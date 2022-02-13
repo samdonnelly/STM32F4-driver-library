@@ -1,27 +1,28 @@
 /**
- * @file mpu6050_driver.h
+ * @file uart_comm.h
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief 
+ * @brief Driver for UART communication 
  * 
  * @version 0.1
- * @date 2022-02-11
+ * @date 2022-02-12
  * 
  * @copyright Copyright (c) 2022
  * 
  */
 
-#ifndef _MPU6050_DRIVER_H_
-#define _MPU6050_DRIVER_H_
+#ifndef _UART_COMM_H_
+#define _UART_COMM_H_
 
 //=======================================================================================
 // Includes 
 //=======================================================================================
 
+
 //=======================================================================================
-// Function Prototypes
+// Function Prototypes 
 //=======================================================================================
 
 
-#endif  // _MPU6050_DRIVER_H_
+#endif  // _UART_COMM_H_
