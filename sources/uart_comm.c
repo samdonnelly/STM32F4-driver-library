@@ -34,16 +34,33 @@
  * 
  */
 
-void uart_init(void)
+void uart2_init(void)
 {
     // UART setup 
 
-    // 1. Enable the UART CLOCK and GPIO CLOCK
-    RCC->APB1ENR |= (SET_BIT << SHIFT_17);  // Enable UART2 Clock 
-    RCC->APB1ENR |= (SET_BIT << SHIFT_0);   // Enable GPIOA clock for TX and RX pins
+    // Pin Setup 
 
-    // 2. Configure the UART pins for alternative functions 
- 
+    // Enable UART2 Clock - RCC_APB1 register, bit 17
+    RCC->APB1ENR |= (SET_BIT << SHIFT_17);
+
+    // Enable GPIOA clock for TX and RX pins - RCC_AHB! register, bit 0
+    RCC->AHB1ENR |= (SET_BIT << SHIFT_0);
+
+    // Configure the UART pins for alternative functions - GPIOA_MODER register 
+    GPIOA->MODER |= (SET_TWO << SHIFT_4);   // pin PA2
+    GPIOA->MODER |= (SET_TWO << SHIFT_6);   // pin PA3
+
+    // Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
+    GPIOA->OSPEEDR |= (SET_THREE << SHIFT_4);   // pin PA2
+    GPIOA->OSPEEDR |= (SET_THREE << SHIFT_6);   // pin PA3
+
+    // Set the alternative function low ([0]) register for USART2 (AF7)
+    GPIOA->AFR[0] |= (SET_SEVEN << SHIFT_8);    // pin PA2
+    GPIOA->AFR[0] |= (SET_SEVEN << SHIFT_12);   // pin PA3
+
+    // UART Configuration 
+
+    // 
 }
 
 
