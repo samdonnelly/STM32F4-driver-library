@@ -33,10 +33,27 @@
 // Function Prototypes 
 
 /**
- * @brief 
+ * @brief Configure USART2
+ * 
+ * @details The function is current equiped to enable UART on pins PA2 and PA3. 
+ *          Additional functionality can be added later to equip USART if desired. 
  * 
  */
 void uart2_init(void);
+
+
+/**
+ * @brief Send data over UART2
+ * 
+ */
+void uart2_tx(void);
+
+
+/**
+ * @brief Receive data over UART2 
+ * 
+ */
+void uart2_rx(void);
 
 //=======================================================================================
 

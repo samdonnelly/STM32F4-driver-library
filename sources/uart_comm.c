@@ -19,24 +19,11 @@
 
 //=======================================================================================
 
-/*
- * STM32F4 Reference Manual Procedure to Configuring UART
- * 
- * 1. Enable the UART CLOCK and GPIO CLOCK 
- * 2. Configure the UART pins for alternative functions 
- * 3. Enable the USART by writing the UE bit in USART_CR1 register to 1
- *          a. USART_CR1: Control register 1 - Page 550 
- * 4. Program the M bit in USART_CR1 to define the word length 
- * 5. Program the number of stop bits in USART_CR2
- * 6. Select the desired baud rate using the USART_BRR register 
- * 7. Set the TE bit in USART_CR1 to send an idle frame as first transmission
- * 8. Enable the transmitter/reciever by setting the TE and RE bits in USART_CR1 register 
- * 
- */
 
+// UART2 setup 
 void uart2_init(void)
 {
-    // UART setup 
+    // Enable UART on pins PA2 and PA3 
 
     // Pin Setup 
 
@@ -47,21 +34,52 @@ void uart2_init(void)
     RCC->AHB1ENR |= (SET_BIT << SHIFT_0);
 
     // Configure the UART pins for alternative functions - GPIOA_MODER register 
-    GPIOA->MODER |= (SET_TWO << SHIFT_4);   // pin PA2
-    GPIOA->MODER |= (SET_TWO << SHIFT_6);   // pin PA3
+    GPIOA->MODER |= (SET_2 << SHIFT_4);   // pin PA2
+    GPIOA->MODER |= (SET_2 << SHIFT_6);   // pin PA3
 
     // Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
-    GPIOA->OSPEEDR |= (SET_THREE << SHIFT_4);   // pin PA2
-    GPIOA->OSPEEDR |= (SET_THREE << SHIFT_6);   // pin PA3
+    GPIOA->OSPEEDR |= (SET_3 << SHIFT_4);   // pin PA2
+    GPIOA->OSPEEDR |= (SET_3 << SHIFT_6);   // pin PA3
 
     // Set the alternative function low ([0]) register for USART2 (AF7)
-    GPIOA->AFR[0] |= (SET_SEVEN << SHIFT_8);    // pin PA2
-    GPIOA->AFR[0] |= (SET_SEVEN << SHIFT_12);   // pin PA3
+    GPIOA->AFR[0] |= (SET_7 << SHIFT_8);    // pin PA2
+    GPIOA->AFR[0] |= (SET_7 << SHIFT_12);   // pin PA3
 
     // UART Configuration 
 
+    // Clear the USART_CR1 register 
+    USART2->CR1 = CLEAR;
+
+    // Write the UE bit in the USART_CR1 register to 1
+    USART2->CR1 |= (SET_BIT << SHIFT_13);
+
+    // Program the M bit to define the word length
+    USART2->CR1 &= ~(SET_BIT << SHIFT_12);  //  Set to zero for 8 bit word length
+
+    // Program the number of stop bits in the USART_CR2 register 
+    USART2->CR2 &= ~(SET_2 << SHIFT_12);  // Set to 0 for 1 stop bit 
+
+    // Set the baud rate 
+    USART2->BRR |= (USART_50MHZ_9600_FRAC << SHIFT_0);  // Fractional 
+    USART2->BRR |= (USART_50MHZ_9600_MANT << SHIFT_4);  // Mantissa 
+
+    // Enable the TX/RX by setting the TE and RE bits in USART_CR1 register 
+    USART2->CR1 |= (SET_BIT << SHIFT_2);  // Set RE
+    USART2->CR1 |= (SET_BIT << SHIFT_3);  // Set TE
+}
+
+
+// UART2 Transmit 
+void uart2_tx(void)
+{
     // 
 }
 
+
+// UART2 Receive
+void uart2_rx(void)
+{
+    // 
+}
 
 

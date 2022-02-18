@@ -22,6 +22,11 @@
 
 //=======================================================================================
 // Macros 
+
+// Different ways to write zero for readability 
+#define CLEAR 0
+#define RESET 0
+
 //=======================================================================================
 
 
@@ -35,12 +40,13 @@
 typedef enum {
     CLEAR_BIT,
     SET_BIT,
-    SET_TWO,
-    SET_THREE,
-    SET_FOUR,
-    SET_FIVE,
-    SET_SIX,
-    SET_SEVEN,
+    SET_2,
+    SET_3,
+    SET_4,
+    SET_5,
+    SET_6,
+    SET_7,
+    SET_8
 } bit_setter_t;
 
 
@@ -82,6 +88,26 @@ typedef enum {
     SHIFT_30,
     SHIFT_31,
 } bit_shifter_t;
+
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    USART_50MHZ_115200_FRAC = 2,
+    USART_50MHZ_9600_FRAC = 8
+} usart_fractional_baud_t;
+
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    USART_50MHZ_115200_MANT = 27,
+    USART_50MHZ_9600_MANT = 325
+} usart_mantissa_baud_t;
 
 //=======================================================================================
 
