@@ -69,6 +69,15 @@ void uart2_init(void)
 }
 
 
+// 
+void uart2_sendchar(uint8_t c)
+{
+    // 
+    USART2->DR = c;  // write the data 
+    while (!(USART2->SR & (SET_BIT << SHIFT_6)));  // Wait for TC to be 1 
+}
+
+
 // UART2 Transmit 
 void uart2_tx(void)
 {

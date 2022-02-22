@@ -43,6 +43,14 @@ void uart2_init(void);
 
 
 /**
+ * @brief 
+ * 
+ * @param c 
+ */
+void uart2_sendchar(uint8_t c);
+
+
+/**
  * @brief Send data over UART2
  * 
  */

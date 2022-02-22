@@ -25,7 +25,7 @@
 
 // Different ways to write zero for readability 
 #define CLEAR 0
-#define RESET 0
+#define RESET_ZERO 0
 
 //=======================================================================================
 
