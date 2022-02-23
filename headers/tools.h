@@ -95,8 +95,7 @@ typedef enum {
  * 
  */
 typedef enum {
-    USART_50MHZ_115200_FRAC = 2,
-    USART_50MHZ_9600_FRAC = 8
+    USART_42MHZ_9600_FRAC = 7
 } usart_fractional_baud_t;
 
 
@@ -105,8 +104,7 @@ typedef enum {
  * 
  */
 typedef enum {
-    USART_50MHZ_115200_MANT = 27,
-    USART_50MHZ_9600_MANT = 325
+    USART_42MHZ_9600_MANT = 273
 } usart_mantissa_baud_t;
 
 //=======================================================================================

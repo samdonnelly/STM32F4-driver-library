@@ -48,7 +48,7 @@ void uart2_init(void)
     // UART Configuration 
 
     // Clear the USART_CR1 register 
-    USART2->CR1 = CLEAR;
+    USART2->CR1 = 0x00;  // CLEAR;
 
     // Write the UE bit in the USART_CR1 register to 1
     USART2->CR1 |= (SET_BIT << SHIFT_13);
@@ -57,11 +57,11 @@ void uart2_init(void)
     USART2->CR1 &= ~(SET_BIT << SHIFT_12);  //  Set to zero for 8 bit word length
 
     // Program the number of stop bits in the USART_CR2 register 
-    USART2->CR2 &= ~(SET_2 << SHIFT_12);  // Set to 0 for 1 stop bit 
+    // USART2->CR2 &= ~(SET_2 << SHIFT_12);  // Set to 0 for 1 stop bit 
 
     // Set the baud rate 
-    USART2->BRR |= (USART_50MHZ_9600_FRAC << SHIFT_0);  // Fractional 
-    USART2->BRR |= (USART_50MHZ_9600_MANT << SHIFT_4);  // Mantissa 
+    USART2->BRR |= (USART_42MHZ_9600_FRAC << SHIFT_0);  // Fractional 
+    USART2->BRR |= (USART_42MHZ_9600_MANT << SHIFT_4);  // Mantissa 
 
     // Enable the TX/RX by setting the TE and RE bits in USART_CR1 register 
     USART2->CR1 |= (SET_BIT << SHIFT_2);  // Set RE
@@ -69,26 +69,47 @@ void uart2_init(void)
 }
 
 
-// 
-void uart2_sendchar(uint8_t c)
+// USART2 Send Character 
+void uart2_sendchar(uint8_t character)
 {
-    // 
-    USART2->DR = c;  // write the data 
-    while (!(USART2->SR & (SET_BIT << SHIFT_6)));  // Wait for TC to be 1 
+    // Write the data to the data register (USART_DR). 
+    USART2->DR = character;
+
+    // Read the Transmission Complete (TC) bit (bit 6) in the status register 
+    // (USART_SR) continuously until it is set. 
+    while (!(USART2->SR & (SET_BIT << SHIFT_6)));
 }
 
 
-// UART2 Transmit 
-void uart2_tx(void)
+// USART2 Send String 
+void uart2_sendstring(char *string)
 {
-    // 
+    // Loop until null character of string is reached. 
+    while (*string)
+    {
+        // Send characters one at a time. 
+        uart2_sendchar(*string);
+
+        // Increment to next character. 
+        string++;
+    }
 }
 
 
-// UART2 Receive
-void uart2_rx(void)
+// USART2 Get Character 
+uint8_t uart2_getchar(void)
 {
     // 
+    uint8_t input;
+
+    // Wait for bit to set indicating data is ready
+    // TODO check if this is blocking 
+    while (!(USART2->SR & (SET_BIT << SHIFT_5)));
+
+    // Read data from data register 
+    input = USART2->DR; 
+
+    return input;
 }
 
 

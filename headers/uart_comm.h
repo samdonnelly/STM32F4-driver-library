@@ -43,25 +43,37 @@ void uart2_init(void);
 
 
 /**
- * @brief 
+ * @brief USART2 Send Character
  * 
- * @param c 
+ * @details Takes a single character and writes it to the data register of USART2. 
+ *          Waits until the Transmission Complete (TC) bit (bit 6) in the status
+ *          register (USART_SR) is set before exiting the function.
+ * 
+ * @param character : Character written to data register 
  */
-void uart2_sendchar(uint8_t c);
+void uart2_sendchar(uint8_t character);
 
 
 /**
- * @brief Send data over UART2
+ * @brief USART2 Send Character 
  * 
+ * @details Iterates through a string and calls uart2_sendchar to send characters. 
+ * 
+ * @see uart2_sendchar
+ * 
+ * @param string : string to send using USART2 
  */
-void uart2_tx(void);
+void uart2_sendstring(char *string);
 
 
 /**
- * @brief Receive data over UART2 
+ * @brief USART2 Get Character 
  * 
+ * @details Retreieve character from an external source. 
+ * 
+ * @return uint8_t 
  */
-void uart2_rx(void);
+uint8_t uart2_getchar(void);
 
 //=======================================================================================
 
