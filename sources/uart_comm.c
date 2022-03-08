@@ -21,10 +21,9 @@
 
 
 // UART2 setup 
+// Pins: PA2, PA3
 void uart2_init(void)
 {
-    // Enable UART on pins PA2 and PA3 
-
     // Pin Setup 
 
     // Enable UART2 Clock - RCC_APB1 register, bit 17
@@ -66,6 +65,13 @@ void uart2_init(void)
     // Enable the TX/RX by setting the TE and RE bits in USART_CR1 register 
     USART2->CR1 |= (SET_BIT << SHIFT_2);  // Set RE
     USART2->CR1 |= (SET_BIT << SHIFT_3);  // Set TE
+
+    // Clear buffer 
+
+    // Read the Transmission Complete (TC) bit (bit 6) in the status register 
+    // (USART_SR) continuously until it is set. If this is not done then some
+    // characters can be skipped in transmission on reset. 
+    while (!(USART2->SR & (SET_BIT << SHIFT_6)));
 }
 
 

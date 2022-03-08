@@ -26,6 +26,24 @@
 
 //=======================================================================================
 // Enums 
+
+/**
+ * @brief Fraction portion of UART baudrate setup 
+ * 
+ */
+typedef enum {
+    USART_42MHZ_9600_FRAC = 7
+} usart_fractional_baud_t;
+
+
+/**
+ * @brief Mantissa portion of UART baudrate setup 
+ * 
+ */
+typedef enum {
+    USART_42MHZ_9600_MANT = 273
+} usart_mantissa_baud_t;
+
 //=======================================================================================
 
 

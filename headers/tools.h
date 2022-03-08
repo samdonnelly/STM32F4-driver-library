@@ -34,6 +34,16 @@
 // Enums 
 
 /**
+ * @brief True and False boolean for readability
+ * 
+ */
+typedef enum {
+    FALSE,
+    TRUE
+} boolean_t;
+
+
+/**
  * @brief 
  * 
  */
@@ -88,24 +98,6 @@ typedef enum {
     SHIFT_30,
     SHIFT_31,
 } bit_shifter_t;
-
-
-/**
- * @brief 
- * 
- */
-typedef enum {
-    USART_42MHZ_9600_FRAC = 7
-} usart_fractional_baud_t;
-
-
-/**
- * @brief 
- * 
- */
-typedef enum {
-    USART_42MHZ_9600_MANT = 273
-} usart_mantissa_baud_t;
 
 //=======================================================================================
 
