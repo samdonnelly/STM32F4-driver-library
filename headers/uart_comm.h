@@ -51,7 +51,7 @@ typedef enum {
 // Function Prototypes 
 
 /**
- * @brief Configure USART2
+ * @brief Configure UART2
  * 
  * @details The function is current equiped to enable UART on pins PA2 and PA3. 
  *          Additional functionality can be added later to equip USART if desired. 
@@ -61,7 +61,7 @@ void uart2_init(void);
 
 
 /**
- * @brief USART2 Send Character
+ * @brief UART2 send character to serial terminal 
  * 
  * @details Takes a single character and writes it to the data register of USART2. 
  *          Waits until the Transmission Complete (TC) bit (bit 6) in the status
@@ -73,7 +73,7 @@ void uart2_sendchar(uint8_t character);
 
 
 /**
- * @brief USART2 Send Character 
+ * @brief UART2 send character to serial terminal
  * 
  * @details Iterates through a string and calls uart2_sendchar to send characters. 
  * 
@@ -85,13 +85,22 @@ void uart2_sendstring(char *string);
 
 
 /**
- * @brief USART2 Get Character 
+ * @brief UART2 get character from serial terminal 
  * 
- * @details Retreieve character from an external source. 
+ * @details Retreieve character from an external source. Make sure there is data 
+ *          available before calling this function so that there is minimal blocking. 
  * 
  * @return uint8_t 
  */
 uint8_t uart2_getchar(void);
+
+
+/**
+ * @brief UART2 get string from serial terminal
+ * 
+ * @param string_to_fill 
+ */
+void uart2_getstr(char *string_to_fill);
 
 //=======================================================================================
 

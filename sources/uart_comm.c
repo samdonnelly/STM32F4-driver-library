@@ -105,11 +105,10 @@ void uart2_sendstring(char *string)
 // USART2 Get Character 
 uint8_t uart2_getchar(void)
 {
-    // 
-    uint8_t input;
+    // Character input 
+    static uint8_t input = 0;
 
     // Wait for bit to set indicating data is ready
-    // TODO check if this is blocking 
     while (!(USART2->SR & (SET_BIT << SHIFT_5)));
 
     // Read data from data register 
@@ -119,3 +118,25 @@ uint8_t uart2_getchar(void)
 }
 
 
+// 
+void uart2_getstr(char *string_to_fill)
+{
+    // 
+    static uint8_t input = 0;
+
+    // Get a character from the string 
+    input = uart2_getchar();
+
+    // Loop until full string is read 
+    while(input);
+    {
+        // Get a character from the string 
+        input = uart2_getchar();
+
+        // Assign the charater to a space in memory 
+        *string_to_fill = input;
+
+        // increment to next space in memory 
+        string_to_fill++;
+    } 
+}
