@@ -109,10 +109,13 @@ uint8_t uart2_getchar(void)
     static uint8_t input = 0;
 
     // Wait for bit to set indicating data is ready
-    while (!(USART2->SR & (SET_BIT << SHIFT_5)));
+    // while (!(USART2->SR & (SET_BIT << SHIFT_5)));
 
     // Read data from data register 
-    input = USART2->DR; 
+    input = USART2->DR;
+
+    // Clear the EXNE bit 
+    USART2->SR &= ~(SET_BIT << SHIFT_5);
 
     return input;
 }
@@ -123,20 +126,48 @@ void uart2_getstr(char *string_to_fill)
 {
     // 
     static uint8_t input = 0;
+    static uint8_t over_run = 0;
 
-    // Get a character from the string 
-    input = uart2_getchar();
-
-    // Loop until full string is read 
-    while(input);
+    // Loop through string 
+    do 
     {
-        // Get a character from the string 
-        input = uart2_getchar();
+        // // Get a character from the string 
+        // input = uart2_getchar();
 
-        // Assign the charater to a space in memory 
-        *string_to_fill = input;
+        // 
+        if (USART2->SR & (SET_BIT << SHIFT_3))
+        {
+            over_run = 1;
+        }
 
-        // increment to next space in memory 
-        string_to_fill++;
+        // Don't read unless there is data available 
+        if (USART2->SR & (SET_BIT << SHIFT_5))
+        {
+            // Get a character from the string 
+            input = uart2_getchar();
+
+            // Assign character from string to a space in memeory 
+            *string_to_fill = input;
+
+            // Increment to next space in memeory 
+            string_to_fill++;
+        }
     } 
+    while (input);
+
+    // // Get a character from the string 
+    // input = uart2_getchar();
+
+    // // Loop until full string is read 
+    // while(input);
+    // {
+    //     // Get a character from the string 
+    //     input = uart2_getchar();
+
+    //     // Assign the charater to a space in memory 
+    //     *string_to_fill = input;
+
+    //     // increment to next space in memory 
+    //     string_to_fill++;
+    // } 
 }
