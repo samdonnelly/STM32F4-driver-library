@@ -53,10 +53,7 @@ void uart2_init(void)
     USART2->CR1 |= (SET_BIT << SHIFT_13);
 
     // Program the M bit to define the word length
-    USART2->CR1 &= ~(SET_BIT << SHIFT_12);  //  Set to zero for 8 bit word length
-
-    // Program the number of stop bits in the USART_CR2 register 
-    // USART2->CR2 &= ~(SET_2 << SHIFT_12);  // Set to 0 for 1 stop bit 
+    USART2->CR1 &= ~(SET_BIT << SHIFT_12);  //  Set to zero for 8 bit word length 
 
     // Set the baud rate 
     USART2->BRR |= (USART_42MHZ_9600_FRAC << SHIFT_0);  // Fractional 
@@ -75,7 +72,7 @@ void uart2_init(void)
 }
 
 
-// USART2 Send Character 
+// UART2 send character to serial terminal 
 void uart2_sendchar(uint8_t character)
 {
     // Write the data to the data register (USART_DR). 
@@ -87,7 +84,7 @@ void uart2_sendchar(uint8_t character)
 }
 
 
-// USART2 Send String 
+// UART2 send string to serial terminal
 void uart2_sendstring(char *string)
 {
     // Loop until null character of string is reached. 
@@ -102,72 +99,40 @@ void uart2_sendstring(char *string)
 }
 
 
-// USART2 Get Character 
+// UART2 get character from serial terminal 
 uint8_t uart2_getchar(void)
 {
-    // Character input 
+    // Store the character input from the data register
     static uint8_t input = 0;
-
-    // Wait for bit to set indicating data is ready
-    // while (!(USART2->SR & (SET_BIT << SHIFT_5)));
 
     // Read data from data register 
     input = USART2->DR;
-
-    // Clear the EXNE bit 
-    USART2->SR &= ~(SET_BIT << SHIFT_5);
 
     return input;
 }
 
 
-// 
+// UART2 get string from serial terminal
 void uart2_getstr(char *string_to_fill)
 {
-    // 
+    // Store the character input from uart2_getchar()
     static uint8_t input = 0;
-    static uint8_t over_run = 0;
 
-    // Loop through string 
-    do 
+    // Run until a carriage return is seen
+    do
     {
-        // // Get a character from the string 
-        // input = uart2_getchar();
-
-        // 
-        if (USART2->SR & (SET_BIT << SHIFT_3))
-        {
-            over_run = 1;
-        }
-
-        // Don't read unless there is data available 
+        // Wait for data to be available
         if (USART2->SR & (SET_BIT << SHIFT_5))
         {
-            // Get a character from the string 
             input = uart2_getchar();
 
-            // Assign character from string to a space in memeory 
+            // Record character and increment to the next space in memeory
             *string_to_fill = input;
-
-            // Increment to next space in memeory 
             string_to_fill++;
         }
     } 
-    while (input);
+    while(input != UART_CARRIAGE);
 
-    // // Get a character from the string 
-    // input = uart2_getchar();
-
-    // // Loop until full string is read 
-    // while(input);
-    // {
-    //     // Get a character from the string 
-    //     input = uart2_getchar();
-
-    //     // Assign the charater to a space in memory 
-    //     *string_to_fill = input;
-
-    //     // increment to next space in memory 
-    //     string_to_fill++;
-    // } 
+    // Add a null character to the end if the string 
+    *string_to_fill = UART_NULL;
 }
