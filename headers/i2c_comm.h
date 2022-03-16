@@ -36,6 +36,34 @@
 
 //=======================================================================================
 // Function Prototypes
+
+/**
+ * @brief Initiate I2C 1 in Mater Mode
+ * 
+ */
+void i2c1_init_master_mode(void);
+
+
+/**
+ * @brief Initiate I2C 1 in Slave Mode 
+ * 
+ */
+void i2c1_init_slave_mode(void);
+
+
+/**
+ * @brief Write data to a device with I2C 1
+ * 
+ */
+void i2c1_write(void);
+
+
+/**
+ * @brief Read data from a device with I2C 1 
+ * 
+ */
+void i2c1_write(void);
+
 //=======================================================================================
 
 
