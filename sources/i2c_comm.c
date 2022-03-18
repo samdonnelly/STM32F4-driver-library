@@ -74,6 +74,16 @@ void i2c1_init_master_mode(void)
     GPIOB->AFR[1] |= (SET_4 << SHIFT_0);      // pin PB8 
     GPIOB->AFR[1] |= (SET_4 << SHIFT_4);      // pin PB9
 
+    // 3. Reset the I2C. 
+
+    // 4. Program the peripheral input clock in I2C_CR2 register
+    I2C1->CR2 |= (I2C_APB1_42MHZ << SHIFT_0);
+
+    // 5. Configure the clock control register 
+
+    // Set to fast mode (fm)
+    I2C1->CCR |= (SET_BIT << SHIFT_15);
+
 }
 
 

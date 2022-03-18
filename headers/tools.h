@@ -56,7 +56,9 @@ typedef enum {
     SET_5,
     SET_6,
     SET_7,
-    SET_8
+    SET_8,
+    SET_9,
+    SET_10,
 } bit_setter_t;
 
 
