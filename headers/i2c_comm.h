@@ -41,6 +41,38 @@ typedef enum {
     I2C_APB1_84MHZ = 84
 } i2c_apb1_freq_t;
 
+/**
+ * @brief I2C CCR setpoint
+ * 
+ * @details enum code: I2C_CCR_(X_1)M_(X_2)_(X_3)_(X_4)
+ *              X_1: Specifies mode, either Fm or Sm
+ *              X_2: Duty cycle - ex. 169 -> 16/9 in Fm mode
+ *              X_3: PCLK1 frquency (MHz)
+ *              X_4: SCL frquency (kHz)
+ *          
+ *          Note: A calculation must be done to determine the numbers that work together.
+ *                See the Reference Manual. 
+ * 
+ */
+typedef enum {
+    I2C_CCR_FM_169_42_400 = 5
+} i2c_ccr_setpoint_t;
+
+/**
+ * @brief I2C TRISE setpoint
+ * 
+ * @details enum code: I2C_TRISE_(X_1)_(X_2)
+ *              X_1: Max rise time (ns)
+ *              X_2: PCLK1 frequency (MHz)
+ *          
+ *          Note: A calculation must be done to determine the numbers that work together.
+ *                See the Reference Manual. 
+ * 
+ */
+typedef enum {
+    I2C_TRISE_300_42 = 13
+} i2c_trise_setpoint_t;
+
 //=======================================================================================
 
 
