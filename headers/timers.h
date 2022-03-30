@@ -25,27 +25,53 @@
 
 
 //=======================================================================================
+// Macros 
+
+#define RESET_COUNT 0
+#define PREFIX_SCALAR 1000
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Enums 
+
+/**
+ * @brief Timer prescalars 
+ * 
+ * @details these prescalars are for generating a 1us count depending on the 
+ *          frequency. 
+ * 
+ */
+typedef enum {
+    TIMERS_APB2_84MHZ_1US_PRESCALAR = 83
+} timer_us_prescalars_t;
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Function Prototypes
 
 /**
  * @brief 
  * 
  */
-void timer6_init(void);
+void tim9_init(uint16_t prescalar);
 
 /**
  * @brief microsecond delay function 
  * 
  * @param delay_us 
  */
-void tim6_delay_us(uint16_t delay_us);
+void tim9_delay_us(uint16_t delay_us);
 
 /**
  * @brief millisecond delay function 
  * 
  * @param delay_ms 
  */
-void tim6_delay_ms(uint16_t delay_ms);
+void tim9_delay_ms(uint16_t delay_ms);
 
 //=======================================================================================
 
