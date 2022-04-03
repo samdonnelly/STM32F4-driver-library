@@ -97,26 +97,22 @@ void i2c1_init_master_mode(void);
 
 
 /**
- * @brief Initiate I2C 1 in Slave Mode 
- * 
- */
-void i2c1_init_slave_mode(void);
-
-
-/**
  * @brief Write data to a device with I2C 1
+ * 
+ * @details Note that this function is set up for 7-bit I2C address and not 10-bit. 
  * 
  * @param data : pointer to data to be sent over the bus 
  * @param data_size : integer indicating the number of bytes to be sent 
+ * @param slave_address : 7-bit I2C address of targeted device 
  */
-void i2c1_write_master_mode(uint8_t *data, uint8_t data_size);
+void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_address);
 
 
 /**
  * @brief Read data from a device with I2C 1 
  * 
  */
-void i2c1_write(void);
+void i2c1_read_master_mode(void);
 
 //=======================================================================================
 

@@ -31,12 +31,42 @@
 
 
 //=======================================================================================
-// Macros 
+// Macros
 //=======================================================================================
 
 
 //=======================================================================================
 // Enums 
+
+/**
+ * @brief PCF8574 write addresses
+ * 
+ */
+typedef enum {
+    PCF8574_LLL_WRITE_ADDRESS = 0x40,
+    PCF8574_LLH_WRITE_ADDRESS = 0x42,
+    PCF8574_LHL_WRITE_ADDRESS = 0x44,
+    PCF8574_LHH_WRITE_ADDRESS = 0x46,
+    PCF8574_HLL_WRITE_ADDRESS = 0x48,
+    PCF8574_HLH_WRITE_ADDRESS = 0x4A,
+    PCF8574_HHL_WRITE_ADDRESS = 0x4C,
+    PCF8574_HHH_WRITE_ADDRESS = 0x4E
+} pcf8574_wrte_addresses_t;
+
+/**
+ * @brief PCF8574 read addresses
+ * 
+ */
+typedef enum {
+    PCF8574_LLL_READ_ADDRESS = 0x41,
+    PCF8574_LLH_READ_ADDRESS = 0x43,
+    PCF8574_LHL_READ_ADDRESS = 0x45,
+    PCF8574_LHH_READ_ADDRESS = 0x47,
+    PCF8574_HLL_READ_ADDRESS = 0x49,
+    PCF8574_HLH_READ_ADDRESS = 0x4B,
+    PCF8574_HHL_READ_ADDRESS = 0x4D,
+    PCF8574_HHH_READ_ADDRESS = 0x4F
+} pcf8574_read_addresses_t;
 
 /**
  * @brief HD44780U delays 
