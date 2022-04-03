@@ -73,11 +73,25 @@ typedef enum {
  * 
  */
 typedef enum {
+    HD44780U_DELAY_001MS = 1,
     HD44780U_DELAY_005MS = 5,
     HD44780U_DELAY_010MS = 10,
     HD44780U_DELAY_050MS = 50,
     HD44780U_DELAY_200US = 200
 } hd44780u_delays_t;
+
+/**
+ * @brief HD44780U setup commands
+ * 
+ */
+typedef enum {
+    HD44780U_8BIT_SETUP_CMD_1 = 0x01,
+    HD44780U_8BIT_SETUP_CMD_2 = 0x06,
+    HD44780U_8BIT_SETUP_CMD_3 = 0x08,
+    HD44780U_8BIT_SETUP_CMD_4 = 0x0C,
+    HD44780U_8BIT_SETUP_CMD_5 = 0x30,
+    HD44780U_8BIT_SETUP_CMD_6 = 0x38
+} hd44780u_setup_cmds_t;
 
 //=======================================================================================
 

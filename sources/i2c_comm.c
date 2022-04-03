@@ -128,7 +128,8 @@ void i2c1_init_master_mode(void)
 // Write I2C 
 
 // Send data to a device using I2C 1 in master mode 
-void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_address)
+// void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_address)
+void i2c1_write_master_mode(uint8_t data, uint8_t data_size, uint8_t slave_address)
 {
     // Note: this function runs in a blocking mode
 
@@ -142,13 +143,14 @@ void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_addr
     uint16_t read_clear = (I2C1->SR1) | (I2C1->SR2);  // Read SR1 and SR2 to clear ADDR
 
     // Send data 
-    for (uint8_t i = 0; i < data_size; i++)
-    {
-        while(!(I2C1->SR1 & (SET_BIT << SHIFT_7)));  // Wait for TxE bit to set 
-        I2C1->DR = *data;                            // Send data 
-        data++;                                      // Move to next memory location 
-    }
-    
+    // for (uint8_t i = 0; i < data_size; i++)
+    // {
+    //     while(!(I2C1->SR1 & (SET_BIT << SHIFT_7)));  // Wait for TxE bit to set 
+    //     I2C1->DR = *data;                            // Send data 
+    //     data++;                                      // Move to next memory location 
+    // }
+    while(!(I2C1->SR1 & (SET_BIT << SHIFT_7)));  // Wait for TxE bit to set 
+    I2C1->DR = data;                            // Send data 
     while(!(I2C1->SR1 & (SET_BIT << SHIFT_2)));  // Wait for byte transfer to finish 
 
     // Create stop condition 
