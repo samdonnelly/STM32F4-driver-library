@@ -128,10 +128,20 @@ void i2c1_init_slave_mode(void)
 //=======================================================================================
 // Write I2C 
 
-// Send data to a device using I2C 1 
-void i2c1_write(void)
+// Send data to a device using I2C 1 in master mode 
+void i2c1_write_master_mode(uint8_t *data, uint8_t data_size)
 {
-    // 
+    // Note: this function runs in a blocking mode
+
+    // Create start condition to initiate master mode 
+    I2C1->CR1 |= (SET_BIT << SHIFT_8);           // Set start generation bit 
+    while(!(I2C1->SR1 & (SET_BIT << SHIFT_0)));  // Wait for start bit to set 
+
+    // Send slave address 
+
+    // Send data 
+
+    // Create stop condition 
 }
 
 //=======================================================================================

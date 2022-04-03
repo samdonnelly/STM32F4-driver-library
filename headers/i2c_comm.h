@@ -73,6 +73,16 @@ typedef enum {
     I2C_TRISE_300_42 = 13
 } i2c_trise_setpoint_t;
 
+/**
+ * @brief I2C data size 
+ * 
+ */
+typedef enum {
+    I2C_1_BYTE = 1,
+    I2C_2_BYTE = 2,
+    I2C_3_BYTE = 3
+} i2c_data_size_t;
+
 //=======================================================================================
 
 
@@ -96,8 +106,10 @@ void i2c1_init_slave_mode(void);
 /**
  * @brief Write data to a device with I2C 1
  * 
+ * @param data : pointer to data to be sent over the bus 
+ * @param data_size : integer indicating the number of bytes to be sent 
  */
-void i2c1_write(void);
+void i2c1_write_master_mode(uint8_t *data, uint8_t data_size);
 
 
 /**
