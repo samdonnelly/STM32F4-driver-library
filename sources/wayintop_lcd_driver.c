@@ -41,81 +41,96 @@ void hd44780u_init(void)
 
     // TODO create I2C send function 
 
+    // Data list 
+    uint8_t data_list[2];
+    data_list[0] = 0;
+    data_list[1] = 0;
+
     // 1. Wait for more than 40 ms after Vcc rises to 2.7V 
     tim9_delay_ms(HD44780U_DELAY_050MS);
 
     // 2. Function set. Wait for more than 4.1 ms. 
+    data_list[0] = (uint8_t)(0x30);
     i2c1_write_master_mode(
-        0x30, 
+        data_list, 
         I2C_1_BYTE, 
         PCF8574_HHH_WRITE_ADDRESS);
     tim9_delay_ms(HD44780U_DELAY_005MS);
 
     // 3. Function set. Wait for more than 100 us. 
     i2c1_write_master_mode(
-        0x30, 
+        data_list, 
         I2C_1_BYTE, 
         PCF8574_HHH_WRITE_ADDRESS);
     tim9_delay_us(HD44780U_DELAY_200US);
 
     // 4. Function set. No specified wait time. 
     i2c1_write_master_mode(
-        0x30, 
+        data_list, 
         I2C_1_BYTE, 
         PCF8574_HHH_WRITE_ADDRESS);
     tim9_delay_ms(HD44780U_DELAY_010MS);
 
     // 5. Function set - Specify the number of display lines and character font
-    // DL = 1 -> 4-bit data length 
-    // N = 1  -> Sets the number of dsiplay lines to 2 
-    // F = 0  -> Sets character font to 5x8 dots 
+    // DL = 0 -> 4-bit data length 
+    data_list[0] = (uint8_t)(0x20);
     i2c1_write_master_mode(
-        0x20, 
+        data_list, 
         I2C_1_BYTE, 
         PCF8574_HHH_WRITE_ADDRESS);
     tim9_delay_ms(HD44780U_DELAY_001MS);
 
-    // 6. Display off 
-    // D = 0 -> Display off 
-    // C = 0 -> Cursor not displayed 
-    // B = 0 -> No blinking 
-    i2c1_write_master_mode(
-        HD44780U_8BIT_SETUP_CMD_3, 
-        I2C_1_BYTE, 
-        PCF8574_HHH_WRITE_ADDRESS);
-    tim9_delay_ms(HD44780U_DELAY_001MS);
+    // Should be good up to this point 
 
-    // 7. Display clear 
-    i2c1_write_master_mode(
-        HD44780U_8BIT_SETUP_CMD_1, 
-        I2C_1_BYTE, 
-        PCF8574_HHH_WRITE_ADDRESS);
-    tim9_delay_ms(HD44780U_DELAY_001MS);
+    // // 
+    // // N = 1  -> Sets the number of dsiplay lines to 2 
+    // // F = 0  -> Sets character font to 5x8 dots 
+    // data_list[1] = (uint8_t)(0x08);
+    // i2c1_write_master_mode(
+    //     data_list, 
+    //     I2C_2_BYTE, 
+    //     PCF8574_HHH_WRITE_ADDRESS);
+    // tim9_delay_ms(HD44780U_DELAY_001MS);
 
-    // 8. Entry mode set 
-    // I/D = 1 -> Increment 
-    // S = 0   -> No display shifting 
-    i2c1_write_master_mode(
-        HD44780U_8BIT_SETUP_CMD_2, 
-        I2C_1_BYTE, 
-        PCF8574_HHH_WRITE_ADDRESS);
-    tim9_delay_ms(HD44780U_DELAY_001MS);
+    // // 6. Display off 
+    // // D = 0 -> Display off 
+    // // C = 0 -> Cursor not displayed 
+    // // B = 0 -> No blinking 
+    // data_list[0] = 0;
+    // i2c1_write_master_mode(
+    //     data_list, 
+    //     I2C_2_BYTE, 
+    //     PCF8574_HHH_WRITE_ADDRESS);
+    // tim9_delay_ms(HD44780U_DELAY_001MS);
 
-    // 9. Display on 
-    // D = 0 -> Display off 
-    // C = 0 -> Cursor not displayed 
-    // B = 0 -> No blinking 
-    i2c1_write_master_mode(
-        HD44780U_8BIT_SETUP_CMD_4, 
-        I2C_1_BYTE, 
-        PCF8574_HHH_WRITE_ADDRESS);
-    tim9_delay_ms(HD44780U_DELAY_001MS);
+    // // 7. Display clear 
+    // data_list[1] = (uint8_t)(0x01);
+    // i2c1_write_master_mode(
+    //     data_list, 
+    //     I2C_2_BYTE, 
+    //     PCF8574_HHH_WRITE_ADDRESS);
+    // tim9_delay_ms(HD44780U_DELAY_001MS);
 
-    // Test dsiplay
-    i2c1_write_master_mode(
-        73, 
-        I2C_1_BYTE, 
-        PCF8574_HHH_WRITE_ADDRESS); 
+    // // 8. Entry mode set 
+    // // I/D = 1 -> Increment 
+    // // S = 0   -> No display shifting 
+    // data_list[1] = (uint8_t)(0x06);
+    // i2c1_write_master_mode(
+    //     data_list, 
+    //     I2C_1_BYTE, 
+    //     PCF8574_HHH_WRITE_ADDRESS);
+    // tim9_delay_ms(HD44780U_DELAY_001MS);
+
+    // // 9. Display on 
+    // // D = 1 -> Display off 
+    // // C = 0 -> Cursor not displayed 
+    // // B = 0 -> No blinking 
+    // data_list[1] = (uint8_t)(0x0C);
+    // i2c1_write_master_mode(
+    //     data_list, 
+    //     I2C_1_BYTE, 
+    //     PCF8574_HHH_WRITE_ADDRESS);
+    // tim9_delay_ms(HD44780U_DELAY_001MS);
 }
 
 //=======================================================================================
