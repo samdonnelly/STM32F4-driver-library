@@ -145,14 +145,12 @@ void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_addr
     // Send data 
     for (uint8_t i = 0; i < data_size; i++)
     {
-        uart2_sendchar(*data);
         while(!(I2C1->SR1 & (SET_BIT << SHIFT_7)));  // Wait for TxE bit to set 
         I2C1->DR = *data;                            // Send data 
-        data++;                                      // Move to next memory location 
+        data++;                                      // Increment memory 
     }
-    // while(!(I2C1->SR1 & (SET_BIT << SHIFT_7)));  // Wait for TxE bit to set 
-    // I2C1->DR = data;                            // Send data 
-    // while(!(I2C1->SR1 & (SET_BIT << SHIFT_2)));  // Wait for byte transfer to finish 
+
+    while(!(I2C1->SR1 & (SET_BIT << SHIFT_2)));  // Wait for BTF to set
 
     // Create stop condition 
     I2C1->CR1 |= (SET_BIT << SHIFT_9);  // Set the stop generation bit 
