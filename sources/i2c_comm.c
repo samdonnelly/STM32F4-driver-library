@@ -47,9 +47,8 @@ void i2c1_init_master_mode(void)
     //  4. Ensure PE is disabled before setting up the I2C
     //  5. Program the peripheral input clock in I2C_CR2 register
     //  6. Configure the clock control register 
-    //      a) Set to fast mode (Fm)
-    //      b) Set Fm mode duty cycle to 16/9
-    //      c) Set the clock control register (CCR) - master mode
+    //      a) Set to standard mode (Sm)
+    //      b) Set the clock control register (CCR) - master mode
     //  7. Configure the rise time register 
     //  8. Program the I2C_CR1 register to enable the peripheral 
     //  9. Set the START but in the I2C_CR1 register to generate a 
@@ -103,18 +102,15 @@ void i2c1_init_master_mode(void)
 
     // 6. Configure the clock control register 
 
-    // a) Set to fast mode (Fm)
-    I2C1->CCR |= (SET_BIT << SHIFT_15);
+    // a) Set to standard mode (Sm)
+    I2C1->CCR |= (CLEAR_BIT << SHIFT_15);
 
-    // b) Set Fm mode duty cycle to 16/9
-    I2C1->CCR |= (SET_BIT << SHIFT_14);
-
-    // c) Set the clock control register (CCR) - master mode
-    I2C1->CCR |= (I2C_CCR_FM_169_42_400 << SHIFT_0);
+    // b) Set the clock control register (CCR) - master mode
+    I2C1->CCR |= (I2C_CCR_SM_42_100 << SHIFT_0);
 
 
     // 7. Configure the rise time register
-    I2C1->TRISE |= (I2C_TRISE_300_42 << SHIFT_0); 
+    I2C1->TRISE |= (I2C_TRISE_1000_42 << SHIFT_0); 
 
 
     // 8. Program the I2C_CR1 register to enable the peripheral

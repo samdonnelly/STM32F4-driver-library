@@ -45,7 +45,7 @@ typedef enum {
 } i2c_apb1_freq_t;
 
 /**
- * @brief I2C CCR setpoint
+ * @brief I2C Fm CCR setpoint
  * 
  * @details enum code: I2C_CCR_(X_1)M_(X_2)_(X_3)_(X_4)
  *              X_1: Specifies mode, either Fm or Sm
@@ -59,7 +59,22 @@ typedef enum {
  */
 typedef enum {
     I2C_CCR_FM_169_42_400 = 5
-} i2c_ccr_setpoint_t;
+} i2c_fm_ccr_setpoint_t;
+
+/**
+ * @brief I2C Sm CCR setpoint
+ * 
+ * @details enum code: I2C_CCR_SM_(X_1)_(X_2)
+ *              X_1: PCLK1 frquency (MHz)
+ *              X_2: SCL frquency (kHz)
+ *          
+ *          Note: A calculation must be done to determine the numbers that work together.
+ *                See the Reference Manual. 
+ * 
+ */
+typedef enum {
+    I2C_CCR_SM_42_100 = 210
+} i2c_sm_ccr_setpoint_t;
 
 /**
  * @brief I2C TRISE setpoint
@@ -73,7 +88,8 @@ typedef enum {
  * 
  */
 typedef enum {
-    I2C_TRISE_300_42 = 13
+    I2C_TRISE_0300_42 = 13,
+    I2C_TRISE_1000_42 = 43
 } i2c_trise_setpoint_t;
 
 /**
@@ -83,7 +99,8 @@ typedef enum {
 typedef enum {
     I2C_1_BYTE = 1,
     I2C_2_BYTE = 2,
-    I2C_3_BYTE = 3
+    I2C_3_BYTE = 3,
+    I2C_4_BYTE = 4
 } i2c_data_size_t;
 
 //=======================================================================================
