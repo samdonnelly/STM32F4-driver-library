@@ -33,6 +33,9 @@
 
 //=======================================================================================
 // Macros
+
+#define HD44780U_MSG_PER_CMD 4  // Number of I2C bytes sent per one LCD screen command
+
 //=======================================================================================
 
 
@@ -86,13 +89,27 @@ typedef enum {
  * 
  */
 typedef enum {
-    HD44780U_8BIT_SETUP_CMD_1 = 0x01,
-    HD44780U_8BIT_SETUP_CMD_2 = 0x06,
-    HD44780U_8BIT_SETUP_CMD_3 = 0x08,
-    HD44780U_8BIT_SETUP_CMD_4 = 0x0C,
-    HD44780U_8BIT_SETUP_CMD_5 = 0x30,
-    HD44780U_8BIT_SETUP_CMD_6 = 0x38
+    HD44780U_SETUP_CMD_0X01 = 0x01,
+    HD44780U_SETUP_CMD_0X06 = 0x06,
+    HD44780U_SETUP_CMD_0x08 = 0x08,
+    HD44780U_SETUP_CMD_0X0C = 0x0C,
+    HD44780U_SETUP_CMD_0X20 = 0x20,
+    HD44780U_SETUP_CMD_0X28 = 0x28,
+    HD44780U_SETUP_CMD_0X30 = 0x30
 } hd44780u_setup_cmds_t;
+
+/**
+ * @brief HD44780U configuration commands
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HD44780U_CONFIG_CMD_0X08 = 0x08,
+    HD44780U_CONFIG_CMD_0X09 = 0x09,
+    HD44780U_CONFIG_CMD_0X0C = 0x0C,
+    HD44780U_CONFIG_CMD_0X0D = 0x0D
+} hd44780u_config_cmds_t;
 
 //=======================================================================================
 
@@ -105,6 +122,16 @@ typedef enum {
  * 
  */
 void hd44780u_init(void);
+
+/**
+ * @brief LCD send command function 
+ * 
+ * @details The command for the LCD screen gets sent here from hd44780u_init, formatted, 
+ *          and send to the LCD using I2C. 
+ * 
+ * @param hd44780u_cmd 
+ */
+void hd44780u_init_send(uint8_t hd44780u_cmd);
 
 //=======================================================================================
 
