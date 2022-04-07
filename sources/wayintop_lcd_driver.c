@@ -91,19 +91,19 @@ void hd44780u_init(void)
     tim9_delay_ms(HD44780U_DELAY_001MS);
 }
 
-// 
+// HD44780U init command send function
 void hd44780u_init_send(uint8_t hd44780u_cmd)
 {
     // Data list 
-    uint8_t data_list[HD44780U_MSG_PER_CMD];
-    data_list[0] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
-    data_list[1] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X08;
-    data_list[2] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
-    data_list[3] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X08;
+    uint8_t lcd_setup_data[HD44780U_MSG_PER_CMD];
+    lcd_setup_data[0] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
+    lcd_setup_data[1] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X08;
+    lcd_setup_data[2] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
+    lcd_setup_data[3] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X08;
 
     // Send data over I2C 1
     i2c1_write_master_mode(
-        data_list, 
+        lcd_setup_data, 
         HD44780U_MSG_PER_CMD, 
         PCF8574_HHH_WRITE_ADDRESS);
 }
@@ -113,4 +113,33 @@ void hd44780u_init_send(uint8_t hd44780u_cmd)
 
 //=======================================================================================
 // Print data 
+
+// HD44780U send data 
+void hd44780u_send_data(uint8_t hd44780u_data)
+{
+    // Data list 
+    uint8_t lcd_print_data[HD44780U_MSG_PER_CMD];
+    lcd_print_data[0] = (hd44780u_data & 0xF0) | HD44780U_CONFIG_CMD_0X0D;
+    lcd_print_data[1] = (hd44780u_data & 0xF0) | HD44780U_CONFIG_CMD_0X09;
+    lcd_print_data[2] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0D;
+    lcd_print_data[3] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X09;
+
+    // Send data over I2C 1
+    i2c1_write_master_mode(
+        lcd_print_data, 
+        HD44780U_MSG_PER_CMD, 
+        PCF8574_HHH_WRITE_ADDRESS);
+}
+
+// HD44780U send string
+void hd44780u_send_string(char *print_string)
+{
+    // Send one character at a time
+    while(*print_string)
+    {
+        hd44780u_send_data((uint8_t)(*print_string));
+        print_string++;
+    }
+}
+
 //=======================================================================================

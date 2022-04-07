@@ -124,7 +124,7 @@ typedef enum {
 void hd44780u_init(void);
 
 /**
- * @brief LCD send command function 
+ * @brief LCD send command
  * 
  * @details The command for the LCD screen gets sent here from hd44780u_init, formatted, 
  *          and send to the LCD using I2C. 
@@ -132,6 +132,20 @@ void hd44780u_init(void);
  * @param hd44780u_cmd 
  */
 void hd44780u_init_send(uint8_t hd44780u_cmd);
+
+/**
+ * @brief LCD send data
+ * 
+ * @param hd44780u_data 
+ */
+void hd44780u_send_data(uint8_t hd44780u_data);
+
+/**
+ * @brief LCD send string
+ * 
+ * @param print_string 
+ */
+void hd44780u_send_string(char *print_string);
 
 //=======================================================================================
 
