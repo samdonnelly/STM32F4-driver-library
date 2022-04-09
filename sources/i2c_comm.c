@@ -23,11 +23,16 @@
 //=======================================================================================
 // Initiate I2C 
 
-// TODO add the ability to customize the init with different frquencies. 
-
 // Initialize I2C 1 in master mode 
 void i2c1_init_master_mode(void)
 {
+    //==============================================================
+    // For the TODO's listed below, create a configuration (maybe 
+    // in the header) that the user can select to configure I2C1 
+    // how they'd like easily without needing to figure out all the 
+    // individual parameters to pass. 
+    //==============================================================
+
     //==============================================================
     // Pin information 
     //  PB8: SCL - I2C1
@@ -48,7 +53,8 @@ void i2c1_init_master_mode(void)
     //  5. Program the peripheral input clock in I2C_CR2 register
     //  6. Configure the clock control register 
     //      a) Set to standard mode (Sm)
-    //      b) Set the clock control register (CCR) - master mode
+    //      b) If in Fm mode then choose the duty cycle
+    //      c) Set the clock control register (CCR) - master mode
     //  7. Configure the rise time register 
     //  8. Program the I2C_CR1 register to enable the peripheral 
     //  9. Set the START but in the I2C_CR1 register to generate a 
@@ -65,6 +71,7 @@ void i2c1_init_master_mode(void)
 
 
     // 2. Configure the I2C pins for alternative functions.
+    // TODO add the ability to select which pins to use
 
     // a) Select alternate function in MODER register. 
     GPIOB->MODER |= (SET_2 << SHIFT_16);      // pin PB8
@@ -97,19 +104,25 @@ void i2c1_init_master_mode(void)
 
 
     // 5. Program the peripheral input clock in I2C_CR2 register
+    // TODO add the ability to configure the I2C with different frquencies. 
     I2C1->CR2 |= (I2C_APB1_42MHZ << SHIFT_0);
 
 
     // 6. Configure the clock control register 
+    // TODO make Sm or Fm mode configurable when calling the init function 
 
     // a) Set to standard mode (Sm)
     I2C1->CCR |= (CLEAR_BIT << SHIFT_15);
 
-    // b) Set the clock control register (CCR) - master mode
+    // b) If in Fm mode then choose the duty cycle
+    // TODO Add the duty cycle selection here
+
+    // c) Set the clock control register (CCR) - master mode
     I2C1->CCR |= (I2C_CCR_SM_42_100 << SHIFT_0);
 
 
     // 7. Configure the rise time register
+    // TODO configure this based on Sm or Fm mode
     I2C1->TRISE |= (I2C_TRISE_1000_42 << SHIFT_0); 
 
 

@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief 
+ * @brief Driver for the MPU6050 accelerometer
  * 
  * @version 0.1
  * @date 2022-02-11
@@ -21,5 +21,12 @@
 
 
 //=======================================================================================
+// Initialization 
+
 // 
+void mpu6050_init(void)
+{
+    // 
+}
+
 //=======================================================================================

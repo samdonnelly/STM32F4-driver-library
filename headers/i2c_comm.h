@@ -21,9 +21,6 @@
 #include "stm32f411xe.h"
 #include "tools.h"
 
-// Drivers 
-#include "uart_comm.h"
-
 //=======================================================================================
 
 
@@ -126,7 +123,6 @@ void i2c1_init_master_mode(void);
  * @param slave_address : 7-bit I2C address of targeted device 
  */
 void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_address);
-// void i2c1_write_master_mode(uint8_t data, uint8_t data_size, uint8_t slave_address);
 
 
 /**
