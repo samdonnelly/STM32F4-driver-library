@@ -128,8 +128,13 @@ void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_addr
 /**
  * @brief Read data from a device with I2C 1 
  * 
+ * @details 
+ * 
+ * @param data : pointer that data is placed into 
+ * @param slave_address : 7-bit I2C address of targeted device 
+ * 
  */
-void i2c1_read_master_mode(void);
+void i2c1_read_master_mode(uint8_t *data, uint8_t slave_address);
 
 //=======================================================================================
 

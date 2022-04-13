@@ -23,6 +23,26 @@
 
 //=======================================================================================
 
+
+//=======================================================================================
+// Enums 
+
+/**
+ * @brief MPU-6050 Addresses 
+ * 
+ * @details The AD0 pin on the accelerometer can be set as either 0 or 1 to allow for 
+ *          two different MPU's to be on the same I2C bus. The default address of the 
+ *          MPU-6050 is 0x68 (pin AD0 = 0). 
+ * 
+ */
+typedef enum {
+    MPU6050_1_ADDRESS = 0x68,
+    MPU6050_2_ADDRESS = 0x69
+} mpu6050_addresses_t;
+
+//=======================================================================================
+
+
 //=======================================================================================
 // Function Prototypes
 
@@ -30,7 +50,7 @@
  * @brief MPU5060 initialization 
  * 
  */
-void mpu6050_init(void);
+uint8_t mpu6050_init(uint8_t mpu6050_address);
 
 //=======================================================================================
 

@@ -172,9 +172,22 @@ void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_addr
 // Read I2C 
 
 // Read data from a device using I2C 1 
-void i2c1_read_master_mode(void)
+void i2c1_read_master_mode(uint8_t *data, uint8_t slave_address)
 {
     // 
+
+    // Create start condition to initiate master mode 
+    I2C1->CR1 |= (SET_BIT << SHIFT_8);           // Set start generation bit 
+    while(!(I2C1->SR1 & (SET_BIT << SHIFT_0)));  // Wait for start bit to set 
+
+    // Send slave address 
+    I2C1->DR = slave_address;                         // Send slave address 
+    while(!(I2C1->SR1 & (SET_BIT << SHIFT_1)));       // Wait for ADDR to set
+    uint16_t read_clear = (I2C1->SR1) | (I2C1->SR2);  // Read SR1 and SR2 to clear ADDR
+
+    // Read the incoming data 
+
+    // Create stop condition 
 }
 
 //=======================================================================================
