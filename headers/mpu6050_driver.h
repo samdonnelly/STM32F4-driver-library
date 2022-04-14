@@ -21,6 +21,9 @@
 #include "stm32f411xe.h"
 #include "tools.h"
 
+// Drivers 
+#include "i2c_comm.h"
+
 //=======================================================================================
 
 
@@ -39,6 +42,15 @@ typedef enum {
     MPU6050_1_ADDRESS = 0x68,
     MPU6050_2_ADDRESS = 0x69
 } mpu6050_addresses_t;
+
+/**
+ * @brief MPU-6050 register byte size
+ * 
+ */
+typedef enum {
+    MPU6050_REG_1_BYTE = 1,
+    MPU6050_REG_2_BYTE = 2
+} mpu6050_reg_byte_size_t;
 
 //=======================================================================================
 

@@ -52,7 +52,7 @@ uint8_t mpu6050_init(uint8_t mpu6050_address)
     // TODO configure the I2C1 master mode read function 
 
     // 1. Read the WHO_AM_I register to establish that there is communication 
-    i2c1_read_master_mode(&mpu6050_who_am_i, mpu6050_address);
+    i2c1_read_master_mode(&mpu6050_who_am_i, MPU6050_REG_1_BYTE, mpu6050_address);
 
     // Check that the correct address was returned
     if (mpu6050_who_am_i != mpu6050_address)

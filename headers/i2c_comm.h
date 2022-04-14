@@ -94,10 +94,11 @@ typedef enum {
  * 
  */
 typedef enum {
-    I2C_1_BYTE = 1,
-    I2C_2_BYTE = 2,
-    I2C_3_BYTE = 3,
-    I2C_4_BYTE = 4
+    I2C_0_BYTE,
+    I2C_1_BYTE,
+    I2C_2_BYTE,
+    I2C_3_BYTE,
+    I2C_4_BYTE
 } i2c_data_size_t;
 
 //=======================================================================================
@@ -131,10 +132,11 @@ void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_addr
  * @details 
  * 
  * @param data : pointer that data is placed into 
+ * @param data_size : integer indicating the number of bytes to be receieved
  * @param slave_address : 7-bit I2C address of targeted device 
  * 
  */
-void i2c1_read_master_mode(uint8_t *data, uint8_t slave_address);
+void i2c1_read_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_address);
 
 //=======================================================================================
 

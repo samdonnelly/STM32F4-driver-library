@@ -111,11 +111,13 @@ void i2c1_init_master_mode(void)
     // 6. Configure the clock control register 
     // TODO make Sm or Fm mode configurable when calling the init function 
 
-    // a) Set to standard mode (Sm)
-    I2C1->CCR |= (CLEAR_BIT << SHIFT_15);
+    // a) Set the mode
+    // I2C1->CCR &= ~(CLEAR_BIT << SHIFT_15);  // Sm mode
+    I2C1->CCR |= (SET_BIT << SHIFT_15);  // Fm mode
 
     // b) If in Fm mode then choose the duty cycle
     // TODO Add the duty cycle selection here
+    I2C1->CCR |= (SET_BIT << SHIFT_14);
 
     // c) Set the clock control register (CCR) - master mode
     I2C1->CCR |= (I2C_CCR_SM_42_100 << SHIFT_0);
@@ -137,7 +139,6 @@ void i2c1_init_master_mode(void)
 // Write I2C 
 
 // Send data to a device using I2C 1 in master mode 
-// void i2c1_write_master_mode(uint8_t data, uint8_t data_size, uint8_t slave_address)
 void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_address)
 {
     // Note: this function runs in a blocking mode
@@ -172,9 +173,9 @@ void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_addr
 // Read I2C 
 
 // Read data from a device using I2C 1 
-void i2c1_read_master_mode(uint8_t *data, uint8_t slave_address)
+void i2c1_read_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_address)
 {
-    // 
+    // TODO create functions for repeated code between here and the write function 
 
     // Create start condition to initiate master mode 
     I2C1->CR1 |= (SET_BIT << SHIFT_8);           // Set start generation bit 
@@ -183,11 +184,40 @@ void i2c1_read_master_mode(uint8_t *data, uint8_t slave_address)
     // Send slave address 
     I2C1->DR = slave_address;                         // Send slave address 
     while(!(I2C1->SR1 & (SET_BIT << SHIFT_1)));       // Wait for ADDR to set
-    uint16_t read_clear = (I2C1->SR1) | (I2C1->SR2);  // Read SR1 and SR2 to clear ADDR
 
-    // Read the incoming data 
+    // Check the amount of data to be receieved 
+    switch(data_size)
+    {
+        case I2C_0_BYTE:
+            // No data specified. Return. 
+            return;
 
-    // Create stop condition 
+        case I2C_1_BYTE:
+            // Set ACK to zero no send a NACK pulse to slave device 
+            I2C1->CR1 &= ~(SET_BIT << SHIFT_10);
+
+            // Read SR1 and SR2 to clear ADDR
+            uint16_t read_clear = (I2C1->SR1) | (I2C1->SR2); 
+
+            // Generate stop condition by setting the stop bit
+            I2C1->CR1 |= (SET_BIT << SHIFT_9);
+
+            // Wait for RxNE bit to set indicating data is ready 
+            while(!(I2C1->SR1 & (SET_BIT << SHIFT_6)));
+
+            // Read the data regsiter
+            *data = I2C1->DR;
+
+            break;
+
+        case I2C_2_BYTE:
+            // Special instructions for two-byte reception 
+            break;
+
+        default:
+            // For anything greater than two bytes
+            break;
+    }
 }
 
 //=======================================================================================
