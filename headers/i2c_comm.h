@@ -115,6 +115,34 @@ void i2c1_init_master_mode(void);
 
 
 /**
+ * @brief 
+ * 
+ */
+void i2c1_start(void);
+
+
+/**
+ * @brief 
+ * 
+ */
+void i2c1_stop(void);
+
+
+/**
+ * @brief 
+ * 
+ */
+void i2c1_clear_addr(void);
+
+
+/**
+ * @brief 
+ * 
+ */
+void i2c1_write_address(uint8_t i2c1_address);
+
+
+/**
  * @brief Write data to a device with I2C 1
  * 
  * @details Note that this function is set up for 7-bit I2C address and not 10-bit. 
@@ -123,7 +151,7 @@ void i2c1_init_master_mode(void);
  * @param data_size : integer indicating the number of bytes to be sent 
  * @param slave_address : 7-bit I2C address of targeted device 
  */
-void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_address);
+void i2c1_write_master_mode(uint8_t *data, uint8_t data_size);
 
 
 /**
@@ -136,7 +164,7 @@ void i2c1_write_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_addr
  * @param slave_address : 7-bit I2C address of targeted device 
  * 
  */
-void i2c1_read_master_mode(uint8_t *data, uint8_t data_size, uint8_t slave_address);
+void i2c1_read_master_mode(uint8_t *data, uint8_t data_size);
 
 //=======================================================================================
 

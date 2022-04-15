@@ -104,11 +104,24 @@ void hd44780u_send_instruc(uint8_t hd44780u_cmd)
     lcd_setup_data[2] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
     lcd_setup_data[3] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X08;
 
+    // Create start condition to initiate master mode 
+    i2c1_start(); 
+
+    // Send the MPU6050 address with a write offset
+    i2c1_write_address(PCF8574_HHH_WRITE_ADDRESS);
+    i2c1_clear_addr();
+
     // Send data over I2C 1
-    i2c1_write_master_mode(
-        lcd_setup_data, 
-        HD44780U_MSG_PER_CMD, 
-        PCF8574_HHH_WRITE_ADDRESS);
+    i2c1_write_master_mode(lcd_setup_data, HD44780U_MSG_PER_CMD);
+
+    // Create a stop condition
+    i2c1_stop();     
+    
+    // // Send data over I2C 1
+    // i2c1_write_master_mode(
+    //     lcd_setup_data, 
+    //     HD44780U_MSG_PER_CMD, 
+    //     PCF8574_HHH_WRITE_ADDRESS);
 }
 
 //=======================================================================================
@@ -127,11 +140,24 @@ void hd44780u_send_data(uint8_t hd44780u_data)
     lcd_print_data[2] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0D;
     lcd_print_data[3] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X09;
 
+    // Create start condition to initiate master mode 
+    i2c1_start(); 
+
+    // Send the MPU6050 address with a write offset
+    i2c1_write_address(PCF8574_HHH_WRITE_ADDRESS);
+    i2c1_clear_addr();
+
     // Send data over I2C 1
-    i2c1_write_master_mode(
-        lcd_print_data, 
-        HD44780U_MSG_PER_CMD, 
-        PCF8574_HHH_WRITE_ADDRESS);
+    i2c1_write_master_mode(lcd_print_data, HD44780U_MSG_PER_CMD);
+
+    // Create a stop condition
+    i2c1_stop();  
+    
+    // // Send data over I2C 1
+    // i2c1_write_master_mode(
+    //     lcd_print_data, 
+    //     HD44780U_MSG_PER_CMD, 
+    //     PCF8574_HHH_WRITE_ADDRESS);
 }
 
 // Send a string of data string
