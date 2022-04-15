@@ -27,9 +27,7 @@
 uint8_t mpu6050_init(uint8_t mpu6050_address)
 {
     //==============================================================
-    // Notes:
-    //  - The accelerometer may only be able to run in I2C fast mode (400kHz)
-    //    which means it may not be able to be used on the same bus as the screen. 
+    // Notes: 
     //  - The accelerometer must be woken up from sleep mode and have default 
     //    settings changed on startup. 
     //  - It looks like to init the accelerometer you have to choose how you want it 
@@ -93,9 +91,7 @@ void mpu6050_write(
     i2c1_clear_addr();
 
     // Send the register address that is going to be written to 
-    // i2c1_write_address(mpu6050_register);
     i2c1_write_master_mode(&mpu6050_register, mpu6050_reg_size);
-    // i2c1_clear_addr();
 
     // Write the data to the MPU6050 
     i2c1_write_master_mode(mpu6050_reg_value, mpu6050_reg_size);
@@ -119,7 +115,6 @@ void mpu6050_read(
     i2c1_clear_addr();
 
     // Send the register address that is going to be read 
-    // i2c1_write_address(mpu6050_register);
     i2c1_write_master_mode(&mpu6050_register, mpu6050_reg_size);
 
     // Create another start signal 

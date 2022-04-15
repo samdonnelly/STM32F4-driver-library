@@ -115,13 +115,7 @@ void hd44780u_send_instruc(uint8_t hd44780u_cmd)
     i2c1_write_master_mode(lcd_setup_data, HD44780U_MSG_PER_CMD);
 
     // Create a stop condition
-    i2c1_stop();     
-    
-    // // Send data over I2C 1
-    // i2c1_write_master_mode(
-    //     lcd_setup_data, 
-    //     HD44780U_MSG_PER_CMD, 
-    //     PCF8574_HHH_WRITE_ADDRESS);
+    i2c1_stop();
 }
 
 //=======================================================================================
@@ -151,13 +145,7 @@ void hd44780u_send_data(uint8_t hd44780u_data)
     i2c1_write_master_mode(lcd_print_data, HD44780U_MSG_PER_CMD);
 
     // Create a stop condition
-    i2c1_stop();  
-    
-    // // Send data over I2C 1
-    // i2c1_write_master_mode(
-    //     lcd_print_data, 
-    //     HD44780U_MSG_PER_CMD, 
-    //     PCF8574_HHH_WRITE_ADDRESS);
+    i2c1_stop();
 }
 
 // Send a string of data string
