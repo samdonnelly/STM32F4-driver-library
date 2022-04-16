@@ -47,7 +47,8 @@ uint8_t mpu6050_init(uint8_t mpu6050_address)
     //  5. Configure the gyroscope register 
     //==============================================================
 
-    // TODO configure the I2C1 master mode read function 
+    // TODO create configuration packages for the accelerometer to make this modular 
+    // TODO add a section for self test and trigger an error if it fails 
 
     // 1. Read the WHO_AM_I register to establish that there is communication 
     mpu6050_who_am_i = mpu6050_who_am_i_read(mpu6050_address);
@@ -59,12 +60,31 @@ uint8_t mpu6050_init(uint8_t mpu6050_address)
     }
 
     // 2. Wake the sensor up through the power management register 
+
+    // 2.1. Set the output rate of the gyro and accelerometer 
+    mpu6050_config_write(
+        mpu6050_address,
+        EXT_SYNC_SET_0,
+        DLPF_CFG_1);
+    
+    // 2.2. Set the Sample Rate 
+    mpu6050_smplrt_div_write(
+        mpu6050_address,
+        SMPLRT_DIV_0);
     
     // 3. Set the data rate 
     
     // 4. Configure the accelerometer register 
+    mpu6050_accel_config_write(
+        mpu6050_address,
+        ACCEL_SELF_TEST_DISABLE,
+        AFS_SEL_8);
     
     // 5. Configure the gyroscope register
+    mpu6050_gyro_config_write(
+        mpu6050_address,
+        GYRO_SELF_TEST_DISABLE,
+        FS_SEL_500);
 
     // Initialization completed successfully 
     return TRUE;
@@ -134,9 +154,73 @@ void mpu6050_read(
 
 
 //=======================================================================================
-// Register functions 
+// Register functions
 
-// WHO_AM_I read 
+// SMPRT_DIV write - Register 25
+void mpu6050_smprt_div_write(
+    uint8_t mpu6050_address,
+    uint8_t smprt_div)
+{
+    // Write to the Sample Rate Divider register
+    mpu6050_write(
+        mpu6050_address,
+        MPU6050_SMPRT_DIV,
+        MPU6050_REG_1_BYTE,
+        &smprt_div);
+}
+
+// CONFIG write - Register 26 
+void mpu6050_config_write(
+    uint8_t mpu6050_address, 
+    uint8_t ext_sync_set,
+    uint8_t dlpf_cfg)
+{
+    // Configure the data
+    uint8_t mpu6050_config = (ext_sync_set << SHIFT_3) | (dlpf_cfg << SHIFT_0);
+
+    // Write to the Configuration register 
+    mpu6050_write(
+        mpu6050_address,
+        MPU6050_CONFIG,
+        MPU6050_REG_1_BYTE,
+        &mpu6050_config);
+}
+
+// GYRO_CONFIG write - Register 27 
+void mpu6050_gyro_config_write(
+    uint8_t mpu6050_address,
+    uint8_t gyro_self_test,
+    uint8_t fs_sel)
+{
+    // Configure the data 
+    uint8_t mpu6050_gyro_config = (gyro_self_test << SHIFT_5) | (fs_sel << SHIFT_3);
+
+    // Write to the Gyroscope Configuration register 
+    mpu6050_write(
+        mpu6050_address,
+        MPU6050_GYRO_CONFIG,
+        MPU6050_REG_1_BYTE,
+        &mpu6050_gyro_config);
+}
+
+// ACCEL_CONFIG write - Register 28 
+void mpu6050_accel_config_write(
+    uint8_t mpu6050_address,
+    uint8_t accel_self_test,
+    uint8_t afs_sel)
+{
+    // Configure the data 
+    uint8_t mpu6050_accel_config = (accel_self_test << SHIFT_5) | (afs_sel << SHIFT_3);
+
+    // Write to the Gyroscope Configuration register 
+    mpu6050_write(
+        mpu6050_address,
+        MPU6050_ACCEL_CONFIG,
+        MPU6050_REG_1_BYTE,
+        &mpu6050_accel_config);
+}
+
+// WHO_AM_I read - Register 117 
 uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address)
 {
     // Place to store the value WHO_AM_I

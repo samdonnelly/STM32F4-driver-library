@@ -57,7 +57,7 @@
 typedef enum {
     MPU6050_1_ADDRESS = 0xD0,
     MPU6050_2_ADDRESS = 0xD2
-} mpu6050_addresses_t;
+} mpu6050_i2c_addresses_t;
 
 /**
  * @brief MPU-6050 read and write offset 
@@ -77,10 +77,106 @@ typedef enum {
     MPU6050_REG_2_BYTE = 2
 } mpu6050_reg_byte_size_t;
 
-
+/**
+ * @brief Register map for the MPU-6050
+ * 
+ */
 typedef enum {
-    MPU6050_WHO_AM_I = 0x75
+    MPU6050_SMPRT_DIV    = 0x19,   // Register 25
+    MPU6050_CONFIG       = 0x1A,   // Register 26
+    MPU6050_GYRO_CONFIG  = 0x1B,   // Register 27
+    MPU6050_ACCEL_CONFIG = 0x1C,   // Register 28 
+    MPU6050_WHO_AM_I     = 0x75    // Register 117
 } mpu6050_register_addresses_t;
+
+/**
+ * @brief SMPLRT_DIV setpoint 
+ * 
+ * @details Unit of kHz
+ * 
+ */
+typedef enum {
+    SMPLRT_DIV_0 = 0,
+    SMPLRT_DIV_7 = 7
+} mpu6050_smplrt_div_t;
+
+/**
+ * @brief EXT_SYNC_SET setpoint
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    EXT_SYNC_SET_0,  // Input disabled 
+    EXT_SYNC_SET_1,
+    EXT_SYNC_SET_2,
+    EXT_SYNC_SET_3,
+    EXT_SYNC_SET_4,
+    EXT_SYNC_SET_5,
+    EXT_SYNC_SET_6,
+    EXT_SYNC_SET_7
+} mpu6050_ext_sync_set_t;
+
+/**
+ * @brief DLPF_CFG setpoint
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DLPF_CFG_0,
+    DLPF_CFG_1,
+    DLPF_CFG_2,
+    DLPF_CFG_3,
+    DLPF_CFG_4,
+    DLPF_CFG_5,
+    DLPF_CFG_6,
+    DLPF_CFG_7
+} mpu6050_dlpf_cfg_t;
+
+/**
+ * @brief XG_ST, YG_ST and ZG_ST setpoint 
+ * 
+ */
+typedef enum {
+    GYRO_SELF_TEST_DISABLE,
+    GYRO_SELF_TEST_ENABLE
+} mpu6050_gyro_self_test_set_t;
+
+/**
+ * @brief FS_SEL setpoint 
+ * 
+ * @details Selects the full scale range of the gyroscope 
+ * 
+ */
+typedef enum {
+    FS_SEL_250,
+    FS_SEL_500,
+    FS_SEL_1000,
+    FS_SEL_2000
+} mpu6050_fs_sel_set_t;
+
+/**
+ * @brief XA_ST, YA_SET and ZA_ST setpoint 
+ * 
+ */
+typedef enum {
+    ACCEL_SELF_TEST_DISABLE,
+    ACCEL_SELF_TEST_ENABLE
+} mpu6050_accel_self_test_set_t;
+
+/**
+ * @brief AFS_SEL setpoint
+ * 
+ * @details Selects the full scale range of the acclerometer 
+ * 
+ */
+typedef enum {
+    AFS_SEL_2,
+    AFS_SEL_4,
+    AFS_SEL_8,
+    AFS_SEL_16
+} mpu6050_afs_sel_set_t;
 
 //=======================================================================================
 
@@ -119,9 +215,63 @@ void mpu6050_read(
     uint8_t *mpu6050_reg_value);
 
 /**
- * @brief 
+ * @brief Sample Rate Divider register 
  * 
- * @details 
+ * @details Register 25 
+ * 
+ * @param mpu6050_address 
+ * @param smprt_div 
+ */
+void mpu6050_smprt_div_write(
+    uint8_t mpu6050_address,
+    uint8_t smprt_div);
+
+/**
+ * @brief Configuration register 
+ * 
+ * @details Register 26
+ * 
+ * @param mapu6050_address 
+ * @param ext_sync_set : 
+ * @param dlpf_cfg : 
+ */
+void mpu6050_config_write(
+    uint8_t mpu6050_address,
+    uint8_t ext_sync_set,
+    uint8_t dlpf_cfg);
+
+/**
+ * @brief Gyroscope Configuration register 
+ * 
+ * @details Register 27 
+ * 
+ * @param mpu6050_address 
+ * @param gyro_self_test 
+ * @param fs_sel 
+ */
+void mpu6050_gyro_config_write(
+    uint8_t mpu6050_address,
+    uint8_t gyro_self_test,
+    uint8_t fs_sel);
+
+/**
+ * @brief Accelerometer Configuration register 
+ * 
+ * @details Register 28 
+ * 
+ * @param mpu6050_address 
+ * @param accel_self_test 
+ * @param afs_sel 
+ */
+void mpu6050_accel_config_write(
+    uint8_t mpu6050_address,
+    uint8_t accel_self_test,
+    uint8_t afs_sel);
+
+/**
+ * @brief Who Am I register
+ * 
+ * @details Register 117
  * 
  * @param mpu6050_sddress 
  * @return uint8_t : Returns 0x68 if AD0 == 0 and 0x69 is AD0 == 1
