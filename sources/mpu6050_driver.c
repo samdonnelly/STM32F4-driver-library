@@ -220,6 +220,18 @@ void mpu6050_accel_config_write(
         &mpu6050_accel_config);
 }
 
+// PWR_MGMT_1 write - Register 107 
+void mpu6050_pwr_mgmt_1_write(
+    uint8_t mpu6050_address,
+    uint8_t device_reset,
+    uint8_t sleep,
+    uint8_t cycle,
+    uint8_t temp_dis,
+    uint8_t clksel)
+{
+    // 
+}
+
 // WHO_AM_I read - Register 117 
 uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address)
 {

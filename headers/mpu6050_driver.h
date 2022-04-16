@@ -64,8 +64,8 @@ typedef enum {
  * 
  */
 typedef enum {
-    MPU6050_W_OFFSET = 0x00,
-    MPU6050_R_OFFSET = 0x01
+    MPU6050_W_OFFSET,
+    MPU6050_R_OFFSET
 } mpu6050_rw_offset_t;
 
 /**
@@ -86,6 +86,8 @@ typedef enum {
     MPU6050_CONFIG       = 0x1A,   // Register 26
     MPU6050_GYRO_CONFIG  = 0x1B,   // Register 27
     MPU6050_ACCEL_CONFIG = 0x1C,   // Register 28 
+    MPU6050_PWR_MGMT_1   = 0x6B,   // Register 107 
+    MPU6050_PWR_MGMT_2   = 0x6C,   // Register 108 
     MPU6050_WHO_AM_I     = 0x75    // Register 117
 } mpu6050_register_addresses_t;
 
@@ -178,6 +180,54 @@ typedef enum {
     AFS_SEL_16
 } mpu6050_afs_sel_set_t;
 
+/**
+ * @brief PWR_MGMT_1 - DEVICE_RESET 
+ * 
+ */
+typedef enum {
+    DEVICE_RESET_DISABLE,
+    DEVICE_RESET_ENABLE
+} mpu6050_device_reset_t; 
+
+/**
+ * @brief PWR_MGMT_1 - SLEEP
+ * 
+ */
+typedef enum {
+    SLEEP_MODE_DISABLE,
+    SLEEP_MODE_ENABLE
+} mpu6050_sleep_mode_t;
+
+/**
+ * @brief PWR_MGMT_1 - CYCLE 
+ * 
+ */
+typedef enum {
+    CYCLE_SLEEP_DISABLED,
+    CYCLE_SLEEP_ENABLED
+} mpu6050_cycle_t;
+
+/**
+ * @brief PWR_MGMT_1 - TEMP_DIS
+ * 
+ */
+typedef enum {
+    TEMP_SENSOR_ENABLE,
+    TEMP_SENSOR_DISABLE
+} mpu6050_temp_sensor_t;
+
+
+typedef enum {
+    CLKSEL_0,  // 
+    CLKSEL_1,  // 
+    CLKSEL_2,  // 
+    CLKSEL_3,  // 
+    CLKSEL_4,  // 
+    CLKSEL_5,  //
+    CLKSEL_6,  // 
+    CLKSEL_7   // 
+} mpu6050_clksel_t;
+
 //=======================================================================================
 
 
@@ -267,6 +317,26 @@ void mpu6050_accel_config_write(
     uint8_t mpu6050_address,
     uint8_t accel_self_test,
     uint8_t afs_sel);
+
+/**
+ * @brief 
+ * 
+ * @details Register 107 
+ * 
+ * @param mpu6050_address 
+ * @param device_reset 
+ * @param sleep 
+ * @param cycle 
+ * @param temp_dis 
+ * @param clksel 
+ */
+void mpu6050_pwr_mgmt_1_write(
+    uint8_t mpu6050_address,
+    uint8_t device_reset,
+    uint8_t sleep,
+    uint8_t cycle,
+    uint8_t temp_dis,
+    uint8_t clksel);
 
 /**
  * @brief Who Am I register
