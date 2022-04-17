@@ -140,6 +140,7 @@ void i2c1_init_master_mode(void)
 // Generate start condition 
 void i2c1_start(void)
 {
+    i2c1_set_ack();                              // Enable acknowledgement bit 
     I2C1->CR1 |= (SET_BIT << SHIFT_8);           // Set start generation bit 
     while(!(I2C1->SR1 & (SET_BIT << SHIFT_0)));  // Wait for start bit to set 
 }
@@ -254,6 +255,9 @@ void i2c1_read_master_mode(uint8_t *data, uint8_t data_size)
             break;
 
         default:  // Greater than one-byte transmission 
+            // Read SR1 and SR2 to clear ADDR
+            i2c1_clear_addr();
+
             // Normal reading 
             for (uint8_t i = 0; i < (data_size - I2C_2_BYTE); i++)
             {

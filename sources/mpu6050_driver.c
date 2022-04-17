@@ -35,9 +35,6 @@ uint8_t mpu6050_init(uint8_t mpu6050_address)
     //    the device with the exception of the point above. 
     //==============================================================
 
-    // Store the value of the WHO_AM_I register 
-    uint8_t mpu6050_who_am_i;
-
     //==============================================================
     // MPU-6050 Init
     //  1. Read the WHO_AM_I register to establish that there is communication 
@@ -51,36 +48,49 @@ uint8_t mpu6050_init(uint8_t mpu6050_address)
     // TODO add a section for self test and trigger an error if it fails 
 
     // 1. Read the WHO_AM_I register to establish that there is communication 
-    mpu6050_who_am_i = mpu6050_who_am_i_read(mpu6050_address);
-
-    // Check that the correct address was returned
-    if (mpu6050_who_am_i != MPU6050_7_BIT_ADDRESS)
+    if (mpu6050_who_am_i_read(mpu6050_address) != MPU6050_7_BIT_ADDRESS)
     {
         return FALSE;
     }
 
-    // 2. Wake the sensor up through the power management register 
+    // 2. Choose which sensors to use and frquency of CYCLE mode (see PWR_MGMT_1)
+    mpu6050_pwr_mgmt_2_write(
+        mpu6050_address,
+        LP_WAKE_CTRL_0,
+        STBY_XA_DISABLE,
+        STBY_YA_DISABLE,
+        STBY_ZA_DISABLE,
+        STBY_XG_DISABLE,
+        STBY_YG_DISABLE,
+        STBY_ZG_DISABLE);
 
-    // 2.1. Set the output rate of the gyro and accelerometer 
+    // 3. Wake the sensor up through the power management 1 register 
+    mpu6050_pwr_mgmt_1_write(
+        mpu6050_address,
+        DEVICE_RESET_DISABLE,
+        SLEEP_MODE_DISABLE,
+        CYCLE_SLEEP_DISABLED,
+        TEMP_SENSOR_ENABLE,
+        CLKSEL_5);
+
+    // 4. Set the output rate of the gyro and accelerometer 
     mpu6050_config_write(
         mpu6050_address,
         EXT_SYNC_SET_0,
         DLPF_CFG_1);
     
-    // 2.2. Set the Sample Rate 
-    mpu6050_smplrt_div_write(
+    // 5. Set the Sample Rate (data rate)
+    mpu6050_smprt_div_write(
         mpu6050_address,
         SMPLRT_DIV_0);
     
-    // 3. Set the data rate 
-    
-    // 4. Configure the accelerometer register 
+    // 6. Configure the accelerometer register 
     mpu6050_accel_config_write(
         mpu6050_address,
         ACCEL_SELF_TEST_DISABLE,
-        AFS_SEL_8);
+        AFS_SEL_4);
     
-    // 5. Configure the gyroscope register
+    // 7. Configure the gyroscope register
     mpu6050_gyro_config_write(
         mpu6050_address,
         GYRO_SELF_TEST_DISABLE,
@@ -111,7 +121,7 @@ void mpu6050_write(
     i2c1_clear_addr();
 
     // Send the register address that is going to be written to 
-    i2c1_write_master_mode(&mpu6050_register, mpu6050_reg_size);
+    i2c1_write_master_mode(&mpu6050_register, MPU6050_REG_1_BYTE);
 
     // Write the data to the MPU6050 
     i2c1_write_master_mode(mpu6050_reg_value, mpu6050_reg_size);
@@ -135,7 +145,7 @@ void mpu6050_read(
     i2c1_clear_addr();
 
     // Send the register address that is going to be read 
-    i2c1_write_master_mode(&mpu6050_register, mpu6050_reg_size);
+    i2c1_write_master_mode(&mpu6050_register, MPU6050_REG_1_BYTE);
 
     // Create another start signal 
     i2c1_start(); 
@@ -220,6 +230,44 @@ void mpu6050_accel_config_write(
         &mpu6050_accel_config);
 }
 
+// // ACCEL_OUT - Registers 59-64
+// void mpu6050_accel_read(
+//     uint8_t  mpu6050_address,
+//     uint16_t *accel_data)
+// {
+//     // 
+// }
+
+// TEMP_OUT - Registers 65-66
+uint16_t mpu6050_temp_read(uint8_t mpu6050_address)
+{
+    // Store the temperature data 
+    uint16_t mpu6050_temp_sensor_val;
+    uint8_t  mpu6050_temp_sensor_reg_val[MPU6050_REG_2_BYTE];
+
+    // Read the temperature data 
+    mpu6050_read(
+        mpu6050_address,
+        MPU6050_TEMP_OUT_H,
+        MPU6050_REG_2_BYTE,
+        mpu6050_temp_sensor_reg_val);
+    
+    // Format the returned value ito readable temperature
+    mpu6050_temp_sensor_val = (uint16_t)((mpu6050_temp_sensor_reg_val[0] << SHIFT_8) |
+                                         (mpu6050_temp_sensor_reg_val[1] << SHIFT_0));
+
+    // Return temperature 
+    return mpu6050_temp_sensor_val;
+}
+
+// // GYRO_OUT - Registers 67-72
+// void mpu6050_gyro_read(
+//     uint8_t  mpu6050_address,
+//     uint16_t *gyro_data)
+// {
+//     // 
+// }
+
 // PWR_MGMT_1 write - Register 107 
 void mpu6050_pwr_mgmt_1_write(
     uint8_t mpu6050_address,
@@ -229,7 +277,47 @@ void mpu6050_pwr_mgmt_1_write(
     uint8_t temp_dis,
     uint8_t clksel)
 {
-    // 
+    // Configure the data
+    uint8_t mpu6050_pwr_mgmt_1 = (device_reset << SHIFT_7) |
+                                 (sleep        << SHIFT_6) |
+                                 (cycle        << SHIFT_5) |
+                                 (temp_dis     << SHIFT_3) |
+                                 (clksel       << SHIFT_0);
+    
+    // Write to the Power Management 1 register 
+    mpu6050_write(
+        mpu6050_address,
+        MPU6050_PWR_MGMT_1,
+        MPU6050_REG_1_BYTE,
+        &mpu6050_pwr_mgmt_1);
+}
+
+// PWR_MGMT_2 write - Register 108 
+void mpu6050_pwr_mgmt_2_write(
+    uint8_t mpu6050_address,
+    uint8_t lp_wake_ctrl,
+    uint8_t stby_xa,
+    uint8_t stby_ya,
+    uint8_t stby_za,
+    uint8_t stby_xg,
+    uint8_t stby_yg,
+    uint8_t stby_zg)
+{
+    // Configure the data 
+    uint8_t mpu6050_pwr_mgmt_2 = (lp_wake_ctrl << SHIFT_6) |
+                                 (stby_xa      << SHIFT_5) |
+                                 (stby_ya      << SHIFT_4) |
+                                 (stby_za      << SHIFT_3) |
+                                 (stby_xg      << SHIFT_2) |
+                                 (stby_yg      << SHIFT_1) |
+                                 (stby_zg      << SHIFT_0);
+    
+    // Write to the Power Management 2 register 
+    mpu6050_write(
+        mpu6050_address,
+        MPU6050_PWR_MGMT_2,
+        MPU6050_REG_1_BYTE,
+        &mpu6050_pwr_mgmt_2);
 }
 
 // WHO_AM_I read - Register 117 

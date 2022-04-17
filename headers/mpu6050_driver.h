@@ -74,7 +74,11 @@ typedef enum {
  */
 typedef enum {
     MPU6050_REG_1_BYTE = 1,
-    MPU6050_REG_2_BYTE = 2
+    MPU6050_REG_2_BYTE = 2,
+    MPU6050_REG_3_BYTE = 3,
+    MPU6050_REG_4_BYTE = 4,
+    MPU6050_REG_5_BYTE = 5,
+    MPU6050_REG_6_BYTE = 6
 } mpu6050_reg_byte_size_t;
 
 /**
@@ -86,6 +90,9 @@ typedef enum {
     MPU6050_CONFIG       = 0x1A,   // Register 26
     MPU6050_GYRO_CONFIG  = 0x1B,   // Register 27
     MPU6050_ACCEL_CONFIG = 0x1C,   // Register 28 
+    MPU6050_ACCEL_XOUT_H = 0x3B,   // Register 59
+    MPU6050_TEMP_OUT_H   = 0x41,   // Register 65
+    MPU6050_GYRO_XOUT_H  = 0x43,   // Register 67
     MPU6050_PWR_MGMT_1   = 0x6B,   // Register 107 
     MPU6050_PWR_MGMT_2   = 0x6C,   // Register 108 
     MPU6050_WHO_AM_I     = 0x75    // Register 117
@@ -103,7 +110,7 @@ typedef enum {
 } mpu6050_smplrt_div_t;
 
 /**
- * @brief EXT_SYNC_SET setpoint
+ * @brief CONFIG - EXT_SYNC_SET setpoint
  * 
  * @details 
  * 
@@ -120,7 +127,7 @@ typedef enum {
 } mpu6050_ext_sync_set_t;
 
 /**
- * @brief DLPF_CFG setpoint
+ * @brief CONFIG - DLPF_CFG setpoint
  * 
  * @details 
  * 
@@ -137,7 +144,7 @@ typedef enum {
 } mpu6050_dlpf_cfg_t;
 
 /**
- * @brief XG_ST, YG_ST and ZG_ST setpoint 
+ * @brief GYRO_CONFIG - XG_ST, YG_ST and ZG_ST setpoint 
  * 
  */
 typedef enum {
@@ -146,7 +153,7 @@ typedef enum {
 } mpu6050_gyro_self_test_set_t;
 
 /**
- * @brief FS_SEL setpoint 
+ * @brief GYRO_CONFIG - FS_SEL setpoint 
  * 
  * @details Selects the full scale range of the gyroscope 
  * 
@@ -159,7 +166,7 @@ typedef enum {
 } mpu6050_fs_sel_set_t;
 
 /**
- * @brief XA_ST, YA_SET and ZA_ST setpoint 
+ * @brief ACCEL_CONFIG - XA_ST, YA_SET and ZA_ST setpoint 
  * 
  */
 typedef enum {
@@ -168,7 +175,7 @@ typedef enum {
 } mpu6050_accel_self_test_set_t;
 
 /**
- * @brief AFS_SEL setpoint
+ * @brief ACCEL_CONFIG - AFS_SEL setpoint
  * 
  * @details Selects the full scale range of the acclerometer 
  * 
@@ -216,17 +223,87 @@ typedef enum {
     TEMP_SENSOR_DISABLE
 } mpu6050_temp_sensor_t;
 
-
+/**
+ * @brief PWR_MGMT_1 - CLKSEL
+ * 
+ * @details 
+ * 
+ */
 typedef enum {
-    CLKSEL_0,  // 
-    CLKSEL_1,  // 
-    CLKSEL_2,  // 
-    CLKSEL_3,  // 
-    CLKSEL_4,  // 
-    CLKSEL_5,  //
-    CLKSEL_6,  // 
-    CLKSEL_7   // 
+    CLKSEL_0,  // Internal 8MHz oscillator
+    CLKSEL_1,  // PPL with X-axis gyro reference 
+    CLKSEL_2,  // PPL with Y-axis gyro reference 
+    CLKSEL_3,  // PPL with Z-axis gyro reference 
+    CLKSEL_4,  // PPL with external 32.768kHz reference
+    CLKSEL_5,  // PPL with external 19.2MHz reference
+    CLKSEL_6,  // Reserved 
+    CLKSEL_7   // Stops the clock and keeps the timing generator on reset
 } mpu6050_clksel_t;
+
+/**
+ * @brief PWR_MGMT_2 - LP_WAKE_CTRL
+ * 
+ */
+typedef enum {
+    LP_WAKE_CTRL_0,
+    LP_WAKE_CTRL_1,
+    LP_WAKE_CTRL_2,
+    LP_WAKE_CTRL_3
+} mpu6050_lp_wake_ctrl_t;
+
+/**
+ * @brief PWR_MGMT_2 - STBY_XA
+ * 
+ */
+typedef enum {
+    STBY_XA_DISABLE,
+    STBY_XA_ENABLE
+} mpu6050_stby_xa_t;
+
+/**
+ * @brief PWR_MGMT_2 - STBY_YA
+ * 
+ */
+typedef enum {
+    STBY_YA_DISABLE,
+    STBY_YA_ENABLE
+} mpu6050_stby_ya_t;
+
+/**
+ * @brief PWR_MGMT_2 - STBY_ZA
+ * 
+ */
+typedef enum {
+    STBY_ZA_DISABLE,
+    STBY_ZA_ENABLE
+} mpu6050_stby_za_t;
+
+/**
+ * @brief PWR_MGMT_2 - STBY_XG
+ * 
+ */
+typedef enum {
+    STBY_XG_DISABLE,
+    STBY_XG_ENABLE
+} mpu6050_stby_xg_t;
+
+/**
+ * @brief PWR_MGMT_2 - STBY_YG
+ * 
+ */
+typedef enum {
+    STBY_YG_DISABLE,
+    STBY_YG_ENABLE
+} mpu6050_stby_yg_t;
+
+/**
+ * @brief PWR_MGMT_2 - STBY_ZG
+ * 
+ */
+typedef enum {
+    STBY_ZG_DISABLE,
+    STBY_ZG_ENABLE
+} mpu6050_stby_zg_t;
 
 //=======================================================================================
 
@@ -319,7 +396,43 @@ void mpu6050_accel_config_write(
     uint8_t afs_sel);
 
 /**
- * @brief 
+ * @brief Accelerometer Measurements registers 
+ * 
+ * @details Registers 59-64
+ *          Note: If these are not read in the same burst as the gyro measurements 
+ *                then each set could be at different instances in time. 
+ * 
+ * @param mpu6050_address 
+ * @param accel_data 
+ */
+void mpu6050_accel_read(
+    uint8_t  mpu6050_address,
+    uint16_t *accel_data);
+
+/**
+ * @brief Temperature Measurements registers
+ * 
+ * @details Registers 65-66
+ * 
+ */
+uint16_t mpu6050_temp_read(uint8_t mpu6050_address);
+
+/**
+ * @brief Gyroscope Measurements registers 
+ * 
+ * @details Registers 67-72
+ *          Note: If these are not read in the same burst as the gyro measurements 
+ *                then each set could be at different instances in time. 
+ * 
+ * @param mpu6050_address 
+ * @param gyro_data 
+ */
+void mpu6050_gyro_read(
+    uint8_t  mpu6050_address,
+    uint16_t *gyro_data);
+
+/**
+ * @brief Power Manangement 1 register 
  * 
  * @details Register 107 
  * 
@@ -339,6 +452,30 @@ void mpu6050_pwr_mgmt_1_write(
     uint8_t clksel);
 
 /**
+ * @brief Power Management 2 register 
+ * 
+ * @details Register 108 
+ * 
+ * @param mpu6050_address 
+ * @param lp_wake_ctrl 
+ * @param stby_xa 
+ * @param stby_ya 
+ * @param stby_za 
+ * @param stby_xg 
+ * @param stby_yg 
+ * @param stby_zg 
+ */
+void mpu6050_pwr_mgmt_2_write(
+    uint8_t mpu6050_address,
+    uint8_t lp_wake_ctrl,
+    uint8_t stby_xa,
+    uint8_t stby_ya,
+    uint8_t stby_za,
+    uint8_t stby_xg,
+    uint8_t stby_yg,
+    uint8_t stby_zg);
+
+/**
  * @brief Who Am I register
  * 
  * @details Register 117
@@ -346,7 +483,7 @@ void mpu6050_pwr_mgmt_1_write(
  * @param mpu6050_sddress 
  * @return uint8_t : Returns 0x68 if AD0 == 0 and 0x69 is AD0 == 1
  */
-uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_sddress);
+uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address);
 
 //=======================================================================================
 
