@@ -239,6 +239,7 @@ void mpu6050_accel_config_write(
 // }
 
 // TEMP_OUT - Registers 65-66
+// TODO create a lookup table to check for temperature ranges and trigger errors
 uint16_t mpu6050_temp_read(uint8_t mpu6050_address)
 {
     // Store the temperature data 
@@ -252,11 +253,11 @@ uint16_t mpu6050_temp_read(uint8_t mpu6050_address)
         MPU6050_REG_2_BYTE,
         mpu6050_temp_sensor_reg_val);
     
-    // Format the returned value ito readable temperature
-    mpu6050_temp_sensor_val = (uint16_t)((mpu6050_temp_sensor_reg_val[0] << SHIFT_8) |
+    // Combine the return values in a signed integer - value is unformatted 
+    mpu6050_temp_sensor_val = (uint16_t)((mpu6050_temp_sensor_reg_val[0] << SHIFT_8)  |
                                          (mpu6050_temp_sensor_reg_val[1] << SHIFT_0));
 
-    // Return temperature 
+    // Return unformatted temperature 
     return mpu6050_temp_sensor_val;
 }
 

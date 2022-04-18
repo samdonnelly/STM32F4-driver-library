@@ -32,6 +32,11 @@
 
 #define MPU6050_7_BIT_ADDRESS 0x68  // MPU-6050 address before read/write bit shift
 
+// Temperature sensor 
+#define MPU6050_TEMP_SCALAR 100   // User defined scalar to eliminate decimals 
+#define MPU6050_TEMP_SENSIT 340   // Sensitivity (LSB/degC) - MPU6050 scalar
+#define MPU6050_TEMP_OFFSET 3653  // Temp offset scaled by the user defined scalar 
+
 //=======================================================================================
 
 
@@ -413,6 +418,11 @@ void mpu6050_accel_read(
  * @brief Temperature Measurements registers
  * 
  * @details Registers 65-66
+ *          
+ *          Temperature in degC = (16-bit register value) / 340 + 36.53
+ *          See register map datasheet - page 30 
+ * 
+ * @return uint16_t : Unformatted signed temperature value 
  * 
  */
 uint16_t mpu6050_temp_read(uint8_t mpu6050_address);
