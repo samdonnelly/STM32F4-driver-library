@@ -417,7 +417,7 @@ float mpu6050_accel_x_calc(uint8_t mpu6050_address, uint16_t accel_x_axis_raw)
 {
     // Get the raw value scalar and calculate the true z-axis acceleration
     float accel_scalar = mpu6050_accel_scalar(mpu6050_address);
-    float accel_x_axis = accel_x_axis_raw / accel_scalar;
+    float accel_x_axis = ((int16_t)(accel_x_axis_raw)) / accel_scalar;
     
     // Return the true acceleration 
     return accel_x_axis;
@@ -428,7 +428,7 @@ float mpu6050_accel_y_calc(uint8_t mpu6050_address, uint16_t accel_y_axis_raw)
 {
     // Get the raw value scalar and calculate the true z-axis acceleration
     float accel_scalar = mpu6050_accel_scalar(mpu6050_address);
-    float accel_y_axis = accel_y_axis_raw / accel_scalar;
+    float accel_y_axis = ((int16_t)(accel_y_axis_raw)) / accel_scalar;
     
     // Return the true acceleration 
     return accel_y_axis;
@@ -497,7 +497,7 @@ float mpu6050_gyro_x_calc(uint8_t mpu6050_address, uint16_t gyro_x_axis_raw)
 {
     // Get the raw value scalar and calculate the true x-axis angular acceleration
     float gyro_scalar = mpu6050_gyro_scalar(mpu6050_address);
-    float gyro_x_axis = gyro_x_axis_raw / gyro_scalar;
+    float gyro_x_axis = ((int16_t)(gyro_x_axis_raw)) / gyro_scalar;
     
     // Return the true angular acceleration
     return gyro_x_axis;
@@ -508,7 +508,7 @@ float mpu6050_gyro_y_calc(uint8_t mpu6050_address, uint16_t gyro_y_axis_raw)
 {
     // Get the raw value scalar and calculate the true x-axis angular acceleration
     float gyro_scalar = mpu6050_gyro_scalar(mpu6050_address);
-    float gyro_y_axis = gyro_y_axis_raw / gyro_scalar;
+    float gyro_y_axis = ((int16_t)(gyro_y_axis_raw)) / gyro_scalar;
     
     // Return the true angular acceleration
     return gyro_y_axis;
@@ -519,7 +519,7 @@ float mpu6050_gyro_z_calc(uint8_t mpu6050_address, uint16_t gyro_z_axis_raw)
 {
     // Get the raw value scalar and calculate the true x-axis angular acceleration
     float gyro_scalar = mpu6050_gyro_scalar(mpu6050_address);
-    float gyro_z_axis = gyro_z_axis_raw / gyro_scalar;
+    float gyro_z_axis = ((int16_t)(gyro_z_axis_raw)) / gyro_scalar;
     
     // Return the true angular acceleration
     return gyro_z_axis;
