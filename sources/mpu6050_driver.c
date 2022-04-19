@@ -104,7 +104,7 @@ uint8_t mpu6050_init(uint8_t mpu6050_address)
 
 
 //=======================================================================================
-// Write and read functions 
+// Read and Write Functions 
 
 // Write to the MPU-6050
 void mpu6050_write(
@@ -164,7 +164,7 @@ void mpu6050_read(
 
 
 //=======================================================================================
-// Register functions
+// Register Functions
 
 // SMPRT_DIV write - Register 25
 void mpu6050_smprt_div_write(
@@ -213,6 +213,23 @@ void mpu6050_gyro_config_write(
         &mpu6050_gyro_config);
 }
 
+// GYRO_CONFIG read - Register 27
+uint8_t mpu6050_gyro_config_read(uint8_t mpu6050_address)
+{
+    // Place to store the value of GYRO_CONFIG
+    uint8_t mpu6050_gyro_config;
+
+    // Read the value ofGYRO_CONFIG register 
+    mpu6050_read(
+        mpu6050_address, 
+        MPU6050_GYRO_CONFIG, 
+        MPU6050_REG_1_BYTE,
+        &mpu6050_gyro_config);
+
+    // Return the value of GYRO_CONFIG 
+    return mpu6050_gyro_config;
+}
+
 // ACCEL_CONFIG write - Register 28 
 void mpu6050_accel_config_write(
     uint8_t mpu6050_address,
@@ -230,13 +247,47 @@ void mpu6050_accel_config_write(
         &mpu6050_accel_config);
 }
 
-// // ACCEL_OUT - Registers 59-64
-// void mpu6050_accel_read(
-//     uint8_t  mpu6050_address,
-//     uint16_t *accel_data)
-// {
-//     // 
-// }
+// ACCEL_CONFIG read - Register 28 
+uint8_t mpu6050_accel_config_read(uint8_t mpu6050_address)
+{
+    // Place to store the value of ACCEL_CONFIG
+    uint8_t mpu6050_accel_config;
+
+    // Read the value of ACCEL_CONFIG register 
+    mpu6050_read(
+        mpu6050_address, 
+        MPU6050_ACCEL_CONFIG, 
+        MPU6050_REG_1_BYTE,
+        &mpu6050_accel_config);
+
+    // Return the value of ACCEL_CONFIG 
+    return mpu6050_accel_config;
+}
+
+// ACCEL_OUT - Registers 59-64
+void mpu6050_accel_read(
+    uint8_t  mpu6050_address,
+    uint16_t *accel_data)
+{
+    // Temporary data storage 
+    uint8_t accel_data_reg_val[MPU6050_REG_6_BYTE];
+
+    // Read the accelerometer data 
+    mpu6050_read(
+        mpu6050_address,
+        MPU6050_ACCEL_XOUT_H,
+        MPU6050_REG_6_BYTE,
+        accel_data_reg_val);
+    
+    // Combine the return values into signed integers - values are unformatted
+    for (uint8_t i = 0; i < MPU6050_NUM_ACCEL_AXIS; i++)
+    {
+        // Read consecutive bytes 3 times to form 16-bit values for each axis
+        *accel_data = (uint16_t)((accel_data_reg_val[2*i]   << SHIFT_8) |
+                                 (accel_data_reg_val[2*i+1] << SHIFT_0));
+        accel_data++;
+    } 
+}
 
 // TEMP_OUT - Registers 65-66
 // TODO create a lookup table to check for temperature ranges and trigger errors
@@ -253,7 +304,7 @@ uint16_t mpu6050_temp_read(uint8_t mpu6050_address)
         MPU6050_REG_2_BYTE,
         mpu6050_temp_sensor_reg_val);
     
-    // Combine the return values in a signed integer - value is unformatted 
+    // Combine the return values into a signed integer - value is unformatted 
     mpu6050_temp_sensor_val = (uint16_t)((mpu6050_temp_sensor_reg_val[0] << SHIFT_8)  |
                                          (mpu6050_temp_sensor_reg_val[1] << SHIFT_0));
 
@@ -261,13 +312,30 @@ uint16_t mpu6050_temp_read(uint8_t mpu6050_address)
     return mpu6050_temp_sensor_val;
 }
 
-// // GYRO_OUT - Registers 67-72
-// void mpu6050_gyro_read(
-//     uint8_t  mpu6050_address,
-//     uint16_t *gyro_data)
-// {
-//     // 
-// }
+// GYRO_OUT - Registers 67-72
+void mpu6050_gyro_read(
+    uint8_t  mpu6050_address,
+    uint16_t *gyro_data)
+{
+    // Temporary data storage 
+    uint8_t gyro_data_reg_val[MPU6050_REG_6_BYTE];
+
+    // Read the accelerometer data 
+    mpu6050_read(
+        mpu6050_address,
+        MPU6050_ACCEL_XOUT_H,
+        MPU6050_REG_6_BYTE,
+        gyro_data_reg_val);
+    
+    // Combine the return values into signed integers - values are unformatted
+    for (uint8_t i = 0; i < MPU6050_NUM_GYRO_AXIS; i++)
+    {
+        // Read consecutive bytes 3 times to form 16-bit values for each axis
+        *gyro_data = (uint16_t)((gyro_data_reg_val[2*i]   << SHIFT_8) |
+                                (gyro_data_reg_val[2*i+1] << SHIFT_0));
+        gyro_data++;
+    } 
+}
 
 // PWR_MGMT_1 write - Register 107 
 void mpu6050_pwr_mgmt_1_write(
@@ -336,6 +404,162 @@ uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address)
 
     // Return the value of who_am_i 
     return mpu6050_who_am_i;
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Calculation Functions 
+
+// 
+float mpu6050_accel_x_calc(uint8_t mpu6050_address, uint16_t accel_x_axis_raw)
+{
+    // Get the raw value scalar and calculate the true z-axis acceleration
+    float accel_scalar = mpu6050_accel_scalar(mpu6050_address);
+    float accel_x_axis = accel_x_axis_raw / accel_scalar;
+    
+    // Return the true acceleration 
+    return accel_x_axis;
+}
+
+// 
+float mpu6050_accel_y_calc(uint8_t mpu6050_address, uint16_t accel_y_axis_raw)
+{
+    // Get the raw value scalar and calculate the true z-axis acceleration
+    float accel_scalar = mpu6050_accel_scalar(mpu6050_address);
+    float accel_y_axis = accel_y_axis_raw / accel_scalar;
+    
+    // Return the true acceleration 
+    return accel_y_axis;
+}
+
+// 
+float mpu6050_accel_z_calc(uint8_t mpu6050_address, uint16_t accel_z_axis_raw)
+{
+    // Get the raw value scalar and calculate the true z-axis acceleration
+    float accel_scalar = mpu6050_accel_scalar(mpu6050_address);
+    float accel_z_axis = ((int16_t)(accel_z_axis_raw)) / accel_scalar;
+    
+    // Return the true acceleration 
+    return accel_z_axis;
+}
+
+// 
+float mpu6050_accel_scalar(uint8_t mpu6050_address)
+{
+    float accel_scalar;
+
+    // Get AFS_SEL
+    uint8_t afs_sel = ((mpu6050_accel_config_read(mpu6050_address) & 
+                        MPU6050_AFS_SEL_MASK) >> SHIFT_3);
+    
+    // Return the scalar 
+    switch (afs_sel)
+    {
+        case AFS_SEL_2:
+            accel_scalar = (float)(ACCEL_SCALE_FS_SEL_2);
+            break;
+        
+        case AFS_SEL_4:
+            accel_scalar = (float)(ACCEL_SCALE_FS_SEL_4);
+            break;
+        
+        case AFS_SEL_8:
+            accel_scalar = (float)(ACCEL_SCALE_FS_SEL_8);
+            break;
+        
+        case AFS_SEL_16:
+            accel_scalar = (float)(ACCEL_SCALE_FS_SEL_16);
+            break;
+        
+        default:
+            accel_scalar = 0;
+            break;
+    }
+
+    return accel_scalar;
+}
+
+// 
+float mpu6050_temp_calc(uint16_t temp_raw)
+{
+    // Get the true temperature in degC
+    float temperature = ((int16_t)(temp_raw)) / ((float)(MPU6050_TEMP_SENSIT)) + 
+                        MPU6050_TEMP_OFFSET / ((float)(MPU6050_TEMP_SCALAR)); 
+
+    // Return the true temperature 
+    return temperature;
+}
+
+// 
+float mpu6050_gyro_x_calc(uint8_t mpu6050_address, uint16_t gyro_x_axis_raw)
+{
+    // Get the raw value scalar and calculate the true x-axis angular acceleration
+    float gyro_scalar = mpu6050_gyro_scalar(mpu6050_address);
+    float gyro_x_axis = gyro_x_axis_raw / gyro_scalar;
+    
+    // Return the true angular acceleration
+    return gyro_x_axis;
+}
+
+// 
+float mpu6050_gyro_y_calc(uint8_t mpu6050_address, uint16_t gyro_y_axis_raw)
+{
+    // Get the raw value scalar and calculate the true x-axis angular acceleration
+    float gyro_scalar = mpu6050_gyro_scalar(mpu6050_address);
+    float gyro_y_axis = gyro_y_axis_raw / gyro_scalar;
+    
+    // Return the true angular acceleration
+    return gyro_y_axis;
+}
+
+// 
+float mpu6050_gyro_z_calc(uint8_t mpu6050_address, uint16_t gyro_z_axis_raw)
+{
+    // Get the raw value scalar and calculate the true x-axis angular acceleration
+    float gyro_scalar = mpu6050_gyro_scalar(mpu6050_address);
+    float gyro_z_axis = gyro_z_axis_raw / gyro_scalar;
+    
+    // Return the true angular acceleration
+    return gyro_z_axis;
+}
+
+// 
+float mpu6050_gyro_scalar(uint8_t mpu6050_address)
+{
+    float gyro_scalar;
+
+    // Get AFS_SEL
+    uint8_t afs_sel = ((mpu6050_gyro_config_read(mpu6050_address) & 
+                        MPU6050_FS_SEL_MASK) >> SHIFT_3);
+    
+    // Return the scalar 
+    switch (afs_sel)
+    {
+        case FS_SEL_250:
+            gyro_scalar = (float)(GYRO_SCALE_FS_SEL_250);
+            break;
+        
+        case FS_SEL_500:
+            gyro_scalar = (float)(GYRO_SCALE_FS_SEL_500);
+            break;
+        
+        case FS_SEL_1000:
+            gyro_scalar = (float)(GYRO_SCALE_FS_SEL_1000);
+            break;
+        
+        case FS_SEL_2000:
+            gyro_scalar = (float)(GYRO_SCALE_FS_SEL_2000);
+            break;
+        
+        default:
+            gyro_scalar = 0;
+            break;
+    }
+
+    // Divide the scalar to restore decimal places
+    return (gyro_scalar / (float)(MPU6050_GYRO_SCALAR_SCALAR));
 }
 
 //=======================================================================================

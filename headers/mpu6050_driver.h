@@ -30,12 +30,22 @@
 //=======================================================================================
 // Macros 
 
+// Controller info 
 #define MPU6050_7_BIT_ADDRESS 0x68  // MPU-6050 address before read/write bit shift
 
 // Temperature sensor 
 #define MPU6050_TEMP_SCALAR 100   // User defined scalar to eliminate decimals 
 #define MPU6050_TEMP_SENSIT 340   // Sensitivity (LSB/degC) - MPU6050 scalar
 #define MPU6050_TEMP_OFFSET 3653  // Temp offset scaled by the user defined scalar 
+
+// Accelerometer info 
+#define MPU6050_NUM_ACCEL_AXIS 3
+#define MPU6050_AFS_SEL_MASK 24  // 0x18
+
+// Gyro info 
+#define MPU6050_NUM_GYRO_AXIS 3 
+#define MPU6050_GYRO_SCALAR_SCALAR 10 
+#define MPU6050_FS_SEL_MASK 24  // 0x18
 
 //=======================================================================================
 
@@ -171,6 +181,20 @@ typedef enum {
 } mpu6050_fs_sel_set_t;
 
 /**
+ * @brief Gyroscope value scalar 
+ * 
+ * @details Values are multipled by 10 to eliminate decimal values 
+ *          Divide the raw 16-bit gyro return by this value to get a value in deg/s
+ * 
+ */
+typedef enum {
+    GYRO_SCALE_FS_SEL_2000 = 164,  // FS_SEL_2000
+    GYRO_SCALE_FS_SEL_1000 = 328,  // FS_SEL_1000
+    GYRO_SCALE_FS_SEL_500  = 655,  // FS_SEL_500
+    GYRO_SCALE_FS_SEL_250  = 1310  // FS_SEL_250
+} mpu6050_gyro_scalar_t;
+
+/**
  * @brief ACCEL_CONFIG - XA_ST, YA_SET and ZA_ST setpoint 
  * 
  */
@@ -191,6 +215,19 @@ typedef enum {
     AFS_SEL_8,
     AFS_SEL_16
 } mpu6050_afs_sel_set_t;
+
+/**
+ * @brief Accelerometer value scalar 
+ * 
+ * @details Divide the raw 16-bit gyro return by this value to get a value in deg/s
+ * 
+ */
+typedef enum {
+    ACCEL_SCALE_FS_SEL_16 = 2048,  // AFS_SEL_16
+    ACCEL_SCALE_FS_SEL_8  = 4096,  // AFS_SEL_8
+    ACCEL_SCALE_FS_SEL_4  = 8192,  // AFS_SEL_4
+    ACCEL_SCALE_FS_SEL_2  = 16384  // AFS_SEL_2
+} mpu6050_accel_scalars_t;
 
 /**
  * @brief PWR_MGMT_1 - DEVICE_RESET 
@@ -314,13 +351,19 @@ typedef enum {
 
 
 //=======================================================================================
-// Function Prototypes
+// Initialization 
 
 /**
  * @brief MPU5060 initialization 
  * 
  */
 uint8_t mpu6050_init(uint8_t mpu6050_address);
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and Write Functions
 
 /**
  * @brief MPU-6050 write to register 
@@ -345,6 +388,12 @@ void mpu6050_read(
     uint8_t mpu6050_register, 
     uint8_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value);
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Register Function
 
 /**
  * @brief Sample Rate Divider register 
@@ -373,7 +422,7 @@ void mpu6050_config_write(
     uint8_t dlpf_cfg);
 
 /**
- * @brief Gyroscope Configuration register 
+ * @brief Gyroscope Configuration register write
  * 
  * @details Register 27 
  * 
@@ -387,7 +436,15 @@ void mpu6050_gyro_config_write(
     uint8_t fs_sel);
 
 /**
- * @brief Accelerometer Configuration register 
+ * @brief Gyroscope Configuration register read
+ * 
+ * @param mpu6050_address 
+ * @return uint8_t 
+ */
+uint8_t mpu6050_gyro_config_read(uint8_t mpu6050_address);
+
+/**
+ * @brief Accelerometer Configuration register write
  * 
  * @details Register 28 
  * 
@@ -399,6 +456,14 @@ void mpu6050_accel_config_write(
     uint8_t mpu6050_address,
     uint8_t accel_self_test,
     uint8_t afs_sel);
+
+/**
+ * @brief Accelerometer Configuration register read 
+ * 
+ * @param mpu6050_address 
+ * @return uint8_t 
+ */
+uint8_t mpu6050_accel_config_read(uint8_t mpu6050_address);
 
 /**
  * @brief Accelerometer Measurements registers 
@@ -494,6 +559,82 @@ void mpu6050_pwr_mgmt_2_write(
  * @return uint8_t : Returns 0x68 if AD0 == 0 and 0x69 is AD0 == 1
  */
 uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address);
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Calculation Functions
+
+/**
+ * @brief 
+ * 
+ * @param accel_x_axis_raw 
+ * @return float 
+ */
+float mpu6050_accel_x_calc(uint8_t mpu6050_address, uint16_t accel_x_axis_raw);
+
+/**
+ * @brief 
+ * 
+ * @param accel_y_axis_raw 
+ * @return float 
+ */
+float mpu6050_accel_y_calc(uint8_t mpu6050_address, uint16_t accel_y_axis_raw);
+
+/**
+ * @brief 
+ * 
+ * @param accel_z_axis_raw 
+ * @return float 
+ */
+float mpu6050_accel_z_calc(uint8_t mpu6050_address, uint16_t accel_z_axis_raw);
+
+/**
+ * @brief 
+ * 
+ * @return float 
+ */
+float mpu6050_accel_scalar(uint8_t mpu6050_address);
+
+/**
+ * @brief 
+ * 
+ * @param temp_raw 
+ * @return float 
+ */
+float mpu6050_temp_calc(uint16_t temp_raw);
+
+/**
+ * @brief 
+ * 
+ * @param gyro_x_axis_raw 
+ * @return float 
+ */
+float mpu6050_gyro_x_calc(uint8_t mpu6050_address, uint16_t gyro_x_axis_raw);
+
+/**
+ * @brief 
+ * 
+ * @param gyro_y_axis_raw 
+ * @return float 
+ */
+float mpu6050_gyro_y_calc(uint8_t mpu6050_address, uint16_t gyro_y_axis_raw);
+
+/**
+ * @brief 
+ * 
+ * @param gyro_z_axis_raw 
+ * @return float 
+ */
+float mpu6050_gyro_z_calc(uint8_t mpu6050_address, uint16_t gyro_z_axis_raw);
+
+/**
+ * @brief 
+ * 
+ * @return float 
+ */
+float mpu6050_gyro_scalar(uint8_t mpu6050_address);
 
 //=======================================================================================
 
