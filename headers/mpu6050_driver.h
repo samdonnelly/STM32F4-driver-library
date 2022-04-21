@@ -477,7 +477,7 @@ uint8_t mpu6050_accel_config_read(uint8_t mpu6050_address);
  */
 void mpu6050_accel_read(
     uint8_t  mpu6050_address,
-    uint16_t *accel_data);
+    int16_t *accel_data);
 
 /**
  * @brief Temperature Measurements registers
@@ -504,7 +504,7 @@ uint16_t mpu6050_temp_read(uint8_t mpu6050_address);
  */
 void mpu6050_gyro_read(
     uint8_t  mpu6050_address,
-    uint16_t *gyro_data);
+    int16_t *gyro_data);
 
 /**
  * @brief Power Manangement 1 register 
@@ -572,7 +572,7 @@ uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address);
  * @param accel_x_axis_raw 
  * @return float 
  */
-float mpu6050_accel_x_calc(uint8_t mpu6050_address, uint16_t accel_x_axis_raw);
+float mpu6050_accel_x_calc(uint8_t mpu6050_address, int16_t accel_x_axis_raw);
 
 /**
  * @brief 
@@ -580,7 +580,7 @@ float mpu6050_accel_x_calc(uint8_t mpu6050_address, uint16_t accel_x_axis_raw);
  * @param accel_y_axis_raw 
  * @return float 
  */
-float mpu6050_accel_y_calc(uint8_t mpu6050_address, uint16_t accel_y_axis_raw);
+float mpu6050_accel_y_calc(uint8_t mpu6050_address, int16_t accel_y_axis_raw);
 
 /**
  * @brief 
@@ -588,7 +588,7 @@ float mpu6050_accel_y_calc(uint8_t mpu6050_address, uint16_t accel_y_axis_raw);
  * @param accel_z_axis_raw 
  * @return float 
  */
-float mpu6050_accel_z_calc(uint8_t mpu6050_address, uint16_t accel_z_axis_raw);
+float mpu6050_accel_z_calc(uint8_t mpu6050_address, int16_t accel_z_axis_raw);
 
 /**
  * @brief 
@@ -611,7 +611,7 @@ float mpu6050_temp_calc(uint16_t temp_raw);
  * @param gyro_x_axis_raw 
  * @return float 
  */
-float mpu6050_gyro_x_calc(uint8_t mpu6050_address, uint16_t gyro_x_axis_raw);
+float mpu6050_gyro_x_calc(uint8_t mpu6050_address, int16_t gyro_x_axis_raw);
 
 /**
  * @brief 
@@ -619,7 +619,7 @@ float mpu6050_gyro_x_calc(uint8_t mpu6050_address, uint16_t gyro_x_axis_raw);
  * @param gyro_y_axis_raw 
  * @return float 
  */
-float mpu6050_gyro_y_calc(uint8_t mpu6050_address, uint16_t gyro_y_axis_raw);
+float mpu6050_gyro_y_calc(uint8_t mpu6050_address, int16_t gyro_y_axis_raw);
 
 /**
  * @brief 
@@ -627,7 +627,7 @@ float mpu6050_gyro_y_calc(uint8_t mpu6050_address, uint16_t gyro_y_axis_raw);
  * @param gyro_z_axis_raw 
  * @return float 
  */
-float mpu6050_gyro_z_calc(uint8_t mpu6050_address, uint16_t gyro_z_axis_raw);
+float mpu6050_gyro_z_calc(uint8_t mpu6050_address, int16_t gyro_z_axis_raw);
 
 /**
  * @brief 
