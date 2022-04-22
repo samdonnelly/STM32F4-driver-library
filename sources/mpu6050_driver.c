@@ -27,21 +27,14 @@
 uint8_t mpu6050_init(uint8_t mpu6050_address)
 {
     //==============================================================
-    // Notes: 
-    //  - The accelerometer must be woken up from sleep mode and have default 
-    //    settings changed on startup. 
-    //  - It looks like to init the accelerometer you have to choose how you want it 
-    //    configured based on the registers meaning there is no exact way to init 
-    //    the device with the exception of the point above. 
-    //==============================================================
-
-    //==============================================================
     // MPU-6050 Init
     //  1. Read the WHO_AM_I register to establish that there is communication 
-    //  2. Wake the sensor up through the power management register 
-    //  3. Set the data rate 
-    //  4. Configure the accelerometer register 
-    //  5. Configure the gyroscope register 
+    //  2. Choose which sensors to use and frquency of CYCLE mode (see PWR_MGMT_1)
+    //  3. Wake the sensor up through the power management 1 register 
+    //  4. Set the output rate of the gyro and accelerometer 
+    //  5. Set the Sample Rate (data rate) 
+    //  6. Configure the accelerometer register 
+    //  7. Configure the gyroscope register
     //==============================================================
 
     // TODO create configuration packages for the accelerometer to make this modular 
@@ -98,6 +91,19 @@ uint8_t mpu6050_init(uint8_t mpu6050_address)
 
     // Initialization completed successfully 
     return TRUE;
+}
+
+// 
+void mpu6050_calibrate(
+    uint8_t mpu6050_address, 
+    int16_t *mpu6050_accel_offset,
+    int16_t *mpu6050_gyro_offset)
+{
+    // 
+    mpu6050_accel_read(MPU6050_1_ADDRESS, mpu6050_accel_offset);
+
+    // 
+    mpu6050_gyro_read(MPU6050_1_ADDRESS, mpu6050_gyro_offset);
 }
 
 //=======================================================================================
@@ -290,12 +296,11 @@ void mpu6050_accel_read(
 }
 
 // TEMP_OUT - Registers 65-66
-// TODO create a lookup table to check for temperature ranges and trigger errors
-uint16_t mpu6050_temp_read(uint8_t mpu6050_address)
+int16_t mpu6050_temp_read(uint8_t mpu6050_address)
 {
     // Store the temperature data 
-    uint16_t mpu6050_temp_sensor_val;
-    uint8_t  mpu6050_temp_sensor_reg_val[MPU6050_REG_2_BYTE];
+    int16_t mpu6050_temp_sensor_val;
+    uint8_t mpu6050_temp_sensor_reg_val[MPU6050_REG_2_BYTE];
 
     // Read the temperature data 
     mpu6050_read(
@@ -305,8 +310,8 @@ uint16_t mpu6050_temp_read(uint8_t mpu6050_address)
         mpu6050_temp_sensor_reg_val);
     
     // Combine the return values into a signed integer - value is unformatted 
-    mpu6050_temp_sensor_val = (uint16_t)((mpu6050_temp_sensor_reg_val[0] << SHIFT_8)  |
-                                         (mpu6050_temp_sensor_reg_val[1] << SHIFT_0));
+    mpu6050_temp_sensor_val = (int16_t)((mpu6050_temp_sensor_reg_val[0] << SHIFT_8)  |
+                                        (mpu6050_temp_sensor_reg_val[1] << SHIFT_0));
 
     // Return unformatted temperature 
     return mpu6050_temp_sensor_val;
@@ -320,7 +325,7 @@ void mpu6050_gyro_read(
     // Temporary data storage 
     uint8_t gyro_data_reg_val[MPU6050_REG_6_BYTE];
 
-    // Read the accelerometer data 
+    // Read the gyroscope data 
     mpu6050_read(
         mpu6050_address,
         MPU6050_GYRO_XOUT_H,
@@ -482,10 +487,10 @@ float mpu6050_accel_scalar(uint8_t mpu6050_address)
 }
 
 // 
-float mpu6050_temp_calc(uint16_t temp_raw)
+float mpu6050_temp_calc(int16_t temp_raw)
 {
     // Get the true temperature in degC
-    float temperature = ((int16_t)(temp_raw)) / ((float)(MPU6050_TEMP_SENSIT)) + 
+    float temperature = temp_raw / ((float)(MPU6050_TEMP_SENSIT)) + 
                         MPU6050_TEMP_OFFSET / ((float)(MPU6050_TEMP_SCALAR)); 
 
     // Return the true temperature 
@@ -493,33 +498,42 @@ float mpu6050_temp_calc(uint16_t temp_raw)
 }
 
 // 
-float mpu6050_gyro_x_calc(uint8_t mpu6050_address, int16_t gyro_x_axis_raw)
+float mpu6050_gyro_x_calc(
+    uint8_t mpu6050_address, 
+    int16_t gyro_x_axis_raw,
+    int16_t gyro_x_axis_offset)
 {
     // Get the raw value scalar and calculate the true x-axis angular acceleration
     float gyro_scalar = mpu6050_gyro_scalar(mpu6050_address);
-    float gyro_x_axis = gyro_x_axis_raw / gyro_scalar;
+    float gyro_x_axis = (gyro_x_axis_raw - gyro_x_axis_offset) / gyro_scalar;
     
     // Return the true angular acceleration
     return gyro_x_axis;
 }
 
 // 
-float mpu6050_gyro_y_calc(uint8_t mpu6050_address, int16_t gyro_y_axis_raw)
+float mpu6050_gyro_y_calc(
+    uint8_t mpu6050_address, 
+    int16_t gyro_y_axis_raw,
+    int16_t gyro_y_axis_offset)
 {
     // Get the raw value scalar and calculate the true y-axis angular acceleration
     float gyro_scalar = mpu6050_gyro_scalar(mpu6050_address);
-    float gyro_y_axis = gyro_y_axis_raw / gyro_scalar;
+    float gyro_y_axis = (gyro_y_axis_raw - gyro_y_axis_offset) / gyro_scalar;
     
     // Return the true angular acceleration
     return gyro_y_axis;
 }
 
 // 
-float mpu6050_gyro_z_calc(uint8_t mpu6050_address, int16_t gyro_z_axis_raw)
+float mpu6050_gyro_z_calc(
+    uint8_t mpu6050_address, 
+    int16_t gyro_z_axis_raw,
+    int16_t gyro_z_axis_offset)
 {
     // Get the raw value scalar and calculate the true z-axis angular acceleration
     float gyro_scalar = mpu6050_gyro_scalar(mpu6050_address);
-    float gyro_z_axis = gyro_z_axis_raw / gyro_scalar;
+    float gyro_z_axis = (gyro_z_axis_raw - gyro_z_axis_offset) / gyro_scalar;
     
     // Return the true angular acceleration
     return gyro_z_axis;
@@ -559,7 +573,6 @@ float mpu6050_gyro_scalar(uint8_t mpu6050_address)
     }
 
     // Divide the scalar to restore decimal places
-    // return (gyro_scalar / (float)(MPU6050_GYRO_SCALAR_SCALAR));
     return gyro_scalar;
 }
 

@@ -359,6 +359,18 @@ typedef enum {
  */
 uint8_t mpu6050_init(uint8_t mpu6050_address);
 
+/**
+ * @brief 
+ * 
+ * @param mpu6050_address 
+ * @param mpu6050_accel_offset 
+ * @param mpu6050_gyro_offset 
+ */
+void mpu6050_calibrate(
+    uint8_t mpu6050_address, 
+    int16_t *mpu6050_accel_offset,
+    int16_t *mpu6050_gyro_offset);
+
 //=======================================================================================
 
 
@@ -490,7 +502,7 @@ void mpu6050_accel_read(
  * @return uint16_t : Unformatted signed temperature value 
  * 
  */
-uint16_t mpu6050_temp_read(uint8_t mpu6050_address);
+int16_t mpu6050_temp_read(uint8_t mpu6050_address);
 
 /**
  * @brief Gyroscope Measurements registers 
@@ -603,7 +615,7 @@ float mpu6050_accel_scalar(uint8_t mpu6050_address);
  * @param temp_raw 
  * @return float 
  */
-float mpu6050_temp_calc(uint16_t temp_raw);
+float mpu6050_temp_calc(int16_t temp_raw);
 
 /**
  * @brief 
@@ -611,7 +623,10 @@ float mpu6050_temp_calc(uint16_t temp_raw);
  * @param gyro_x_axis_raw 
  * @return float 
  */
-float mpu6050_gyro_x_calc(uint8_t mpu6050_address, int16_t gyro_x_axis_raw);
+float mpu6050_gyro_x_calc(
+    uint8_t mpu6050_address, 
+    int16_t gyro_x_axis_raw,
+    int16_t gyro_x_axis_offset);
 
 /**
  * @brief 
@@ -619,7 +634,10 @@ float mpu6050_gyro_x_calc(uint8_t mpu6050_address, int16_t gyro_x_axis_raw);
  * @param gyro_y_axis_raw 
  * @return float 
  */
-float mpu6050_gyro_y_calc(uint8_t mpu6050_address, int16_t gyro_y_axis_raw);
+float mpu6050_gyro_y_calc(
+    uint8_t mpu6050_address, 
+    int16_t gyro_y_axis_raw,
+    int16_t gyro_y_axis_offset);
 
 /**
  * @brief 
@@ -627,7 +645,10 @@ float mpu6050_gyro_y_calc(uint8_t mpu6050_address, int16_t gyro_y_axis_raw);
  * @param gyro_z_axis_raw 
  * @return float 
  */
-float mpu6050_gyro_z_calc(uint8_t mpu6050_address, int16_t gyro_z_axis_raw);
+float mpu6050_gyro_z_calc(
+    uint8_t mpu6050_address, 
+    int16_t gyro_z_axis_raw,
+    int16_t gyro_z_axis_offset);
 
 /**
  * @brief 
