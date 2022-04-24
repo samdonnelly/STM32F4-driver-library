@@ -33,6 +33,74 @@
 // Enums 
 
 /**
+ * @brief 
+ * 
+ */
+typedef enum {
+    I2C1_SCL_PB6 = 0,
+    I2C1_SCL_PB8 = 2
+} i2c1_scl_pin_t;
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    I2C1_SDA_PB7 = 0,
+    I2C1_SDA_PB9 = 2
+} i2c1_sda_pin_t;
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    I2C2_SCL_PB10
+} i2c2_scl_pin_t;
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    I2C2_SDA_PB3,
+    I2C2_SDA_PB9
+} i2c2_sda_pin_t;
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    I2C3_SCL_PA8
+} i2c3_scl_pin_t;
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    I2C3_SDA_PB4,
+    I2C3_SDA_PB8,
+    I2C3_SDA_PC9
+} i2c3_sda_pin_t;
+
+
+typedef enum {
+    I2C_SM_MODE,
+    I2C_FM_MODE
+} i2c_run_mode_t;
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    I2C_FM_DUTY_2,   // t_low/t_high = 2
+    I2C_FM_DUTY_169  // t_low/t_high = 16/9
+} i2c_fm_duty_cycle_t;
+
+/**
  * @brief I2C AP1 frequency 
  * 
  */
@@ -44,11 +112,10 @@ typedef enum {
 /**
  * @brief I2C Fm CCR setpoint
  * 
- * @details enum code: I2C_CCR_(X_1)M_(X_2)_(X_3)_(X_4)
- *              X_1: Specifies mode, either Fm or Sm
- *              X_2: Duty cycle - ex. 169 -> 16/9 in Fm mode
- *              X_3: PCLK1 frquency (MHz)
- *              X_4: SCL frquency (kHz)
+ * @details enum code: I2C_CCR_FM_(X_1)_(X_2)_(X_3)
+ *              X_1: Duty cycle - ex. 169 -> 16/9 in Fm mode
+ *              X_2: PCLK1 frquency (MHz)
+ *              X_3: SCL frquency (kHz)
  *          
  *          Note: A calculation must be done to determine the numbers that work together.
  *                See the Reference Manual. 
@@ -105,13 +172,73 @@ typedef enum {
 
 
 //=======================================================================================
+// Structures 
+
+/**
+ * @brief 
+ * 
+ */
+typedef struct i2c_init_settings_s
+{
+    // 
+    uint32_t i2c_rcc_apb1enr;
+
+    // 
+    uint32_t i2c_rcc_ahb1_enr;
+
+    // 
+    uint32_t i2c_gpiob_moder;
+
+    // 
+    uint32_t i2c_gpiob_otyper;
+
+    // 
+    uint32_t i2c_gpiob_ospeedr;
+
+    // 
+    uint32_t i2c_gpiob_pupdr;
+
+    // 
+    uint32_t i2c_gpiob_afr_h;
+
+    // 
+    uint16_t i2c_cr1;
+
+    // 
+    uint16_t i2c_cr2;
+
+    // 
+    uint16_t i2c_ccr;
+
+    // 
+    uint16_t i2c_trise;
+
+} i2c_init_settings_t;
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Function Prototypes
 
 /**
  * @brief Initiate I2C 1 in Mater Mode
  * 
  */
-void i2c1_init_master_mode(void);
+void i2c1_init(
+    uint8_t sda_pin,
+    uint8_t scl_pin,
+    uint8_t run_mode,
+    uint8_t apb1_freq,
+    uint8_t fm_duty_cycle,
+    uint8_t ccr_reg,
+    uint8_t trise_reg);
+
+
+void i2c2_init(void);
+
+
+void i2c3_init(void);
 
 
 /**
