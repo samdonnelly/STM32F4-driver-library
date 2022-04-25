@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief 
+ * @brief I2C initialization, read and write 
  * 
  * @version 0.1
  * @date 2022-03-13
@@ -36,6 +36,8 @@
 //  4. Ensure PE is disabled before setting up the I2C
 //  5. Program the peripheral input clock in I2C_CR2 register
 //  6. Configure the clock control register based on the run mode
+//      a) Choose Sm or Fm mode 
+//      b) Calculated clock control register based on PCLK1 & SCL frquency 
 //  7. Configure the rise time register 
 //  8. Program the I2C_CR1 register to enable the peripheral 
 //  9. Set the START but in the I2C_CR1 register to generate a 
@@ -70,35 +72,24 @@ void i2c1_init(
 
 
     // 2. Configure the I2C pins for alternative functions.
-    // TODO add the ability to select which pins to use
 
     // a) Select alternate function in MODER register. 
-    // GPIOB->MODER |= (SET_2 << SHIFT_16);      // pin PB8
-    // GPIOB->MODER |= (SET_2 << SHIFT_18);      // pin PB9
     GPIOB->MODER |= (SET_2 << (SHIFT_12 + 2*scl_pin));
     GPIOB->MODER |= (SET_2 << (SHIFT_14 + 2*sda_pin));
 
     // b) Select Open Drain Output - used for lines with multiple devices
-    // GPIOB->OTYPER |= (SET_BIT << SHIFT_8);    // pin PB8 
-    // GPIOB->OTYPER |= (SET_BIT << SHIFT_9);    // pin PB9
     GPIOB->OTYPER |= (SET_BIT << (SHIFT_6 + scl_pin));
     GPIOB->OTYPER |= (SET_BIT << (SHIFT_7 + sda_pin));
 
     // c) Select High SPEED for the pins 
-    // GPIOB->OSPEEDR |= (SET_3 << SHIFT_16);    // pin PB8
-    // GPIOB->OSPEEDR |= (SET_3 << SHIFT_18);    // pin PB9
     GPIOB->OSPEEDR |= (SET_3 << (SHIFT_12 + 2*scl_pin));
     GPIOB->OSPEEDR |= (SET_3 << (SHIFT_14 + 2*sda_pin));
 
     // d) Select pull-up for both the pins 
-    // GPIOB->PUPDR |= (SET_BIT << SHIFT_16);    // pin PB8 
-    // GPIOB->PUPDR |= (SET_BIT << SHIFT_18);    // pin PB9
     GPIOB->PUPDR |= (SET_BIT << (SHIFT_12 + 2*scl_pin));
     GPIOB->PUPDR |= (SET_BIT << (SHIFT_14 + 2*sda_pin));
 
     // e) Configure the Alternate Function in AFR Register. 
-    // GPIOB->AFR[1] |= (SET_4 << SHIFT_0);      // pin PB8 
-    // GPIOB->AFR[1] |= (SET_4 << SHIFT_4);      // pin PB9
     switch(scl_pin)
     {
         case I2C1_SCL_PB6:
@@ -123,9 +114,9 @@ void i2c1_init(
             break;
     }
 
-    // 3. Reset the I2C. 
-    I2C1->CR1 |=  (SET_BIT << SHIFT_15);  // Enable reset bit 
-    I2C1->CR1 &= ~(SET_BIT << SHIFT_15);  // Disable reset bit
+    // 3. Reset the I2C - enable then disable reset bit 
+    I2C1->CR1 |=  (SET_BIT << SHIFT_15);
+    I2C1->CR1 &= ~(SET_BIT << SHIFT_15);
 
 
     // 4. Ensure PE is disabled before setting up the I2C
@@ -133,37 +124,44 @@ void i2c1_init(
 
 
     // 5. Program the peripheral input clock in I2C_CR2 register
-    // I2C1->CR2 |= (I2C_APB1_42MHZ << SHIFT_0);
     I2C1->CR2 |= (apb1_freq << SHIFT_0);
 
 
     // 6. Configure the clock control register 
+
+    // a) Choose Sm or Fm mode 
     switch(run_mode)
     {
         case I2C_SM_MODE:
             I2C1->CCR &= ~(SET_BIT << SHIFT_15);
             break;
+        
         case I2C_FM_MODE:
             I2C1->CCR |= (SET_BIT << SHIFT_15);
-            if (fm_duty_cycle)
+            
+            // Only applies in Fm mode - chooses duty cycle 
+            switch(fm_duty_cycle)
             {
-                I2C1->CCR |= (SET_BIT << SHIFT_14);
-            }
-            else 
-            {
-                I2C1->CCR &= ~(SET_BIT << SHIFT_14);
+                case I2C_FM_DUTY_2:
+                    I2C1->CCR &= ~(SET_BIT << SHIFT_14);
+                    break;
+                case I2C_FM_DUTY_169:
+                    I2C1->CCR |= (SET_BIT << SHIFT_14);
+                    break;
+                default:
+                    break;
             }
             break;
+        
         default:
             break;
-    }    
+    }
 
-    // I2C1->CCR |= (I2C_CCR_SM_42_100 << SHIFT_0);
+    // b) Calculated clock control register based on PCLK1 & SCL frquency 
     I2C1->CCR |= (ccr_reg << SHIFT_0);
 
 
     // 7. Configure the rise time register
-    // I2C1->TRISE |= (I2C_TRISE_1000_42 << SHIFT_0); 
     I2C1->TRISE |= (trise_reg << SHIFT_0);
 
 
@@ -172,7 +170,14 @@ void i2c1_init(
 }
 
 //
-void i2c2_init(void)
+void i2c2_init(
+    uint8_t sda_pin,
+    uint8_t scl_pin,
+    uint8_t run_mode,
+    uint8_t apb1_freq,
+    uint8_t fm_duty_cycle,
+    uint8_t ccr_reg,
+    uint8_t trise_reg)
 {
     //==============================================================
     // Pin information for I2C2
@@ -183,7 +188,14 @@ void i2c2_init(void)
 }
 
 //
-void i2c3_init(void)
+void i2c3_init(
+    uint8_t sda_pin,
+    uint8_t scl_pin,
+    uint8_t run_mode,
+    uint8_t apb1_freq,
+    uint8_t fm_duty_cycle,
+    uint8_t ccr_reg,
+    uint8_t trise_reg)
 {
     //==============================================================
     // Pin information for I2C3
@@ -198,7 +210,7 @@ void i2c3_init(void)
 
 
 //=======================================================================================
-// Working with Registers 
+// I2C1 register functions
 
 // Generate start condition 
 void i2c1_start(void)
@@ -260,7 +272,7 @@ void i2c1_btf_wait(void)
 
 
 //=======================================================================================
-// Write I2C 
+// Write I2C1 
 
 // Send address 
 void i2c1_write_address(uint8_t i2c1_address)
@@ -287,7 +299,7 @@ void i2c1_write_master_mode(uint8_t *data, uint8_t data_size)
 
 
 //=======================================================================================
-// Read I2C 
+// Read I2C1
 
 // Read data from a device using I2C 1 
 void i2c1_read_master_mode(uint8_t *data, uint8_t data_size)

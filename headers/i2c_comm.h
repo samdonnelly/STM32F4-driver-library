@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief 
+ * @brief I2C initialization, read and write 
  * 
  * @version 0.1
  * @date 2022-03-13
@@ -21,11 +21,6 @@
 #include "stm32f411xe.h"
 #include "tools.h"
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Macros 
 //=======================================================================================
 
 
@@ -172,58 +167,25 @@ typedef enum {
 
 
 //=======================================================================================
-// Structures 
-
-/**
- * @brief 
- * 
- */
-typedef struct i2c_init_settings_s
-{
-    // 
-    uint32_t i2c_rcc_apb1enr;
-
-    // 
-    uint32_t i2c_rcc_ahb1_enr;
-
-    // 
-    uint32_t i2c_gpiob_moder;
-
-    // 
-    uint32_t i2c_gpiob_otyper;
-
-    // 
-    uint32_t i2c_gpiob_ospeedr;
-
-    // 
-    uint32_t i2c_gpiob_pupdr;
-
-    // 
-    uint32_t i2c_gpiob_afr_h;
-
-    // 
-    uint16_t i2c_cr1;
-
-    // 
-    uint16_t i2c_cr2;
-
-    // 
-    uint16_t i2c_ccr;
-
-    // 
-    uint16_t i2c_trise;
-
-} i2c_init_settings_t;
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Function Prototypes
 
 /**
- * @brief Initiate I2C 1 in Mater Mode
+ * @brief Initiate I2C 1
  * 
+ * @details 
+ *          Pin information for I2C1: 
+ *              PB6: SCL
+ *              PB7: SDA
+ *              PB8: SCL
+ *              PB9: SDA
+ * 
+ * @param sda_pin 
+ * @param scl_pin 
+ * @param run_mode 
+ * @param apb1_freq 
+ * @param fm_duty_cycle 
+ * @param ccr_reg 
+ * @param trise_reg 
  */
 void i2c1_init(
     uint8_t sda_pin,
@@ -234,11 +196,58 @@ void i2c1_init(
     uint8_t ccr_reg,
     uint8_t trise_reg);
 
+/**
+ * @brief Initiate I2C 2
+ * 
+ * @details 
+ *          Pin information for I2C2: 
+ *              PB3:  SDA
+ *              PB9:  SDA
+ *              PB10: SCL
+ * 
+ * @param sda_pin 
+ * @param scl_pin 
+ * @param run_mode 
+ * @param apb1_freq 
+ * @param fm_duty_cycle 
+ * @param ccr_reg 
+ * @param trise_reg 
+ */
+void i2c2_init(
+    uint8_t sda_pin,
+    uint8_t scl_pin,
+    uint8_t run_mode,
+    uint8_t apb1_freq,
+    uint8_t fm_duty_cycle,
+    uint8_t ccr_reg,
+    uint8_t trise_reg);
 
-void i2c2_init(void);
-
-
-void i2c3_init(void);
+/**
+ * @brief Initiate I2C 3
+ * 
+ * @details 
+ *          Pin information for I2C3: 
+ *              PA8: SCL
+ *              PB4: SDA
+ *              PB8: SDA
+ *              PC9: SDA
+ * 
+ * @param sda_pin 
+ * @param scl_pin 
+ * @param run_mode 
+ * @param apb1_freq 
+ * @param fm_duty_cycle 
+ * @param ccr_reg 
+ * @param trise_reg 
+ */
+void i2c3_init(
+    uint8_t sda_pin,
+    uint8_t scl_pin,
+    uint8_t run_mode,
+    uint8_t apb1_freq,
+    uint8_t fm_duty_cycle,
+    uint8_t ccr_reg,
+    uint8_t trise_reg);
 
 
 /**

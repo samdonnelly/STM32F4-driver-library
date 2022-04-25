@@ -20,10 +20,18 @@
 //=======================================================================================
 
 
+//=======================================================================================
+// Initialization 
+
 // UART2 setup 
-// Pins: PA2, PA3
 void uart2_init(void)
 {
+    //==============================================================
+    // Pin information for I2C1
+    //  PA2: TX
+    //  PA3: RX
+    //==============================================================
+
     // Pin Setup 
 
     // Enable UART2 Clock - RCC_APB1 register, bit 17
@@ -71,6 +79,11 @@ void uart2_init(void)
     while (!(USART2->SR & (SET_BIT << SHIFT_6)));
 }
 
+//=======================================================================================
+
+
+//=======================================================================================
+// UART2 Send
 
 // UART2 send character to serial terminal 
 void uart2_sendchar(uint8_t character)
@@ -98,6 +111,69 @@ void uart2_sendstring(char *string)
     }
 }
 
+
+// 
+void uart2_send_digit(uint8_t digit)
+{
+    uart2_sendchar(digit + UART2_CHAR_DIGIT_OFFSET);
+}
+
+
+// 
+void uart2_send_integer(int16_t integer)
+{
+    // Print sign 
+    integer = uart2_send_sign(integer);
+
+    // separate digits
+}
+
+
+// 
+int16_t uart2_send_sign(int16_t integer)
+{
+    // Get sign 
+    uint8_t sign = (uint8_t)((integer & UART2_NUM_SIGN_MASK) >> SHIFT_15);
+
+    // Print sign 
+    switch(sign)
+    {
+        case UART2_NUM_POSITIVE:
+            uart2_sendchar(sign + UART2_CHAR_PLUS_OFFSET);
+            break;
+        case UART2_NUM_NEGATIVE: 
+            uart2_sendchar(sign + UART2_CHAR_MINUS_OFFSET);
+            integer = ~(integer) + UART2_2S_COMP_OFFSET;    // Eliminate negative
+            break;
+        default:
+            break;
+    }
+
+    return integer;
+}
+
+
+// Print a desired number of spaces 
+void uart2_send_spaces(uint8_t num_spaces)
+{
+    for (uint8_t i = 0; i < num_spaces; i++)
+    {
+        uart2_sendchar(" ");
+    }
+}
+
+
+// Go to a new line in the serial terminal 
+void uart2_send_new_line(void)
+{
+    uart2_sendstring("\r\n");
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// UART2 read
 
 // UART2 get character from serial terminal 
 uint8_t uart2_getchar(void)
@@ -136,3 +212,5 @@ void uart2_getstr(char *string_to_fill)
     // Add a null character to the end if the string 
     *string_to_fill = UART_NULL;
 }
+
+//=======================================================================================

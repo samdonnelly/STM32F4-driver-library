@@ -30,6 +30,10 @@
 #define UART_NULL 0       // '\0' == 0
 #define UART_CARRIAGE 13  // '\r' == 13
 
+#define UART2_NUM_SIGN_MASK 32768  // 0x8000
+
+#define UART2_2S_COMP_OFFSET 1
+
 //=======================================================================================
 
 
@@ -53,21 +57,58 @@ typedef enum {
     USART_42MHZ_9600_MANT = 273
 } usart_mantissa_baud_t;
 
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    UART2_1_SPACE  = 1,
+    UART2_2_SPACES = 2
+} uart2_num_spaces_t;
+
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    UART2_NUM_POSITIVE,
+    UART2_NUM_NEGATIVE
+} uart2_num_sign_t;
+
+
+
+typedef enum {
+    UART2_CHAR_PLUS_OFFSET  = 43,
+    UART2_CHAR_MINUS_OFFSET = 45,
+    UART2_CHAR_DIGIT_OFFSET = 48
+} uart2_char_offset_t;
+
 //=======================================================================================
 
 
 //=======================================================================================
-// Function Prototypes 
+// UART Initialization 
 
 /**
  * @brief Configure UART2
  * 
  * @details The function is current equiped to enable UART on pins PA2 and PA3. 
- *          Additional functionality can be added later to equip USART if desired. 
+ *          Additional functionality can be added later to equip USART if desired.
+ *          
+ *          Pin information for USART2: 
+ *              PA2: TX
+ *              PA3: RX
  * 
  */
 void uart2_init(void);
 
+//=======================================================================================
+
+
+//=======================================================================================
+// UART2 Send Functions 
 
 /**
  * @brief UART2 send character to serial terminal 
@@ -92,6 +133,65 @@ void uart2_sendchar(uint8_t character);
  */
 void uart2_sendstring(char *string);
 
+
+/**
+ * @brief 
+ * 
+ * @details Input a number from 0-9 to print it to the terminal. The function 
+ *          takes the digit, offsets it to the corresponding character (ex. 9 -> '9')
+ *          and sends it to the serial terminal using uart2_sendchar.
+ * 
+ * @see uart2_sendchar
+ * 
+ * @param digit 
+ */
+void uart2_send_digit(uint8_t digit);
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @see 
+ * 
+ * @param number 
+ */
+void uart2_send_integer(int16_t integer);
+
+
+/**
+ * @brief 
+ * 
+ * @param integer 
+ * @return int16_t 
+ */
+int16_t uart2_send_sign(int16_t integer);
+
+
+/**
+ * @brief Print a desired number of blank spaces to the serial terminal 
+ * 
+ * @details 
+ * 
+ * @param num_spaces 
+ */
+void uart2_send_spaces(uint8_t num_spaces);
+
+
+/**
+ * @brief Print a new line on the serial terminal 
+ * 
+ * @details 
+ * 
+ */
+void uart2_send_new_line(void);
+
+//=======================================================================================
+
+
+//=======================================================================================
+// UART2 Read Functions
 
 /**
  * @brief UART2 get character from serial terminal 
