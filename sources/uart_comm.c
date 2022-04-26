@@ -23,6 +23,24 @@
 //=======================================================================================
 // Initialization 
 
+//==============================================================
+// UART Setup Steps 
+//  1. Configure the pins 
+//     a) Enable UART2 Clock - RCC_APB1 register, bit 17
+//     b) Enable GPIOA clock for TX and RX pins - RCC_AHB! register, bit 0
+//     c) Configure the UART pins for alternative functions - GPIOA_MODER register 
+//     d) Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
+//     e) Set the alternative function low ([0]) register for USART2 (AF7)
+//  2. Configure the UART 
+//     a) Clear the USART_CR1 register 
+//     b) Write the UE bit in the USART_CR1 register to 1
+//     c) Program the M bit to define the word length
+//     d) Set the baud rate 
+//     e) Enable the TX/RX by setting the TE and RE bits in USART_CR1 register 
+//     f) Clear buffer 
+//==============================================================
+
+
 // UART2 setup 
 void uart2_init(void)
 {
@@ -32,47 +50,47 @@ void uart2_init(void)
     //  PA3: RX
     //==============================================================
 
-    // Pin Setup 
+    // 1. Pin Setup 
 
-    // Enable UART2 Clock - RCC_APB1 register, bit 17
+    // a) Enable UART2 Clock - RCC_APB1 register, bit 17
     RCC->APB1ENR |= (SET_BIT << SHIFT_17);
 
-    // Enable GPIOA clock for TX and RX pins - RCC_AHB! register, bit 0
+    // b) Enable GPIOA clock for TX and RX pins - RCC_AHB! register, bit 0
     RCC->AHB1ENR |= (SET_BIT << SHIFT_0);
 
-    // Configure the UART pins for alternative functions - GPIOA_MODER register 
-    GPIOA->MODER |= (SET_2 << SHIFT_4);   // pin PA2
-    GPIOA->MODER |= (SET_2 << SHIFT_6);   // pin PA3
+    // c) Configure the UART pins for alternative functions - GPIOA_MODER register 
+    GPIOA->MODER |= (SET_2 << SHIFT_4);
+    GPIOA->MODER |= (SET_2 << SHIFT_6);
 
-    // Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
-    GPIOA->OSPEEDR |= (SET_3 << SHIFT_4);   // pin PA2
-    GPIOA->OSPEEDR |= (SET_3 << SHIFT_6);   // pin PA3
+    // d) Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
+    GPIOA->OSPEEDR |= (SET_3 << SHIFT_4);
+    GPIOA->OSPEEDR |= (SET_3 << SHIFT_6);
 
-    // Set the alternative function low ([0]) register for USART2 (AF7)
-    GPIOA->AFR[0] |= (SET_7 << SHIFT_8);    // pin PA2
-    GPIOA->AFR[0] |= (SET_7 << SHIFT_12);   // pin PA3
+    // e) Set the alternative function low ([0]) register for USART2 (AF7)
+    GPIOA->AFR[0] |= (SET_7 << SHIFT_8); 
+    GPIOA->AFR[0] |= (SET_7 << SHIFT_12);
 
-    // UART Configuration 
 
-    // Clear the USART_CR1 register 
-    USART2->CR1 = 0x00;  // CLEAR;
+    // 2. UART Configuration 
 
-    // Write the UE bit in the USART_CR1 register to 1
+    // a) Clear the USART_CR1 register 
+    USART2->CR1 = CLEAR;
+
+    // b) Write the UE bit in the USART_CR1 register to 1
     USART2->CR1 |= (SET_BIT << SHIFT_13);
 
-    // Program the M bit to define the word length
-    USART2->CR1 &= ~(SET_BIT << SHIFT_12);  //  Set to zero for 8 bit word length 
+    // c) Program the M bit to define the word length - set to 0 for 8-bit word 
+    USART2->CR1 &= ~(SET_BIT << SHIFT_12);
 
-    // Set the baud rate 
+    // d) Set the baud rate 
     USART2->BRR |= (USART_42MHZ_9600_FRAC << SHIFT_0);  // Fractional 
     USART2->BRR |= (USART_42MHZ_9600_MANT << SHIFT_4);  // Mantissa 
 
-    // Enable the TX/RX by setting the TE and RE bits in USART_CR1 register 
-    USART2->CR1 |= (SET_BIT << SHIFT_2);  // Set RE
-    USART2->CR1 |= (SET_BIT << SHIFT_3);  // Set TE
+    // e) Enable the TX/RX by setting the RE and TE bits in USART_CR1 register 
+    USART2->CR1 |= (SET_BIT << SHIFT_2);
+    USART2->CR1 |= (SET_BIT << SHIFT_3); 
 
-    // Clear buffer 
-
+    // f) Clear buffer 
     // Read the Transmission Complete (TC) bit (bit 6) in the status register 
     // (USART_SR) continuously until it is set. If this is not done then some
     // characters can be skipped in transmission on reset. 
@@ -103,62 +121,60 @@ void uart2_sendstring(char *string)
     // Loop until null character of string is reached. 
     while (*string)
     {
-        // Send characters one at a time. 
         uart2_sendchar(*string);
-
-        // Increment to next character. 
         string++;
     }
 }
 
 
-// 
+// Send a numeric digit to the serial terminal 
 void uart2_send_digit(uint8_t digit)
 {
     uart2_sendchar(digit + UART2_CHAR_DIGIT_OFFSET);
 }
 
 
-// 
+// Send an integer to the serial terminal 
 void uart2_send_integer(int16_t integer)
 {
-    // Print sign 
-    integer = uart2_send_sign(integer);
+    // Store a digit to print 
+    uint8_t digit;
 
-    // separate digits
-}
-
-
-// 
-int16_t uart2_send_sign(int16_t integer)
-{
-    // Get sign 
-    uint8_t sign = (uint8_t)((integer & UART2_NUM_SIGN_MASK) >> SHIFT_15);
-
-    // Print sign 
-    switch(sign)
+    // Print the sign of the number 
+    if (integer < 0)
     {
-        case UART2_NUM_POSITIVE:
-            uart2_sendchar(sign + UART2_CHAR_PLUS_OFFSET);
-            break;
-        case UART2_NUM_NEGATIVE: 
-            uart2_sendchar(sign + UART2_CHAR_MINUS_OFFSET);
-            integer = ~(integer) + UART2_2S_COMP_OFFSET;    // Eliminate negative
-            break;
-        default:
-            break;
+        uart2_sendchar(UART2_CHAR_MINUS_OFFSET);
+        integer = -(integer);
+    }
+    else 
+    {
+        uart2_sendchar(UART2_CHAR_PLUS_OFFSET);
     }
 
-    return integer;
+    // Parse and print each digit
+    digit = (uint8_t)((integer / DIVIDE_10000) % REMAINDER_10) + UART2_CHAR_DIGIT_OFFSET;
+    uart2_sendchar(digit);
+
+    digit = (uint8_t)((integer / DIVIDE_1000) % REMAINDER_10) + UART2_CHAR_DIGIT_OFFSET;
+    uart2_sendchar(digit);
+
+    digit = (uint8_t)((integer / DIVIDE_100) % REMAINDER_10) + UART2_CHAR_DIGIT_OFFSET;
+    uart2_sendchar(digit);
+
+    digit = (uint8_t)((integer / DIVIDE_10) % REMAINDER_10) + UART2_CHAR_DIGIT_OFFSET;
+    uart2_sendchar(digit);
+
+    digit = (uint8_t)((integer / DIVIDE_1) % REMAINDER_10) + UART2_CHAR_DIGIT_OFFSET;
+    uart2_sendchar(digit);
 }
 
 
-// Print a desired number of spaces 
+// Print a desired number of spaces to the serial terminal 
 void uart2_send_spaces(uint8_t num_spaces)
 {
     for (uint8_t i = 0; i < num_spaces; i++)
     {
-        uart2_sendchar(" ");
+        uart2_sendchar(UART2_CHAR_SPACE_OFFSET);
     }
 }
 

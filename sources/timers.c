@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief 
+ * @brief General purpose timers
  * 
  * @version 0.1
  * @date 2022-03-28
@@ -23,15 +23,17 @@
 //=======================================================================================
 // Initialization 
 
+// ============================================================
+// Timer setup 
+// 1. Enable the timer clock
+// 2. Set the prescalar and the ARR
+// 3. Enable the timer, and wait for the update flag to set
+// ============================================================
+
+
+// Timer 9 setup 
 void tim9_init(uint16_t prescalar)
 {
-    // ============================================================
-    // Steps to follow 
-    // 1. Enable the timer clock
-    // 2. Set the prescalar and the ARR
-    // 3. Enable the timer, and wait for the update flag to set
-    // ============================================================
-
     // 1. Enable the timer clock - TIM9 in the RCC_APB2ENR register 
     RCC->APB2ENR |= (SET_BIT << SHIFT_16);
 
@@ -59,6 +61,7 @@ void tim9_delay_us(uint16_t delay_us)
     // Count up to specified value in blocking mode to produce delay 
     while((TIM9->CNT) < delay_us);
 }
+
 
 // millisecond delay function 
 void tim9_delay_ms(uint16_t delay_ms)

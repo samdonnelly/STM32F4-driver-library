@@ -26,6 +26,8 @@
 //==============================================================
 // I2C Setup Steps 
 //  1. Enable the I2C clock and the GPIO clock. 
+//      a) Enable I2C1 clock - RCC_APB1ENR register, bit 21
+//      b) Enable GPIOB clock - RCC_AHB1ENR register, bit 1
 //  2. Configure the I2C pins for alternative functions. 
 //      a) Select alternate function in MODER register. 
 //      b) Select Open Drain Output. 
@@ -64,10 +66,10 @@ void i2c1_init(
 
     // 1. Enable the I2C clock and the GPIO clock. 
 
-    // Enable I2C1 clock - RCC_APB1ENR register, bit 21
+    // a) Enable I2C1 clock - RCC_APB1ENR register, bit 21
     RCC->APB1ENR |= (SET_BIT << SHIFT_21);
 
-    // Enable GPIOB clock - RCC_AHB1ENR register, bit 1
+    // b) Enable GPIOB clock - RCC_AHB1ENR register, bit 1
     RCC->AHB1ENR |= (SET_BIT << SHIFT_1);
 
 

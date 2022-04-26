@@ -80,6 +80,7 @@ typedef enum {
 
 
 typedef enum {
+    UART2_CHAR_SPACE_OFFSET = 32,
     UART2_CHAR_PLUS_OFFSET  = 43,
     UART2_CHAR_MINUS_OFFSET = 45,
     UART2_CHAR_DIGIT_OFFSET = 48
@@ -158,15 +159,6 @@ void uart2_send_digit(uint8_t digit);
  * @param number 
  */
 void uart2_send_integer(int16_t integer);
-
-
-/**
- * @brief 
- * 
- * @param integer 
- * @return int16_t 
- */
-int16_t uart2_send_sign(int16_t integer);
 
 
 /**

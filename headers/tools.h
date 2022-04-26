@@ -27,6 +27,8 @@
 #define CLEAR 0
 #define RESET_ZERO 0
 
+#define INT16_NUM_DIGITS 5
+
 //=======================================================================================
 
 
@@ -100,6 +102,30 @@ typedef enum {
     SHIFT_30,
     SHIFT_31,
 } bit_shifter_t;
+
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    REMAINDER_10   = 10,
+    REMAINDER_100  = 100,
+    REMAINDER_1000 = 1000
+} remainder_decimal_place_t;
+
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    DIVIDE_1     = 1,
+    DIVIDE_10    = 10,
+    DIVIDE_100   = 100,
+    DIVIDE_1000  = 1000,
+    DIVIDE_10000 = 10000
+} divide_decimal_place_t;
 
 //=======================================================================================
 
