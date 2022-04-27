@@ -24,7 +24,12 @@
 // Initialization 
 
 // MPU-6050 Initialization 
-uint8_t mpu6050_init(uint8_t mpu6050_address)
+uint8_t mpu6050_init(
+    uint8_t mpu6050_address,
+    uint8_t dlpf_cfg,
+    uint8_t smplrt_div,
+    uint8_t afs_sel,
+    uint8_t fs_sel)
 {
     //==============================================================
     // MPU-6050 Init
@@ -36,9 +41,6 @@ uint8_t mpu6050_init(uint8_t mpu6050_address)
     //  6. Configure the accelerometer register 
     //  7. Configure the gyroscope register
     //==============================================================
-
-    // TODO create configuration packages for the accelerometer to make this modular 
-    // TODO add a section for self test and trigger an error if it fails 
 
     // 1. Read the WHO_AM_I register to establish that there is communication 
     if (mpu6050_who_am_i_read(mpu6050_address) != MPU6050_7_BIT_ADDRESS)
@@ -70,24 +72,24 @@ uint8_t mpu6050_init(uint8_t mpu6050_address)
     mpu6050_config_write(
         mpu6050_address,
         EXT_SYNC_SET_0,
-        DLPF_CFG_1);
+        dlpf_cfg);
     
     // 5. Set the Sample Rate (data rate)
     mpu6050_smprt_div_write(
         mpu6050_address,
-        SMPLRT_DIV_0);
+        smplrt_div);
     
     // 6. Configure the accelerometer register 
     mpu6050_accel_config_write(
         mpu6050_address,
         ACCEL_SELF_TEST_DISABLE,
-        AFS_SEL_4);
+        afs_sel);
     
     // 7. Configure the gyroscope register
     mpu6050_gyro_config_write(
         mpu6050_address,
         GYRO_SELF_TEST_DISABLE,
-        FS_SEL_500);
+        fs_sel);
 
     // Initialization completed successfully 
     return TRUE;
@@ -409,6 +411,37 @@ uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address)
 
     // Return the value of who_am_i 
     return mpu6050_who_am_i;
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Self test functions 
+
+// TODO add a section for self test and trigger an error if it fails 
+
+// Self Test 
+uint8_t mpu6050_self_test(void)
+{
+    // 
+    //==============================================================
+    // Steps for self test 
+    //  X. Set the full scale range of the gyro to +/- 250 
+    //  X. Set the full scale range of the accel to +/- 
+    //  X. Read and store the value to the gyro (non-self-test)
+    //  X. Read and store the value of the accel (non-self-test)
+    //  X. Enable self test 
+    //  X. Read the self-test registers 
+    //  X. Calculater the factory trim value 
+    //  X. Read and store the value of the gyro (self-test)
+    //  X. Read and store the value of the accel (self-test)
+    //  X. Calculate self test response of the gyro and accel 
+    //  X. Calculate the change from factory trim % of the gyro and accel 
+    //  X. Check if the % is outside the accepable range 
+    //  X. Disable self test 
+    //  X. Set the full scale ranges back to their original values
+    //==============================================================
 }
 
 //=======================================================================================

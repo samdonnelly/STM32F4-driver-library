@@ -356,11 +356,26 @@ typedef enum {
 /**
  * @brief MPU5060 initialization 
  * 
+ * @details 
+ * 
+ * @param mpu6050_address 
+ * @param dlpf_cfg 
+ * @param smplrt_div 
+ * @param afs_sel 
+ * @param fs_sel 
+ * @return uint8_t 
  */
-uint8_t mpu6050_init(uint8_t mpu6050_address);
+uint8_t mpu6050_init(
+    uint8_t mpu6050_address,
+    uint8_t dlpf_cfg,
+    uint8_t smplrt_div,
+    uint8_t afs_sel,
+    uint8_t fs_sel);
 
 /**
  * @brief 
+ * 
+ * @details 
  * 
  * @param mpu6050_address 
  * @param mpu6050_accel_offset 
@@ -571,6 +586,19 @@ void mpu6050_pwr_mgmt_2_write(
  * @return uint8_t : Returns 0x68 if AD0 == 0 and 0x69 is AD0 == 1
  */
 uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address);
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Self test 
+
+/**
+ * @brief 
+ * 
+ * @return uint8_t 
+ */
+uint8_t mpu6050_self_test(void);
 
 //=======================================================================================
 
