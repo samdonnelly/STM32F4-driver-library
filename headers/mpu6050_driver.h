@@ -83,6 +83,19 @@ typedef enum {
     MPU6050_R_OFFSET
 } mpu6050_rw_offset_t;
 
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    MPU6050_REG_IDX_0,
+    MPU6050_REG_IDX_1,
+    MPU6050_REG_IDX_2,
+    MPU6050_REG_IDX_3
+} mpu6050_register_index_t;
+
+
 /**
  * @brief MPU-6050 register byte size
  * 
@@ -101,6 +114,7 @@ typedef enum {
  * 
  */
 typedef enum {
+    MPU6050_SELF_TEST    = 0x0D,   // Register 13 
     MPU6050_SMPRT_DIV    = 0x19,   // Register 25
     MPU6050_CONFIG       = 0x1A,   // Register 26
     MPU6050_GYRO_CONFIG  = 0x1B,   // Register 27
@@ -112,6 +126,20 @@ typedef enum {
     MPU6050_PWR_MGMT_2   = 0x6C,   // Register 108 
     MPU6050_WHO_AM_I     = 0x75    // Register 117
 } mpu6050_register_addresses_t;
+
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    SELF_TEST_MASK_ZA_TEST_LO = 0x03,
+    SELF_TEST_MASK_YA_TEST_LO = 0x0C,
+    SELF_TEST_MASK_X_TEST     = 0x1F,
+    SELF_TEST_MASK_XA_TEST_LO = 0x30,
+    SELF_TEST_MASK_A_TEST_HI  = 0xE0
+} mpu6050_self_test_masks_t;
+
 
 /**
  * @brief SMPLRT_DIV setpoint 
@@ -393,6 +421,18 @@ void mpu6050_calibrate(
 // Read and Write Functions
 
 /**
+ * @brief 
+ * 
+ * @param mpu6050_address 
+ * @param self_test_data 
+ */
+void mpu6050_self_test_read(
+    uint8_t mpu6050_address,
+    uint8_t *accel_self_test_data,
+    uint8_t *gyro_self_test_data);
+
+
+/**
  * @brief MPU-6050 write to register 
  * 
  */
@@ -596,9 +636,43 @@ uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address);
 /**
  * @brief 
  * 
+ * @param mpu6050_address 
  * @return uint8_t 
  */
-uint8_t mpu6050_self_test(void);
+uint8_t mpu6050_self_test(uint8_t mpu6050_address);
+
+
+/**
+ * @brief 
+ * 
+ * @param a_test 
+ * @return float 
+ */
+float mpu6050_accel_ft(uint8_t *a_test);
+
+
+/**
+ * @brief 
+ * 
+ * @param g_test 
+ * @return float 
+ */
+float mpu6050_gyro_ft(uint8_t *g_test);
+
+
+/**
+ * @brief 
+ * 
+ * @param self_test_response 
+ * @param no_self_test 
+ * @param self_test 
+ * @param num_axes 
+ */
+void mpu6050_str_calc(
+    int16_t *self_test_response,
+    int16_t *no_self_test,
+    int16_t *self_test,
+    uint8_t num_axes);
 
 //=======================================================================================
 

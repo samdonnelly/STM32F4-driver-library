@@ -174,6 +174,50 @@ void mpu6050_read(
 //=======================================================================================
 // Register Functions
 
+// SELF_TEST read - Registers 13-16 
+void mpu6050_self_test_read(
+    uint8_t mpu6050_address,
+    uint8_t *accel_st_data,
+    uint8_t *gyro_st_data)
+{
+    // Store unformatted datat 
+    uint8_t st_data[MPU6050_REG_4_BYTE];
+
+    // Read the value of SELF_TEST registers 
+    mpu6050_read(
+        mpu6050_address, 
+        MPU6050_SELF_TEST, 
+        MPU6050_REG_4_BYTE,
+        st_data);
+    
+    // Parse the data 
+
+    // Acceleration in X
+    *accel_st_data = ((st_data[MPU6050_REG_IDX_0] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
+                     ((st_data[MPU6050_REG_IDX_3] & SELF_TEST_MASK_XA_TEST_LO) >> SHIFT_4);
+    accel_st_data++;
+
+    // Acceleration in Y
+    *accel_st_data = ((st_data[MPU6050_REG_IDX_1] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
+                     ((st_data[MPU6050_REG_IDX_3] & SELF_TEST_MASK_YA_TEST_LO) >> SHIFT_2);
+    accel_st_data++;
+
+    // Acceleration in Z
+    *accel_st_data = ((st_data[MPU6050_REG_IDX_2] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
+                     ((st_data[MPU6050_REG_IDX_3] & SELF_TEST_MASK_ZA_TEST_LO) >> SHIFT_0);
+
+    // Gyro in X
+    *gyro_st_data = st_data[MPU6050_REG_IDX_0] & SELF_TEST_MASK_X_TEST;
+    gyro_st_data++;
+
+    // Gyro in Y
+    *gyro_st_data = st_data[MPU6050_REG_IDX_1] & SELF_TEST_MASK_X_TEST;
+    gyro_st_data++;
+
+    // Gyro in Z
+    *gyro_st_data = st_data[MPU6050_REG_IDX_2] & SELF_TEST_MASK_X_TEST;
+}
+
 // SMPRT_DIV write - Register 25
 void mpu6050_smprt_div_write(
     uint8_t mpu6050_address,
@@ -227,7 +271,7 @@ uint8_t mpu6050_gyro_config_read(uint8_t mpu6050_address)
     // Place to store the value of GYRO_CONFIG
     uint8_t mpu6050_gyro_config;
 
-    // Read the value ofGYRO_CONFIG register 
+    // Read the value of GYRO_CONFIG register 
     mpu6050_read(
         mpu6050_address, 
         MPU6050_GYRO_CONFIG, 
@@ -422,26 +466,154 @@ uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address)
 // TODO add a section for self test and trigger an error if it fails 
 
 // Self Test 
-uint8_t mpu6050_self_test(void)
+uint8_t mpu6050_self_test(uint8_t mpu6050_address)
 {
-    // 
+    // Local variables 
+    uint8_t accel_fsr;
+    uint8_t gyro_fsr;
+
+    int16_t mpu6050_accel_no_st[MPU6050_NUM_ACCEL_AXIS];
+    int16_t mpu6050_gyro_no_st[MPU6050_NUM_GYRO_AXIS];
+
+    int16_t mpu6050_accel_st[MPU6050_NUM_ACCEL_AXIS];
+    int16_t mpu6050_gyro_st[MPU6050_NUM_GYRO_AXIS];
+
+    int16_t mpu6050_accel_str[MPU6050_NUM_ACCEL_AXIS];
+    int16_t mpu6050_gyro_str[MPU6050_NUM_GYRO_AXIS];
+
+    uint8_t mpu6050_accel_test[MPU6050_NUM_ACCEL_AXIS];
+    uint8_t mpu6050_gyro_test[MPU6050_NUM_GYRO_AXIS];
+
+    uint8_t self_test_result;
+
     //==============================================================
     // Steps for self test 
-    //  X. Set the full scale range of the gyro to +/- 250 
-    //  X. Set the full scale range of the accel to +/- 
-    //  X. Read and store the value to the gyro (non-self-test)
+    //  X. Record the full scale range set in the init function 
+    //  X. Set the full scale range of the accel to +/- 8g
+    //  X. Set the full scale range of the gyro to +/- 250 deg/s
     //  X. Read and store the value of the accel (non-self-test)
+    //  X. Read and store the value to the gyro (non-self-test)
     //  X. Enable self test 
+    //  X. Read and store the value of the accel (self-test)
+    //  X. Read and store the value of the gyro (self-test)
     //  X. Read the self-test registers 
     //  X. Calculater the factory trim value 
-    //  X. Read and store the value of the gyro (self-test)
-    //  X. Read and store the value of the accel (self-test)
     //  X. Calculate self test response of the gyro and accel 
     //  X. Calculate the change from factory trim % of the gyro and accel 
     //  X. Check if the % is outside the accepable range 
-    //  X. Disable self test 
-    //  X. Set the full scale ranges back to their original values
+    //  X. Disable self test and set the full scale ranges back to their original values
     //==============================================================
+
+    // X. Record the full scale range set in the init function 
+    accel_fsr = ((mpu6050_accel_config_read(mpu6050_address) & 
+                  MPU6050_AFS_SEL_MASK) >> SHIFT_3);
+    gyro_fsr  = ((mpu6050_gyro_config_read(mpu6050_address) & 
+                  MPU6050_FS_SEL_MASK) >> SHIFT_3);
+
+    // X. Set the full scale range of the accel to +/- 8g
+    mpu6050_accel_config_write(
+        mpu6050_address,
+        ACCEL_SELF_TEST_DISABLE,
+        AFS_SEL_8);
+
+    // X. Set the full scale range of the gyro to +/- 250 deg/s
+    mpu6050_gyro_config_write(
+        mpu6050_address,
+        GYRO_SELF_TEST_DISABLE,
+        FS_SEL_250);
+
+    // X. Read and store the value of the accel (non-self-test)
+    mpu6050_accel_read(mpu6050_address, mpu6050_accel_no_st);
+
+    // X. Read and store the value to the gyro (non-self-test)
+    mpu6050_gyro_read(mpu6050_address, mpu6050_gyro_no_st);
+
+    // X. Enable self test 
+    mpu6050_accel_config_write(
+        mpu6050_address,
+        ACCEL_SELF_TEST_ENABLE,
+        AFS_SEL_8);
+    
+    mpu6050_gyro_config_write(
+        mpu6050_address,
+        GYRO_SELF_TEST_ENABLE,
+        FS_SEL_250);
+    
+    // X. Read and store the value of the accel (self-test)
+    mpu6050_accel_read(mpu6050_address, mpu6050_accel_st);
+    
+    // X. Read and store the value of the gyro (self-test)
+    mpu6050_gyro_read(mpu6050_address, mpu6050_gyro_st);
+    
+    // X. Read the self-test registers
+    mpu6050_self_test_read(
+        mpu6050_address,
+        mpu6050_accel_test,
+        mpu6050_gyro_test);
+    
+    // X. Calculate the factory trim value 
+    mpu6050_accel_ft(mpu6050_accel_test);
+    mpu6050_gyro_ft(mpu6050_gyro_test);
+    
+    // X. Calculate self test response of the accel
+    mpu6050_str_calc(
+        mpu6050_accel_str,
+        mpu6050_accel_no_st,
+        mpu6050_accel_st,
+        MPU6050_NUM_ACCEL_AXIS);
+
+    // X. Calculate self test response of the gyro 
+    mpu6050_str_calc(
+        mpu6050_gyro_str,
+        mpu6050_gyro_no_st,
+        mpu6050_gyro_st,
+        MPU6050_NUM_GYRO_AXIS);
+    
+    // X. Calculate the change from factory trim % of the gyro and accel 
+    
+    // X. Check if the % is outside the accepable range 
+    
+    // X. Disable self test and set the full scale ranges back to their original values
+    mpu6050_accel_config_write(
+        mpu6050_address,
+        ACCEL_SELF_TEST_DISABLE,
+        accel_fsr);
+
+    mpu6050_gyro_config_write(
+        mpu6050_address,
+        GYRO_SELF_TEST_DISABLE,
+        gyro_fsr);
+}
+
+
+// 
+float mpu6050_accel_ft(uint8_t *a_test)
+{
+    // 
+}
+
+
+// 
+float mpu6050_gyro_ft(uint8_t *g_test)
+{
+    // 
+}
+
+
+// Calculate the self test response
+void mpu6050_str_calc(
+    int16_t *self_test_response,
+    int16_t *no_self_test,
+    int16_t *self_test,
+    uint8_t num_axes)
+{
+    for (uint8_t i = 0; i < num_axes; i++)
+    {
+        *self_test_response = *self_test - *no_self_test;
+        self_test_response++;
+        self_test++;
+        no_self_test++;
+    }
 }
 
 //=======================================================================================
@@ -577,12 +749,12 @@ float mpu6050_gyro_scalar(uint8_t mpu6050_address)
 {
     float gyro_scalar;
 
-    // Get AFS_SEL
-    uint8_t afs_sel = ((mpu6050_gyro_config_read(mpu6050_address) & 
-                        MPU6050_FS_SEL_MASK) >> SHIFT_3);
+    // Get FS_SEL
+    uint8_t fs_sel = ((mpu6050_gyro_config_read(mpu6050_address) & 
+                       MPU6050_FS_SEL_MASK) >> SHIFT_3);
     
     // Return the scalar 
-    switch (afs_sel)
+    switch (fs_sel)
     {
         case FS_SEL_250:
             gyro_scalar = GYRO_SCALE_FS_SEL_250 / ((float)(MPU6050_GYRO_SCALAR_SCALAR));
