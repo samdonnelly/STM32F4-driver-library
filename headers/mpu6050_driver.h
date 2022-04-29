@@ -247,7 +247,7 @@ typedef enum {
 /**
  * @brief Accelerometer value scalar 
  * 
- * @details Divide the raw 16-bit gyro return by this value to get a value in deg/s
+ * @details Divide the raw 16-bit gyro return by this value to get a value in g's
  * 
  */
 typedef enum {
