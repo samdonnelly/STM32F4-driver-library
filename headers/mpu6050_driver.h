@@ -40,12 +40,14 @@
 
 // Accelerometer info 
 #define MPU6050_NUM_ACCEL_AXIS 3
-#define MPU6050_AFS_SEL_MASK 24  // 0x18
+#define MPU6050_AFS_SEL_MASK 24        // 0x18
+#define MPU6050_ACCEL_FT_MAX_ERROR 14  // % 
 
 // Gyro info 
 #define MPU6050_NUM_GYRO_AXIS 3 
 #define MPU6050_GYRO_SCALAR_SCALAR 10 
-#define MPU6050_FS_SEL_MASK 24  // 0x18
+#define MPU6050_FS_SEL_MASK 24         // 0x18
+#define MPU6050_GYRO_FT_MAX_ERROR 14   // % 
 
 //=======================================================================================
 
@@ -139,6 +141,16 @@ typedef enum {
     SELF_TEST_MASK_XA_TEST_LO = 0x30,
     SELF_TEST_MASK_A_TEST_HI  = 0xE0
 } mpu6050_self_test_masks_t;
+
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    SELF_TEST_RESULT_SHIFT_ACCEL = 0x01,
+    SELF_TEST_RESULT_SHIFT_GYRO  = 0x08
+} self_test_result_shift_t;
 
 
 /**
@@ -646,18 +658,16 @@ uint8_t mpu6050_self_test(uint8_t mpu6050_address);
  * @brief 
  * 
  * @param a_test 
- * @return float 
  */
-float mpu6050_accel_ft(uint8_t *a_test);
+void mpu6050_accel_ft(uint8_t *a_test, float *accel_ft);
 
 
 /**
  * @brief 
  * 
  * @param g_test 
- * @return float 
  */
-float mpu6050_gyro_ft(uint8_t *g_test);
+void mpu6050_gyro_ft(uint8_t *g_test, float *gyro_ft);
 
 
 /**
@@ -673,6 +683,34 @@ void mpu6050_str_calc(
     int16_t *no_self_test,
     int16_t *self_test,
     uint8_t num_axes);
+
+
+/**
+ * @brief 
+ * 
+ * @param accel_self_test_results 
+ * @param accel_factory_trim 
+ * @param self_test_results 
+ * @return uint8_t 
+ */
+uint8_t mpu6050_self_test_accel_result(
+    int16_t *accel_self_test_results,
+    float *accel_factory_trim,
+    uint8_t self_test_results);
+
+
+/**
+ * @brief 
+ * 
+ * @param gyro_self_test_results 
+ * @param gyro_factory_trim 
+ * @param self_test_results 
+ * @return uint8_t 
+ */
+uint8_t mpu6050_self_test_gyro_result(
+    int16_t *gyro_self_test_results,
+    float *gyro_factory_trim,
+    uint8_t self_test_results);
 
 //=======================================================================================
 

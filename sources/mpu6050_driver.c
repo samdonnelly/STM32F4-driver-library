@@ -472,19 +472,22 @@ uint8_t mpu6050_self_test(uint8_t mpu6050_address)
     uint8_t accel_fsr;
     uint8_t gyro_fsr;
 
-    int16_t mpu6050_accel_no_st[MPU6050_NUM_ACCEL_AXIS];
-    int16_t mpu6050_gyro_no_st[MPU6050_NUM_GYRO_AXIS];
+    int16_t accel_no_st[MPU6050_NUM_ACCEL_AXIS];
+    int16_t gyro_no_st[MPU6050_NUM_GYRO_AXIS];
 
-    int16_t mpu6050_accel_st[MPU6050_NUM_ACCEL_AXIS];
-    int16_t mpu6050_gyro_st[MPU6050_NUM_GYRO_AXIS];
+    int16_t accel_st[MPU6050_NUM_ACCEL_AXIS];
+    int16_t gyro_st[MPU6050_NUM_GYRO_AXIS];
 
-    int16_t mpu6050_accel_str[MPU6050_NUM_ACCEL_AXIS];
-    int16_t mpu6050_gyro_str[MPU6050_NUM_GYRO_AXIS];
+    int16_t accel_str[MPU6050_NUM_ACCEL_AXIS];
+    int16_t gyro_str[MPU6050_NUM_GYRO_AXIS];
 
-    uint8_t mpu6050_accel_test[MPU6050_NUM_ACCEL_AXIS];
-    uint8_t mpu6050_gyro_test[MPU6050_NUM_GYRO_AXIS];
+    uint8_t accel_test[MPU6050_NUM_ACCEL_AXIS];
+    uint8_t gyro_test[MPU6050_NUM_GYRO_AXIS];
 
-    uint8_t self_test_result;
+    float accel_ft[MPU6050_NUM_ACCEL_AXIS];
+    float gyro_ft[MPU6050_NUM_GYRO_AXIS];
+
+    uint8_t self_test_result = 0;
 
     //==============================================================
     // Steps for self test 
@@ -523,10 +526,10 @@ uint8_t mpu6050_self_test(uint8_t mpu6050_address)
         FS_SEL_250);
 
     // X. Read and store the value of the accel (non-self-test)
-    mpu6050_accel_read(mpu6050_address, mpu6050_accel_no_st);
+    mpu6050_accel_read(mpu6050_address, accel_no_st);
 
     // X. Read and store the value to the gyro (non-self-test)
-    mpu6050_gyro_read(mpu6050_address, mpu6050_gyro_no_st);
+    mpu6050_gyro_read(mpu6050_address, gyro_no_st);
 
     // X. Enable self test 
     mpu6050_accel_config_write(
@@ -540,38 +543,48 @@ uint8_t mpu6050_self_test(uint8_t mpu6050_address)
         FS_SEL_250);
     
     // X. Read and store the value of the accel (self-test)
-    mpu6050_accel_read(mpu6050_address, mpu6050_accel_st);
+    mpu6050_accel_read(mpu6050_address, accel_st);
     
     // X. Read and store the value of the gyro (self-test)
-    mpu6050_gyro_read(mpu6050_address, mpu6050_gyro_st);
+    mpu6050_gyro_read(mpu6050_address, gyro_st);
     
     // X. Read the self-test registers
     mpu6050_self_test_read(
         mpu6050_address,
-        mpu6050_accel_test,
-        mpu6050_gyro_test);
+        accel_test,
+        gyro_test);
     
-    // X. Calculate the factory trim value 
-    mpu6050_accel_ft(mpu6050_accel_test);
-    mpu6050_gyro_ft(mpu6050_gyro_test);
+    // X. Calculate the factory trim of the accelerometer 
+    mpu6050_accel_ft(accel_test, accel_ft);
+
+    // X. Calculate the factory trim of the gyroscope 
+    mpu6050_gyro_ft(gyro_test, gyro_ft);
     
     // X. Calculate self test response of the accel
     mpu6050_str_calc(
-        mpu6050_accel_str,
-        mpu6050_accel_no_st,
-        mpu6050_accel_st,
+        accel_str,
+        accel_no_st,
+        accel_st,
         MPU6050_NUM_ACCEL_AXIS);
 
     // X. Calculate self test response of the gyro 
     mpu6050_str_calc(
-        mpu6050_gyro_str,
-        mpu6050_gyro_no_st,
-        mpu6050_gyro_st,
+        gyro_str,
+        gyro_no_st,
+        gyro_st,
         MPU6050_NUM_GYRO_AXIS);
     
-    // X. Calculate the change from factory trim % of the gyro and accel 
+    // X. Calculate the change from factory trim % of the gyro and accel and 
+    //    check if the % is outside the accepable range 
+    self_test_result = mpu6050_self_test_accel_result(
+                                            accel_str,
+                                            accel_ft,
+                                            self_test_result);
     
-    // X. Check if the % is outside the accepable range 
+    self_test_result = mpu6050_self_test_gyro_result(
+                                            gyro_str,
+                                            gyro_ft,
+                                            self_test_result);
     
     // X. Disable self test and set the full scale ranges back to their original values
     mpu6050_accel_config_write(
@@ -583,18 +596,21 @@ uint8_t mpu6050_self_test(uint8_t mpu6050_address)
         mpu6050_address,
         GYRO_SELF_TEST_DISABLE,
         gyro_fsr);
+    
+    // Return the result 
+    return self_test_result;
 }
 
 
 // 
-float mpu6050_accel_ft(uint8_t *a_test)
+void mpu6050_accel_ft(uint8_t *a_test, float *accel_ft)
 {
     // 
 }
 
 
 // 
-float mpu6050_gyro_ft(uint8_t *g_test)
+void mpu6050_gyro_ft(uint8_t *g_test, float *gyro_ft)
 {
     // 
 }
@@ -614,6 +630,62 @@ void mpu6050_str_calc(
         self_test++;
         no_self_test++;
     }
+}
+
+
+// 
+uint8_t mpu6050_self_test_accel_result(
+    int16_t *accel_self_test_results,
+    float  *accel_factory_trim,
+    uint8_t self_test_results)
+{
+    // Place to store the % change 
+    uint8_t ft_change;
+
+    // 
+    for (uint8_t i = 0; i <= MPU6050_NUM_ACCEL_AXIS; i++)
+    {
+        // Check % change from factory trim 
+        ft_change = PERCENT_CONVERSION * ((*accel_self_test_results - *accel_factory_trim) /
+                                           *accel_factory_trim);
+        
+        // Check change against maximum allowed value
+        if ((ft_change > MPU6050_ACCEL_FT_MAX_ERROR) ||
+            (ft_change < -(MPU6050_ACCEL_FT_MAX_ERROR)))
+        {
+            self_test_results |= (SELF_TEST_RESULT_SHIFT_GYRO << SHIFT_1*i);
+        }
+    }
+
+    return self_test_results;
+}
+
+
+// 
+uint8_t mpu6050_self_test_gyro_result(
+    int16_t *gyro_self_test_results,
+    float *gyro_factory_trim,
+    uint8_t self_test_results)
+{
+    // Place to store the % change 
+    uint8_t ft_change;
+
+    // 
+    for (uint8_t i = 0; i <= MPU6050_NUM_GYRO_AXIS; i++)
+    {
+        // Check % change from factory trim 
+        ft_change = PERCENT_CONVERSION * ((*gyro_self_test_results - *gyro_factory_trim) /
+                                           *gyro_factory_trim);
+        
+        // Check change against maximum allowed value
+        if ((ft_change > MPU6050_GYRO_FT_MAX_ERROR) ||
+            (ft_change < -(MPU6050_GYRO_FT_MAX_ERROR)))
+        {
+            self_test_results |= (SELF_TEST_RESULT_SHIFT_GYRO << SHIFT_1*i);
+        }
+    }
+
+    return self_test_results;
 }
 
 //=======================================================================================
