@@ -504,7 +504,7 @@ uint8_t mpu6050_self_test(uint8_t mpu6050_address)
     float accel_ft[MPU6050_NUM_ACCEL_AXIS];
     float gyro_ft[MPU6050_NUM_GYRO_AXIS];
 
-    // Status if the self-test 
+    // Status of the self-test 
     uint8_t self_test_result = 0;
 
 
@@ -642,6 +642,11 @@ void mpu6050_gyro_ft(uint8_t *g_test, float *gyro_ft)
             *gyro_ft = (*g_test)*((*g_test)*(c1*(*g_test) + c2) + c3) + c4;
         }
 
+        if (i == 1)
+        {
+            *gyro_ft = -(*gyro_ft);
+        }
+
         gyro_ft++;
         g_test++;
     }
@@ -678,8 +683,7 @@ uint8_t mpu6050_self_test_accel_result(
     for (uint8_t i = 0; i < MPU6050_NUM_ACCEL_AXIS; i++)
     {
         // Check % change from factory trim 
-        ft_change = PERCENT_CONVERSION * ((*accel_self_test_results - *accel_factory_trim) /
-                                           *accel_factory_trim);
+        ft_change = (*accel_self_test_results - *accel_factory_trim) / *accel_factory_trim;
         
         // Check change against maximum allowed value
         if ((ft_change > MPU6050_ACCEL_FT_MAX_ERROR) ||
@@ -709,8 +713,7 @@ uint8_t mpu6050_self_test_gyro_result(
     for (uint8_t i = 0; i < MPU6050_NUM_GYRO_AXIS; i++)
     {
         // Check % change from factory trim 
-        ft_change = PERCENT_CONVERSION * ((*gyro_self_test_results - *gyro_factory_trim) /
-                                           *gyro_factory_trim);
+        ft_change = (*gyro_self_test_results - *gyro_factory_trim) / *gyro_factory_trim;
         
         // Check change against maximum allowed value
         if ((ft_change > MPU6050_GYRO_FT_MAX_ERROR) ||
