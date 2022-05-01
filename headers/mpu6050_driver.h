@@ -154,6 +154,30 @@ typedef enum {
 
 
 /**
+ * @brief 
+ * 
+ */
+typedef enum {
+    SELF_TEST_ACCEL_FT_C1 = 142,
+    SELF_TEST_ACCEL_FT_C2 = 6056,
+    SELF_TEST_ACCEL_FT_C3 = 45752,
+    SELF_TEST_ACCEL_FT_C4 = 13452
+} self_test_accel_constants_t;
+
+
+/**
+ * @brief 
+ * 
+ */
+typedef enum {
+    SELF_TEST_GYRO_FT_C1 = 1001,
+    SELF_TEST_GYRO_FT_C2 = 19244,
+    SELF_TEST_GYRO_FT_C3 = 15056,
+    SELF_TEST_GYRO_FT_C4 = 31125
+} self_test_gyro_constants_t;
+
+
+/**
  * @brief SMPLRT_DIV setpoint 
  * 
  * @details Unit of kHz
