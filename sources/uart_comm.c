@@ -21,16 +21,49 @@
 
 
 //=======================================================================================
+// Finction Prototypes 
+
+//==============================================================
+// Note: These functions are for internal driver use only and 
+//       are therefore not included in the header file. 
+//==============================================================
+
+/**
+ * @brief Select the fractional and mantissa portions of the baud rate setup 
+ * 
+ * @details Uses the baud_rate to determine the fractional and mantissa values used in 
+ *          the initialization of the baud rate in uart2_init. This function is made 
+ *          to make uart2_init easier to use by allowing for a baud rate to be passsed 
+ *          when initializing UART2 as opposed to fractional and mantissa parameters. 
+ * 
+ * @see uart2_init
+ * @see uart_fractional_baud_t
+ * @see uart_mantissa_baud_t
+ * 
+ * @param baud_rate : (bps) communication speed of UART2
+ * @param baud_frac : fractional portion of UART2 baud rate setup 
+ * @param baud_mant : mantissa portion of UART2 baud rate setup
+ */
+void uart2_baud_select(
+    uint8_t baud_rate,
+    uint16_t *baud_frac,
+    uint16_t *baud_mant);
+
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 //==============================================================
 // UART Setup Steps 
 //  1. Configure the pins 
-//     a) Enable UART2 Clock - RCC_APB1 register, bit 17
-//     b) Enable GPIOA clock for TX and RX pins - RCC_AHB! register, bit 0
-//     c) Configure the UART pins for alternative functions - GPIOA_MODER register 
-//     d) Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
-//     e) Set the alternative function low ([0]) register for USART2 (AF7)
+//     a) Enable the UART Clock - RCC_APB1 register
+//     b) Enable GPIOX clock for TX and RX pins - RCC_AHB1 register
+//     c) Configure the UART pins for alternative functions - GPIOX_MODER register 
+//     d) Set output speed of GPIO pins to high speed - GPIOX_OSPEEDR register 
+//     e) Set the alternative function register for USART
 //  2. Configure the UART 
 //     a) Clear the USART_CR1 register 
 //     b) Write the UE bit in the USART_CR1 register to 1
@@ -41,11 +74,15 @@
 //==============================================================
 
 
-// UART2 setup 
-void uart2_init(void)
+// UART2 initialization 
+void uart2_init(uint8_t baud_rate)
 {
+    // Baud rate setup variables 
+    uint8_t baud_frac;
+    uint8_t baud_mant;
+
     //==============================================================
-    // Pin information for I2C1
+    // Pin information for UART2
     //  PA2: TX
     //  PA3: RX
     //==============================================================
@@ -55,7 +92,7 @@ void uart2_init(void)
     // a) Enable UART2 Clock - RCC_APB1 register, bit 17
     RCC->APB1ENR |= (SET_BIT << SHIFT_17);
 
-    // b) Enable GPIOA clock for TX and RX pins - RCC_AHB! register, bit 0
+    // b) Enable GPIOA clock for TX and RX pins - RCC_AHB1 register, bit 0
     RCC->AHB1ENR |= (SET_BIT << SHIFT_0);
 
     // c) Configure the UART pins for alternative functions - GPIOA_MODER register 
@@ -83,8 +120,9 @@ void uart2_init(void)
     USART2->CR1 &= ~(SET_BIT << SHIFT_12);
 
     // d) Set the baud rate 
-    USART2->BRR |= (USART_42MHZ_9600_FRAC << SHIFT_0);  // Fractional 
-    USART2->BRR |= (USART_42MHZ_9600_MANT << SHIFT_4);  // Mantissa 
+    uart2_baud_select(baud_rate, &baud_frac, &baud_mant);
+    USART2->BRR |= (baud_frac << SHIFT_0);  // Fractional 
+    USART2->BRR |= (baud_mant << SHIFT_4);  // Mantissa 
 
     // e) Enable the TX/RX by setting the RE and TE bits in USART_CR1 register 
     USART2->CR1 |= (SET_BIT << SHIFT_2);
@@ -95,6 +133,28 @@ void uart2_init(void)
     // (USART_SR) continuously until it is set. If this is not done then some
     // characters can be skipped in transmission on reset. 
     while (!(USART2->SR & (SET_BIT << SHIFT_6)));
+}
+
+
+// Select the fractional and mantissa portions of the baud rate setup 
+void uart2_baud_select(
+    uint8_t baud_rate,
+    uint16_t *baud_frac,
+    uint16_t *baud_mant)
+{
+    switch (baud_rate)
+    {
+        case UART2_BAUD_9600:
+            *baud_frac = UART_42_9600_FRAC;
+            *baud_mant = UART_42_9600_MANT;
+            break;
+        
+        case UART2_BAUD_115200:
+            break;
+        
+        default:
+            break;
+    }
 }
 
 //=======================================================================================
@@ -223,10 +283,10 @@ void uart2_getstr(char *string_to_fill)
             string_to_fill++;
         }
     } 
-    while(input != UART_CARRIAGE);
+    while(input != UART2_STRING_CARRIAGE);
 
     // Add a null character to the end if the string 
-    *string_to_fill = UART_NULL;
+    *string_to_fill = UART2_STRING_NULL;
 }
 
 //=======================================================================================

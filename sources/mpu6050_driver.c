@@ -23,6 +23,17 @@
 //=======================================================================================
 // Initialization 
 
+//==============================================================
+// MPU-6050 Init
+//  1. Read the WHO_AM_I register to establish that there is communication 
+//  2. Choose which sensors to use and frquency of CYCLE mode (see PWR_MGMT_1)
+//  3. Wake the sensor up through the power management 1 register 
+//  4. Set the output rate of the gyro and accelerometer 
+//  5. Set the Sample Rate (data rate) 
+//  6. Configure the accelerometer register 
+//  7. Configure the gyroscope register
+//==============================================================
+
 // MPU-6050 Initialization 
 uint8_t mpu6050_init(
     uint8_t mpu6050_address,
@@ -31,17 +42,6 @@ uint8_t mpu6050_init(
     uint8_t afs_sel,
     uint8_t fs_sel)
 {
-    //==============================================================
-    // MPU-6050 Init
-    //  1. Read the WHO_AM_I register to establish that there is communication 
-    //  2. Choose which sensors to use and frquency of CYCLE mode (see PWR_MGMT_1)
-    //  3. Wake the sensor up through the power management 1 register 
-    //  4. Set the output rate of the gyro and accelerometer 
-    //  5. Set the Sample Rate (data rate) 
-    //  6. Configure the accelerometer register 
-    //  7. Configure the gyroscope register
-    //==============================================================
-
     // 1. Read the WHO_AM_I register to establish that there is communication 
     if (mpu6050_who_am_i_read(mpu6050_address) != MPU6050_7_BIT_ADDRESS)
     {

@@ -27,9 +27,6 @@
 //=======================================================================================
 // Macros 
 
-#define UART_NULL 0       // '\0' == 0
-#define UART_CARRIAGE 13  // '\r' == 13
-
 #define UART2_NUM_SIGN_MASK 32768  // 0x8000
 
 #define UART2_2S_COMP_OFFSET 1
@@ -41,25 +38,54 @@
 // Enums 
 
 /**
- * @brief Fraction portion of UART baudrate setup 
+ * @brief UART2 baud rate 
+ * 
+ * @details 
+ * 
+ * @see uart2_baud_select
  * 
  */
 typedef enum {
-    USART_42MHZ_9600_FRAC = 7
-} usart_fractional_baud_t;
+    UART2_BAUD_9600,
+    UART2_BAUD_115200
+} uart2_baud_rate_t;
+
+/**
+ * @brief Fraction portion of UART baudrate setup 
+ * 
+ * @details <br><br>
+ *          enum code: UART_(X_1)_(X_2)_FRAC <br>
+ *              X_1: PCLK1 frquency (MHz)    <br>
+ *              X_2: Baud rate (bps)         <br>
+ * 
+ * @see uart_mantissa_baud_t 
+ * 
+ */
+typedef enum {
+    UART_42_9600_FRAC = 7
+} uart_fractional_baud_t;
 
 
 /**
  * @brief Mantissa portion of UART baudrate setup 
  * 
+ * @details <br><br>
+ *          enum code: UART_(X_1)_(X_2)_MANT <br>
+ *              X_1: PCLK1 frquency (MHz)    <br>
+ *              X_2: Baud rate (bps)         <br>
+ * 
+ * @see uart_fractional_baud_t
+ * 
  */
 typedef enum {
-    USART_42MHZ_9600_MANT = 273
-} usart_mantissa_baud_t;
+    UART_42_9600_MANT = 273
+} uart_mantissa_baud_t;
 
 
 /**
- * @brief 
+ * @brief Number of spaces to send to the serial terminal using UART2
+ * 
+ * @see uart2_send_spaces
  * 
  */
 typedef enum {
@@ -69,22 +95,37 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief Character offsets to produce numbers on the serial terminal 
+ * 
+ * @details A byte sent to the serial terminal using UART2 is interpreted as a 
+ *          character by the terminal and not a number. This means to produce a 
+ *          number you must send a byte (integer) that corresponds to a number 
+ *          character. The following offset numbers convert the byte that is be 
+ *          sent to the terminal into a number character based on the ASCII table. 
+ *          <br>
+ * 
+ * @see uart2_sendchar
+ * @see uart2_send_digit
+ * @see uart2_send_integer
+ * @see uart2_send_spaces
  * 
  */
-typedef enum {
-    UART2_NUM_POSITIVE,
-    UART2_NUM_NEGATIVE
-} uart2_num_sign_t;
-
-
-
 typedef enum {
     UART2_CHAR_SPACE_OFFSET = 32,
     UART2_CHAR_PLUS_OFFSET  = 43,
     UART2_CHAR_MINUS_OFFSET = 45,
     UART2_CHAR_DIGIT_OFFSET = 48
 } uart2_char_offset_t;
+
+
+/**
+ * @brief String formatters for UART2
+ * 
+ */
+typedef enum {
+    UART2_STRING_NULL     = 0,  // '\0' == 0
+    UART2_STRING_CARRIAGE = 13  // '\r' == 13
+} uart2_string_formatters_t;
 
 //=======================================================================================
 
@@ -93,17 +134,25 @@ typedef enum {
 // UART Initialization 
 
 /**
- * @brief Configure UART2
+ * @brief UART2 initialization
  * 
- * @details The function is current equiped to enable UART on pins PA2 and PA3. 
- *          Additional functionality can be added later to equip USART if desired.
+ * @details Configures UART2 which is connected to the serial port of the dev board. 
+ *          This allows for communication with the serial terminal. Additional
+ *          functionality can be added later to equip USART if desired. <br><br>
  *          
- *          Pin information for USART2: 
- *              PA2: TX
- *              PA3: RX
+ *          Takes the baud_rate as a parameter do define the communication speed of 
+ *          UART2. <br><br>
+ *          
+ *          Pin information for UART2:  <br>
+ *              PA2: TX                 <br>
+ *              PA3: RX                 <br>
+ * 
+ * @see uart2_baud_rate_t
+ * 
+ * @param baud_rate : baud rate to initialize UART2 with - defined by uart2_baud_rate_t
  * 
  */
-void uart2_init(void);
+void uart2_init(uint8_t baud_rate);
 
 //=======================================================================================
 
@@ -114,7 +163,7 @@ void uart2_init(void);
 /**
  * @brief UART2 send character to serial terminal 
  * 
- * @details Takes a single character and writes it to the data register of USART2. 
+ * @details Takes a single character and writes it to the data register of UART2. 
  *          Waits until the Transmission Complete (TC) bit (bit 6) in the status
  *          register (USART_SR) is set before exiting the function.
  * 
@@ -130,7 +179,7 @@ void uart2_sendchar(uint8_t character);
  * 
  * @see uart2_sendchar
  * 
- * @param string string to send using USART2 
+ * @param string string to send using UART2 
  */
 void uart2_sendstring(char *string);
 
@@ -205,14 +254,15 @@ uint8_t uart2_getchar(void);
  * @details Read a string from the serial terminal using uart2_getchar. The string
  *          read from the terminal is recorded into string_to_fill. Ensure 
  *          string_to_fill is big enough to accomidate the side of string you want 
- *          to read. 
+ *          to read. <br><br>
  *          
  *          I'm using PuTTy to send and receive data. When inputing information into 
  *          PuTTy and sending it to the device the final character sent is a carriage
  *          return (\r). This function is only called once there is data available 
  *          to be read, but once there is data the function will continually wait 
  *          for all the data until the full string is read. Once a carriage return 
- *          is seen the function then adds a null termination to the string and returns. 
+ *          is seen the function then adds a null termination to the string and returns.
+ *          <br> 
  * 
  * @see uart2_getchar
  * 
