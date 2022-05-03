@@ -128,10 +128,7 @@ void uart2_init(uint8_t baud_rate)
     USART2->CR1 |= (SET_BIT << SHIFT_2);
     USART2->CR1 |= (SET_BIT << SHIFT_3); 
 
-    // f) Clear buffer 
-    // Read the Transmission Complete (TC) bit (bit 6) in the status register 
-    // (USART_SR) continuously until it is set. If this is not done then some
-    // characters can be skipped in transmission on reset. 
+    // f) Clear buffer  
     while (!(USART2->SR & (SET_BIT << SHIFT_6)));
 }
 
@@ -187,14 +184,15 @@ void uart2_sendstring(char *string)
 }
 
 
-// Send a numeric digit to the serial terminal 
+// UART2 send a numeric digit to the serial terminal 
 void uart2_send_digit(uint8_t digit)
 {
+    // Convert the digit into the ASCII character equivalent 
     uart2_sendchar(digit + UART2_CHAR_DIGIT_OFFSET);
 }
 
 
-// Send an integer to the serial terminal 
+// UART2 send an integer to the serial terminal 
 void uart2_send_integer(int16_t integer)
 {
     // Store a digit to print 
@@ -203,8 +201,9 @@ void uart2_send_integer(int16_t integer)
     // Print the sign of the number 
     if (integer < 0)
     {
-        uart2_sendchar(UART2_CHAR_MINUS_OFFSET);
+        // 2's complememt the integer so the correct value is printed
         integer = -(integer);
+        uart2_sendchar(UART2_CHAR_MINUS_OFFSET);
     }
     else 
     {
@@ -212,24 +211,24 @@ void uart2_send_integer(int16_t integer)
     }
 
     // Parse and print each digit
-    digit = (uint8_t)((integer / DIVIDE_10000) % REMAINDER_10) + UART2_CHAR_DIGIT_OFFSET;
-    uart2_sendchar(digit);
+    digit = (uint8_t)((integer / DIVIDE_10000) % REMAINDER_10);
+    uart2_send_digit(digit);
 
-    digit = (uint8_t)((integer / DIVIDE_1000) % REMAINDER_10) + UART2_CHAR_DIGIT_OFFSET;
-    uart2_sendchar(digit);
+    digit = (uint8_t)((integer / DIVIDE_1000) % REMAINDER_10);
+    uart2_send_digit(digit);
 
-    digit = (uint8_t)((integer / DIVIDE_100) % REMAINDER_10) + UART2_CHAR_DIGIT_OFFSET;
-    uart2_sendchar(digit);
+    digit = (uint8_t)((integer / DIVIDE_100) % REMAINDER_10);
+    uart2_send_digit(digit);
 
-    digit = (uint8_t)((integer / DIVIDE_10) % REMAINDER_10) + UART2_CHAR_DIGIT_OFFSET;
-    uart2_sendchar(digit);
+    digit = (uint8_t)((integer / DIVIDE_10) % REMAINDER_10);
+    uart2_send_digit(digit);
 
-    digit = (uint8_t)((integer / DIVIDE_1) % REMAINDER_10) + UART2_CHAR_DIGIT_OFFSET;
-    uart2_sendchar(digit);
+    digit = (uint8_t)((integer / DIVIDE_1) % REMAINDER_10);
+    uart2_send_digit(digit);
 }
 
 
-// Print a desired number of spaces to the serial terminal 
+// UART2 send a desired number of spaces to the serial terminal 
 void uart2_send_spaces(uint8_t num_spaces)
 {
     for (uint8_t i = 0; i < num_spaces; i++)
@@ -239,7 +238,7 @@ void uart2_send_spaces(uint8_t num_spaces)
 }
 
 
-// Go to a new line in the serial terminal 
+// UART2 go to a the beginning of a new line in the serial terminal 
 void uart2_send_new_line(void)
 {
     uart2_sendstring("\r\n");
@@ -254,13 +253,8 @@ void uart2_send_new_line(void)
 // UART2 get character from serial terminal 
 uint8_t uart2_getchar(void)
 {
-    // Store the character input from the data register
-    static uint8_t input = 0;
-
-    // Read data from data register 
-    input = USART2->DR;
-
-    return input;
+    // Read and return data from data register 
+    return (uint8_t)(USART2->DR);
 }
 
 
@@ -268,17 +262,15 @@ uint8_t uart2_getchar(void)
 void uart2_getstr(char *string_to_fill)
 {
     // Store the character input from uart2_getchar()
-    static uint8_t input = 0;
+    uint8_t input;
 
     // Run until a carriage return is seen
     do
     {
-        // Wait for data to be available
+        // Wait for data to be available then read and store it 
         if (USART2->SR & (SET_BIT << SHIFT_5))
         {
             input = uart2_getchar();
-
-            // Record character and increment to the next space in memeory
             *string_to_fill = input;
             string_to_fill++;
         }

@@ -25,16 +25,6 @@
 
 
 //=======================================================================================
-// Macros 
-
-#define UART2_NUM_SIGN_MASK 32768  // 0x8000
-
-#define UART2_2S_COMP_OFFSET 1
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Enums 
 
 /**
@@ -167,7 +157,7 @@ void uart2_init(uint8_t baud_rate);
  *          Waits until the Transmission Complete (TC) bit (bit 6) in the status
  *          register (USART_SR) is set before exiting the function.
  * 
- * @param character character written to data register 
+ * @param character : character written to data register 
  */
 void uart2_sendchar(uint8_t character);
 
@@ -175,55 +165,61 @@ void uart2_sendchar(uint8_t character);
 /**
  * @brief UART2 send string to serial terminal
  * 
- * @details Iterates through a string and calls uart2_sendchar to send characters. 
+ * @details Iterates through each character of a string and sends each character to the 
+ *          serial terminal by calling uart2_sendchar.
  * 
  * @see uart2_sendchar
  * 
- * @param string string to send using UART2 
+ * @param string : string to send using UART2 
  */
 void uart2_sendstring(char *string);
 
 
 /**
- * @brief 
+ * @brief UART2 send a numeric digit to the serial terminal 
  * 
- * @details Input a number from 0-9 to print it to the terminal. The function 
+ * @details Pass a number from 0-9 to print it to the serial terminal. The function 
  *          takes the digit, offsets it to the corresponding character (ex. 9 -> '9')
  *          and sends it to the serial terminal using uart2_sendchar.
  * 
  * @see uart2_sendchar
  * 
- * @param digit 
+ * @param digit : number from 0-9 that gets printed to the serial terminal 
  */
 void uart2_send_digit(uint8_t digit);
 
 
 /**
- * @brief 
+ * @brief UART2 send an integer to the serial terminal 
  * 
- * @details 
+ * @details Takes a signed 16-bit integer, parses the digits and send them to the serial
+ *          terminal one at a time using uart2_send_digit along with the correct sign of 
+ *          the number. 
  * 
- * @see 
+ * @see uart2_send_digit
  * 
- * @param number 
+ * @param number : signed 16-bit number that gets printed to the serial terminal 
  */
 void uart2_send_integer(int16_t integer);
 
 
 /**
- * @brief Print a desired number of blank spaces to the serial terminal 
+ * @brief UART2 send a desired number of spaces to the serial terminal 
  * 
- * @details 
+ * @details Sends a space character to the serial terminal a number of times defined 
+ *          by num_spaces. This is usedful for formatting outputs to the serial 
+ *          terminal. 
  * 
- * @param num_spaces 
+ * @param num_spaces : number of blank spaces that get sent to the 
  */
 void uart2_send_spaces(uint8_t num_spaces);
 
 
 /**
- * @brief Print a new line on the serial terminal 
+ * @brief UART2 go to a the beginning of a new line in the serial terminal 
  * 
- * @details 
+ * @details When called the serial terminal output will go to the beginning of a new 
+ *          line. Useful for formatting outputs to the serial terminal. 
  * 
  */
 void uart2_send_new_line(void);
@@ -237,11 +233,8 @@ void uart2_send_new_line(void);
 /**
  * @brief UART2 get character from serial terminal 
  * 
- * @details Read a character from the UART data register that gets populated from
- *          the serial terminal. Returns a single character. Typically this is 
- *          called from uart2_getstr instead of called directly. 
- * 
- * @see uart2_getstr
+ * @details Read a byte from the UART2 data register that gets populated by data 
+ *          sent from the serial terminal and return the data (single character). 
  * 
  * @return uint8_t : returns character from data register 
  */
@@ -251,22 +244,21 @@ uint8_t uart2_getchar(void);
 /**
  * @brief UART2 get string from serial terminal
  * 
- * @details Read a string from the serial terminal using uart2_getchar. The string
- *          read from the terminal is recorded into string_to_fill. Ensure 
- *          string_to_fill is big enough to accomidate the side of string you want 
- *          to read. <br><br>
+ * @details Read a string from the serial terminal one character at a time by repeatedly
+ *          calling uart2_getchar. The string data gets stored into string_to_fill which 
+ *          is a char pointer passed to the function. Ensure string_to_fill is big enough
+ *          to accomidate the size of string you want to read. <br><br>
  *          
- *          I'm using PuTTy to send and receive data. When inputing information into 
- *          PuTTy and sending it to the device the final character sent is a carriage
- *          return (\r). This function is only called once there is data available 
- *          to be read, but once there is data the function will continually wait 
- *          for all the data until the full string is read. Once a carriage return 
+ *          PuTTy was used to test sending and receiving data. When inputing information 
+ *          into PuTTy and sending it to the device the final character sent is a
+ *          carriage return (\r). This function is only called once there is data
+ *          available to be read, but once there is data the function will continually
+ *          wait for all the data until the full string is read. Once a carriage return
  *          is seen the function then adds a null termination to the string and returns.
- *          <br> 
  * 
  * @see uart2_getchar
  * 
- * @param string_to_fill pointer to string used to store the string input 
+ * @param string_to_fill : pointer to string used to store the string input 
  */
 void uart2_getstr(char *string_to_fill);
 
