@@ -30,7 +30,10 @@
 /**
  * @brief UART2 baud rate 
  * 
- * @details 
+ * @details Passed as an argument to uart2_baud_select that allows the user to define 
+ *          the baud rate of UART2. The baud rates here are defined from 0-X and not 
+ *          the actual value of the baud rate. This method is chosen to prevent the need 
+ *          to define large numbers for the baud rate. 
  * 
  * @see uart2_baud_select
  * 
@@ -41,9 +44,17 @@ typedef enum {
 } uart2_baud_rate_t;
 
 /**
- * @brief Fraction portion of UART baudrate setup 
+ * @brief Fractional portion of UART baud rate setup 
  * 
- * @details <br><br>
+ * @details UART baud rate is a function of a variable called USARTDIV. After picking a 
+ *          baud rate, USARTDIV can be calculated as an unsigned fixed point number. This 
+ *          value needs to be set in the USART_BRR register in order to set the baud rate
+ *          and we define USART_DIV in two parts. The first is the mantissa which defines 
+ *          the integer portion of the value and the second is the fraction which defines 
+ *          the decimal places. This enum defines the fraction portion for a given UART 
+ *          clock speed and baud rate. Refer to the reference manual for more information.
+ *          <br><br>
+ *          
  *          enum code: UART_(X_1)_(X_2)_FRAC <br>
  *              X_1: PCLK1 frquency (MHz)    <br>
  *              X_2: Baud rate (bps)         <br>
@@ -57,9 +68,17 @@ typedef enum {
 
 
 /**
- * @brief Mantissa portion of UART baudrate setup 
+ * @brief Mantissa portion of UART baud rate setup 
  * 
- * @details <br><br>
+ * @details UART baud rate is a function of a variable called USARTDIV. After picking a 
+ *          baud rate, USARTDIV can be calculated as an unsigned fixed point number. This 
+ *          value needs to be set in the USART_BRR register in order to set the baud rate
+ *          and we define USART_DIV in two parts. The first is the mantissa which defines 
+ *          the integer portion of the value and the second is the fraction which defines 
+ *          the decimal places. This enum defines the mantissa portion for a given UART 
+ *          clock speed and baud rate. Refer to the reference manual for more information.
+ *          <br><br>
+ *          
  *          enum code: UART_(X_1)_(X_2)_MANT <br>
  *              X_1: PCLK1 frquency (MHz)    <br>
  *              X_2: Baud rate (bps)         <br>
