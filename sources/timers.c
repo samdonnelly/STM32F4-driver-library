@@ -52,7 +52,7 @@ void tim9_init(uint16_t prescalar)
 //=======================================================================================
 // Delays
 
-// microsecond delay function 
+// microsecond delay function (blocking)
 void tim9_delay_us(uint16_t delay_us)
 {
     // Reset the counter 
@@ -63,10 +63,10 @@ void tim9_delay_us(uint16_t delay_us)
 }
 
 
-// millisecond delay function 
+// millisecond delay function (blocking)
 void tim9_delay_ms(uint16_t delay_ms)
 {
-    // Repeatedly call the us delay function 
+    // Repeatedly call tim9_delay_us
     for (uint16_t i = 0; i < delay_ms; i++)
     {
         tim9_delay_us(PREFIX_SCALAR);

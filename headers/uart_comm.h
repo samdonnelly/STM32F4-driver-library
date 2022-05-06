@@ -94,12 +94,17 @@ typedef enum {
 /**
  * @brief Number of spaces to send to the serial terminal using UART2
  * 
+ * @details This enum is used when calling uart2_send_spaces to specify the number of 
+ *          spaces to print to ther serial terminal. The purpose of the function and 
+ *          this enum is primarily for formatting the serial terminal output. 
+ * 
  * @see uart2_send_spaces
  * 
  */
 typedef enum {
     UART2_1_SPACE  = 1,
-    UART2_2_SPACES = 2
+    UART2_2_SPACES = 2,
+    UART2_3_SPACES = 3
 } uart2_num_spaces_t;
 
 
@@ -109,11 +114,10 @@ typedef enum {
  * @details A byte sent to the serial terminal using UART2 is interpreted as a 
  *          character by the terminal and not a number. This means to produce a 
  *          number you must send a byte (integer) that corresponds to a number 
- *          character. The following offset numbers convert the byte that is be 
- *          sent to the terminal into a number character based on the ASCII table. 
- *          <br>
+ *          character. The following offset numbers convert the byte (integer) that 
+ *          is be sent to the terminal into a number character based on the ASCII 
+ *          table. <br>
  * 
- * @see uart2_sendchar
  * @see uart2_send_digit
  * @see uart2_send_integer
  * @see uart2_send_spaces
@@ -129,6 +133,13 @@ typedef enum {
 
 /**
  * @brief String formatters for UART2
+ * 
+ * @details These are used in uart2_getstr for reading and formatting strings received
+ *          from the serial terminal. Within this function the string has been fully 
+ *          read once the code sees a carriage return. A null character is added to the 
+ *          end to complete the read string. 
+ * 
+ * @see uart2_getstr
  * 
  */
 typedef enum {
