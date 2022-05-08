@@ -56,14 +56,24 @@ typedef enum {
 // Function Prototypes
 
 /**
- * @brief 
+ * @brief TIM9 initialization 
+ * 
+ * @details Initializes TIM9 using a specified prescalar to generate a specific counting
+ *          frequency based on the clock frequency. This timer is used for generating 
+ *          blocking delays. 
+ * 
+ * @see timer_us_prescalars_t
+ * @see tim9_delay_us
+ * @see tim9_delay_ms
+ * 
+ * @param prescalar : value to divide the clock by to get a certain counting frequency
  * 
  */
 void tim9_init(uint16_t prescalar);
 
 
 /**
- * @brief microsecond delay function (blocking)
+ * @brief TIM9 microsecond delay function (blocking)
  * 
  * @details TIM9 is initialized with a 1us frequency using tim9_init. This frequency 
  *          allows this function to increment the TIM9 count register once every 
@@ -79,7 +89,7 @@ void tim9_delay_us(uint16_t delay_us);
 
 
 /**
- * @brief millisecond delay function (blocking)
+ * @brief TIM9 millisecond delay function (blocking)
  * 
  * @details This function allows for millisecond delays. It works by repeatedly calling
  *          tim9_delay_us in 1000 microsecond (1 millisecond) increments. Note that this 

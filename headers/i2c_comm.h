@@ -28,7 +28,14 @@
 // Enums 
 
 /**
- * @brief 
+ * @brief I2C1 available SCL pins 
+ * 
+ * @details These pins are the available I2C1 SCL pins on the chip. The values associated 
+ *          with these variables are used in i2c1_init to determine how to configure 
+ *          the pins alternate function. These variables get passed to i2c1_init as 
+ *          an argument. 
+ * 
+ * @see i2c1_init
  * 
  */
 typedef enum {
@@ -36,8 +43,16 @@ typedef enum {
     I2C1_SCL_PB8 = 2
 } i2c1_scl_pin_t;
 
+
 /**
- * @brief 
+ * @brief I2C1 available SDA pins 
+ * 
+ * @details These pins are the available I2C1 SDA pins on the chip. The values associated 
+ *          with these variables are used in i2c1_init to determine how to configure 
+ *          the pins alternate function. These variables get passed to i2c1_init as 
+ *          an argument.
+ * 
+ * @see i2c1_init
  * 
  */
 typedef enum {
@@ -45,16 +60,32 @@ typedef enum {
     I2C1_SDA_PB9 = 2
 } i2c1_sda_pin_t;
 
+
 /**
- * @brief 
+ * @brief I2C2 available SCL pins 
+ * 
+ * @details These pins are the available I2C2 SCL pins on the chip. The values associated 
+ *          with these variables are used in i2c2_init to determine how to configure 
+ *          the pins alternate function. These variables get passed to i2c2_init as 
+ *          an argument. 
+ * 
+ * @see i2c2_init
  * 
  */
 typedef enum {
     I2C2_SCL_PB10
 } i2c2_scl_pin_t;
 
+
 /**
- * @brief 
+ * @brief I2C2 available SDA pins 
+ * 
+ * @details These pins are the available I2C3 SDA pins on the chip. The values associated 
+ *          with these variables are used in i2c2_init to determine how to configure 
+ *          the pins alternate function. These variables get passed to i2c2_init as 
+ *          an argument.
+ * 
+ * @see i2c2_init
  * 
  */
 typedef enum {
@@ -62,16 +93,32 @@ typedef enum {
     I2C2_SDA_PB9
 } i2c2_sda_pin_t;
 
+
 /**
- * @brief 
+ * @brief I2C3 available SCL pins 
+ * 
+ * @details These pins are the available I2C3 SCL pins on the chip. The values associated 
+ *          with these variables are used in i2c3_init to determine how to configure 
+ *          the pins alternate function. These variables get passed to i2c3_init as 
+ *          an argument. 
+ * 
+ * @see i2c3_init
  * 
  */
 typedef enum {
     I2C3_SCL_PA8
 } i2c3_scl_pin_t;
 
+
 /**
- * @brief 
+ * @brief I2C3 available SDA pins 
+ * 
+ * @details These pins are the available I2C3 SDA pins on the chip. The values associated 
+ *          with these variables are used in i2c3_init to determine how to configure 
+ *          the pins alternate function. These variables get passed to i2c3_init as 
+ *          an argument.
+ * 
+ * @see i2c3_init
  * 
  */
 typedef enum {
@@ -81,10 +128,21 @@ typedef enum {
 } i2c3_sda_pin_t;
 
 
+/**
+ * @brief I2C1 run mode selection 
+ * 
+ * @details I2C can run in standard (SM) or fast (FM) mode. The mode dictates the range 
+ *          of SCL clock frequencies that can be run. i2c1_init uses this enum as an input
+ *          when the function is called so it can set the desired run mode. 
+ * 
+ * @see i2c1_init
+ * 
+ */
 typedef enum {
     I2C_SM_MODE,
     I2C_FM_MODE
 } i2c_run_mode_t;
+
 
 /**
  * @brief 
@@ -95,6 +153,7 @@ typedef enum {
     I2C_FM_DUTY_169  // t_low/t_high = 16/9
 } i2c_fm_duty_cycle_t;
 
+
 /**
  * @brief I2C AP1 frequency 
  * 
@@ -103,6 +162,7 @@ typedef enum {
     I2C_APB1_42MHZ = 42,
     I2C_APB1_84MHZ = 84
 } i2c_apb1_freq_t;
+
 
 /**
  * @brief I2C Fm CCR setpoint
@@ -120,6 +180,7 @@ typedef enum {
     I2C_CCR_FM_169_42_400 = 5
 } i2c_fm_ccr_setpoint_t;
 
+
 /**
  * @brief I2C Sm CCR setpoint
  * 
@@ -134,6 +195,7 @@ typedef enum {
 typedef enum {
     I2C_CCR_SM_42_100 = 210
 } i2c_sm_ccr_setpoint_t;
+
 
 /**
  * @brief I2C TRISE setpoint
@@ -150,6 +212,7 @@ typedef enum {
     I2C_TRISE_0300_42 = 13,
     I2C_TRISE_1000_42 = 43
 } i2c_trise_setpoint_t;
+
 
 /**
  * @brief I2C data size 
@@ -196,6 +259,7 @@ void i2c1_init(
     uint8_t ccr_reg,
     uint8_t trise_reg);
 
+
 /**
  * @brief Initiate I2C 2
  * 
@@ -221,6 +285,7 @@ void i2c2_init(
     uint8_t fm_duty_cycle,
     uint8_t ccr_reg,
     uint8_t trise_reg);
+
 
 /**
  * @brief Initiate I2C 3
