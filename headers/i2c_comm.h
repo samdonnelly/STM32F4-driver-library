@@ -340,48 +340,6 @@ void i2c1_clear_addr(void);
  * @brief 
  * 
  */
-void i2c1_addr_wait(void);
-
-
-/**
- * @brief 
- * 
- */
-void i2c1_clear_ack(void);
-
-
-/**
- * @brief 
- * 
- */
-void i2c1_set_ack(void);
-
-
-/**
- * @brief 
- * 
- */
-void i2c1_rxne_wait(void);
-
-
-/**
- * @brief 
- * 
- */
-void i2c1_txe_wait(void);
-
-
-/**
- * @brief 
- * 
- */
-void i2c1_btf_wait(void);
-
-
-/**
- * @brief 
- * 
- */
 void i2c1_write_address(uint8_t i2c1_address);
 
 
