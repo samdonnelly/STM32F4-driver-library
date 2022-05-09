@@ -129,13 +129,12 @@ typedef enum {
 
 
 /**
- * @brief I2C1 run mode selection 
+ * @brief I2C run mode selection 
  * 
  * @details I2C can run in standard (SM) or fast (FM) mode. The mode dictates the range 
- *          of SCL clock frequencies that can be run. i2c1_init uses this enum as an input
- *          when the function is called so it can set the desired run mode. 
- * 
- * @see i2c1_init
+ *          of SCL clock frequencies that can be run. The i2c init functions uses this 
+ *          enum as an input when the function is called so it can set the desired
+ *          run mode. 
  * 
  */
 typedef enum {
@@ -145,7 +144,12 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief I2C Fm mode duty cycle 
+ * 
+ * @details When I2C is initialized in FM mode for faster clock frequencies the duty 
+ *          cycle can be chosen. The i2c init functions take this as an argument. If the 
+ *          i2c is going to be initialized in Sm mode then this input in the init function 
+ *          has no effect. 
  * 
  */
 typedef enum {
@@ -157,6 +161,9 @@ typedef enum {
 /**
  * @brief I2C AP1 frequency 
  * 
+ * @details The i2c init functions take this as an argument in order to program the 
+ *          peripheral input clock based in the frequency of APB1. 
+ * 
  */
 typedef enum {
     I2C_APB1_42MHZ = 42,
@@ -167,13 +174,16 @@ typedef enum {
 /**
  * @brief I2C Fm CCR setpoint
  * 
- * @details enum code: I2C_CCR_FM_(X_1)_(X_2)_(X_3)
- *              X_1: Duty cycle - ex. 169 -> 16/9 in Fm mode
- *              X_2: PCLK1 frquency (MHz)
- *              X_3: SCL frquency (kHz)
+ * @details The i2c init functions take this an argument to program the clock control 
+ *          register when initializing in Fm mode. <br><br>
+ *          
+ *          enum code: I2C_CCR_FM_(X_1)_(X_2)_(X_3)           <br>
+ *              X_1: Duty cycle - ex. 169 -> 16/9 in Fm mode  <br>
+ *              X_2: PCLK1 frquency (MHz)                     <br>
+ *              X_3: SCL frquency (kHz)                       <br><br>
  *          
  *          Note: A calculation must be done to determine the numbers that work together.
- *                See the Reference Manual. 
+ *                See the Reference Manual for more information. 
  * 
  */
 typedef enum {
@@ -184,12 +194,15 @@ typedef enum {
 /**
  * @brief I2C Sm CCR setpoint
  * 
- * @details enum code: I2C_CCR_SM_(X_1)_(X_2)
- *              X_1: PCLK1 frquency (MHz)
- *              X_2: SCL frquency (kHz)
+ * @details The i2c init functions take this an argument to program the clock control 
+ *          register when initializing in Sm mode. <br><br>
+ *          
+ *          enum code: I2C_CCR_SM_(X_1)_(X_2)  <br>
+ *              X_1: PCLK1 frquency (MHz)      <br>
+ *              X_2: SCL frquency (kHz)        <br><br>
  *          
  *          Note: A calculation must be done to determine the numbers that work together.
- *                See the Reference Manual. 
+ *                See the Reference Manual for more information. 
  * 
  */
 typedef enum {
@@ -200,12 +213,16 @@ typedef enum {
 /**
  * @brief I2C TRISE setpoint
  * 
- * @details enum code: I2C_TRISE_(X_1)_(X_2)
- *              X_1: Max rise time (ns)
- *              X_2: PCLK1 frequency (MHz)
+ * @details The i2c init functions take this as an argument to program the rise timer 
+ *          register based on the clock frequency and max rise time which changes based 
+ *          on the run mode. <br><br> 
+ *          
+ *          enum code: I2C_TRISE_(X_1)_(X_2)  <br>
+ *              X_1: Max rise time (ns)       <br>
+ *              X_2: PCLK1 frequency (MHz)    <br><br>
  *          
  *          Note: A calculation must be done to determine the numbers that work together.
- *                See the Reference Manual. 
+ *                See the Reference Manual for more information. 
  * 
  */
 typedef enum {
@@ -216,6 +233,9 @@ typedef enum {
 
 /**
  * @brief I2C data size 
+ * 
+ * @details This is a general enum used for specifying i2c message sizes when sending or 
+ *          receiving data. 
  * 
  */
 typedef enum {
@@ -233,14 +253,14 @@ typedef enum {
 // Function Prototypes
 
 /**
- * @brief Initiate I2C 1
+ * @brief I2C1 Initialization 
  * 
  * @details 
- *          Pin information for I2C1: 
- *              PB6: SCL
- *              PB7: SDA
- *              PB8: SCL
- *              PB9: SDA
+ *          Pin information for I2C1: <br>
+ *              PB6: SCL              <br>
+ *              PB7: SDA              <br> 
+ *              PB8: SCL              <br>
+ *              PB9: SDA              <br><br>
  * 
  * @param sda_pin 
  * @param scl_pin 
@@ -249,6 +269,16 @@ typedef enum {
  * @param fm_duty_cycle 
  * @param ccr_reg 
  * @param trise_reg 
+ * 
+ * @see i2c1_scl_pin_t
+ * @see i2c1_sda_pin_t
+ * @see i2c_run_mode_t
+ * @see i2c_apb1_freq_t
+ * @see i2c_fm_duty_cycle_t
+ * @see i2c_fm_ccr_setpoint_t
+ * @see i2c_sm_ccr_setpoint_t
+ * @see i2c_trise_setpoint_t
+ * 
  */
 void i2c1_init(
     uint8_t sda_pin,
@@ -261,13 +291,13 @@ void i2c1_init(
 
 
 /**
- * @brief Initiate I2C 2
+ * @brief I2C2 Initialization 
  * 
  * @details 
- *          Pin information for I2C2: 
- *              PB3:  SDA
- *              PB9:  SDA
- *              PB10: SCL
+ *          Pin information for I2C2:  <br>
+ *              PB3:  SDA              <br>
+ *              PB9:  SDA              <br>
+ *              PB10: SCL              <br><br>
  * 
  * @param sda_pin 
  * @param scl_pin 
@@ -276,6 +306,16 @@ void i2c1_init(
  * @param fm_duty_cycle 
  * @param ccr_reg 
  * @param trise_reg 
+ * 
+ * @see i2c2_scl_pin_t
+ * @see i2c2_sda_pin_t
+ * @see i2c_run_mode_t
+ * @see i2c_apb1_freq_t
+ * @see i2c_fm_duty_cycle_t
+ * @see i2c_fm_ccr_setpoint_t
+ * @see i2c_sm_ccr_setpoint_t
+ * @see i2c_trise_setpoint_t
+ * 
  */
 void i2c2_init(
     uint8_t sda_pin,
@@ -288,14 +328,14 @@ void i2c2_init(
 
 
 /**
- * @brief Initiate I2C 3
+ * @brief I2C3 Initialization 
  * 
  * @details 
- *          Pin information for I2C3: 
- *              PA8: SCL
- *              PB4: SDA
- *              PB8: SDA
- *              PC9: SDA
+ *          Pin information for I2C3: <br>
+ *              PA8: SCL              <br>
+ *              PB4: SDA              <br>
+ *              PB8: SDA              <br>
+ *              PC9: SDA              <br><br>
  * 
  * @param sda_pin 
  * @param scl_pin 
@@ -304,6 +344,16 @@ void i2c2_init(
  * @param fm_duty_cycle 
  * @param ccr_reg 
  * @param trise_reg 
+ * 
+ * @see i2c3_scl_pin_t
+ * @see i2c3_sda_pin_t
+ * @see i2c_run_mode_t
+ * @see i2c_apb1_freq_t
+ * @see i2c_fm_duty_cycle_t
+ * @see i2c_fm_ccr_setpoint_t
+ * @see i2c_sm_ccr_setpoint_t
+ * @see i2c_trise_setpoint_t
+ * 
  */
 void i2c3_init(
     uint8_t sda_pin,
