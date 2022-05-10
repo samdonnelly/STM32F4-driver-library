@@ -29,42 +29,55 @@
 //==============================================================
 
 /**
- * @brief 
+ * @brief I2C1 wait for ADDR bit to set
  * 
+ * @details This bit is set once the address has been successfully sent in master mode or
+ *          successfully matched in slave mode. This event must occur before proceeding 
+ *          to transfer data. 
  */
 void i2c1_addr_wait(void);
 
 
 /**
- * @brief 
+ * @brief I2C1 clear acknowledge bit 
+ * 
+ * @details 
  * 
  */
 void i2c1_clear_ack(void);
 
 
 /**
- * @brief 
+ * @brief I2C1 set acknowledge bit 
+ * 
+ * @details 
  * 
  */
 void i2c1_set_ack(void);
 
 
 /**
- * @brief 
+ * @brief I2C1 wait for RxNE bit to set 
+ * 
+ * @details Indicates data is ready to be read 
  * 
  */
 void i2c1_rxne_wait(void);
 
 
 /**
- * @brief 
+ * @brief I2C1 wait for TxE bit to set 
+ * 
+ * @details 
  * 
  */
 void i2c1_txe_wait(void);
 
 
 /**
- * @brief 
+ * @brief I2C1 wait for BTF bit to set
+ * 
+ * @details 
  * 
  */
 void i2c1_btf_wait(void);
@@ -98,7 +111,7 @@ void i2c1_btf_wait(void);
 //     Start condition 
 //==============================================================
 
-// Initialize I2C 1 in master mode 
+// I2C1 Initialization 
 void i2c1_init(
     uint8_t sda_pin,
     uint8_t scl_pin,
@@ -223,7 +236,7 @@ void i2c1_init(
     I2C1->CR1 |= (SET_BIT << SHIFT_0);
 }
 
-//
+// I2C2 Initialization 
 void i2c2_init(
     uint8_t sda_pin,
     uint8_t scl_pin,
@@ -241,7 +254,7 @@ void i2c2_init(
     //==============================================================
 }
 
-//
+// I2C3 Initialization 
 void i2c3_init(
     uint8_t sda_pin,
     uint8_t scl_pin,
@@ -286,7 +299,7 @@ void i2c1_clear_addr(void)
     uint16_t read_clear = (I2C1->SR1) | (I2C1->SR2);
 }
 
-// Wait for ADDR to set
+// I2C1 wait for ADDR bit to set
 void i2c1_addr_wait(void)
 {
     while(!(I2C1->SR1 & (SET_BIT << SHIFT_1)));

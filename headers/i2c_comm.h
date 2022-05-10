@@ -255,20 +255,24 @@ typedef enum {
 /**
  * @brief I2C1 Initialization 
  * 
- * @details 
+ * @details Configures I2C1 using two of the pins specified below. One SCL and one SDA 
+ *          must be selected. The enums referenced in the comments below are used to 
+ *          define the inputs to the function. Refer to the reference manual for 
+ *          detailed information on configuring the pins. <br><br>
+ *          
  *          Pin information for I2C1: <br>
  *              PB6: SCL              <br>
  *              PB7: SDA              <br> 
  *              PB8: SCL              <br>
  *              PB9: SDA              <br><br>
  * 
- * @param sda_pin 
- * @param scl_pin 
- * @param run_mode 
- * @param apb1_freq 
- * @param fm_duty_cycle 
- * @param ccr_reg 
- * @param trise_reg 
+ * @param sda_pin : SDA pin used for I2C1
+ * @param scl_pin : SCL pin used for I2C1
+ * @param run_mode : specifies Sm or Fm mode 
+ * @param apb1_freq : configured APB1 clock frquency 
+ * @param fm_duty_cycle : Fm mode duty cycle (no affect in Sm mode)
+ * @param ccr_reg : calculated clock control register value
+ * @param trise_reg : calculated trise time 
  * 
  * @see i2c1_scl_pin_t
  * @see i2c1_sda_pin_t
@@ -293,19 +297,23 @@ void i2c1_init(
 /**
  * @brief I2C2 Initialization 
  * 
- * @details 
+ * @details Configures I2C2 using two of the pins specified below. One SCL and one SDA 
+ *          must be selected. The enums referenced in the comments below are used to 
+ *          define the inputs to the function. Refer to the reference manual for 
+ *          detailed information on configuring the pins. <br><br>
+ *          
  *          Pin information for I2C2:  <br>
  *              PB3:  SDA              <br>
  *              PB9:  SDA              <br>
  *              PB10: SCL              <br><br>
  * 
- * @param sda_pin 
- * @param scl_pin 
- * @param run_mode 
- * @param apb1_freq 
- * @param fm_duty_cycle 
- * @param ccr_reg 
- * @param trise_reg 
+ * @param sda_pin : SDA pin used for I2C1
+ * @param scl_pin : SCL pin used for I2C1
+ * @param run_mode : specifies Sm or Fm mode 
+ * @param apb1_freq : configured APB1 clock frquency 
+ * @param fm_duty_cycle : Fm mode duty cycle (no affect in Sm mode)
+ * @param ccr_reg : calculated clock control register value
+ * @param trise_reg : calculated trise time 
  * 
  * @see i2c2_scl_pin_t
  * @see i2c2_sda_pin_t
@@ -330,20 +338,24 @@ void i2c2_init(
 /**
  * @brief I2C3 Initialization 
  * 
- * @details 
+ * @details Configures I2C3 using two of the pins specified below. One SCL and one SDA 
+ *          must be selected. The enums referenced in the comments below are used to 
+ *          define the inputs to the function. Refer to the reference manual for 
+ *          detailed information on configuring the pins. <br><br>
+ *          
  *          Pin information for I2C3: <br>
  *              PA8: SCL              <br>
  *              PB4: SDA              <br>
  *              PB8: SDA              <br>
  *              PC9: SDA              <br><br>
  * 
- * @param sda_pin 
- * @param scl_pin 
- * @param run_mode 
- * @param apb1_freq 
- * @param fm_duty_cycle 
- * @param ccr_reg 
- * @param trise_reg 
+ * @param sda_pin : SDA pin used for I2C1
+ * @param scl_pin : SCL pin used for I2C1
+ * @param run_mode : specifies Sm or Fm mode 
+ * @param apb1_freq : configured APB1 clock frquency 
+ * @param fm_duty_cycle : Fm mode duty cycle (no affect in Sm mode)
+ * @param ccr_reg : calculated clock control register value
+ * @param trise_reg : calculated trise time 
  * 
  * @see i2c3_scl_pin_t
  * @see i2c3_sda_pin_t
@@ -366,54 +378,73 @@ void i2c3_init(
 
 
 /**
- * @brief 
+ * @brief I2C1 start condition generation 
+ * 
+ * @details This must be called by the master to begin an i2c read or write 
+ *          transmisssion. The controller is in slave mode when idle but becomes 
+ *          the master when the start condition is generated. 
  * 
  */
 void i2c1_start(void);
 
 
 /**
- * @brief 
+ * @brief I2C1 stop condition condition 
+ * 
+ * @details This must be called in order to end an i2c read or write transmission. 
+ *          Once the stop condition is sent then the controller releases the bus and 
+ *          reverts back to slave mode. 
  * 
  */
 void i2c1_stop(void);
 
 
 /**
- * @brief 
+ * @brief I2C1 clear ADDR bit
+ * 
+ * @details This bit must be cleared before data can start to be sent on the bus. The 
+ *          function gets called after the slave has acknowledged the address sent by 
+ *          the master. 
  * 
  */
 void i2c1_clear_addr(void);
 
 
 /**
- * @brief 
+ * @brief I2C1 write address 
  * 
+ * @details Sends the slave address to the bus to initialize communication with a certain 
+ *          device. This function is called after the start condition has been generated. 
+ *          Only 7-bit addresses are supported. 
+ * 
+ * @param i2c1_address : 7-bit address of slave device on the bus 
  */
 void i2c1_write_address(uint8_t i2c1_address);
 
 
 /**
- * @brief Write data to a device with I2C 1
+ * @brief I2C1 write data
  * 
- * @details Note that this function is set up for 7-bit I2C address and not 10-bit. 
+ * @details Write data to a slave device. This function is called after the ADDR bit has 
+ *          been cleared. The function takes a pointer to the data that will be send over 
+ *          the bus and the size of the data so it knows how many bytes to send. 
  * 
  * @param data : pointer to data to be sent over the bus 
  * @param data_size : integer indicating the number of bytes to be sent 
- * @param slave_address : 7-bit I2C address of targeted device 
  */
 void i2c1_write_master_mode(uint8_t *data, uint8_t data_size);
 
 
 /**
- * @brief Read data from a device with I2C 1 
+ * @brief I2C1 read data
  * 
- * @details 
+ * @details Read data from a slave device. This function is called after the ADDR bit has 
+ *          been cleared. The function takes a pointer where it will store the recieved 
+ *          data and the size of the data so it knows how many bytes to read. 
+ *          
  * 
  * @param data : pointer that data is placed into 
  * @param data_size : integer indicating the number of bytes to be receieved
- * @param slave_address : 7-bit I2C address of targeted device 
- * 
  */
 void i2c1_read_master_mode(uint8_t *data, uint8_t data_size);
 
