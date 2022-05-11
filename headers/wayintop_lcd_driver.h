@@ -45,12 +45,11 @@
 /**
  * @brief PCF8574 write addresses
  * 
- * @details The PCF8574 is the I2C module that relays I2C messages from the controller 
- *          to the screen. The board has contacts on the surface that allow the address
- *          to be set manually by grounding certain contacts. The contacts are not 
- *          grounded by default. These are the addresses used for writing to the 
- *          screen and the address depends on the contact grounding configuration. 
- *          These addresses are from the user manual for the I2C module. 
+ * @details The PCF8574 is the i2c module that relays i2c messages from the controller 
+ *          to the screen. The module has contacts on its surface that can be grounded to 
+ *          manually set the i2c address. By default none of the contacts are grounded.
+ *          The following are all the possible write addresses the module can have. The 
+ *          addresses are defined in the deviced user manual. 
  * 
  */
 typedef enum {
@@ -67,12 +66,11 @@ typedef enum {
 /**
  * @brief PCF8574 read addresses
  * 
- * @details The PCF8574 is the I2C module that relays I2C messages from the controller 
- *          to the screen. The board has contacts on the surface that allow the address
- *          to be set manually by grounding certain contacts. The contacts are not 
- *          grounded by default. These are the addresses used for reading from the 
- *          screen and the address depends on the contact grounding configuration. 
- *          These addresses are from the user manual for the I2C module. 
+ * @details The PCF8574 is the i2c module that relays i2c messages from the controller 
+ *          to the screen. The module has contacts on its surface that can be grounded to 
+ *          manually set the i2c address. By default none of the contacts are grounded.
+ *          The following are all the possible read addresses the module can have. The 
+ *          addresses are defined in the deviced user manual. 
  * 
  */
 typedef enum {
@@ -89,9 +87,11 @@ typedef enum {
 /**
  * @brief HD44780U delays 
  * 
- * @details The screen requires certain delays between each instruction initialization 
- *          command. These come from the user manaul. The timers driver is used to 
- *          provide a delay. 
+ * @details The screen requires certain delays between each initialization instruction 
+ *          which are defined in the screens user manaul. The following values are the
+ *          various delays needed throughout the initialization sequence. 
+ * 
+ * @see hd44780u_init
  * 
  */
 typedef enum {
@@ -105,8 +105,10 @@ typedef enum {
 /**
  * @brief HD44780U setup commands
  * 
- * @details The screen requires certain instructions to be sent to it in order to 
- *          initialize it correctly. These are directly from the user manual. 
+ * @details The screen requires certain initialization instructions which are defined in 
+ *          user manual. The following values are the needed initialization instructions. 
+ * 
+ * @see hd44780u_init
  * 
  */
 typedef enum {
@@ -124,13 +126,18 @@ typedef enum {
  * 
  * @details These commands provide values for the screen backlight, enable or start
  *          transmission signal, read/write command and register choice. These 
- *          commands are automatically added to the instruction and data commands 
- *          in the send functions. See the screen manual for more information. 
+ *          commands are predefined because they don't need to be changed and are 
+ *          sent along with instruction/data information to the screen. Screen data 
+ *          transmission works by sending 4-bits of instruction/data along with 4-bits 
+ *          of these commands to make a byte. <br><br>
  *          
- *          bit 3: backlight -> 0 = off, 1 = on
- *          bit 2: Enable -> 0 = start, 1 = stop
- *          bit 1: R/W -> 0 = read, 1 = write
- *          bit 0: RS register -> 0 = instruction, 1 = data
+ *          bit 3: backlight ---> 0 = off,     1 = on     <br>
+ *          bit 2: Enable ------> 0 = start,   1 = stop   <br>
+ *          bit 1: R/W ---------> 0 = read,    1 = write  <br>
+ *          bit 0: RS register -> 0 = instruc, 1 = data   <br>
+ * 
+ * @see hd44780u_send_instruc
+ * @see hd44780u_send_data
  * 
  */
 typedef enum {
@@ -148,7 +155,8 @@ typedef enum {
  *          a 20x4 dsiplay. The addresses start at the beginning of line 1 (0x00) and 
  *          carry over to line 3, then line 2, and lastly line 4 which is the reason 
  *          for the order in the enum below. These addresses can be used to format 
- *          the information that gets sent to the screen. 
+ *          the information that gets sent to the screen particularily in application 
+ *          code where screen messages are more specific. 
  * 
  */
 typedef enum {
@@ -165,7 +173,9 @@ typedef enum {
 // Function Prototypes
 
 /**
- * @brief LCD screen initialization sequence. 
+ * @brief HD44780U screen initialization
+ * 
+ * @details 
  * 
  */
 void hd44780u_init(void);

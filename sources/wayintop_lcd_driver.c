@@ -23,23 +23,23 @@
 //=======================================================================================
 // Initialization 
 
-// LCD screen init 
+// ============================================================
+// Steps to initialize HD44780U (LCD screen) 
+// 1. Wait for more than 40 ms after Vcc rises to 2.7V. 
+// 2. Function set. Wait for more than 4.1 ms. 
+// 3. Function set. Wait for more than 100 us. 
+// 4. Function set. No specified wait time. 
+// 5. Function set - Choose 4-bit mode
+// 6. Function set - Specify the number of display lines and character font
+// 7. Display off. 
+// 8. Display clear. 
+// 9. Entry mode set. 
+// 10. Display on. 
+// ============================================================
+
+// HD44780U screen init 
 void hd44780u_init(void)
 {
-    // ============================================================
-    // Steps to initialize HD44780U (LCD screen) 
-    // 1. Wait for more than 40 ms after Vcc rises to 2.7V. 
-    // 2. Function set. Wait for more than 4.1 ms. 
-    // 3. Function set. Wait for more than 100 us. 
-    // 4. Function set. No specified wait time. 
-    // 5. Function set - Choose 4-bit mode
-    // 6. Function set - Specify the number of display lines and character font
-    // 7. Display off. 
-    // 8. Display clear. 
-    // 9. Entry mode set. 
-    // 10. Display on. 
-    // ============================================================
-
     // 1. Wait for more than 40 ms after Vcc rises to 2.7V 
     tim9_delay_ms(HD44780U_DELAY_050MS);
 
@@ -94,7 +94,7 @@ void hd44780u_init(void)
     hd44780u_clear();
 }
 
-// Send single byte of instruction information 
+// HD44780U send a single byte of instruction information 
 void hd44780u_send_instruc(uint8_t hd44780u_cmd)
 {
     // Organize send data into a sendable format
@@ -124,7 +124,7 @@ void hd44780u_send_instruc(uint8_t hd44780u_cmd)
 //=======================================================================================
 // Print data 
 
-// Send single byte of printable data 
+// HD44780U send a single byte of printable data 
 void hd44780u_send_data(uint8_t hd44780u_data)
 {
     // Organize send data into a sendable format
@@ -148,7 +148,7 @@ void hd44780u_send_data(uint8_t hd44780u_data)
     i2c1_stop();
 }
 
-// Send a string of data string
+// HD44780U send a string of data string
 void hd44780u_send_string(char *print_string)
 {
     // Send one string character at a time
@@ -160,7 +160,7 @@ void hd44780u_send_string(char *print_string)
     }
 }
 
-// Clear the HD44780U screen 
+// HD44780U clear screen 
 void hd44780u_clear(void)
 {
     // Set the write address to the first place on the screen 
