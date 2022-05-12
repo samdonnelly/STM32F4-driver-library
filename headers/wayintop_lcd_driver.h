@@ -175,38 +175,57 @@ typedef enum {
 /**
  * @brief HD44780U screen initialization
  * 
- * @details 
+ * @details This function configures the screen for displaying data. The steps for 
+ *          manually configuring the device are outlined in the devices user manual. 
+ *          The function hd44780u_send_instruc and the commands defined in 
+ *          hd44780u_setup_cmds_t are used to configure the screen. 
+ * 
+ * @see hd44780u_send_instruc
+ * @see hd44780u_setup_cmds_t
  * 
  */
 void hd44780u_init(void);
 
 /**
- * @brief LCD send command
+ * @brief HD44780U send command
  * 
- * @details Instructions for the LCD screen get sent here from hd44780u_init, 
- *          formatted, and forwarded to the LCD using I2C. This function is also used
- *          for setting the DDRAM value to choose a position on the screen. 
+ * @details This function is used for configuring settings on the screen. The 
+ *          hd44780u_init functions uses this function to send configuration commands. 
+ *          The function can also be used to set the cursor position by setting the 
+ *          DDRAM address value. The i2c driver is used to send the instructions. 
+ *          Before sending instructions, the instruction data is formatted using the 
+ *          hd44780u_config_cmds_t commands. 
+ * 
+ * @see hd44780u_init
+ * @see hd44780u_config_cmds_t
  * 
  * @param hd44780u_cmd : instruction to configure the screen 
  */
 void hd44780u_send_instruc(uint8_t hd44780u_cmd);
 
 /**
- * @brief LCD send data
+ * @brief HD44780U send data
  * 
- * @details All the information that gets printed on the screen is sent using this 
- *          function. It sends a single byte of information on each pass. Command data 
- *          gets formatted before sending to the screen. 
+ * @details This function is used to print information onto the screen one byte at a time. 
+ *          The function can be called directly for printing a single character or 
+ *          hd44780u_send_string can be used to repeatedly call the function and print a 
+ *          string. hd44780u_clear uses this function to send blank characters to the 
+ *          screen. The i2c driver is used to send data. Before sending the data, the 
+ *          data is formatted using hd44780u_config_cmds_t commands. 
+ * 
+ * @see hd44780u_send_string
+ * @see hd44780u_config_cmds_t
  * 
  * @param hd44780u_data : command to be printed to the screen
  */
 void hd44780u_send_data(uint8_t hd44780u_data);
 
 /**
- * @brief LCD send string
+ * @brief HD44780U send string
  * 
- * @details Sends a whole string of data to be printed on the screen. One character 
- *          or byte is sent at a time using the hd44780u_send_data function. 
+ * @details This function is used to print a string onto the screen which is defined 
+ *          by the user and application. The function takes a pointer to a string and 
+ *          repeatedly calls hd44780u_send_data to print the entire string. 
  * 
  * @see hd44780u_send_data
  * 
@@ -215,11 +234,14 @@ void hd44780u_send_data(uint8_t hd44780u_data);
 void hd44780u_send_string(char *print_string);
 
 /**
- * @brief Clear LCD display 
+ * @brief HD44780U clear display 
  * 
  * @details Blank characters are send to all character spaces on the screen to erase 
- *          any existing text. The DDRAM address also gets updates to the cursor sits 
- *          at the beginning of line 1. 
+ *          any existing text. The DDRAM address also gets updated so that the cursor sits 
+ *          at the beginning of line 1. The function repeatedly calls hd44780u_send_data
+ *          to send the blank characters. 
+ * 
+ * @see hd44780u_send_data
  * 
  */
 void hd44780u_clear(void);

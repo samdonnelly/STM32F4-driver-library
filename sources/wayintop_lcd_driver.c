@@ -79,7 +79,7 @@ void hd44780u_init(void)
 
     // 9. Entry mode set 
     // I/D = 1 -> Increment 
-    // S = 0   -> No display shifting 
+    // S   = 0 -> No display shifting 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X06);
     tim9_delay_ms(HD44780U_DELAY_001MS);
 
