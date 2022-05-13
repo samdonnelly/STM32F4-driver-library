@@ -31,23 +31,23 @@
 // Macros 
 
 // Controller info 
-#define MPU6050_7_BIT_ADDRESS 0x68  // MPU-6050 address before read/write bit shift
+#define MPU6050_7_BIT_ADDRESS 0x68  // MPU6050 address before read/write bit shift
 
 // Temperature sensor 
-#define MPU6050_TEMP_SCALAR 100   // User defined scalar to eliminate decimals 
-#define MPU6050_TEMP_SENSIT 340   // Sensitivity (LSB/degC) - MPU6050 scalar
-#define MPU6050_TEMP_OFFSET 3653  // Temp offset scaled by the user defined scalar 
+#define MPU6050_TEMP_SCALAR 100   // User defined temp scalar to eliminate decimals 
+#define MPU6050_TEMP_SENSIT 340   // Sensitivity (LSB/degC) - MPU6050 defined scalar
+#define MPU6050_TEMP_OFFSET 3653  // MPU6050 defined temp offset scaled by MPU6050_TEMP_SCALAR
 
 // Accelerometer info 
-#define MPU6050_NUM_ACCEL_AXIS 3
-#define MPU6050_AFS_SEL_MASK 24        // 0x18
-#define MPU6050_ACCEL_FT_MAX_ERROR 14  // % 
+#define MPU6050_NUM_ACCEL_AXIS 3       // Number of acclerometer axes 
+#define MPU6050_AFS_SEL_MASK 24        // 0x18 - Mask for reading accel full scale range
+#define MPU6050_ACCEL_FT_MAX_ERROR 14  // Max % change from factory trim acceptable
 
 // Gyro info 
-#define MPU6050_NUM_GYRO_AXIS 3 
-#define MPU6050_GYRO_SCALAR_SCALAR 10 
-#define MPU6050_FS_SEL_MASK 24         // 0x18
-#define MPU6050_GYRO_FT_MAX_ERROR 14   // % 
+#define MPU6050_NUM_GYRO_AXIS 3        // Number of gyroscope axes 
+#define MPU6050_GYRO_SCALAR_SCALAR 10  // Unscales scaled mpu6050_gyro_scalar_t values 
+#define MPU6050_FS_SEL_MASK 24         // 0x18 - Mask for reading gyro full scale range 
+#define MPU6050_GYRO_FT_MAX_ERROR 14   // Max % change from factory trim acceptable
 
 //=======================================================================================
 
@@ -57,18 +57,23 @@
 // Enums 
 
 /**
- * @brief MPU-6050 Addresses 
+ * @brief MPU6050 Addresses 
  * 
- * @details The AD0 pin on the accelerometer can be set as either 0 or 1 to allow for 
- *          two different MPU's to be on the same I2C bus. The default address of the 
- *          MPU-6050 is 0x68 (pin AD0 = 0). 
+ * @details The AD0 pin on the accelerometer can be set externally as either 0 or 1 to 
+ *          allow for two different MPU's to be on the same I2C bus. The default address
+ *          of the MPU6050 is 0x68 (pin AD0 = 0). <br><br>
  *          
  *          The 7-bit address of a slave I2C device is held in the upper 7-bits of the 
- *          byte and LSB is left to indicate read/receive (1) or write/transmit (0). 
- *          This makes the addresses if the MPU-6050 bit shifted to the left by 1. The 
- *          resulting addresses become: 
- *             - 0xD0 and 0xD1 if AD0 is 0 
- *             - 0xD2 and 0xD3 if AD0 is 1 
+ *          byte and the LSB is left to indicate read/receive (1) or write/transmit (0). 
+ *          This makes the addresses of the MPU6050 (0x68) shifted to the left by 1. The 
+ *          resulting addresses become:                    <br>
+ *             - 0xD0 (write) and 0xD1 (read) if AD0 is 0  <br>
+ *             - 0xD2 (write) and 0xD3 (read) if AD0 is 1  <br><br>
+ *          
+ *          Note that only the write addresses are shown below. mpu6050_rw_offset_t is 
+ *          used to provide the needed offset when calling the address. 
+ * 
+ * @see mpu6050_rw_offset_t
  * 
  */
 typedef enum {
@@ -77,7 +82,13 @@ typedef enum {
 } mpu6050_i2c_addresses_t;
 
 /**
- * @brief MPU-6050 read and write offset 
+ * @brief MPU6050 read and write offset 
+ * 
+ * @details These provide the necessary offset to the devices I2C address to either read 
+ *          or write to from it. Simply add this value to the end of the address when 
+ *          reading or writing.  
+ * 
+ * @see mpu6050_i2c_addresses_t
  * 
  */
 typedef enum {
@@ -87,7 +98,12 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief MPU6050 register indexes 
+ * 
+ * @details The MPU6050 registers are often grouped into more than a single byte. For 
+ *          example all of the self-test register data is held across 4 registers or bytes. 
+ *          These provide an easy way to index the register information once it's 
+ *          already been read so that you can work with it.
  * 
  */
 typedef enum {
@@ -99,7 +115,11 @@ typedef enum {
 
 
 /**
- * @brief MPU-6050 register byte size
+ * @brief MPU6050 register byte size
+ * 
+ * @details This is used to specify the number of registers or bytes to read from the 
+ *          MPU6050. Not all register information in contained within a single byte 
+ *          so this enum provides notation to specify how many bytes to read or write. 
  * 
  */
 typedef enum {
@@ -112,7 +132,13 @@ typedef enum {
 } mpu6050_reg_byte_size_t;
 
 /**
- * @brief Register map for the MPU-6050
+ * @brief MPU6050 register map
+ * 
+ * @details The following are registers in the MPU6050. These provide the address of 
+ *          where you should start reading or writing data. When reading or writing data,
+ *          if you read or write more than a single byte, the address will be incremented 
+ *          automatically which is why for example only MPU6050_ACCEL_XOUT_H is specified 
+ *          and not Y and Z axes registers. 
  * 
  */
 typedef enum {
@@ -131,7 +157,11 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief MPU6050 self-test masks 
+ * 
+ * @details During self-test, after reading the self-test registers, the following masks 
+ *          are used to parse the X, Y and Z accleroemeter and gyroscope data apart from 
+ *          one another so that the data is readable/usable. 
  * 
  */
 typedef enum {
@@ -144,7 +174,14 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief MPU6050 self-test results shifter 
+ * 
+ * @details When self-test is executed the final result is a single byte of data that 
+ *          indicated a pass or fail for all 6 (3 accel + 3 gyro) axes. These shifters 
+ *          are used to format that final result so that the result of each axes doesn't
+ *          conflict with the result of another. 
+ * 
+ * @see mpu6050_self_test
  * 
  */
 typedef enum {
@@ -154,76 +191,135 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief MPU6050 accelerometer factory trim equation constants 
+ * 
+ * @details The Register Map document for the MPU6050 outlines how to calculate the 
+ *          factory trim for each axes in order to perform a self-test. The factory trim 
+ *          equation however is complex, so to avoid performing this complex calculation
+ *          in the code, the equation was plotted in Excel using all possible outcomes 
+ *          of the 5-bit result from the self-test register and then approximated using 
+ *          a third order polynominal equation. The following values are the constants 
+ *          from the approximated accelerometer factory trim equation. 
  * 
  */
 typedef enum {
     SELF_TEST_ACCEL_FT_C1 = 142,
     SELF_TEST_ACCEL_FT_C2 = 6056,
-    SELF_TEST_ACCEL_FT_C3 = 45752,
-    SELF_TEST_ACCEL_FT_C4 = 13452
+    SELF_TEST_ACCEL_FT_C4 = 13452,
+    SELF_TEST_ACCEL_FT_C3 = 45752
 } self_test_accel_constants_t;
 
 
 /**
- * @brief 
+ * @brief MPU6050 gyroscope factory trim equation constants 
+ * 
+ * @details The Register Map document for the MPU6050 outlines how to calculate the 
+ *          factory trim for each axes in order to perform a self-test. The factory trim 
+ *          equation however is complex, so to avoid performing this complex calculation
+ *          in the code, the equation was plotted in Excel using all possible outcomes 
+ *          of the 5-bit result from the self-test register and then approximated using 
+ *          a third order polynominal equation. The following values are the constants 
+ *          from the approximated gyroscope factory trim equation. 
  * 
  */
 typedef enum {
     SELF_TEST_GYRO_FT_C1 = 1001,
-    SELF_TEST_GYRO_FT_C2 = 19244,
     SELF_TEST_GYRO_FT_C3 = 15056,
+    SELF_TEST_GYRO_FT_C2 = 19244,
     SELF_TEST_GYRO_FT_C4 = 31125
 } self_test_gyro_constants_t;
 
 
 /**
- * @brief SMPLRT_DIV setpoint 
+ * @brief MPU6050 sample rate divider setpoint 
  * 
- * @details Unit of kHz
+ * @details These values are dividers used to divide the gyroscope output rate to get the 
+ *          system sample rate. The gyroscope output rate is dependent on the digital 
+ *          low pass filter setpoint so this value changes to reflect that value along 
+ *          with the desired sample rate you want. The values used as an argument to 
+ *          mpu6050_init for setting up the device. The units of this value is kHz. 
+ * 
+ * @see mpu6050_init
+ * @see mpu6050_dlpf_cfg_t
  * 
  */
 typedef enum {
-    SMPLRT_DIV_0 = 0,
-    SMPLRT_DIV_7 = 7
+    SMPLRT_DIV_0 = 0,  // 1 kHz when DLPF = 0 or 7 
+    SMPLRT_DIV_7 = 7   // 1 kHz when DLPF = 1 - 6
 } mpu6050_smplrt_div_t;
 
 /**
- * @brief CONFIG - EXT_SYNC_SET setpoint
+ * @brief MPU6050 EXT_SYNC_SET setpoint
  * 
- * @details 
+ * @details These are setpointf for the EXT_SYNC_SET value in the CONFIG register. This 
+ *          value can be used to configure sampling of an external signal via the FSYNC
+ *          pin. The possible values for EXT_SYNC_SET are detailed as follows: <br><br>
+ *          
+ *          0 : Input disabled   <br> 
+ *          1 : TEMP_OUT_L[0]    <br> 
+ *          2 : GYRO_XOUT_L[0]   <br> 
+ *          3 : GYRO_YOUT_L[0]   <br> 
+ *          5 : ACCEL_XOUT_L[0]  <br> 
+ *          6 : ACCEL_YOUT_L[0]  <br> 
+ *          7 : ACCEL_ZOUT_L[0]  <br><br>
+ *          
+ *          Currently this input is hardcoded to 0 and isn't an argument to mpu6050_init. 
  * 
  */
 typedef enum {
     EXT_SYNC_SET_0,  // Input disabled 
-    EXT_SYNC_SET_1,
-    EXT_SYNC_SET_2,
-    EXT_SYNC_SET_3,
-    EXT_SYNC_SET_4,
-    EXT_SYNC_SET_5,
-    EXT_SYNC_SET_6,
-    EXT_SYNC_SET_7
+    EXT_SYNC_SET_1,  // TEMP_OUT_L[0]
+    EXT_SYNC_SET_2,  // GYRO_XOUT_L[0]
+    EXT_SYNC_SET_3,  // GYRO_YOUT_L[0]
+    EXT_SYNC_SET_4,  // GYRO_ZOUT_L[0]
+    EXT_SYNC_SET_5,  // ACCEL_XOUT_L[0]
+    EXT_SYNC_SET_6,  // ACCEL_YOUT_L[0]
+    EXT_SYNC_SET_7   // ACCEL_ZOUT_L[0]
 } mpu6050_ext_sync_set_t;
 
 /**
- * @brief CONFIG - DLPF_CFG setpoint
+ * @brief MPU6050 DLPF_CFG setpoint
  * 
- * @details 
+ * @details A digital low pass filter (DLPF) can be specified in the CONFIG register 
+ *          which is used to filter accelerometer and gyroscope data. The value of the 
+ *          DLPF dictates the gyroscope output frquency as descibed below: <br>
+ *             - DLPF = 0 or 7 -> gyroscope output rate = 8 kHz <br>
+ *             - DLPF = 1 - 6  -> gyroscope output rate = 1 kHz <br><br> 
+ *          
+ *          A summary of cutoff frquencies are outlined below. Note that lower cutoff
+ *          frequencies come with longer delay times.     <br>
+ *             - DLPF = 0 : accel = 260 Hz, gyro = 256 Hz <br> 
+ *             - DLPF = 1 : accel = 184 Hz, gyro = 188 Hz <br> 
+ *             - DLPF = 2 : accel = 94  Hz, gyro = 98  Hz <br> 
+ *             - DLPF = 3 : accel = 44  Hz, gyro = 42  Hz <br> 
+ *             - DLPF = 4 : accel = 21  Hz, gyro = 20  Hz <br> 
+ *             - DLPF = 5 : accel = 10  Hz, gyro = 10  Hz <br> 
+ *             - DLPF = 6 : accel = 5   Hz, gyro = 5   Hz <br> 
+ *             - DLPF = 7 : RESERVED <br> <br> 
+ *          
+ *          Refer to the Register Map datasheet for the MPU6050 for more information on 
+ *          DLPF settings.
  * 
  */
 typedef enum {
-    DLPF_CFG_0,
-    DLPF_CFG_1,
-    DLPF_CFG_2,
-    DLPF_CFG_3,
-    DLPF_CFG_4,
-    DLPF_CFG_5,
-    DLPF_CFG_6,
-    DLPF_CFG_7
+    DLPF_CFG_0,  // accel = 260 Hz, gyro = 256 Hz
+    DLPF_CFG_1,  // accel = 184 Hz, gyro = 188 Hz
+    DLPF_CFG_2,  // accel = 94  Hz, gyro = 98  Hz
+    DLPF_CFG_3,  // accel = 44  Hz, gyro = 42  Hz
+    DLPF_CFG_4,  // accel = 21  Hz, gyro = 20  Hz
+    DLPF_CFG_5,  // accel = 10  Hz, gyro = 10  Hz
+    DLPF_CFG_6,  // accel = 5   Hz, gyro = 5   Hz
+    DLPF_CFG_7   // RESERVED
 } mpu6050_dlpf_cfg_t;
 
 /**
- * @brief GYRO_CONFIG - XG_ST, YG_ST and ZG_ST setpoint 
+ * @brief MPU6050 - GYRO_CONFIG : XG_ST, YG_ST and ZG_ST setpoint 
+ * 
+ * @details This is used to enable and disable self-test on the gyroscope. During 
+ *          initialization self-test is disabled, but when mpu6050_self_test is called 
+ *          self-test is temporarily enabled. 
+ * 
+ * @see mpu6050_self_test
  * 
  */
 typedef enum {
@@ -232,34 +328,44 @@ typedef enum {
 } mpu6050_gyro_self_test_set_t;
 
 /**
- * @brief GYRO_CONFIG - FS_SEL setpoint 
+ * @brief MPU6050 - GYRO_CONFIG : FS_SEL setpoint 
  * 
- * @details Selects the full scale range of the gyroscope 
+ * @details Selects the full scale range used by the gyroscope. This is passed as an 
+ *          argument to mpu6050_init to configure the device. Higher ranges cover 
+ *          a wider range of angular accelerations but have less precision. 
  * 
  */
 typedef enum {
-    FS_SEL_250,
-    FS_SEL_500,
-    FS_SEL_1000,
-    FS_SEL_2000
+    FS_SEL_250,   // +/- 250  deg/s
+    FS_SEL_500,   // +/- 500  deg/s
+    FS_SEL_1000,  // +/- 1000 deg/s
+    FS_SEL_2000   // +/- 2000 deg/s
 } mpu6050_fs_sel_set_t;
 
 /**
- * @brief Gyroscope value scalar 
+ * @brief MPU6050 gyroscope value scalar 
  * 
- * @details Values are multipled by 10 to eliminate decimal values 
- *          Divide the raw 16-bit gyro return by this value to get a value in deg/s
+ * @details These values are used to divide the raw 16-bit value read from the gyroscope 
+ *          measurement register to get the angular acceleration in deg/s. These values 
+ *          are scaled by a factor of 10 to eliminate the decimal place. When calculating  
+ *          the actual value the values are unscaled. 
  * 
  */
 typedef enum {
-    GYRO_SCALE_FS_SEL_2000 = 164,  // FS_SEL_2000
-    GYRO_SCALE_FS_SEL_1000 = 328,  // FS_SEL_1000
-    GYRO_SCALE_FS_SEL_500  = 655,  // FS_SEL_500
-    GYRO_SCALE_FS_SEL_250  = 1310  // FS_SEL_250
+    GYRO_SCALE_FS_SEL_2000 = 164,  // 16.4  * 10
+    GYRO_SCALE_FS_SEL_1000 = 328,  // 32.8  * 10
+    GYRO_SCALE_FS_SEL_500  = 655,  // 65.5  * 10
+    GYRO_SCALE_FS_SEL_250  = 1310  // 131.0 * 10
 } mpu6050_gyro_scalar_t;
 
 /**
- * @brief ACCEL_CONFIG - XA_ST, YA_SET and ZA_ST setpoint 
+ * @brief MPU6050 - ACCEL_CONFIG : XA_ST, YA_SET and ZA_ST setpoint
+ * 
+ * @details This is used to enable and disable self-test on the accelerometer. During 
+ *          initialization self-test is disabled, but when mpu6050_self_test is called 
+ *          self-test is temporarily enabled. 
+ * 
+ * @see mpu6050_self_test 
  * 
  */
 typedef enum {
@@ -268,9 +374,12 @@ typedef enum {
 } mpu6050_accel_self_test_set_t;
 
 /**
- * @brief ACCEL_CONFIG - AFS_SEL setpoint
+ * @brief MPU6050 - ACCEL_CONFIG : AFS_SEL setpoint
  * 
  * @details Selects the full scale range of the acclerometer 
+ *          Selects the full scale range used by the gyroscope. This is passed as an 
+ *          argument to mpu6050_init to configure the device. Higher ranges cover 
+ *          a wider range of angular accelerations but have less precision. 
  * 
  */
 typedef enum {
@@ -283,18 +392,22 @@ typedef enum {
 /**
  * @brief Accelerometer value scalar 
  * 
- * @details Divide the raw 16-bit gyro return by this value to get a value in g's
+ * @details These values are used to divide the raw 16-bit value read from the  
+ *          accelerometer measurement register to get the linear acceleration in g's. 
  * 
  */
 typedef enum {
-    ACCEL_SCALE_FS_SEL_16 = 2048,  // AFS_SEL_16
-    ACCEL_SCALE_FS_SEL_8  = 4096,  // AFS_SEL_8
-    ACCEL_SCALE_FS_SEL_4  = 8192,  // AFS_SEL_4
-    ACCEL_SCALE_FS_SEL_2  = 16384  // AFS_SEL_2
+    ACCEL_SCALE_AFS_SEL_16 = 2048,
+    ACCEL_SCALE_AFS_SEL_8  = 4096,
+    ACCEL_SCALE_AFS_SEL_4  = 8192,
+    ACCEL_SCALE_AFS_SEL_2  = 16384
 } mpu6050_accel_scalars_t;
 
 /**
- * @brief PWR_MGMT_1 - DEVICE_RESET 
+ * @brief MPU6050 - PWR_MGMT_1 : DEVICE_RESET
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. Allows for 
+ *          a reset to the devices default settings. 
  * 
  */
 typedef enum {
@@ -303,7 +416,16 @@ typedef enum {
 } mpu6050_device_reset_t; 
 
 /**
- * @brief PWR_MGMT_1 - SLEEP
+ * @brief MPU6050 - PWR_MGMT_1 : SLEEP
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. Allows for 
+ *          sleep mode to be enabled or disabled. Sleep mode is a low power mode where 
+ *          data is not recorded. When mpu6050_cycle_t is set to 1 and sleep mode is 
+ *          disabled the device will cycle between sleep mode and waking up to take a 
+ *          single sample of data at a frquency dictated by LP_WAKE_CTRL. 
+ * 
+ * @see mpu6050_cycle_t
+ * @see mpu6050_lp_wake_ctrl_t
  * 
  */
 typedef enum {
@@ -312,7 +434,15 @@ typedef enum {
 } mpu6050_sleep_mode_t;
 
 /**
- * @brief PWR_MGMT_1 - CYCLE 
+ * @brief MPU6050 - PWR_MGMT_1 : CYCLE 
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. If cycle is 
+ *          enabled and sleep mode is disabled, the device will wake up from sleep mode 
+ *          periodically to take a single sample of data at a frquency dictated by 
+ *          LP_WAKE_CTRL. 
+ * 
+ * @see mpu6050_sleep_mode_t
+ * @see mpu6050_lp_wake_ctrl_t
  * 
  */
 typedef enum {
@@ -321,7 +451,10 @@ typedef enum {
 } mpu6050_cycle_t;
 
 /**
- * @brief PWR_MGMT_1 - TEMP_DIS
+ * @brief MPU6050 - PWR_MGMT_1 : TEMP_DIS
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. Allows for 
+ *          enabling or disabling of the temperature sensor. 
  * 
  */
 typedef enum {
@@ -330,9 +463,22 @@ typedef enum {
 } mpu6050_temp_sensor_t;
 
 /**
- * @brief PWR_MGMT_1 - CLKSEL
+ * @brief MPU6050 - PWR_MGMT_1 : CLKSEL
  * 
- * @details 
+ * @details Used to configure power management register 1 in mpu6050_init. Allows for the
+ *          selection of the devices clock source. The clock source is selected as 
+ *          follows: <br><br> 
+ *              - CLKSEL = 0 : Internal 8MHz oscillator                                <br>
+ *              - CLKSEL = 1 : PPL with X-axis gyro reference                          <br>
+ *              - CLKSEL = 2 : PPL with Y-axis gyro reference                          <br>
+ *              - CLKSEL = 3 : PPL with Z-axis gyro reference                          <br>
+ *              - CLKSEL = 4 : PPL with external 32.768kHz reference                   <br>
+ *              - CLKSEL = 5 : PPL with external 19.2MHz reference                     <br>
+ *              - CLKSEL = 6 : Reserved                                                <br>
+ *              - CLKSEL = 7 : Stops the clock and keeps the timing generator on reset <br>
+ *           <br> 
+ *           It is recommended the internal oscillator is not used as the other options 
+ *           are much more stable.  
  * 
  */
 typedef enum {
@@ -347,7 +493,9 @@ typedef enum {
 } mpu6050_clksel_t;
 
 /**
- * @brief PWR_MGMT_2 - LP_WAKE_CTRL
+ * @brief MPU6050 - PWR_MGMT_2 : LP_WAKE_CTRL
+ * 
+ * @details 
  * 
  */
 typedef enum {
@@ -358,7 +506,9 @@ typedef enum {
 } mpu6050_lp_wake_ctrl_t;
 
 /**
- * @brief PWR_MGMT_2 - STBY_XA
+ * @brief MPU6050 - PWR_MGMT_2 : STBY_XA
+ * 
+ * @details 
  * 
  */
 typedef enum {
@@ -367,7 +517,9 @@ typedef enum {
 } mpu6050_stby_xa_t;
 
 /**
- * @brief PWR_MGMT_2 - STBY_YA
+ * @brief MPU6050 - PWR_MGMT_2 : STBY_YA
+ * 
+ * @details 
  * 
  */
 typedef enum {
@@ -376,7 +528,9 @@ typedef enum {
 } mpu6050_stby_ya_t;
 
 /**
- * @brief PWR_MGMT_2 - STBY_ZA
+ * @brief MPU6050 - PWR_MGMT_2 : STBY_ZA
+ * 
+ * @details 
  * 
  */
 typedef enum {
@@ -385,7 +539,9 @@ typedef enum {
 } mpu6050_stby_za_t;
 
 /**
- * @brief PWR_MGMT_2 - STBY_XG
+ * @brief MPU6050 - PWR_MGMT_2 : STBY_XG
+ * 
+ * @details 
  * 
  */
 typedef enum {
@@ -394,7 +550,9 @@ typedef enum {
 } mpu6050_stby_xg_t;
 
 /**
- * @brief PWR_MGMT_2 - STBY_YG
+ * @brief MPU6050 - PWR_MGMT_2 : STBY_YG
+ * 
+ * @details 
  * 
  */
 typedef enum {
@@ -403,7 +561,9 @@ typedef enum {
 } mpu6050_stby_yg_t;
 
 /**
- * @brief PWR_MGMT_2 - STBY_ZG
+ * @brief MPU6050 - PWR_MGMT_2 : STBY_ZG
+ * 
+ * @details 
  * 
  */
 typedef enum {
@@ -469,7 +629,7 @@ void mpu6050_self_test_read(
 
 
 /**
- * @brief MPU-6050 write to register 
+ * @brief MPU6050 write to register 
  * 
  */
 void mpu6050_write(
@@ -479,7 +639,7 @@ void mpu6050_write(
     uint8_t *mpu6050_reg_value);
 
 /**
- * @brief MPU-6050 read from register 
+ * @brief MPU6050 read from register 
  * 
  * @details 
  *          The MPU automatically increments the register address if there is more than 

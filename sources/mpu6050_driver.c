@@ -781,19 +781,19 @@ float mpu6050_accel_scalar(uint8_t mpu6050_address)
     switch (afs_sel)
     {
         case AFS_SEL_2:
-            accel_scalar = (float)(ACCEL_SCALE_FS_SEL_2);
+            accel_scalar = (float)(ACCEL_SCALE_AFS_SEL_2);
             break;
         
         case AFS_SEL_4:
-            accel_scalar = (float)(ACCEL_SCALE_FS_SEL_4);
+            accel_scalar = (float)(ACCEL_SCALE_AFS_SEL_4);
             break;
         
         case AFS_SEL_8:
-            accel_scalar = (float)(ACCEL_SCALE_FS_SEL_8);
+            accel_scalar = (float)(ACCEL_SCALE_AFS_SEL_8);
             break;
         
         case AFS_SEL_16:
-            accel_scalar = (float)(ACCEL_SCALE_FS_SEL_16);
+            accel_scalar = (float)(ACCEL_SCALE_AFS_SEL_16);
             break;
         
         default:

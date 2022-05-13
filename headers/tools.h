@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief 
+ * @brief General code tools used across files 
  * 
  * @version 0.1
  * @date 2022-02-16
@@ -16,17 +16,13 @@
 #define _TOOLS_H_
 
 //=======================================================================================
-// Includes 
-//=======================================================================================
-
-
-//=======================================================================================
 // Macros 
 
 // Different ways to write zero for readability 
 #define CLEAR 0
 #define RESET_ZERO 0
 
+// Data type 
 #define INT16_NUM_DIGITS 5
 
 //=======================================================================================
@@ -46,7 +42,14 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief Setters 
+ * 
+ * @details These are mainly used in communication and device drivers during 
+ *          initialization in conjunction with bit_shifter_t when setting values 
+ *          in registers. However they can be used for setting any value to avoid 
+ *          using ghost values. 
+ * 
+ * @see bit_shifter_t
  * 
  */
 typedef enum {
@@ -65,7 +68,14 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief Bit shifters 
+ * 
+ * @details These are mainly used in communication and device drivers during 
+ *          initialization in conjunction with bit_setter_t when setting values 
+ *          in registers. However they can be used for any bit shifting operation 
+ *          that is needed. 
+ * 
+ * @see bit_setter_t
  * 
  */
 typedef enum {
@@ -105,7 +115,10 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief Modulo operator divisors
+ * 
+ * @details These are used during mathematical remainders (modulo) expressions to divide
+ *          a particular number by multiples of 10 and get the remainder. 
  * 
  */
 typedef enum {
@@ -116,7 +129,9 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief Divisors 
+ * 
+ * @details Used to divide values by multiples of 10. 
  * 
  */
 typedef enum {
@@ -128,11 +143,5 @@ typedef enum {
 } divide_decimal_place_t;
 
 //=======================================================================================
-
-
-//=======================================================================================
-// Structures 
-//=======================================================================================
-
 
 #endif  // _TOOL_H_
