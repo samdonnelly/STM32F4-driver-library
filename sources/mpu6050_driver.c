@@ -21,6 +21,86 @@
 
 
 //=======================================================================================
+// Function Prototypes 
+
+//==============================================================
+// Note: These functions are for internal driver use only and 
+//       are therefore not included in the header file. 
+//==============================================================
+
+//==============================================================
+// Read and Write Functions
+
+/**
+ * @brief MPU6050 write to register 
+ * 
+ * @details This function takes the device address, register address, data size and a 
+ *          pointer to data and writes it to an MPU6050 register using the I2C driver.
+ *          All register write functions call this function to send data. Only the first 
+ *          register address is needed even if there are multiple successive addresses
+ *          because the device automatically increments the register address after 
+ *          each byte that is written. 
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param mpu6050_register : register address within the device 
+ * @param mpu6050_reg_size : register byte size within the device 
+ * @param mpu6050_reg_value : pointer to data to write to specified register 
+ */
+void mpu6050_write(
+    uint8_t mpu6050_address, 
+    uint8_t mpu6050_register,
+    uint8_t mpu6050_reg_size,
+    uint8_t *mpu6050_reg_value);
+
+
+/**
+ * @brief MPU6050 read from register 
+ * 
+ * @details This function takes the device address, register address, data size and a 
+ *          pointer to where data can be stored and reads MPU6050 register data using 
+ *          the I2C driver. All register read functions call this function to read data. 
+ *          Only the first register address is needed even if there are multiple 
+ *          successive addresses because the device automatically increments the 
+ *          register address after each byte that is read. 
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param mpu6050_register : register address within the device 
+ * @param mpu6050_reg_size : register byte size within the device 
+ * @param mpu6050_reg_value : pointer to where register data can be stored 
+ */
+void mpu6050_read(
+    uint8_t mpu6050_address, 
+    uint8_t mpu6050_register, 
+    uint8_t mpu6050_reg_size,
+    uint8_t *mpu6050_reg_value);
+
+
+/**
+ * @brief MPU6050 self-test read 
+ * 
+ * @details Called within mpu6050_self_test to read the self-test register values. After 
+ *          reading the registers the accelerometer and gyroscope data is parsed to make 
+ *          the data sets distinguishable from one another. The results are stored in the 
+ *          pointers passed to the function. 
+ * 
+ * @see mpu6050_self_test
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param accel_self_test_data : pointer where self-test accel register data gets stored 
+ * @param gyro_self_test_data : pointer where self-test gyro register data gets stored 
+ */
+void mpu6050_self_test_read(
+    uint8_t mpu6050_address,
+    uint8_t *accel_self_test_data,
+    uint8_t *gyro_self_test_data);
+
+//==============================================================
+
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 //==============================================================
@@ -114,7 +194,7 @@ void mpu6050_calibrate(
 //=======================================================================================
 // Read and Write Functions 
 
-// Write to the MPU-6050
+//  MPU6050 write to register 
 void mpu6050_write(
     uint8_t mpu6050_address, 
     uint8_t mpu6050_register,
@@ -138,7 +218,8 @@ void mpu6050_write(
     i2c1_stop(); 
 }
 
-// Read from the MPU-6050
+
+// MPU6050 read from register 
 void mpu6050_read(
     uint8_t mpu6050_address, 
     uint8_t mpu6050_register, 
@@ -168,11 +249,6 @@ void mpu6050_read(
     i2c1_stop(); 
 }
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Register Functions
 
 // SELF_TEST read - Registers 13-16 
 void mpu6050_self_test_read(
@@ -217,6 +293,12 @@ void mpu6050_self_test_read(
     // Gyro in Z
     *gyro_st_data = st_data[MPU6050_REG_IDX_2] & SELF_TEST_MASK_X_TEST;
 }
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Register Functions
 
 // SMPRT_DIV write - Register 25
 void mpu6050_smprt_div_write(

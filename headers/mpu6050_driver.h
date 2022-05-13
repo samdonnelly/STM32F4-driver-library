@@ -495,20 +495,37 @@ typedef enum {
 /**
  * @brief MPU6050 - PWR_MGMT_2 : LP_WAKE_CTRL
  * 
- * @details 
+ * @details Used to configure power management register 2 in mpu6050_init. This allows 
+ *          for configuring of the frequency of wake-ups in low power mode. In this mode 
+ *          the device will power off all functions except for the primary i2c interface
+ *          waking up only the accelerometer at fixed intervals to take a single 
+ *          measurements. Values of LP_WAKE_CTRL correspond to the following wake-up
+ *          frequencies: <br>
+ *              - LP_WAKE_CTRL = 0 : 1.25 Hz  <br>
+ *              - LP_WAKE_CTRL = 1 : 5  Hz    <br>
+ *              - LP_WAKE_CTRL = 2 : 20 Hz    <br>
+ *              - LP_WAKE_CTRL = 3 : 40 Hz    <br><br>
+ *          
+ *          Low power mode can be configured using the following steps carried out in 
+ *          power management register 1:             <br>
+ *              - Set CYCLE to 1                     <br>
+ *              - Set SLEEP to 0                     <br>
+ *              - Set TEMP_DIS to 1                  <br>
+ *              - Set STBY_XG, STBY_YG, STBY_ZG to 1 <br>
  * 
  */
 typedef enum {
-    LP_WAKE_CTRL_0,
-    LP_WAKE_CTRL_1,
-    LP_WAKE_CTRL_2,
-    LP_WAKE_CTRL_3
+    LP_WAKE_CTRL_0,  // 1.25 Hz wakeup frequency
+    LP_WAKE_CTRL_1,  // 5  Hz wakeup frequency
+    LP_WAKE_CTRL_2,  // 20 Hz wakeup frequency
+    LP_WAKE_CTRL_3   // 40 Hz wakeup frequency
 } mpu6050_lp_wake_ctrl_t;
 
 /**
  * @brief MPU6050 - PWR_MGMT_2 : STBY_XA
  * 
- * @details 
+ * @details Used to configure power management register 2 in mpu6050_init. Allows for 
+ *          putting the x-axis accelerometer into standy mode.
  * 
  */
 typedef enum {
@@ -519,7 +536,8 @@ typedef enum {
 /**
  * @brief MPU6050 - PWR_MGMT_2 : STBY_YA
  * 
- * @details 
+ * @details Used to configure power management register 2 in mpu6050_init. Allows for 
+ *          putting the y-axis accelerometer into standy mode.
  * 
  */
 typedef enum {
@@ -530,7 +548,8 @@ typedef enum {
 /**
  * @brief MPU6050 - PWR_MGMT_2 : STBY_ZA
  * 
- * @details 
+ * @details Used to configure power management register 2 in mpu6050_init. Allows for 
+ *          putting the z-axis accelerometer into standy mode.
  * 
  */
 typedef enum {
@@ -541,7 +560,11 @@ typedef enum {
 /**
  * @brief MPU6050 - PWR_MGMT_2 : STBY_XG
  * 
- * @details 
+ * @details Used to configure power management register 2 in mpu6050_init. Allows for 
+ *          putting the x-axis gyroscope into standy mode. Note that if this axis is 
+ *          used as the clock source for the device and this axis is disabled then 
+ *          the clock source will automatically be changed to the internal 8 MHz 
+ *          oscillator (not recommended). 
  * 
  */
 typedef enum {
@@ -552,7 +575,11 @@ typedef enum {
 /**
  * @brief MPU6050 - PWR_MGMT_2 : STBY_YG
  * 
- * @details 
+ * @details Used to configure power management register 2 in mpu6050_init. Allows for 
+ *          putting the y-axis gyroscope into standy mode. Note that if this axis is 
+ *          used as the clock source for the device and this axis is disabled then 
+ *          the clock source will automatically be changed to the internal 8 MHz 
+ *          oscillator (not recommended).
  * 
  */
 typedef enum {
@@ -563,7 +590,11 @@ typedef enum {
 /**
  * @brief MPU6050 - PWR_MGMT_2 : STBY_ZG
  * 
- * @details 
+ * @details Used to configure power management register 2 in mpu6050_init. Allows for 
+ *          putting the z-axis gyroscope into standy mode. Note that if this axis is 
+ *          used as the clock source for the device and this axis is disabled then 
+ *          the clock source will automatically be changed to the internal 8 MHz 
+ *          oscillator (not recommended).
  * 
  */
 typedef enum {
@@ -580,14 +611,17 @@ typedef enum {
 /**
  * @brief MPU5060 initialization 
  * 
- * @details 
+ * @details Used to configure the device upon startup. If device initialization is 
+ *          successfull the function will return true. If there was issues establishing 
+ *          communication with the device the function will return false. The return 
+ *          value is used to trigger fault conditions. 
  * 
- * @param mpu6050_address 
- * @param dlpf_cfg 
- * @param smplrt_div 
- * @param afs_sel 
- * @param fs_sel 
- * @return uint8_t 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param dlpf_cfg : digital low pass filter selection 
+ * @param smplrt_div : sample rate divider selection 
+ * @param afs_sel : full scale range of accelerometer 
+ * @param fs_sel : full scale range of gyroscope 
+ * @return uint8_t : returns true (1) if successfull, false (0) if unsuccessfull
  */
 uint8_t mpu6050_init(
     uint8_t mpu6050_address,
@@ -597,60 +631,23 @@ uint8_t mpu6050_init(
     uint8_t fs_sel);
 
 /**
- * @brief 
+ * @brief MPU6050 reference point set 
  * 
- * @details 
+ * @details The readings from the accelerometer are not exact even if a self-test is 
+ *          passed. This function takes a single reading of acceleromater and 
+ *          gyroscope values and stores the result in a pointer passed to the function 
+ *          which can be used as an error offset when analyzing other readings. 
+ *          Typically this function would be called once during initialization of the 
+ *          program. 
  * 
- * @param mpu6050_address 
- * @param mpu6050_accel_offset 
- * @param mpu6050_gyro_offset 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param mpu6050_accel_offset : pointer that stores an instance of accelerometer data
+ * @param mpu6050_gyro_offset : pointer that stores an instance of gyroscope data
  */
 void mpu6050_calibrate(
     uint8_t mpu6050_address, 
     int16_t *mpu6050_accel_offset,
     int16_t *mpu6050_gyro_offset);
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Read and Write Functions
-
-/**
- * @brief 
- * 
- * @param mpu6050_address 
- * @param self_test_data 
- */
-void mpu6050_self_test_read(
-    uint8_t mpu6050_address,
-    uint8_t *accel_self_test_data,
-    uint8_t *gyro_self_test_data);
-
-
-/**
- * @brief MPU6050 write to register 
- * 
- */
-void mpu6050_write(
-    uint8_t mpu6050_address, 
-    uint8_t mpu6050_register,
-    uint8_t mpu6050_reg_size,
-    uint8_t *mpu6050_reg_value);
-
-/**
- * @brief MPU6050 read from register 
- * 
- * @details 
- *          The MPU automatically increments the register address if there is more than 
- *          one byte to be read. 
- * 
- */
-void mpu6050_read(
-    uint8_t mpu6050_address, 
-    uint8_t mpu6050_register, 
-    uint8_t mpu6050_reg_size,
-    uint8_t *mpu6050_reg_value);
 
 //=======================================================================================
 
@@ -663,7 +660,7 @@ void mpu6050_read(
  * 
  * @details Register 25 
  * 
- * @param mpu6050_address 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param smprt_div 
  */
 void mpu6050_smprt_div_write(
@@ -675,7 +672,7 @@ void mpu6050_smprt_div_write(
  * 
  * @details Register 26
  * 
- * @param mapu6050_address 
+ * @param mapu6050_address : I2C address of MPU6050 
  * @param ext_sync_set : 
  * @param dlpf_cfg : 
  */
@@ -689,7 +686,7 @@ void mpu6050_config_write(
  * 
  * @details Register 27 
  * 
- * @param mpu6050_address 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param gyro_self_test 
  * @param fs_sel 
  */
@@ -701,7 +698,7 @@ void mpu6050_gyro_config_write(
 /**
  * @brief Gyroscope Configuration register read
  * 
- * @param mpu6050_address 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @return uint8_t 
  */
 uint8_t mpu6050_gyro_config_read(uint8_t mpu6050_address);
@@ -711,7 +708,7 @@ uint8_t mpu6050_gyro_config_read(uint8_t mpu6050_address);
  * 
  * @details Register 28 
  * 
- * @param mpu6050_address 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param accel_self_test 
  * @param afs_sel 
  */
@@ -723,7 +720,7 @@ void mpu6050_accel_config_write(
 /**
  * @brief Accelerometer Configuration register read 
  * 
- * @param mpu6050_address 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @return uint8_t 
  */
 uint8_t mpu6050_accel_config_read(uint8_t mpu6050_address);
@@ -735,7 +732,7 @@ uint8_t mpu6050_accel_config_read(uint8_t mpu6050_address);
  *          Note: If these are not read in the same burst as the gyro measurements 
  *                then each set could be at different instances in time. 
  * 
- * @param mpu6050_address 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param accel_data 
  */
 void mpu6050_accel_read(
@@ -750,8 +747,8 @@ void mpu6050_accel_read(
  *          Temperature in degC = (16-bit register value) / 340 + 36.53
  *          See register map datasheet - page 30 
  * 
- * @return uint16_t : Unformatted signed temperature value 
- * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @return int16_t : Unformatted signed temperature value 
  */
 int16_t mpu6050_temp_read(uint8_t mpu6050_address);
 
@@ -762,7 +759,7 @@ int16_t mpu6050_temp_read(uint8_t mpu6050_address);
  *          Note: If these are not read in the same burst as the gyro measurements 
  *                then each set could be at different instances in time. 
  * 
- * @param mpu6050_address 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param gyro_data 
  */
 void mpu6050_gyro_read(
@@ -774,7 +771,7 @@ void mpu6050_gyro_read(
  * 
  * @details Register 107 
  * 
- * @param mpu6050_address 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param device_reset 
  * @param sleep 
  * @param cycle 
@@ -794,7 +791,7 @@ void mpu6050_pwr_mgmt_1_write(
  * 
  * @details Register 108 
  * 
- * @param mpu6050_address 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param lp_wake_ctrl 
  * @param stby_xa 
  * @param stby_ya 
@@ -818,7 +815,7 @@ void mpu6050_pwr_mgmt_2_write(
  * 
  * @details Register 117
  * 
- * @param mpu6050_sddress 
+ * @param mpu6050_sddress : I2C address of MPU6050 
  * @return uint8_t : Returns 0x68 if AD0 == 0 and 0x69 is AD0 == 1
  */
 uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address);
@@ -832,7 +829,7 @@ uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address);
 /**
  * @brief 
  * 
- * @param mpu6050_address 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @return uint8_t 
  */
 uint8_t mpu6050_self_test(uint8_t mpu6050_address);
@@ -842,6 +839,7 @@ uint8_t mpu6050_self_test(uint8_t mpu6050_address);
  * @brief 
  * 
  * @param a_test 
+ * @param accel_ft 
  */
 void mpu6050_accel_ft(uint8_t *a_test, float *accel_ft);
 
@@ -850,6 +848,7 @@ void mpu6050_accel_ft(uint8_t *a_test, float *accel_ft);
  * @brief 
  * 
  * @param g_test 
+ * @param gyro_ft 
  */
 void mpu6050_gyro_ft(uint8_t *g_test, float *gyro_ft);
 
@@ -879,7 +878,7 @@ void mpu6050_str_calc(
  */
 uint8_t mpu6050_self_test_accel_result(
     int16_t *accel_self_test_results,
-    float *accel_factory_trim,
+    float   *accel_factory_trim,
     uint8_t self_test_results);
 
 
@@ -893,7 +892,7 @@ uint8_t mpu6050_self_test_accel_result(
  */
 uint8_t mpu6050_self_test_gyro_result(
     int16_t *gyro_self_test_results,
-    float *gyro_factory_trim,
+    float   *gyro_factory_trim,
     uint8_t self_test_results);
 
 //=======================================================================================
@@ -905,6 +904,7 @@ uint8_t mpu6050_self_test_gyro_result(
 /**
  * @brief 
  * 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param accel_x_axis_raw 
  * @return float 
  */
@@ -913,6 +913,7 @@ float mpu6050_accel_x_calc(uint8_t mpu6050_address, int16_t accel_x_axis_raw);
 /**
  * @brief 
  * 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param accel_y_axis_raw 
  * @return float 
  */
@@ -921,6 +922,7 @@ float mpu6050_accel_y_calc(uint8_t mpu6050_address, int16_t accel_y_axis_raw);
 /**
  * @brief 
  * 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param accel_z_axis_raw 
  * @return float 
  */
@@ -929,6 +931,7 @@ float mpu6050_accel_z_calc(uint8_t mpu6050_address, int16_t accel_z_axis_raw);
 /**
  * @brief 
  * 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @return float 
  */
 float mpu6050_accel_scalar(uint8_t mpu6050_address);
@@ -944,7 +947,9 @@ float mpu6050_temp_calc(int16_t temp_raw);
 /**
  * @brief 
  * 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param gyro_x_axis_raw 
+ * @param gyro_x_axis_offset 
  * @return float 
  */
 float mpu6050_gyro_x_calc(
@@ -955,7 +960,9 @@ float mpu6050_gyro_x_calc(
 /**
  * @brief 
  * 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param gyro_y_axis_raw 
+ * @param gyro_y_axis_offset 
  * @return float 
  */
 float mpu6050_gyro_y_calc(
@@ -966,7 +973,9 @@ float mpu6050_gyro_y_calc(
 /**
  * @brief 
  * 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @param gyro_z_axis_raw 
+ * @param gyro_z_axis_offset 
  * @return float 
  */
 float mpu6050_gyro_z_calc(
@@ -977,6 +986,7 @@ float mpu6050_gyro_z_calc(
 /**
  * @brief 
  * 
+ * @param mpu6050_address : I2C address of MPU6050 
  * @return float 
  */
 float mpu6050_gyro_scalar(uint8_t mpu6050_address);
