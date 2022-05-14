@@ -656,12 +656,14 @@ void mpu6050_calibrate(
 // Register Function
 
 /**
- * @brief Sample Rate Divider register 
+ * @brief MPU6050 Sample Rate Divider register write 
  * 
  * @details Register 25 
  * 
+ * @see mpu6050_register_addresses_t
+ * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @param smprt_div 
+ * @param smprt_div : sample rate divider address
  */
 void mpu6050_smprt_div_write(
     uint8_t mpu6050_address,
@@ -671,6 +673,8 @@ void mpu6050_smprt_div_write(
  * @brief Configuration register 
  * 
  * @details Register 26
+ * 
+ * @see mpu6050_register_addresses_t
  * 
  * @param mapu6050_address : I2C address of MPU6050 
  * @param ext_sync_set : 
@@ -685,6 +689,8 @@ void mpu6050_config_write(
  * @brief Gyroscope Configuration register write
  * 
  * @details Register 27 
+ * 
+ * @see mpu6050_register_addresses_t
  * 
  * @param mpu6050_address : I2C address of MPU6050 
  * @param gyro_self_test 
