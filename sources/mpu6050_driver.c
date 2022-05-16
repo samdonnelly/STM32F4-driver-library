@@ -74,6 +74,11 @@ void mpu6050_read(
     uint8_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value);
 
+//==============================================================
+
+
+//==============================================================
+// Self-test functions 
 
 /**
  * @brief MPU6050 self-test read 
@@ -94,8 +99,105 @@ void mpu6050_self_test_read(
     uint8_t *accel_self_test_data,
     uint8_t *gyro_self_test_data);
 
+
+/**
+ * @brief MPU6050 self-test response calculation
+ * 
+ * @details 
+ * 
+ * @param self_test_response 
+ * @param no_self_test 
+ * @param self_test 
+ * @param num_axes 
+ */
+void mpu6050_str_calc(
+    int16_t *self_test_response,
+    int16_t *no_self_test,
+    int16_t *self_test,
+    uint8_t num_axes);
+
+
+/**
+ * @brief MPU6050 accelerometer self-test result 
+ * 
+ * @details 
+ * 
+ * @param accel_self_test_results 
+ * @param accel_factory_trim 
+ * @param self_test_results 
+ * @return uint8_t 
+ */
+uint8_t mpu6050_self_test_accel_result(
+    int16_t *accel_self_test_results,
+    float   *accel_factory_trim,
+    uint8_t self_test_results);
+
+
+/**
+ * @brief MPU6050 gyroscope self-test result
+ * 
+ * @details 
+ * 
+ * @param gyro_self_test_results 
+ * @param gyro_factory_trim 
+ * @param self_test_results 
+ * @return uint8_t 
+ */
+uint8_t mpu6050_self_test_gyro_result(
+    int16_t *gyro_self_test_results,
+    float   *gyro_factory_trim,
+    uint8_t self_test_results);
+
+
+/**
+ * @brief MPU6050 accelerometer factory trim 
+ * 
+ * @details 
+ * 
+ * @param a_test 
+ * @param accel_ft 
+ */
+void mpu6050_accel_ft(uint8_t *a_test, float *accel_ft);
+
+
+/**
+ * @brief MPU6050 gyroscope factory trim 
+ * 
+ * @details 
+ * 
+ * @param g_test 
+ * @param gyro_ft 
+ */
+void mpu6050_gyro_ft(uint8_t *g_test, float *gyro_ft);
+
 //==============================================================
 
+
+//==============================================================
+// 
+
+/**
+ * @brief MPU6050 
+ * 
+ * @details 
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @return float 
+ */
+float mpu6050_accel_scalar(uint8_t mpu6050_address);
+
+
+/**
+ * @brief MPU6050 
+ * 
+ * @details 
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @return float 
+ */
+float mpu6050_gyro_scalar(uint8_t mpu6050_address);
+
+//==============================================================
 
 //=======================================================================================
 

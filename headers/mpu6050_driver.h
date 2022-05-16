@@ -45,7 +45,7 @@
 
 // Gyro info 
 #define MPU6050_NUM_GYRO_AXIS 3        // Number of gyroscope axes 
-#define MPU6050_GYRO_SCALAR_SCALAR 10  // Unscales scaled mpu6050_gyro_scalar_t values 
+#define MPU6050_GYRO_SCALAR_SCALAR 10  // Unscales scaled mpu6050_gyro_scalars_t values 
 #define MPU6050_FS_SEL_MASK 24         // 0x18 - Mask for reading gyro full scale range 
 #define MPU6050_GYRO_FT_MAX_ERROR 14   // Max % change from factory trim acceptable
 
@@ -356,7 +356,7 @@ typedef enum {
     GYRO_SCALE_FS_SEL_1000 = 328,  // 32.8  * 10
     GYRO_SCALE_FS_SEL_500  = 655,  // 65.5  * 10
     GYRO_SCALE_FS_SEL_250  = 1310  // 131.0 * 10
-} mpu6050_gyro_scalar_t;
+} mpu6050_gyro_scalars_t;
 
 /**
  * @brief MPU6050 - ACCEL_CONFIG : XA_ST, YA_SET and ZA_ST setpoint
@@ -1000,85 +1000,35 @@ uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address);
 
 
 //=======================================================================================
-// Self-test 
+// Self-test functions 
 
 /**
- * @brief MPU6050 
+ * @brief MPU6050 self-test
  * 
- * @details When self-test is activated, the on-board electronics will actuate the 
- *          appropriate sensor and produce a change in the sensor output. The self-test 
- *          response is defined as: <br><br> 
+ * @details This functions runs a self-test on the device to see its drift from the 
+ *          factory calibration. When self-test is activated, the on-board electronics
+ *          will actuate the appropriate sensor and produce a change in the sensor
+ *          output. The self-test response is defined as: <br><br> 
  *          
  *          Self-test response = (sensor output with self-test enabled) - 
  *                               (sensor output with self-test disabled) <br><br> 
  *          
- *          A self-test can be 
+ *          To pass the self-test the sensor must be within 14% of it's factory 
+ *          calibration. The function will return a byte that indicates the self-test 
+ *          results of each accelerometer and gyroscope axis where a 0 is a pass and 
+ *          a 1 is a fail. The return value breakdown is as follows: <br><br>
+ *          
+ *          - Bit 5: gyroscope z-axis     <br>
+ *          - Bit 4: gyroscope y-axis     <br>
+ *          - Bit 3: gyroscope x-axis     <br>
+ *          - Bit 2: accelerometer z-axis <br>
+ *          - Bit 1: accelerometer y-axis <br>
+ *          - Bit 0: accelerometer x-axis <br>
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @return uint8_t 
+ * @return uint8_t : self-test results for each sensor axis 
  */
 uint8_t mpu6050_self_test(uint8_t mpu6050_address);
-
-
-/**
- * @brief MPU6050 
- * 
- * @param a_test 
- * @param accel_ft 
- */
-void mpu6050_accel_ft(uint8_t *a_test, float *accel_ft);
-
-
-/**
- * @brief MPU6050 
- * 
- * @param g_test 
- * @param gyro_ft 
- */
-void mpu6050_gyro_ft(uint8_t *g_test, float *gyro_ft);
-
-
-/**
- * @brief MPU6050 
- * 
- * @param self_test_response 
- * @param no_self_test 
- * @param self_test 
- * @param num_axes 
- */
-void mpu6050_str_calc(
-    int16_t *self_test_response,
-    int16_t *no_self_test,
-    int16_t *self_test,
-    uint8_t num_axes);
-
-
-/**
- * @brief MPU6050 
- * 
- * @param accel_self_test_results 
- * @param accel_factory_trim 
- * @param self_test_results 
- * @return uint8_t 
- */
-uint8_t mpu6050_self_test_accel_result(
-    int16_t *accel_self_test_results,
-    float   *accel_factory_trim,
-    uint8_t self_test_results);
-
-
-/**
- * @brief MPU6050 
- * 
- * @param gyro_self_test_results 
- * @param gyro_factory_trim 
- * @param self_test_results 
- * @return uint8_t 
- */
-uint8_t mpu6050_self_test_gyro_result(
-    int16_t *gyro_self_test_results,
-    float   *gyro_factory_trim,
-    uint8_t self_test_results);
 
 //=======================================================================================
 
@@ -1087,58 +1037,89 @@ uint8_t mpu6050_self_test_gyro_result(
 // Calculation Functions
 
 /**
- * @brief MPU6050 
+ * @brief MPU6050 accelerometer x-axis calculation 
+ * 
+ * @details Calculates and returns the true acceleration along the x-axis in g's using 
+ *          the raw sensor output from mpu6050_accel_read. The value is calculated by 
+ *          taking the raw sensor output and dividing it by the appropriate scalar based
+ *          on the full scale range of the accelerometer. 
+ * 
+ * @see mpu6050_accel_read
+ * @see mpu6050_accel_scalars_t
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @param accel_x_axis_raw 
- * @return float 
+ * @param accel_x_axis_raw : raw x-axis acceleration output 
+ * @return float : x-axis acceleration in g's
  */
 float mpu6050_accel_x_calc(uint8_t mpu6050_address, int16_t accel_x_axis_raw);
 
 /**
- * @brief MPU6050 
+ * @brief MPU6050 accelerometer y-axis calculation 
+ * 
+ * @details Calculates and returns the true acceleration along the y-axis in g's using 
+ *          the raw sensor output from mpu6050_accel_read. The value is calculated by 
+ *          taking the raw sensor output and dividing it by the appropriate scalar based
+ *          on the full scale range of the accelerometer. 
+ * 
+ * @see mpu6050_accel_read
+ * @see mpu6050_accel_scalars_t
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @param accel_y_axis_raw 
- * @return float 
+ * @param accel_y_axis_raw : raw y-axis acceleration output 
+ * @return float : y-axis acceleration in g's
  */
 float mpu6050_accel_y_calc(uint8_t mpu6050_address, int16_t accel_y_axis_raw);
 
 /**
- * @brief MPU6050 
+ * @brief MPU6050 accelerometer z-axis calculation 
+ * 
+ * @details Calculates and returns the true acceleration along the z-axis in g's using 
+ *          the raw sensor output from mpu6050_accel_read. The value is calculated by 
+ *          taking the raw sensor output and dividing it by the appropriate scalar based
+ *          on the full scale range of the accelerometer. 
+ * 
+ * @see mpu6050_accel_read
+ * @see mpu6050_accel_scalars_t
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @param accel_z_axis_raw 
- * @return float 
+ * @param accel_z_axis_raw : raw z-axis acceleration output 
+ * @return float : z-axis acceleration in g's
  */
 float mpu6050_accel_z_calc(uint8_t mpu6050_address, int16_t accel_z_axis_raw);
 
-/**
- * @brief MPU6050 
- * 
- * @param mpu6050_address : I2C address of MPU6050 
- * @return float 
- */
-float mpu6050_accel_scalar(uint8_t mpu6050_address);
 
 /**
- * @brief MPU6050 
+ * @brief MPU6050 temperature sensor calculation
  * 
- * @details Temperature in degC = (16-bit register value) / 340 + 36.53
- *          See register map datasheet - page 30 
+ * @details Calculates and returns the true temperature reading in degC using the raw 
+ *          temperature sensor output from mpu6050_temp_read. This value is calculated
+ *          using the following equation: <br><br>
+ *          
+ *          Temperature (degC) = (16-bit register value) / 340 + 36.53
  * 
- * @param temp_raw 
- * @return float 
+ * @param temp_raw : raw temperature sensor output
+ * @return float : true temperature value in degC
  */
 float mpu6050_temp_calc(int16_t temp_raw);
 
 /**
- * @brief MPU6050 
+ * @brief MPU6050 gyroscopic value calculation around x-axis 
+ * 
+ * @details Calculates and returns the true gyroscopic value around the x-axis in deg/s 
+ *          using the raw sensor output from mpu6050_gyro_read. The value is calculated 
+ *          by taking the raw sensor output and dividing it by the appropriate scalar 
+ *          based on the full scale range of the gyroscope. The gyroscope is prone to 
+ *          drift/errors over time so the initial value recorded from mpu6050_calibrate
+ *          is passed to offset the error from the calculation. 
+ * 
+ * @see mpu6050_gyro_read
+ * @see mpu6050_gyro_scalars_t
+ * @see mpu6050_calibrate
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @param gyro_x_axis_raw 
- * @param gyro_x_axis_offset 
- * @return float 
+ * @param gyro_x_axis_raw : raw x-axis gyroscope output 
+ * @param gyro_x_axis_offset : resting drift/error in gyroscope axis
+ * @return float : x-axis gyroscopic value in deg/s
  */
 float mpu6050_gyro_x_calc(
     uint8_t mpu6050_address, 
@@ -1146,12 +1127,23 @@ float mpu6050_gyro_x_calc(
     int16_t gyro_x_axis_offset);
 
 /**
- * @brief MPU6050 
+ * @brief MPU6050 gyroscopic value calculation around y-axis 
+ * 
+ * @details Calculates and returns the true gyroscopic value around the y-axis in deg/s 
+ *          using the raw sensor output from mpu6050_gyro_read. The value is calculated 
+ *          by taking the raw sensor output and dividing it by the appropriate scalar 
+ *          based on the full scale range of the gyroscope. The gyroscope is prone to 
+ *          drift/errors over time so the initial value recorded from mpu6050_calibrate
+ *          is passed to offset the error from the calculation.
+ * 
+ * @see mpu6050_gyro_read
+ * @see mpu6050_gyro_scalars_t
+ * @see mpu6050_calibrate
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @param gyro_y_axis_raw 
- * @param gyro_y_axis_offset 
- * @return float 
+ * @param gyro_y_axis_raw : raw y-axis gyroscope output 
+ * @param gyro_y_axis_offset : resting drift/error in gyroscope axis
+ * @return float : y-axis gyroscopic value in deg/s
  */
 float mpu6050_gyro_y_calc(
     uint8_t mpu6050_address, 
@@ -1159,25 +1151,28 @@ float mpu6050_gyro_y_calc(
     int16_t gyro_y_axis_offset);
 
 /**
- * @brief MPU6050 
+ * @brief MPU6050 gyroscopic value calculation around z-axis 
+ * 
+ * @details Calculates and returns the true gyroscopic value around the z-axis in deg/s 
+ *          using the raw sensor output from mpu6050_gyro_read. The value is calculated 
+ *          by taking the raw sensor output and dividing it by the appropriate scalar 
+ *          based on the full scale range of the gyroscope. The gyroscope is prone to 
+ *          drift/errors over time so the initial value recorded from mpu6050_calibrate
+ *          is passed to offset the error from the calculation.
+ * 
+ * @see mpu6050_gyro_read
+ * @see mpu6050_gyro_scalars_t
+ * @see mpu6050_calibrate
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @param gyro_z_axis_raw 
- * @param gyro_z_axis_offset 
- * @return float 
+ * @param gyro_z_axis_raw : raw z-axis gyroscope output 
+ * @param gyro_z_axis_offset : resting drift/error in gyroscope axis
+ * @return float : z-axis gyroscopic value in deg/s
  */
 float mpu6050_gyro_z_calc(
     uint8_t mpu6050_address, 
     int16_t gyro_z_axis_raw,
     int16_t gyro_z_axis_offset);
-
-/**
- * @brief MPU6050 
- * 
- * @param mpu6050_address : I2C address of MPU6050 
- * @return float 
- */
-float mpu6050_gyro_scalar(uint8_t mpu6050_address);
 
 //=======================================================================================
 
