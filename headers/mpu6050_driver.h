@@ -658,17 +658,19 @@ void mpu6050_calibrate(
 /**
  * @brief MPU6050 Sample Rate Divider register write 
  * 
- * @details Writes to the SMPRT_DIV register (Register 25). This register specifies the 
- *          divider from the gyroscope output rate used to generate the device sensor 
- *          sample rate. The sample rate is calculated as follows: <br><br>
+ * @details Writes to the SMPRT_DIV register (Register 25 - 1 byte). This register 
+ *          specifies the  divider from the gyroscope output rate used to generate the 
+ *          device sensor  sample rate. The sample rate is calculated as follows: 
+ *          <br><br>
  *          
  *          Sample Rate = Gyroscope Output Rate / (a + SMPLRT_DIV) <br><br>
  *          
- *          SMPLRT_DIV is an 8-bit value. <br><br>
- *          
  *          The Gyroscope Output Rate is determined by the digital low pass filter. The 
  *          accelerometer output rate is 1kHz so a sample rate greater than this will 
- *          procude repeated accelerometer readings. 
+ *          procude repeated accelerometer readings. <br><br>
+ *          
+ *          Register write information: <br>
+ *          - SMPLRT_DIV: 8-bit unsigned value.
  * 
  * @see mpu6050_register_addresses_t
  * @see mpu6050_smplrt_div_t
@@ -681,12 +683,18 @@ void mpu6050_smprt_div_write(
     uint8_t mpu6050_address,
     uint8_t smprt_div);
 
+
 /**
  * @brief MPU6050 Configuration register write
  * 
- * @details Writes to the CONFIG register (Register 26). This register allows for 
- *          configuring the external frame synchronization (FSYNC) pin sampling and 
- *          the digital low pass filter (DLPF) for both accelerometers and gyroscopes. 
+ * @details Writes to the CONFIG register (Register 26 - 1 byte). This register allows 
+ *          for configuring the external frame synchronization (FSYNC) pin sampling and 
+ *          the digital low pass filter (DLPF) for both accelerometers and gyroscopes.
+ *          <br><br>
+ *          
+ *          Register write information: <br>
+ *          - EXT_SYNC_SET: 3-bit unsigned value. <br>
+ *          - DLPF_CFG: 3-bit unsigned value.  
  * 
  * @see mpu6050_register_addresses_t
  * @see mpu6050_ext_sync_set_t
@@ -694,79 +702,27 @@ void mpu6050_smprt_div_write(
  * 
  * @param mapu6050_address : I2C address of MPU6050 
  * @param ext_sync_set : FSYNC pin sampling setpoint 
- * @param dlpf_cfg : digital low pass filter setpoint 
+ * @param dlpf_cfg : digital low pass filter setpoint for all axes
  */
 void mpu6050_config_write(
     uint8_t mpu6050_address,
     uint8_t ext_sync_set,
     uint8_t dlpf_cfg);
 
-/**
- * @brief MPU6050 Gyroscope Configuration register write
- * 
- * @details Writes to the GYRO_CONFIG register (Register 27). This register is used to 
- *          trigger gyroscope self-test and configure the gyroscopes full scale range. 
- * 
- * @see mpu6050_register_addresses_t
- * @see mpu6050_gyro_self_test_set_t
- * @see mpu6050_fs_sel_set_t
- * @see mpu6050_self_test
- * 
- * @param mpu6050_address : I2C address of MPU6050 
- * @param gyro_self_test : enables or disabled self-test mode
- * @param fs_sel : gyroscope full scale range setpoint 
- */
-void mpu6050_gyro_config_write(
-    uint8_t mpu6050_address,
-    uint8_t gyro_self_test,
-    uint8_t fs_sel);
-
-/**
- * @brief MPU6050 Gyroscope Configuration register read
- * 
- * @details Reads from the GYRO_CONFIG register (Register 27). This function is used 
- *          to read the full scale range setpoint of the gyroscope during self-test.
- *  
- * @see mpu6050_register_addresses_t
- * @see mpu6050_self_test
- * 
- * @param mpu6050_address : I2C address of MPU6050 
- * @return uint8_t : returns the unparsed self-test and full scale range setpoints 
- */
-uint8_t mpu6050_gyro_config_read(uint8_t mpu6050_address);
-
-/**
- * @brief MPU6050 Gyroscope Measurements registers read
- * 
- * @details Read from the GYRO_OUT registers (Registers 67-72). These registers store 
- *          the most recent (unformatted) gyroscope measurements. These values are 
- *          updated at the Sample Rate. The calculation functions 
- *          mpu6050_gyro_x/y/z_calc are used to get the actual gyroscopic values in 
- *          deg/s. <br><br>
- *          
- *          When the serial interface (i2c interface) is active, the values in the 
- *          registers are held constant so that you can read all values (burst read)
- *          at one instance in time. When the serial interface is idle then these 
- *          registers will go back to being written to at the Sample Rate. 
- * 
- * @see mpu6050_gyro_scalars_t
- * @see mpu6050_gyro_x_calc
- * @see mpu6050_gyro_y_calc
- * @see mpu6050_gyro_z_calc
- * 
- * @param mpu6050_address : I2C address of MPU6050 
- * @param gyro_data : pointer to were gyroscope data us stored 
- */
-void mpu6050_gyro_read(
-    uint8_t  mpu6050_address,
-    int16_t *gyro_data);
 
 /**
  * @brief MPU6050 Accelerometer Configuration register write
  * 
- * @details Writes to the ACCEL_CONFIG register (Register 28). This register is used to 
- *          trigger accelerometer self-test and configure the accelerometer full scale 
- *          range. 
+ * @details Writes to the ACCEL_CONFIG register (Register 28 - 1 byte). This register is 
+ *          used to trigger accelerometer self-test and configure the accelerometer full 
+ *          scale range. <br><br>
+ *          
+ *          Register write information: <br>
+ *          - ACCEL_SELF_TEST: 3-bit unsigned value that represents each axis: <br>
+ *            - XA_ST: bit 2 <br>
+ *            - YA_ST: bit 1 <br>
+ *            - ZA_ST: bit 0 <br>
+ *          - AFS_SEL: 2-bit unsigned value 
  * 
  * @see mpu6050_register_addresses_t
  * @see mpu6050_accel_self_test_set_t
@@ -774,19 +730,27 @@ void mpu6050_gyro_read(
  * @see mpu6050_self_test
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @param accel_self_test : enables of disables self-test mode
- * @param afs_sel : accelerometer full scale range setpoint
+ * @param accel_self_test : enables of disables self-test mode for all axes 
+ * @param afs_sel : accelerometer full scale range setpoint for all axes
  */
 void mpu6050_accel_config_write(
     uint8_t mpu6050_address,
     uint8_t accel_self_test,
     uint8_t afs_sel);
 
+
 /**
  * @brief MPU6050 Accelerometer Configuration register read 
  * 
- * @details Reads from the ACCEL_CONFIG register (Register 27). This function is used 
- *          to read the full scale range setpoint of the accelerometer during self-test.
+ * @details Reads from the ACCEL_CONFIG register (Register 28 - 1 byte). This function 
+ *          is used to read the full scale range setpoint of the accelerometer during 
+ *          self-test. <br><br>
+ *          
+ *          Register read information: <br>
+ *          - XA_ST: bit 7 <br>
+ *          - YA_ST: bit 6 <br>
+ *          - ZA_ST: bit 5 <br>
+ *          - AFS_SEL: bits 3-4. 2-bit unsigned value. 
  * 
  * @see mpu6050_register_addresses_t
  * @see mpu6050_self_test
@@ -796,19 +760,25 @@ void mpu6050_accel_config_write(
  */
 uint8_t mpu6050_accel_config_read(uint8_t mpu6050_address);
 
+
 /**
  * @brief MPU6050 Accelerometer Measurements registers read
  * 
- * @details Read from the ACCEL_OUT registers (Registers 59-64). These registers store 
- *          the most recent (unformatted) accelerometer measurements. These values are 
- *          written to the register at the Sample Rate but are updated at a frequency 
- *          of 1 kHz. The calculation functions mpu6050_accel_x/y/z_calc are used to get
- *          the actual acceleration in g's. <br><br>
+ * @details Read from the ACCEL_OUT registers (Registers 59-64 - 6 bytes). These 
+ *          registers store the most recent (unformatted) accelerometer measurements. 
+ *          These values are written to the register at the Sample Rate but are updated 
+ *          at a frequency of 1 kHz. The calculation functions mpu6050_accel_x/y/z_calc 
+ *          are used to getthe actual acceleration in g's. <br><br>
  *          
  *          When the serial interface (i2c interface) is active, the values in the 
  *          registers are held constant so that you can read all values (burst read)
  *          at one instance in time. When the serial interface is idle then these 
- *          registers will go back to being written to at the Sample Rate. 
+ *          registers will go back to being written to at the Sample Rate. <br><br>
+ *          
+ *          Register read information: <br>
+ *          - ACCEL_XOUT: 16-bit signed value. Stored in the pointers first address. <br>
+ *          - ACCEL_YOUT: 16-bit signed value. Stored in the pointers second address. <br>
+ *          - ACCEL_ZOUT: 16-bit signed value. Stored in the pointers third address. 
  * 
  * @see mpu6050_accel_scalars_t
  * @see mpu6050_accel_x_calc
@@ -816,36 +786,147 @@ uint8_t mpu6050_accel_config_read(uint8_t mpu6050_address);
  * @see mpu6050_accel_z_calc
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @param accel_data : pointer to were accelerometer data us stored 
+ * @param accel_data : pointer to where accelerometer data is stored 
  */
 void mpu6050_accel_read(
     uint8_t  mpu6050_address,
     int16_t *accel_data);
 
+
 /**
  * @brief MPU6050 Temperature Measurements registers read
  * 
- * @details Registers 65-66
+ * @details Reads from the TEMP_OUT registers (Registers 65-66 - 2 bytes). These 
+ *          registers store the most recent (unformatted) temperature sensor 
+ *          measurements. The measurements are updated to these registers at the 
+ *          Sample Rate. <br><br>
  *          
- *          Temperature in degC = (16-bit register value) / 340 + 36.53
- *          See register map datasheet - page 30 
+ *          When the serial interface (i2c interface) is active, the values in the 
+ *          registers are held constant so that you can read all values (burst read)
+ *          at one instance in time. When the serial interface is idle then these 
+ *          registers will go back to being written to at the Sample Rate. <br><br>
+ *          
+ *          Register read information: <br>
+ *          - TEMP_OUT: 16-bit signed value. 
+ * 
+ * @see mpu6050_temp_calc
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @return int16_t : Unformatted signed temperature value 
+ * @return int16_t : unformatted signed temperature value 
  */
 int16_t mpu6050_temp_read(uint8_t mpu6050_address);
+
+
+/**
+ * @brief MPU6050 Gyroscope Configuration register write
+ * 
+ * @details Writes to the GYRO_CONFIG register (Register 27 - 1 byte). This register 
+ *          is used to trigger gyroscope self-test and configure the gyroscopes full 
+ *          scale range. <br><br>
+ *          
+ *          Register write information: <br>
+ *          - GYRO_SELF_TEST: 3-bit unsigned value that represents each axis: <br>
+ *            - XG_ST: bit 2 <br>
+ *            - YG_ST: bit 1 <br>
+ *            - ZG_ST: bit 0 <br>
+ *          - FS_SEL: 2-bit unsigned value. 
+ * 
+ * @see mpu6050_register_addresses_t
+ * @see mpu6050_gyro_self_test_set_t
+ * @see mpu6050_fs_sel_set_t
+ * @see mpu6050_self_test
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param gyro_self_test : enables or disabled self-test mode for all axes
+ * @param fs_sel : gyroscope full scale range setpoint for all axes 
+ */
+void mpu6050_gyro_config_write(
+    uint8_t mpu6050_address,
+    uint8_t gyro_self_test,
+    uint8_t fs_sel);
+
+
+/**
+ * @brief MPU6050 Gyroscope Configuration register read
+ * 
+ * @details Reads from the GYRO_CONFIG register (Register 27 - 1 byte). This function 
+ *          is used to read the full scale range setpoint of the gyroscope during 
+ *          self-test. <br><br>
+ *          
+ *          Register read information: <br>
+ *          - XG_ST: bit 7 <br>
+ *          - YG_ST: bit 6 <br>
+ *          - ZG_ST: bit 5 <br>
+ *          - FS_SEL: bits 3-4. 2-bit unsigned value.
+ *  
+ * @see mpu6050_register_addresses_t
+ * @see mpu6050_self_test
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @return uint8_t : returns the unparsed self-test and full scale range setpoints 
+ */
+uint8_t mpu6050_gyro_config_read(uint8_t mpu6050_address);
+
+
+/**
+ * @brief MPU6050 Gyroscope Measurements registers read
+ * 
+ * @details Read from the GYRO_OUT registers (Registers 67-72 - 6 bytes). These 
+ *          registers store the most recent (unformatted) gyroscope measurements. 
+ *          These values are updated at the Sample Rate. The calculation functions 
+ *          mpu6050_gyro_x/y/z_calc are used to get the actual gyroscopic values in 
+ *          deg/s. <br><br>
+ *          
+ *          When the serial interface (i2c interface) is active, the values in the 
+ *          registers are held constant so that you can read all values (burst read)
+ *          at one instance in time. When the serial interface is idle then these 
+ *          registers will go back to being written to at the Sample Rate. <br><br>
+ *          
+ *          Register read information: <br>
+ *          - GYRO_XOUT: 16-bit signed value. Stored in the pointers first address. <br>
+ *          - GYRO_YOUT: 16-bit signed value. Stored in the pointers second address. <br>
+ *          - GYRO_ZOUT: 16-bit signed value. Stored in the pointers third address. 
+ * 
+ * @see mpu6050_gyro_scalars_t
+ * @see mpu6050_gyro_x_calc
+ * @see mpu6050_gyro_y_calc
+ * @see mpu6050_gyro_z_calc
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param gyro_data : pointer to where gyroscope data is stored 
+ */
+void mpu6050_gyro_read(
+    uint8_t  mpu6050_address,
+    int16_t *gyro_data);
+
 
 /**
  * @brief MPU6050 Power Manangement 1 register write
  * 
- * @details Register 107 
+ * @details Writes to the PWR_MGMT_1 register (Register 107 - 1 byte). This register allows
+ *          the user to configure the power mode and clock source. It can also reset the 
+ *          entire device and disable the temperature sensor if needed. This function 
+ *          is typically called in the init function to configure the device. <br><br>
+ *          
+ *          Register write information: <br>
+ *          - DEVICE_RESET : 1-bit      <br>
+ *          - SLEEP : 1-bit             <br>
+ *          - CYCLE : 1-bit             <br>
+ *          - TEMP_DIS : 1-bit          <br>
+ *          - CLKSEL : 3-bit unsigned value. 
+ * 
+ * @see mpu6050_device_reset_t
+ * @see mpu6050_sleep_mode_t
+ * @see mpu6050_cycle_t
+ * @see mpu6050_temp_sensor_t
+ * @see mpu6050_clksel_t
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @param device_reset 
- * @param sleep 
- * @param cycle 
- * @param temp_dis 
- * @param clksel 
+ * @param device_reset : reset internal registers to default value when set to 1
+ * @param sleep : enter sleep mode when set to 1 
+ * @param cycle : periodic sleep mode when set to 1 and sleep is set to 0 
+ * @param temp_dis : disables temperature sensor when set to 1 
+ * @param clksel : specifies clock source of the device
  */
 void mpu6050_pwr_mgmt_1_write(
     uint8_t mpu6050_address,
@@ -855,19 +936,40 @@ void mpu6050_pwr_mgmt_1_write(
     uint8_t temp_dis,
     uint8_t clksel);
 
+
 /**
  * @brief MPU6050 Power Management 2 register write
  * 
- * @details Register 108 
+ * @details Writes to the PWR_MGMT_2 register (Register 108 - 1 byte). This register allows 
+ *          the user to configure the frequency of wake-ups in acclerometer only low power
+ *          mode. It can also put individual axes of the accelerometer and gyroscope into 
+ *          low power mode. <br><br>
+ *          
+ *          Register write information: <br>
+ *          - LP_WAKE_CTRL : 2-bit unsigned value. <br>
+ *          - STBY_XA : 1-bit  <br>
+ *          - STBY_YA : 1-bit  <br>
+ *          - STBY_ZA : 1-bit  <br>
+ *          - STBY_XA : 1-bit  <br> 
+ *          - STBY_YG : 1-bit  <br>
+ *          - STBY_ZG : 1-bit 
+ * 
+ * @see mpu6050_lp_wake_ctrl_t
+ * @see mpu6050_stby_xa_t
+ * @see mpu6050_stby_ya_t
+ * @see mpu6050_stby_za_t
+ * @see mpu6050_stby_xg_t
+ * @see mpu6050_stby_yg_t
+ * @see mpu6050_stby_zg_t
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @param lp_wake_ctrl 
- * @param stby_xa 
- * @param stby_ya 
- * @param stby_za 
- * @param stby_xg 
- * @param stby_yg 
- * @param stby_zg 
+ * @param lp_wake_ctrl : specify wake-up frequency in accelerometer only low power mode
+ * @param stby_xa : put accelerometer x-axis in standby when set to 1
+ * @param stby_ya : put accelerometer y-axis in standby when set to 1
+ * @param stby_za : put accelerometer z-axis in standby when set to 1
+ * @param stby_xg : put gyroscope x-axis in standby when set to 1
+ * @param stby_yg : put gyroscope y-axis in standby when set to 1
+ * @param stby_zg : put gyroscope z-axis in standby when set to 1
  */
 void mpu6050_pwr_mgmt_2_write(
     uint8_t mpu6050_address,
@@ -882,7 +984,12 @@ void mpu6050_pwr_mgmt_2_write(
 /**
  * @brief MPU6050 Who Am I register read 
  * 
- * @details Register 117
+ * @details Read from WHO_AM_I register (Register 117 - 1 byte). This register is used 
+ *          to verify the identity of the device. The register contains the upper 6-bits 
+ *          of the 7-bit I2C address (the LSB bit being the value of AD0). <br><br>
+ *          
+ *          Register read information: <br>
+ *          - WHO_AM_I: bits 1-6 <br>
  * 
  * @param mpu6050_sddress : I2C address of MPU6050 
  * @return uint8_t : Returns 0x68 if AD0 == 0 and 0x69 is AD0 == 1
@@ -893,7 +1000,7 @@ uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address);
 
 
 //=======================================================================================
-// Self test 
+// Self-test 
 
 /**
  * @brief MPU6050 
@@ -1016,6 +1123,9 @@ float mpu6050_accel_scalar(uint8_t mpu6050_address);
 
 /**
  * @brief MPU6050 
+ * 
+ * @details Temperature in degC = (16-bit register value) / 340 + 36.53
+ *          See register map datasheet - page 30 
  * 
  * @param temp_raw 
  * @return float 
