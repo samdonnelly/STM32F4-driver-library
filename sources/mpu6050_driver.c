@@ -41,6 +41,8 @@
  *          because the device automatically increments the register address after 
  *          each byte that is written. 
  * 
+ * @see mpu6050_register_addresses_t
+ * 
  * @param mpu6050_address : I2C address of MPU6050 
  * @param mpu6050_register : register address within the device 
  * @param mpu6050_reg_size : register byte size within the device 
@@ -63,6 +65,8 @@ void mpu6050_write(
  *          successive addresses because the device automatically increments the 
  *          register address after each byte that is read. 
  * 
+ * @see mpu6050_register_addresses_t
+ * 
  * @param mpu6050_address : I2C address of MPU6050 
  * @param mpu6050_register : register address within the device 
  * @param mpu6050_reg_size : register byte size within the device 
@@ -73,6 +77,266 @@ void mpu6050_read(
     uint8_t mpu6050_register, 
     uint8_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value);
+
+//==============================================================
+
+
+//==============================================================
+// Register functions 
+
+/**
+ * @brief MPU6050 Sample Rate Divider register write 
+ * 
+ * @details Writes to the SMPRT_DIV register (Register 25 - 1 byte). This register 
+ *          specifies the  divider from the gyroscope output rate used to generate the 
+ *          device sensor  sample rate. The sample rate is calculated as follows: 
+ *          <br><br>
+ *          
+ *          Sample Rate = Gyroscope Output Rate / (a + SMPLRT_DIV) <br><br>
+ *          
+ *          The Gyroscope Output Rate is determined by the digital low pass filter. The 
+ *          accelerometer output rate is 1kHz so a sample rate greater than this will 
+ *          procude repeated accelerometer readings. <br><br>
+ *          
+ *          Register write information: <br>
+ *          - SMPLRT_DIV: 8-bit unsigned value.
+ * 
+ * @see mpu6050_register_addresses_t
+ * @see mpu6050_smplrt_div_t
+ * @see mpu6050_dlpf_cfg_t
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param smprt_div : sample rate divider address
+ */
+void mpu6050_smprt_div_write(
+    uint8_t mpu6050_address,
+    uint8_t smprt_div);
+
+
+/**
+ * @brief MPU6050 Configuration register write
+ * 
+ * @details Writes to the CONFIG register (Register 26 - 1 byte). This register allows 
+ *          for configuring the external frame synchronization (FSYNC) pin sampling and 
+ *          the digital low pass filter (DLPF) for both accelerometers and gyroscopes.
+ *          <br><br>
+ *          
+ *          Register write information: <br>
+ *          - EXT_SYNC_SET: 3-bit unsigned value. <br>
+ *          - DLPF_CFG: 3-bit unsigned value.  
+ * 
+ * @see mpu6050_register_addresses_t
+ * @see mpu6050_ext_sync_set_t
+ * @see mpu6050_dlpf_cfg_t
+ * 
+ * @param mapu6050_address : I2C address of MPU6050 
+ * @param ext_sync_set : FSYNC pin sampling setpoint 
+ * @param dlpf_cfg : digital low pass filter setpoint for all axes
+ */
+void mpu6050_config_write(
+    uint8_t mpu6050_address,
+    uint8_t ext_sync_set,
+    uint8_t dlpf_cfg);
+
+
+/**
+ * @brief MPU6050 Accelerometer Configuration register write
+ * 
+ * @details Writes to the ACCEL_CONFIG register (Register 28 - 1 byte). This register is 
+ *          used to trigger accelerometer self-test and configure the accelerometer full 
+ *          scale range. <br><br>
+ *          
+ *          Register write information: <br>
+ *          - ACCEL_SELF_TEST: 3-bit unsigned value that represents each axis: <br>
+ *            - XA_ST: bit 2 <br>
+ *            - YA_ST: bit 1 <br>
+ *            - ZA_ST: bit 0 <br>
+ *          - AFS_SEL: 2-bit unsigned value 
+ * 
+ * @see mpu6050_register_addresses_t
+ * @see mpu6050_accel_self_test_set_t
+ * @see mpu6050_afs_sel_set_t
+ * @see mpu6050_self_test
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param accel_self_test : enables of disables self-test mode for all axes 
+ * @param afs_sel : accelerometer full scale range setpoint for all axes
+ */
+void mpu6050_accel_config_write(
+    uint8_t mpu6050_address,
+    uint8_t accel_self_test,
+    uint8_t afs_sel);
+
+
+/**
+ * @brief MPU6050 Accelerometer Configuration register read 
+ * 
+ * @details Reads from the ACCEL_CONFIG register (Register 28 - 1 byte). This function 
+ *          is used to read the full scale range setpoint of the accelerometer during 
+ *          self-test. <br><br>
+ *          
+ *          Register read information: <br>
+ *          - XA_ST: bit 7 <br>
+ *          - YA_ST: bit 6 <br>
+ *          - ZA_ST: bit 5 <br>
+ *          - AFS_SEL: bits 3-4. 2-bit unsigned value. 
+ * 
+ * @see mpu6050_register_addresses_t
+ * @see mpu6050_self_test
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @return uint8_t : returns the unparsed self-test and full scale range setpoints 
+ */
+uint8_t mpu6050_accel_config_read(uint8_t mpu6050_address);
+
+
+/**
+ * @brief MPU6050 Gyroscope Configuration register write
+ * 
+ * @details Writes to the GYRO_CONFIG register (Register 27 - 1 byte). This register 
+ *          is used to trigger gyroscope self-test and configure the gyroscopes full 
+ *          scale range. <br><br>
+ *          
+ *          Register write information: <br>
+ *          - GYRO_SELF_TEST: 3-bit unsigned value that represents each axis: <br>
+ *            - XG_ST: bit 2 <br>
+ *            - YG_ST: bit 1 <br>
+ *            - ZG_ST: bit 0 <br>
+ *          - FS_SEL: 2-bit unsigned value. 
+ * 
+ * @see mpu6050_register_addresses_t
+ * @see mpu6050_gyro_self_test_set_t
+ * @see mpu6050_fs_sel_set_t
+ * @see mpu6050_self_test
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param gyro_self_test : enables or disabled self-test mode for all axes
+ * @param fs_sel : gyroscope full scale range setpoint for all axes 
+ */
+void mpu6050_gyro_config_write(
+    uint8_t mpu6050_address,
+    uint8_t gyro_self_test,
+    uint8_t fs_sel);
+
+
+/**
+ * @brief MPU6050 Gyroscope Configuration register read
+ * 
+ * @details Reads from the GYRO_CONFIG register (Register 27 - 1 byte). This function 
+ *          is used to read the full scale range setpoint of the gyroscope during 
+ *          self-test. <br><br>
+ *          
+ *          Register read information: <br>
+ *          - XG_ST: bit 7 <br>
+ *          - YG_ST: bit 6 <br>
+ *          - ZG_ST: bit 5 <br>
+ *          - FS_SEL: bits 3-4. 2-bit unsigned value.
+ *  
+ * @see mpu6050_register_addresses_t
+ * @see mpu6050_self_test
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @return uint8_t : returns the unparsed self-test and full scale range setpoints 
+ */
+uint8_t mpu6050_gyro_config_read(uint8_t mpu6050_address);
+
+
+/**
+ * @brief MPU6050 Power Manangement 1 register write
+ * 
+ * @details Writes to the PWR_MGMT_1 register (Register 107 - 1 byte). This register allows
+ *          the user to configure the power mode and clock source. It can also reset the 
+ *          entire device and disable the temperature sensor if needed. This function 
+ *          is typically called in the init function to configure the device. <br><br>
+ *          
+ *          Register write information: <br>
+ *          - DEVICE_RESET : 1-bit      <br>
+ *          - SLEEP : 1-bit             <br>
+ *          - CYCLE : 1-bit             <br>
+ *          - TEMP_DIS : 1-bit          <br>
+ *          - CLKSEL : 3-bit unsigned value. 
+ * 
+ * @see mpu6050_device_reset_t
+ * @see mpu6050_sleep_mode_t
+ * @see mpu6050_cycle_t
+ * @see mpu6050_temp_sensor_t
+ * @see mpu6050_clksel_t
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param device_reset : reset internal registers to default value when set to 1
+ * @param sleep : enter sleep mode when set to 1 
+ * @param cycle : periodic sleep mode when set to 1 and sleep is set to 0 
+ * @param temp_dis : disables temperature sensor when set to 1 
+ * @param clksel : specifies clock source of the device
+ */
+void mpu6050_pwr_mgmt_1_write(
+    uint8_t mpu6050_address,
+    uint8_t device_reset,
+    uint8_t sleep,
+    uint8_t cycle,
+    uint8_t temp_dis,
+    uint8_t clksel);
+
+
+/**
+ * @brief MPU6050 Power Management 2 register write
+ * 
+ * @details Writes to the PWR_MGMT_2 register (Register 108 - 1 byte). This register allows 
+ *          the user to configure the frequency of wake-ups in acclerometer only low power
+ *          mode. It can also put individual axes of the accelerometer and gyroscope into 
+ *          low power mode. <br><br>
+ *          
+ *          Register write information: <br>
+ *          - LP_WAKE_CTRL : 2-bit unsigned value. <br>
+ *          - STBY_XA : 1-bit  <br>
+ *          - STBY_YA : 1-bit  <br>
+ *          - STBY_ZA : 1-bit  <br>
+ *          - STBY_XA : 1-bit  <br> 
+ *          - STBY_YG : 1-bit  <br>
+ *          - STBY_ZG : 1-bit 
+ * 
+ * @see mpu6050_lp_wake_ctrl_t
+ * @see mpu6050_stby_xa_t
+ * @see mpu6050_stby_ya_t
+ * @see mpu6050_stby_za_t
+ * @see mpu6050_stby_xg_t
+ * @see mpu6050_stby_yg_t
+ * @see mpu6050_stby_zg_t
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @param lp_wake_ctrl : specify wake-up frequency in accelerometer only low power mode
+ * @param stby_xa : put accelerometer x-axis in standby when set to 1
+ * @param stby_ya : put accelerometer y-axis in standby when set to 1
+ * @param stby_za : put accelerometer z-axis in standby when set to 1
+ * @param stby_xg : put gyroscope x-axis in standby when set to 1
+ * @param stby_yg : put gyroscope y-axis in standby when set to 1
+ * @param stby_zg : put gyroscope z-axis in standby when set to 1
+ */
+void mpu6050_pwr_mgmt_2_write(
+    uint8_t mpu6050_address,
+    uint8_t lp_wake_ctrl,
+    uint8_t stby_xa,
+    uint8_t stby_ya,
+    uint8_t stby_za,
+    uint8_t stby_xg,
+    uint8_t stby_yg,
+    uint8_t stby_zg);
+
+
+/**
+ * @brief MPU6050 Who Am I register read 
+ * 
+ * @details Read from WHO_AM_I register (Register 117 - 1 byte). This register is used 
+ *          to verify the identity of the device. The register contains the upper 6-bits 
+ *          of the 7-bit I2C address (the LSB bit being the value of AD0). <br><br>
+ *          
+ *          Register read information: <br>
+ *          - WHO_AM_I: bits 1-6 <br>
+ * 
+ * @param mpu6050_sddress : I2C address of MPU6050 
+ * @return uint8_t : Returns 0x68 if AD0 == 0 and 0x69 is AD0 == 1
+ */
+uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address);
 
 //==============================================================
 
@@ -103,12 +367,16 @@ void mpu6050_self_test_read(
 /**
  * @brief MPU6050 self-test response calculation
  * 
- * @details 
+ * @details This function calculates the self-test response of each sensor axis. The 
+ *          self-test response is defined as: <br><br>
+ *          
+ *          Self-test response = (sensor output with self-test enabled) - 
+ *                               (sensor output with self-test disabled) <br><br>
  * 
- * @param self_test_response 
- * @param no_self_test 
- * @param self_test 
- * @param num_axes 
+ * @param self_test_response : pointer that stores the sef-test response calculation
+ * @param no_self_test : pointer to raw senor output (without self-test enabled)
+ * @param self_test : pointer to raw self-test sensor output 
+ * @param num_axes : number of accelerometer or gyroscope axis to calculate
  */
 void mpu6050_str_calc(
     int16_t *self_test_response,
@@ -120,12 +388,24 @@ void mpu6050_str_calc(
 /**
  * @brief MPU6050 accelerometer self-test result 
  * 
- * @details 
+ * @details Determines the results (pass/fail) of the self-test for the accelerometer 
+ *          and stores the result in bits 0-2 of self_test_results. mpu6050_self_test
+ *          calls this function to calculate the result. See mpu6050_self_test
+ *          documentation for a breakdown on reading these results. The result is 
+ *          determined for each axis by taking the output of the following equation
+ *          and comparing it against the maximum allowable change from factory trim.
+ *          <br><br>
+ *          
+ *          Change from factory trim = ((self-test response) - (factory trim)) / 
+ *                                     (factory trim)
  * 
- * @param accel_self_test_results 
- * @param accel_factory_trim 
- * @param self_test_results 
- * @return uint8_t 
+ * @see mpu6050_accel_ft
+ * @see mpu6050_self_test
+ * 
+ * @param accel_self_test_results : pointer to accelerometer self-test responses
+ * @param accel_factory_trim : pointer to accelerometer axes factory trim 
+ * @param self_test_results : stores the pass/fail results of the self-test
+ * @return uint8_t : returns the updated self_test_results
  */
 uint8_t mpu6050_self_test_accel_result(
     int16_t *accel_self_test_results,
@@ -136,12 +416,24 @@ uint8_t mpu6050_self_test_accel_result(
 /**
  * @brief MPU6050 gyroscope self-test result
  * 
- * @details 
+ * @details Determines the results (pass/fail) of the self-test for the gyroscope 
+ *          and stores the result in bits 3-5 of self_test_results. mpu6050_self_test
+ *          calls this function to calculate the result. See mpu6050_self_test
+ *          documentation for a breakdown on reading these results. The result is 
+ *          determined for each axis by taking the output of the following equation
+ *          and comparing it against the maximum allowable change from factory trim.
+ *          <br><br>
+ *          
+ *          Change from factory trim = ((self-test response) - (factory trim)) / 
+ *                                     (factory trim)
  * 
- * @param gyro_self_test_results 
- * @param gyro_factory_trim 
- * @param self_test_results 
- * @return uint8_t 
+ * @see mpu6050_gyro_ft
+ * @see mpu6050_self_test
+ * 
+ * @param gyro_self_test_results : pointer to gyroscope self-test responses
+ * @param gyro_factory_trim : pointer to gyroscope axes factory trim 
+ * @param self_test_results : stores the pass/fail results of the self-test
+ * @return uint8_t : returns the updated self_test_results
  */
 uint8_t mpu6050_self_test_gyro_result(
     int16_t *gyro_self_test_results,
@@ -152,10 +444,22 @@ uint8_t mpu6050_self_test_gyro_result(
 /**
  * @brief MPU6050 accelerometer factory trim 
  * 
- * @details 
+ * @details The factory trim is used to determine how much the accelerometer sensors
+ *          have drifted from their factory configuration as seen in the 
+ *          mpu6050_self_test_accel_result function. Factory trim is a complex 
+ *          calculation and so this function approximates the result using a third 
+ *          order polynomial: <br><br>
+ *          
+ *          Factory trim = C1*x^3 + C2*x^2 + C3*x + C4 <br><br>
+ *          
+ *          More information on this calculation can be found in 
+ *          self_test_accel_constants_t and the register map documentation. 
  * 
- * @param a_test 
- * @param accel_ft 
+ * @see self_test_accel_constants_t
+ * @see mpu6050_self_test_accel_result
+ * 
+ * @param a_test : pointer to self-test accelerometer results 
+ * @param accel_ft : pointer to store calculated factory trim 
  */
 void mpu6050_accel_ft(uint8_t *a_test, float *accel_ft);
 
@@ -163,10 +467,22 @@ void mpu6050_accel_ft(uint8_t *a_test, float *accel_ft);
 /**
  * @brief MPU6050 gyroscope factory trim 
  * 
- * @details 
+ * @details The factory trim is used to determine how much the gyroscope sensors
+ *          have drifted from their factory configuration as seen in the 
+ *          mpu6050_self_test_gyro_result function. Factory trim is a complex 
+ *          calculation and so this function approximates the result using a third 
+ *          order polynomial: <br><br>
+ *          
+ *          Factory trim = C1*x^3 + C2*x^2 + C3*x + C4 <br><br>
+ *          
+ *          More information on this calculation can be found in 
+ *          self_test_gyro_constants_t and the register map documentation. 
  * 
- * @param g_test 
- * @param gyro_ft 
+ * @see self_test_gyro_constants_t
+ * @see mpu6050_self_test_gyro_result
+ * 
+ * @param g_test : pointer to self-test gyroscope results 
+ * @param gyro_ft : pointer to store calcualted factory trim
  */
 void mpu6050_gyro_ft(uint8_t *g_test, float *gyro_ft);
 
@@ -174,26 +490,36 @@ void mpu6050_gyro_ft(uint8_t *g_test, float *gyro_ft);
 
 
 //==============================================================
-// 
+// Calculation functions 
 
 /**
- * @brief MPU6050 
+ * @brief MPU6050 accelerometer scalar 
  * 
- * @details 
+ * @details This function reads the ACCEL_CONFIG register to check the chosen full scale
+ *          range of the accelerometer. This is used to determine the scalar that  
+ *          converts raw sensor output into g's. The mpu6050_accel_x/y/z_calc functions 
+ *          call this function. 
+ * 
+ * @see mpu6050_accel_config_read
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @return float 
+ * @return float : returns the scalar used to convert raw acceleromeeter data to g's
  */
 float mpu6050_accel_scalar(uint8_t mpu6050_address);
 
 
 /**
- * @brief MPU6050 
+ * @brief MPU6050 gyroscope scalar
  * 
- * @details 
+ * @details This function reads the GYRO_CONFIG register to check the chosen full scale
+ *          range of the gyroscope. This is used to determine the scalar that  
+ *          converts raw sensor output into deg/s. The mpu6050_gyro_x/y/z_calc functions 
+ *          call this function. 
+ * 
+ * @see mpu6050_gyro_config_read
  * 
  * @param mpu6050_address : I2C address of MPU6050 
- * @return float 
+ * @return float : returns the scalar used to convert raw gyroscope data to deg/s
  */
 float mpu6050_gyro_scalar(uint8_t mpu6050_address);
 
@@ -206,7 +532,7 @@ float mpu6050_gyro_scalar(uint8_t mpu6050_address);
 // Initialization 
 
 //==============================================================
-// MPU-6050 Init
+// MPU6050 Init
 //  1. Read the WHO_AM_I register to establish that there is communication 
 //  2. Choose which sensors to use and frquency of CYCLE mode (see PWR_MGMT_1)
 //  3. Wake the sensor up through the power management 1 register 
@@ -216,7 +542,7 @@ float mpu6050_gyro_scalar(uint8_t mpu6050_address);
 //  7. Configure the gyroscope register
 //==============================================================
 
-// MPU-6050 Initialization 
+// MPU6050 Initialization 
 uint8_t mpu6050_init(
     uint8_t mpu6050_address,
     uint8_t dlpf_cfg,
@@ -230,7 +556,7 @@ uint8_t mpu6050_init(
         return FALSE;
     }
 
-    // 2. Choose which sensors to use and frquency of CYCLE mode (see PWR_MGMT_1)
+    // 2. Choose which sensors to use and frquency of CYCLE mode
     mpu6050_pwr_mgmt_2_write(
         mpu6050_address,
         LP_WAKE_CTRL_0,
@@ -277,16 +603,17 @@ uint8_t mpu6050_init(
     return TRUE;
 }
 
-// 
+
+// MPU6050 reference point set 
 void mpu6050_calibrate(
     uint8_t mpu6050_address, 
     int16_t *mpu6050_accel_offset,
     int16_t *mpu6050_gyro_offset)
 {
-    // 
+    // Read initial accelerometer values 
     mpu6050_accel_read(MPU6050_1_ADDRESS, mpu6050_accel_offset);
 
-    // 
+    // Read initial gyroscope values 
     mpu6050_gyro_read(MPU6050_1_ADDRESS, mpu6050_gyro_offset);
 }
 
@@ -352,13 +679,13 @@ void mpu6050_read(
 }
 
 
-// SELF_TEST read - Registers 13-16 
+// MPU6050 self-test read 
 void mpu6050_self_test_read(
     uint8_t mpu6050_address,
     uint8_t *accel_st_data,
     uint8_t *gyro_st_data)
 {
-    // Store unformatted datat 
+    // Store unformatted data 
     uint8_t st_data[MPU6050_REG_4_BYTE];
 
     // Read the value of SELF_TEST registers 
@@ -402,7 +729,7 @@ void mpu6050_self_test_read(
 //=======================================================================================
 // Register Functions
 
-// SMPRT_DIV write - Register 25
+// MPU6050 Sample Rate Divider register write 
 void mpu6050_smprt_div_write(
     uint8_t mpu6050_address,
     uint8_t smprt_div)
@@ -415,7 +742,7 @@ void mpu6050_smprt_div_write(
         &smprt_div);
 }
 
-// CONFIG write - Register 26 
+// MPU6050 Configuration register write
 void mpu6050_config_write(
     uint8_t mpu6050_address, 
     uint8_t ext_sync_set,
@@ -432,7 +759,7 @@ void mpu6050_config_write(
         &mpu6050_config);
 }
 
-// GYRO_CONFIG write - Register 27 
+// MPU6050 Gyroscope Configuration register write
 void mpu6050_gyro_config_write(
     uint8_t mpu6050_address,
     uint8_t gyro_self_test,
@@ -449,7 +776,7 @@ void mpu6050_gyro_config_write(
         &mpu6050_gyro_config);
 }
 
-// GYRO_CONFIG read - Register 27
+// MPU6050 Gyroscope Configuration register read
 uint8_t mpu6050_gyro_config_read(uint8_t mpu6050_address)
 {
     // Place to store the value of GYRO_CONFIG
@@ -466,7 +793,7 @@ uint8_t mpu6050_gyro_config_read(uint8_t mpu6050_address)
     return mpu6050_gyro_config;
 }
 
-// ACCEL_CONFIG write - Register 28 
+// MPU6050 Accelerometer Configuration register write
 void mpu6050_accel_config_write(
     uint8_t mpu6050_address,
     uint8_t accel_self_test,
@@ -475,7 +802,7 @@ void mpu6050_accel_config_write(
     // Configure the data 
     uint8_t mpu6050_accel_config = (accel_self_test << SHIFT_5) | (afs_sel << SHIFT_3);
 
-    // Write to the Gyroscope Configuration register 
+    // Write to the Accelerometer Configuration register 
     mpu6050_write(
         mpu6050_address,
         MPU6050_ACCEL_CONFIG,
@@ -483,7 +810,7 @@ void mpu6050_accel_config_write(
         &mpu6050_accel_config);
 }
 
-// ACCEL_CONFIG read - Register 28 
+// MPU6050 Accelerometer Configuration register read 
 uint8_t mpu6050_accel_config_read(uint8_t mpu6050_address)
 {
     // Place to store the value of ACCEL_CONFIG
@@ -500,7 +827,7 @@ uint8_t mpu6050_accel_config_read(uint8_t mpu6050_address)
     return mpu6050_accel_config;
 }
 
-// ACCEL_OUT - Registers 59-64
+// MPU6050 Accelerometer Measurements registers read
 void mpu6050_accel_read(
     uint8_t  mpu6050_address,
     int16_t *accel_data)
@@ -525,7 +852,7 @@ void mpu6050_accel_read(
     } 
 }
 
-// TEMP_OUT - Registers 65-66
+// MPU6050 Temperature Measurements registers read
 int16_t mpu6050_temp_read(uint8_t mpu6050_address)
 {
     // Store the temperature data 
@@ -547,7 +874,7 @@ int16_t mpu6050_temp_read(uint8_t mpu6050_address)
     return mpu6050_temp_sensor_val;
 }
 
-// GYRO_OUT - Registers 67-72
+// MPU6050 Gyroscope Measurements registers read
 void mpu6050_gyro_read(
     uint8_t  mpu6050_address,
     int16_t *gyro_data)
@@ -572,7 +899,7 @@ void mpu6050_gyro_read(
     } 
 }
 
-// PWR_MGMT_1 write - Register 107 
+// MPU6050 Power Manangement 1 register write
 void mpu6050_pwr_mgmt_1_write(
     uint8_t mpu6050_address,
     uint8_t device_reset,
@@ -596,7 +923,7 @@ void mpu6050_pwr_mgmt_1_write(
         &mpu6050_pwr_mgmt_1);
 }
 
-// PWR_MGMT_2 write - Register 108 
+// MPU6050 Power Manangement 2 register write
 void mpu6050_pwr_mgmt_2_write(
     uint8_t mpu6050_address,
     uint8_t lp_wake_ctrl,
@@ -624,7 +951,7 @@ void mpu6050_pwr_mgmt_2_write(
         &mpu6050_pwr_mgmt_2);
 }
 
-// WHO_AM_I read - Register 117 
+// MPU6050 Who Am I register read
 uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address)
 {
     // Place to store the value WHO_AM_I
@@ -645,23 +972,23 @@ uint8_t mpu6050_who_am_i_read(uint8_t mpu6050_address)
 
 
 //=======================================================================================
-// Self test functions 
+// Self-test functions 
 
 //==============================================================
-// Steps for self test 
+// Steps for self-test 
 //  1. Record the full scale range set in the init function 
 //  2. Set the full scale range of the accel to +/- 8g and gyro to +/- 250 deg/s
 //  3. Read and store the sensor values during non-self-test
-//  4. Enable self test 
+//  4. Enable self-test 
 //  5. Read and store the sensor values during self-test
 //  6. Read the self-test registers
 //  7. Calculate the factory trim
 //  8. Calculate self-test response
 //  9. Calculate the change from factory trim and check against the acceptable range
-//  10. Disable self test and set the full scale ranges back to their original values
+//  10. Disable self-test and set the full scale ranges back to their original values
 //============================================================== 
 
-// Self Test 
+// MPU6050 self-test
 uint8_t mpu6050_self_test(uint8_t mpu6050_address)
 {
     // Full scale range 
@@ -713,7 +1040,7 @@ uint8_t mpu6050_self_test(uint8_t mpu6050_address)
     mpu6050_accel_read(mpu6050_address, accel_no_st);
     mpu6050_gyro_read(mpu6050_address, gyro_no_st);
 
-    // 4. Enable self test 
+    // 4. Enable self-test 
     mpu6050_accel_config_write(
         mpu6050_address,
         ACCEL_SELF_TEST_ENABLE,
@@ -762,7 +1089,7 @@ uint8_t mpu6050_self_test(uint8_t mpu6050_address)
                                             gyro_ft,
                                             self_test_result);
     
-    // 10. Disable self test and set the full scale ranges back to their original values
+    // 10. Disable self-test and set the full scale ranges back to their original values
     mpu6050_accel_config_write(
         mpu6050_address,
         ACCEL_SELF_TEST_DISABLE,
@@ -778,7 +1105,7 @@ uint8_t mpu6050_self_test(uint8_t mpu6050_address)
 }
 
 
-// Accelerometer factory trim calculation 
+// MPU6050 accelerometer factory trim 
 void mpu6050_accel_ft(uint8_t *a_test, float *accel_ft)
 {
     // Constants 
@@ -805,7 +1132,7 @@ void mpu6050_accel_ft(uint8_t *a_test, float *accel_ft)
 }
 
 
-// Gyroscope factory trim calculation 
+// MPU6050 gyroscope factory trim 
 void mpu6050_gyro_ft(uint8_t *g_test, float *gyro_ft)
 {
     // Constants 
@@ -837,7 +1164,7 @@ void mpu6050_gyro_ft(uint8_t *g_test, float *gyro_ft)
 }
 
 
-// Calculate the self test response
+// MPU6050 self-test response calculation
 void mpu6050_str_calc(
     int16_t *self_test_response,
     int16_t *no_self_test,
@@ -854,7 +1181,7 @@ void mpu6050_str_calc(
 }
 
 
-// 
+// MPU6050 accelerometer self-test result 
 uint8_t mpu6050_self_test_accel_result(
     int16_t *accel_self_test_results,
     float  *accel_factory_trim,
@@ -863,7 +1190,7 @@ uint8_t mpu6050_self_test_accel_result(
     // Place to store the % change 
     float ft_change;
 
-    // Determine the result of the self test
+    // Determine the result of the self-test
     for (uint8_t i = 0; i < MPU6050_NUM_ACCEL_AXIS; i++)
     {
         // Check % change from factory trim 
@@ -884,7 +1211,7 @@ uint8_t mpu6050_self_test_accel_result(
 }
 
 
-// 
+// MPU6050 gyroscope self-test result 
 uint8_t mpu6050_self_test_gyro_result(
     int16_t *gyro_self_test_results,
     float *gyro_factory_trim,
@@ -893,7 +1220,7 @@ uint8_t mpu6050_self_test_gyro_result(
     // Place to store the % change 
     float ft_change;
 
-    // Determine the result of the self test
+    // Determine the result of the self-test
     for (uint8_t i = 0; i < MPU6050_NUM_GYRO_AXIS; i++)
     {
         // Check % change from factory trim 
@@ -919,7 +1246,7 @@ uint8_t mpu6050_self_test_gyro_result(
 //=======================================================================================
 // Calculation Functions 
 
-// 
+// MPU6050 accelerometer x-axis calculation 
 float mpu6050_accel_x_calc(uint8_t mpu6050_address, int16_t accel_x_axis_raw)
 {
     // Get the raw value scalar and calculate the true x-axis acceleration
@@ -930,7 +1257,7 @@ float mpu6050_accel_x_calc(uint8_t mpu6050_address, int16_t accel_x_axis_raw)
     return accel_x_axis;
 }
 
-// 
+// MPU6050 accelerometer y-axis calculation 
 float mpu6050_accel_y_calc(uint8_t mpu6050_address, int16_t accel_y_axis_raw)
 {
     // Get the raw value scalar and calculate the true y-axis acceleration
@@ -941,7 +1268,7 @@ float mpu6050_accel_y_calc(uint8_t mpu6050_address, int16_t accel_y_axis_raw)
     return accel_y_axis;
 }
 
-// 
+// MPU6050 accelerometer z-axis calculation 
 float mpu6050_accel_z_calc(uint8_t mpu6050_address, int16_t accel_z_axis_raw)
 {
     // Get the raw value scalar and calculate the true z-axis acceleration
@@ -952,7 +1279,7 @@ float mpu6050_accel_z_calc(uint8_t mpu6050_address, int16_t accel_z_axis_raw)
     return accel_z_axis;
 }
 
-// 
+// MPU6050 accelerometer scalar
 float mpu6050_accel_scalar(uint8_t mpu6050_address)
 {
     float accel_scalar;
@@ -988,7 +1315,7 @@ float mpu6050_accel_scalar(uint8_t mpu6050_address)
     return accel_scalar;
 }
 
-// 
+// MPU6050 temperature sensor calculation
 float mpu6050_temp_calc(int16_t temp_raw)
 {
     // Get the true temperature in degC
@@ -999,7 +1326,7 @@ float mpu6050_temp_calc(int16_t temp_raw)
     return temperature;
 }
 
-// 
+// MPU6050 gyroscopic value calculation around x-axis 
 float mpu6050_gyro_x_calc(
     uint8_t mpu6050_address, 
     int16_t gyro_x_axis_raw,
@@ -1013,7 +1340,7 @@ float mpu6050_gyro_x_calc(
     return gyro_x_axis;
 }
 
-// 
+// MPU6050 gyroscopic value calculation around y-axis 
 float mpu6050_gyro_y_calc(
     uint8_t mpu6050_address, 
     int16_t gyro_y_axis_raw,
@@ -1027,7 +1354,7 @@ float mpu6050_gyro_y_calc(
     return gyro_y_axis;
 }
 
-// 
+// MPU6050 gyroscopic value calculation around z-axis 
 float mpu6050_gyro_z_calc(
     uint8_t mpu6050_address, 
     int16_t gyro_z_axis_raw,
@@ -1041,7 +1368,7 @@ float mpu6050_gyro_z_calc(
     return gyro_z_axis;
 }
 
-// 
+// MPU6050 gyroscope scalar
 float mpu6050_gyro_scalar(uint8_t mpu6050_address)
 {
     float gyro_scalar;
