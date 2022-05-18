@@ -1,12 +1,12 @@
 /**
  * @file HW_125_microSD_driver.c
  * 
- * @author your name (you@domain.com)
+ * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief 
+ * @brief HW125 SD card reader driver
  * 
  * @version 0.1
- * @date 2022-02-11
+ * @date 2022-05-18
  * 
  * @copyright Copyright (c) 2022
  * 
