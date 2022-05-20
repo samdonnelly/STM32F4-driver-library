@@ -25,7 +25,7 @@
 // Inititalization 
 
 //==============================================================
-// SPI Setup Steps 
+// SPI Master Mode Setup Steps 
 //  1. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
 //  2. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
 //  3. Set the DFF bit to define 8-bit or 16-bit data frame format. 
@@ -57,7 +57,32 @@ void spi2_init(void)
 // Read and write 
 
 //==============================================================
+// Full duplex 
+//  - The sequence begins when data is written into the SPI_DR register (TX buffer). 
+//  - Data is parallel loaded into a shift register then shifted out serially over 
+//    the MOSI pin. 
+//  - At the same time the received data on the MISO pin is shifted in serially to 
+//    the shift register then parallel loaded into the RX buffer. 
+// 
+// Bidirectional mode 
+//  - Transmitting
+//    - Sequence begins when data is written into the TX buffer. 
+//    - Data is shifted out serially to the MOSI pin. 
+//    - No data is received. 
+//  - Receiving 
+//    - The sequence begins as soon as soon as SPE=1 and BIDIOE=0 
+//    - The received data on the MOSI pin eventaully gets loaded into the RX buffer. 
+//    - No data is shifted out. 
+//==============================================================
+
+//==============================================================
 // Receive sequence 
+//  - When data transfer is complete: 
+//    - The data in the shift register is transferred to the RX buffer and the RXNE 
+//      flag is set 
+//    - An interrupt is generated if the RXNEIE bit is set in the SPI_CR2 register. 
+//  - Data is received and stored into an internal RX buffer to be read. Read access to 
+//    the SPI_DR register returns the RX buffer value. 
 //==============================================================
 
 // SPI2 Read
@@ -72,6 +97,8 @@ void spi2_read(void)
 //  - Transmit sequence begins when a byte is written to the TX buffer 
 //  - TXE flag must be set to 1 to indicate that the data has been moved to the 
 //    shift register and you can load more data to the TX register. 
+//  - Data is first stored into an internal TX buffer before being transmitted. Write 
+//    access to the SPI_DR register stores the written data into the TX buffer. 
 //  
 //  TODO : figure out which transmission type you need (full-duplex, half-duplex, etc.)
 //==============================================================
