@@ -57,6 +57,27 @@ void spi2_init(void)
 // Read and write 
 
 //==============================================================
+// Notes 
+//  - You will need to use the CubeMX FATFS system for now as this is too big of a 
+//    task for you to take on yourseld 
+//  - You can still put together SPI and SD card drivers, they will just use pre-
+//    existing code for FATFS
+//==============================================================
+
+//==============================================================
+// Procedure to transmit and receive data 
+//  1. Enable SPI by setting the SPE bit to 1 
+//  2. Write the first data item to be transmitted into the SPI_DR register (clears TXE
+//     flag)
+//  3. Wait until TXE=1  and write the second data item to be transmitted
+//  4. Wait until RXNE=1 and read the SPI_DR regsiter to get the first received data 
+//     item (cleas RXNE bit) 
+//  5. Repeat operations 3 and 4 for each data item 
+//  6. Wait for RXNE=1 and read the last received data 
+//  7. Wait until TXE=1 and then wait until BSY=0 before disabling SPI 
+//==============================================================
+
+//==============================================================
 // Full duplex 
 //  - The sequence begins when data is written into the SPI_DR register (TX buffer). 
 //  - Data is parallel loaded into a shift register then shifted out serially over 
