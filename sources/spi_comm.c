@@ -58,10 +58,17 @@ void spi2_init(void)
 
 //==============================================================
 // Notes 
-//  - You will need to use the CubeMX FATFS system for now as this is too big of a 
-//    task for you to take on yourseld 
-//  - You can still put together SPI and SD card drivers, they will just use pre-
-//    existing code for FATFS
+//  - The CubeMX FATFS file system code will be used instead of creating the code from 
+//    scratch like the other drivers. This is because the code/process seems complex 
+//    with little online supporting material and therefore is not a good use of time 
+//    given that the filesystem is not within your defined scope of learning. It's also 
+//    been recommended online to not reinvent this process. With that being said, it 
+//    looks like SPI and SD card drivers can still be made that are self-contained 
+//    (don't use STM code). The functions made in these drivers can be referenced by the
+//    STM code. 
+//  - For the SD card driver you will need to reverse engineer the controllerstech code 
+//    and/or find where he got the informartion to create that driver. The information 
+//    may lie with the SD card manual itself. 
 //==============================================================
 
 //==============================================================
