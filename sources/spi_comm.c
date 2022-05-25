@@ -25,21 +25,50 @@
 // Inititalization 
 
 //==============================================================
+// I2C Setup Steps 
+//  1. Enable the I2C clock and the GPIO clock
+//      a) Enable I2CX clock
+//      b) Enable GPIOX clock
+//  2. Configure the I2C pins for alternative functions
+//      a) Select alternate function in MODER register
+//      b) Select Open Drain Output
+//      c) Select High SPEED for the PINs 
+//      d) Select Pill-up for both the Pins 
+//      e) Configure the Alternate Function in AFR Register
+//  3. Reset the I2C
+//  4. Ensure PE is disabled before setting up the I2C
+//  5. Program the peripheral input clock in I2C_CR2 register
+//  6. Configure the clock control register based on the run mode
+//      a) Choose Sm or Fm mode 
+//      b) Calculated clock control register based on PCLK1 & SCL frquency 
+//  7. Configure the rise time register 
+//  8. Program the I2C_CR1 register to enable the peripheral 
+//  9. Set the START but in the I2C_CR1 register to generate a 
+//     Start condition 
+//==============================================================
+
+//==============================================================
 // SPI Master Mode Setup Steps 
-//  1. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
-//  2. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
-//  3. Set the DFF bit to define 8-bit or 16-bit data frame format. 
-//  4. Configure the LSBFIRST bit in the SPI_CR1 register to define the frame format. 
-//  5. Configure the NSS pin. 
+//  X. Enable the SPI clock and the GPIO clock 
+//  X. Configure the SPI pins for alternative functions
+//  X. Reset and disable the SPI before manking any changes
+//  X. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
+//  X. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
+//  X. Set the DFF bit to define 8-bit or 16-bit data frame format. 
+//  X. Configure the LSBFIRST bit in the SPI_CR1 register to define the frame format. 
+//  X. Configure the NSS pin. 
 //     a) 
 //     b) 
-//  6. Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
-//  7. Set the MSTR and SPE bits. 
+//  X. Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
+//  X. Set the MSTR and SPE bits. 
 //==============================================================
 
 
 // SPI2 initialization
-void spi2_init(void)
+void spi2_init(
+    uint8_t baud_rate_ctrl,
+    uint8_t clock_mode,
+    uint8_t data_frame_format)
 {
     //==============================================================
     // Pin information for SPI2
@@ -48,6 +77,34 @@ void spi2_init(void)
     //  PB14: MISO
     //  PB15: MOSI
     //==============================================================
+
+    // X. Enable the SPI clock and the GPIO clock
+
+    // X. Configure the SPI pins for alternative functions
+
+    // X. Reset and disable the SPI before manking any changes
+    SPI2->CR1 = CLEAR;
+
+    // X. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
+    SPI2->CR1 |= (baud_rate_ctrl << SHIFT_3);
+
+    // X. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
+    SPI2->CR1 |= (clock_mode << SHIFT_0);
+
+    // X. Set the DFF bit to define 8-bit or 16-bit data frame format. 
+    SPI2->CR1 |= (data_frame_format << SHIFT_11);
+
+    // X. Configure the LSBFIRST bit in the SPI_CR1 register to define the frame format. 
+    SPI2->CR1 &= ~(SET_BIT << SHIFT_7);
+
+    // X. Configure the NSS pin. 
+
+    // X. Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
+    SPI2->CR2 &= ~(SET_BIT << SHIFT_4);
+
+    // X. Set the MSTR and SPE bits. 
+    SPI2->CR1 |= (SET_BIT << SHIFT_2);  // Set to master mode 
+    SPI2->CR1 |= (SET_BIT << SHIFT_6);  // Enable SPI 
 }
 
 //=======================================================================================
