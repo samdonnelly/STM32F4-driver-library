@@ -76,6 +76,20 @@ typedef enum {
     DFF_16BIT
 } spi_dff_t;
 
+
+/**
+ * @brief SPI2 Number of Slaves 
+ * 
+ * @details 
+ * 
+ * @see spi2_init
+ * 
+ */
+typedef enum {
+    SPI2_1_SLAVE,  // Pin PB9 GPIO 
+    SPI2_2_SLAVE   // Pins PB9 and PB12 GPIO 
+} spi2_num_slaves_t;
+
 //=======================================================================================
 
 
@@ -86,12 +100,19 @@ typedef enum {
  * @brief SPI2 initialization 
  * 
  * @details 
+ *          SPI2 is currently supported for up to 2 slave devices (2 GPIOs).
  * 
  * @see spi_baud_rate_ctrl_t
  * @see spi_dff_t
  * 
+ * @param num_slaves 
+ * @param baud_rate_ctrl 
+ * @param clock_mode 
+ * @param data_frame_format 
+ * @return uint8_t 
  */
-void spi2_init(
+uint8_t spi2_init(
+    uint8_t num_slaves,
     uint8_t baud_rate_ctrl,
     uint8_t clock_mode,
     uint8_t data_frame_format);
