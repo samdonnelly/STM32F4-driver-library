@@ -87,9 +87,9 @@ uint8_t spi2_init(
     switch (num_slaves)
     {
         case SPI2_2_SLAVE:  // Initialize PB12 as GPIO
-            // Case has no break so PB9 will also be initialized
             GPIOB->MODER   |= (SET_BIT << SHIFT_24);
             GPIOB->OSPEEDR |= (SET_3   << SHIFT_24); 
+            // Case has no break so PB9 will also be initialized
 
         case SPI2_1_SLAVE:  // Initialize PB9 as GPIO 
             GPIOB->MODER   |= (SET_BIT << SHIFT_18);
@@ -132,6 +132,60 @@ uint8_t spi2_init(
 
 
 //=======================================================================================
+// SPI2 register functions 
+
+// Set the SPE bit to enable SPI2
+void spi2_enable(void)
+{
+    SPI2->CR1 |= (SET_BIT << SHIFT_6);
+}
+
+
+// Clear the SPE bit to disable SPI2 
+void spi2_disable(void)
+{
+    SPI2->CR1 &= ~(SET_BIT << SHIFT_6);
+}
+
+
+// Wait for TXE bit to set 
+void spi2_txe_wait(void)
+{
+    while(!(SPI2->SR & (SET_BIT << SHIFT_1)));
+}
+
+
+// Wait for RXNE bit to set 
+void spi2_rxne_wait(void)
+{
+    while(!(SPI2->SR & (SET_BIT << SHIFT_0)));
+}
+
+
+// Wait for BSY bit to clear
+void spi2_bsy_wait(void)
+{
+    while(SPI2->SR & (SET_BIT << SHIFT_7));
+}
+
+
+// Select an SPI2 slave 
+void spi2_slave_select(void)
+{
+    // 
+}
+
+
+// Deselect an SPI2 slave 
+void spi2_slave_deselect(void)
+{
+    // 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Read and write 
 
 //==============================================================
@@ -154,9 +208,9 @@ uint8_t spi2_init(
 //  1. Enable SPI by setting the SPE bit to 1 
 //  2. Write the first data item to be transmitted into the SPI_DR register (clears TXE
 //     flag)
-//  3. Wait until TXE=1  and write the second data item to be transmitted
+//  3. Wait until TXE=1 and write the second data item to be transmitted
 //  4. Wait until RXNE=1 and read the SPI_DR regsiter to get the first received data 
-//     item (cleas RXNE bit) 
+//     item (clears RXNE bit) 
 //  5. Repeat operations 3 and 4 for each data item 
 //  6. Wait for RXNE=1 and read the last received data 
 //  7. Wait until TXE=1 and then wait until BSY=0 before disabling SPI 

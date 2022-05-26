@@ -121,6 +121,74 @@ uint8_t spi2_init(
 
 
 //=======================================================================================
+// SPI2 register functions 
+
+/**
+ * @brief SPI2 enable 
+ * 
+ * @details 
+ * 
+ */
+void spi2_enable(void);
+
+
+/**
+ * @brief SPI2 disable 
+ * 
+ * @details 
+ * 
+ */
+void spi2_disable(void);
+
+
+/**
+ * @brief SPI2 TXE wait 
+ * 
+ * @details 
+ * 
+ */
+void spi2_txe_wait(void);
+
+
+/**
+ * @brief SPI2 RXNE wait 
+ * 
+ * @details 
+ * 
+ */
+void spi2_rxne_wait(void);
+
+
+/**
+ * @brief SPI2 BSY wait 
+ * 
+ * @details 
+ * 
+ */
+void spi2_bsy_wait(void);
+
+
+/**
+ * @brief SPI2 slave select 
+ * 
+ * @details 
+ * 
+ */
+void spi2_slave_select(void);
+
+
+/**
+ * @brief SPI2 slave deselect 
+ * 
+ * @details 
+ * 
+ */
+void spi2_slave_deselect(void);
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Read and write functions 
 
 /**
