@@ -17,6 +17,7 @@
 // Includes 
 
 #include "spi_comm.h"
+#include "gpio_driver.h"
 
 //=======================================================================================
 
@@ -89,11 +90,13 @@ uint8_t spi2_init(
         case SPI2_2_SLAVE:  // Initialize PB12 as GPIO
             GPIOB->MODER   |= (SET_BIT << SHIFT_24);
             GPIOB->OSPEEDR |= (SET_3   << SHIFT_24); 
+            spi2_slave_deselect(SPI2_SLAVE_2);  // Deselect slave 
             // Case has no break so PB9 will also be initialized
 
         case SPI2_1_SLAVE:  // Initialize PB9 as GPIO 
             GPIOB->MODER   |= (SET_BIT << SHIFT_18);
             GPIOB->OSPEEDR |= (SET_3   << SHIFT_18); 
+            spi2_slave_deselect(SPI2_SLAVE_1);  // Deselect slave 
             break;
 
         default:  // Invalid number of slaves specified
@@ -168,22 +171,17 @@ void spi2_bsy_wait(void)
     while(SPI2->SR & (SET_BIT << SHIFT_7));
 }
 
-
-// TODO make a GPIO driver to call when needed 
-
 // Select an SPI2 slave 
-void spi2_slave_select(void)
+void spi2_slave_select(uint16_t slave_num)
 {
-    // lower 16-bits are for setting 
-    // upper 16 bits are for resetting 
-    GPIOB->BSRR;
+    gpiob_write(slave_num, GPIO_LOW);
 }
 
 
 // Deselect an SPI2 slave 
-void spi2_slave_deselect(void)
+void spi2_slave_deselect(uint16_t slave_num)
 {
-    // 
+    gpiob_write(slave_num, GPIO_HIGH);
 }
 
 //=======================================================================================

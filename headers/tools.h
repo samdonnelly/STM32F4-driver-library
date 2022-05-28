@@ -21,6 +21,7 @@
 // Different ways to write zero for readability 
 #define CLEAR 0
 #define RESET_ZERO 0
+#define NONE 0
 
 // Data type 
 #define INT16_NUM_DIGITS 5

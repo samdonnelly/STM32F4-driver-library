@@ -90,6 +90,18 @@ typedef enum {
     SPI2_2_SLAVE   // Pins PB9 and PB12 GPIO 
 } spi2_num_slaves_t;
 
+
+/**
+ * @brief SPI2 slave select pin number 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    SPI2_SLAVE_1 = 0x0200,  // PB9 
+    SPI2_SLAVE_2 = 0x1000   // PB12 
+} spi2_slave_select_pin_t;
+
 //=======================================================================================
 
 
@@ -173,8 +185,11 @@ void spi2_bsy_wait(void);
  * 
  * @details 
  * 
+ * @see spi2_slave_select_pin_t
+ * 
+ * @param slave_num 
  */
-void spi2_slave_select(void);
+void spi2_slave_select(uint16_t slave_num);
 
 
 /**
@@ -182,8 +197,11 @@ void spi2_slave_select(void);
  * 
  * @details 
  * 
+ * @see spi2_slave_select_pin_t
+ * 
+ * @param slave_num 
  */
-void spi2_slave_deselect(void);
+void spi2_slave_deselect(uint16_t slave_num);
 
 //=======================================================================================
 
