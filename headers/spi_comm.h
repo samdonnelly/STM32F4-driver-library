@@ -194,12 +194,16 @@ void spi2_slave_deselect(void);
 /**
  * @brief SPI2 read
  * 
+ * @details 
+ * 
  */
 void spi2_read(void);
 
 
 /**
  * @brief SPI2 write
+ * 
+ * @details 
  * 
  */
 void spi2_write(void);

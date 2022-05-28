@@ -169,10 +169,14 @@ void spi2_bsy_wait(void)
 }
 
 
+// TODO make a GPIO driver to call when needed 
+
 // Select an SPI2 slave 
 void spi2_slave_select(void)
 {
-    // 
+    // lower 16-bits are for setting 
+    // upper 16 bits are for resetting 
+    GPIOB->BSRR;
 }
 
 
@@ -214,6 +218,14 @@ void spi2_slave_deselect(void)
 //  5. Repeat operations 3 and 4 for each data item 
 //  6. Wait for RXNE=1 and read the last received data 
 //  7. Wait until TXE=1 and then wait until BSY=0 before disabling SPI 
+//==============================================================
+
+//==============================================================
+// Disabling the SPI 
+//  1. Wait until RXNE=1 to receive the last data 
+//  2. Wait until TXE=1
+//  3. Wait until BSY=0 
+//  4. Set SPE=0 
 //==============================================================
 
 //==============================================================
