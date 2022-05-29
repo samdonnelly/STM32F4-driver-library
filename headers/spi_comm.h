@@ -98,8 +98,8 @@ typedef enum {
  * 
  */
 typedef enum {
-    SPI2_SLAVE_1 = 0x0200,  // PB9 
-    SPI2_SLAVE_2 = 0x1000   // PB12 
+    SPI2_SS_1 = 0x0200,  // PB9 
+    SPI2_SS_2 = 0x1000   // PB12 
 } spi2_slave_select_pin_t;
 
 //=======================================================================================

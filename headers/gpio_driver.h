@@ -147,25 +147,6 @@ void gpiob_init(
 // Write functions 
 
 /**
- * @brief GPIOA write
- * 
- * @details This function writes "A" pins congigured as GPIO to either high or low (on or
- *          off). Arguments include the pin number to write to and the state to write the 
- *          pin to. The pin number can be specified using the gpio_pin_num_t enum and the 
- *          pin state can be specified using the gpio_pin_state_t enum. 
- * 
- * @see gpio_pin_state_t
- * @see gpio_pin_num_t
- * 
- * @param pin_num : GPIOA pin to write to (0-15)
- * @param pin_state : on (1) or off (0) state
- */
-void gpioa_write(
-    uint16_t pin_num,
-    uint8_t  pin_state);
-
-
-/**
  * @brief GPIOB write
  * 
  * @details This function writes "B" pins congigured as GPIO to either high or low (on or
@@ -180,25 +161,6 @@ void gpioa_write(
  * @param pin_state : on (1) or off (0) state
  */
 void gpiob_write(
-    uint16_t pin_num,
-    uint8_t  pin_state);
-
-
-/**
- * @brief GPIOC write
- * 
- * @details This function writes "C" pins congigured as GPIO to either high or low (on or
- *          off). Arguments include the pin number to write to and the state to write the 
- *          pin to. The pin number can be specified using the gpio_pin_num_t enum and the 
- *          pin state can be specified using the gpio_pin_state_t enum. 
- * 
- * @see gpio_pin_state_t
- * @see gpio_pin_num_t
- * 
- * @param pin_num : GPIOC pin to write to (0-15)
- * @param pin_state : on (1) or off (0) state
- */
-void gpioc_write(
     uint16_t pin_num,
     uint8_t  pin_state);
 
