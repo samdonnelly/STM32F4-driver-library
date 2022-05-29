@@ -90,12 +90,14 @@ uint8_t spi2_init(
         case SPI2_2_SLAVE:  // Initialize PB12 as GPIO
             GPIOB->MODER   |= (SET_BIT << SHIFT_24);
             GPIOB->OSPEEDR |= (SET_3   << SHIFT_24); 
+            gpiob_init(GPIO_PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
             spi2_slave_deselect(SPI2_SLAVE_2);  // Deselect slave 
             // Case has no break so PB9 will also be initialized
 
         case SPI2_1_SLAVE:  // Initialize PB9 as GPIO 
             GPIOB->MODER   |= (SET_BIT << SHIFT_18);
             GPIOB->OSPEEDR |= (SET_3   << SHIFT_18); 
+            gpiob_init(GPIO_PIN_9, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
             spi2_slave_deselect(SPI2_SLAVE_1);  // Deselect slave 
             break;
 

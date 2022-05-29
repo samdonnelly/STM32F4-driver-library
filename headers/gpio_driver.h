@@ -64,15 +64,57 @@ typedef enum {
 
 
 /**
- * @brief Pin configuration mode
+ * @brief GPIO port mode register (MODER) register 
+ * 
+ * @details 
  * 
  */
 typedef enum {
-    MODE_INPUT,   // Input (reset state)
-    MODE_GPO,     // General purpose output mode 
-    MODE_AF,      // Alternate function mode 
-    MODE_ANALOG   // Analog mode 
-} gpio_pin_mode_t;
+    MODER_INPUT,   // Input (reset state)
+    MODER_GPO,     // General purpose output mode 
+    MODER_AF,      // Alternate function mode 
+    MODER_ANALOG   // Analog mode 
+} gpio_moder_t;
+
+
+/**
+ * @brief GPIO port output type (OTYPER) register 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    OTYPER_PP,  // Output push-pull (reset state) 
+    OTYPER_OD   // Output open-drain 
+} gpio_otyper_t;
+
+
+/**
+ * @brief GPIO port output speed (OSPEEDR) register
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    OSPEEDR_LOW,   // Low speed 
+    OSPEEDR_MED,   // Medium speed 
+    OSPEEDR_FAST,  // Fast speed 
+    OSPEEDR_HIGH   // High speed 
+} gpio_ospeedr_t;
+
+
+/**
+ * @brief GPIO port pull-up/pull-down (PUPDR) register 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    PUPDR_NO,  // No pull-up, pull-down 
+    PUPDR_PU,  // Pull-up 
+    PUPDR_PD,  // Pull-down 
+    PUPDR_RE   // Reserved 
+} gpio_pupdr_t;
 
 //=======================================================================================
 
@@ -96,46 +138,6 @@ void gpiob_init(
     uint32_t moder,
     uint32_t otyper,
     uint32_t ospeedr,
-    uint32_t pupdr);
-
-
-/**
- * @brief 
- * 
- * @param moder 
- */
-void gpiob_moder(
-    uint16_t pin_num,
-    uint32_t moder);
-
-
-/**
- * @brief 
- * 
- * @param otyper 
- */
-void gpiob_otyper(
-    uint16_t pin_num,
-    uint32_t otyper);
-
-
-/**
- * @brief 
- * 
- * @param ospeedr 
- */
-void gpiob_ospeedr(
-    uint16_t pin_num,
-    uint32_t ospeedr);
-
-
-/**
- * @brief 
- * 
- * @param pupdr 
- */
-void gpiob_pupdr(
-    uint16_t pin_num,
     uint32_t pupdr);
 
 //=======================================================================================
