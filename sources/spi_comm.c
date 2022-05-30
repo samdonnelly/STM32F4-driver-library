@@ -233,22 +233,6 @@ void spi2_slave_deselect(uint16_t slave_num)
 //    the shift register then parallel loaded into the RX buffer. 
 //==============================================================
 
-//==============================================================
-// Receive sequence 
-//  - When data transfer is complete: 
-//    - The data in the shift register is transferred to the RX buffer and the RXNE 
-//      flag is set 
-//    - An interrupt is generated if the RXNEIE bit is set in the SPI_CR2 register. 
-//  - Data is received and stored into an internal RX buffer to be read. Read access to 
-//    the SPI_DR register returns the RX buffer value. 
-//==============================================================
-
-// SPI2 Read
-void spi2_read(void)
-{
-    // 
-}
-
 
 //==============================================================
 // Transmit sequence
@@ -262,7 +246,55 @@ void spi2_read(void)
 // SPI2 write 
 void spi2_write(void)
 {
-    // 
+    // Check 8-bit or 16-bit mode? 
+
+    // Start a loop that iterates to the data size 
+
+    /* loop */ 
+
+    // Wait for TXE bit to set before writing to the data register 
+    // Write data to the data register 
+}
+
+
+// SPI2 write then read 
+void spi2_write_read(void)
+{
+    // Check 8-bit or 16-bit mode? 
+
+    // Start a loop that iterates to the data size 
+
+    /* loop */ 
+
+    // Wait for TXE bit to set before writing to the data register 
+    // Write data to the data register 
+
+    // Wait for RXNE bit to set before reading the data register 
+    // Read data from the data register 
+}
+
+
+//==============================================================
+// Receive sequence 
+//  - When data transfer is complete: 
+//    - The data in the shift register is transferred to the RX buffer and the RXNE 
+//      flag is set 
+//    - An interrupt is generated if the RXNEIE bit is set in the SPI_CR2 register. 
+//  - Data is received and stored into an internal RX buffer to be read. Read access to 
+//    the SPI_DR register returns the RX buffer value. 
+//==============================================================
+
+// SPI2 Read
+void spi2_read(void)
+{
+    // Check 8-bit or 16-bit mode? 
+    
+    // Start a loop that iterates to the data size 
+
+    /* loop */ 
+
+    // Wait for RXNE bit to set before reading the data register 
+    // Read data from the data register 
 }
 
 //=======================================================================================

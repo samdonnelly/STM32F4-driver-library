@@ -210,20 +210,31 @@ void spi2_slave_deselect(uint16_t slave_num);
 // Read and write functions 
 
 /**
- * @brief SPI2 read
- * 
- * @details 
- * 
- */
-void spi2_read(void);
-
-
-/**
  * @brief SPI2 write
  * 
  * @details 
  * 
  */
 void spi2_write(void);
+
+
+/**
+ * @brief SPI2 write then read 
+ * 
+ * @details 
+ *          This can be used to request information from a slave device (write) then 
+ *          receive the needed information immediately afterwards (read). 
+ * 
+ */
+void spi2_write_read(void);
+
+
+/**
+ * @brief SPI2 read
+ * 
+ * @details 
+ * 
+ */
+void spi2_read(void);
 
 //=======================================================================================
