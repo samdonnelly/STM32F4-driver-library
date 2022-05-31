@@ -253,33 +253,92 @@ void spi2_slave_deselect(uint16_t slave_num)
 //==============================================================
 
 // SPI2 write 
-void spi2_write(void)
+void spi2_write(uint16_t *write_data, uint8_t data_len)
 {
     // Check 8-bit or 16-bit mode? 
 
+    // Variables 
+    uint16_t dummy; 
+
+    // Enable the SPI 
+    spi2_enable();
+
     // Start a loop that iterates to the data size 
+    for (uint8_t i = 0; i < data_len; i++)
+    {
+        // Wait for TXE bit to set before writing to the data register 
+        spi2_txe_wait();
+        // Write data to the data register 
+        SPI2->DR = *write_data;
+        // Increment data 
+        write_data++; 
+    }
 
-    /* loop */ 
+    // Wait for txe
+    spi2_txe_wait();
 
-    // Wait for TXE bit to set before writing to the data register 
-    // Write data to the data register 
+    // Wait for BSY to clear 
+    spi2_bsy_wait();
+
+    // If the data register is not read then whatever data is there will stay and any 
+    // incoming data will be lost. Because of this we must read the register after 
+    // we're done so that if we want to receive data then we won't lose anything (note 
+    // that spi full-duplex always sends data back after writing even if it's not 
+    // data we want). When we're writing continuously and not reading the overrun flag
+    // will be set so that also has to be cleared. We can tackle both at once by 
+    // reading the data register (to clear the buffer and clear the overrun flag) and 
+    // then reading the status register (to clear the overrun flag)
+    dummy = SPI2->DR;
+    dummy = SPI2->SR;
+
+    // Disable the SPI 
+    spi2_disable();
 }
 
 
 // SPI2 write then read 
-void spi2_write_read(void)
+void spi2_write_read(uint16_t *write_data, uint16_t *read_data, uint8_t data_len)
 {
     // Check 8-bit or 16-bit mode? 
 
+    // Enable the SPI 
+    spi2_enable();
+
+    // Write first data 
+    spi2_txe_wait();
+    SPI2->DR = *write_data;
+    write_data++; 
+
     // Start a loop that iterates to the data size 
+    for (uint8_t i = 0; i < data_len-1; i++)
+    {
+        // Wait for TXE bit to set before writing to the data register 
+        spi2_txe_wait();
+        // Write data to the data register 
+        SPI2->DR = *write_data;
+        // Increment data 
+        write_data++; 
 
-    /* loop */ 
+        // Wait for RXNE bit to set before reading the data register 
+        spi2_rxne_wait();
+        // Read data from the data register 
+        *read_data = SPI2->DR;
+        // Increment buffer 
+        read_data++; 
+    }
 
-    // Wait for TXE bit to set before writing to the data register 
-    // Write data to the data register 
+    // Read last data 
+    spi2_rxne_wait();
+    *read_data = SPI2->DR;
 
-    // Wait for RXNE bit to set before reading the data register 
-    // Read data from the data register 
+    // Wait for txe
+    spi2_txe_wait();
+
+    // Wait for BSY to clear 
+    spi2_bsy_wait();
+
+    // Disable the SPI 
+    spi2_disable();
 }
 
 
@@ -294,16 +353,20 @@ void spi2_write_read(void)
 //==============================================================
 
 // SPI2 Read
-void spi2_read(void)
+void spi2_read(uint16_t *read_data, uint8_t data_len)
 {
     // Check 8-bit or 16-bit mode? 
 
     // Start a loop that iterates to the data size 
-
-    /* loop */ 
-
-    // Wait for RXNE bit to set before reading the data register 
-    // Read data from the data register 
+    for (uint8_t i = 0; i < data_len; i++)
+    {
+        // Wait for RXNE bit to set before reading the data register 
+        spi2_rxne_wait();
+        // Read data from the data register 
+        *read_data = SPI2->DR;
+        // Increment buffer 
+        read_data++; 
+    }
 }
 
 //=======================================================================================
