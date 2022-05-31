@@ -33,15 +33,17 @@
 //      a) Specify SPI2 pins as using alternative functions
 //      b) Select high speed for the pins 
 //      c) Configure the SPI alternate function in the AFR register 
-//  4. Configure the slave select pins as GPIO 
-//  5. Reset and disable the SPI before manking any changes
-//  6. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
-//  7. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
-//  8. Set the DFF bit to define 8-bit or 16-bit data frame format. 
-//  9. Configure the LSBFIRST bit in the SPI_CR1 register to define the frame format. 
-//  10. Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
-//  11. Set the MSTR bit to enable master mode 
-//  12. Set the SPE bit to enable SPI 
+//  4. Reset and disable the SPI before manking any changes
+//  5. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
+//  6. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
+//  7. Set the DFF bit to define 8-bit or 16-bit data frame format. 
+//  8. Enable software slave management
+//  9. Set full-duplex mode 
+//  10. Configure the LSBFIRST bit in the SPI_CR1 register to define the frame format. 
+//  11. Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
+//  12. Set the MSTR bit to enable master mode 
+//  13. Set the SPE bit to enable SPI 
+//  14. Configure the slave select pins as GPIO 
 //==============================================================
 
 
@@ -84,7 +86,38 @@ uint8_t spi2_init(
     GPIOB->AFR[1] |= (SET_5 << SHIFT_24);  // PB14 
     GPIOB->AFR[1] |= (SET_5 << SHIFT_28);  // PB15 
 
-    // 4. Configure the slave select pins as GPIO 
+    // 4. Reset and disable the SPI before manking any changes
+    SPI2->CR1 = CLEAR;
+
+    // 5. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
+    SPI2->CR1 |= (baud_rate_ctrl << SHIFT_3);
+
+    // 6. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
+    SPI2->CR1 |= (clock_mode << SHIFT_0);
+
+    // 7. Set the DFF bit to define 8-bit or 16-bit data frame format. 
+    SPI2->CR1 |= (data_frame_format << SHIFT_11);
+
+    // 8. Enable software slave management
+    SPI2->CR1 |= (SET_BIT << SHIFT_9);
+    SPI2->CR1 |= (SET_BIT << SHIFT_8);
+
+    // 9. Set full-duplex mode 
+    SPI2->CR1 &= ~(SET_BIT << SHIFT_10);
+
+    // 10. Configure the LSBFIRST bit in the SPI_CR1 register to define the frame format. 
+    SPI2->CR1 &= ~(SET_BIT << SHIFT_7);  // MSB first 
+
+    // 11. Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
+    SPI2->CR2 &= ~(SET_BIT << SHIFT_4);  // No TI protocol 
+
+    // 12. Set the MSTR bit to enable master mode 
+    SPI2->CR1 |= (SET_BIT << SHIFT_2);
+
+    // 13. Set the SPE bit to enable SPI 
+    spi2_enable();
+
+    // 14. Configure the slave select pins as GPIO 
     switch (num_slaves)
     {
         case SPI2_2_SLAVE:  // Initialize PB12 as GPIO
@@ -100,30 +133,6 @@ uint8_t spi2_init(
         default:  // Invalid number of slaves specified
             return FALSE;
     }
-
-    // 5. Reset and disable the SPI before manking any changes
-    SPI2->CR1 = CLEAR;
-
-    // 6. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
-    SPI2->CR1 |= (baud_rate_ctrl << SHIFT_3);
-
-    // 7. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
-    SPI2->CR1 |= (clock_mode << SHIFT_0);
-
-    // 8. Set the DFF bit to define 8-bit or 16-bit data frame format. 
-    SPI2->CR1 |= (data_frame_format << SHIFT_11);
-
-    // 9. Configure the LSBFIRST bit in the SPI_CR1 register to define the frame format. 
-    SPI2->CR1 &= ~(SET_BIT << SHIFT_7);  // MSB first 
-
-    // 10. Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
-    SPI2->CR2 &= ~(SET_BIT << SHIFT_4);  // No TI protocol 
-
-    // 11. Set the MSTR bit to enable master mode 
-    SPI2->CR1 |= (SET_BIT << SHIFT_2);
-
-    // 12. Set the SPE bit to enable SPI 
-    SPI2->CR1 |= (SET_BIT << SHIFT_6);
 
     // Return true for passing initialization 
     return TRUE;
@@ -288,7 +297,7 @@ void spi2_write_read(void)
 void spi2_read(void)
 {
     // Check 8-bit or 16-bit mode? 
-    
+
     // Start a loop that iterates to the data size 
 
     /* loop */ 
