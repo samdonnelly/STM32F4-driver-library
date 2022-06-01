@@ -198,22 +198,54 @@ void spi2_slave_deselect(uint16_t slave_num)
 // Read and write 
 
 //==============================================================
-// Notes 
-//  - The CubeMX FATFS file system code will be used instead of creating the code from 
-//    scratch like the other drivers. This is because the code/process seems complex 
-//    with little online supporting material and therefore is not a good use of time 
-//    given that the filesystem is not within your defined scope of learning. It's also 
-//    been recommended online to not reinvent this process. With that being said, it 
-//    looks like SPI and SD card drivers can still be made that are self-contained 
-//    (don't use STM code). The functions made in these drivers can be referenced by the
-//    STM code. 
-//  - For the SD card driver you will need to reverse engineer the controllerstech code 
-//    and/or find where he got the informartion to create that driver. The information 
-//    may lie with the SD card manual itself. 
+// Write sequence
+//  1. Enable the SPI. 
+//  2. Loop through the data to be written. 
+//      a) Wait for the TXE bit to set. 
+//      b) Write data to the data register. 
+//      c) Increment to the next piece of data. 
+//  3. Wait for the TXE bit to set. 
+//  4. Wait for the BSY flag to clear. 
+//  5. Read the data and status registers to clear the RX buffer and overrun error bit. 
+//  6. Disable the SPI. 
 //==============================================================
 
+// SPI2 write 
+void spi2_write(
+    uint16_t *write_data, 
+    uint16_t data_len)
+{
+    // Local variables 
+    static uint16_t dummy_read; 
+
+    // Enable the SPI 
+    spi2_enable();
+
+    // Iterate through all data to be sent 
+    for (uint8_t i = 0; i < data_len; i++)
+    {
+        spi2_txe_wait();          // Wait for TXE bit to set 
+        SPI2->DR = *write_data;   // Write data to the data register 
+        write_data++;             // Increment to next piece of data 
+    }
+
+    // Wait for TXE bit to set 
+    spi2_txe_wait();
+
+    // Wait for BSY to clear 
+    spi2_bsy_wait();
+
+    // Read the data and status registers to clear the RX buffer and overrun error bit
+    dummy_read = SPI2->DR;
+    dummy_read = SPI2->SR;
+
+    // Disable the SPI 
+    spi2_disable();
+}
+
+
 //==============================================================
-// Procedure to transmit and receive data 
+// Write-Read sequence
 //  1. Enable SPI by setting the SPE bit to 1 
 //  2. Write the first data item to be transmitted into the SPI_DR register (clears TXE
 //     flag)
@@ -225,113 +257,37 @@ void spi2_slave_deselect(uint16_t slave_num)
 //  7. Wait until TXE=1 and then wait until BSY=0 before disabling SPI 
 //==============================================================
 
-//==============================================================
-// Disabling the SPI 
-//  1. Wait until RXNE=1 to receive the last data 
-//  2. Wait until TXE=1
-//  3. Wait until BSY=0 
-//  4. Set SPE=0 
-//==============================================================
-
-//==============================================================
-// Full duplex 
-//  - The sequence begins when data is written into the SPI_DR register (TX buffer). 
-//  - Data is parallel loaded into a shift register then shifted out serially over 
-//    the MOSI pin. 
-//  - At the same time the received data on the MISO pin is shifted in serially to 
-//    the shift register then parallel loaded into the RX buffer. 
-//==============================================================
-
-
-//==============================================================
-// Transmit sequence
-//  - Transmit sequence begins when a byte is written to the TX buffer 
-//  - TXE flag must be set to 1 to indicate that the data has been moved to the 
-//    shift register and you can load more data to the TX register. 
-//  - Data is first stored into an internal TX buffer before being transmitted. Write 
-//    access to the SPI_DR register stores the written data into the TX buffer. 
-//==============================================================
-
-// SPI2 write 
-void spi2_write(uint16_t *write_data, uint8_t data_len)
-{
-    // Check 8-bit or 16-bit mode? 
-
-    // Variables 
-    uint16_t dummy; 
-
-    // Enable the SPI 
-    spi2_enable();
-
-    // Start a loop that iterates to the data size 
-    for (uint8_t i = 0; i < data_len; i++)
-    {
-        // Wait for TXE bit to set before writing to the data register 
-        spi2_txe_wait();
-        // Write data to the data register 
-        SPI2->DR = *write_data;
-        // Increment data 
-        write_data++; 
-    }
-
-    // Wait for txe
-    spi2_txe_wait();
-
-    // Wait for BSY to clear 
-    spi2_bsy_wait();
-
-    // If the data register is not read then whatever data is there will stay and any 
-    // incoming data will be lost. Because of this we must read the register after 
-    // we're done so that if we want to receive data then we won't lose anything (note 
-    // that spi full-duplex always sends data back after writing even if it's not 
-    // data we want). When we're writing continuously and not reading the overrun flag
-    // will be set so that also has to be cleared. We can tackle both at once by 
-    // reading the data register (to clear the buffer and clear the overrun flag) and 
-    // then reading the status register (to clear the overrun flag)
-    dummy = SPI2->DR;
-    dummy = SPI2->SR;
-
-    // Disable the SPI 
-    spi2_disable();
-}
-
-
 // SPI2 write then read 
-void spi2_write_read(uint16_t *write_data, uint16_t *read_data, uint8_t data_len)
+void spi2_write_read(
+    uint16_t *write_data, 
+    uint16_t *read_data, 
+    uint16_t data_len)
 {
-    // Check 8-bit or 16-bit mode? 
-
     // Enable the SPI 
     spi2_enable();
 
-    // Write first data 
+    // Write the first piece of data 
     spi2_txe_wait();
     SPI2->DR = *write_data;
     write_data++; 
 
-    // Start a loop that iterates to the data size 
+    // Iterate through all data to be sent and recieved
     for (uint8_t i = 0; i < data_len-1; i++)
     {
-        // Wait for TXE bit to set before writing to the data register 
-        spi2_txe_wait();
-        // Write data to the data register 
-        SPI2->DR = *write_data;
-        // Increment data 
-        write_data++; 
+        spi2_txe_wait();          // Wait for TXE bit to set 
+        SPI2->DR = *write_data;   // Write data to the data register 
+        write_data++;             // Increment to next piece of data 
 
-        // Wait for RXNE bit to set before reading the data register 
-        spi2_rxne_wait();
-        // Read data from the data register 
-        *read_data = SPI2->DR;
-        // Increment buffer 
-        read_data++; 
+        spi2_rxne_wait();         // Wait for the RXNE bit to set
+        *read_data = SPI2->DR;    // Read data from the data register 
+        read_data++;              // Increment to next space in memeory to store data
     }
 
-    // Read last data 
+    // Read the last piece of data 
     spi2_rxne_wait();
     *read_data = SPI2->DR;
 
-    // Wait for txe
+    // Wait for TXE bit to set 
     spi2_txe_wait();
 
     // Wait for BSY to clear 
@@ -351,22 +307,5 @@ void spi2_write_read(uint16_t *write_data, uint16_t *read_data, uint8_t data_len
 //  - Data is received and stored into an internal RX buffer to be read. Read access to 
 //    the SPI_DR register returns the RX buffer value. 
 //==============================================================
-
-// SPI2 Read
-void spi2_read(uint16_t *read_data, uint8_t data_len)
-{
-    // Check 8-bit or 16-bit mode? 
-
-    // Start a loop that iterates to the data size 
-    for (uint8_t i = 0; i < data_len; i++)
-    {
-        // Wait for RXNE bit to set before reading the data register 
-        spi2_rxne_wait();
-        // Read data from the data register 
-        *read_data = SPI2->DR;
-        // Increment buffer 
-        read_data++; 
-    }
-}
 
 //=======================================================================================

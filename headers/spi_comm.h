@@ -215,7 +215,9 @@ void spi2_slave_deselect(uint16_t slave_num);
  * @details 
  * 
  */
-void spi2_write(uint16_t *write_data, uint8_t data_len);
+void spi2_write(
+    uint16_t *write_data, 
+    uint16_t data_len);
 
 
 /**
@@ -226,15 +228,9 @@ void spi2_write(uint16_t *write_data, uint8_t data_len);
  *          receive the needed information immediately afterwards (read). 
  * 
  */
-void spi2_write_read(uint16_t *write_data, uint16_t *read_data, uint8_t data_len);
-
-
-/**
- * @brief SPI2 read
- * 
- * @details 
- * 
- */
-void spi2_read(uint16_t *read_data, uint8_t data_len);
+void spi2_write_read(
+    uint16_t *write_data, 
+    uint16_t *read_data, 
+    uint16_t data_len);
 
 //=======================================================================================
