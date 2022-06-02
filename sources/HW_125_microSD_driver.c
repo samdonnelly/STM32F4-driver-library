@@ -25,7 +25,7 @@
 // Initialization 
 
 // HW125 initialization 
-void hw125_ini(void)
+void hw125_init(void)
 {
     // 
 }
