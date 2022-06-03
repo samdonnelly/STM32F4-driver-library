@@ -90,6 +90,7 @@ uint8_t spi2_init(
     SPI2->CR1 = CLEAR;
 
     // 5. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
+    // TODO create pre-defined rates based on clock speed and SPI speed 
     SPI2->CR1 |= (baud_rate_ctrl << SHIFT_3);
 
     // 6. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
