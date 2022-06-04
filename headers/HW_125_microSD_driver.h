@@ -30,6 +30,8 @@
 
 #define INDEX_OFFSET 0x40  // First two bits of command index 
 
+#define SPI_TIMEOUT 1000   // Time before an error is thrown 
+
 //=======================================================================================
 
 
@@ -59,6 +61,19 @@ typedef enum {
     CMD55 = INDEX_OFFSET + 0x37,  // APP_CMD
     CMD58 = INDEX_OFFSET + 0x3A   // READ_OCR
 } hw125_command_index_t;
+
+
+/**
+ * @brief HW125 CRC commands 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    CRC_CMDX = 1,
+    CRC_CMD8 = 0x87,
+    CRC_CMD0 = 0x95
+} hw125_crc_cmd_t;
 
 //=======================================================================================
 
