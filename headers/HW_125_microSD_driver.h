@@ -45,22 +45,36 @@
  * 
  */
 typedef enum {
-    CMD0  = INDEX_OFFSET + 0x00,  // GO_IDLE_STATE
-    CMD1  = INDEX_OFFSET + 0x01,  // SEND_OP_COND
-    CMD8  = INDEX_OFFSET + 0x08,  // SEND_IF_COND
-    CMD9  = INDEX_OFFSET + 0x09,  // SEND_CSD
-    CMD10 = INDEX_OFFSET + 0x0A,  // SEND_CID
-    CMD12 = INDEX_OFFSET + 0x0C,  // STOP_TRANSMISSION
-    CMD16 = INDEX_OFFSET + 0x10,  // SET_BLOCKLEN
-    CMD17 = INDEX_OFFSET + 0x11,  // READ_SINGLE_BLOCK
-    CMD18 = INDEX_OFFSET + 0x12,  // READ_MULTIPLE_BLOCK
-    CMD23 = INDEX_OFFSET + 0x17,  // SET_BLOCK_COUNT
-    CMD24 = INDEX_OFFSET + 0x18,  // WRITE_BLOCK
-    CMD25 = INDEX_OFFSET + 0x19,  // WRITE_MULTIPLE_BLOCK
-    CMD41 = INDEX_OFFSET + 0x29,  // APP_SEND_OP_COND
-    CMD55 = INDEX_OFFSET + 0x37,  // APP_CMD
-    CMD58 = INDEX_OFFSET + 0x3A   // READ_OCR
+    HW125_CMD0  = INDEX_OFFSET + 0x00,  // GO_IDLE_STATE
+    HW125_CMD1  = INDEX_OFFSET + 0x01,  // SEND_OP_COND
+    HW125_CMD8  = INDEX_OFFSET + 0x08,  // SEND_IF_COND
+    HW125_CMD9  = INDEX_OFFSET + 0x09,  // SEND_CSD
+    HW125_CMD10 = INDEX_OFFSET + 0x0A,  // SEND_CID
+    HW125_CMD12 = INDEX_OFFSET + 0x0C,  // STOP_TRANSMISSION
+    HW125_CMD16 = INDEX_OFFSET + 0x10,  // SET_BLOCKLEN
+    HW125_CMD17 = INDEX_OFFSET + 0x11,  // READ_SINGLE_BLOCK
+    HW125_CMD18 = INDEX_OFFSET + 0x12,  // READ_MULTIPLE_BLOCK
+    HW125_CMD23 = INDEX_OFFSET + 0x17,  // SET_BLOCK_COUNT
+    HW125_CMD24 = INDEX_OFFSET + 0x18,  // WRITE_BLOCK
+    HW125_CMD25 = INDEX_OFFSET + 0x19,  // WRITE_MULTIPLE_BLOCK
+    HW125_CMD41 = INDEX_OFFSET + 0x29,  // APP_SEND_OP_COND
+    HW125_CMD55 = INDEX_OFFSET + 0x37,  // APP_CMD
+    HW125_CMD58 = INDEX_OFFSET + 0x3A   // READ_OCR
 } hw125_command_index_t;
+
+
+/**
+ * @brief HW125 card types 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HW125_CT_UNKNOWN = 0x00,   // Unknown card type - failed to read 
+    HW125_CT_MMC     = 0x01,   // MMC version 3
+    HW125_CT_SDC1    = 0x02,   // SDC version 1
+    HW125_CT_SDC2    = 0x04    // SDC version 2
+} hw125_card_type_t; 
 
 
 /**
@@ -70,9 +84,9 @@ typedef enum {
  * 
  */
 typedef enum {
-    CRC_CMDX = 1,
-    CRC_CMD8 = 0x87,
-    CRC_CMD0 = 0x95
+    HW125_CRC_CMDX = 1,
+    HW125_CRC_CMD8 = 0x87,
+    HW125_CRC_CMD0 = 0x95
 } hw125_crc_cmd_t;
 
 //=======================================================================================
