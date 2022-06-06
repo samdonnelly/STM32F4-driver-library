@@ -36,7 +36,7 @@
 
 #define HW125_DI_POWER_ON 0xFF  // DI/MOSI set high for power on sequence 
 
-#define HW125_ARG_LEN 8  // Command argument length 
+#define HW125_DUMMY_CLOCK 10   // Dummy counter used in power on sequence 
 
 //=======================================================================================
 
@@ -108,6 +108,21 @@ typedef enum {
  * 
  */
 void hw125_init(uint16_t hw125_slave_pin);
+
+
+/**
+ * @brief HW125 send command 
+ * 
+ * @details 
+ * 
+ * @param cmd 
+ * @param argument 
+ * @param crc 
+ */
+void hw125_send_cmd(
+    uint8_t cmd,
+    uint8_t *argument,
+    uint8_t crc);
 
 //=======================================================================================
 

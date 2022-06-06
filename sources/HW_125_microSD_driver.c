@@ -30,7 +30,7 @@
 void hw125_init(uint16_t hw125_slave_pin)
 {
     // Local variables 
-    uint8_t arg[HW125_ARG_LEN]; 
+    uint8_t di_cmd; 
 
     // Wait 1ms to allow for voltage to reach above 2.2V
     tim9_delay_ms(HW125_INIT_DELAY);
@@ -39,11 +39,13 @@ void hw125_init(uint16_t hw125_slave_pin)
     spi2_slave_deselect(hw125_slave_pin);
 
     // Set the DI/MOSI command high (0xFF) 
-    // TODO make this better 
-    arg[0] = HW125_DI_POWER_ON;
+    di_cmd = HW125_DI_POWER_ON;
 
     // Send DI/MOSI (0xFF) 10x to wait for more than 74 clock pulses 
-    spi2_write(arg, SPI_1_BYTE);
+    for (uint8_t i = 0; i < HW125_DUMMY_CLOCK; i++)
+    {
+        spi2_write(&di_cmd, SPI_1_BYTE);
+    }
 
     // Select the sd card slave 
     spi2_slave_select(hw125_slave_pin);
@@ -126,6 +128,13 @@ void hw125_init(uint16_t hw125_slave_pin)
 //=======================================================================================
 // SPI read and write
 
-
+// HW125 send command 
+void hw125_send_cmd(
+    uint8_t cmd,
+    uint8_t *argument,
+    uint8_t crc)
+{
+    // 
+}
 
 //=======================================================================================

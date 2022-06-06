@@ -110,12 +110,12 @@ typedef enum {
  * 
  */
 typedef enum {
-    SPI_1_BYTE  = 1,   // 1 bytes 
-    SPI_2_BYTES = 2,   // 
-    SPI_3_BYTES = 3,   // 
-    SPI_4_BYTES = 4,   // 
-    SPI_5_BYTES = 5,   // 
-    SPI_6_BYTES = 6,   // 
+    SPI_1_BYTE  = 1,   // 1 byte
+    SPI_2_BYTES = 2,   // 2 bytes
+    SPI_3_BYTES = 3,   // 3 bytes
+    SPI_4_BYTES = 4,   // 4 bytes
+    SPI_5_BYTES = 5,   // 5 bytes
+    SPI_6_BYTES = 6,   // 6 bytes
 } spi_data_length_t;
 
 //=======================================================================================
@@ -232,7 +232,7 @@ void spi2_slave_deselect(uint16_t slave_num);
  * 
  */
 void spi2_write(
-    uint16_t *write_data, 
+    uint8_t *write_data, 
     uint16_t data_len);
 
 

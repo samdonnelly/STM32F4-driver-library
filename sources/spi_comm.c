@@ -97,7 +97,9 @@ uint8_t spi2_init(
     SPI2->CR1 |= (clock_mode << SHIFT_0);
 
     // 7. Set the DFF bit to define 8-bit or 16-bit data frame format. 
-    SPI2->CR1 |= (data_frame_format << SHIFT_11);
+    // TODO see if it's worth having the option to choose 8 or 16 bits 
+    // SPI2->CR1 |= (data_frame_format << SHIFT_11);
+    SPI2->CR1 &= ~(SET_BIT << SHIFT_11);
 
     // 8. Enable software slave management
     SPI2->CR1 |= (SET_BIT << SHIFT_9);
@@ -213,7 +215,7 @@ void spi2_slave_deselect(uint16_t slave_num)
 
 // SPI2 write 
 void spi2_write(
-    uint16_t *write_data, 
+    uint8_t *write_data, 
     uint16_t data_len)
 {
     // Local variables 
