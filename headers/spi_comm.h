@@ -102,6 +102,22 @@ typedef enum {
     SPI2_SS_2 = 0x1000   // PB12 
 } spi2_slave_select_pin_t;
 
+
+/**
+ * @brief SPI data length 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    SPI_1_BYTE  = 1,   // 1 bytes 
+    SPI_2_BYTES = 2,   // 
+    SPI_3_BYTES = 3,   // 
+    SPI_4_BYTES = 4,   // 
+    SPI_5_BYTES = 5,   // 
+    SPI_6_BYTES = 6,   // 
+} spi_data_length_t;
+
 //=======================================================================================
 
 

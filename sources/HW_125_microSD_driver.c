@@ -17,6 +17,8 @@
 // Includes 
 
 #include "HW_125_microSD_driver.h"
+#include "timers.h"
+#include "spi_comm.h"
 
 //=======================================================================================
 
@@ -25,9 +27,97 @@
 // Initialization 
 
 // HW125 initialization 
-void hw125_init(void)
+void hw125_init(uint16_t hw125_slave_pin)
 {
-    // 
+    // Local variables 
+    uint8_t arg[HW125_ARG_LEN]; 
+
+    // Wait 1ms to allow for voltage to reach above 2.2V
+    tim9_delay_ms(HW125_INIT_DELAY);
+
+    // Deselect the sd card slave
+    spi2_slave_deselect(hw125_slave_pin);
+
+    // Set the DI/MOSI command high (0xFF) 
+    // TODO make this better 
+    arg[0] = HW125_DI_POWER_ON;
+
+    // Send DI/MOSI (0xFF) 10x to wait for more than 74 clock pulses 
+    spi2_write(arg, SPI_1_BYTE);
+
+    // Select the sd card slave 
+    spi2_slave_select(hw125_slave_pin);
+
+    // Send CMD0 with arg = 0 and a valid CRC value (0x95)
+
+    // Check the R1 response from CMD0 - check repeatedly until timeout or idle returned 
+
+    // If: in idle state (0x01)
+        // Send CMD8 with arg = 0x000001AA and a valid CRC (0x87)
+
+        // Read lower 12-bits in R7 response 
+
+        // If: 0x1AA matched 
+            // Send CMD55 with arg = 0 followed by CMD41 (ACMD41) with HCS bit set (bit 
+            // 30) in arg (0x4000000)
+
+            // Read R1 response 
+                // If: still in idle (0x01)
+                    // Send initiate initialization cmd and check R1 response again 
+
+                // Else if: Error, no response, or timeout 
+                    // Error - Unknown card - power off 
+
+                    // Failed return value 
+
+                // Else if: return 0x00
+                    // Send CMD58 with arg = 0 to check OCR 
+
+                    // Read CCS bit in the OCR response
+                        // if: 1
+                            // SD version 2+ (block address) 
+
+                        // Else: 0
+                            // SD version 2+ (byte address) 
+
+                            // Send CMD16 with arg = 0x00000200 to force block size to
+                            // 512 bytes to work with FAT file system
+
+        // Else if: 0x1AA not matched
+            // Error - unknown card - power off 
+
+        // Else if: Error response or no response (or timeout?) 
+            // Send CMd55 followed by CMD41 (ACMD41) with arg = 0 to init the init
+
+            // Read R1 response
+                // If: still in idle (0x01)
+                    // Send initiate initialization cmd and check R1 response again 
+
+                // Else if: 0x00
+                    // SD version 1
+
+                    // Send CMD16 with arg = 0x00000200 to force block size to
+                    // 512 bytes to work with FAT file system
+
+                // Else if: Error, no response, or timeout
+                    // Send CMD1 with arg = 0 to init the init 
+
+                    // if: still in idle (0x01)
+                        // Send CMD1 and check R1 response again 
+
+                    // Else if: Error response or no response (or timeout?) 
+                        // Error - unknown card - power off 
+
+                    // Else if: 0x00
+                        // MMC version 3
+
+                        // Send CMD16 with arg = 0x00000200 to force block size to
+                        // 512 bytes to work with FAT file system
+    
+    // Else if: Timeout / no response 
+        // Error - Unknown card - power off
+        
+        // Failed return value 
 }
 
 //=======================================================================================

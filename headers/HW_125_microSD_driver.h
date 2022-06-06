@@ -32,6 +32,12 @@
 
 #define SPI_TIMEOUT 1000   // Time before an error is thrown 
 
+#define HW125_INIT_DELAY 1  // ms delay for power on sequence
+
+#define HW125_DI_POWER_ON 0xFF  // DI/MOSI set high for power on sequence 
+
+#define HW125_ARG_LEN 8  // Command argument length 
+
 //=======================================================================================
 
 
@@ -101,7 +107,7 @@ typedef enum {
  * @details 
  * 
  */
-void hw125_init(void);
+void hw125_init(uint16_t hw125_slave_pin);
 
 //=======================================================================================
 
