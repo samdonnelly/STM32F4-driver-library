@@ -84,6 +84,20 @@ typedef enum {
 
 
 /**
+ * @brief HW125 arguments
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HW125_ARG_NONE  = 0x00000000,  // Zero argument 
+    HW125_ARG_SUPV  = 0x000001AA,  // Check supply voltage range 
+    HW125_ARG_BL512 = 0x00000200,  // Block length 512 bytes 
+    HW125_ARG_HCS   = 0x40000000   // HCS bit set 
+} hw125_args_t;
+
+
+/**
  * @brief HW125 CRC commands 
  * 
  * @details 
@@ -111,18 +125,18 @@ void hw125_init(uint16_t hw125_slave_pin);
 
 
 /**
- * @brief HW125 send command 
+ * @brief HW125 send command messages 
  * 
  * @details 
  * 
  * @param cmd 
- * @param argument 
+ * @param arg 
  * @param crc 
  */
 void hw125_send_cmd(
-    uint8_t cmd,
-    uint8_t *argument,
-    uint8_t crc);
+    uint8_t  cmd,
+    uint32_t arg,
+    uint8_t  crc);
 
 //=======================================================================================
 

@@ -51,11 +51,13 @@ void hw125_init(uint16_t hw125_slave_pin)
     spi2_slave_select(hw125_slave_pin);
 
     // Send CMD0 with arg = 0 and a valid CRC value (0x95)
+    hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0);
 
     // Check the R1 response from CMD0 - check repeatedly until timeout or idle returned 
 
     // If: in idle state (0x01)
         // Send CMD8 with arg = 0x000001AA and a valid CRC (0x87)
+        hw125_send_cmd(HW125_CMD8, HW125_ARG_SUPV, HW125_CRC_CMD8);
 
         // Read lower 12-bits in R7 response 
 
@@ -128,11 +130,11 @@ void hw125_init(uint16_t hw125_slave_pin)
 //=======================================================================================
 // SPI read and write
 
-// HW125 send command 
+// HW125 send command messages 
 void hw125_send_cmd(
-    uint8_t cmd,
-    uint8_t *argument,
-    uint8_t crc)
+    uint8_t  cmd,
+    uint32_t arg,
+    uint8_t  crc)
 {
     // 
 }
