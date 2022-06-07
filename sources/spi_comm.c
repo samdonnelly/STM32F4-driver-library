@@ -311,4 +311,12 @@ void spi2_write_read(
 //    the SPI_DR register returns the RX buffer value. 
 //==============================================================
 
+// SPI2 read 
+void spi2_read(
+    uint8_t *read_data,
+    uint16_t data_len)
+{
+    // 
+}
+
 //=======================================================================================

@@ -36,6 +36,8 @@
 
 #define HW125_DI_POWER_ON 0xFF  // DI/MOSI set high for power on sequence 
 
+#define HW125_READY_REC 0xFF  // DO set high by device when it's ready for commands
+
 #define HW125_DUMMY_CLOCK 10   // Dummy counter used in power on sequence 
 
 //=======================================================================================
@@ -125,7 +127,7 @@ void hw125_init(uint16_t hw125_slave_pin);
 
 
 /**
- * @brief HW125 send command messages 
+ * @brief HW125 send command messages and return response values 
  * 
  * @details 
  * 
@@ -137,6 +139,15 @@ void hw125_send_cmd(
     uint8_t  cmd,
     uint32_t arg,
     uint8_t  crc);
+
+
+/**
+ * @brief HW125 ready to receive commands 
+ * 
+ * @details 
+ * 
+ */
+void hw125_ready_rec(void);
 
 //=======================================================================================
 

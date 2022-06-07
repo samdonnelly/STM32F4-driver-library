@@ -130,13 +130,33 @@ void hw125_init(uint16_t hw125_slave_pin)
 //=======================================================================================
 // SPI read and write
 
-// HW125 send command messages 
+// HW125 send command messages and return response values 
 void hw125_send_cmd(
     uint8_t  cmd,
     uint32_t arg,
     uint8_t  crc)
 {
-    // 
+    // Local variables 
+
+    // Wait until the device is ready to accept commands 
+    hw125_ready_rec();
+}
+
+
+// HW125 ready to receive commands 
+void hw125_ready_rec(void)
+{
+    // TODO create a timeout - what will happen if it times out? 
+
+    // Local variables 
+    uint8_t resp;
+
+    // Read DO continuously until it is ready to receive commands 
+    do 
+    {
+        spi2_read(&resp, SPI_1_BYTE);
+    }
+    while(resp != HW125_READY_REC);
 }
 
 //=======================================================================================

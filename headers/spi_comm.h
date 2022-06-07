@@ -230,6 +230,8 @@ void spi2_slave_deselect(uint16_t slave_num);
  * 
  * @details 
  * 
+ * @param write_data 
+ * @param data_len 
  */
 void spi2_write(
     uint8_t *write_data, 
@@ -243,10 +245,26 @@ void spi2_write(
  *          This can be used to request information from a slave device (write) then 
  *          receive the needed information immediately afterwards (read). 
  * 
+ * @param write_data 
+ * @param read_data 
+ * @param data_len 
  */
 void spi2_write_read(
     uint16_t *write_data, 
     uint16_t *read_data, 
+    uint16_t data_len);
+
+
+/**
+ * @brief SPI2 read 
+ * 
+ * @details 
+ * 
+ * @param read_data 
+ * @param data_len 
+ */
+void spi2_read(
+    uint8_t *read_data,
     uint16_t data_len);
 
 //=======================================================================================
