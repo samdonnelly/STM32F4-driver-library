@@ -137,7 +137,8 @@ void hw125_init(uint16_t hw125_slave_pin);
 void hw125_send_cmd(
     uint8_t  cmd,
     uint32_t arg,
-    uint8_t  crc);
+    uint8_t  crc,
+    uint8_t *resp);
 
 
 /**

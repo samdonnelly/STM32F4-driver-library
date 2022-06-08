@@ -240,7 +240,6 @@ void spi2_write(
     spi2_bsy_wait();
 
     // Read the data and status registers to clear the RX buffer and overrun error bit
-    // TODO be mindful that this may not be needed or wanted for the SD card 
     dummy_read = SPI2->DR;
     dummy_read = SPI2->SR;
 
@@ -257,7 +256,8 @@ void spi2_write(
 //  3. Wait until TXE=1 and write the second data item to be transmitted
 //  4. Wait until RXNE=1 and read the SPI_DR regsiter to get the first received data 
 //     item (clears RXNE bit) 
-//  5. Repeat operations 3 and 4 for each data item 
+//  5. Repeat operations 3 and 4 for each data item to be transmitted/received until the 
+//     n-1 received data. 
 //  6. Wait for RXNE=1 and read the last received data 
 //  7. Wait until TXE=1 and then wait until BSY=0 before disabling SPI 
 //==============================================================
@@ -277,8 +277,7 @@ void spi2_write_read(
     // write_data++; 
 
     // Iterate through all data to be sent and received
-    // TODO check that this loop sequence will work with a single byte 
-    for (uint8_t i = 0; i < data_len; i++)
+    for (uint8_t i = 0; i < data_len-1; i++)
     {
         spi2_txe_wait();          // Wait for TXE bit to set 
         SPI2->DR = write_data;    // Write data to the data register 
@@ -286,12 +285,12 @@ void spi2_write_read(
 
         spi2_rxne_wait();         // Wait for the RXNE bit to set
         *read_data = SPI2->DR;    // Read data from the data register 
-        // TODO in 1-byte data transfer will incrementing the read buffer cause a problem? 
         read_data++;              // Increment to next space in memeory to store data
     }
 
     // Read the last piece of data
-    // TODO does this need to be excluded from single-byte transfer?  
+    // TODO add a timer here in case data doesn't get sent back 
+    // TODO test to see if there is an overrun error that needs clearing
     spi2_rxne_wait();
     *read_data = SPI2->DR;
 

@@ -169,6 +169,23 @@ typedef enum {
     DIVIDE_10000 = 10000
 } divide_decimal_place_t;
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    BYTE_0,
+    BYTE_1,
+    BYTE_2,
+    BYTE_3,
+    BYTE_4,
+    BYTE_5,
+    BYTE_6
+} bytes_t;
+
 //=======================================================================================
 
 #endif  // _TOOL_H_
