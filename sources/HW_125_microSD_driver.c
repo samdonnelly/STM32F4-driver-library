@@ -39,7 +39,7 @@ void hw125_init(uint16_t hw125_slave_pin)
     spi2_slave_deselect(hw125_slave_pin);
 
     // Set the DI/MOSI command high (0xFF) 
-    di_cmd = HW125_DI_POWER_ON;
+    di_cmd = HW125_DI_HIGH;
 
     // Send DI/MOSI (0xFF) 10x to wait for more than 74 clock pulses 
     for (uint8_t i = 0; i < HW125_DUMMY_CLOCK; i++)
@@ -154,9 +154,9 @@ void hw125_ready_rec(void)
     // Read DO continuously until it is ready to receive commands 
     do 
     {
-        spi2_read(&resp, SPI_1_BYTE);
+        spi2_write_read(HW125_DI_HIGH, &resp, SPI_1_BYTE);
     }
-    while(resp != HW125_READY_REC);
+    while(resp != HW125_DO_HIGH);
 }
 
 //=======================================================================================

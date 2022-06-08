@@ -118,6 +118,7 @@ uint8_t spi2_init(
     SPI2->CR1 |= (SET_BIT << SHIFT_2);
 
     // 13. Set the SPE bit to enable SPI 
+    // TODO do I need to enable here? 
     spi2_enable();
 
     // 14. Configure the slave select pins as GPIO 
@@ -239,6 +240,7 @@ void spi2_write(
     spi2_bsy_wait();
 
     // Read the data and status registers to clear the RX buffer and overrun error bit
+    // TODO be mindful that this may not be needed or wanted for the SD card 
     dummy_read = SPI2->DR;
     dummy_read = SPI2->SR;
 
@@ -262,8 +264,8 @@ void spi2_write(
 
 // SPI2 write then read 
 void spi2_write_read(
-    uint16_t *write_data, 
-    uint16_t *read_data, 
+    uint8_t  write_data, 
+    uint8_t *read_data, 
     uint16_t data_len)
 {
     // Enable the SPI 
@@ -271,22 +273,25 @@ void spi2_write_read(
 
     // Write the first piece of data 
     spi2_txe_wait();
-    SPI2->DR = *write_data;
-    write_data++; 
+    SPI2->DR = write_data;
+    // write_data++; 
 
-    // Iterate through all data to be sent and recieved
-    for (uint8_t i = 0; i < data_len-1; i++)
+    // Iterate through all data to be sent and received
+    // TODO check that this loop sequence will work with a single byte 
+    for (uint8_t i = 0; i < data_len; i++)
     {
         spi2_txe_wait();          // Wait for TXE bit to set 
-        SPI2->DR = *write_data;   // Write data to the data register 
-        write_data++;             // Increment to next piece of data 
+        SPI2->DR = write_data;    // Write data to the data register 
+        // write_data++;             // Increment to next piece of data 
 
         spi2_rxne_wait();         // Wait for the RXNE bit to set
         *read_data = SPI2->DR;    // Read data from the data register 
+        // TODO in 1-byte data transfer will incrementing the read buffer cause a problem? 
         read_data++;              // Increment to next space in memeory to store data
     }
 
-    // Read the last piece of data 
+    // Read the last piece of data
+    // TODO does this need to be excluded from single-byte transfer?  
     spi2_rxne_wait();
     *read_data = SPI2->DR;
 
@@ -310,13 +315,5 @@ void spi2_write_read(
 //  - Data is received and stored into an internal RX buffer to be read. Read access to 
 //    the SPI_DR register returns the RX buffer value. 
 //==============================================================
-
-// SPI2 read 
-void spi2_read(
-    uint8_t *read_data,
-    uint16_t data_len)
-{
-    // 
-}
 
 //=======================================================================================

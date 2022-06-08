@@ -34,9 +34,8 @@
 
 #define HW125_INIT_DELAY 1  // ms delay for power on sequence
 
-#define HW125_DI_POWER_ON 0xFF  // DI/MOSI set high for power on sequence 
-
-#define HW125_READY_REC 0xFF  // DO set high by device when it's ready for commands
+#define HW125_DI_HIGH 0xFF  // DI/MOSI set high for power on sequence 
+#define HW125_DO_HIGH 0xFF  // DO/MISO set high by device when it's ready for commands
 
 #define HW125_DUMMY_CLOCK 10   // Dummy counter used in power on sequence 
 
