@@ -34,7 +34,8 @@
 
 #define HW125_INIT_DELAY 1  // ms delay for power on sequence
 
-#define HW125_DI_POWER_ON 0xFF  // DI/MOSI set high for power on sequence 
+#define HW125_DI_HIGH 0xFF  // DI/MOSI set high for power on sequence 
+#define HW125_DO_HIGH 0xFF  // DO/MISO set high by device when it's ready for commands
 
 #define HW125_DUMMY_CLOCK 10   // Dummy counter used in power on sequence 
 
@@ -84,6 +85,20 @@ typedef enum {
 
 
 /**
+ * @brief HW125 arguments
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HW125_ARG_NONE  = 0x00000000,  // Zero argument 
+    HW125_ARG_SUPV  = 0x000001AA,  // Check supply voltage range 
+    HW125_ARG_BL512 = 0x00000200,  // Block length 512 bytes 
+    HW125_ARG_HCS   = 0x40000000   // HCS bit set 
+} hw125_args_t;
+
+
+/**
  * @brief HW125 CRC commands 
  * 
  * @details 
@@ -111,18 +126,28 @@ void hw125_init(uint16_t hw125_slave_pin);
 
 
 /**
- * @brief HW125 send command 
+ * @brief HW125 send command messages and return response values 
  * 
  * @details 
  * 
  * @param cmd 
- * @param argument 
+ * @param arg 
  * @param crc 
  */
 void hw125_send_cmd(
-    uint8_t cmd,
-    uint8_t *argument,
-    uint8_t crc);
+    uint8_t  cmd,
+    uint32_t arg,
+    uint8_t  crc,
+    uint8_t *resp);
+
+
+/**
+ * @brief HW125 ready to receive commands 
+ * 
+ * @details 
+ * 
+ */
+void hw125_ready_rec(void);
 
 //=======================================================================================
 

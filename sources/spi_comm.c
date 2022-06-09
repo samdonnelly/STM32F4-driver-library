@@ -118,6 +118,7 @@ uint8_t spi2_init(
     SPI2->CR1 |= (SET_BIT << SHIFT_2);
 
     // 13. Set the SPE bit to enable SPI 
+    // TODO do I need to enable here? 
     spi2_enable();
 
     // 14. Configure the slave select pins as GPIO 
@@ -219,13 +220,13 @@ void spi2_write(
     uint16_t data_len)
 {
     // Local variables 
-    static uint16_t dummy_read; 
+    uint16_t dummy_read; 
 
     // Enable the SPI 
     spi2_enable();
 
     // Iterate through all data to be sent 
-    for (uint8_t i = 0; i < data_len; i++)
+    for (uint16_t i = 0; i < data_len; i++)
     {
         spi2_txe_wait();          // Wait for TXE bit to set 
         SPI2->DR = *write_data;   // Write data to the data register 
@@ -255,15 +256,16 @@ void spi2_write(
 //  3. Wait until TXE=1 and write the second data item to be transmitted
 //  4. Wait until RXNE=1 and read the SPI_DR regsiter to get the first received data 
 //     item (clears RXNE bit) 
-//  5. Repeat operations 3 and 4 for each data item 
+//  5. Repeat operations 3 and 4 for each data item to be transmitted/received until the 
+//     n-1 received data. 
 //  6. Wait for RXNE=1 and read the last received data 
 //  7. Wait until TXE=1 and then wait until BSY=0 before disabling SPI 
 //==============================================================
 
 // SPI2 write then read 
 void spi2_write_read(
-    uint16_t *write_data, 
-    uint16_t *read_data, 
+    uint8_t  write_data, 
+    uint8_t *read_data, 
     uint16_t data_len)
 {
     // Enable the SPI 
@@ -271,22 +273,24 @@ void spi2_write_read(
 
     // Write the first piece of data 
     spi2_txe_wait();
-    SPI2->DR = *write_data;
-    write_data++; 
+    SPI2->DR = write_data;
+    // write_data++; 
 
-    // Iterate through all data to be sent and recieved
+    // Iterate through all data to be sent and received
     for (uint8_t i = 0; i < data_len-1; i++)
     {
         spi2_txe_wait();          // Wait for TXE bit to set 
-        SPI2->DR = *write_data;   // Write data to the data register 
-        write_data++;             // Increment to next piece of data 
+        SPI2->DR = write_data;    // Write data to the data register 
+        // write_data++;             // Increment to next piece of data 
 
         spi2_rxne_wait();         // Wait for the RXNE bit to set
         *read_data = SPI2->DR;    // Read data from the data register 
         read_data++;              // Increment to next space in memeory to store data
     }
 
-    // Read the last piece of data 
+    // Read the last piece of data
+    // TODO add a timer here in case data doesn't get sent back 
+    // TODO test to see if there is an overrun error that needs clearing
     spi2_rxne_wait();
     *read_data = SPI2->DR;
 
