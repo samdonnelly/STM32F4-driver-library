@@ -1,2 +1,4 @@
 # .gitignore
 
+# VS Code files 
+.vscode/
