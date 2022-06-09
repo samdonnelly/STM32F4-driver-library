@@ -220,13 +220,13 @@ void spi2_write(
     uint16_t data_len)
 {
     // Local variables 
-    static uint16_t dummy_read; 
+    uint16_t dummy_read; 
 
     // Enable the SPI 
     spi2_enable();
 
     // Iterate through all data to be sent 
-    for (uint8_t i = 0; i < data_len; i++)
+    for (uint16_t i = 0; i < data_len; i++)
     {
         spi2_txe_wait();          // Wait for TXE bit to set 
         SPI2->DR = *write_data;   // Write data to the data register 

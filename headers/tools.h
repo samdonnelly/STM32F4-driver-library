@@ -171,9 +171,9 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief Byte number 
  * 
- * @details 
+ * @details General purpose byte counter for specifying the byte within a data structure. 
  * 
  */
 typedef enum {
@@ -184,7 +184,7 @@ typedef enum {
     BYTE_4,
     BYTE_5,
     BYTE_6
-} bytes_t;
+} byte_num_t;
 
 //=======================================================================================
 
