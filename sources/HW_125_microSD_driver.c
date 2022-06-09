@@ -56,14 +56,47 @@ void hw125_init(uint16_t hw125_slave_pin)
     // Send CMD0 with arg = 0 and a valid CRC value (0x95)
     hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
 
-    // Check the R1 response from CMD0 - check repeatedly until timeout or idle returned 
+    // Check the R1 response from CMD0 
 
-    // If: in idle state (0x01)
+    // 
+    if (do_resp == HW125_IDLE_STATE)
+    {
+        // 
         // Send CMD8 with arg = 0x000001AA and a valid CRC (0x87)
         hw125_send_cmd(HW125_CMD8, HW125_ARG_SUPV, HW125_CRC_CMD8, &do_resp);
-        // call spi2_write_read to read trailing 32 bits if needed 
-        spi2_write_read(HW125_DI_HIGH, ocr, HW125_TRAIL_RESP_BYTES);
 
+        // 
+        if (do_resp == HW125_IDLE_STATE)
+        {
+            // SDC V2 
+
+            // Read trailing 32-bits 
+            spi2_write_read(HW125_DI_HIGH, volt_range, HW125_TRAIL_RESP_BYTES);
+
+            // Read lower 12-bits of R7 response 
+            if (0x1AA)
+            {
+                // 0x1AA matched 
+            }
+            else 
+            {
+                // 0x1AA mismatched 
+                // Error: Unknown card 
+            }
+        }
+        else // Error (0x05) or no response 
+        {
+            // SDC V1 or MMC V3 
+        }
+    }
+    else
+    {
+        // Error: Unknown card --> power off --> init failed 
+        // TODO add timer in spi read function that will return an error if it times out
+    }
+
+    // If: in idle state (0x01)
+        
         // Read lower 12-bits in R7 response 
 
         // If: 0x1AA matched 
@@ -151,7 +184,7 @@ void hw125_send_cmd(
     // Wait until the device is ready to accept commands 
     hw125_ready_rec();
 
-    // Genrate a command frame 
+    // Generate a command frame 
     for (uint8_t i = 0; i < SPI_6_BYTES; i++)
     {
         switch (i)
