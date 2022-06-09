@@ -43,6 +43,7 @@
 //  11. Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
 //  12. Set the MSTR bit to enable master mode 
 //  13. Set the SPE bit to enable SPI 
+//       Note: spi will get disabled in an error state, otherwise it'll be enabled 
 //  14. Configure the slave select pins as GPIO 
 //==============================================================
 
@@ -51,8 +52,7 @@
 uint8_t spi2_init(
     uint8_t num_slaves,
     uint8_t baud_rate_ctrl,
-    uint8_t clock_mode,
-    uint8_t data_frame_format)
+    uint8_t clock_mode)
 {
     //==============================================================
     // Pin information for SPI2
@@ -96,9 +96,7 @@ uint8_t spi2_init(
     // 6. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
     SPI2->CR1 |= (clock_mode << SHIFT_0);
 
-    // 7. Set the DFF bit to define 8-bit or 16-bit data frame format. 
-    // TODO see if it's worth having the option to choose 8 or 16 bits 
-    // SPI2->CR1 |= (data_frame_format << SHIFT_11);
+    // 7. Set the DFF bit to define an 8-bit data frame format. 
     SPI2->CR1 &= ~(SET_BIT << SHIFT_11);
 
     // 8. Enable software slave management
@@ -118,7 +116,6 @@ uint8_t spi2_init(
     SPI2->CR1 |= (SET_BIT << SHIFT_2);
 
     // 13. Set the SPE bit to enable SPI 
-    // TODO do I need to enable here? 
     spi2_enable();
 
     // 14. Configure the slave select pins as GPIO 
@@ -204,6 +201,7 @@ void spi2_slave_deselect(uint16_t slave_num)
 //==============================================================
 // Write sequence
 //  1. Enable the SPI. 
+//      Note: this is done in the init function. 
 //  2. Loop through the data to be written. 
 //      a) Wait for the TXE bit to set. 
 //      b) Write data to the data register. 
@@ -212,6 +210,7 @@ void spi2_slave_deselect(uint16_t slave_num)
 //  4. Wait for the BSY flag to clear. 
 //  5. Read the data and status registers to clear the RX buffer and overrun error bit. 
 //  6. Disable the SPI. 
+//      Note: this is not done here. spi is disabled only in an error state. 
 //==============================================================
 
 // SPI2 write 
@@ -221,9 +220,6 @@ void spi2_write(
 {
     // Local variables 
     uint16_t dummy_read; 
-
-    // Enable the SPI 
-    spi2_enable();
 
     // Iterate through all data to be sent 
     for (uint16_t i = 0; i < data_len; i++)
@@ -242,15 +238,13 @@ void spi2_write(
     // Read the data and status registers to clear the RX buffer and overrun error bit
     dummy_read = SPI2->DR;
     dummy_read = SPI2->SR;
-
-    // Disable the SPI 
-    spi2_disable();
 }
 
 
 //==============================================================
 // Write-Read sequence
-//  1. Enable SPI by setting the SPE bit to 1 
+//  1. Enable SPI by setting the SPE bit to 1. 
+//      Note: this is done in the init function. 
 //  2. Write the first data item to be transmitted into the SPI_DR register (clears TXE
 //     flag)
 //  3. Wait until TXE=1 and write the second data item to be transmitted
@@ -260,6 +254,7 @@ void spi2_write(
 //     n-1 received data. 
 //  6. Wait for RXNE=1 and read the last received data 
 //  7. Wait until TXE=1 and then wait until BSY=0 before disabling SPI 
+//      Note: disabling is not done here. spi is disabled only in an error state. 
 //==============================================================
 
 // SPI2 write then read 
@@ -268,16 +263,13 @@ void spi2_write_read(
     uint8_t *read_data, 
     uint16_t data_len)
 {
-    // Enable the SPI 
-    spi2_enable();
-
     // Write the first piece of data 
     spi2_txe_wait();
     SPI2->DR = write_data;
     // write_data++; 
 
     // Iterate through all data to be sent and received
-    for (uint8_t i = 0; i < data_len-1; i++)
+    for (uint16_t i = 0; i < data_len-1; i++)
     {
         spi2_txe_wait();          // Wait for TXE bit to set 
         SPI2->DR = write_data;    // Write data to the data register 
@@ -299,9 +291,6 @@ void spi2_write_read(
 
     // Wait for BSY to clear 
     spi2_bsy_wait();
-
-    // Disable the SPI 
-    spi2_disable();
 }
 
 

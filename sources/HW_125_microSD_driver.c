@@ -32,6 +32,8 @@ void hw125_init(uint16_t hw125_slave_pin)
     // Local variables 
     uint8_t di_cmd;
     uint8_t do_resp; 
+    uint8_t ocr[HW125_TRAIL_RESP_BYTES];
+    uint8_t volt_range[HW125_TRAIL_RESP_BYTES];
 
     // Wait 1ms to allow for voltage to reach above 2.2V
     tim9_delay_ms(HW125_INIT_DELAY);
@@ -59,6 +61,8 @@ void hw125_init(uint16_t hw125_slave_pin)
     // If: in idle state (0x01)
         // Send CMD8 with arg = 0x000001AA and a valid CRC (0x87)
         hw125_send_cmd(HW125_CMD8, HW125_ARG_SUPV, HW125_CRC_CMD8, &do_resp);
+        // call spi2_write_read to read trailing 32 bits if needed 
+        spi2_write_read(HW125_DI_HIGH, ocr, HW125_TRAIL_RESP_BYTES);
 
         // Read lower 12-bits in R7 response 
 
@@ -131,6 +135,9 @@ void hw125_init(uint16_t hw125_slave_pin)
 //=======================================================================================
 // SPI read and write
 
+// TODO disable spi in an error state if spi comms go wrong. 
+// Otherwise SPI will be enabled at all times 
+
 // HW125 send command messages and return response values 
 void hw125_send_cmd(
     uint8_t  cmd,
@@ -166,7 +173,7 @@ void hw125_send_cmd(
 
     // Skip a stop byte when stop_transmission? 
 
-    // Read response 
+    // Read R1 response 
     spi2_write_read(HW125_DI_HIGH, resp, SPI_1_BYTE);
 }
 

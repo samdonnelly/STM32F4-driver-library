@@ -39,6 +39,8 @@
 
 #define HW125_DUMMY_CLOCK 10   // Dummy counter used in power on sequence 
 
+#define HW125_TRAIL_RESP_BYTES 4  // 
+
 //=======================================================================================
 
 

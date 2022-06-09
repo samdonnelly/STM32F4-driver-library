@@ -142,8 +142,7 @@ typedef enum {
 uint8_t spi2_init(
     uint8_t num_slaves,
     uint8_t baud_rate_ctrl,
-    uint8_t clock_mode,
-    uint8_t data_frame_format);
+    uint8_t clock_mode);
 
 //=======================================================================================
 
