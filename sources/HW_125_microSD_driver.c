@@ -34,6 +34,7 @@ void hw125_init(uint16_t hw125_slave_pin)
     uint8_t do_resp; 
     uint8_t ocr[HW125_TRAIL_RESP_BYTES];
     uint8_t volt_range[HW125_TRAIL_RESP_BYTES];
+    uint16_t init_timer = HW125_INIT_TIMER;
 
     // Wait 1ms to allow for voltage to reach above 2.2V
     tim9_delay_ms(HW125_INIT_DELAY);
@@ -67,26 +68,67 @@ void hw125_init(uint16_t hw125_slave_pin)
         // Check the R1 response from CMD8 
         if (do_resp == HW125_IDLE_STATE)
         {
-            // Idle state returned - 32 trailing bits incoming 
-            // SDC V2 
+            // Idle state - 32 trailing bits incoming 
 
             // Read trailing 32-bits 
             spi2_write_read(HW125_DI_HIGH, volt_range, HW125_TRAIL_RESP_BYTES);
 
-            // Read lower 12-bits of R7 response (big endian format) 
+            // Check lower 12-bits of R7 response (big endian format) 
             if ((uint16_t)((volt_range[BYTE_2] << SHIFT_8) | (volt_range[BYTE_3])) 
                                                                 == HW125_CMD8_R7_RESP)
             {
                 // 0x1AA matched - voltage range 2.7-3.6V
+                
+                // Send ACMD41 until appropriate response - allow up to 1 second
+                do
+                {
+                    // Send ACMD41 (CMD55+CMD41) with HCS bit set in the arg 
+                    hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+                    hw125_send_cmd(HW125_CMD41, HW125_ARG_HCS, HW125_CRC_CMDX, &do_resp);
 
-                // Repeatedly send ACMD41 until an appropriate response 
-                // Have a timer of up to 1 second
-                // Need to check idle (0x01), initialization (0x00) and error/timeout 
-                // How do I check all three? 
+                    // Delay 1ms 
+                    tim9_delay_ms(HW125_INIT_DELAY);
 
-                // Send ACMD41 with HCS bit set in the arg 
-                hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
-                hw125_send_cmd(HW125_CMD41, HW125_ARG_HCS, HW125_CRC_CMDX, &do_resp);
+                    // Decrement timer 
+                    init_timer--;
+                }
+                while(init_timer && (do_resp == HW125_IDLE_STATE));
+
+                // Check R1 response 
+                if (init_timer)
+                {
+                    // No timeout 
+                    if (do_resp == HW125_INIT_STATE)
+                    {
+                        // Initiate initialization begun 
+
+                        // Send CMD58 with no arg to check the OCR (trailing 32-bits)
+                        hw125_send_cmd(HW125_CMD58, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+                        spi2_write_read(HW125_DI_HIGH, ocr, HW125_TRAIL_RESP_BYTES);
+
+                        // Check CCS bit (bit 30) in OCR response 
+                        if (ocr[BYTE_0] & HW125_CCS_SET)
+                        {
+                            // SDC V2 (block address)
+                        }
+                        else
+                        {
+                            // SDC V2 (byte address)
+
+                            // Send CMD16 to change block size 
+                        }
+                    }
+                    else
+                    {
+                        // Error: Unknwon card 
+                    }
+                    
+                }
+                else
+                {
+                    // Init timer timeout 
+                    // Error: Unknown card 
+                }
             }
             else 
             {

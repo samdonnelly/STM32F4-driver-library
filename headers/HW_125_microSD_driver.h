@@ -30,7 +30,7 @@
 
 #define INDEX_OFFSET 0x40  // First two bits of command index 
 
-#define HW125_SPI_TIMEOUT 1000   // Time before an error is thrown 
+#define HW125_INIT_TIMER 1000   // Time before an error is thrown 
 
 #define HW125_INIT_DELAY 1  // ms delay for power on sequence
 
@@ -42,6 +42,8 @@
 #define HW125_TRAIL_RESP_BYTES 4  // 
 
 #define HW125_IDLE_STATE 0x01  // 
+#define HW125_INIT_STATE 0x00  // 
+#define HW125_CCS_SET 0x40  // 
 
 #define HW125_CMD8_R7_RESP 0x1AA  // 
 
