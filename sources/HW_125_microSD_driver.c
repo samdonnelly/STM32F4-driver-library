@@ -57,26 +57,36 @@ void hw125_init(uint16_t hw125_slave_pin)
     hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
 
     // Check the R1 response from CMD0 
-
-    // 
     if (do_resp == HW125_IDLE_STATE)
     {
-        // 
+        // Idle state 
+
         // Send CMD8 with arg = 0x000001AA and a valid CRC (0x87)
         hw125_send_cmd(HW125_CMD8, HW125_ARG_SUPV, HW125_CRC_CMD8, &do_resp);
 
-        // 
+        // Check the R1 response from CMD8 
         if (do_resp == HW125_IDLE_STATE)
         {
+            // Idle state returned - 32 trailing bits incoming 
             // SDC V2 
 
             // Read trailing 32-bits 
             spi2_write_read(HW125_DI_HIGH, volt_range, HW125_TRAIL_RESP_BYTES);
 
-            // Read lower 12-bits of R7 response 
-            if (0x1AA)
+            // Read lower 12-bits of R7 response (big endian format) 
+            if ((uint16_t)((volt_range[BYTE_2] << SHIFT_8) | (volt_range[BYTE_3])) 
+                                                                == HW125_CMD8_R7_RESP)
             {
-                // 0x1AA matched 
+                // 0x1AA matched - voltage range 2.7-3.6V
+
+                // Repeatedly send ACMD41 until an appropriate response 
+                // Have a timer of up to 1 second
+                // Need to check idle (0x01), initialization (0x00) and error/timeout 
+                // How do I check all three? 
+
+                // Send ACMD41 with HCS bit set in the arg 
+                hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+                hw125_send_cmd(HW125_CMD41, HW125_ARG_HCS, HW125_CRC_CMDX, &do_resp);
             }
             else 
             {
@@ -84,8 +94,9 @@ void hw125_init(uint16_t hw125_slave_pin)
                 // Error: Unknown card 
             }
         }
-        else // Error (0x05) or no response 
+        else 
         {
+            // CMD8 rejected with illegal command error (R1 = 0x05) or no response
             // SDC V1 or MMC V3 
         }
     }
