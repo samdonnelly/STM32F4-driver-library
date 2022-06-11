@@ -85,10 +85,11 @@ typedef enum {
  * 
  */
 typedef enum {
-    HW125_CT_UNKNOWN = 0x00,   // Unknown card type - failed to read 
-    HW125_CT_MMC     = 0x01,   // MMC version 3
-    HW125_CT_SDC1    = 0x02,   // SDC version 1
-    HW125_CT_SDC2    = 0x04    // SDC version 2
+    HW125_CT_UNKNOWN     = 0x00,   // Unknown card type - failed to read 
+    HW125_CT_MMC         = 0x01,   // MMC version 3
+    HW125_CT_SDC1        = 0x02,   // SDC version 1
+    HW125_CT_SDC2_BLOCK  = 0x04,   // SDC version 2 - block address 
+    HW125_CT_SDC2_BYTE   = 0x05    // SDC version 2 - byte address 
 } hw125_card_type_t; 
 
 

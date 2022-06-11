@@ -35,6 +35,7 @@ void hw125_init(uint16_t hw125_slave_pin)
     uint8_t ocr[HW125_TRAIL_RESP_BYTES];
     uint8_t volt_range[HW125_TRAIL_RESP_BYTES];
     uint16_t init_timer = HW125_INIT_TIMER;
+    uint8_t card_type; 
 
     // Wait 1ms to allow for voltage to reach above 2.2V
     tim9_delay_ms(HW125_INIT_DELAY);
@@ -75,7 +76,7 @@ void hw125_init(uint16_t hw125_slave_pin)
 
             // Check lower 12-bits of R7 response (big endian format) 
             if ((uint16_t)((volt_range[BYTE_2] << SHIFT_8) | (volt_range[BYTE_3])) 
-                                                                == HW125_CMD8_R7_RESP)
+                == HW125_CMD8_R7_RESP)
             {
                 // 0x1AA matched - voltage range 2.7-3.6V
                 
@@ -94,10 +95,12 @@ void hw125_init(uint16_t hw125_slave_pin)
                 }
                 while(init_timer && (do_resp == HW125_IDLE_STATE));
 
-                // Check R1 response 
+                // Check timeout
                 if (init_timer)
                 {
-                    // No timeout 
+                    // No init timer timeout 
+
+                    // Check R1 response 
                     if (do_resp == HW125_INIT_STATE)
                     {
                         // Initiate initialization begun 
@@ -106,40 +109,108 @@ void hw125_init(uint16_t hw125_slave_pin)
                         hw125_send_cmd(HW125_CMD58, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
                         spi2_write_read(HW125_DI_HIGH, ocr, HW125_TRAIL_RESP_BYTES);
 
-                        // Check CCS bit (bit 30) in OCR response 
+                        // Check CCS bit (bit 30) in OCR response (big endian format) 
                         if (ocr[BYTE_0] & HW125_CCS_SET)
                         {
                             // SDC V2 (block address)
+                            card_type = HW125_CT_SDC2_BLOCK;
                         }
                         else
                         {
                             // SDC V2 (byte address)
+                            card_type = HW125_CT_SDC2_BYTE;
 
-                            // Send CMD16 to change block size 
+                            // Send CMD16 to change the block size to 512 bytes (for FAT)
+                            hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
                         }
                     }
                     else
                     {
+                        // TODO this state may be able to be wrapped up in the next error 
+
                         // Error: Unknwon card 
+                        card_type = HW125_CT_UNKNOWN;
                     }
                     
                 }
                 else
                 {
                     // Init timer timeout 
+
                     // Error: Unknown card 
+                    card_type = HW125_CT_UNKNOWN;
                 }
             }
             else 
             {
                 // 0x1AA mismatched 
+
                 // Error: Unknown card 
+                card_type = HW125_CT_UNKNOWN;
             }
         }
         else 
         {
-            // CMD8 rejected with illegal command error (R1 = 0x05) or no response
-            // SDC V1 or MMC V3 
+            // CMD8 rejected with illegal command error (0x05)
+
+            // Send ACMD41 until appropriate response - allow up to 1 second
+            do 
+            {
+                // Send ACMD41 (CMD55+CMD41) with no arg 
+                hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+                hw125_send_cmd(HW125_CMD41, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+
+                // Delay 1ms 
+                tim9_delay_ms(HW125_INIT_DELAY);
+
+                // Decrement timer 
+                init_timer--;
+            }
+            while (init_timer && (do_resp == HW125_IDLE_STATE));
+
+            // Check timeout and R1 response 
+            if (init_timer && (do_resp == HW125_INIT_STATE))
+            {
+                // Initiate initialization begun - No init timer timeout 
+
+                // SDC V1 
+                card_type = HW125_CT_SDC1;
+
+                // Send CMD16 to change the block size to 512 bytes (for FAT)
+                hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
+            }
+
+            else
+            {
+                // Error or timeout 
+                // TODO find a new timer - this one has already been used! 
+
+                // Send ACMD41 until appropriate response - allow up to 1 second
+                do 
+                {
+                    // Send CMD1 with no arg 
+                    hw125_send_cmd(HW125_CMD1, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+
+                    // Delay 1ms 
+                    tim9_delay_ms(HW125_INIT_DELAY);
+
+                    // Decrement timer 
+                    init_timer--;
+                }
+                while (init_timer && (do_resp == HW125_IDLE_STATE));
+
+                // Check timeout and R1 response 
+                if (init_timer && (do_resp == HW125_INIT_STATE))
+                {
+                    // Initiate initialization begun - No init timer timeout 
+
+                    // MMC V3
+                    card_type = HW125_CT_MMC;
+
+                    // Send CMD16 to change the block size to 512 bytes (for FAT)
+                    hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
+                }
+            }
         }
     }
     else
@@ -147,72 +218,6 @@ void hw125_init(uint16_t hw125_slave_pin)
         // Error: Unknown card --> power off --> init failed 
         // TODO add timer in spi read function that will return an error if it times out
     }
-
-    // If: in idle state (0x01)
-        
-        // Read lower 12-bits in R7 response 
-
-        // If: 0x1AA matched 
-            // Send CMD55 with arg = 0 followed by CMD41 (ACMD41) with HCS bit set (bit 
-            // 30) in arg (0x4000000)
-
-            // Read R1 response 
-                // If: still in idle (0x01)
-                    // Send initiate initialization cmd and check R1 response again 
-
-                // Else if: Error, no response, or timeout 
-                    // Error - Unknown card - power off 
-
-                    // Failed return value 
-
-                // Else if: return 0x00
-                    // Send CMD58 with arg = 0 to check OCR 
-
-                    // Read CCS bit in the OCR response
-                        // if: 1
-                            // SD version 2+ (block address) 
-
-                        // Else: 0
-                            // SD version 2+ (byte address) 
-
-                            // Send CMD16 with arg = 0x00000200 to force block size to
-                            // 512 bytes to work with FAT file system
-
-        // Else if: 0x1AA not matched
-            // Error - unknown card - power off 
-
-        // Else if: Error response or no response (or timeout?) 
-            // Send CMd55 followed by CMD41 (ACMD41) with arg = 0 to init the init
-
-            // Read R1 response
-                // If: still in idle (0x01)
-                    // Send initiate initialization cmd and check R1 response again 
-
-                // Else if: 0x00
-                    // SD version 1
-
-                    // Send CMD16 with arg = 0x00000200 to force block size to
-                    // 512 bytes to work with FAT file system
-
-                // Else if: Error, no response, or timeout
-                    // Send CMD1 with arg = 0 to init the init 
-
-                    // if: still in idle (0x01)
-                        // Send CMD1 and check R1 response again 
-
-                    // Else if: Error response or no response (or timeout?) 
-                        // Error - unknown card - power off 
-
-                    // Else if: 0x00
-                        // MMC version 3
-
-                        // Send CMD16 with arg = 0x00000200 to force block size to
-                        // 512 bytes to work with FAT file system
-    
-    // Else if: Timeout / no response 
-        // Error - Unknown card - power off
-        
-        // Failed return value 
 }
 
 //=======================================================================================
