@@ -28,24 +28,24 @@
 //=======================================================================================
 // Macros 
 
-#define INDEX_OFFSET 0x40  // First two bits of command index 
+// Command values 
+#define HW125_INDEX_OFFSET 0x40  // First two bits of command index 
 
-#define HW125_INIT_TIMER 1000   // Time before an error is thrown 
+// Timers 
+#define HW125_INIT_TIMER     1000  // Initiate initialization counter 
+#define HW125_INIT_DELAY     1     // time delay in ms for initiate initialization sequence
+#define HW125_POWER_ON_TIMER 10    // Power on sequence counter 
+#define HW125_POWER_ON_DELAY 1     // time delay in ms for power on sequence
 
-#define HW125_INIT_DELAY 1  // ms delay for power on sequence
+// Data information 
+#define HW125_DATA_HIGH 0xFF       // DI/MOSI setpoint and DO/MISO response value 
+#define HW125_TRAIL_RESP_BYTES 4   // Number of bytes in an R3/R7 response after receiving R1 
 
-#define HW125_DI_HIGH 0xFF  // DI/MOSI set high for power on sequence 
-#define HW125_DO_HIGH 0xFF  // DO/MISO set high by device when it's ready for commands
-
-#define HW125_DUMMY_CLOCK 10   // Dummy counter used in power on sequence 
-
-#define HW125_TRAIL_RESP_BYTES 4  // 
-
-#define HW125_IDLE_STATE 0x01  // 
-#define HW125_INIT_STATE 0x00  // 
-#define HW125_CCS_SET 0x40  // 
-
-#define HW125_CMD8_R7_RESP 0x1AA  // 
+// Command response values
+#define HW125_INIT_STATE   0x00   // SD card has initiated initialization 
+#define HW125_IDLE_STATE   0x01   // SD card is in the idle state 
+#define HW125_CCS_SET      0x40   // CCS bit location in OCR 
+#define HW125_CMD8_R7_RESP 0x1AA  // SDCV2 return value from CMD8 
 
 //=======================================================================================
 
@@ -60,21 +60,21 @@
  * 
  */
 typedef enum {
-    HW125_CMD0  = INDEX_OFFSET + 0x00,  // GO_IDLE_STATE
-    HW125_CMD1  = INDEX_OFFSET + 0x01,  // SEND_OP_COND
-    HW125_CMD8  = INDEX_OFFSET + 0x08,  // SEND_IF_COND
-    HW125_CMD9  = INDEX_OFFSET + 0x09,  // SEND_CSD
-    HW125_CMD10 = INDEX_OFFSET + 0x0A,  // SEND_CID
-    HW125_CMD12 = INDEX_OFFSET + 0x0C,  // STOP_TRANSMISSION
-    HW125_CMD16 = INDEX_OFFSET + 0x10,  // SET_BLOCKLEN
-    HW125_CMD17 = INDEX_OFFSET + 0x11,  // READ_SINGLE_BLOCK
-    HW125_CMD18 = INDEX_OFFSET + 0x12,  // READ_MULTIPLE_BLOCK
-    HW125_CMD23 = INDEX_OFFSET + 0x17,  // SET_BLOCK_COUNT
-    HW125_CMD24 = INDEX_OFFSET + 0x18,  // WRITE_BLOCK
-    HW125_CMD25 = INDEX_OFFSET + 0x19,  // WRITE_MULTIPLE_BLOCK
-    HW125_CMD41 = INDEX_OFFSET + 0x29,  // APP_SEND_OP_COND
-    HW125_CMD55 = INDEX_OFFSET + 0x37,  // APP_CMD
-    HW125_CMD58 = INDEX_OFFSET + 0x3A   // READ_OCR
+    HW125_CMD0  = HW125_INDEX_OFFSET + 0x00,  // GO_IDLE_STATE
+    HW125_CMD1  = HW125_INDEX_OFFSET + 0x01,  // SEND_OP_COND
+    HW125_CMD8  = HW125_INDEX_OFFSET + 0x08,  // SEND_IF_COND
+    HW125_CMD9  = HW125_INDEX_OFFSET + 0x09,  // SEND_CSD
+    HW125_CMD10 = HW125_INDEX_OFFSET + 0x0A,  // SEND_CID
+    HW125_CMD12 = HW125_INDEX_OFFSET + 0x0C,  // STOP_TRANSMISSION
+    HW125_CMD16 = HW125_INDEX_OFFSET + 0x10,  // SET_BLOCKLEN
+    HW125_CMD17 = HW125_INDEX_OFFSET + 0x11,  // READ_SINGLE_BLOCK
+    HW125_CMD18 = HW125_INDEX_OFFSET + 0x12,  // READ_MULTIPLE_BLOCK
+    HW125_CMD23 = HW125_INDEX_OFFSET + 0x17,  // SET_BLOCK_COUNT
+    HW125_CMD24 = HW125_INDEX_OFFSET + 0x18,  // WRITE_BLOCK
+    HW125_CMD25 = HW125_INDEX_OFFSET + 0x19,  // WRITE_MULTIPLE_BLOCK
+    HW125_CMD41 = HW125_INDEX_OFFSET + 0x29,  // APP_SEND_OP_COND
+    HW125_CMD55 = HW125_INDEX_OFFSET + 0x37,  // APP_CMD
+    HW125_CMD58 = HW125_INDEX_OFFSET + 0x3A   // READ_OCR
 } hw125_command_index_t;
 
 
@@ -130,9 +130,42 @@ typedef enum {
  * 
  * @details 
  * 
+ * @param hw125_slave_pin 
+ * @return uint8_t 
  */
-void hw125_init(uint16_t hw125_slave_pin);
+uint8_t hw125_init(uint16_t hw125_slave_pin);
 
+
+/**
+ * @brief HW125 power on sequence
+ * 
+ * @details 
+ * 
+ * @param hw125_slave_pin 
+ */
+void hw125_power_on(uint16_t hw125_slave_pin);
+
+
+/**
+ * @brief HW125 initiate initialization sequence
+ * 
+ * @details 
+ * 
+ * @param cmd 
+ * @param arg 
+ * @param resp 
+ * @return uint8_t 
+ */
+uint8_t hw125_initiate_init(
+    uint8_t  cmd,
+    uint32_t arg,
+    uint8_t *resp);
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and write
 
 /**
  * @brief HW125 send command messages and return response values 
