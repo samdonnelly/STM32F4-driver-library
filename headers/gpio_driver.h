@@ -25,30 +25,31 @@
 //=======================================================================================
 // Enums 
 
+// TODO when you get rid of HAL then change this back to GPIO_PIN_X
 /**
- * @brief GPIO pin number 
+ * @brief GPIOB pin number 
  * 
  * @details 
  * 
  */
 typedef enum {
-    GPIO_PIN_0  = 0x0001,
-    GPIO_PIN_1  = 0x0002,
-    GPIO_PIN_2  = 0x0004,
-    GPIO_PIN_3  = 0x0008,
-    GPIO_PIN_4  = 0x0010,
-    GPIO_PIN_5  = 0x0020,
-    GPIO_PIN_6  = 0x0040,
-    GPIO_PIN_7  = 0x0080,
-    GPIO_PIN_8  = 0x0100,
-    GPIO_PIN_9  = 0x0200,
-    GPIO_PIN_10 = 0x0400,
-    GPIO_PIN_11 = 0x0800,
-    GPIO_PIN_12 = 0x1000,
-    GPIO_PIN_13 = 0x2000,
-    GPIO_PIN_14 = 0x4000,
-    GPIO_PIN_15 = 0x8000
-} gpio_pin_num_t;
+    GPIOB_PIN_0  = 0x0001,
+    GPIOB_PIN_1  = 0x0002,
+    GPIOB_PIN_2  = 0x0004,
+    GPIOB_PIN_3  = 0x0008,
+    GPIOB_PIN_4  = 0x0010,
+    GPIOB_PIN_5  = 0x0020,
+    GPIOB_PIN_6  = 0x0040,
+    GPIOB_PIN_7  = 0x0080,
+    GPIOB_PIN_8  = 0x0100,
+    GPIOB_PIN_9  = 0x0200,
+    GPIOB_PIN_10 = 0x0400,
+    GPIOB_PIN_11 = 0x0800,
+    GPIOB_PIN_12 = 0x1000,
+    GPIOB_PIN_13 = 0x2000,
+    GPIOB_PIN_14 = 0x4000,
+    GPIOB_PIN_15 = 0x8000
+} gpiob_pin_num_t;
 
 
 /**

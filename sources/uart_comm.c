@@ -78,8 +78,8 @@ void uart2_baud_select(
 void uart2_init(uint8_t baud_rate)
 {
     // Baud rate setup variables 
-    uint8_t baud_frac;
-    uint8_t baud_mant;
+    uint16_t baud_frac;
+    uint16_t baud_mant;
 
     //==============================================================
     // Pin information for UART2

@@ -225,7 +225,7 @@ uint8_t hw125_initiate_init(
         // Decrement timer 
         init_timer--;
     }
-    while(init_timer && (resp == HW125_IDLE_STATE));
+    while(init_timer && (*resp == HW125_IDLE_STATE));
 
     // Return the timer status 
     if (init_timer)
