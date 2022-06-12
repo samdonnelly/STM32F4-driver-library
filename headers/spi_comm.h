@@ -131,7 +131,6 @@ typedef enum {
  *          SPI2 is currently supported for up to 2 slave devices (2 GPIOs).
  * 
  * @see spi_baud_rate_ctrl_t
- * @see spi_dff_t
  * 
  * @param num_slaves 
  * @param baud_rate_ctrl 
