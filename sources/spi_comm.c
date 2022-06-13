@@ -56,9 +56,9 @@ uint8_t spi2_init(
 {
     //==============================================================
     // Pin information for SPI2
-    //  PB9:  NSS --> GPIO slave select 2
+    //  PB9:  NSS --> GPIO slave select 1
     //  PB10: SCK
-    //  PB12: NSS --> GPIO slave select 1
+    //  PB12: NSS --> GPIO slave select 2
     //  PB14: MISO
     //  PB15: MOSI
     //==============================================================

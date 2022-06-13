@@ -258,6 +258,7 @@ void hw125_send_cmd(
 {
     // Local variables 
     uint8_t cmd_frame[SPI_6_BYTES];
+    uint8_t counter = 10;
 
     // Wait until the device is ready to accept commands 
     hw125_ready_rec();
@@ -285,7 +286,11 @@ void hw125_send_cmd(
     // Skip a stop byte when stop_transmission? 
 
     // Read R1 response 
-    spi2_write_read(HW125_DATA_HIGH, resp, SPI_1_BYTE);
+    do 
+    {
+        spi2_write_read(HW125_DATA_HIGH, resp, SPI_1_BYTE);
+    }
+    while((*resp & 0x80) && --counter);
 }
 
 
