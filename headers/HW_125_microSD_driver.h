@@ -36,16 +36,18 @@
 #define HW125_INIT_DELAY     1     // time delay in ms for initiate initialization sequence
 #define HW125_POWER_ON_TIMER 10    // Power on sequence counter 
 #define HW125_POWER_ON_DELAY 1     // time delay in ms for power on sequence
+#define HW125_R1_RESP_COUNT  5     // Max num of times to read R1 until appropriate response
 
 // Data information 
 #define HW125_DATA_HIGH 0xFF       // DI/MOSI setpoint and DO/MISO response value 
 #define HW125_TRAIL_RESP_BYTES 4   // Number of bytes in an R3/R7 response after receiving R1 
 
 // Command response values
-#define HW125_INIT_STATE   0x00   // SD card has initiated initialization 
-#define HW125_IDLE_STATE   0x01   // SD card is in the idle state 
-#define HW125_CCS_SET      0x40   // CCS bit location in OCR 
-#define HW125_CMD8_R7_RESP 0x1AA  // SDCV2 return value from CMD8 
+#define HW125_INIT_STATE     0x00   // SD card has initiated initialization 
+#define HW125_IDLE_STATE     0x01   // SD card is in the idle state 
+#define HW125_CCS_SET        0x40   // CCS bit location in OCR 
+#define HW125_CMD8_R7_RESP   0x1AA  // SDCV2 return value from CMD8 
+#define HW125_R1_RESP_FILTER 0x80   // Filter used to determine a valid R1 response 
 
 //=======================================================================================
 
@@ -119,12 +121,26 @@ typedef enum {
     HW125_CRC_CMD0 = 0x95
 } hw125_crc_cmd_t;
 
+
+/**
+ * @brief HW125 disk status 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HW125_STATUS_NOINIT  = 0x01,  // Device has not been initialized and not ready to work 
+    HW125_STATUS_NODISK  = 0x02,  // No medium in the drive 
+    HW125_STATUS_PROTECT = 0x04   // Medium is write protected 
+} hw125_disk_status_t; 
+
 //=======================================================================================
 
 
 //=======================================================================================
-// Initialization 
+// Initialization and status functions 
 
+// TODO need to change the arguments to only rhe device number and return type to the status 
 /**
  * @brief HW125 initialization 
  * 
@@ -161,11 +177,22 @@ uint8_t hw125_initiate_init(
     uint32_t arg,
     uint8_t *resp);
 
+
+/**
+ * @brief HW125 disk status 
+ * 
+ * @details 
+ * 
+ * @param pdrv : physical drive number to identify the target device 
+ * @return uint8_t 
+ */
+uint8_t hw125_status(uint8_t pdrv);
+
 //=======================================================================================
 
 
 //=======================================================================================
-// Read and write
+// Command functions 
 
 /**
  * @brief HW125 send command messages and return response values 
@@ -191,6 +218,11 @@ void hw125_send_cmd(
  */
 void hw125_ready_rec(void);
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Data functions 
 //=======================================================================================
 
 

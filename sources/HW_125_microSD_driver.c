@@ -24,7 +24,10 @@
 
 
 //=======================================================================================
-// Initialization 
+// Initialization and status functions 
+
+// TODO globals for status, card types and power flag need to be created so they can be 
+// used across functions and maintain their value 
 
 // HW125 initialization 
 uint8_t hw125_init(uint16_t hw125_slave_pin)
@@ -32,9 +35,11 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
     // Local variables 
     uint8_t do_resp; 
     uint8_t init_timer_status;
-    uint8_t card_type; 
+    uint8_t card_type;  // This is needed for read and write data formats 
     uint8_t ocr[HW125_TRAIL_RESP_BYTES];
     uint8_t v_range[HW125_TRAIL_RESP_BYTES];
+
+    // If pdrv is not zero then return. This code if not equiped for multiple devices.
 
     // Power on 
     hw125_power_on(hw125_slave_pin);
@@ -89,6 +94,9 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
                     {
                         // SDC V2 (byte address)
                         card_type = HW125_CT_SDC2_BYTE;
+
+                        // Send CMD16 to change the block size to 512 bytes (for FAT)
+                        hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
                     }
                 }
                 else
@@ -117,6 +125,9 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
 
                 // SDC V1 
                 card_type = HW125_CT_SDC1;
+
+                // Send CMD16 to change the block size to 512 bytes (for FAT)
+                hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
             }
 
             else
@@ -133,6 +144,9 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
 
                     // MMC V3
                     card_type = HW125_CT_MMC;
+
+                    // Send CMD16 to change the block size to 512 bytes (for FAT)
+                    hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
                 }
                 else
                 {
@@ -150,21 +164,22 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
         // TODO add timer in spi read function that will return an error if it times out
     }
 
-    // Change the block size if needed 
-    if ((card_type != HW125_CT_UNKNOWN) && (card_type != HW125_CT_SDC2_BLOCK))
-    {
-        // Send CMD16 to change the block size to 512 bytes (for FAT)
-        hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
-    }
+    // Deselect slave 
+    spi2_slave_deselect(hw125_slave_pin);
+    
+    // Perform a write_read after deselecting the slave --> Why? 
 
-    // Power off sequence 
+    // Status check 
     if (card_type == HW125_CT_UNKNOWN)
     {
         // Power off 
+        // If card_type = HW125_CT_UNKNOWN then the status must be set to HW125_STATUS_NOINIT
     }
-
-    // Deselect slave 
-    spi2_slave_deselect(hw125_slave_pin);
+    else
+    {
+        // If the function succeeds (card_type != HW125_CT_UNKNOWN) then clear the 
+        // HW125_STATUS_NOINIT flag in the return value (clear bit zero of the return) 
+    }
 
     // Return the card type for fault handling 
     return card_type;
@@ -240,11 +255,18 @@ uint8_t hw125_initiate_init(
     }
  }
 
+
+ // HW125 disk status 
+ uint8_t hw125_status(uint8_t pdrv)
+ {
+    // 
+ }
+
 //=======================================================================================
 
 
 //=======================================================================================
-// Read and write
+// Command functions 
 
 // TODO disable spi in an error state if spi comms go wrong. 
 // Otherwise SPI will be enabled at all times 
@@ -258,7 +280,7 @@ void hw125_send_cmd(
 {
     // Local variables 
     uint8_t cmd_frame[SPI_6_BYTES];
-    uint8_t counter = 10;
+    uint8_t num_read = HW125_R1_RESP_COUNT;
 
     // Wait until the device is ready to accept commands 
     hw125_ready_rec();
@@ -285,12 +307,12 @@ void hw125_send_cmd(
 
     // Skip a stop byte when stop_transmission? 
 
-    // Read R1 response 
+    // Read R1 response until it is valid or until it times out 
     do 
     {
         spi2_write_read(HW125_DATA_HIGH, resp, SPI_1_BYTE);
     }
-    while((*resp & 0x80) && --counter);
+    while((*resp & HW125_R1_RESP_FILTER) && --num_read);
 }
 
 
@@ -309,5 +331,13 @@ void hw125_ready_rec(void)
     }
     while(resp != HW125_DATA_HIGH);
 }
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data functions 
+
+
 
 //=======================================================================================
