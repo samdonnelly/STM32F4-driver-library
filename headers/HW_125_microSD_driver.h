@@ -134,11 +134,27 @@ typedef enum {
     HW125_STATUS_PROTECT = 0x04   // Medium is write protected 
 } hw125_disk_status_t; 
 
+
+// TODO create return types used by the read and write functions - see chan website 
+
 //=======================================================================================
 
 
 //=======================================================================================
 // Initialization and status functions 
+
+/**
+ * @brief HW125 user init 
+ * 
+ * @details This functions is called directly by the user and used to set parameters for 
+ *          the hw125 driver. The hw125 driver functions (aside from this one) are 
+ *          references by the FATFS module and are not meant to be called directly by the 
+ *          user within application code. 
+ * 
+ * @param hw125_slave_pin 
+ */
+void hw125_user_init(uint16_t hw125_slave_pin);
+
 
 // TODO need to change the arguments to only rhe device number and return type to the status 
 /**
@@ -150,32 +166,6 @@ typedef enum {
  * @return uint8_t 
  */
 uint8_t hw125_init(uint16_t hw125_slave_pin);
-
-
-/**
- * @brief HW125 power on sequence
- * 
- * @details 
- * 
- * @param hw125_slave_pin 
- */
-void hw125_power_on(uint16_t hw125_slave_pin);
-
-
-/**
- * @brief HW125 initiate initialization sequence
- * 
- * @details 
- * 
- * @param cmd 
- * @param arg 
- * @param resp 
- * @return uint8_t 
- */
-uint8_t hw125_initiate_init(
-    uint8_t  cmd,
-    uint32_t arg,
-    uint8_t *resp);
 
 
 /**
@@ -192,37 +182,10 @@ uint8_t hw125_status(uint8_t pdrv);
 
 
 //=======================================================================================
-// Command functions 
-
-/**
- * @brief HW125 send command messages and return response values 
- * 
- * @details 
- * 
- * @param cmd 
- * @param arg 
- * @param crc 
- */
-void hw125_send_cmd(
-    uint8_t  cmd,
-    uint32_t arg,
-    uint8_t  crc,
-    uint8_t *resp);
-
-
-/**
- * @brief HW125 ready to receive commands 
- * 
- * @details 
- * 
- */
-void hw125_ready_rec(void);
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Data functions 
+
+// TODO add remaining functions for FATFS requirements 
+
 //=======================================================================================
 
 

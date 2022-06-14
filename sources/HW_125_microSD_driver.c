@@ -24,10 +24,81 @@
 
 
 //=======================================================================================
+// Function prototypes 
+
+/**
+ * @brief HW125 power on sequence
+ * 
+ * @details 
+ * 
+ * @param hw125_slave_pin 
+ */
+void hw125_power_on(uint16_t hw125_slave_pin);
+
+
+/**
+ * @brief HW125 initiate initialization sequence
+ * 
+ * @details 
+ * 
+ * @param cmd 
+ * @param arg 
+ * @param resp 
+ * @return uint8_t 
+ */
+uint8_t hw125_initiate_init(
+    uint8_t  cmd,
+    uint32_t arg,
+    uint8_t *resp);
+
+
+/**
+ * @brief HW125 send command messages and return response values 
+ * 
+ * @details 
+ * 
+ * @param cmd 
+ * @param arg 
+ * @param crc 
+ */
+void hw125_send_cmd(
+    uint8_t  cmd,
+    uint32_t arg,
+    uint8_t  crc,
+    uint8_t *resp);
+
+
+/**
+ * @brief HW125 ready to receive commands 
+ * 
+ * @details 
+ * 
+ */
+void hw125_ready_rec(void);
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Variables 
+
+// TODO create a global structure and variable for status, card type, power flag, ss pin 
+// Should these be declared static or volatile or neither?
+
+//=======================================================================================
+
+
+// TODO add all functions to user_diskio.c functions for FATFS reference 
+
+//=======================================================================================
 // Initialization and status functions 
 
-// TODO globals for status, card types and power flag need to be created so they can be 
-// used across functions and maintain their value 
+// 
+void hw125_user_init(uint16_t hw125_slave_pin)
+{
+    // TODO assign values to needed globals here - user customizable 
+}
+
 
 // HW125 initialization 
 uint8_t hw125_init(uint16_t hw125_slave_pin)
@@ -39,7 +110,9 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
     uint8_t ocr[HW125_TRAIL_RESP_BYTES];
     uint8_t v_range[HW125_TRAIL_RESP_BYTES];
 
-    // If pdrv is not zero then return. This code if not equiped for multiple devices.
+    // TODO change the arguments of this functions to match FATFA requirements 
+
+    // TODO If pdrv is not zero then return. This code if not equiped for multiple devices.
 
     // Power on 
     hw125_power_on(hw125_slave_pin);
@@ -172,12 +245,12 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
     // Status check 
     if (card_type == HW125_CT_UNKNOWN)
     {
-        // Power off 
-        // If card_type = HW125_CT_UNKNOWN then the status must be set to HW125_STATUS_NOINIT
+        // TODO Power off 
+        // TODO If card_type = HW125_CT_UNKNOWN then the status must be set to HW125_STATUS_NOINIT
     }
     else
     {
-        // If the function succeeds (card_type != HW125_CT_UNKNOWN) then clear the 
+        // TODO If the function succeeds (card_type != HW125_CT_UNKNOWN) then clear the 
         // HW125_STATUS_NOINIT flag in the return value (clear bit zero of the return) 
     }
 
@@ -338,6 +411,6 @@ void hw125_ready_rec(void)
 //=======================================================================================
 // Data functions 
 
-
+// TODO add remaining functions for FATFS requirements 
 
 //=======================================================================================
