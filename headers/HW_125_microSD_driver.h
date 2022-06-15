@@ -164,6 +164,48 @@ typedef enum {
     HW125_RES_PARERR    // command code or parameter is invalid 
 } hw125_disk_results_t;
 
+
+/**
+ * @brief HW125 data token 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HW125_DT_ZERO = 0xFC,    // Data token for CMD25 
+    HW125_DT_ONE  = 0xFD,    // Stop token for CMD25
+    HW125_DT_TWO  = 0xFE     // Data token for CMD17/18/24
+} hw125_data_token_t; 
+
+
+/**
+ * @brief HW125 data response filters 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HW125_DR_FILTER_ZERO = 0x05,   // Data accepted 
+    HW125_DR_FILTER_ZERO = 0x0B,   // Data rejected due to a CRC error 
+    HW125_DR_FILTER_ZERO = 0x0D    // Data rejected due to a write error 
+} hw125_data_response_filter_t; 
+
+
+// TODO see if the error token enum is needed 
+/**
+ * @brief HW125 error token filters 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HW125_ET_FILTER_ERROR = 0x01,    // Error 
+    HW125_ET_FILTER_CC    = 0x02,    // CC error 
+    HW125_ET_FILTER_ECC   = 0x04,    // Card ECC failed 
+    HW125_ET_FILTER_OOR   = 0x08,    // Out of range 
+    HW125_ET_FILTER_LOCK  = 0x10     // Card is locked 
+} hw125_error_token_t; 
+
 //=======================================================================================
 
 
@@ -219,8 +261,6 @@ DISK_STATUS hw125_status(uint8_t pdrv);
 
 //=======================================================================================
 // Data functions 
-
-// TODO add remaining functions for FATFS requirements 
 
 /**
  * @brief HW125 read 

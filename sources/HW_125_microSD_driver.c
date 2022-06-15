@@ -452,7 +452,14 @@ DISK_RESULT hw125_read(
     uint32_t sector,
     uint16_t count)
 {
-    // 
+    // Read a single block 
+
+    // Send CMD17 with an arg that specifies the address to start to read in units of 
+    // BTE or BLOCK. 
+
+    // Read multiple blocks 
+
+    // Send CMD18 to read blocks in sequence starting at the specified address 
 }
 
 
@@ -463,7 +470,13 @@ DISK_RESULT hw125_write(
     uint32_t      sector,
     uint16_t      count)
 {
-    // 
+    // Write a single block 
+
+    // Send CMD24 to write a single block to the card 
+
+    // Write multiple blocks 
+
+    // Send CMD25 to write multiple blocks in sequence starting at a specified address
 }
 
 
