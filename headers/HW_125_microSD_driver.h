@@ -26,16 +26,6 @@
 
 
 //=======================================================================================
-// Data types 
-
-typedef uint8_t DISK_STATUS;
-
-typedef hw125_disk_results_t DISK_RESULT; 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Macros 
 
 // Command values 
@@ -58,6 +48,9 @@ typedef hw125_disk_results_t DISK_RESULT;
 #define HW125_CCS_SET        0x40   // CCS bit location in OCR 
 #define HW125_CMD8_R7_RESP   0x1AA  // SDCV2 return value from CMD8 
 #define HW125_R1_RESP_FILTER 0x80   // Filter used to determine a valid R1 response 
+
+// Status 
+#define HW125_INIT_SUCCESS 0xFE  // Filter to clear the HW125_STATUS_NOINIT flag 
 
 //=======================================================================================
 
@@ -175,6 +168,16 @@ typedef enum {
 
 
 //=======================================================================================
+// Data types 
+
+typedef uint8_t DISK_STATUS;
+
+typedef hw125_disk_results_t DISK_RESULT; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization and status functions 
 
 /**
@@ -218,6 +221,58 @@ DISK_STATUS hw125_status(uint8_t pdrv);
 // Data functions 
 
 // TODO add remaining functions for FATFS requirements 
+
+/**
+ * @brief HW125 read 
+ * 
+ * @details 
+ * 
+ * @param pdrv : physical drive number 
+ * @param buff : pointer to the read data buffer 
+ * @param sector : start sector number 
+ * @param count : number of sectors to read 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_read(
+    uint8_t  pdrv, 
+    uint8_t  *buff,
+    uint32_t sector,
+    uint16_t count);
+
+
+/**
+ * @brief HW125 write 
+ * 
+ * @details 
+ * 
+ * @param pdrv : physical drive number 
+ * @param buff : pointer to the data to be written 
+ * @param sector : sector number to write from 
+ * @param count : number of sectors to write 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_write(
+    uint8_t       pdrv, 
+    const uint8_t *buff,
+    uint32_t      sector,
+    uint16_t      count);
+
+
+/**
+ * @brief HW125 IO control 
+ * 
+ * @details This function is called to control device specific features and misc functions 
+ *          other than generic read and write. 
+ * 
+ * @param pdrv : drive number 
+ * @param cmd : control command code 
+ * @param buff : parameter and data buffer 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_ioctl(
+    uint8_t pdrv, 
+    uint8_t cmd, 
+    void    *buff);
 
 //=======================================================================================
 

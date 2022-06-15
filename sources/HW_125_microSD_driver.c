@@ -83,7 +83,7 @@ void hw125_ready_rec(void);
 // Structures 
 
 /**
- * @brief 
+ * @brief HW125 disk information 
  * 
  */
 typedef struct {
@@ -92,6 +92,8 @@ typedef struct {
     uint8_t  pwr_flag;
     uint16_t ss_pin;
 } hw125_disk_info_t;
+
+// TODO figure out if the pwr_flag is needed 
 
 //=======================================================================================
 
@@ -130,11 +132,8 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     uint8_t ocr[HW125_TRAIL_RESP_BYTES];
     uint8_t v_range[HW125_TRAIL_RESP_BYTES];
 
-    // BYTE;
-
-    // TODO change the arguments of this functions to match FATFA requirements 
-
-    // TODO If pdrv is not zero then return. This code if not equiped for multiple devices.
+    // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
+    if (pdrv) return HW125_STATUS_NOINIT; 
 
     // Power on 
     hw125_power_on(sd_card.ss_pin);
@@ -267,13 +266,15 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     // Status check 
     if (sd_card.card_type == HW125_CT_UNKNOWN)
     {
-        // TODO Power off 
-        // TODO If card_type = HW125_CT_UNKNOWN then the status must be set to HW125_STATUS_NOINIT
+        // TODO Power off?
+
+        // Set no init flag 
+        sd_card.disk_status = HW125_STATUS_NOINIT;
     }
     else
     {
-        // TODO If the function succeeds (card_type != HW125_CT_UNKNOWN) then clear the 
-        // HW125_STATUS_NOINIT flag in the return value (clear bit zero of the return) 
+        // Clear no init flag 
+        sd_card.disk_status = (HW125_STATUS_NOINIT & HW125_INIT_SUCCESS); 
     }
 
     // Return the card type for fault handling 
@@ -354,7 +355,16 @@ uint8_t hw125_initiate_init(
  // HW125 disk status 
  DISK_STATUS hw125_status(uint8_t pdrv)
  {
-    // 
+    if (pdrv) 
+    { 
+        // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
+        return HW125_STATUS_NOINIT; 
+    }
+    else 
+    {
+        // Return the existing disk status 
+        return sd_card.disk_status;
+    }
  }
 
 //=======================================================================================
@@ -434,5 +444,36 @@ void hw125_ready_rec(void)
 // Data functions 
 
 // TODO add remaining functions for FATFS requirements 
+
+// HW125 read 
+DISK_RESULT hw125_read(
+    uint8_t  pdrv, 
+    uint8_t  *buff,
+    uint32_t sector,
+    uint16_t count)
+{
+    // 
+}
+
+
+// HW125 write 
+DISK_RESULT hw125_write(
+    uint8_t       pdrv, 
+    const uint8_t *buff,
+    uint32_t      sector,
+    uint16_t      count)
+{
+    // 
+}
+
+
+// HW125 IO control 
+DISK_RESULT hw125_ioctl(
+    uint8_t pdrv, 
+    uint8_t cmd, 
+    void    *buff)
+{
+    // 
+}
 
 //=======================================================================================
