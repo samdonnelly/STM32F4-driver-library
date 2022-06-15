@@ -80,10 +80,27 @@ void hw125_ready_rec(void);
 
 
 //=======================================================================================
+// Structures 
+
+/**
+ * @brief 
+ * 
+ */
+typedef struct {
+    uint8_t  disk_status;
+    uint8_t  card_type;
+    uint8_t  pwr_flag;
+    uint16_t ss_pin;
+} hw125_disk_info_t;
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Variables 
 
-// TODO create a global structure and variable for status, card type, power flag, ss pin 
-// Should these be declared static or volatile or neither?
+// SD card information 
+static hw125_disk_info_t sd_card;
 
 //=======================================================================================
 
@@ -93,32 +110,37 @@ void hw125_ready_rec(void);
 //=======================================================================================
 // Initialization and status functions 
 
-// 
+// HW125 user initialization 
 void hw125_user_init(uint16_t hw125_slave_pin)
 {
-    // TODO assign values to needed globals here - user customizable 
+    // Define SD card information 
+    sd_card.disk_status = HW125_STATUS_NOINIT;
+    sd_card.card_type = HW125_CT_UNKNOWN;
+    sd_card.pwr_flag = HW125_PWR_OFF;
+    sd_card.ss_pin = hw125_slave_pin;
 }
 
 
 // HW125 initialization 
-uint8_t hw125_init(uint16_t hw125_slave_pin)
+DISK_STATUS hw125_init(uint8_t pdrv)
 {
     // Local variables 
     uint8_t do_resp; 
     uint8_t init_timer_status;
-    uint8_t card_type;  // This is needed for read and write data formats 
     uint8_t ocr[HW125_TRAIL_RESP_BYTES];
     uint8_t v_range[HW125_TRAIL_RESP_BYTES];
+
+    // BYTE;
 
     // TODO change the arguments of this functions to match FATFA requirements 
 
     // TODO If pdrv is not zero then return. This code if not equiped for multiple devices.
 
     // Power on 
-    hw125_power_on(hw125_slave_pin);
+    hw125_power_on(sd_card.ss_pin);
 
     // Select the sd card slave 
-    spi2_slave_select(hw125_slave_pin);
+    spi2_slave_select(sd_card.ss_pin);
 
     // Send CMD0 with no arg and a valid CRC value 
     hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
@@ -161,12 +183,12 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
                     if (ocr[BYTE_0] & HW125_CCS_SET)
                     {
                         // SDC V2 (block address)
-                        card_type = HW125_CT_SDC2_BLOCK;
+                        sd_card.card_type = HW125_CT_SDC2_BLOCK;
                     }
                     else
                     {
                         // SDC V2 (byte address)
-                        card_type = HW125_CT_SDC2_BYTE;
+                        sd_card.card_type = HW125_CT_SDC2_BYTE;
 
                         // Send CMD16 to change the block size to 512 bytes (for FAT)
                         hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
@@ -175,13 +197,13 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
                 else
                 {
                     // Initiate initialization timer timeout 
-                    card_type = HW125_CT_UNKNOWN;
+                    sd_card.card_type = HW125_CT_UNKNOWN;
                 }
             }
             else 
             {
                 // 0x1AA mismatched 
-                card_type = HW125_CT_UNKNOWN;
+                sd_card.card_type = HW125_CT_UNKNOWN;
             }
         }
         else 
@@ -197,7 +219,7 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
                 // Initiate initialization begun - No init timer timeout 
 
                 // SDC V1 
-                card_type = HW125_CT_SDC1;
+                sd_card.card_type = HW125_CT_SDC1;
 
                 // Send CMD16 to change the block size to 512 bytes (for FAT)
                 hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
@@ -216,7 +238,7 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
                     // Initiate initialization begun - No init timer timeout 
 
                     // MMC V3
-                    card_type = HW125_CT_MMC;
+                    sd_card.card_type = HW125_CT_MMC;
 
                     // Send CMD16 to change the block size to 512 bytes (for FAT)
                     hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
@@ -224,7 +246,7 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
                 else
                 {
                     // Initiate initialization timer timeout 
-                    card_type = HW125_CT_UNKNOWN;
+                    sd_card.card_type = HW125_CT_UNKNOWN;
                 }
             }
         }
@@ -232,18 +254,18 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
     else
     {
         // Not in idle state
-        card_type = HW125_CT_UNKNOWN;
+        sd_card.card_type = HW125_CT_UNKNOWN;
 
         // TODO add timer in spi read function that will return an error if it times out
     }
 
     // Deselect slave 
-    spi2_slave_deselect(hw125_slave_pin);
+    spi2_slave_deselect(sd_card.ss_pin);
     
     // Perform a write_read after deselecting the slave --> Why? 
 
     // Status check 
-    if (card_type == HW125_CT_UNKNOWN)
+    if (sd_card.card_type == HW125_CT_UNKNOWN)
     {
         // TODO Power off 
         // TODO If card_type = HW125_CT_UNKNOWN then the status must be set to HW125_STATUS_NOINIT
@@ -255,7 +277,7 @@ uint8_t hw125_init(uint16_t hw125_slave_pin)
     }
 
     // Return the card type for fault handling 
-    return card_type;
+    return sd_card.disk_status;
 }
 
 
@@ -330,7 +352,7 @@ uint8_t hw125_initiate_init(
 
 
  // HW125 disk status 
- uint8_t hw125_status(uint8_t pdrv)
+ DISK_STATUS hw125_status(uint8_t pdrv)
  {
     // 
  }

@@ -26,6 +26,16 @@
 
 
 //=======================================================================================
+// Data types 
+
+typedef uint8_t DISK_STATUS;
+
+typedef hw125_disk_results_t DISK_RESULT; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Macros 
 
 // Command values 
@@ -135,7 +145,31 @@ typedef enum {
 } hw125_disk_status_t; 
 
 
-// TODO create return types used by the read and write functions - see chan website 
+/**
+ * @brief HW125 power status 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HW125_PWR_OFF,
+    HW125_PWR_ON
+} hw125_pwr_status_t;
+
+
+/**
+ * @brief HW125 disk function results 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HW125_RES_OK,       // the function succeeded
+    HW125_RES_ERROR,    // an error occured 
+    HW125_RES_WRPRT,    // the medium is write protected 
+    HW125_RES_NOTRDY,   // device has not been initialized 
+    HW125_RES_PARERR    // command code or parameter is invalid 
+} hw125_disk_results_t;
 
 //=======================================================================================
 
@@ -156,7 +190,6 @@ typedef enum {
 void hw125_user_init(uint16_t hw125_slave_pin);
 
 
-// TODO need to change the arguments to only rhe device number and return type to the status 
 /**
  * @brief HW125 initialization 
  * 
@@ -165,7 +198,7 @@ void hw125_user_init(uint16_t hw125_slave_pin);
  * @param hw125_slave_pin 
  * @return uint8_t 
  */
-uint8_t hw125_init(uint16_t hw125_slave_pin);
+DISK_STATUS hw125_init(uint8_t pdrv);
 
 
 /**
@@ -176,7 +209,7 @@ uint8_t hw125_init(uint16_t hw125_slave_pin);
  * @param pdrv : physical drive number to identify the target device 
  * @return uint8_t 
  */
-uint8_t hw125_status(uint8_t pdrv);
+DISK_STATUS hw125_status(uint8_t pdrv);
 
 //=======================================================================================
 
