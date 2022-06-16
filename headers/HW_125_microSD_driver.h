@@ -41,6 +41,8 @@
 // Data information 
 #define HW125_DATA_HIGH 0xFF       // DI/MOSI setpoint and DO/MISO response value 
 #define HW125_TRAIL_RESP_BYTES 4   // Number of bytes in an R3/R7 response after receiving R1 
+#define HW125_SINGLE_BYTE 1        // 
+#define HW125_NO_BYTE     0        // 
 
 // Command response values
 #define HW125_INIT_STATE     0x00   // SD card has initiated initialization 

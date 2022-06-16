@@ -452,14 +452,53 @@ DISK_RESULT hw125_read(
     uint32_t sector,
     uint16_t count)
 {
-    // Read a single block 
+    // Check the drive number and return if not zero
 
-    // Send CMD17 with an arg that specifies the address to start to read in units of 
-    // BTE or BLOCK. 
+    // Check to see if the disk didn't init properly 
 
-    // Read multiple blocks 
+    // Select the slave device 
+    spi2_slave_select(sd_card.ss_pin);
 
-    // Send CMD18 to read blocks in sequence starting at the specified address 
+    // Determine the read operation 
+    switch (count)
+    {
+        case HW125_NO_BYTE:  // Return a result 
+            break;
+        
+        case HW125_SINGLE_BYTE:  // Send one byte 
+            // Send CMD17 with an arg that specifies the address to start to read in units of 
+            // BYTE or BLOCK. 
+
+            // Read the CMD response. 
+
+            // If successful then a read operation will be initiated 
+            
+            // If a valid data token is detected then the data field and CRC are received 
+            // The CRC must be received even it is not used. 
+
+            // If an error occurs then an error packet will be returned instead of a data packet
+            break;
+        
+        default:  // send multiple bytes 
+            // Read multiple blocks - if count does not equal 1 
+
+            // Send CMD18 to read blocks in sequence starting at the specified address. The read 
+            // will be open ended meaning the host has to send a CMD12 to stop the read. 
+
+            // The byte received following sending CMD12 is stuff byte that should be discarded 
+            // prior to receiving the CMD12 response. 
+
+            // For MMC a CMD23 can be sent prior to CMD18 to specify the number of transfer blocks. 
+            // If this is the case then the read transaction is initiated as a pre-defined multiple
+            // block transfer (not open ended) and the read operation is terminated at the last 
+            // block trasnfer. 
+            break;
+    }
+
+    // Deselect the slave device 
+    spi2_slave_deselect(sd_card.ss_pin);
+
+    // Return the result 
 }
 
 
