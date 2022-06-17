@@ -43,9 +43,12 @@
 #define HW125_TRAIL_RESP_BYTES 4   // Number of bytes in an R3/R7 response after receiving R1 
 #define HW125_SINGLE_BYTE 1        // 
 #define HW125_NO_BYTE     0        // 
+#define HW125_CRC_DISCARD 2        // 
 
 // Command response values
 #define HW125_INIT_STATE     0x00   // SD card has initiated initialization 
+#define HW125_BEGIN_READ     0x00   // 
+#define HW125_END_READ       0x00   // 
 #define HW125_IDLE_STATE     0x01   // SD card is in the idle state 
 #define HW125_CCS_SET        0x40   // CCS bit location in OCR 
 #define HW125_CMD8_R7_RESP   0x1AA  // SDCV2 return value from CMD8 

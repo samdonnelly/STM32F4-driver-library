@@ -410,12 +410,13 @@ void hw125_send_cmd(
     // Transmit command 
     spi2_write(cmd_frame, SPI_6_BYTES);
 
-    // Skip a stop byte when stop_transmission? 
+    // Skip the stuff byte sent following CMD12 (stop transmission) 
+    if (cmd == HW125_CMD12) spi2_write_read(HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
 
     // Read R1 response until it is valid or until it times out 
     do 
     {
-        spi2_write_read(HW125_DATA_HIGH, resp, SPI_1_BYTE);
+        spi2_write_read(HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
     }
     while((*resp & HW125_R1_RESP_FILTER) && --num_read);
 }
@@ -452,53 +453,139 @@ DISK_RESULT hw125_read(
     uint32_t sector,
     uint16_t count)
 {
-    // Check the drive number and return if not zero
+    // Local variables 
+    DISK_RESULT read_resp;
+    uint8_t do_resp;
 
-    // Check to see if the disk didn't init properly 
+    // Check that the drive number is zero 
+    if (pdrv) return HW125_RES_PARERR;
+    
+    // Check that the count is valid 
+    if (count == HW125_NO_BYTE) return HW125_RES_PARERR;
+
+    // Check the init status 
+    if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
+
+    // TODO convert sector to byte address if SDC2? 
 
     // Select the slave device 
     spi2_slave_select(sd_card.ss_pin);
 
     // Determine the read operation 
-    switch (count)
+    if (count == HW125_SINGLE_BYTE)   // Send one byte if count == 1
     {
-        case HW125_NO_BYTE:  // Return a result 
-            break;
-        
-        case HW125_SINGLE_BYTE:  // Send one byte 
-            // Send CMD17 with an arg that specifies the address to start to read in units of 
-            // BYTE or BLOCK. 
+        // Send CMD17 with an arg that specifies the address to start to read 
+        hw125_send_cmd(HW125_CMD17, sector, HW125_CRC_CMDX, &do_resp);
 
-            // Read the CMD response. 
+        // Read the R1 response 
+        if (do_resp == HW125_BEGIN_READ)
+        {
+            // Read initiated 
 
-            // If successful then a read operation will be initiated 
-            
-            // If a valid data token is detected then the data field and CRC are received 
-            // The CRC must be received even it is not used. 
+            // Read the data token 
+            spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
 
-            // If an error occurs then an error packet will be returned instead of a data packet
-            break;
-        
-        default:  // send multiple bytes 
-            // Read multiple blocks - if count does not equal 1 
+            if (do_resp == HW125_DT_TWO)
+            {
+                // Valid data token is detected - read the data field and CRC
+                spi2_write_read(HW125_DATA_HIGH, buff, count);
 
-            // Send CMD18 to read blocks in sequence starting at the specified address. The read 
-            // will be open ended meaning the host has to send a CMD12 to stop the read. 
+                // Discard the teo CRC bytes 
+                spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_CRC_DISCARD);
 
-            // The byte received following sending CMD12 is stuff byte that should be discarded 
-            // prior to receiving the CMD12 response. 
+                // Operation success 
+                read_resp = HW125_RES_OK;
+            }
+            else
+            {
+                // Error token received 
+                read_resp = HW125_RES_ERROR;
+            }
+        } 
+        else
+        {
+            // Unsuccessful CMD17 
+            read_resp = HW125_RES_ERROR;
+        }
+    }
+    else   // Send multiple bytes if count > 1
+    {
+        // Send CMD18 with an arg that specifies the address to start a sequential read 
+        hw125_send_cmd(HW125_CMD18, sector, HW125_CRC_CMDX, &do_resp);
 
-            // For MMC a CMD23 can be sent prior to CMD18 to specify the number of transfer blocks. 
-            // If this is the case then the read transaction is initiated as a pre-defined multiple
-            // block transfer (not open ended) and the read operation is terminated at the last 
-            // block trasnfer. 
-            break;
+        // Read the R1 response 
+        if (do_resp == HW125_BEGIN_READ)
+        {
+            // Read initiated 
+
+            // The following is repeatedly called 'count' times. The data packets are 
+            // read a number of times equivalent to the sector size. When the min and max
+            // sector size are the same then the read and write functions can be 
+            // configured to that sector size. If the min and max are different then 
+            // the ioctl function will be used to read the sector size. The 
+            // controllerstech code sets the min and max to be different in CubeMX 
+            // and then manually defines the sector size to be 512 in the ioctl function
+            // which is also the sector size he uses for data packets. I'm not sure why 
+            // he defined a fixed sector size but specified different for min and max. 
+            // This will have to be tested if I want to learn more. 
+
+            // TODO make a function that calls the following block of code
+            // The following code is also called in single data packet read. When 
+            // reading multiple packets then the function can be called however many 
+            // times is needed. After each call, make sure to increment the buff 
+            // address by the sector size to account for the amount of data read. 
+
+            // Read the data token 
+            // TODO Add a small timer to read this repeatedly until a match or a timeout 
+            spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+
+            if (do_resp == HW125_DT_TWO)
+            {
+                // TODO change the length from 'count' to the sector size. 
+                // Call the following code 'count' number of times instead. 
+                // Valid data token is detected - continuously read the data packets 
+                spi2_write_read(HW125_DATA_HIGH, buff, count);
+
+                // Discard the teo CRC bytes 
+                spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_CRC_DISCARD);
+
+                // Send CMD12 to terminate the read transaction 
+                hw125_send_cmd(HW125_CMD12, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+
+                if (do_resp == HW125_END_READ)
+                {
+                    // 
+                    read_resp = HW125_RES_OK;
+                }
+                else
+                {
+                    // Unsuccessful CMD12 
+                    read_resp = HW125_RES_ERROR;
+                }
+            }
+            else
+            {
+                // Error token received 
+                read_resp = HW125_RES_ERROR;
+            }
+        }
+        else
+        {
+            // Unsuccessful CMD18 
+            read_resp = HW125_RES_ERROR;
+        }
+
+        // For MMC a CMD23 can be sent prior to CMD18 to specify the number of transfer blocks. 
+        // If this is the case then the read transaction is initiated as a pre-defined multiple
+        // block transfer (not open ended) and the read operation is terminated at the last 
+        // block trasnfer. 
     }
 
     // Deselect the slave device 
     spi2_slave_deselect(sd_card.ss_pin);
 
     // Return the result 
+    return read_resp;
 }
 
 
