@@ -191,8 +191,8 @@ typedef enum {
  */
 typedef enum {
     HW125_DR_FILTER_ZERO = 0x05,   // Data accepted 
-    HW125_DR_FILTER_ZERO = 0x0B,   // Data rejected due to a CRC error 
-    HW125_DR_FILTER_ZERO = 0x0D    // Data rejected due to a write error 
+    HW125_DR_FILTER_ONE  = 0x0B,   // Data rejected due to a CRC error 
+    HW125_DR_FILTER_TEO  = 0x0D    // Data rejected due to a write error 
 } hw125_data_response_filter_t; 
 
 
