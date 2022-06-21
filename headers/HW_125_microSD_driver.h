@@ -36,14 +36,15 @@
 #define HW125_INIT_DELAY     1     // time delay in ms for initiate initialization sequence
 #define HW125_POWER_ON_TIMER 10    // Power on sequence counter 
 #define HW125_POWER_ON_DELAY 1     // time delay in ms for power on sequence
-#define HW125_R1_RESP_COUNT  5     // Max num of times to read R1 until appropriate response
+#define HW125_R1_RESP_COUNT  10    // Max num of times to read R1 until appropriate response
 
 // Data information 
-#define HW125_DATA_HIGH 0xFF       // DI/MOSI setpoint and DO/MISO response value 
-#define HW125_TRAIL_RESP_BYTES 4   // Number of bytes in an R3/R7 response after receiving R1 
-#define HW125_SINGLE_BYTE 1        // 
-#define HW125_NO_BYTE     0        // 
-#define HW125_CRC_DISCARD 2        // 
+#define HW125_DATA_HIGH        0xFF    // DI/MOSI setpoint and DO/MISO response value 
+#define HW125_TRAIL_RESP_BYTES 4       // Number of bytes in an R3/R7 response after R1 
+#define HW125_SINGLE_BYTE      1       // 
+#define HW125_NO_BYTE          0       // 
+#define HW125_CRC_DISCARD      2       // 
+#define HW125_SEC_SIZE         512     // Min and max sector size of the card 
 
 // Command response values
 #define HW125_INIT_STATE     0x00   // SD card has initiated initialization 
@@ -283,6 +284,12 @@ DISK_RESULT hw125_read(
     uint8_t  *buff,
     uint32_t sector,
     uint16_t count);
+
+
+
+DISK_RESULT hw125_read_data_packet(
+    uint8_t *buff,
+    uint16_t sector_size);
 
 
 /**

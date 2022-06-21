@@ -481,26 +481,10 @@ DISK_RESULT hw125_read(
         if (do_resp == HW125_BEGIN_READ)
         {
             // Read initiated 
+            read_resp = hw125_read_data_packet(buff, HW125_SEC_SIZE);
 
-            // Read the data token 
-            spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
-
-            if (do_resp == HW125_DT_TWO)
-            {
-                // Valid data token is detected - read the data field and CRC
-                spi2_write_read(HW125_DATA_HIGH, buff, count);
-
-                // Discard the teo CRC bytes 
-                spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_CRC_DISCARD);
-
-                // Operation success 
-                read_resp = HW125_RES_OK;
-            }
-            else
-            {
-                // Error token received 
-                read_resp = HW125_RES_ERROR;
-            }
+            // Operation success 
+            read_resp = HW125_RES_OK;
         } 
         else
         {
@@ -517,55 +501,25 @@ DISK_RESULT hw125_read(
         if (do_resp == HW125_BEGIN_READ)
         {
             // Read initiated 
-
-            // The following is repeatedly called 'count' times. The data packets are 
-            // read a number of times equivalent to the sector size. When the min and max
-            // sector size are the same then the read and write functions can be 
-            // configured to that sector size. If the min and max are different then 
-            // the ioctl function will be used to read the sector size. The 
-            // controllerstech code sets the min and max to be different in CubeMX 
-            // and then manually defines the sector size to be 512 in the ioctl function
-            // which is also the sector size he uses for data packets. I'm not sure why 
-            // he defined a fixed sector size but specified different for min and max. 
-            // This will have to be tested if I want to learn more. 
-
-            // TODO make a function that calls the following block of code
-            // The following code is also called in single data packet read. When 
-            // reading multiple packets then the function can be called however many 
-            // times is needed. After each call, make sure to increment the buff 
-            // address by the sector size to account for the amount of data read. 
-
-            // Read the data token 
-            // TODO Add a small timer to read this repeatedly until a match or a timeout 
-            spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
-
-            if (do_resp == HW125_DT_TWO)
+            do 
             {
-                // TODO change the length from 'count' to the sector size. 
-                // Call the following code 'count' number of times instead. 
-                // Valid data token is detected - continuously read the data packets 
-                spi2_write_read(HW125_DATA_HIGH, buff, count);
+                read_resp = hw125_read_data_packet(buff, HW125_SEC_SIZE);
+                buff += HW125_SEC_SIZE;
+                count--; 
+            }
+            while (count && read_resp != HW125_RES_ERROR);
 
-                // Discard the teo CRC bytes 
-                spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_CRC_DISCARD);
+            // Send CMD12 to terminate the read transaction 
+            hw125_send_cmd(HW125_CMD12, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
 
-                // Send CMD12 to terminate the read transaction 
-                hw125_send_cmd(HW125_CMD12, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
-
-                if (do_resp == HW125_END_READ)
-                {
-                    // 
-                    read_resp = HW125_RES_OK;
-                }
-                else
-                {
-                    // Unsuccessful CMD12 
-                    read_resp = HW125_RES_ERROR;
-                }
+            if (do_resp == HW125_END_READ)
+            {
+                // 
+                read_resp = HW125_RES_OK;
             }
             else
             {
-                // Error token received 
+                // Unsuccessful CMD12 
                 read_resp = HW125_RES_ERROR;
             }
         }
@@ -585,6 +539,62 @@ DISK_RESULT hw125_read(
     spi2_slave_deselect(sd_card.ss_pin);
 
     // Return the result 
+    return read_resp;
+}
+
+
+// 
+DISK_RESULT hw125_read_data_packet(
+    uint8_t *buff,
+    uint16_t sector_size)
+{
+    // Local variables 
+    DISK_RESULT read_resp;
+    uint8_t do_resp;
+
+    // Read initiated 
+
+    // The following is repeatedly called 'count' times. The data packets are 
+    // read a number of times equivalent to the sector size. When the min and max
+    // sector size are the same then the read and write functions can be 
+    // configured to that sector size. If the min and max are different then 
+    // the ioctl function will be used to read the sector size. The 
+    // controllerstech code sets the min and max to be different in CubeMX 
+    // and then manually defines the sector size to be 512 in the ioctl function
+    // which is also the sector size he uses for data packets. I'm not sure why 
+    // he defined a fixed sector size but specified different for min and max. 
+    // This will have to be tested if I want to learn more. 
+
+    // TODO make a function that calls the following block of code. 
+    // The following code is also called in single data packet read. When 
+    // reading multiple packets then the function can be called however many 
+    // times is needed. After each call, make sure to increment the buff 
+    // address by the sector size to account for the amount of data read. 
+
+    // Read the data token 
+    // TODO Add a small timer to read this repeatedly until a match or a timeout 
+    spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+
+    if (do_resp == HW125_DT_TWO)
+    {
+        // TODO Loop a number of times equal to the sector size 
+
+        // Valid data token is detected - continuously read the data packets 
+        spi2_write_read(HW125_DATA_HIGH, buff, sector_size);
+
+        // Discard the teo CRC bytes 
+        spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_CRC_DISCARD);
+
+        // Operation success 
+        read_resp = HW125_RES_OK;
+    }
+    else
+    {
+        // Error token received 
+        read_resp = HW125_RES_ERROR;
+    }
+
+    // 
     return read_resp;
 }
 
