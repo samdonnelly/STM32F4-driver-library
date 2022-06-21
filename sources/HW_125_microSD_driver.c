@@ -466,7 +466,7 @@ DISK_RESULT hw125_read(
     // Check the init status 
     if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
 
-    // TODO convert sector to byte address if SDC2? 
+    // TODO convert sector to byte address if not SDC V2 (byte address)? 
 
     // Select the slave device 
     spi2_slave_select(sd_card.ss_pin);
@@ -482,9 +482,6 @@ DISK_RESULT hw125_read(
         {
             // Read initiated 
             read_resp = hw125_read_data_packet(buff, HW125_SEC_SIZE);
-
-            // Operation success 
-            read_resp = HW125_RES_OK;
         } 
         else
         {
@@ -504,22 +501,15 @@ DISK_RESULT hw125_read(
             do 
             {
                 read_resp = hw125_read_data_packet(buff, HW125_SEC_SIZE);
-                buff += HW125_SEC_SIZE;
-                count--; 
+                buff += HW125_SEC_SIZE; 
             }
-            while (count && read_resp != HW125_RES_ERROR);
+            while (--count && (read_resp != HW125_RES_ERROR));
 
             // Send CMD12 to terminate the read transaction 
             hw125_send_cmd(HW125_CMD12, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
 
-            if (do_resp == HW125_END_READ)
+            if (do_resp != HW125_END_READ)
             {
-                // 
-                read_resp = HW125_RES_OK;
-            }
-            else
-            {
-                // Unsuccessful CMD12 
                 read_resp = HW125_RES_ERROR;
             }
         }
@@ -538,6 +528,8 @@ DISK_RESULT hw125_read(
     // Deselect the slave device 
     spi2_slave_deselect(sd_card.ss_pin);
 
+    // TODO dummy read? 
+
     // Return the result 
     return read_resp;
 }
@@ -551,8 +543,7 @@ DISK_RESULT hw125_read_data_packet(
     // Local variables 
     DISK_RESULT read_resp;
     uint8_t do_resp;
-
-    // Read initiated 
+    uint8_t num_read = HW125_DT_RESP_COUNT; 
 
     // The following is repeatedly called 'count' times. The data packets are 
     // read a number of times equivalent to the sector size. When the min and max
@@ -565,24 +556,19 @@ DISK_RESULT hw125_read_data_packet(
     // he defined a fixed sector size but specified different for min and max. 
     // This will have to be tested if I want to learn more. 
 
-    // TODO make a function that calls the following block of code. 
-    // The following code is also called in single data packet read. When 
-    // reading multiple packets then the function can be called however many 
-    // times is needed. After each call, make sure to increment the buff 
-    // address by the sector size to account for the amount of data read. 
-
     // Read the data token 
-    // TODO Add a small timer to read this repeatedly until a match or a timeout 
-    spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+    do 
+    {
+        spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+    }
+    while((do_resp != HW125_DT_TWO) && --num_read);
 
     if (do_resp == HW125_DT_TWO)
     {
-        // TODO Loop a number of times equal to the sector size 
-
-        // Valid data token is detected - continuously read the data packets 
+        // Valid data token is detected - read the data packet(s) 
         spi2_write_read(HW125_DATA_HIGH, buff, sector_size);
 
-        // Discard the teo CRC bytes 
+        // Discard the two CRC bytes 
         spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_CRC_DISCARD);
 
         // Operation success 
@@ -590,11 +576,11 @@ DISK_RESULT hw125_read_data_packet(
     }
     else
     {
-        // Error token received 
+        // Incorrect or error token received 
         read_resp = HW125_RES_ERROR;
     }
 
-    // 
+    // Return the status of the data packet response 
     return read_resp;
 }
 

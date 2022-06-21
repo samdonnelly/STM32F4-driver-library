@@ -37,6 +37,7 @@
 #define HW125_POWER_ON_TIMER 10    // Power on sequence counter 
 #define HW125_POWER_ON_DELAY 1     // time delay in ms for power on sequence
 #define HW125_R1_RESP_COUNT  10    // Max num of times to read R1 until appropriate response
+#define HW125_DT_RESP_COUNT  10    // Max number of times to check the data token 
 
 // Data information 
 #define HW125_DATA_HIGH        0xFF    // DI/MOSI setpoint and DO/MISO response value 
@@ -99,8 +100,8 @@ typedef enum {
     HW125_CT_UNKNOWN     = 0x00,   // Unknown card type - failed to read 
     HW125_CT_MMC         = 0x01,   // MMC version 3
     HW125_CT_SDC1        = 0x02,   // SDC version 1
-    HW125_CT_SDC2_BLOCK  = 0x04,   // SDC version 2 - block address 
-    HW125_CT_SDC2_BYTE   = 0x05    // SDC version 2 - byte address 
+    HW125_CT_SDC2_BYTE   = 0x04,   // SDC version 2 - byte address 
+    HW125_CT_SDC2_BLOCK  = 0x0C    // SDC version 2 - block address 
 } hw125_card_type_t; 
 
 
