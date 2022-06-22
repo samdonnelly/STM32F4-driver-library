@@ -49,8 +49,10 @@
 
 // Command response values
 #define HW125_INIT_STATE     0x00   // SD card has initiated initialization 
-#define HW125_BEGIN_READ     0x00   // 
-#define HW125_END_READ       0x00   // 
+#define HW125_BEGIN_READ     0x00   // Successful CMD response to reading data 
+#define HW125_END_READ       0x00   // Successful CMD responde to terminating read operation
+#define HW125_BEGIN_WRITE    0x00   // Successful CMD response to writing data 
+#define HW125_END_WRITE      0x00   // 
 #define HW125_IDLE_STATE     0x01   // SD card is in the idle state 
 #define HW125_CCS_SET        0x40   // CCS bit location in OCR 
 #define HW125_CMD8_R7_RESP   0x1AA  // SDCV2 return value from CMD8 
@@ -285,12 +287,6 @@ DISK_RESULT hw125_read(
     uint8_t  *buff,
     uint32_t sector,
     uint16_t count);
-
-
-
-DISK_RESULT hw125_read_data_packet(
-    uint8_t *buff,
-    uint16_t sector_size);
 
 
 /**

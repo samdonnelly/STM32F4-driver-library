@@ -76,6 +76,21 @@ void hw125_send_cmd(
  */
 void hw125_ready_rec(void);
 
+
+/**
+ * @brief HW125 read data packet 
+ * 
+ * @details Gets called by hw125_read for both single and multiple data packet reads
+ *          to get all the requesed information from the storage device. 
+ * 
+ * @param buff 
+ * @param sector_size 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_read_data_packet(
+    uint8_t *buff,
+    uint16_t sector_size);
+
 //=======================================================================================
 
 
@@ -442,7 +457,7 @@ void hw125_ready_rec(void)
 
 
 //=======================================================================================
-// Data functions 
+// Read functions 
 
 // TODO add remaining functions for FATFS requirements 
 
@@ -466,13 +481,14 @@ DISK_RESULT hw125_read(
     // Check the init status 
     if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
 
-    // TODO convert sector to byte address if not SDC V2 (byte address)? 
+    // Convert the sector number to byte address if it's not SDC V2 (byte address) 
+    if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
 
     // Select the slave device 
     spi2_slave_select(sd_card.ss_pin);
 
     // Determine the read operation 
-    if (count == HW125_SINGLE_BYTE)   // Send one byte if count == 1
+    if (count == HW125_SINGLE_BYTE)   // Read one data packet if count == 1
     {
         // Send CMD17 with an arg that specifies the address to start to read 
         hw125_send_cmd(HW125_CMD17, sector, HW125_CRC_CMDX, &do_resp);
@@ -489,7 +505,7 @@ DISK_RESULT hw125_read(
             read_resp = HW125_RES_ERROR;
         }
     }
-    else   // Send multiple bytes if count > 1
+    else   // Read multiple data packets if count > 1
     {
         // Send CMD18 with an arg that specifies the address to start a sequential read 
         hw125_send_cmd(HW125_CMD18, sector, HW125_CRC_CMDX, &do_resp);
@@ -535,7 +551,7 @@ DISK_RESULT hw125_read(
 }
 
 
-// 
+// HW125 read data packet 
 DISK_RESULT hw125_read_data_packet(
     uint8_t *buff,
     uint16_t sector_size)
@@ -544,17 +560,6 @@ DISK_RESULT hw125_read_data_packet(
     DISK_RESULT read_resp;
     uint8_t do_resp;
     uint8_t num_read = HW125_DT_RESP_COUNT; 
-
-    // The following is repeatedly called 'count' times. The data packets are 
-    // read a number of times equivalent to the sector size. When the min and max
-    // sector size are the same then the read and write functions can be 
-    // configured to that sector size. If the min and max are different then 
-    // the ioctl function will be used to read the sector size. The 
-    // controllerstech code sets the min and max to be different in CubeMX 
-    // and then manually defines the sector size to be 512 in the ioctl function
-    // which is also the sector size he uses for data packets. I'm not sure why 
-    // he defined a fixed sector size but specified different for min and max. 
-    // This will have to be tested if I want to learn more. 
 
     // Read the data token 
     do 
@@ -584,6 +589,11 @@ DISK_RESULT hw125_read_data_packet(
     return read_resp;
 }
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Write functions 
 
 // HW125 write 
 DISK_RESULT hw125_write(
@@ -592,15 +602,85 @@ DISK_RESULT hw125_write(
     uint32_t      sector,
     uint16_t      count)
 {
-    // Write a single block 
+    // Local variables 
+    DISK_RESULT write_resp; 
+    uint8_t do_resp; 
 
-    // Send CMD24 to write a single block to the card 
+    // Check that the drive number is zero 
+    if (pdrv) return HW125_RES_PARERR;
 
-    // Write multiple blocks 
+    // Check that the count is valid 
+    if (count == HW125_NO_BYTE) return HW125_RES_PARERR;
 
-    // Send CMD25 to write multiple blocks in sequence starting at a specified address
+    // Check the init status 
+    if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
+
+    // Convert the sector number to byte address if it's not SDC V2 (byte address) 
+    if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
+
+    // Select the slave device 
+    spi2_slave_select(sd_card.ss_pin);
+
+    // 
+    if (count ==  HW125_SINGLE_BYTE)  // Send one data packet if count == 1
+    {
+        // Send CMD24 with an arg that specifies the address to start to write 
+        hw125_send_cmd(HW125_CMD24, sector, HW125_CRC_CMDX, &do_resp);
+
+        // Check the R1 response 
+        if (do_resp == HW125_BEGIN_WRITE)
+        {
+            // TODO add the following functionality 
+
+            // Successfull CMD24 - proceed to send a data packet to the card 
+
+            // Must wait at least 1 byte before writing the data packet. 
+
+            // Packet frame is the same as read operations. Most cards cannot change the 
+            // write block size that is fixed to 512 bytes. 
+
+            // CRC field can have any fixed value unless the CRC is enabled 
+
+            // The card responds a data response byte immediately following the data 
+            // packet from the host. 
+
+            // A busy flag trails the data response and the host must suspend the next 
+            // command or data transmission until the card goes ready. 
+
+            // When waiting for the busy flag to clear, the SS pin can be deselcted to 
+            // allow other SPI devices to proceed if needed. 
+
+            // DO will be driven low when an internal process is still taking place. 
+            // Check if the card is busy prior to each CMD and data packet. 
+
+            // The internal write process is initiated a byte after the data response. 
+            // This means 8 SCLK clocks are required to initiate an internal write. This 
+            // process is irrespective of the SS pin status. 
+        }
+        else
+        {
+            // Unsuccessfull CMD24 
+            write_resp = HW125_RES_ERROR;
+        }
+    }
+    else  // Send multiple data packets if count > 1
+    {
+        // Send CMD25 with an arg that specifies the address to start to write 
+        hw125_send_cmd(HW125_CMD25, sector, HW125_CRC_CMDX, &do_resp);
+    }
+
+    // Deselect the slave device
+    spi2_slave_deselect(sd_card.ss_pin); 
+
+    // Return the write opration status 
+    return write_resp; 
 }
 
+//=======================================================================================
+
+
+//=======================================================================================
+// IO Control functions 
 
 // HW125 IO control 
 DISK_RESULT hw125_ioctl(
