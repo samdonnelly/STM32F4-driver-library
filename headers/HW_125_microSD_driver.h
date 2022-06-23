@@ -308,6 +308,20 @@ DISK_RESULT hw125_write(
 
 
 /**
+ * @brief HW125 write data packet 
+ * 
+ * @details 
+ * 
+ * @param buff 
+ * @param sector_size 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_write_data_packet(
+    const uint8_t *buff,
+    uint32_t sector_size);
+
+
+/**
  * @brief HW125 IO control 
  * 
  * @details This function is called to control device specific features and misc functions 

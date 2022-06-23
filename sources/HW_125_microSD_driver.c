@@ -89,7 +89,7 @@ void hw125_ready_rec(void);
  */
 DISK_RESULT hw125_read_data_packet(
     uint8_t *buff,
-    uint16_t sector_size);
+    uint32_t sector_size);
 
 //=======================================================================================
 
@@ -554,7 +554,7 @@ DISK_RESULT hw125_read(
 // HW125 read data packet 
 DISK_RESULT hw125_read_data_packet(
     uint8_t *buff,
-    uint16_t sector_size)
+    uint32_t sector_size)
 {
     // Local variables 
     DISK_RESULT read_resp;
@@ -621,7 +621,9 @@ DISK_RESULT hw125_write(
     // Select the slave device 
     spi2_slave_select(sd_card.ss_pin);
 
-    // 
+    // Wait until the card is no longer busy before sending a CMD 
+
+    // Determine the write operation 
     if (count ==  HW125_SINGLE_BYTE)  // Send one data packet if count == 1
     {
         // Send CMD24 with an arg that specifies the address to start to write 
@@ -635,6 +637,19 @@ DISK_RESULT hw125_write(
             // Successfull CMD24 - proceed to send a data packet to the card 
 
             // Must wait at least 1 byte before writing the data packet. 
+            // Wait until there is no internal process taking place? 
+
+            // Wait until the card is no longer busy before sending a CMD? 
+
+            // Send data token 
+
+            // Send data block 
+
+            // Send CRC 
+
+            // Read data response 
+
+            // Wait on busy flag to clear 
 
             // Packet frame is the same as read operations. Most cards cannot change the 
             // write block size that is fixed to 512 bytes. 
@@ -665,8 +680,29 @@ DISK_RESULT hw125_write(
     }
     else  // Send multiple data packets if count > 1
     {
+        // Can send a ACMD23 prior to CMD25 to specify the number of sectors to 
+        // pre-erase 
+
         // Send CMD25 with an arg that specifies the address to start to write 
         hw125_send_cmd(HW125_CMD25, sector, HW125_CRC_CMDX, &do_resp);
+
+        // Check the R1 response 
+        if (do_resp == HW125_BEGIN_WRITE)
+        {
+            // Successful CMD25 - start sequentially writing data blocks from start address
+
+            // The write transaction continues until it is terminated with a stop token 
+
+            // Must wait at least 1 byte between the CMD25 response and sending the first 
+            // data packet 
+
+            // The busy flag will be output after every data packet as well as the stop 
+            // token so you have to wait until the drive is no longer busy 
+        }
+        else
+        {
+            // Unsuccessfull CMD25 
+        }
     }
 
     // Deselect the slave device
