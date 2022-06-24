@@ -216,13 +216,13 @@ void spi2_slave_deselect(uint16_t slave_num)
 // SPI2 write 
 void spi2_write(
     uint8_t *write_data, 
-    uint16_t data_len)
+    uint32_t data_len)
 {
     // Local variables 
     uint16_t dummy_read; 
 
     // Iterate through all data to be sent 
-    for (uint16_t i = 0; i < data_len; i++)
+    for (uint32_t i = 0; i < data_len; i++)
     {
         spi2_txe_wait();          // Wait for TXE bit to set 
         SPI2->DR = *write_data;   // Write data to the data register 
@@ -261,7 +261,7 @@ void spi2_write(
 void spi2_write_read(
     uint8_t  write_data, 
     uint8_t *read_data, 
-    uint16_t data_len)
+    uint32_t data_len)
 {
     // Write the first piece of data 
     spi2_txe_wait();

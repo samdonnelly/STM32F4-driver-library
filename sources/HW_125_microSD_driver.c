@@ -91,6 +91,21 @@ DISK_RESULT hw125_read_data_packet(
     uint8_t *buff,
     uint32_t sector_size);
 
+
+/**
+ * @brief HW125 write data packet 
+ * 
+ * @details 
+ * 
+ * @param buff 
+ * @param sector_size 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_write_data_packet(
+    const uint8_t *buff,
+    uint32_t sector_size,
+    uint8_t data_token);
+
 //=======================================================================================
 
 
@@ -622,6 +637,7 @@ DISK_RESULT hw125_write(
     spi2_slave_select(sd_card.ss_pin);
 
     // Wait until the card is no longer busy before sending a CMD 
+    hw125_ready_rec();
 
     // Determine the write operation 
     if (count ==  HW125_SINGLE_BYTE)  // Send one data packet if count == 1
@@ -637,19 +653,7 @@ DISK_RESULT hw125_write(
             // Successfull CMD24 - proceed to send a data packet to the card 
 
             // Must wait at least 1 byte before writing the data packet. 
-            // Wait until there is no internal process taking place? 
-
-            // Wait until the card is no longer busy before sending a CMD? 
-
-            // Send data token 
-
-            // Send data block 
-
-            // Send CRC 
-
-            // Read data response 
-
-            // Wait on busy flag to clear 
+            // Wait until there is no internal process taking place?
 
             // Packet frame is the same as read operations. Most cards cannot change the 
             // write block size that is fixed to 512 bytes. 
@@ -671,6 +675,9 @@ DISK_RESULT hw125_write(
             // The internal write process is initiated a byte after the data response. 
             // This means 8 SCLK clocks are required to initiate an internal write. This 
             // process is irrespective of the SS pin status. 
+
+            // 
+            write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_TWO);
         }
         else
         {
@@ -698,17 +705,82 @@ DISK_RESULT hw125_write(
 
             // The busy flag will be output after every data packet as well as the stop 
             // token so you have to wait until the drive is no longer busy 
+
+            // 
+            uint8_t stop_token = HW125_DT_ONE; 
+            
+            // 
+            do 
+            {
+                write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_ZERO);
+                buff += HW125_SEC_SIZE; 
+            }
+            while(--count && (write_resp != HW125_RES_ERROR)); 
+
+            // Wait on busy flag to clear 
+            hw125_ready_rec();
+
+            // Send stop token 
+            spi2_write(&stop_token, HW125_SINGLE_BYTE);
         }
         else
         {
             // Unsuccessfull CMD25 
+            write_resp = HW125_RES_ERROR;
         }
     }
+
+    // Wait on busy flag to clear 
+    hw125_ready_rec();
 
     // Deselect the slave device
     spi2_slave_deselect(sd_card.ss_pin); 
 
     // Return the write opration status 
+    return write_resp; 
+}
+
+
+// 
+DISK_RESULT hw125_write_data_packet(
+    const uint8_t *buff,
+    uint32_t sector_size,
+    uint8_t data_token)
+{
+    // Local variables 
+    DISK_RESULT write_resp;
+    uint8_t do_resp; 
+    uint8_t crc = HW125_CRC_CMDX; 
+
+    // Wait until the card is no longer busy before sending a CMD? 
+    hw125_ready_rec();
+
+    // Send data token 
+    spi2_write(&data_token, HW125_SINGLE_BYTE);
+
+    // Send data block 
+    spi2_write(buff, sector_size); 
+
+    // Send CRC 
+    spi2_write(&crc, HW125_SINGLE_BYTE);
+    spi2_write(&crc, HW125_SINGLE_BYTE);
+
+    // Read data response 
+    spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+
+    // Check the data response 
+    if (do_resp == HW125_DR_ZERO)
+    {
+        // Data accepted 
+        write_resp = HW125_RES_OK;
+    }
+    else
+    {
+        // Data rejected 
+        write_resp = HW125_RES_ERROR; 
+    }
+
+    // Return the response 
     return write_resp; 
 }
 

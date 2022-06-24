@@ -128,7 +128,7 @@ typedef enum {
  * 
  */
 typedef enum {
-    HW125_CRC_CMDX = 1,
+    HW125_CRC_CMDX = 0x01,
     HW125_CRC_CMD8 = 0x87,
     HW125_CRC_CMD0 = 0x95
 } hw125_crc_cmd_t;
@@ -182,7 +182,7 @@ typedef enum {
  */
 typedef enum {
     HW125_DT_ZERO = 0xFC,    // Data token for CMD25 
-    HW125_DT_ONE  = 0xFD,    // Stop token for CMD25
+    HW125_DT_ONE  = 0xFD,    // Stop token for CMD25 
     HW125_DT_TWO  = 0xFE     // Data token for CMD17/18/24
 } hw125_data_token_t; 
 
@@ -194,9 +194,9 @@ typedef enum {
  * 
  */
 typedef enum {
-    HW125_DR_FILTER_ZERO = 0x05,   // Data accepted 
-    HW125_DR_FILTER_ONE  = 0x0B,   // Data rejected due to a CRC error 
-    HW125_DR_FILTER_TWO  = 0x0D    // Data rejected due to a write error 
+    HW125_DR_ZERO = 0x05,   // Data accepted 
+    HW125_DR_ONE  = 0x0B,   // Data rejected due to a CRC error 
+    HW125_DR_TWO  = 0x0D    // Data rejected due to a write error 
 } hw125_data_response_filter_t; 
 
 
@@ -305,20 +305,6 @@ DISK_RESULT hw125_write(
     const uint8_t *buff,
     uint32_t      sector,
     uint16_t      count);
-
-
-/**
- * @brief HW125 write data packet 
- * 
- * @details 
- * 
- * @param buff 
- * @param sector_size 
- * @return DISK_RESULT 
- */
-DISK_RESULT hw125_write_data_packet(
-    const uint8_t *buff,
-    uint32_t sector_size);
 
 
 /**

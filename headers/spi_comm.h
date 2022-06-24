@@ -233,7 +233,7 @@ void spi2_slave_deselect(uint16_t slave_num);
  */
 void spi2_write(
     uint8_t *write_data, 
-    uint16_t data_len);
+    uint32_t data_len);
 
 
 /**
@@ -250,6 +250,6 @@ void spi2_write(
 void spi2_write_read(
     uint8_t  write_data, 
     uint8_t *read_data, 
-    uint16_t data_len);
+    uint32_t data_len);
 
 //=======================================================================================
