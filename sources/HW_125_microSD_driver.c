@@ -784,6 +784,7 @@ DISK_RESULT hw125_ioctl(
     // Check that the drive number is zero 
     if (pdrv) return HW125_RES_PARERR;
 
+    // TODO this function does not need to be called after init has completed - move this 
     // Check the init status 
     if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
 
@@ -791,6 +792,8 @@ DISK_RESULT hw125_ioctl(
     switch(cmd)
     {
         case HW125_CMD_CTRL_SYNC:
+            // This is not not needed if the write operation is completed within the 
+            // disk_write function. 
             break; 
         case HW125_CMD_GET_SECTOR_COUNT:
             break; 
