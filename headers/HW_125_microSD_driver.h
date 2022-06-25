@@ -50,12 +50,7 @@
 
 // Command response values
 // TODO change all the following 0x00's to HW125_R1_READY
-#define HW125_R1_READY       0x00   // No 
-#define HW125_INIT_STATE     0x00   // SD card has initiated initialization 
-#define HW125_BEGIN_READ     0x00   // Successful CMD response to reading data 
-#define HW125_END_READ       0x00   // Successful CMD responde to terminating read operation
-#define HW125_BEGIN_WRITE    0x00   // Successful CMD response to writing data 
-#define HW125_END_WRITE      0x00   // 
+#define HW125_READY_STATE    0x00   // No 
 #define HW125_IDLE_STATE     0x01   // SD card is in the idle state 
 #define HW125_CCS_SET        0x40   // CCS bit location in OCR 
 #define HW125_CMD8_R7_RESP   0x1AA  // SDCV2 return value from CMD8 
@@ -217,6 +212,39 @@ typedef enum {
     HW125_ET_FILTER_OOR   = 0x08,    // Out of range 
     HW125_ET_FILTER_LOCK  = 0x10     // Card is locked 
 } hw125_error_token_t; 
+
+
+/**
+ * @brief HW125 IOCTL commands 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HW125_CMD_CTRL_SYNC,
+    HW125_CMD_GET_SECTOR_COUNT,
+    HW125_CMD_GET_SECTOR_SIZE,
+    HW125_CMD_GET_BLOCK_SIZE,
+    HW125_CMD_CTRL_TRIM,
+    HW125_CMD_CTRL_FORMAT,
+    HW125_CMD_CTRL_POWER_IDLE,
+    HW125_CMD_CTRL_POWER_OFF,
+    HW125_CMD_CTRL_LOCK,
+    HW125_CMD_CTRL_UNLOCK,
+    HW125_CMD_CTRL_EJECT, 
+    HW125_CMD_CTRL_GET_SMART, 
+    HW125_CMD_MMC_GET_TYPE, 
+    HW125_CMD_MMC_GET_CSD, 
+    HW125_CMD_MMC_GET_CID, 
+    HW125_CMD_MMC_GET_OCR, 
+    HW125_CMD_MMC_GET_SDSTAT, 
+    HW125_CMD_ATA_GET_REV, 
+    HW125_CMD_ATA_GET_MODEL, 
+    HW125_CMD_ATA_GET_SN, 
+    HW125_CMD_ISDIO_READ,
+    HW125_CMD_ISDIO_WRITE,
+    HW125_CMD_ISDIO_MRITE
+} hw125_cmd_ioctl_t; 
 
 //=======================================================================================
 

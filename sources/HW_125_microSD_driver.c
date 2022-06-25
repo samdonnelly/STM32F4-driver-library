@@ -200,7 +200,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
                 init_timer_status = hw125_initiate_init(HW125_CMD41, HW125_ARG_HCS, &do_resp);
 
                 // Check timeout
-                if (init_timer_status && (do_resp == HW125_INIT_STATE))
+                if (init_timer_status && (do_resp == HW125_READY_STATE))
                 {
                     // Initiate initialization begun - No init timer timeout 
 
@@ -243,7 +243,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
             init_timer_status = hw125_initiate_init(HW125_CMD41, HW125_ARG_NONE, &do_resp);
 
             // Check timeout and R1 response 
-            if (init_timer_status && (do_resp == HW125_INIT_STATE))
+            if (init_timer_status && (do_resp == HW125_READY_STATE))
             {
                 // Initiate initialization begun - No init timer timeout 
 
@@ -262,7 +262,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
                 init_timer_status = hw125_initiate_init(HW125_CMD1, HW125_ARG_NONE, &do_resp);
 
                 // Check timeout and R1 response 
-                if (init_timer_status && (do_resp == HW125_INIT_STATE))
+                if (init_timer_status && (do_resp == HW125_READY_STATE))
                 {
                     // Initiate initialization begun - No init timer timeout 
 
@@ -344,8 +344,7 @@ uint8_t hw125_initiate_init(
     // Local variables 
     uint16_t init_timer = HW125_INIT_TIMER;
 
-    // Send the initiate initialization command until an appropriate response is received
-    // Allow up to 1 second for the process before timing out 
+    // Send CMD1 or ACMD41 to initiate initialization 
     do
     {
         if (cmd == HW125_CMD1)
@@ -381,6 +380,11 @@ uint8_t hw125_initiate_init(
     }
  }
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Status functions 
 
  // HW125 disk status 
  DISK_STATUS hw125_status(uint8_t pdrv)
@@ -396,6 +400,23 @@ uint8_t hw125_initiate_init(
         return sd_card.disk_status;
     }
  }
+
+
+ // HW125 ready to receive commands 
+void hw125_ready_rec(void)
+{
+    // TODO create a timeout - what will happen if it times out? 
+
+    // Local variables 
+    uint8_t resp;
+
+    // Read DO continuously until it is ready to receive commands 
+    do 
+    {
+        spi2_write_read(HW125_DATA_HIGH, &resp, SPI_1_BYTE);
+    }
+    while(resp != HW125_DATA_HIGH);
+}
 
 //=======================================================================================
 
@@ -451,23 +472,6 @@ void hw125_send_cmd(
     while((*resp & HW125_R1_RESP_FILTER) && --num_read);
 }
 
-
-// HW125 ready to receive commands 
-void hw125_ready_rec(void)
-{
-    // TODO create a timeout - what will happen if it times out? 
-
-    // Local variables 
-    uint8_t resp;
-
-    // Read DO continuously until it is ready to receive commands 
-    do 
-    {
-        spi2_write_read(HW125_DATA_HIGH, &resp, SPI_1_BYTE);
-    }
-    while(resp != HW125_DATA_HIGH);
-}
-
 //=======================================================================================
 
 
@@ -509,9 +513,9 @@ DISK_RESULT hw125_read(
         hw125_send_cmd(HW125_CMD17, sector, HW125_CRC_CMDX, &do_resp);
 
         // Read the R1 response 
-        if (do_resp == HW125_BEGIN_READ)
+        if (do_resp == HW125_READY_STATE)
         {
-            // Read initiated 
+            // CMD17 successful - Read initiated 
             read_resp = hw125_read_data_packet(buff, HW125_SEC_SIZE);
         } 
         else
@@ -526,9 +530,9 @@ DISK_RESULT hw125_read(
         hw125_send_cmd(HW125_CMD18, sector, HW125_CRC_CMDX, &do_resp);
 
         // Read the R1 response 
-        if (do_resp == HW125_BEGIN_READ)
+        if (do_resp == HW125_READY_STATE)
         {
-            // Read initiated 
+            // CMD18 successfull - read initiated 
             do 
             {
                 read_resp = hw125_read_data_packet(buff, HW125_SEC_SIZE);
@@ -539,8 +543,9 @@ DISK_RESULT hw125_read(
             // Send CMD12 to terminate the read transaction 
             hw125_send_cmd(HW125_CMD12, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
 
-            if (do_resp != HW125_END_READ)
+            if (do_resp != HW125_READY_STATE)
             {
+                // CMD12 unsuccessfull 
                 read_resp = HW125_RES_ERROR;
             }
         }
@@ -549,11 +554,6 @@ DISK_RESULT hw125_read(
             // Unsuccessful CMD18 
             read_resp = HW125_RES_ERROR;
         }
-
-        // For MMC a CMD23 can be sent prior to CMD18 to specify the number of transfer blocks. 
-        // If this is the case then the read transaction is initiated as a pre-defined multiple
-        // block transfer (not open ended) and the read operation is terminated at the last 
-        // block trasnfer. 
     }
 
     // Deselect the slave device 
@@ -649,26 +649,9 @@ DISK_RESULT hw125_write(
         hw125_send_cmd(HW125_CMD24, sector, HW125_CRC_CMDX, &do_resp);
 
         // Check the R1 response 
-        if (do_resp == HW125_BEGIN_WRITE)
+        if (do_resp == HW125_READY_STATE)
         {
             // Successfull CMD24 - proceed to send a data packet to the card 
-
-            // Must wait at least 1 byte before writing the data packet. 
-            // Wait until there is no internal process taking place?
-            // Packet frame is the same as read operations. Most cards cannot change the 
-            // write block size that is fixed to 512 bytes. 
-            // CRC field can have any fixed value unless the CRC is enabled. 
-            // The card responds a data response byte immediately following the data 
-            // packet from the host. 
-            // A busy flag trails the data response and the host must suspend the next 
-            // command or data transmission until the card goes ready. 
-            // When waiting for the busy flag to clear, the SS pin can be deselcted to 
-            // allow other SPI devices to proceed if needed. 
-            // DO will be driven low when an internal process is still taking place. 
-            // Check if the card is busy prior to each CMD and data packet. 
-            // The internal write process is initiated a byte after the data response. 
-            // This means 8 SCLK clocks are required to initiate an internal write. This 
-            // process is irrespective of the SS pin status. 
 
             // Write initiated 
             write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_TWO);
@@ -686,27 +669,20 @@ DISK_RESULT hw125_write(
         hw125_send_cmd(HW125_CMD23, count, HW125_CRC_CMDX, &do_resp);
 
         // Check R1 response 
-        if (do_resp == HW125_R1_READY)
+        if (do_resp == HW125_READY_STATE)
         {
-            // ACDM23 successful 
-
-            // Send CMD25 with an arg that specifies the address to start to write 
+            // ACDM23 successful - send CMD25 that specifies the address to start to write 
             hw125_send_cmd(HW125_CMD25, sector, HW125_CRC_CMDX, &do_resp);
 
             // Check the R1 response 
-            if (do_resp == HW125_BEGIN_WRITE)
+            if (do_resp == HW125_READY_STATE)
             {
-                // Successful CMD25 - start sequentially writing data blocks from start address. 
-                // The write transaction continues until it is terminated with a stop token. 
-                // Must wait at least 1 byte between the CMD25 response and sending the first 
-                // data packet. 
-                // The busy flag will be output after every data packet as well as the stop 
-                // token so you have to wait until the drive is no longer busy. 
+                // CMD25 successful - write initiated
 
                 // Define the CMD25 stop token 
                 uint8_t stop_trans = HW125_DT_ONE; 
-                
-                // Write initiated 
+
+                // Write all the sectors or until there is an error 
                 do 
                 {
                     write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_ZERO);
@@ -744,7 +720,7 @@ DISK_RESULT hw125_write(
 }
 
 
-// 
+// HW125 write data packet 
 DISK_RESULT hw125_write_data_packet(
     const uint8_t *buff,
     uint32_t sector_size,
@@ -762,8 +738,8 @@ DISK_RESULT hw125_write_data_packet(
     spi2_write(&data_token, HW125_SINGLE_BYTE);
 
     // Send data block 
-    // TODO will buff (a const) work in the spi2_write function? 
-    spi2_write(buff, sector_size); 
+    // TODO make sure this case away from const doesn't cause issues 
+    spi2_write((uint8_t *)buff, sector_size); 
 
     // Send CRC 
     spi2_write(&crc, HW125_SINGLE_BYTE);
@@ -802,7 +778,70 @@ DISK_RESULT hw125_ioctl(
     uint8_t cmd, 
     void    *buff)
 {
+    // Local variables 
+    DISK_RESULT result; 
+
+    // Check that the drive number is zero 
+    if (pdrv) return HW125_RES_PARERR;
+
+    // Check the init status 
+    if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
+
     // 
+    switch(cmd)
+    {
+        case HW125_CMD_CTRL_SYNC:
+            break; 
+        case HW125_CMD_GET_SECTOR_COUNT:
+            break; 
+        case HW125_CMD_GET_SECTOR_SIZE:
+            break; 
+        case HW125_CMD_GET_BLOCK_SIZE:
+            break; 
+        case HW125_CMD_CTRL_TRIM:
+            break; 
+        case HW125_CMD_CTRL_FORMAT:
+            break; 
+        case HW125_CMD_CTRL_POWER_IDLE:
+            break; 
+        case HW125_CMD_CTRL_POWER_OFF:
+            break; 
+        case HW125_CMD_CTRL_LOCK:
+            break; 
+        case HW125_CMD_CTRL_UNLOCK:
+            break; 
+        case HW125_CMD_CTRL_EJECT:
+            break; 
+        case HW125_CMD_CTRL_GET_SMART:
+            break; 
+        case HW125_CMD_MMC_GET_TYPE:
+            break; 
+        case HW125_CMD_MMC_GET_CSD:
+            break; 
+        case HW125_CMD_MMC_GET_CID:
+            break; 
+        case HW125_CMD_MMC_GET_OCR:
+            break; 
+        case HW125_CMD_MMC_GET_SDSTAT:
+            break; 
+        case HW125_CMD_ATA_GET_REV:
+            break; 
+        case HW125_CMD_ATA_GET_MODEL:
+            break; 
+        case HW125_CMD_ATA_GET_SN:
+            break; 
+        case HW125_CMD_ISDIO_READ:
+            break; 
+        case HW125_CMD_ISDIO_WRITE:
+            break; 
+        case HW125_CMD_ISDIO_MRITE:
+            break; 
+        default:
+            break;
+    }
+
+    // Return the result
+    return result; 
 }
 
 //=======================================================================================
