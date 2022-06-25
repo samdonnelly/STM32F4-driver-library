@@ -630,6 +630,9 @@ DISK_RESULT hw125_write(
     // Check the init status 
     if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
 
+    // Check write protection 
+    if (sd_card.disk_status == HW125_STATUS_PROTECT) return HW125_RES_WRPRT; 
+
     // Convert the sector number to byte address if it's not SDC V2 (byte address) 
     if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
 
@@ -648,35 +651,26 @@ DISK_RESULT hw125_write(
         // Check the R1 response 
         if (do_resp == HW125_BEGIN_WRITE)
         {
-            // TODO add the following functionality 
-
             // Successfull CMD24 - proceed to send a data packet to the card 
 
             // Must wait at least 1 byte before writing the data packet. 
             // Wait until there is no internal process taking place?
-
             // Packet frame is the same as read operations. Most cards cannot change the 
             // write block size that is fixed to 512 bytes. 
-
-            // CRC field can have any fixed value unless the CRC is enabled 
-
+            // CRC field can have any fixed value unless the CRC is enabled. 
             // The card responds a data response byte immediately following the data 
             // packet from the host. 
-
             // A busy flag trails the data response and the host must suspend the next 
             // command or data transmission until the card goes ready. 
-
             // When waiting for the busy flag to clear, the SS pin can be deselcted to 
             // allow other SPI devices to proceed if needed. 
-
             // DO will be driven low when an internal process is still taking place. 
             // Check if the card is busy prior to each CMD and data packet. 
-
             // The internal write process is initiated a byte after the data response. 
             // This means 8 SCLK clocks are required to initiate an internal write. This 
             // process is irrespective of the SS pin status. 
 
-            // 
+            // Write initiated 
             write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_TWO);
         }
         else
@@ -687,45 +681,54 @@ DISK_RESULT hw125_write(
     }
     else  // Send multiple data packets if count > 1
     {
-        // Can send a ACMD23 prior to CMD25 to specify the number of sectors to 
-        // pre-erase 
+        // Specify the number of sectors to pre-erase to optimize write performance
+        hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+        hw125_send_cmd(HW125_CMD23, count, HW125_CRC_CMDX, &do_resp);
 
-        // Send CMD25 with an arg that specifies the address to start to write 
-        hw125_send_cmd(HW125_CMD25, sector, HW125_CRC_CMDX, &do_resp);
-
-        // Check the R1 response 
-        if (do_resp == HW125_BEGIN_WRITE)
+        // Check R1 response 
+        if (do_resp == HW125_R1_READY)
         {
-            // Successful CMD25 - start sequentially writing data blocks from start address
+            // ACDM23 successful 
 
-            // The write transaction continues until it is terminated with a stop token 
+            // Send CMD25 with an arg that specifies the address to start to write 
+            hw125_send_cmd(HW125_CMD25, sector, HW125_CRC_CMDX, &do_resp);
 
-            // Must wait at least 1 byte between the CMD25 response and sending the first 
-            // data packet 
-
-            // The busy flag will be output after every data packet as well as the stop 
-            // token so you have to wait until the drive is no longer busy 
-
-            // 
-            uint8_t stop_token = HW125_DT_ONE; 
-            
-            // 
-            do 
+            // Check the R1 response 
+            if (do_resp == HW125_BEGIN_WRITE)
             {
-                write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_ZERO);
-                buff += HW125_SEC_SIZE; 
+                // Successful CMD25 - start sequentially writing data blocks from start address. 
+                // The write transaction continues until it is terminated with a stop token. 
+                // Must wait at least 1 byte between the CMD25 response and sending the first 
+                // data packet. 
+                // The busy flag will be output after every data packet as well as the stop 
+                // token so you have to wait until the drive is no longer busy. 
+
+                // Define the CMD25 stop token 
+                uint8_t stop_trans = HW125_DT_ONE; 
+                
+                // Write initiated 
+                do 
+                {
+                    write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_ZERO);
+                    buff += HW125_SEC_SIZE; 
+                }
+                while(--count && (write_resp != HW125_RES_ERROR)); 
+
+                // Wait on busy flag to clear 
+                hw125_ready_rec();
+
+                // Send stop token 
+                spi2_write(&stop_trans, HW125_SINGLE_BYTE);
             }
-            while(--count && (write_resp != HW125_RES_ERROR)); 
-
-            // Wait on busy flag to clear 
-            hw125_ready_rec();
-
-            // Send stop token 
-            spi2_write(&stop_token, HW125_SINGLE_BYTE);
+            else
+            {
+                // Unsuccessfull CMD25 
+                write_resp = HW125_RES_ERROR;
+            }
         }
-        else
+        else 
         {
-            // Unsuccessfull CMD25 
+            // Unsuccessfull ACMD23 
             write_resp = HW125_RES_ERROR;
         }
     }
@@ -759,6 +762,7 @@ DISK_RESULT hw125_write_data_packet(
     spi2_write(&data_token, HW125_SINGLE_BYTE);
 
     // Send data block 
+    // TODO will buff (a const) work in the spi2_write function? 
     spi2_write(buff, sector_size); 
 
     // Send CRC 
@@ -769,7 +773,7 @@ DISK_RESULT hw125_write_data_packet(
     spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
 
     // Check the data response 
-    if (do_resp == HW125_DR_ZERO)
+    if ((do_resp & HW125_DR_FILTER) == HW125_DR_ZERO)
     {
         // Data accepted 
         write_resp = HW125_RES_OK;
@@ -779,6 +783,8 @@ DISK_RESULT hw125_write_data_packet(
         // Data rejected 
         write_resp = HW125_RES_ERROR; 
     }
+
+    // TODO clear the receive buffer? 
 
     // Return the response 
     return write_resp; 

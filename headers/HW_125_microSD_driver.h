@@ -46,8 +46,11 @@
 #define HW125_NO_BYTE          0       // 
 #define HW125_CRC_DISCARD      2       // 
 #define HW125_SEC_SIZE         512     // Min and max sector size of the card 
+#define HW125_DR_FILTER        0x1F    // 
 
 // Command response values
+// TODO change all the following 0x00's to HW125_R1_READY
+#define HW125_R1_READY       0x00   // No 
 #define HW125_INIT_STATE     0x00   // SD card has initiated initialization 
 #define HW125_BEGIN_READ     0x00   // Successful CMD response to reading data 
 #define HW125_END_READ       0x00   // Successful CMD responde to terminating read operation
