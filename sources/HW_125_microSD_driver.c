@@ -37,6 +37,25 @@ void hw125_power_on(uint16_t hw125_slave_pin);
 
 
 /**
+ * @brief HW125 Power Flag set to off 
+ * 
+ * @details 
+ * 
+ */
+void hw125_power_off(void);
+
+
+/**
+ * @brief HW125 Power Flag status 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t hw125_power_status(void);
+
+
+/**
  * @brief HW125 initiate initialization sequence
  * 
  * @details 
@@ -332,6 +351,16 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     {
         spi2_write(&di_cmd, SPI_1_BYTE);
     }
+
+    // Set the Power Flag status to on 
+    sd_card.pwr_flag = HW125_PWR_ON; 
+}
+
+
+// Set the Power Flag status to off 
+void hw125_power_off(void)
+{
+    sd_card.pwr_flag = HW125_PWR_OFF; 
 }
 
 
@@ -417,6 +446,14 @@ void hw125_ready_rec(void)
     }
     while(resp != HW125_DATA_HIGH);
 }
+
+
+// Return the Power Flag status 
+uint8_t hw125_power_status(void)
+{
+    return (uint8_t)(sd_card.pwr_flag); 
+}
+
 
 //=======================================================================================
 
@@ -780,66 +817,137 @@ DISK_RESULT hw125_ioctl(
 {
     // Local variables 
     DISK_RESULT result; 
+    uint8_t *param = buff;  // Cast the parameter and data buffer to a uint8_t where needed 
+    uint8_t do_resp; 
+    uint8_t csd[HW125_CSD_REG_LEN];  
 
     // Check that the drive number is zero 
     if (pdrv) return HW125_RES_PARERR;
 
-    // TODO this function does not need to be called after init has completed - move this 
     // Check the init status 
-    if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
+    if ((sd_card.disk_status == HW125_STATUS_NOINIT) && (cmd != HW125_CTRL_POWER)) 
+    {
+        return HW125_RES_NOTRDY;
+    }
 
     // 
     switch(cmd)
     {
-        case HW125_CMD_CTRL_SYNC:
+        case HW125_CTRL_SYNC:
             // This is not not needed if the write operation is completed within the 
-            // disk_write function. 
+            // disk_write function which it is. 
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_GET_SECTOR_COUNT:
+        
+        case HW125_GET_SECTOR_COUNT:
+            // Send CMD9 
+            hw125_send_cmd(HW125_CMD9, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+
+            // Check the response 
+            if (do_resp == HW125_CSD_V2)
+            {
+                // Read the CSD register data 
+                spi2_write_read(HW125_DATA_HIGH, csd, HW125_CSD_REG_LEN);
+            }
+            else 
+            {
+                // 
+            }
+
+            // Read the bytes that follow 
+
+            // Check the CSD version number 
+                // CSD version 2.0 --> SDC V2 
+                    // Read the "device size" --> bits 48-69 
+                // CSD Version X --> MMC and SDC V1 
+                    // Read the "device size" --> bits 62-73 
+
+            result = HW125_RES_OK; 
             break; 
-        case HW125_CMD_GET_SECTOR_SIZE:
+        
+        case HW125_GET_SECTOR_SIZE:  // Get the sector size 
+            *(uint16_t *)buff = (uint16_t)HW125_SEC_SIZE; 
+            result = HW125_RES_OK; 
             break; 
-        case HW125_CMD_GET_BLOCK_SIZE:
+        
+        case HW125_GET_BLOCK_SIZE:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_CTRL_TRIM:
+        
+        case HW125_CTRL_TRIM:
+            // Not needed 
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_CTRL_FORMAT:
+        
+        case HW125_CTRL_POWER:  // Get/set the power status 
+            result = HW125_RES_OK; 
+            
+            switch (*param)  // TODO why do we need a separate variable? 
+            {
+                case HW125_PWR_OFF:  // Turn the Power Flag off 
+                    hw125_power_off(); 
+                    break;
+                
+                case HW125_PWR_ON:  // Turn the Power Flag on 
+                    hw125_power_on(sd_card.ss_pin);
+                    break;
+                
+                case HW125_PWR_CHECK:  // Check the status of the Power Flag 
+                    *(param++) = hw125_power_status(); 
+                    break;
+                
+                default:  // Invalid request 
+                    result = HW125_RES_PARERR; 
+                    break; 
+            }
             break; 
-        case HW125_CMD_CTRL_POWER_IDLE:
+        
+        case HW125_CTRL_LOCK:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_CTRL_POWER_OFF:
+        
+        case HW125_CTRL_EJECT:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_CTRL_LOCK:
+        
+        case HW125_CTRL_FORMAT:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_CTRL_UNLOCK:
+        
+        case HW125_MMC_GET_TYPE:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_CTRL_EJECT:
+        
+        case HW125_MMC_GET_CSD:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_CTRL_GET_SMART:
+        
+        case HW125_MMC_GET_CID:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_MMC_GET_TYPE:
+        
+        case HW125_MMC_GET_OCR:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_MMC_GET_CSD:
+        
+        case HW125_MMC_GET_SDSTAT:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_MMC_GET_CID:
+        
+        case HW125_ATA_GET_REV:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_MMC_GET_OCR:
+        
+        case HW125_ATA_GET_MODEL:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_MMC_GET_SDSTAT:
+        
+        case HW125_ATA_GET_SN:
+            result = HW125_RES_PARERR; 
             break; 
-        case HW125_CMD_ATA_GET_REV:
-            break; 
-        case HW125_CMD_ATA_GET_MODEL:
-            break; 
-        case HW125_CMD_ATA_GET_SN:
-            break; 
-        case HW125_CMD_ISDIO_READ:
-            break; 
-        case HW125_CMD_ISDIO_WRITE:
-            break; 
-        case HW125_CMD_ISDIO_MRITE:
-            break; 
+        
         default:
+            result = HW125_RES_PARERR; 
             break;
     }
 
