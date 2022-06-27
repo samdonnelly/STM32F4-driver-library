@@ -56,7 +56,10 @@
 #define HW125_CCS_SET        0x40   // CCS bit location in OCR 
 #define HW125_CMD8_R7_RESP   0x1AA  // SDCV2 return value from CMD8 
 #define HW125_R1_RESP_FILTER 0x80   // Filter used to determine a valid R1 response 
+#define HW125_CSD_V1         0x00   // 
 #define HW125_CSD_V2         0x01   // 
+#define HW125_CSD_V3         0x02   // 
+#define HW125_CSD_FILTER     0x03   // 
 
 // Status 
 #define HW125_INIT_SUCCESS 0xFE  // Filter to clear the HW125_STATUS_NOINIT flag 

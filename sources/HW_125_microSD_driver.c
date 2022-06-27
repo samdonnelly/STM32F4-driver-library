@@ -819,7 +819,8 @@ DISK_RESULT hw125_ioctl(
     DISK_RESULT result; 
     uint8_t *param = buff;  // Cast the parameter and data buffer to a uint8_t where needed 
     uint8_t do_resp; 
-    uint8_t csd[HW125_CSD_REG_LEN];  
+    uint8_t csd[HW125_CSD_REG_LEN]; 
+    uint8_t csd_struc; 
 
     // Check that the drive number is zero 
     if (pdrv) return HW125_RES_PARERR;
@@ -839,30 +840,50 @@ DISK_RESULT hw125_ioctl(
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_GET_SECTOR_COUNT:
-            // Send CMD9 
+        case HW125_GET_SECTOR_COUNT:  // Get the size of the disk 
+            result = HW125_RES_OK; 
+
+            // Send CMD9 to read the CSD register 
             hw125_send_cmd(HW125_CMD9, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
 
-            // Check the response 
-            if (do_resp == HW125_CSD_V2)
+            // Check the R1 response 
+            if (do_resp == HW125_READY_STATE)
             {
                 // Read the CSD register data 
                 spi2_write_read(HW125_DATA_HIGH, csd, HW125_CSD_REG_LEN);
+
+                // Get the version number 
+                csd_struc = (csd[BYTE_0] >> SHIFT_6) & HW125_CSD_FILTER; 
+
+                // Check the version number to know which bits to read
+                switch (csd_struc) 
+                {
+                    case HW125_CSD_V1:
+                        // CSD Version == 1.0 --> MMC or SDC V1 
+                        // Read the "device size" --> bits 62-73 
+                        break;
+                    
+                    case HW125_CSD_V2:
+                        // CSD Version == 2.0 --> SDC V2 
+                        // Read the "device size" --> bits 48-69  
+                        break;
+                    
+                    case HW125_CSD_V3: 
+                        // CSD Version == 3.0 --> Currently unsupported 
+                        result = HW125_RES_PARERR; 
+                        break;
+                    
+                    default:  // Unknown 
+                        result = HW125_RES_ERROR;
+                        break;
+                }
             }
             else 
             {
-                // 
+                // Unsuccessfull CMD9 
+                result = HW125_RES_ERROR; 
             }
 
-            // Read the bytes that follow 
-
-            // Check the CSD version number 
-                // CSD version 2.0 --> SDC V2 
-                    // Read the "device size" --> bits 48-69 
-                // CSD Version X --> MMC and SDC V1 
-                    // Read the "device size" --> bits 62-73 
-
-            result = HW125_RES_OK; 
             break; 
         
         case HW125_GET_SECTOR_SIZE:  // Get the sector size 
