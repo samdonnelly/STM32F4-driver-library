@@ -125,6 +125,28 @@ DISK_RESULT hw125_write_data_packet(
     uint32_t sector_size,
     uint8_t data_token);
 
+
+/**
+ * @brief HW125 IO Control - Get Sector Count 
+ * 
+ * @details 
+ * 
+ * @param buff 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_ioctl_get_sector_count(void *buff);
+
+
+/**
+ * @brief HW125 IO Control - Control Power 
+ * 
+ * @details 
+ * 
+ * @param buff 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_ioctl_ctrl_pwr(void *buff);
+
 //=======================================================================================
 
 
@@ -838,54 +860,7 @@ DISK_RESULT hw125_ioctl(
             break; 
         
         case HW125_GET_SECTOR_COUNT:  // Get the size of the disk 
-            // Sector count variables 
-            uint8_t  csd[HW125_CSD_REG_LEN]; 
-            uint8_t  csd_struc; 
-            uint32_t device_size; 
-
-            // Send CMD9 to read the CSD register 
-            hw125_send_cmd(HW125_CMD9, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
-
-            // Check the R1 response 
-            if (do_resp == HW125_READY_STATE)
-            {
-                // Read the CSD register data 
-                spi2_write_read(HW125_DATA_HIGH, csd, HW125_CSD_REG_LEN);
-
-                // Get the version number 
-                csd_struc = (csd[BYTE_0] >> SHIFT_6) & HW125_CSD_FILTER; 
-
-                // Check the version number to know which bits to read 
-                switch (csd_struc) 
-                {
-                    case HW125_CSD_V1:
-                        // CSD Version == 1.0 --> MMC or SDC V1 
-                        // Read the "device size" --> bits 62-73 
-                        result = HW125_RES_OK; 
-                        break;
-                    
-                    case HW125_CSD_V2:
-                        // CSD Version == 2.0 --> SDC V2 
-                        // Read the "device size" --> bits 48-69 
-                        result = HW125_RES_OK; 
-                        break;
-                    
-                    case HW125_CSD_V3: 
-                        // CSD Version == 3.0 --> Currently unsupported 
-                        result = HW125_RES_PARERR; 
-                        break;
-                    
-                    default:  // Unknown 
-                        result = HW125_RES_ERROR;
-                        break;
-                }
-            }
-            else 
-            {
-                // Unsuccessfull CMD9 
-                result = HW125_RES_ERROR; 
-            }
-
+            result = hw125_ioctl_get_sector_count(buff); 
             break; 
         
         case HW125_GET_SECTOR_SIZE:  // Get the sector size 
@@ -903,30 +878,7 @@ DISK_RESULT hw125_ioctl(
             break; 
         
         case HW125_CTRL_POWER:  // Get/set the power status 
-            // Power status variables 
-            uint8_t *param = buff;  // Cast the parameter and data buffer to a uint8_t where needed 
-            
-            switch (*param)  // TODO why do we need a separate variable? 
-            {
-                case HW125_PWR_OFF:  // Turn the Power Flag off 
-                    hw125_power_off(); 
-                    result = HW125_RES_OK; 
-                    break;
-                
-                case HW125_PWR_ON:  // Turn the Power Flag on 
-                    hw125_power_on(sd_card.ss_pin);
-                    result = HW125_RES_OK; 
-                    break;
-                
-                case HW125_PWR_CHECK:  // Check the status of the Power Flag 
-                    *(param++) = hw125_power_status(); 
-                    result = HW125_RES_OK; 
-                    break;
-                
-                default:  // Invalid request 
-                    result = HW125_RES_PARERR; 
-                    break; 
-            }
+            result = hw125_ioctl_ctrl_pwr(buff); 
             break; 
         
         case HW125_CTRL_LOCK:
@@ -979,6 +931,108 @@ DISK_RESULT hw125_ioctl(
     }
 
     // Return the result
+    return result; 
+}
+
+
+// HW125 IO Control - Get Sector Count 
+DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
+{
+    // Sector count variables 
+    DISK_RESULT result; 
+    uint8_t do_resp; 
+    uint8_t csd[HW125_CSD_REG_LEN]; 
+    uint8_t csd_struc; 
+    uint8_t n; 
+    uint32_t c_size; 
+
+    // Send CMD9 to read the CSD register 
+    hw125_send_cmd(HW125_CMD9, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+
+    // Check the R1 response 
+    if (do_resp == HW125_READY_STATE)
+    {
+        // Read the CSD register data 
+        spi2_write_read(HW125_DATA_HIGH, csd, HW125_CSD_REG_LEN);
+
+        // Get the version number 
+        csd_struc = (csd[BYTE_0] >> SHIFT_6) & HW125_CSD_FILTER; 
+
+        // Check the version number to know which bits to read 
+        switch (csd_struc) 
+        {
+            case HW125_CSD_V1:
+                // CSD Version == 1.0 --> MMC or SDC V1 
+                // TODO 
+                n = HW125_MULT_PLUS_TWO; 
+                c_size = ((uint32_t)(csd[BYTE_8] & FILTER_2_MSB) >> SHIFT_6) +
+                         ((uint32_t) csd[BYTE_7] << SHIFT_2) + 
+                         ((uint32_t)(csd[BYTE_6] & FILTER_2_LSB) << SHIFT_10) + 
+                         HW125_LBA_PLUS_ONE; 
+                *(uint32_t *) buff = c_size << (n - HW125_MAGIC_SHIFT_V1); 
+                result = HW125_RES_OK; 
+                break;
+            
+            case HW125_CSD_V2: 
+                // CSD Version == 2.0 --> SDC V2 
+                c_size =  (uint32_t) csd[BYTE_9] + 
+                         ((uint32_t) csd[BYTE_8] << SHIFT_8) + 
+                         ((uint32_t)(csd[BYTE_7] & FILTER_6_LSB) << SHIFT_16) + 
+                         HW125_LBA_PLUS_ONE; 
+                *(uint32_t *) buff = c_size << HW125_MAGIC_SHIFT_V2;
+                result = HW125_RES_OK; 
+                break;
+            
+            case HW125_CSD_V3: 
+                // CSD Version == 3.0 --> Currently unsupported 
+                result = HW125_RES_PARERR; 
+                break;
+            
+            default:  // Unknown 
+                result = HW125_RES_ERROR;
+                break;
+        }
+    }
+    else 
+    {
+        // Unsuccessfull CMD9 
+        result = HW125_RES_ERROR; 
+    }
+
+    return result; 
+}
+
+
+// HW125 IO Control - Control Power 
+DISK_RESULT hw125_ioctl_ctrl_pwr(void *buff)
+{
+    // Local variables 
+    DISK_RESULT result; 
+    uint8_t do_resp; 
+    uint8_t *param = buff; 
+    
+    switch (*param) 
+    {
+        case HW125_PWR_OFF:  // Turn the Power Flag off 
+            hw125_power_off(); 
+            result = HW125_RES_OK; 
+            break;
+        
+        case HW125_PWR_ON:  // Turn the Power Flag on 
+            hw125_power_on(sd_card.ss_pin);
+            result = HW125_RES_OK; 
+            break;
+        
+        case HW125_PWR_CHECK:  // Check the status of the Power Flag 
+            *(param++) = hw125_power_status(); 
+            result = HW125_RES_OK; 
+            break;
+        
+        default:  // Invalid request 
+            result = HW125_RES_PARERR; 
+            break; 
+    }
+
     return result; 
 }
 

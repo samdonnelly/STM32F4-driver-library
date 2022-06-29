@@ -26,11 +26,31 @@
 // Data type 
 #define INT16_NUM_DIGITS 5
 
+
+// AND filters 
+#define FILTER_1_LSB 0x01
+#define FILTER_2_LSB 0x03
+#define FILTER_3_LSB 0x07
+#define FILTER_4_LSB 0x0F
+#define FILTER_5_LSB 0x1F
+#define FILTER_6_LSB 0x3F
+#define FILTER_7_LSB 0x7F
+
+#define FILTER_1_MSB 0x80
+#define FILTER_2_MSB 0xC0
+#define FILTER_3_MSB 0xE0
+#define FILTER_4_MSB 0xF0
+#define FILTER_5_MSB 0xF8
+#define FILTER_6_MSB 0xFC
+#define FILTER_7_MSB 0xFE
+
 //=======================================================================================
 
 
 //=======================================================================================
 // Enums 
+
+// TODO make these into macros if possible 
 
 /**
  * @brief True and False boolean for readability
@@ -183,7 +203,11 @@ typedef enum {
     BYTE_3,
     BYTE_4,
     BYTE_5,
-    BYTE_6
+    BYTE_6,
+    BYTE_7,
+    BYTE_8,
+    BYTE_9,
+    BYTE_10
 } byte_num_t;
 
 //=======================================================================================

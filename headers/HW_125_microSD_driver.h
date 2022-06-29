@@ -49,6 +49,12 @@
 #define HW125_DR_FILTER        0x1F    // 
 #define HW125_CSD_REG_LEN      16      // 
 
+// IO Control 
+#define HW125_LBA_PLUS_ONE     1       // 
+#define HW125_MULT_PLUS_TWO    2       // 
+#define HW125_MAGIC_SHIFT_V1   9       // Shift of unknown reasoning for CSD V1 cards 
+#define HW125_MAGIC_SHIFT_V2   10      // Shift of unknown reasoning for CSD V2 cards 
+
 // Command response values
 // TODO change all the following 0x00's to HW125_R1_READY
 #define HW125_READY_STATE    0x00   // No 
