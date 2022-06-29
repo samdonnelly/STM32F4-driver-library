@@ -817,10 +817,7 @@ DISK_RESULT hw125_ioctl(
 {
     // Local variables 
     DISK_RESULT result; 
-    uint8_t *param = buff;  // Cast the parameter and data buffer to a uint8_t where needed 
     uint8_t do_resp; 
-    uint8_t csd[HW125_CSD_REG_LEN]; 
-    uint8_t csd_struc; 
 
     // Check that the drive number is zero 
     if (pdrv) return HW125_RES_PARERR;
@@ -841,7 +838,10 @@ DISK_RESULT hw125_ioctl(
             break; 
         
         case HW125_GET_SECTOR_COUNT:  // Get the size of the disk 
-            result = HW125_RES_OK; 
+            // Sector count variables 
+            uint8_t  csd[HW125_CSD_REG_LEN]; 
+            uint8_t  csd_struc; 
+            uint32_t device_size; 
 
             // Send CMD9 to read the CSD register 
             hw125_send_cmd(HW125_CMD9, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
@@ -855,17 +855,19 @@ DISK_RESULT hw125_ioctl(
                 // Get the version number 
                 csd_struc = (csd[BYTE_0] >> SHIFT_6) & HW125_CSD_FILTER; 
 
-                // Check the version number to know which bits to read
+                // Check the version number to know which bits to read 
                 switch (csd_struc) 
                 {
                     case HW125_CSD_V1:
                         // CSD Version == 1.0 --> MMC or SDC V1 
                         // Read the "device size" --> bits 62-73 
+                        result = HW125_RES_OK; 
                         break;
                     
                     case HW125_CSD_V2:
                         // CSD Version == 2.0 --> SDC V2 
-                        // Read the "device size" --> bits 48-69  
+                        // Read the "device size" --> bits 48-69 
+                        result = HW125_RES_OK; 
                         break;
                     
                     case HW125_CSD_V3: 
@@ -901,20 +903,24 @@ DISK_RESULT hw125_ioctl(
             break; 
         
         case HW125_CTRL_POWER:  // Get/set the power status 
-            result = HW125_RES_OK; 
+            // Power status variables 
+            uint8_t *param = buff;  // Cast the parameter and data buffer to a uint8_t where needed 
             
             switch (*param)  // TODO why do we need a separate variable? 
             {
                 case HW125_PWR_OFF:  // Turn the Power Flag off 
                     hw125_power_off(); 
+                    result = HW125_RES_OK; 
                     break;
                 
                 case HW125_PWR_ON:  // Turn the Power Flag on 
                     hw125_power_on(sd_card.ss_pin);
+                    result = HW125_RES_OK; 
                     break;
                 
                 case HW125_PWR_CHECK:  // Check the status of the Power Flag 
                     *(param++) = hw125_power_status(); 
+                    result = HW125_RES_OK; 
                     break;
                 
                 default:  // Invalid request 
