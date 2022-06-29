@@ -24,7 +24,26 @@
 
 
 //=======================================================================================
-// Function prototypes 
+// Function Prototypes 
+
+//==============================================
+// Initialization functions 
+
+/**
+ * @brief HW125 initiate initialization sequence
+ * 
+ * @details 
+ * 
+ * @param cmd 
+ * @param arg 
+ * @param resp 
+ * @return uint8_t 
+ */
+uint8_t hw125_initiate_init(
+    uint8_t  cmd,
+    uint32_t arg,
+    uint8_t *resp);
+
 
 /**
  * @brief HW125 power on sequence
@@ -44,32 +63,11 @@ void hw125_power_on(uint16_t hw125_slave_pin);
  */
 void hw125_power_off(void);
 
-
-/**
- * @brief HW125 Power Flag status 
- * 
- * @details 
- * 
- * @return uint8_t 
- */
-uint8_t hw125_power_status(void);
+//==============================================
 
 
-/**
- * @brief HW125 initiate initialization sequence
- * 
- * @details 
- * 
- * @param cmd 
- * @param arg 
- * @param resp 
- * @return uint8_t 
- */
-uint8_t hw125_initiate_init(
-    uint8_t  cmd,
-    uint32_t arg,
-    uint8_t *resp);
-
+//==============================================
+// Command functions 
 
 /**
  * @brief HW125 send command messages and return response values 
@@ -86,6 +84,21 @@ void hw125_send_cmd(
     uint8_t  crc,
     uint8_t *resp);
 
+//==============================================
+
+
+//==============================================
+// Status functions 
+
+/**
+ * @brief HW125 Power Flag status 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t hw125_power_status(void);
+
 
 /**
  * @brief HW125 ready to receive commands 
@@ -95,6 +108,11 @@ void hw125_send_cmd(
  */
 void hw125_ready_rec(void);
 
+//==============================================
+
+
+//==============================================
+// Data functions 
 
 /**
  * @brief HW125 read data packet 
@@ -125,6 +143,11 @@ DISK_RESULT hw125_write_data_packet(
     uint32_t sector_size,
     uint8_t data_token);
 
+//==============================================
+
+
+//==============================================
+// IO Control functions 
 
 /**
  * @brief HW125 IO Control - Get Sector Count 
@@ -138,6 +161,17 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff);
 
 
 /**
+ * @brief HW125 IO Control - Get Sector Size 
+ * 
+ * @details 
+ * 
+ * @param buff 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_ioctl_get_sector_size(void *buff);
+
+
+/**
  * @brief HW125 IO Control - Control Power 
  * 
  * @details 
@@ -146,6 +180,8 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff);
  * @return DISK_RESULT 
  */
 DISK_RESULT hw125_ioctl_ctrl_pwr(void *buff);
+
+//==============================================
 
 //=======================================================================================
 
@@ -164,8 +200,6 @@ typedef struct {
     uint16_t ss_pin;
 } hw125_disk_info_t;
 
-// TODO figure out if the pwr_flag is needed 
-
 //=======================================================================================
 
 
@@ -181,7 +215,7 @@ static hw125_disk_info_t sd_card;
 // TODO add all functions to user_diskio.c functions for FATFS reference 
 
 //=======================================================================================
-// Initialization and status functions 
+// Initialization functions 
 
 // HW125 user initialization 
 void hw125_user_init(uint16_t hw125_slave_pin)
@@ -332,12 +366,13 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     // Deselect slave 
     spi2_slave_deselect(sd_card.ss_pin);
     
-    // Perform a write_read after deselecting the slave --> Why? 
+    // TODO Perform a write_read after deselecting the slave --> Why? 
 
     // Status check 
     if (sd_card.card_type == HW125_CT_UNKNOWN)
     {
-        // TODO Power off?
+        // TPower off the card 
+        hw125_power_off(); 
 
         // Set no init flag 
         sd_card.disk_status = HW125_STATUS_NOINIT;
@@ -864,16 +899,14 @@ DISK_RESULT hw125_ioctl(
             break; 
         
         case HW125_GET_SECTOR_SIZE:  // Get the sector size 
-            *(uint16_t *)buff = (uint16_t)HW125_SEC_SIZE; 
-            result = HW125_RES_OK; 
+            result = hw125_ioctl_get_sector_size(buff); 
             break; 
         
-        case HW125_GET_BLOCK_SIZE:
+        case HW125_GET_BLOCK_SIZE:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_CTRL_TRIM:
-            // Not needed 
+        case HW125_CTRL_TRIM:  // Not needed 
             result = HW125_RES_PARERR; 
             break; 
         
@@ -881,51 +914,51 @@ DISK_RESULT hw125_ioctl(
             result = hw125_ioctl_ctrl_pwr(buff); 
             break; 
         
-        case HW125_CTRL_LOCK:
+        case HW125_CTRL_LOCK:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_CTRL_EJECT:
+        case HW125_CTRL_EJECT:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_CTRL_FORMAT:
+        case HW125_CTRL_FORMAT:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_MMC_GET_TYPE:
+        case HW125_MMC_GET_TYPE:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_MMC_GET_CSD:
+        case HW125_MMC_GET_CSD:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_MMC_GET_CID:
+        case HW125_MMC_GET_CID:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_MMC_GET_OCR:
+        case HW125_MMC_GET_OCR:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_MMC_GET_SDSTAT:
+        case HW125_MMC_GET_SDSTAT:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_ATA_GET_REV:
+        case HW125_ATA_GET_REV:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_ATA_GET_MODEL:
+        case HW125_ATA_GET_MODEL:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_ATA_GET_SN:
+        case HW125_ATA_GET_SN:  // Currently unsupported 
             result = HW125_RES_PARERR; 
             break; 
         
-        default:
+        default:  // Unknown 
             result = HW125_RES_PARERR; 
             break;
     }
@@ -998,6 +1031,19 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
         // Unsuccessfull CMD9 
         result = HW125_RES_ERROR; 
     }
+
+    return result; 
+}
+
+
+// HW125 IO Control - Get Sector Size 
+DISK_RESULT hw125_ioctl_get_sector_size(void *buff)
+{
+    // Local variables 
+    uint8_t result; 
+
+    *(uint16_t *)buff = (uint16_t)HW125_SEC_SIZE; 
+    result = HW125_RES_OK; 
 
     return result; 
 }

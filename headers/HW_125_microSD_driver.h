@@ -270,7 +270,7 @@ typedef hw125_disk_results_t DISK_RESULT;
 
 
 //=======================================================================================
-// Initialization and status functions 
+// Initialization functions 
 
 /**
  * @brief HW125 user init 
@@ -295,6 +295,11 @@ void hw125_user_init(uint16_t hw125_slave_pin);
  */
 DISK_STATUS hw125_init(uint8_t pdrv);
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Status functions 
 
 /**
  * @brief HW125 disk status 
@@ -347,6 +352,11 @@ DISK_RESULT hw125_write(
     uint32_t      sector,
     uint16_t      count);
 
+//=======================================================================================
+
+
+//=======================================================================================
+// IO Control functions 
 
 /**
  * @brief HW125 IO control 
