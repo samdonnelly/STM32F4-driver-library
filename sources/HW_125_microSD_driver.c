@@ -181,6 +181,39 @@ DISK_RESULT hw125_ioctl_get_sector_size(void *buff);
  */
 DISK_RESULT hw125_ioctl_ctrl_pwr(void *buff);
 
+
+/**
+ * @brief HW125 IO Control - Get CSD Register 
+ * 
+ * @details 
+ * 
+ * @param buff 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_ioctl_get_csd(void *buff);
+
+
+/**
+ * @brief HW125 IO Control - Get CID Register 
+ * 
+ * @details 
+ * 
+ * @param buff 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_ioctl_get_cid(void *buff);
+
+
+/**
+ * @brief HW125 IO Control - Get OCR Register 
+ * 
+ * @details 
+ * 
+ * @param buff 
+ * @return DISK_RESULT 
+ */
+DISK_RESULT hw125_ioctl_get_ocr(void *buff);
+
 //==============================================
 
 //=======================================================================================
@@ -885,7 +918,10 @@ DISK_RESULT hw125_ioctl(
         return HW125_RES_NOTRDY;
     }
 
-    // 
+    // Select the slave card 
+    spi2_slave_select(sd_card.ss_pin); 
+
+    // Choose the misc function 
     switch(cmd)
     {
         case HW125_CTRL_SYNC:
@@ -930,16 +966,16 @@ DISK_RESULT hw125_ioctl(
             result = HW125_RES_PARERR; 
             break; 
         
-        case HW125_MMC_GET_CSD:  // Currently unsupported 
-            result = HW125_RES_PARERR; 
+        case HW125_MMC_GET_CSD:  // Read and the CSD register 
+            result = hw125_ioctl_get_csd(buff); 
             break; 
         
-        case HW125_MMC_GET_CID:  // Currently unsupported 
-            result = HW125_RES_PARERR; 
+        case HW125_MMC_GET_CID:  // Read the CID register 
+            result = hw125_ioctl_get_cid(buff); 
             break; 
         
-        case HW125_MMC_GET_OCR:  // Currently unsupported 
-            result = HW125_RES_PARERR; 
+        case HW125_MMC_GET_OCR:  // Read tje OCR register 
+            result = hw125_ioctl_get_ocr(buff); 
             break; 
         
         case HW125_MMC_GET_SDSTAT:  // Currently unsupported 
@@ -963,7 +999,9 @@ DISK_RESULT hw125_ioctl(
             break;
     }
 
-    // Return the result
+    // Deselect the slave card 
+    spi2_slave_deselect(sd_card.ss_pin); 
+
     return result; 
 }
 
@@ -996,13 +1034,18 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
         {
             case HW125_CSD_V1:
                 // CSD Version == 1.0 --> MMC or SDC V1 
-                // TODO 
-                n = HW125_MULT_PLUS_TWO; 
+                n =   ((uint32_t)csd[BYTE_5]  & FILTER_4_LSB) + 
+                    ((((uint32_t)csd[BYTE_10] & FILTER_1_MSB) >> SHIFT_7) + 
+                     (((uint32_t)csd[BYTE_9]  & FILTER_2_LSB) << SHIFT_1)) + 
+                    HW125_MULT_PLUS_TWO;
+
                 c_size = ((uint32_t)(csd[BYTE_8] & FILTER_2_MSB) >> SHIFT_6) +
                          ((uint32_t) csd[BYTE_7] << SHIFT_2) + 
                          ((uint32_t)(csd[BYTE_6] & FILTER_2_LSB) << SHIFT_10) + 
-                         HW125_LBA_PLUS_ONE; 
+                         HW125_LBA_PLUS_ONE;
+                 
                 *(uint32_t *) buff = c_size << (n - HW125_MAGIC_SHIFT_V1); 
+
                 result = HW125_RES_OK; 
                 break;
             
@@ -1012,7 +1055,9 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
                          ((uint32_t) csd[BYTE_8] << SHIFT_8) + 
                          ((uint32_t)(csd[BYTE_7] & FILTER_6_LSB) << SHIFT_16) + 
                          HW125_LBA_PLUS_ONE; 
+
                 *(uint32_t *) buff = c_size << HW125_MAGIC_SHIFT_V2;
+                
                 result = HW125_RES_OK; 
                 break;
             
@@ -1078,6 +1123,36 @@ DISK_RESULT hw125_ioctl_ctrl_pwr(void *buff)
             result = HW125_RES_PARERR; 
             break; 
     }
+
+    return result; 
+}
+
+
+// HW125 IO Control - Get CSD Register 
+DISK_RESULT hw125_ioctl_get_csd(void *buff)
+{
+    // Local variables 
+    DISK_RESULT result; 
+
+    return result; 
+}
+
+
+// HW125 IO Control - Get CID Register 
+DISK_RESULT hw125_ioctl_get_cid(void *buff)
+{
+    // Local variables 
+    DISK_RESULT result; 
+
+    return result; 
+}
+
+
+// HW125 IO Control - Get OCR Register 
+DISK_RESULT hw125_ioctl_get_ocr(void *buff)
+{
+    // Local variables 
+    DISK_RESULT result; 
 
     return result; 
 }
