@@ -245,8 +245,6 @@ static hw125_disk_info_t sd_card;
 //=======================================================================================
 
 
-// TODO add all functions to user_diskio.c functions for FATFS reference 
-
 //=======================================================================================
 // Initialization functions 
 
@@ -615,8 +613,6 @@ void hw125_send_cmd(
 //=======================================================================================
 // Read functions 
 
-// TODO add remaining functions for FATFS requirements 
-
 // HW125 read 
 DISK_RESULT hw125_read(
     uint8_t  pdrv, 
@@ -918,7 +914,6 @@ DISK_RESULT hw125_ioctl(
 {
     // Local variables 
     DISK_RESULT result; 
-    uint8_t do_resp; 
 
     // Check that the drive number is zero 
     if (pdrv) return HW125_RES_PARERR;
@@ -1115,7 +1110,6 @@ DISK_RESULT hw125_ioctl_ctrl_pwr(void *buff)
 {
     // Local variables 
     DISK_RESULT result; 
-    uint8_t do_resp; 
     uint8_t *param = buff; 
     
     switch (*param) 

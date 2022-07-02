@@ -57,7 +57,6 @@
 #define HW125_MAGIC_SHIFT_V2   10      // Shift of unknown reasoning for CSD V2 cards 
 
 // Command response values
-// TODO change all the following 0x00's to HW125_R1_READY
 #define HW125_READY_STATE    0x00   // No 
 #define HW125_IDLE_STATE     0x01   // SD card is in the idle state 
 #define HW125_CCS_SET        0x40   // CCS bit location in OCR 
@@ -239,23 +238,7 @@ typedef enum {
     HW125_DR_ZERO = 0x05,   // Data accepted 
     HW125_DR_ONE  = 0x0B,   // Data rejected due to a CRC error 
     HW125_DR_TWO  = 0x0D    // Data rejected due to a write error 
-} hw125_data_response_filter_t; 
-
-
-// TODO see if the error token enum is needed 
-/**
- * @brief HW125 error token filters 
- * 
- * @details 
- * 
- */
-typedef enum {
-    HW125_ET_FILTER_ERROR = 0x01,    // Error 
-    HW125_ET_FILTER_CC    = 0x02,    // CC error 
-    HW125_ET_FILTER_ECC   = 0x04,    // Card ECC failed 
-    HW125_ET_FILTER_OOR   = 0x08,    // Out of range 
-    HW125_ET_FILTER_LOCK  = 0x10     // Card is locked 
-} hw125_error_token_t; 
+} hw125_data_response_filter_t;  
 
 //=======================================================================================
 
