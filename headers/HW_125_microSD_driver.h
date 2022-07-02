@@ -44,7 +44,6 @@
 #define HW125_TRAIL_RESP_BYTES 4       // Number of bytes in an R3/R7 response after R1 
 #define HW125_SINGLE_BYTE      1       // 
 #define HW125_NO_BYTE          0       // 
-#define HW125_CRC_DISCARD      2       // 
 #define HW125_SEC_SIZE         512     // Min and max sector size of the card 
 #define HW125_DR_FILTER        0x1F    // 
 #define HW125_CSD_REG_LEN      16      // 

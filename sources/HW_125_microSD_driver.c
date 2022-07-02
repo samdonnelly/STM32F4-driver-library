@@ -51,8 +51,9 @@ uint8_t hw125_initiate_init(
  * @details 
  * 
  * @param hw125_slave_pin 
+ * @return uint8_t 
  */
-void hw125_power_on(uint16_t hw125_slave_pin);
+uint8_t hw125_power_on(uint16_t hw125_slave_pin);
 
 
 /**
@@ -272,45 +273,34 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     if (pdrv) return HW125_STATUS_NOINIT; 
 
     // Power on 
-    hw125_power_on(sd_card.ss_pin);
+    do_resp = hw125_power_on(sd_card.ss_pin);
 
     // Select the sd card slave 
     spi2_slave_select(sd_card.ss_pin);
 
-    // Send CMD0 with no arg and a valid CRC value 
-    hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
-
-    // Check the R1 response from CMD0 
+    // Check the R1 response from CMD0 send in hw125_power_on
     if (do_resp == HW125_IDLE_STATE)
     {
-        // Idle state 
-        
-        // Send CMD8 with arg = 0x000001AA and a valid CRC
+        // In idle state - Send CMD8 with arg = 0x000001AA and a valid CRC
         hw125_send_cmd(HW125_CMD8, HW125_ARG_SUPV, HW125_CRC_CMD8, &do_resp);
 
         // Check the R1 response from CMD8 
         if (do_resp == HW125_IDLE_STATE)
         {
-            // Idle state - 32 trailing bits incoming 
-
-            // Read trailing 32-bits 
+            // No command wrror - Read the trailing 32-bit R7 response 
             spi2_write_read(HW125_DATA_HIGH, v_range, HW125_TRAIL_RESP_BYTES);
 
             // Check lower 12-bits of R7 response (big endian format) 
             if ((uint16_t)((v_range[BYTE_2] << SHIFT_8) | (v_range[BYTE_3])) 
                 == HW125_CMD8_R7_RESP)
             {
-                // 0x1AA matched - voltage range 2.7-3.6V
-                
-                // Send ACMD41 with the HCS bit set in the arg 
+                // 0x1AA matched (SDCV2+) - Send ACMD41 with the HCS bit set in the arg 
                 init_timer_status = hw125_initiate_init(HW125_CMD41, HW125_ARG_HCS, &do_resp);
 
                 // Check timeout
                 if (init_timer_status && (do_resp == HW125_READY_STATE))
                 {
-                    // Initiate initialization begun - No init timer timeout 
-
-                    // Send CMD58 with no arg to check the OCR (trailing 32-bits)
+                    // Itialization begun - Send CMD58 to check the OCR (trailing 32-bits)
                     hw125_send_cmd(HW125_CMD58, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
 
                     if (do_resp == HW125_READY_STATE)
@@ -341,7 +331,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
                 }
                 else
                 {
-                    // Initiate initialization timer timeout 
+                    // Initialization timer timeout 
                     sd_card.card_type = HW125_CT_UNKNOWN;
                 }
             }
@@ -353,17 +343,13 @@ DISK_STATUS hw125_init(uint8_t pdrv)
         }
         else 
         {
-            // CMD8 rejected with illegal command error (0x05)
-
-            // Send ACMD41 with no arg 
+            // CMD8 rejected with illegal command error (0x05) - Send ACMD41 
             init_timer_status = hw125_initiate_init(HW125_CMD41, HW125_ARG_NONE, &do_resp);
 
             // Check timeout and R1 response 
             if (init_timer_status && (do_resp == HW125_READY_STATE))
             {
-                // Initiate initialization begun - No init timer timeout 
-
-                // SDC V1 
+                // Initialization begun - Card is SDC V1 
                 sd_card.card_type = HW125_CT_SDC1;
 
                 // Send CMD16 to change the block size to 512 bytes (for FAT)
@@ -372,17 +358,13 @@ DISK_STATUS hw125_init(uint8_t pdrv)
 
             else
             {
-                // Error or timeout 
-
-                // Send CMD1 with non arg 
+                // Error or timeout - Send CMD1 
                 init_timer_status = hw125_initiate_init(HW125_CMD1, HW125_ARG_NONE, &do_resp);
 
                 // Check timeout and R1 response 
                 if (init_timer_status && (do_resp == HW125_READY_STATE))
                 {
-                    // Initiate initialization begun - No init timer timeout 
-
-                    // MMC V3
+                    // Initialization begun - Card is MMC V3
                     sd_card.card_type = HW125_CT_MMC;
 
                     // Send CMD16 to change the block size to 512 bytes (for FAT)
@@ -390,7 +372,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
                 }
                 else
                 {
-                    // Initiate initialization timer timeout 
+                    // Initialization timer timeout 
                     sd_card.card_type = HW125_CT_UNKNOWN;
                 }
             }
@@ -412,7 +394,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     // Status check 
     if (sd_card.card_type == HW125_CT_UNKNOWN)
     {
-        // TPower off the card 
+        // Power off the card 
         hw125_power_off(); 
 
         // Set no init flag 
@@ -430,10 +412,14 @@ DISK_STATUS hw125_init(uint8_t pdrv)
 
 
 // HW125 power on sequence
-void hw125_power_on(uint16_t hw125_slave_pin)
+uint8_t hw125_power_on(uint16_t hw125_slave_pin)
 {
     // Local variables 
     uint8_t di_cmd; 
+    uint8_t do_resp; 
+
+    //=================================
+    // Power Sequence 
 
     // Wait 1ms to allow for voltage to reach above 2.2V
     tim9_delay_ms(HW125_POWER_ON_DELAY);
@@ -450,8 +436,29 @@ void hw125_power_on(uint16_t hw125_slave_pin)
         spi2_write(&di_cmd, SPI_1_BYTE);
     }
 
+    //=================================
+
+
+    //=================================
+    // Software reset - set to IDLE state 
+
+    // Select the SD card device 
+    spi2_slave_select(hw125_slave_pin);
+
+    // Send CMD0 with no arg and a valid CRC value 
+    hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
+
+    // Deselect the card device 
+    spi2_slave_deselect(hw125_slave_pin);
+
+    //=================================
+
+    // TODO send a data high byte? 
+
     // Set the Power Flag status to on 
     sd_card.pwr_flag = HW125_PWR_ON; 
+
+    return do_resp; 
 }
 
 
@@ -516,16 +523,14 @@ uint8_t hw125_initiate_init(
  // HW125 disk status 
  DISK_STATUS hw125_status(uint8_t pdrv)
  {
+    // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
     if (pdrv) 
     { 
-        // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
         return HW125_STATUS_NOINIT; 
     }
-    else 
-    {
-        // Return the existing disk status 
-        return sd_card.disk_status;
-    }
+    
+    // Return the existing disk status 
+    return sd_card.disk_status;
  }
 
 
@@ -549,7 +554,7 @@ void hw125_ready_rec(void)
 // Return the Power Flag status 
 uint8_t hw125_power_status(void)
 {
-    return (uint8_t)(sd_card.pwr_flag); 
+    return sd_card.pwr_flag; 
 }
 
 
@@ -722,8 +727,8 @@ DISK_RESULT hw125_read_data_packet(
         spi2_write_read(HW125_DATA_HIGH, buff, sector_size);
 
         // Discard the two CRC bytes 
-        // TODO is incrementing the do_resp address going to be ok? 
-        spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_CRC_DISCARD);
+        spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+        spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
 
         // Operation success 
         read_resp = HW125_RES_OK;
@@ -785,9 +790,7 @@ DISK_RESULT hw125_write(
         // Check the R1 response 
         if (do_resp == HW125_READY_STATE)
         {
-            // Successfull CMD24 - proceed to send a data packet to the card 
-
-            // Write initiated 
+            // Successfull CMD24 - Write data packet to card 
             write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_TWO);
         }
         else
@@ -865,7 +868,7 @@ DISK_RESULT hw125_write_data_packet(
     uint8_t do_resp; 
     uint8_t crc = HW125_CRC_CMDX; 
 
-    // Wait until the card is no longer busy before sending a CMD? 
+    // Wait until the card is no longer busy before sending a CMD 
     hw125_ready_rec();
 
     // Send data token 

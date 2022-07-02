@@ -125,6 +125,7 @@ uint8_t spi2_init(
             gpiob_init(PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
             spi2_slave_deselect(SPI2_SS_2);  // Deselect slave 
             // Case has no break so PB9 will also be initialized
+            // TODO check if no break statement works 
 
         case SPI2_1_SLAVE:  // Initialize PB9 as GPIO 
             gpiob_init(PIN_9, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
@@ -265,15 +266,13 @@ void spi2_write_read(
 {
     // Write the first piece of data 
     spi2_txe_wait();
-    SPI2->DR = write_data;
-    // write_data++; 
+    SPI2->DR = write_data; 
 
     // Iterate through all data to be sent and received
     for (uint16_t i = 0; i < data_len-1; i++)
     {
         spi2_txe_wait();          // Wait for TXE bit to set 
         SPI2->DR = write_data;    // Write data to the data register 
-        // write_data++;             // Increment to next piece of data 
 
         spi2_rxne_wait();         // Wait for the RXNE bit to set
         *read_data = SPI2->DR;    // Read data from the data register 
@@ -292,16 +291,5 @@ void spi2_write_read(
     // Wait for BSY to clear 
     spi2_bsy_wait();
 }
-
-
-//==============================================================
-// Receive sequence 
-//  - When data transfer is complete: 
-//    - The data in the shift register is transferred to the RX buffer and the RXNE 
-//      flag is set 
-//    - An interrupt is generated if the RXNEIE bit is set in the SPI_CR2 register. 
-//  - Data is received and stored into an internal RX buffer to be read. Read access to 
-//    the SPI_DR register returns the RX buffer value. 
-//==============================================================
 
 //=======================================================================================
