@@ -48,6 +48,7 @@
 #define HW125_SEC_SIZE         512     // Min and max sector size of the card 
 #define HW125_DR_FILTER        0x1F    // 
 #define HW125_CSD_REG_LEN      16      // 
+#define HW125_CID_REG_LEN      16      // 
 
 // IO Control 
 #define HW125_LBA_PLUS_ONE     1       // 

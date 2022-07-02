@@ -314,21 +314,31 @@ DISK_STATUS hw125_init(uint8_t pdrv)
 
                     // Send CMD58 with no arg to check the OCR (trailing 32-bits)
                     hw125_send_cmd(HW125_CMD58, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
-                    spi2_write_read(HW125_DATA_HIGH, ocr, HW125_TRAIL_RESP_BYTES);
 
-                    // Check CCS bit (bit 30) in OCR response (big endian format) 
-                    if (ocr[BYTE_0] & HW125_CCS_SET)
+                    if (do_resp == HW125_READY_STATE)
                     {
-                        // SDC V2 (block address)
-                        sd_card.card_type = HW125_CT_SDC2_BLOCK;
+                        // Successful CMD58 - proceed to read the OCR register 
+                        spi2_write_read(HW125_DATA_HIGH, ocr, HW125_TRAIL_RESP_BYTES);
+
+                        // Check CCS bit (bit 30) in OCR response (big endian format) 
+                        if (ocr[BYTE_0] & HW125_CCS_SET)
+                        {
+                            // SDC V2 (block address)
+                            sd_card.card_type = HW125_CT_SDC2_BLOCK;
+                        }
+                        else
+                        {
+                            // SDC V2 (byte address)
+                            sd_card.card_type = HW125_CT_SDC2_BYTE;
+
+                            // Send CMD16 to change the block size to 512 bytes (for FAT)
+                            hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
+                        }
                     }
                     else
                     {
-                        // SDC V2 (byte address)
-                        sd_card.card_type = HW125_CT_SDC2_BYTE;
-
-                        // Send CMD16 to change the block size to 512 bytes (for FAT)
-                        hw125_send_cmd(HW125_CMD16, HW125_ARG_BL512, HW125_CRC_CMDX, &do_resp);
+                        // Unsuccessful CMD58 
+                        sd_card.card_type = HW125_CT_UNKNOWN;
                     }
                 }
                 else
@@ -716,6 +726,7 @@ DISK_RESULT hw125_read_data_packet(
         spi2_write_read(HW125_DATA_HIGH, buff, sector_size);
 
         // Discard the two CRC bytes 
+        // TODO is incrementing the do_resp address going to be ok? 
         spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_CRC_DISCARD);
 
         // Operation success 
@@ -865,7 +876,7 @@ DISK_RESULT hw125_write_data_packet(
     spi2_write(&data_token, HW125_SINGLE_BYTE);
 
     // Send data block 
-    // TODO make sure this case away from const doesn't cause issues 
+    // TODO make sure this cast away from const doesn't cause issues 
     spi2_write((uint8_t *)buff, sector_size); 
 
     // Send CRC 
@@ -1002,6 +1013,8 @@ DISK_RESULT hw125_ioctl(
     // Deselect the slave card 
     spi2_slave_deselect(sd_card.ss_pin); 
 
+    // TODO read a byte? 
+
     return result; 
 }
 
@@ -1024,51 +1037,54 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
     if (do_resp == HW125_READY_STATE)
     {
         // Read the CSD register data 
-        spi2_write_read(HW125_DATA_HIGH, csd, HW125_CSD_REG_LEN);
+        result = hw125_read_data_packet(csd, HW125_CSD_REG_LEN); 
 
-        // Get the version number 
-        csd_struc = (csd[BYTE_0] >> SHIFT_6) & HW125_CSD_FILTER; 
-
-        // Check the version number to know which bits to read 
-        switch (csd_struc) 
+        if (result == HW125_RES_OK)
         {
-            case HW125_CSD_V1:
-                // CSD Version == 1.0 --> MMC or SDC V1 
-                n =   ((uint32_t)csd[BYTE_5]  & FILTER_4_LSB) + 
-                    ((((uint32_t)csd[BYTE_10] & FILTER_1_MSB) >> SHIFT_7) + 
-                     (((uint32_t)csd[BYTE_9]  & FILTER_2_LSB) << SHIFT_1)) + 
-                    HW125_MULT_PLUS_TWO;
+            // No issues reading the data packet - Get the version number 
+            csd_struc = (csd[BYTE_0] >> SHIFT_6) & HW125_CSD_FILTER; 
 
-                c_size = ((uint32_t)(csd[BYTE_8] & FILTER_2_MSB) >> SHIFT_6) +
-                         ((uint32_t) csd[BYTE_7] << SHIFT_2) + 
-                         ((uint32_t)(csd[BYTE_6] & FILTER_2_LSB) << SHIFT_10) + 
-                         HW125_LBA_PLUS_ONE;
-                 
-                *(uint32_t *) buff = c_size << (n - HW125_MAGIC_SHIFT_V1); 
+            // Check the version number to know which bits to read 
+            switch (csd_struc) 
+            {
+                case HW125_CSD_V1:
+                    // CSD Version == 1.0 --> MMC or SDC V1 
+                    n =   ((uint32_t)csd[BYTE_5]  & FILTER_4_LSB) + 
+                        ((((uint32_t)csd[BYTE_10] & FILTER_1_MSB) >> SHIFT_7) + 
+                        (((uint32_t)csd[BYTE_9]  & FILTER_2_LSB) << SHIFT_1)) + 
+                        HW125_MULT_PLUS_TWO;
 
-                result = HW125_RES_OK; 
-                break;
-            
-            case HW125_CSD_V2: 
-                // CSD Version == 2.0 --> SDC V2 
-                c_size =  (uint32_t) csd[BYTE_9] + 
-                         ((uint32_t) csd[BYTE_8] << SHIFT_8) + 
-                         ((uint32_t)(csd[BYTE_7] & FILTER_6_LSB) << SHIFT_16) + 
-                         HW125_LBA_PLUS_ONE; 
+                    c_size = ((uint32_t)(csd[BYTE_8] & FILTER_2_MSB) >> SHIFT_6) +
+                            ((uint32_t) csd[BYTE_7] << SHIFT_2) + 
+                            ((uint32_t)(csd[BYTE_6] & FILTER_2_LSB) << SHIFT_10) + 
+                            HW125_LBA_PLUS_ONE;
+                    
+                    *(uint32_t *) buff = c_size << (n - HW125_MAGIC_SHIFT_V1); 
 
-                *(uint32_t *) buff = c_size << HW125_MAGIC_SHIFT_V2;
+                    result = HW125_RES_OK; 
+                    break;
                 
-                result = HW125_RES_OK; 
-                break;
-            
-            case HW125_CSD_V3: 
-                // CSD Version == 3.0 --> Currently unsupported 
-                result = HW125_RES_PARERR; 
-                break;
-            
-            default:  // Unknown 
-                result = HW125_RES_ERROR;
-                break;
+                case HW125_CSD_V2: 
+                    // CSD Version == 2.0 --> SDC V2 
+                    c_size =  (uint32_t) csd[BYTE_9] + 
+                            ((uint32_t) csd[BYTE_8] << SHIFT_8) + 
+                            ((uint32_t)(csd[BYTE_7] & FILTER_6_LSB) << SHIFT_16) + 
+                            HW125_LBA_PLUS_ONE; 
+
+                    *(uint32_t *) buff = c_size << HW125_MAGIC_SHIFT_V2;
+                    
+                    result = HW125_RES_OK; 
+                    break;
+                
+                case HW125_CSD_V3: 
+                    // CSD Version == 3.0 --> Currently unsupported 
+                    result = HW125_RES_PARERR; 
+                    break;
+                
+                default:  // Unknown 
+                    result = HW125_RES_ERROR;
+                    break;
+            }
         }
     }
     else 
@@ -1133,6 +1149,24 @@ DISK_RESULT hw125_ioctl_get_csd(void *buff)
 {
     // Local variables 
     DISK_RESULT result; 
+    uint8_t do_resp; 
+    uint8_t *csd = buff; 
+
+    // Send CMD9 to read the CSD register 
+    hw125_send_cmd(HW125_CMD9, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp); 
+
+    // Check the R1 response 
+    if (do_resp == HW125_READY_STATE)
+    {
+        // Successful CMD9 - proceed to read the CSD register 
+        // TODO check to see if CMD9 returns a valid token 
+        result = hw125_read_data_packet(csd, HW125_CSD_REG_LEN); 
+    }
+    else
+    {
+        // Unsucessful CMD9 
+        result = HW125_RES_ERROR; 
+    }
 
     return result; 
 }
@@ -1143,6 +1177,23 @@ DISK_RESULT hw125_ioctl_get_cid(void *buff)
 {
     // Local variables 
     DISK_RESULT result; 
+    uint8_t do_resp; 
+    uint8_t *cid = buff; 
+
+    // Send CMD10 to read the CID register 
+    hw125_send_cmd(HW125_CMD10, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp); 
+
+    // Check the R1 response 
+    if (do_resp == HW125_READY_STATE)
+    {
+        // Successful CMD10 - proceed to read the CID register 
+        result = hw125_read_data_packet(cid, HW125_CID_REG_LEN); 
+    }
+    else
+    {
+        // Unsucessful CMD10 
+        result = HW125_RES_ERROR; 
+    }
 
     return result; 
 }
@@ -1153,6 +1204,23 @@ DISK_RESULT hw125_ioctl_get_ocr(void *buff)
 {
     // Local variables 
     DISK_RESULT result; 
+    uint8_t do_resp; 
+    uint8_t *ocr = buff; 
+
+    // Send CMD58 with no arg to check the OCR (trailing 32-bits)
+    hw125_send_cmd(HW125_CMD58, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+
+    if (do_resp == HW125_READY_STATE)
+    {
+        // Successful CMD58 - proceed to read the OCR register 
+        spi2_write_read(HW125_DATA_HIGH, ocr, HW125_TRAIL_RESP_BYTES);
+        result = HW125_RES_OK; 
+    }
+    else
+    {
+        // Unsuccessful CMD58 
+        result = HW125_RES_ERROR; 
+    }
 
     return result; 
 }
