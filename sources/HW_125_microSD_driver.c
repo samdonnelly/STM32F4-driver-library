@@ -19,6 +19,7 @@
 #include "HW_125_microSD_driver.h"
 #include "timers.h"
 #include "spi_comm.h"
+#include "uart_comm.h"
 
 //=======================================================================================
 
@@ -51,9 +52,8 @@ uint8_t hw125_initiate_init(
  * @details 
  * 
  * @param hw125_slave_pin 
- * @return uint8_t 
  */
-uint8_t hw125_power_on(uint16_t hw125_slave_pin);
+void hw125_power_on(uint16_t hw125_slave_pin);
 
 
 /**
@@ -273,10 +273,13 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     if (pdrv) return HW125_STATUS_NOINIT; 
 
     // Power on 
-    do_resp = hw125_power_on(sd_card.ss_pin);
+    hw125_power_on(sd_card.ss_pin);
 
     // Select the sd card slave 
     spi2_slave_select(sd_card.ss_pin);
+
+    // Send CMD0 with no arg and a valid CRC value 
+    hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
 
     // Check the R1 response from CMD0 send in hw125_power_on
     if (do_resp == HW125_IDLE_STATE)
@@ -412,7 +415,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
 
 
 // HW125 power on sequence
-uint8_t hw125_power_on(uint16_t hw125_slave_pin)
+void hw125_power_on(uint16_t hw125_slave_pin)
 {
     // Local variables 
     uint8_t di_cmd; 
@@ -442,14 +445,45 @@ uint8_t hw125_power_on(uint16_t hw125_slave_pin)
     //=================================
     // Software reset - set to IDLE state 
 
-    // Select the SD card device 
-    spi2_slave_select(hw125_slave_pin);
+    // // Select the SD card device 
+    // spi2_slave_select(hw125_slave_pin);
 
-    // Send CMD0 with no arg and a valid CRC value 
-    hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
+    // // Send CMD0 with no arg and a valid CRC value 
+    // hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
 
-    // Deselect the card device 
-    spi2_slave_deselect(hw125_slave_pin);
+    // // Deselect the card device 
+    // spi2_slave_deselect(hw125_slave_pin);
+
+    // Local variables 
+    uint8_t cmd_frame[SPI_6_BYTES];
+    uint8_t num_read = HW125_R1_RESP_COUNT;
+
+    // Generate a command frame 
+    for (uint8_t i = 0; i < SPI_6_BYTES; i++)
+    {
+        switch (i)
+        {
+            case BYTE_0:
+                cmd_frame[i] = HW125_CMD0;
+                break;
+            case BYTE_5:
+                 cmd_frame[i] = HW125_CRC_CMD0;
+                break;
+            default:
+                cmd_frame[i] = (uint8_t)(HW125_ARG_NONE >> SHIFT_8*(BYTE_4 - i));
+                break;
+        }
+    }
+
+    // Transmit command 
+    spi2_write(cmd_frame, SPI_6_BYTES);
+
+    // Read R1 response until it is valid or until it times out 
+    do 
+    {
+        spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+    }
+    while((do_resp & HW125_R1_RESP_FILTER) && --num_read);
 
     //=================================
 
@@ -457,8 +491,6 @@ uint8_t hw125_power_on(uint16_t hw125_slave_pin)
 
     // Set the Power Flag status to on 
     sd_card.pwr_flag = HW125_PWR_ON; 
-
-    return do_resp; 
 }
 
 
