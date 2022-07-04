@@ -456,7 +456,11 @@ void hw125_power_on(uint16_t hw125_slave_pin)
 
     // Local variables 
     uint8_t cmd_frame[SPI_6_BYTES];
-    uint8_t num_read = HW125_R1_RESP_COUNT;
+    // uint8_t num_read = HW125_R1_RESP_COUNT;
+    uint16_t num_read = 0x1FFF;
+
+    // Slave select 
+    spi2_slave_select(hw125_slave_pin); 
 
     // Generate a command frame 
     for (uint8_t i = 0; i < SPI_6_BYTES; i++)
@@ -483,9 +487,12 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     {
         spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
     }
-    while((do_resp & HW125_R1_RESP_FILTER) && --num_read);
+    while((do_resp != 0x01) && --num_read);
 
     //=================================
+
+    // Slave select 
+    spi2_slave_deselect(hw125_slave_pin); 
 
     // TODO send a data high byte? 
 
@@ -660,6 +667,7 @@ DISK_RESULT hw125_read(
     // Local variables 
     DISK_RESULT read_resp;
     uint8_t do_resp;
+    volatile uint8_t path; 
 
     // Check that the drive number is zero 
     if (pdrv) return HW125_RES_PARERR;
@@ -687,11 +695,13 @@ DISK_RESULT hw125_read(
         {
             // CMD17 successful - Read initiated 
             read_resp = hw125_read_data_packet(buff, HW125_SEC_SIZE);
+            path = 1; 
         } 
         else
         {
             // Unsuccessful CMD17 
             read_resp = HW125_RES_ERROR;
+            path = 2; 
         }
     }
     else   // Read multiple data packets if count > 1
@@ -744,14 +754,17 @@ DISK_RESULT hw125_read_data_packet(
     // Local variables 
     DISK_RESULT read_resp;
     uint8_t do_resp;
-    uint8_t num_read = HW125_DT_RESP_COUNT; 
+    // uint8_t num_read = HW125_DT_RESP_COUNT;
+    volatile uint32_t num_read = 0; 
 
     // Read the data token 
     do 
     {
         spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+        num_read++; 
     }
-    while((do_resp != HW125_DT_TWO) && --num_read);
+    // while((do_resp != HW125_DT_TWO) && --num_read);
+    while((do_resp != HW125_DT_TWO));
 
     if (do_resp == HW125_DT_TWO)
     {
@@ -834,6 +847,7 @@ DISK_RESULT hw125_write(
     else  // Send multiple data packets if count > 1
     {
         // Specify the number of sectors to pre-erase to optimize write performance
+        // TODO only for SDC V1? 
         hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
         hw125_send_cmd(HW125_CMD23, count, HW125_CRC_CMDX, &do_resp);
 
