@@ -35,7 +35,7 @@
 #define HW125_INIT_TIMER     1000  // Initiate initialization counter 
 #define HW125_INIT_DELAY     1     // time delay in ms for initiate initialization sequence
 #define HW125_POWER_ON_TIMER 10    // Power on sequence counter 
-#define HW125_POWER_ON_DELAY 1     // time delay in ms for power on sequence
+#define HW125_POWER_ON_DELAY 10    // time delay in ms for power on sequence
 #define HW125_R1_RESP_COUNT  10    // Max num of times to read R1 until appropriate response
 #define HW125_DT_RESP_COUNT  10    // Max number of times to check the data token 
 
