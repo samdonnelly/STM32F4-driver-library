@@ -29,6 +29,16 @@
 // - figure out inputs to f_mkfs() 
 //=======================================================================================
 
+// 
+extern volatile uint8_t fail_state; 
+extern volatile uint8_t init_calls; 
+extern volatile uint8_t inin_calls; 
+extern volatile uint8_t pwon_calls; 
+extern volatile uint8_t scmd_calls; 
+extern volatile uint8_t read_calls; 
+extern volatile uint8_t rdpa_calls; 
+extern volatile uint8_t writ_calls; 
+extern volatile uint8_t wdpc_calls; 
 
 //=======================================================================================
 // Function Prototypes 
@@ -275,8 +285,14 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     uint8_t ocr[HW125_TRAIL_RESP_BYTES];
     uint8_t v_range[HW125_TRAIL_RESP_BYTES];
 
+    init_calls++; 
+
     // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
-    if (pdrv) return HW125_STATUS_NOINIT; 
+    if (pdrv) 
+    {
+        fail_state = 0; 
+        return HW125_STATUS_NOINIT; 
+    }
 
     // Power on 
     hw125_power_on(sd_card.ss_pin);
@@ -335,18 +351,21 @@ DISK_STATUS hw125_init(uint8_t pdrv)
                     else
                     {
                         // Unsuccessful CMD58 
+                        fail_state = 1; 
                         sd_card.card_type = HW125_CT_UNKNOWN;
                     }
                 }
                 else
                 {
                     // Initialization timer timeout 
+                    fail_state = 2; 
                     sd_card.card_type = HW125_CT_UNKNOWN;
                 }
             }
             else 
             {
                 // 0x1AA mismatched 
+                fail_state = 3; 
                 sd_card.card_type = HW125_CT_UNKNOWN;
             }
         }
@@ -382,6 +401,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
                 else
                 {
                     // Initialization timer timeout 
+                    fail_state = 4; 
                     sd_card.card_type = HW125_CT_UNKNOWN;
                 }
             }
@@ -390,6 +410,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     else
     {
         // Not in idle state
+        fail_state = 5; 
         sd_card.card_type = HW125_CT_UNKNOWN;
 
         // TODO add timer in spi read function that will return an error if it times out
@@ -399,6 +420,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     spi2_slave_deselect(sd_card.ss_pin);
     
     // TODO Perform a write_read after deselecting the slave --> Why? 
+    spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE); 
 
     // Status check 
     if (sd_card.card_type == HW125_CT_UNKNOWN)
@@ -426,6 +448,8 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     // Local variables 
     uint8_t di_cmd; 
     uint8_t do_resp; 
+
+    pwon_calls++; 
 
     //=================================
     // Power Sequence 
@@ -496,12 +520,15 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     }
     while((do_resp != 0x01) && --num_read);
 
+    if (num_read == 0) fail_state = 6; // Sometimes this fails 
+
     //=================================
 
     // Slave select 
     spi2_slave_deselect(hw125_slave_pin); 
 
     // TODO send a data high byte? 
+    spi2_write(&di_cmd, SPI_1_BYTE);
 
     // Set the Power Flag status to on 
     sd_card.pwr_flag = HW125_PWR_ON; 
@@ -523,6 +550,8 @@ uint8_t hw125_initiate_init(
  {
     // Local variables 
     uint16_t init_timer = HW125_INIT_TIMER;
+
+    inin_calls++; 
 
     // Send CMD1 or ACMD41 to initiate initialization 
     do
@@ -624,6 +653,8 @@ void hw125_send_cmd(
     uint8_t cmd_frame[SPI_6_BYTES];
     uint8_t num_read = HW125_R1_RESP_COUNT;
 
+    scmd_calls++; 
+
     // Wait until the device is ready to accept commands 
     hw125_ready_rec();
 
@@ -656,6 +687,8 @@ void hw125_send_cmd(
         spi2_write_read(HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
     }
     while((*resp & HW125_R1_RESP_FILTER) && --num_read);
+
+    if(num_read == 0) fail_state = 7; 
 }
 
 //=======================================================================================
@@ -675,14 +708,28 @@ DISK_RESULT hw125_read(
     DISK_RESULT read_resp;
     uint8_t do_resp;
 
+    read_calls++; 
+
     // Check that the drive number is zero 
-    if (pdrv) return HW125_RES_PARERR;
+    if (pdrv) 
+    {
+        fail_state = 8; 
+        return HW125_RES_PARERR;
+    }
     
     // Check that the count is valid 
-    if (count == HW125_NO_BYTE) return HW125_RES_PARERR;
+    if (count == HW125_NO_BYTE) 
+    {
+        fail_state = 9; 
+        return HW125_RES_PARERR;
+    }
 
     // Check the init status 
-    if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
+    if (sd_card.disk_status == HW125_STATUS_NOINIT) 
+    {
+        fail_state = 10; 
+        return HW125_RES_NOTRDY;
+    }
 
     // Convert the sector number to byte address if it's not SDC V2 (byte address) 
     if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
@@ -705,6 +752,7 @@ DISK_RESULT hw125_read(
         else
         {
             // Unsuccessful CMD17 
+            fail_state = 11; 
             read_resp = HW125_RES_ERROR;
         }
     }
@@ -724,18 +772,22 @@ DISK_RESULT hw125_read(
             }
             while (--count && (read_resp != HW125_RES_ERROR));
 
+            if (read_resp == HW125_RES_ERROR) fail_state = 12; 
+
             // Send CMD12 to terminate the read transaction 
             hw125_send_cmd(HW125_CMD12, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
 
             if (do_resp != HW125_READY_STATE)
             {
                 // CMD12 unsuccessfull 
+                fail_state = 13; 
                 read_resp = HW125_RES_ERROR;
             }
         }
         else
         {
-            // Unsuccessful CMD18 
+            // Unsuccessful CMD18
+            fail_state = 14;  
             read_resp = HW125_RES_ERROR;
         }
     }
@@ -744,6 +796,7 @@ DISK_RESULT hw125_read(
     spi2_slave_deselect(sd_card.ss_pin);
 
     // TODO dummy read? 
+    spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE); 
 
     // Return the result 
     return read_resp;
@@ -761,6 +814,8 @@ DISK_RESULT hw125_read_data_packet(
     // uint8_t num_read = HW125_DT_RESP_COUNT;
     volatile uint32_t num_read = 0; 
     // TODO create and use a real-time timer here 
+
+    rdpa_calls++; 
 
     // Read the data token 
     do 
@@ -786,6 +841,7 @@ DISK_RESULT hw125_read_data_packet(
     else
     {
         // Incorrect or error token received 
+        fail_state = 15; 
         read_resp = HW125_RES_ERROR;
     }
 
@@ -808,19 +864,37 @@ DISK_RESULT hw125_write(
 {
     // Local variables 
     DISK_RESULT write_resp; 
-    uint8_t do_resp; 
+    uint8_t do_resp;
+
+    writ_calls++; 
 
     // Check that the drive number is zero 
-    if (pdrv) return HW125_RES_PARERR;
+    if (pdrv) 
+    {
+        fail_state = 16; 
+        return HW125_RES_PARERR;
+    }
 
     // Check that the count is valid 
-    if (count == HW125_NO_BYTE) return HW125_RES_PARERR;
+    if (count == HW125_NO_BYTE) 
+    {
+        fail_state = 17; 
+        return HW125_RES_PARERR;
+    }
 
     // Check the init status 
-    if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
+    if (sd_card.disk_status == HW125_STATUS_NOINIT) 
+    {
+        fail_state = 18; 
+        return HW125_RES_NOTRDY;
+    }
 
     // Check write protection 
-    if (sd_card.disk_status == HW125_STATUS_PROTECT) return HW125_RES_WRPRT; 
+    if (sd_card.disk_status == HW125_STATUS_PROTECT) 
+    {
+        fail_state = 19; 
+        return HW125_RES_WRPRT; 
+    }
 
     // Convert the sector number to byte address if it's not SDC V2 (byte address) 
     if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
@@ -846,6 +920,7 @@ DISK_RESULT hw125_write(
         else
         {
             // Unsuccessfull CMD24 
+            fail_state = 20; 
             write_resp = HW125_RES_ERROR;
         }
     }
@@ -853,8 +928,8 @@ DISK_RESULT hw125_write(
     {
         // Specify the number of sectors to pre-erase to optimize write performance
         // TODO only for SDC V1? 
-        hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
-        hw125_send_cmd(HW125_CMD23, count, HW125_CRC_CMDX, &do_resp);
+        // hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+        // hw125_send_cmd(HW125_CMD23, count, HW125_CRC_CMDX, &do_resp);
 
         // Check R1 response 
         if (do_resp == HW125_READY_STATE)
@@ -878,6 +953,8 @@ DISK_RESULT hw125_write(
                 }
                 while(--count && (write_resp != HW125_RES_ERROR)); 
 
+                if (write_resp == HW125_RES_ERROR) fail_state = 21; 
+
                 // Wait on busy flag to clear 
                 hw125_ready_rec();
 
@@ -887,12 +964,14 @@ DISK_RESULT hw125_write(
             else
             {
                 // Unsuccessfull CMD25 
+                fail_state = 22; 
                 write_resp = HW125_RES_ERROR;
             }
         }
         else 
         {
             // Unsuccessfull ACMD23 
+            fail_state = 23; 
             write_resp = HW125_RES_ERROR;
         }
     }
@@ -918,6 +997,8 @@ DISK_RESULT hw125_write_data_packet(
     DISK_RESULT write_resp;
     uint8_t do_resp; 
     uint8_t crc = HW125_CRC_CMDX; 
+
+    wdpc_calls++; 
 
     // Wait until the card is no longer busy before sending a CMD 
     hw125_ready_rec();
@@ -945,6 +1026,7 @@ DISK_RESULT hw125_write_data_packet(
     else
     {
         // Data rejected 
+        fail_state = 24; 
         write_resp = HW125_RES_ERROR; 
     }
 
@@ -970,11 +1052,16 @@ DISK_RESULT hw125_ioctl(
     DISK_RESULT result; 
 
     // Check that the drive number is zero 
-    if (pdrv) return HW125_RES_PARERR;
+    if (pdrv) 
+    {
+        fail_state = 25; 
+        return HW125_RES_PARERR;
+    }
 
     // Check the init status 
     if ((sd_card.disk_status == HW125_STATUS_NOINIT) && (cmd != HW125_CTRL_POWER)) 
     {
+        fail_state = 26; 
         return HW125_RES_NOTRDY;
     }
 
@@ -1139,6 +1226,7 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
     else 
     {
         // Unsuccessfull CMD9 
+        fail_state = 27; 
         result = HW125_RES_ERROR; 
     }
 
@@ -1213,6 +1301,7 @@ DISK_RESULT hw125_ioctl_get_csd(void *buff)
     else
     {
         // Unsucessful CMD9 
+        fail_state = 28; 
         result = HW125_RES_ERROR; 
     }
 
@@ -1240,6 +1329,7 @@ DISK_RESULT hw125_ioctl_get_cid(void *buff)
     else
     {
         // Unsucessful CMD10 
+        fail_state = 29; 
         result = HW125_RES_ERROR; 
     }
 
@@ -1267,6 +1357,7 @@ DISK_RESULT hw125_ioctl_get_ocr(void *buff)
     else
     {
         // Unsuccessful CMD58 
+        fail_state = 30; 
         result = HW125_RES_ERROR; 
     }
 
