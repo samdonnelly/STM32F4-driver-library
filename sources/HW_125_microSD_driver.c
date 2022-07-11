@@ -39,6 +39,8 @@ extern volatile uint8_t read_calls;
 extern volatile uint8_t rdpa_calls; 
 extern volatile uint8_t writ_calls; 
 extern volatile uint8_t wdpc_calls; 
+extern volatile uint8_t scsz_calls; 
+extern volatile uint8_t scct_calls; 
 
 //=======================================================================================
 // Function Prototypes 
@@ -1166,6 +1168,8 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
     uint8_t n; 
     uint32_t c_size; 
 
+    scct_calls++; 
+
     // Send CMD9 to read the CSD register 
     hw125_send_cmd(HW125_CMD9, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
 
@@ -1239,6 +1243,8 @@ DISK_RESULT hw125_ioctl_get_sector_size(void *buff)
 {
     // Local variables 
     uint8_t result; 
+
+    scsz_calls++; 
 
     *(uint16_t *)buff = (uint16_t)HW125_SEC_SIZE; 
     result = HW125_RES_OK; 
