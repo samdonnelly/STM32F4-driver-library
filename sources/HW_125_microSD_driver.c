@@ -25,22 +25,16 @@
 
 
 //=======================================================================================
-// TODO list 
-// - figure out inputs to f_mkfs() 
+// Global variables 
+
+// Debugging 
+extern volatile uint8_t fail_state; 
+extern volatile uint8_t func_num[30]; 
+extern volatile uint8_t mount_seq[100]; 
+extern volatile uint8_t mount_it; 
+
 //=======================================================================================
 
-// 
-extern volatile uint8_t fail_state; 
-extern volatile uint8_t init_calls; 
-extern volatile uint8_t inin_calls; 
-extern volatile uint8_t pwon_calls; 
-extern volatile uint8_t scmd_calls; 
-extern volatile uint8_t read_calls; 
-extern volatile uint8_t rdpa_calls; 
-extern volatile uint8_t writ_calls; 
-extern volatile uint8_t wdpc_calls; 
-extern volatile uint8_t scsz_calls; 
-extern volatile uint8_t scct_calls; 
 
 //=======================================================================================
 // Function Prototypes 
@@ -287,7 +281,9 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     uint8_t ocr[HW125_TRAIL_RESP_BYTES];
     uint8_t v_range[HW125_TRAIL_RESP_BYTES];
 
-    init_calls++; 
+    func_num[0] = func_num[0] + 1; 
+    mount_seq[mount_it] = 0; 
+    mount_it++; 
 
     // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
     if (pdrv) 
@@ -451,7 +447,9 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     uint8_t di_cmd; 
     uint8_t do_resp; 
 
-    pwon_calls++; 
+    func_num[1] = func_num[1] + 1; 
+    mount_seq[mount_it] = 1; 
+    mount_it++; 
 
     //=================================
     // Power Sequence 
@@ -553,7 +551,9 @@ uint8_t hw125_initiate_init(
     // Local variables 
     uint16_t init_timer = HW125_INIT_TIMER;
 
-    inin_calls++; 
+    func_num[2] = func_num[2] + 1; 
+    mount_seq[mount_it] = 2; 
+    mount_it++; 
 
     // Send CMD1 or ACMD41 to initiate initialization 
     do
@@ -655,7 +655,9 @@ void hw125_send_cmd(
     uint8_t cmd_frame[SPI_6_BYTES];
     uint8_t num_read = HW125_R1_RESP_COUNT;
 
-    scmd_calls++; 
+    func_num[3] = func_num[3] + 1; 
+    mount_seq[mount_it] = 3; 
+    mount_it++; 
 
     // Wait until the device is ready to accept commands 
     hw125_ready_rec();
@@ -710,7 +712,9 @@ DISK_RESULT hw125_read(
     DISK_RESULT read_resp;
     uint8_t do_resp;
 
-    read_calls++; 
+    func_num[4] = func_num[4] + 1; 
+    mount_seq[mount_it] = 4; 
+    mount_it++; 
 
     // Check that the drive number is zero 
     if (pdrv) 
@@ -817,7 +821,9 @@ DISK_RESULT hw125_read_data_packet(
     volatile uint32_t num_read = 0; 
     // TODO create and use a real-time timer here 
 
-    rdpa_calls++; 
+    func_num[5] = func_num[5] + 1; 
+    mount_seq[mount_it] = 5; 
+    mount_it++; 
 
     // Read the data token 
     do 
@@ -868,7 +874,9 @@ DISK_RESULT hw125_write(
     DISK_RESULT write_resp; 
     uint8_t do_resp;
 
-    writ_calls++; 
+    func_num[6] = func_num[6] + 1; 
+    mount_seq[mount_it] = 6; 
+    mount_it++; 
 
     // Check that the drive number is zero 
     if (pdrv) 
@@ -1000,7 +1008,9 @@ DISK_RESULT hw125_write_data_packet(
     uint8_t do_resp; 
     uint8_t crc = HW125_CRC_CMDX; 
 
-    wdpc_calls++; 
+    func_num[7] = func_num[7] + 1; 
+    mount_seq[mount_it] = 7; 
+    mount_it++; 
 
     // Wait until the card is no longer busy before sending a CMD 
     hw125_ready_rec();
@@ -1168,7 +1178,9 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
     uint8_t n; 
     uint32_t c_size; 
 
-    scct_calls++; 
+    func_num[8] = func_num[8] + 1; 
+    mount_seq[mount_it] = 8; 
+    mount_it++; 
 
     // Send CMD9 to read the CSD register 
     hw125_send_cmd(HW125_CMD9, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
@@ -1244,7 +1256,9 @@ DISK_RESULT hw125_ioctl_get_sector_size(void *buff)
     // Local variables 
     uint8_t result; 
 
-    scsz_calls++; 
+    func_num[9] = func_num[9] + 1; 
+    mount_seq[mount_it] = 9; 
+    mount_it++; 
 
     *(uint16_t *)buff = (uint16_t)HW125_SEC_SIZE; 
     result = HW125_RES_OK; 
