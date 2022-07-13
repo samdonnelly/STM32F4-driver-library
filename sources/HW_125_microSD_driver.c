@@ -597,21 +597,25 @@ uint8_t hw125_initiate_init(
 //=======================================================================================
 // Status functions 
 
- // HW125 disk status 
- DISK_STATUS hw125_status(uint8_t pdrv)
- {
-    // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
-    if (pdrv) 
-    { 
-        return HW125_STATUS_NOINIT; 
-    }
-    
-    // Return the existing disk status 
-    return sd_card.disk_status;
- }
+// HW125 disk status 
+DISK_STATUS hw125_status(uint8_t pdrv)
+{
+    func_num[10] = func_num[10] + 1; 
+    mount_seq[mount_it] = 10; 
+    mount_it++; 
+
+   // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
+   if (pdrv) 
+   { 
+       return HW125_STATUS_NOINIT; 
+   }
+   
+   // Return the existing disk status 
+   return sd_card.disk_status;
+}
 
 
- // HW125 ready to receive commands 
+// HW125 ready to receive commands 
 void hw125_ready_rec(void)
 {
     // TODO create a timeout - what will happen if it times out? 
@@ -633,7 +637,6 @@ uint8_t hw125_power_status(void)
 {
     return sd_card.pwr_flag; 
 }
-
 
 //=======================================================================================
 
@@ -710,7 +713,7 @@ DISK_RESULT hw125_read(
 {
     // Local variables 
     DISK_RESULT read_resp;
-    uint8_t do_resp;
+    uint8_t do_resp = 255;
 
     func_num[4] = func_num[4] + 1; 
     mount_seq[mount_it] = 4; 
@@ -737,8 +740,10 @@ DISK_RESULT hw125_read(
         return HW125_RES_NOTRDY;
     }
 
-    // Convert the sector number to byte address if it's not SDC V2 (byte address) 
-    if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
+    // Convert the sector number to byte address if it's not SDC V2 (byte address)
+    // TODO  
+    // if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
+    if (sd_card.card_type & HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
 
     // Select the slave device 
     spi2_slave_select(sd_card.ss_pin);
@@ -816,7 +821,7 @@ DISK_RESULT hw125_read_data_packet(
 {
     // Local variables 
     DISK_RESULT read_resp;
-    uint8_t do_resp;
+    uint8_t do_resp = 200;
     // uint8_t num_read = HW125_DT_RESP_COUNT;
     volatile uint32_t num_read = 0; 
     // TODO create and use a real-time timer here 
