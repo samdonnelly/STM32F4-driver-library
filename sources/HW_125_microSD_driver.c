@@ -1091,7 +1091,9 @@ DISK_RESULT hw125_ioctl(
         case HW125_CTRL_SYNC:
             // This is not not needed if the write operation is completed within the 
             // disk_write function which it is. 
-            result = HW125_RES_PARERR; 
+            hw125_ready_rec(); 
+            result = HW125_RES_OK; 
+            // result = HW125_RES_PARERR; 
             break; 
         
         case HW125_GET_SECTOR_COUNT:  // Get the size of the disk 
