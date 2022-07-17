@@ -415,15 +415,15 @@ DISK_STATUS hw125_init(uint8_t pdrv)
 }
 
 
-// HW125 power on sequence
+// HW125 power on sequence and software reset 
 void hw125_power_on(uint16_t hw125_slave_pin)
 {
     // Local variables 
     uint8_t di_cmd; 
     uint8_t do_resp; 
-
-    //=================================
-    // Power Sequence 
+    uint8_t cmd_frame[SPI_6_BYTES];
+    // uint8_t num_read = HW125_R1_RESP_COUNT;
+    uint16_t num_read = 0x1FFF;  // TODO create a proper macro for this timer value 
 
     // Wait 1ms to allow for voltage to reach above 2.2V
     tim9_delay_ms(HW125_POWER_ON_DELAY);
@@ -439,27 +439,6 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     {
         spi2_write(&di_cmd, SPI_1_BYTE);
     }
-
-    //=================================
-
-
-    //=================================
-    // Software reset - set to IDLE state 
-
-    // // Select the SD card device 
-    // spi2_slave_select(hw125_slave_pin);
-
-    // // Send CMD0 with no arg and a valid CRC value 
-    // hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
-
-    // // Deselect the card device 
-    // spi2_slave_deselect(hw125_slave_pin);
-
-    // Local variables 
-    uint8_t cmd_frame[SPI_6_BYTES];
-    // uint8_t num_read = HW125_R1_RESP_COUNT;
-    uint16_t num_read = 0x1FFF;
-    // TODO create a proper macro for this timer value 
 
     // Slave select 
     spi2_slave_select(hw125_slave_pin); 
@@ -493,8 +472,6 @@ void hw125_power_on(uint16_t hw125_slave_pin)
 
     // TODO Sometimes this fails 
     // if (num_read == 0); 
-
-    //=================================
 
     // Slave select 
     spi2_slave_deselect(hw125_slave_pin); 
@@ -761,8 +738,7 @@ DISK_RESULT hw125_read_data_packet(
     DISK_RESULT read_resp;
     uint8_t do_resp = 200;
     // uint8_t num_read = HW125_DT_RESP_COUNT;
-    volatile uint32_t num_read = 0; 
-    // TODO create and use a real-time timer here 
+    volatile uint32_t num_read = 0;  // TODO create and use a real-time timer here 
 
     // Read the data token 
     do 
@@ -854,47 +830,41 @@ DISK_RESULT hw125_write(
     else  // Send multiple data packets if count > 1
     {
         // Specify the number of sectors to pre-erase to optimize write performance
-        // TODO only for SDC V1? 
-        // hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
-        // hw125_send_cmd(HW125_CMD23, count, HW125_CRC_CMDX, &do_resp);
+        // TODO No error condition in place. Also unclear if it's only SDCV1. 
+        if (sd_card.card_type == HW125_CT_SDC1)
+        {
+            hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
+            hw125_send_cmd(HW125_CMD23, count, HW125_CRC_CMDX, &do_resp);
+        }
 
-        // Check R1 response 
+        // ACDM23 successful - send CMD25 that specifies the address to start to write 
+        hw125_send_cmd(HW125_CMD25, sector, HW125_CRC_CMDX, &do_resp);
+
+        // Check the R1 response 
         if (do_resp == HW125_READY_STATE)
         {
-            // ACDM23 successful - send CMD25 that specifies the address to start to write 
-            hw125_send_cmd(HW125_CMD25, sector, HW125_CRC_CMDX, &do_resp);
+            // CMD25 successful - write initiated
 
-            // Check the R1 response 
-            if (do_resp == HW125_READY_STATE)
+            // Define the CMD25 stop token 
+            uint8_t stop_trans = HW125_DT_ONE; 
+
+            // Write all the sectors or until there is an error 
+            do 
             {
-                // CMD25 successful - write initiated
-
-                // Define the CMD25 stop token 
-                uint8_t stop_trans = HW125_DT_ONE; 
-
-                // Write all the sectors or until there is an error 
-                do 
-                {
-                    write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_ZERO);
-                    buff += HW125_SEC_SIZE; 
-                }
-                while(--count && (write_resp != HW125_RES_ERROR)); 
-
-                // Wait on busy flag to clear 
-                hw125_ready_rec();
-
-                // Send stop token 
-                spi2_write(&stop_trans, HW125_SINGLE_BYTE);
+                write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_ZERO);
+                buff += HW125_SEC_SIZE; 
             }
-            else
-            {
-                // Unsuccessfull CMD25 
-                write_resp = HW125_RES_ERROR;
-            }
+            while(--count && (write_resp != HW125_RES_ERROR)); 
+
+            // Wait on busy flag to clear 
+            hw125_ready_rec();
+
+            // Send stop token 
+            spi2_write(&stop_trans, HW125_SINGLE_BYTE);
         }
-        else 
+        else
         {
-            // Unsuccessfull ACMD23 
+            // Unsuccessfull CMD25 
             write_resp = HW125_RES_ERROR;
         }
     }
