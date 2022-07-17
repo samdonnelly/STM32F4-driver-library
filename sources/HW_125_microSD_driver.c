@@ -33,12 +33,16 @@
 /**
  * @brief HW125 initiate initialization sequence
  * 
- * @details 
+ * @details A sequence that occurs during the initialization process used to initiate 
+ *          initialization in the SD card. This sequence is common among all card type 
+ *          initialization. Depending on the card, CMD41 or CMD1 is sent repeatedly until 
+ *          the card enters its ready state (0x00) or an error has occured. The hw125_init 
+ *          function calls this function. 
  * 
- * @param cmd 
- * @param arg 
- * @param resp 
- * @return uint8_t 
+ * @param cmd : command to send (either CMD1 or CMD41) 
+ * @param arg : argument in the command message that corresponds to the cmd specified 
+ * @param resp : pointer to where the command response is stored 
+ * @return uint8_t : status of the timer - TRUE or FALSE (for timout) 
  */
 uint8_t hw125_initiate_init(
     uint8_t  cmd,
@@ -49,17 +53,34 @@ uint8_t hw125_initiate_init(
 /**
  * @brief HW125 power on sequence
  * 
- * @details 
+ * @details This functions sets the SD card into it's native operating mode where it is 
+ *          ready to accept native commands. It is called at the beginning of the 
+ *          hw125_init function to prepare the card. It can also be called in the ioctl 
+ *          function by the FATFS module layer if needed. <br><br> 
+ *          
+ *          To prepare the card this function deselects the slave, sets the DI/MOSI 
+ *          line to high (0xFF) and sends a minumum of 74 SCLK pulses. <br><br> 
+ *          
+ *          After the card enters it's native operating mode a software reset seqence is 
+ *          performed. In this sequence the SD card is selected and CMD0 is sent to the 
+ *          card. If the command is successfully received then the card will enter SPI 
+ *          mode and respond with an IDLE state (0x01). <br><br> 
+ *          
+ *          At the end of the sequence the pwr_flag for the sd_card is set the 
+ *          HW125_PWR_ON. 
  * 
- * @param hw125_slave_pin 
+ * @param hw125_slave_pin : SS pin that the SD card is connected to 
  */
 void hw125_power_on(uint16_t hw125_slave_pin);
 
 
 /**
- * @brief HW125 Power Flag set to off 
+ * @brief HW125 power off 
  * 
- * @details 
+ * @details Sets the pwr_flag of the sd_card to HW125_PWR_OFF. The power flag only serves to 
+ *          update the status check read from hw125_power_status. This function is called 
+ *          during initialization if the card type is unknown (initialization failed) and in 
+ *          the ioctl function if the FATFS module layer requets it. 
  * 
  */
 void hw125_power_off(void);
@@ -517,11 +538,8 @@ uint8_t hw125_initiate_init(
 
         // Delay 1ms 
         tim9_delay_ms(HW125_INIT_DELAY);
-
-        // Decrement timer 
-        init_timer--;
     }
-    while(init_timer && (*resp == HW125_IDLE_STATE));
+    while((*resp == HW125_IDLE_STATE) && --init_timer);
 
     // Return the timer status 
     if (init_timer)
