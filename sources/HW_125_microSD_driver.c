@@ -39,6 +39,8 @@
  *          the card enters its ready state (0x00) or an error has occured. The hw125_init 
  *          function calls this function. 
  * 
+ * @see hw125_init
+ * 
  * @param cmd : command to send (either CMD1 or CMD41) 
  * @param arg : argument in the command message that corresponds to the cmd specified 
  * @param resp : pointer to where the command response is stored 
@@ -69,6 +71,9 @@ uint8_t hw125_initiate_init(
  *          At the end of the sequence the pwr_flag for the sd_card is set the 
  *          HW125_PWR_ON. 
  * 
+ * @see hw125_init
+ * @see hw125_power_status
+ * 
  * @param hw125_slave_pin : SS pin that the SD card is connected to 
  */
 void hw125_power_on(uint16_t hw125_slave_pin);
@@ -81,6 +86,8 @@ void hw125_power_on(uint16_t hw125_slave_pin);
  *          update the status check read from hw125_power_status. This function is called 
  *          during initialization if the card type is unknown (initialization failed) and in 
  *          the ioctl function if the FATFS module layer requets it. 
+ * 
+ * @see hw125_power_status 
  * 
  */
 void hw125_power_off(void);
@@ -121,9 +128,10 @@ void hw125_send_cmd(
 /**
  * @brief HW125 Power Flag status 
  * 
- * @details 
+ * @details Returns the current status of the pwr_flag for sd_card. This function is called
+ *          by the FATFS module layer in the ioctl function. 
  * 
- * @return uint8_t 
+ * @return uint8_t : pwr_flag 
  */
 uint8_t hw125_power_status(void);
 
@@ -131,7 +139,9 @@ uint8_t hw125_power_status(void);
 /**
  * @brief HW125 ready to receive commands 
  * 
- * @details 
+ * @details Waits for the SD card DO/MISO line to go high (0xFF) which indicates that the 
+ *          card is ready to receive further instructions. The function is called before 
+ *          sending a command and before writing new data packets to the card. 
  * 
  */
 void hw125_ready_rec(void);
@@ -145,12 +155,17 @@ void hw125_ready_rec(void);
 /**
  * @brief HW125 read data packet 
  * 
- * @details Gets called by hw125_read for both single and multiple data packet reads
- *          to get all the requesed information from the storage device. 
+ * @details Verifies the data tocken sent from the card and if correct then reads the 
+ *          info from the data packet. The function only reads a single data packet so if 
+ *          multiple are required then the function is repeatedly called. The function is 
+ *          used by hw125_read and hw125_ioctl. 
  * 
- * @param buff 
- * @param sector_size 
- * @return DISK_RESULT 
+ * @see hw125_read 
+ * @see hw125_ioctl 
+ * 
+ * @param buff : buffer to store info from the data packet 
+ * @param sector_size : number of bytes read in the packet - sector size of the card 
+ * @return DISK_RESULT : result of the read operation 
  */
 DISK_RESULT hw125_read_data_packet(
     uint8_t *buff,
@@ -160,11 +175,16 @@ DISK_RESULT hw125_read_data_packet(
 /**
  * @brief HW125 write data packet 
  * 
- * @details 
+ * @details Sends a data token to the card to indicate the write operation then proceeds 
+ *          to write the data packet to the card. The functions writes a single data packet 
+ *          so if multiple packets are needed then the functionis called repeatedly. The 
+ *          function is used by hw125_write. 
  * 
- * @param buff 
- * @param sector_size 
- * @return DISK_RESULT 
+ * @see hw125_write 
+ * 
+ * @param buff : buffer that stores the info in the packet to be written 
+ * @param sector_size : number of bytes written in the packet - sector size of the card 
+ * @return DISK_RESULT : result of the write operation 
  */
 DISK_RESULT hw125_write_data_packet(
     const uint8_t *buff,
@@ -180,10 +200,15 @@ DISK_RESULT hw125_write_data_packet(
 /**
  * @brief HW125 IO Control - Get Sector Count 
  * 
- * @details 
+ * @details Reads the sector count from the card based on the card type determined during 
+ *          initialization and stores it in a buffer for use in the FATFS module layer. 
+ *          <br><br>
+ *          
+ *          The FATFS layer calls the hw125_ioctl function and requests the sector count. The 
+ *          hw125_ioctl function then in turn calls this function. 
  * 
- * @param buff 
- * @return DISK_RESULT 
+ * @param buff : pointer to store sector count - gets typecast to the correct data type 
+ * @return DISK_RESULT : result of the read operation 
  */
 DISK_RESULT hw125_ioctl_get_sector_count(void *buff);
 
@@ -191,10 +216,14 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff);
 /**
  * @brief HW125 IO Control - Get Sector Size 
  * 
- * @details 
+ * @details Reads the sector size from the code and stores it in a buffer for use in the 
+ *          FATFS module layer. <br><br>
+ *          
+ *          The FATFS layer calls the hw125_ioctl function and requests the sector size. The 
+ *          hw125_ioctl function then in turn calls this function. 
  * 
- * @param buff 
- * @return DISK_RESULT 
+ * @param buff : pointer to store the sector size - gets typecast to the correct data type 
+ * @return DISK_RESULT : result of the read operation 
  */
 DISK_RESULT hw125_ioctl_get_sector_size(void *buff);
 
@@ -202,10 +231,14 @@ DISK_RESULT hw125_ioctl_get_sector_size(void *buff);
 /**
  * @brief HW125 IO Control - Control Power 
  * 
- * @details 
+ * @details Sets the pwr_flag status or reads the pwr_flag status from the code. Called by 
+ *          the FATFS module layer. <br><br>
+ *          
+ *          The FATFS layer calls the hw125_ioctl function and requests a pwr_flag operation. 
+ *          The hw125_ioctl function then in turn calls this function. 
  * 
- * @param buff 
- * @return DISK_RESULT 
+ * @param buff : pointer to store the pwr_flag status - gets typecast to pwr_flag status type
+ * @return DISK_RESULT : result of the status check 
  */
 DISK_RESULT hw125_ioctl_ctrl_pwr(void *buff);
 
@@ -213,10 +246,14 @@ DISK_RESULT hw125_ioctl_ctrl_pwr(void *buff);
 /**
  * @brief HW125 IO Control - Get CSD Register 
  * 
- * @details 
+ * @details Reads the CSD register from the card and stores it in a buffer for use in the 
+ *          FATFS module layer. <br><br>
+ *          
+ *          The FATFS layer calls the hw125_ioctl function and requests the contents of the 
+ *          CSD register. The hw125_ioctl function then in turn calls this function.
  * 
- * @param buff 
- * @return DISK_RESULT 
+ * @param buff : pointer to store the CSD register - gets typecast to CSD register type 
+ * @return DISK_RESULT : result of the read operation 
  */
 DISK_RESULT hw125_ioctl_get_csd(void *buff);
 
@@ -224,10 +261,14 @@ DISK_RESULT hw125_ioctl_get_csd(void *buff);
 /**
  * @brief HW125 IO Control - Get CID Register 
  * 
- * @details 
+ * @details Reads the CID register from the card and stores it in a buffer for use in the 
+ *          FATFS module layer. <br><br>
+ *          
+ *          The FATFS layer calls the hw125_ioctl function and requests the contents of the 
+ *          CID register. The hw125_ioctl function then in turn calls this function.
  * 
- * @param buff 
- * @return DISK_RESULT 
+ * @param buff : pointer to store the CID register - gets typecast to CID register type 
+ * @return DISK_RESULT : result of the read operation 
  */
 DISK_RESULT hw125_ioctl_get_cid(void *buff);
 
@@ -235,10 +276,14 @@ DISK_RESULT hw125_ioctl_get_cid(void *buff);
 /**
  * @brief HW125 IO Control - Get OCR Register 
  * 
- * @details 
+ * @details Reads the OCR register from the card and stores it in a buffer for use in the 
+ *          FATFS module layer. <br><br>
+ *          
+ *          The FATFS layer calls the hw125_ioctl function and requests the contents of the 
+ *          OCR register. The hw125_ioctl function then in turn calls this function.
  * 
- * @param buff 
- * @return DISK_RESULT 
+ * @param buff : pointer to store the OCR register - gets typecast to the OCR register type 
+ * @return DISK_RESULT : result of the read operation 
  */
 DISK_RESULT hw125_ioctl_get_ocr(void *buff);
 
