@@ -91,14 +91,20 @@ void hw125_power_off(void);
 //==============================================
 // Command functions 
 
+// TODO make the cmd, arg and crc part of a structure so the user only has to specify 
+//      the cmd --> the cmd will be used to pull the needed arg and crc 
+
 /**
- * @brief HW125 send command messages and return response values 
+ * @brief HW125 send command messages to the SD card 
  * 
- * @details 
+ * @details Generates a command frame based on the arguments, transmits the command to 
+ *          the SD card and waits for an appropriate R1 response. This function can be 
+ *          called for any command. 
  * 
- * @param cmd 
- * @param arg 
- * @param crc 
+ * @param cmd : command to send 
+ * @param arg : argument for the corresponding command 
+ * @param crc : crc value for the corresponding command 
+ * @param resp : pointer to where the R1 response is stored 
  */
 void hw125_send_cmd(
     uint8_t  cmd,
