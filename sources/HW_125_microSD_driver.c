@@ -98,9 +98,6 @@ void hw125_power_off(void);
 //==============================================
 // Command functions 
 
-// TODO make the cmd, arg and crc part of a structure so the user only has to specify 
-//      the cmd --> the cmd will be used to pull the needed arg and crc 
-
 /**
  * @brief HW125 send command messages to the SD card 
  * 
@@ -298,6 +295,16 @@ DISK_RESULT hw125_ioctl_get_ocr(void *buff);
 /**
  * @brief HW125 disk information 
  * 
+ * @details Parameters associated with a drive. <br>
+ *          - disk_status: status of the drive <br> 
+ *          - card_type: type if card the drive is <br> 
+ *          - pwr_flag: power flag status <br> 
+ *          - ss_pin: slave select pin (GPIO pin) used for the drive 
+ * 
+ * @see hw125_disk_status_t
+ * @see hw125_card_type_t
+ * @see hw125_pwr_status_t
+ * 
  */
 typedef struct {
     uint8_t  disk_status;
@@ -312,7 +319,7 @@ typedef struct {
 //=======================================================================================
 // Variables 
 
-// SD card information 
+// SD card (drive 0) information 
 static hw125_disk_info_t sd_card;
 
 //=======================================================================================
@@ -344,16 +351,17 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
     if (pdrv) return HW125_STATUS_NOINIT; 
 
-    // Power on 
+    // Power on sequence 
     hw125_power_on(sd_card.ss_pin);
 
-    // Select the sd card slave 
+    // Select the sd card 
     spi2_slave_select(sd_card.ss_pin);
 
-    // Send CMD0 with no arg and a valid CRC value 
-    hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
+    // TODO test to see if this is not needed anymore 
+    // // Send CMD0 with no arg and a valid CRC value 
+    // hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
 
-    // Check the R1 response from CMD0 send in hw125_power_on
+    // Check the R1 response from CMD0 sent in hw125_power_on
     if (do_resp == HW125_IDLE_STATE)
     {
         // In idle state - Send CMD8 with arg = 0x000001AA and a valid CRC
@@ -482,7 +490,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
         sd_card.disk_status = (HW125_STATUS_NOINIT & HW125_INIT_SUCCESS); 
     }
 
-    // Return the card type for fault handling 
+    // Return the card type 
     return sd_card.disk_status;
 }
 
@@ -494,10 +502,11 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     uint8_t di_cmd; 
     uint8_t do_resp; 
     uint8_t cmd_frame[SPI_6_BYTES];
-    // uint8_t num_read = HW125_R1_RESP_COUNT;
-    uint16_t num_read = 0x1FFF;  // TODO create a proper macro for this timer value 
 
-    // Wait 1ms to allow for voltage to reach above 2.2V
+    // TODO test the length of this counter 
+    uint16_t num_read = HW125_PWR_ON_RES_CNT; 
+
+    // Wait for >1ms - delay for after the supply voltage reaches above 2.2V
     tim9_delay_ms(HW125_POWER_ON_DELAY);
 
     // Deselect the sd card slave
@@ -506,11 +515,8 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     // Set the DI/MOSI command high (0xFF) 
     di_cmd = HW125_DATA_HIGH;
 
-    // Send DI/MOSI (0xFF) 10x to wait for more than 74 clock pulses 
-    for (uint8_t i = 0; i < HW125_POWER_ON_TIMER; i++)
-    {
-        spi2_write(&di_cmd, SPI_1_BYTE);
-    }
+    // Send DI/MOSI high 10x to wait for more than 74 clock pulses 
+    for (uint8_t i = 0; i < HW125_POWER_ON_TIMER; i++) spi2_write(&di_cmd, SPI_1_BYTE);
 
     // Slave select 
     spi2_slave_select(hw125_slave_pin); 
@@ -572,37 +578,28 @@ uint8_t hw125_initiate_init(
     // Local variables 
     uint16_t init_timer = HW125_INIT_TIMER;
 
-    // Send CMD1 or ACMD41 to initiate initialization 
+    // Send CMD1 or ACMD41 (dependingon the card type) to initiate initialization 
     do
     {
         if (cmd == HW125_CMD1)
         {
-            // Send CMD1 
             hw125_send_cmd(HW125_CMD1, HW125_ARG_NONE, HW125_CRC_CMDX, resp);
         }
         else
         {
-            // Send ACMD41 (CMD55+CMD41)
             hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, resp);
             hw125_send_cmd(HW125_CMD41, arg, HW125_CRC_CMDX, resp);
         }
 
-        // Delay 1ms 
+        // TODO change init_timer to a real-time timer to remove this delay 
+        // Delay 1ms --> HW125_INIT_DELAY * HW125_INIT_TIMER = 1000ms (recommended delay) 
         tim9_delay_ms(HW125_INIT_DELAY);
     }
     while((*resp == HW125_IDLE_STATE) && --init_timer);
 
     // Return the timer status 
-    if (init_timer)
-    {
-        // Timer is not zero - no timeout 
-        return TRUE;
-    }
-    else
-    {
-        // Timer is zero - timeout 
-        return FALSE;
-    }
+    if (init_timer) return TRUE;  // Timer is not zero - no timeout 
+    else return FALSE;            // Timer is zero - timeout
  }
 
 //=======================================================================================
@@ -630,7 +627,7 @@ void hw125_ready_rec(void)
     // Local variables 
     uint8_t resp;
 
-    // Read DO continuously until it is ready to receive commands 
+    // Read DO/MISO continuously until it is ready to receive commands 
     do 
     {
         spi2_write_read(HW125_DATA_HIGH, &resp, SPI_1_BYTE);
@@ -723,14 +720,11 @@ DISK_RESULT hw125_read(
     if (count == HW125_NO_BYTE) return HW125_RES_PARERR;
 
     // Check the init status 
-    if (sd_card.disk_status == HW125_STATUS_NOINIT) 
-    {
-        // TODO sometimes this fails 
-        return HW125_RES_NOTRDY;
-    }
+    // TODO sometimes this fails 
+    if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
 
     // Convert the sector number to byte address if it's not SDC V2 (byte address)
-    // TODO  
+    // TODO is this needed for all SDC V2 cards or just block address ones? 
     // if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
     if (sd_card.card_type & HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
 
@@ -806,21 +800,22 @@ DISK_RESULT hw125_read_data_packet(
     // Local variables 
     DISK_RESULT read_resp;
     uint8_t do_resp = 200;
+
+    // TODO create and use a real-time timer here 
     // uint8_t num_read = HW125_DT_RESP_COUNT;
-    volatile uint32_t num_read = 0;  // TODO create and use a real-time timer here 
 
     // Read the data token 
     do 
     {
         spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
-        num_read++; 
     }
     // while((do_resp != HW125_DT_TWO) && --num_read);
     while((do_resp != HW125_DT_TWO));
 
+    // Check the R1 response 
     if (do_resp == HW125_DT_TWO)
     {
-        // Valid data token is detected - read the data packet(s) 
+        // Valid data token is detected - read the data packet 
         spi2_write_read(HW125_DATA_HIGH, buff, sector_size);
 
         // Discard the two CRC bytes 
@@ -855,7 +850,8 @@ DISK_RESULT hw125_write(
 {
     // Local variables 
     DISK_RESULT write_resp; 
-    uint8_t do_resp;
+    uint8_t do_resp; 
+    uint8_t stop_trans = HW125_DT_ONE; 
 
     // Check that the drive number is zero 
     if (pdrv) return HW125_RES_PARERR;
@@ -869,6 +865,7 @@ DISK_RESULT hw125_write(
     // Check write protection 
     if (sd_card.disk_status == HW125_STATUS_PROTECT) return HW125_RES_WRPRT; 
 
+    // TODO see this line of code in the hw125_read function 
     // Convert the sector number to byte address if it's not SDC V2 (byte address) 
     if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
 
@@ -906,18 +903,13 @@ DISK_RESULT hw125_write(
             hw125_send_cmd(HW125_CMD23, count, HW125_CRC_CMDX, &do_resp);
         }
 
-        // ACDM23 successful - send CMD25 that specifies the address to start to write 
+        // Send CMD25 that specifies the address to start to write 
         hw125_send_cmd(HW125_CMD25, sector, HW125_CRC_CMDX, &do_resp);
 
         // Check the R1 response 
         if (do_resp == HW125_READY_STATE)
         {
-            // CMD25 successful - write initiated
-
-            // Define the CMD25 stop token 
-            uint8_t stop_trans = HW125_DT_ONE; 
-
-            // Write all the sectors or until there is an error 
+            // CMD25 successful - Write all the sectors or until there is an error 
             do 
             {
                 write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_ZERO);
@@ -1015,9 +1007,7 @@ DISK_RESULT hw125_ioctl(
 
     // Check the init status 
     if ((sd_card.disk_status == HW125_STATUS_NOINIT) && (cmd != HW125_CTRL_POWER)) 
-    {
         return HW125_RES_NOTRDY;
-    }
 
     // Select the slave card 
     spi2_slave_select(sd_card.ss_pin); 
@@ -1025,8 +1015,7 @@ DISK_RESULT hw125_ioctl(
     // Choose the misc function 
     switch(cmd)
     {
-        case HW125_CTRL_SYNC:
-            // Make sure the write operation in disk_write is complete. 
+        case HW125_CTRL_SYNC:  // Ensure write operation in disk_write is complete. 
             hw125_ready_rec(); 
             result = HW125_RES_OK; 
             break; 
@@ -1137,37 +1126,38 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
             // Check the version number to know which bits to read 
             switch (csd_struc) 
             {
-                case HW125_CSD_V1:
-                    // CSD Version == 1.0 --> MMC or SDC V1 
+                case HW125_CSD_V1:  // CSD Version == 1.0 --> MMC or SDC V1 
+                    // Filter the register data 
                     n =   ((uint32_t)csd[BYTE_5]  & FILTER_4_LSB) + 
                         ((((uint32_t)csd[BYTE_10] & FILTER_1_MSB) >> SHIFT_7) + 
-                        (((uint32_t)csd[BYTE_9]  & FILTER_2_LSB) << SHIFT_1)) + 
+                         (((uint32_t)csd[BYTE_9]  & FILTER_2_LSB) << SHIFT_1)) + 
                         HW125_MULT_PLUS_TWO;
 
                     c_size = ((uint32_t)(csd[BYTE_8] & FILTER_2_MSB) >> SHIFT_6) +
-                            ((uint32_t) csd[BYTE_7] << SHIFT_2) + 
-                            ((uint32_t)(csd[BYTE_6] & FILTER_2_LSB) << SHIFT_10) + 
-                            HW125_LBA_PLUS_ONE;
+                             ((uint32_t) csd[BYTE_7] << SHIFT_2) + 
+                             ((uint32_t)(csd[BYTE_6] & FILTER_2_LSB) << SHIFT_10) + 
+                             HW125_LBA_PLUS_ONE;
                     
+                    // Format the sector count 
                     *(uint32_t *) buff = c_size << (n - HW125_MAGIC_SHIFT_V1); 
 
                     result = HW125_RES_OK; 
                     break;
                 
-                case HW125_CSD_V2: 
-                    // CSD Version == 2.0 --> SDC V2 
+                case HW125_CSD_V2:  // CSD Version == 2.0 --> SDC V2 
+                    // Filter the register data 
                     c_size =  (uint32_t) csd[BYTE_9] + 
                             ((uint32_t) csd[BYTE_8] << SHIFT_8) + 
                             ((uint32_t)(csd[BYTE_7] & FILTER_6_LSB) << SHIFT_16) + 
                             HW125_LBA_PLUS_ONE; 
 
+                    // Format the sector count 
                     *(uint32_t *) buff = c_size << HW125_MAGIC_SHIFT_V2;
                     
                     result = HW125_RES_OK; 
                     break;
                 
-                case HW125_CSD_V3: 
-                    // CSD Version == 3.0 --> Currently unsupported 
+                case HW125_CSD_V3:  // CSD Version == 3.0 --> Currently unsupported 
                     result = HW125_RES_PARERR; 
                     break;
                 
@@ -1193,6 +1183,7 @@ DISK_RESULT hw125_ioctl_get_sector_size(void *buff)
     // Local variables 
     uint8_t result; 
 
+    // Assign pre-defined sector size 
     *(uint16_t *)buff = (uint16_t)HW125_SEC_SIZE; 
     result = HW125_RES_OK; 
 
@@ -1207,6 +1198,7 @@ DISK_RESULT hw125_ioctl_ctrl_pwr(void *buff)
     DISK_RESULT result; 
     uint8_t *param = buff; 
     
+    // Choose the power operation 
     switch (*param) 
     {
         case HW125_PWR_OFF:  // Turn the Power Flag off 
@@ -1248,7 +1240,6 @@ DISK_RESULT hw125_ioctl_get_csd(void *buff)
     if (do_resp == HW125_READY_STATE)
     {
         // Successful CMD9 - proceed to read the CSD register 
-        // TODO check to see if CMD9 returns a valid token 
         result = hw125_read_data_packet(csd, HW125_CSD_REG_LEN); 
     }
     else
