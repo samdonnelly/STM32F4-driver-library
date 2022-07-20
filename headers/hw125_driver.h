@@ -28,51 +28,52 @@
 //=======================================================================================
 // Macros 
 
+//======================================================
+// User defined 
+
 // Command values 
 #define HW125_INDEX_OFFSET 0x40  // First two bits of command index 
 
-// Timers 
-#define HW125_INIT_TIMER     1000    // Initiate initialization counter 
-#define HW125_INIT_DELAY     1       // time delay in ms for initiate initialization sequence
-#define HW125_POWER_ON_TIMER 10      // Power on sequence counter 
-#define HW125_POWER_ON_DELAY 10      // time delay in ms for power on sequence
-#define HW125_PWR_ON_RES_CNT 0x1FFF  // 
-#define HW125_R1_RESP_COUNT  10      // Max num of times to read R1 until appropriate response
-#define HW125_DT_RESP_COUNT  10      // Max number of times to check the data token 
+// Timers/counters 
+#define HW125_INIT_TIMER         1000    // Initiate initialization counter 
+#define HW125_INIT_DELAY         1       // time delay in ms for initiate initialization sequence
+#define HW125_PWR_ON_COUNTER     10      // General counter for the hw125_power_on function 
+#define HW125_PWR_ON_RES_CNT     0x1FFF  // 
+#define HW125_R1_RESP_COUNT      10      // Max num of times to read R1 until appropriate response
+#define HW125_DT_RESP_COUNT      10      // Max number of times to check the data token 
 
 // Data information 
-#define HW125_DATA_HIGH        0xFF    // DI/MOSI setpoint and DO/MISO response value 
-#define HW125_TRAIL_RESP_BYTES 4       // Number of bytes in an R3/R7 response after R1 
-#define HW125_SINGLE_BYTE      1       // 
-#define HW125_NO_BYTE          0       // 
-#define HW125_SEC_SIZE         512     // Min and max sector size of the card 
-#define HW125_DR_FILTER        0x1F    // 
-#define HW125_CSD_REG_LEN      16      // 
-#define HW125_CID_REG_LEN      16      // 
+#define HW125_DATA_HIGH          0xFF    // DI/MOSI setpoint and DO/MISO response value 
+#define HW125_TRAIL_RESP_BYTES   4       // Number of bytes in an R3/R7 response after R1 
+#define HW125_SINGLE_BYTE        1       // 
+#define HW125_NO_BYTE            0       // 
+#define HW125_SEC_SIZE           512     // Min and max sector size of the card 
+#define HW125_DR_FILTER          0x1F    // 
+#define HW125_CSD_REG_LEN        16      // 
+#define HW125_CID_REG_LEN        16      // 
 
 // IO Control 
-#define HW125_LBA_PLUS_ONE     1       // 
-#define HW125_MULT_PLUS_TWO    2       // 
-#define HW125_MAGIC_SHIFT_V1   9       // Shift of unknown reasoning for CSD V1 cards 
-#define HW125_MAGIC_SHIFT_V2   10      // Shift of unknown reasoning for CSD V2 cards 
+#define HW125_LBA_OFFSET         1       // Used in sector size calculation for all cards 
+#define HW125_MULT_OFFSET        2       // Used in sector size calculation for SDC V1 
+#define HW125_MAGIC_SHIFT_V1     9       // Magic sector count format shift for CSD V1 
+#define HW125_MAGIC_SHIFT_V2     10      // Magic sector count format shift for CSD V2 cards 
 
 // Command response values
-#define HW125_READY_STATE    0x00   // No 
-#define HW125_IDLE_STATE     0x01   // SD card is in the idle state 
-#define HW125_CCS_SET        0x40   // CCS bit location in OCR 
-#define HW125_CMD8_R7_RESP   0x1AA  // SDCV2 return value from CMD8 
-#define HW125_R1_RESP_FILTER 0x80   // Filter used to determine a valid R1 response 
-#define HW125_CSD_V1         0x00   // 
-#define HW125_CSD_V2         0x01   // 
-#define HW125_CSD_V3         0x02   // 
-#define HW125_CSD_FILTER     0x03   // 
+#define HW125_READY_STATE        0x00    // Drive is ready to send and receive information 
+#define HW125_IDLE_STATE         0x01    // Drive is in the idle state - after software reset 
+#define HW125_SDCV2_CHECK        0x1AA   // SDCV2 return value from CMD8 
+#define HW125_R1_FILTER          0x80    // Filter used to determine a valid R1 response 
+#define HW125_CCS_FILTER         0x40    // Isolate the CCS bit location in OCR 
+#define HW125_CSD_FILTER         0x03    // Isolate the CSD register version number 
 
 // Status 
-#define HW125_INIT_SUCCESS 0xFE  // Filter to clear the HW125_STATUS_NOINIT flag 
+#define HW125_INIT_SUCCESS       0xFE    // Filter to clear the HW125_STATUS_NOINIT flag 
+
+//======================================================
 
 
 //======================================================
-// Command codes for the hw125_ioctl fucntion (from diskio.h) 
+// Command codes for IO control --> copied from diskio.h 
 
 /* Generic command (Used by FatFs) */
 #define HW125_CTRL_SYNC           0   // Complete pending write process (needed at _FS_READONLY == 0) 
@@ -239,6 +240,19 @@ typedef enum {
     HW125_DR_ONE  = 0x0B,   // Data rejected due to a CRC error 
     HW125_DR_TWO  = 0x0D    // Data rejected due to a write error 
 } hw125_data_response_filter_t;  
+
+
+/**
+ * @brief CSD register version 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HW125_CSD_V1, 
+    HW125_CSD_V2, 
+    HW125_CSD_V3
+} hw125_csd_version_t; 
 
 //=======================================================================================
 

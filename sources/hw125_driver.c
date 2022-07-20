@@ -375,7 +375,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
 
             // Check lower 12-bits of R7 response (big endian format) 
             if ((uint16_t)((v_range[BYTE_2] << SHIFT_8) | (v_range[BYTE_3])) 
-                == HW125_CMD8_R7_RESP)
+                == HW125_SDCV2_CHECK)
             {
                 // 0x1AA matched (SDCV2+) - Send ACMD41 with the HCS bit set in the arg 
                 init_timer_status = hw125_initiate_init(HW125_CMD41, HW125_ARG_HCS, &do_resp);
@@ -392,7 +392,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
                         spi2_write_read(HW125_DATA_HIGH, ocr, HW125_TRAIL_RESP_BYTES);
 
                         // Check CCS bit (bit 30) in OCR response (big endian format) 
-                        if (ocr[BYTE_0] & HW125_CCS_SET)
+                        if (ocr[BYTE_0] & HW125_CCS_FILTER)
                         {
                             // SDC V2 (block address)
                             sd_card.card_type = HW125_CT_SDC2_BLOCK;
@@ -507,7 +507,7 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     uint16_t num_read = HW125_PWR_ON_RES_CNT; 
 
     // Wait for >1ms - delay for after the supply voltage reaches above 2.2V
-    tim9_delay_ms(HW125_POWER_ON_DELAY);
+    tim9_delay_ms(HW125_PWR_ON_COUNTER);
 
     // Deselect the sd card slave
     spi2_slave_deselect(hw125_slave_pin);
@@ -516,7 +516,7 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     di_cmd = HW125_DATA_HIGH;
 
     // Send DI/MOSI high 10x to wait for more than 74 clock pulses 
-    for (uint8_t i = 0; i < HW125_POWER_ON_TIMER; i++) spi2_write(&di_cmd, SPI_1_BYTE);
+    for (uint8_t i = 0; i < HW125_PWR_ON_COUNTER; i++) spi2_write(&di_cmd, SPI_1_BYTE);
 
     // Slave select 
     spi2_slave_select(hw125_slave_pin); 
@@ -693,7 +693,7 @@ void hw125_send_cmd(
     {
         spi2_write_read(HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
     }
-    while((*resp & HW125_R1_RESP_FILTER) && --num_read);
+    while((*resp & HW125_R1_FILTER) && --num_read);
 }
 
 //=======================================================================================
@@ -1131,12 +1131,12 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
                     n =   ((uint32_t)csd[BYTE_5]  & FILTER_4_LSB) + 
                         ((((uint32_t)csd[BYTE_10] & FILTER_1_MSB) >> SHIFT_7) + 
                          (((uint32_t)csd[BYTE_9]  & FILTER_2_LSB) << SHIFT_1)) + 
-                        HW125_MULT_PLUS_TWO;
+                        HW125_MULT_OFFSET;
 
                     c_size = ((uint32_t)(csd[BYTE_8] & FILTER_2_MSB) >> SHIFT_6) +
                              ((uint32_t) csd[BYTE_7] << SHIFT_2) + 
                              ((uint32_t)(csd[BYTE_6] & FILTER_2_LSB) << SHIFT_10) + 
-                             HW125_LBA_PLUS_ONE;
+                             HW125_LBA_OFFSET;
                     
                     // Format the sector count 
                     *(uint32_t *) buff = c_size << (n - HW125_MAGIC_SHIFT_V1); 
@@ -1149,7 +1149,7 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
                     c_size =  (uint32_t) csd[BYTE_9] + 
                             ((uint32_t) csd[BYTE_8] << SHIFT_8) + 
                             ((uint32_t)(csd[BYTE_7] & FILTER_6_LSB) << SHIFT_16) + 
-                            HW125_LBA_PLUS_ONE; 
+                            HW125_LBA_OFFSET; 
 
                     // Format the sector count 
                     *(uint32_t *) buff = c_size << HW125_MAGIC_SHIFT_V2;
