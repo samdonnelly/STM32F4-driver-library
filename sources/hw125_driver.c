@@ -345,8 +345,8 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     // Local variables 
     uint8_t do_resp; 
     uint8_t init_timer_status;
-    uint8_t ocr[HW125_TRAIL_RESP_BYTES];
-    uint8_t v_range[HW125_TRAIL_RESP_BYTES];
+    uint8_t ocr[HW125_TRAILING_BYTES];
+    uint8_t v_range[HW125_TRAILING_BYTES];
 
     // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
     if (pdrv) return HW125_STATUS_NOINIT; 
@@ -371,7 +371,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
         if (do_resp == HW125_IDLE_STATE)
         {
             // No command wrror - Read the trailing 32-bit R7 response 
-            spi2_write_read(HW125_DATA_HIGH, v_range, HW125_TRAIL_RESP_BYTES);
+            spi2_write_read(HW125_DATA_HIGH, v_range, HW125_TRAILING_BYTES);
 
             // Check lower 12-bits of R7 response (big endian format) 
             if ((uint16_t)((v_range[BYTE_2] << SHIFT_8) | (v_range[BYTE_3])) 
@@ -389,7 +389,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
                     if (do_resp == HW125_READY_STATE)
                     {
                         // Successful CMD58 - proceed to read the OCR register 
-                        spi2_write_read(HW125_DATA_HIGH, ocr, HW125_TRAIL_RESP_BYTES);
+                        spi2_write_read(HW125_DATA_HIGH, ocr, HW125_TRAILING_BYTES);
 
                         // Check CCS bit (bit 30) in OCR response (big endian format) 
                         if (ocr[BYTE_0] & HW125_CCS_FILTER)
@@ -717,7 +717,7 @@ DISK_RESULT hw125_read(
     if (pdrv) return HW125_RES_PARERR;
     
     // Check that the count is valid 
-    if (count == HW125_NO_BYTE) return HW125_RES_PARERR;
+    if (count == NONE) return HW125_RES_PARERR;
 
     // Check the init status 
     // TODO sometimes this fails 
@@ -857,7 +857,7 @@ DISK_RESULT hw125_write(
     if (pdrv) return HW125_RES_PARERR;
 
     // Check that the count is valid 
-    if (count == HW125_NO_BYTE) return HW125_RES_PARERR;
+    if (count == NONE) return HW125_RES_PARERR;
 
     // Check the init status 
     if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
@@ -1293,7 +1293,7 @@ DISK_RESULT hw125_ioctl_get_ocr(void *buff)
     if (do_resp == HW125_READY_STATE)
     {
         // Successful CMD58 - proceed to read the OCR register 
-        spi2_write_read(HW125_DATA_HIGH, ocr, HW125_TRAIL_RESP_BYTES);
+        spi2_write_read(HW125_DATA_HIGH, ocr, HW125_TRAILING_BYTES);
         result = HW125_RES_OK; 
     }
     else

@@ -32,42 +32,39 @@
 // User defined 
 
 // Command values 
-#define HW125_INDEX_OFFSET 0x40  // First two bits of command index 
+#define HW125_INDEX_OFFSET       0x40    // First two bits of command index 
 
 // Timers/counters 
 #define HW125_INIT_TIMER         1000    // Initiate initialization counter 
 #define HW125_INIT_DELAY         1       // time delay in ms for initiate initialization sequence
 #define HW125_PWR_ON_COUNTER     10      // General counter for the hw125_power_on function 
-#define HW125_PWR_ON_RES_CNT     0x1FFF  // 
+#define HW125_PWR_ON_RES_CNT     0x1FFF  // R1 response counter during power on sequence 
 #define HW125_R1_RESP_COUNT      10      // Max num of times to read R1 until appropriate response
 #define HW125_DT_RESP_COUNT      10      // Max number of times to check the data token 
 
 // Data information 
 #define HW125_DATA_HIGH          0xFF    // DI/MOSI setpoint and DO/MISO response value 
-#define HW125_TRAIL_RESP_BYTES   4       // Number of bytes in an R3/R7 response after R1 
-#define HW125_SINGLE_BYTE        1       // 
-#define HW125_NO_BYTE            0       // 
-#define HW125_SEC_SIZE           512     // Min and max sector size of the card 
-#define HW125_DR_FILTER          0x1F    // 
-#define HW125_CSD_REG_LEN        16      // 
-#define HW125_CID_REG_LEN        16      // 
+#define HW125_TRAILING_BYTES     4       // Number of bytes in an R3/R7 response after R1 
+#define HW125_SINGLE_BYTE        1       // For single byte operations 
+#define HW125_SEC_SIZE           512     // Sector size of the card 
+#define HW125_CSD_REG_LEN        16      // CSD register length 
+#define HW125_CID_REG_LEN        16      // CID register length 
 
-// IO Control 
-#define HW125_LBA_OFFSET         1       // Used in sector size calculation for all cards 
-#define HW125_MULT_OFFSET        2       // Used in sector size calculation for SDC V1 
-#define HW125_MAGIC_SHIFT_V1     9       // Magic sector count format shift for CSD V1 
-#define HW125_MAGIC_SHIFT_V2     10      // Magic sector count format shift for CSD V2 cards 
-
-// Command response values
+// Responses and filters values
 #define HW125_READY_STATE        0x00    // Drive is ready to send and receive information 
 #define HW125_IDLE_STATE         0x01    // Drive is in the idle state - after software reset 
 #define HW125_SDCV2_CHECK        0x1AA   // SDCV2 return value from CMD8 
 #define HW125_R1_FILTER          0x80    // Filter used to determine a valid R1 response 
 #define HW125_CCS_FILTER         0x40    // Isolate the CCS bit location in OCR 
 #define HW125_CSD_FILTER         0x03    // Isolate the CSD register version number 
-
-// Status 
 #define HW125_INIT_SUCCESS       0xFE    // Filter to clear the HW125_STATUS_NOINIT flag 
+#define HW125_DR_FILTER          0x1F    // Data response filter for write operations 
+
+// IO Control 
+#define HW125_LBA_OFFSET         1       // Used in sector size calculation for all cards 
+#define HW125_MULT_OFFSET        2       // Used in sector size calculation for SDC V1 
+#define HW125_MAGIC_SHIFT_V1     9       // Magic sector count format shift for CSD V1 
+#define HW125_MAGIC_SHIFT_V2     10      // Magic sector count format shift for CSD V2 cards 
 
 //======================================================
 
@@ -111,32 +108,36 @@
 /**
  * @brief HW125 command index 
  * 
- * @details 
+ * @details Index that determines what command is being requested. Each index is offset 
+ *          by HW125_INDEX_OFFSET because every command frame sends this value every time 
+ *          a command is sent. 
  * 
  */
 typedef enum {
-    HW125_CMD0  = HW125_INDEX_OFFSET + 0x00,  // GO_IDLE_STATE
-    HW125_CMD1  = HW125_INDEX_OFFSET + 0x01,  // SEND_OP_COND
-    HW125_CMD8  = HW125_INDEX_OFFSET + 0x08,  // SEND_IF_COND
-    HW125_CMD9  = HW125_INDEX_OFFSET + 0x09,  // SEND_CSD
-    HW125_CMD10 = HW125_INDEX_OFFSET + 0x0A,  // SEND_CID
-    HW125_CMD12 = HW125_INDEX_OFFSET + 0x0C,  // STOP_TRANSMISSION
-    HW125_CMD16 = HW125_INDEX_OFFSET + 0x10,  // SET_BLOCKLEN
-    HW125_CMD17 = HW125_INDEX_OFFSET + 0x11,  // READ_SINGLE_BLOCK
-    HW125_CMD18 = HW125_INDEX_OFFSET + 0x12,  // READ_MULTIPLE_BLOCK
-    HW125_CMD23 = HW125_INDEX_OFFSET + 0x17,  // SET_BLOCK_COUNT
-    HW125_CMD24 = HW125_INDEX_OFFSET + 0x18,  // WRITE_BLOCK
-    HW125_CMD25 = HW125_INDEX_OFFSET + 0x19,  // WRITE_MULTIPLE_BLOCK
-    HW125_CMD41 = HW125_INDEX_OFFSET + 0x29,  // APP_SEND_OP_COND
-    HW125_CMD55 = HW125_INDEX_OFFSET + 0x37,  // APP_CMD
-    HW125_CMD58 = HW125_INDEX_OFFSET + 0x3A   // READ_OCR
+    HW125_CMD0  = HW125_INDEX_OFFSET + 0x00,    // GO_IDLE_STATE
+    HW125_CMD1  = HW125_INDEX_OFFSET + 0x01,    // SEND_OP_COND
+    HW125_CMD8  = HW125_INDEX_OFFSET + 0x08,    // SEND_IF_COND
+    HW125_CMD9  = HW125_INDEX_OFFSET + 0x09,    // SEND_CSD
+    HW125_CMD10 = HW125_INDEX_OFFSET + 0x0A,    // SEND_CID
+    HW125_CMD12 = HW125_INDEX_OFFSET + 0x0C,    // STOP_TRANSMISSION
+    HW125_CMD16 = HW125_INDEX_OFFSET + 0x10,    // SET_BLOCKLEN
+    HW125_CMD17 = HW125_INDEX_OFFSET + 0x11,    // READ_SINGLE_BLOCK
+    HW125_CMD18 = HW125_INDEX_OFFSET + 0x12,    // READ_MULTIPLE_BLOCK
+    HW125_CMD23 = HW125_INDEX_OFFSET + 0x17,    // SET_BLOCK_COUNT
+    HW125_CMD24 = HW125_INDEX_OFFSET + 0x18,    // WRITE_BLOCK
+    HW125_CMD25 = HW125_INDEX_OFFSET + 0x19,    // WRITE_MULTIPLE_BLOCK
+    HW125_CMD41 = HW125_INDEX_OFFSET + 0x29,    // APP_SEND_OP_COND
+    HW125_CMD55 = HW125_INDEX_OFFSET + 0x37,    // APP_CMD
+    HW125_CMD58 = HW125_INDEX_OFFSET + 0x3A     // READ_OCR
 } hw125_command_index_t;
 
 
 /**
  * @brief HW125 card types 
  * 
- * @details 
+ * @details Identifiers for the card type. The card type is used internally for determining 
+ *          how to handle a particular drive when read and write operations are called 
+ *          by the FATFS module layer. 
  * 
  */
 typedef enum {
@@ -151,7 +152,9 @@ typedef enum {
 /**
  * @brief HW125 arguments
  * 
- * @details 
+ * @details Each command needs a certain argument to be sent with it in the command frame. 
+ *          For the commands used in reading and writing to a drive, these are all the 
+ *          needed arguments. 
  * 
  */
 typedef enum {
@@ -165,7 +168,9 @@ typedef enum {
 /**
  * @brief HW125 CRC commands 
  * 
- * @details 
+ * @details Each command needs a certain CRC to be sent with it at the end of the command 
+ *          frame. For the commands used in reading and writing to a drive, these are all the 
+ *          needed CRC values. 
  * 
  */
 typedef enum {
