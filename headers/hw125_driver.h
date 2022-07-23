@@ -73,29 +73,29 @@
 // Command codes for IO control --> copied from diskio.h 
 
 /* Generic command (Used by FatFs) */
-#define HW125_CTRL_SYNC           0   // Complete pending write process (needed at _FS_READONLY == 0) 
-#define HW125_GET_SECTOR_COUNT    1   // Get media size (needed at _USE_MKFS == 1) 
-#define HW125_GET_SECTOR_SIZE     2   // Get sector size (needed at _MAX_SS != _MIN_SS) 
-#define HW125_GET_BLOCK_SIZE      3   // Get erase block size (needed at _USE_MKFS == 1) 
-#define HW125_CTRL_TRIM           4   // Inform device that the data on the block of sectors is no longer used (needed at _USE_TRIM == 1) 
+#define HW125_CTRL_SYNC           0      // Complete pending write process (needed at _FS_READONLY == 0) 
+#define HW125_GET_SECTOR_COUNT    1      // Get media size (needed at _USE_MKFS == 1) 
+#define HW125_GET_SECTOR_SIZE     2      // Get sector size (needed at _MAX_SS != _MIN_SS) 
+#define HW125_GET_BLOCK_SIZE      3      // Get erase block size (needed at _USE_MKFS == 1) 
+#define HW125_CTRL_TRIM           4      // Inform device that the data on the block of sectors is no longer used (needed at _USE_TRIM == 1) 
 
 // Generic command (Not used by FatFs) 
-#define HW125_CTRL_POWER          5   // Get/Set power status 
-#define HW125_CTRL_LOCK           6   // Lock/Unlock media removal 
-#define HW125_CTRL_EJECT          7   // Eject media 
-#define HW125_CTRL_FORMAT         8   // Create physical format on the media 
+#define HW125_CTRL_POWER          5      // Get/Set power status 
+#define HW125_CTRL_LOCK           6      // Lock/Unlock media removal 
+#define HW125_CTRL_EJECT          7      // Eject media 
+#define HW125_CTRL_FORMAT         8      // Create physical format on the media 
 
 // MMC/SDC specific ioctl command 
-#define HW125_MMC_GET_TYPE        10  // Get card type 
-#define HW125_MMC_GET_CSD         11  // Get CSD 
-#define HW125_MMC_GET_CID         12  // Get CID 
-#define HW125_MMC_GET_OCR         13  // Get OCR 
-#define HW125_MMC_GET_SDSTAT      14  // Get SD status 
+#define HW125_MMC_GET_TYPE        10     // Get card type 
+#define HW125_MMC_GET_CSD         11     // Get CSD 
+#define HW125_MMC_GET_CID         12     // Get CID 
+#define HW125_MMC_GET_OCR         13     // Get OCR 
+#define HW125_MMC_GET_SDSTAT      14     // Get SD status 
 
 // ATA/CF specific ioctl command 
-#define HW125_ATA_GET_REV         20  // Get F/W revision 
-#define HW125_ATA_GET_MODEL       21  // Get model name 
-#define HW125_ATA_GET_SN          22  // Get serial number 
+#define HW125_ATA_GET_REV         20     // Get F/W revision 
+#define HW125_ATA_GET_MODEL       21     // Get model name 
+#define HW125_ATA_GET_SN          22     // Get serial number 
 
 //======================================================
 
@@ -133,23 +133,6 @@ typedef enum {
 
 
 /**
- * @brief HW125 card types 
- * 
- * @details Identifiers for the card type. The card type is used internally for determining 
- *          how to handle a particular drive when read and write operations are called 
- *          by the FATFS module layer. 
- * 
- */
-typedef enum {
-    HW125_CT_UNKNOWN     = 0x00,   // Unknown card type - failed to read 
-    HW125_CT_MMC         = 0x01,   // MMC version 3
-    HW125_CT_SDC1        = 0x02,   // SDC version 1
-    HW125_CT_SDC2_BYTE   = 0x04,   // SDC version 2 - byte address 
-    HW125_CT_SDC2_BLOCK  = 0x0C    // SDC version 2 - block address 
-} hw125_card_type_t; 
-
-
-/**
  * @brief HW125 arguments
  * 
  * @details Each command needs a certain argument to be sent with it in the command frame. 
@@ -174,16 +157,42 @@ typedef enum {
  * 
  */
 typedef enum {
-    HW125_CRC_CMDX = 0x01,
-    HW125_CRC_CMD8 = 0x87,
-    HW125_CRC_CMD0 = 0x95
+    HW125_CRC_CMDX = 0x01,  // For all other commands 
+    HW125_CRC_CMD8 = 0x87,  // For command 8 exclusively 
+    HW125_CRC_CMD0 = 0x95   // For command 0 exclusively 
 } hw125_crc_cmd_t;
+
+
+/**
+ * @brief HW125 card types 
+ * 
+ * @details Identifiers for the card type. The card type is used internally for determining 
+ *          how to handle a particular drive when read and write operations are called 
+ *          by the FATFS module layer. The card type is determined during the drive 
+ *          initialization process. 
+ * 
+ * @see hw125_init 
+ * 
+ */
+typedef enum {
+    HW125_CT_UNKNOWN     = 0x00,   // Unknown card type - failed to read 
+    HW125_CT_MMC         = 0x01,   // MMC version 3
+    HW125_CT_SDC1        = 0x02,   // SDC version 1
+    HW125_CT_SDC2_BYTE   = 0x04,   // SDC version 2 - byte address 
+    HW125_CT_SDC2_BLOCK  = 0x0C    // SDC version 2 - block address 
+} hw125_card_type_t; 
 
 
 /**
  * @brief HW125 disk status 
  * 
- * @details 
+ * @details Status of the card being used. The status is used as a check before read and 
+ *          write operations to determine whether to proceed or not. If the status is any of 
+ *          the options below then the card will not perform any operations. The status gets 
+ *          set in the hw125_init function and if initialization is successful then the 
+ *          status is cleared from being HW125_STATUS_NOINIT and will work as normal. 
+ * 
+ * @see hw125_init 
  * 
  */
 typedef enum {
@@ -196,7 +205,12 @@ typedef enum {
 /**
  * @brief HW125 power status 
  * 
- * @details 
+ * @details Status and commands for the power flag (pwr_flag). The power flag is used as a 
+ *          reference for the FATFS module layer. HW125_PWR_OFF and HW125_PWR_ON are used to 
+ *          set the power flag and determine if the FATFS layer wants to set or clear the flag. 
+ *          HW125_PWR_CHECK is used to identify that the FATFS layer wants to know the state 
+ *          of the power flag. If the power on sequence during initialization is successful 
+ *          then the pwoer flag gets set to on.
  * 
  */
 typedef enum {
@@ -209,7 +223,10 @@ typedef enum {
 /**
  * @brief HW125 disk function results 
  * 
- * @details 
+ * @details The result of the read and write operations. The return type of numerous functions 
+ *          in the driver is DISK_RESULT which is a typedef of this enum. If the operation is 
+ *          successful then HW125_RES_OK will be returned. If not then the problem will be 
+ *          reflected in the result. 
  * 
  */
 typedef enum {
@@ -224,7 +241,9 @@ typedef enum {
 /**
  * @brief HW125 data token 
  * 
- * @details 
+ * @details Data tokens associated with various commands. When reading or writing data, 
+ *          information is sent in the form of data packets which consist of a data token 
+ *          followed by a data block and a CRC. 
  * 
  */
 typedef enum {
