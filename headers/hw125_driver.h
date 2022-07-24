@@ -243,7 +243,15 @@ typedef enum {
  * 
  * @details Data tokens associated with various commands. When reading or writing data, 
  *          information is sent in the form of data packets which consist of a data token 
- *          followed by a data block and a CRC. 
+ *          followed by a data block and a CRC. If reading data from a drive then the code 
+ *          looks for the appropriate data token before reading data. If writing data to a 
+ *          drive the appropriate data token is sent before the data. When writing multiple 
+ *          data packets then a stop token is needed to terminate the transaction. <br><br> 
+ *          
+ *          CMD17: Read a single data packet    <br> 
+ *          CMD18: Read multiple data packets   <br> 
+ *          CMD24: Write a single data packet   <br> 
+ *          CMD25: Write multiple data packets 
  * 
  */
 typedef enum {
@@ -256,7 +264,9 @@ typedef enum {
 /**
  * @brief HW125 data response filters 
  * 
- * @details 
+ * @details When writing to a drive a data response byte will be received immediately after 
+ *          the data packet has finished sending. This data response will indicate if the 
+ *          transaction was successful or if there were errors. 
  * 
  */
 typedef enum {
@@ -269,13 +279,18 @@ typedef enum {
 /**
  * @brief CSD register version 
  * 
- * @details 
+ * @details Different SD card drives contain different versions of the CSD register. Each 
+ *          version stored slightly different information and at different locations in the 
+ *          register. The values in this enum are used to verify the CSD register version in  
+ *          the hw125_ioctl function so the drives sector count can be calculated correctly. 
+ * 
+ * @see hw125_ioctl
  * 
  */
 typedef enum {
-    HW125_CSD_V1, 
-    HW125_CSD_V2, 
-    HW125_CSD_V3
+    HW125_CSD_V1,   // Version 1.0 
+    HW125_CSD_V2,   // Version 2.0 
+    HW125_CSD_V3    // Version 3.0 
 } hw125_csd_version_t; 
 
 //=======================================================================================
@@ -299,8 +314,8 @@ typedef hw125_disk_results_t DISK_RESULT;
  * 
  * @details This functions is called directly by the user and used to set parameters for 
  *          the hw125 driver. The hw125 driver functions (aside from this one) are 
- *          references by the FATFS module and are not meant to be called directly by the 
- *          user within application code. 
+ *          references by the FATFS module layer and are not meant to be called directly by 
+ *          the user within application code. 
  * 
  * @param hw125_slave_pin 
  */

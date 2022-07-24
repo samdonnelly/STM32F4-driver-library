@@ -977,7 +977,7 @@ DISK_RESULT hw125_write_data_packet(
     }
     else
     {
-        // Data rejected 
+        // Data rejected duw to write error or CRC error 
         write_resp = HW125_RES_ERROR; 
     }
 
