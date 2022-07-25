@@ -313,11 +313,14 @@ typedef hw125_disk_results_t DISK_RESULT;
  * @brief HW125 user init 
  * 
  * @details This functions is called directly by the user and used to set parameters for 
- *          the hw125 driver. The hw125 driver functions (aside from this one) are 
- *          references by the FATFS module layer and are not meant to be called directly by 
- *          the user within application code. 
+ *          the hw125 driver that define the characteristics of the drive. Characteristics 
+ *          such as the disk status, card type, power flag and slave select pin are 
+ *          initialized here but currently only the slave select pin is configurable 
+ *          through a call to this function. <br><br?
+ *          
+ *          This function should be called during initialization in the application code. 
  * 
- * @param hw125_slave_pin 
+ * @param hw125_slave_pin : slave pin (GPIO pin) used to select the slave device 
  */
 void hw125_user_init(uint16_t hw125_slave_pin);
 
@@ -325,10 +328,20 @@ void hw125_user_init(uint16_t hw125_slave_pin);
 /**
  * @brief HW125 initialization 
  * 
- * @details 
+ * @details Puts the SD card into the ready state so it can start to accept generic read and 
+ *          write commands. The type of card is also determined which is used throughout the 
+ *          driver to know how to handle data. If all initialization operations are 
+ *          successful then the function will clear the HW125_STATUS_NOINIT flag and 
+ *          return that as the status. If unsuccessful then HW125_STATUS_NOINIT will be 
+ *          returned and the no further calls can be made to the card. <br><br>
+ *          
+ *          This function is called by the FATFS module layer and should not be called 
+ *          manually in the application layer. 
  * 
- * @param hw125_slave_pin 
- * @return uint8_t 
+ * @see hw125_disk_status_t
+ * 
+ * @param pdrv : physical drive number to distinguish between target devices (starts at 0) 
+ * @return DISK_STATUS : status of the disk drive 
  */
 DISK_STATUS hw125_init(uint8_t pdrv);
 
@@ -341,10 +354,15 @@ DISK_STATUS hw125_init(uint8_t pdrv);
 /**
  * @brief HW125 disk status 
  * 
- * @details 
+ * @details Returns the current status of the card. <br><br>
+ *          
+ *          This function is called by the FATFS module layer and should not be called 
+ *          manually in the application layer. 
  * 
- * @param pdrv : physical drive number to identify the target device 
- * @return uint8_t 
+ * @see hw125_disk_status_t
+ * 
+ * @param pdrv : physical drive number to distinguish between target devices (starts at 0)
+ * @return DISK_STATUS : status of the disk drive 
  */
 DISK_STATUS hw125_status(uint8_t pdrv);
 
@@ -357,13 +375,21 @@ DISK_STATUS hw125_status(uint8_t pdrv);
 /**
  * @brief HW125 read 
  * 
- * @details 
+ * @details Reads single or multiple data packets from the SD card. The address to start 
+ *          reading from is specified as an argument and the data read gets stored into 
+ *          a pointer to a buffer. The function returns the result of the operation. 
+ *          <br><br>
+ *          
+ *          This function is called by the FATFS module layer and should not be called 
+ *          manually in the application layer. 
  * 
- * @param pdrv : physical drive number 
- * @param buff : pointer to the read data buffer 
- * @param sector : start sector number 
+ * @see hw125_disk_results_t
+ * 
+ * @param pdrv : physical drive number to distinguish between target devices (starts at 0) 
+ * @param buff : pointer to the read data buffer that stores the information read 
+ * @param sector : start sector number - address to begin reading from 
  * @param count : number of sectors to read 
- * @return DISK_RESULT 
+ * @return DISK_RESULT : result of the read operation 
  */
 DISK_RESULT hw125_read(
     uint8_t  pdrv, 
@@ -375,13 +401,20 @@ DISK_RESULT hw125_read(
 /**
  * @brief HW125 write 
  * 
- * @details 
+ * @details Writes single or multiple data packets to the SD card. The address to start 
+ *          writing to and a pointer to a buffer that stores the data to be written are passed 
+ *          as arguments. The function returns the result of the operation. <br><br>
+ *          
+ *          This function is called by the FATFS module layer and should not be called 
+ *          manually in the application layer. 
  * 
- * @param pdrv : physical drive number 
+ * @see hw125_disk_results_t
+ * 
+ * @param pdrv : physical drive number to distinguish between target devices (starts at 0) 
  * @param buff : pointer to the data to be written 
- * @param sector : sector number to write from 
- * @param count : number of sectors to write 
- * @return DISK_RESULT 
+ * @param sector : sector number (address) that specifies where to begin writing data 
+ * @param count : number of sectors to write (determines single or multiple data packet write) 
+ * @return DISK_RESULT : result of the write operation 
  */
 DISK_RESULT hw125_write(
     uint8_t       pdrv, 
@@ -399,12 +432,21 @@ DISK_RESULT hw125_write(
  * @brief HW125 IO control 
  * 
  * @details This function is called to control device specific features and misc functions 
- *          other than generic read and write. 
+ *          other than generic read and write. Which function to call is specified by the 
+ *          cmd argument. The buff argument is a generic void pointer that can be used for 
+ *          any of the functions specified by cmd. Each function can cast the pointer to the 
+ *          needed data type. buff can also serves as further specification of the operation to 
+ *          perform within each sub function. <br><br>
+ *          
+ *          This function is called by the FATFS module layer and should not be called 
+ *          manually in the application layer. 
  * 
- * @param pdrv : drive number 
- * @param cmd : control command code 
- * @param buff : parameter and data buffer 
- * @return DISK_RESULT 
+ * @see hw125_disk_results_t
+ * 
+ * @param pdrv : physical drive number to distinguish between target devices (starts at 0) 
+ * @param cmd : control command code - specifies sub operation to execute 
+ * @param buff : parameter and data buffer - supports the sub operation specified by cmd 
+ * @return DISK_RESULT : result of the IO control operation 
  */
 DISK_RESULT hw125_ioctl(
     uint8_t pdrv, 
