@@ -1,5 +1,5 @@
 /**
- * @file HW_125_microSD_driver.h
+ * @file hw125_driver.h
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
@@ -12,8 +12,8 @@
  * 
  */
 
-#ifndef _HW_125_MICROSD_DRIVER_H_
-#define _HW_125_MICROSD_DRIVER_H_
+#ifndef _HW125_DRIVER_H_
+#define _HW125_DRIVER_H_
 
 
 //=======================================================================================
@@ -456,4 +456,4 @@ DISK_RESULT hw125_ioctl(
 //=======================================================================================
 
 
-#endif  // _HW_125_MICROSD_DRIVER_H_
+#endif  // _HW125_DRIVER_H_

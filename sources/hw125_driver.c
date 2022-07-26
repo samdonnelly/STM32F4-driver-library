@@ -1,5 +1,5 @@
 /**
- * @file HW_125_microSD_driver.c
+ * @file hw125_driver.c
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
