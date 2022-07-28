@@ -27,7 +27,9 @@
 //=======================================================================================
 // Macros 
 
+// HC-05 paramters 
 #define HC05_ADDRESS 0 
+#define HC05_DEFAULT_PIN 1234
 
 // AT Command Mode 
 #define HC05_AT_CMD_MODE 1   // Controls the inclusion of AT command mode code 
@@ -82,6 +84,19 @@ typedef enum {
     HC05_AT_EXERT         // 34. Exerts energy saving mode 
 } hc05_at_commnds_t; 
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HC05_NONE,
+    HC05_SET,
+    HC05_CHECK
+} hc05_at_operation_t; 
+
 //=======================================================================================
 
 
@@ -89,6 +104,7 @@ typedef enum {
 // Data types 
 
 typedef hc05_at_commnds_t AT_CMD; 
+typedef hc05_at_operation_t AT_OPR; 
 
 //=======================================================================================
 
@@ -102,9 +118,15 @@ typedef hc05_at_commnds_t AT_CMD;
  * @details 
  * 
  * @param command 
+ * @param operation 
+ * @param param 
  * @param response 
  */
-void hc05_at_command(AT_CMD command, char *response); 
+void hc05_at_command(
+    AT_CMD command, 
+    AT_OPR operation, 
+    char *param, 
+    char *response); 
 
 //=======================================================================================
 
