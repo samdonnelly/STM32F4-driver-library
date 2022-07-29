@@ -41,6 +41,8 @@
 //=======================================================================================
 // Enums 
 
+#if HC05_AT_CMD_MODE
+
 /**
  * @brief HC-05 AT Commands 
  * 
@@ -96,6 +98,21 @@ typedef enum {
     HC05_SET,
     HC05_CHECK
 } hc05_at_operation_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HC05_MM_SLAVE,
+    HC05_MM_MASTER,
+    HC05_MM_SLAVE_LOOP,
+} hc05_module_mode_t; 
+
+#endif  // HC05_AT_CMD_MODE
 
 //=======================================================================================
 
