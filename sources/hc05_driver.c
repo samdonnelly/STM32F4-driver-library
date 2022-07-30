@@ -41,12 +41,12 @@
 
 #if HC05_AT_CMD_MODE
 
-// This mode is designed to be used along with serial terminal input/output with 
-// the help of uart2 
+// This code will be used once to configure the module as needed then only the data mode 
+// will be used. 
 
 // TODO add HC-05 standard configs 
 
-// 
+// Send AT commands and record responses 
 void hc05_at_command(
     AT_CMD command, 
     AT_OPR operation, 
@@ -86,8 +86,7 @@ void hc05_at_command(
             break; 
         
         case HC05_AT_DEV_NAME:  // 7. Get the Bluetooth device name 
-            // TODO Get the module address first? 
-            strcpy(cmd_str, "AT+\r\n");
+            sprintf(cmd_str, "AT+RNAME?%s\r\n", param); 
             break; 
         
         case HC05_AT_MODE:  // 8. Set/check module mode 
@@ -121,87 +120,93 @@ void hc05_at_command(
             break; 
         
         case HC05_AT_CONNECT:  // 14. Set/check connect mode 
-            strcpy(cmd_str, "AT+\r\n");
+            if (operation == HC05_SET) sprintf(cmd_str, "AT+CMODE=%s\r\n", param); 
+            else if (operation == HC05_CHECK) strcpy(cmd_str, "AT+CMODE?\r\n");
             break; 
         
         case HC05_AT_FIXED:  // 15. Set/check fixed address 
-            strcpy(cmd_str, "AT+\r\n");
+            if (operation == HC05_SET) sprintf(cmd_str, "AT+BIND=%s\r\n", param); 
+            else if (operation == HC05_CHECK) strcpy(cmd_str, "AT+BIND?\r\n");
             break; 
         
-        case HC05_AT_LED:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_LED:  // 16. Set/check LED IO 
+            if (operation == HC05_SET) sprintf(cmd_str, "AT+POLAR=%s\r\n", param); 
+            else if (operation == HC05_CHECK) strcpy(cmd_str, "AT+POLAR?\r\n");
             break; 
         
-        case HC05_AT_PIO:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_PIO:  // 17. Set PIO output 
+            sprintf(cmd_str, "AT+PIO=%s\r\n", param); 
             break; 
         
-        case HC05_AT_SCAN:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_SCAN:  // 18. Set/check scan parameter 
+            if (operation == HC05_SET) sprintf(cmd_str, "AT+IPSCAN=%s\r\n", param); 
+            else if (operation == HC05_CHECK) strcpy(cmd_str, "AT+IPSCAN?\r\n");
             break; 
         
-        case HC05_AT_SHIFF:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_SNIFF:  // 19. Set/check SNIFF parameter 
+            if (operation == HC05_SET) sprintf(cmd_str, "AT+SNIFF=%s\r\n", param); 
+            else if (operation == HC05_CHECK) strcpy(cmd_str, "AT+SNIFF?\r\n");
             break; 
         
-        case HC05_AT_SECURITY:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_SECURITY:  // 20. Set/check security mode 
+            if (operation == HC05_SET) sprintf(cmd_str, "AT+SENM=%s\r\n", param); 
+            else if (operation == HC05_CHECK) strcpy(cmd_str, "AT+SENM?\r\n");
             break; 
         
-        case HC05_AT_DELETE:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_DELETE:  // 21. Delete authentication device 
+            sprintf(cmd_str, "AT+PMSAD=%s\r\n", param); 
             break; 
         
-        case HC05_AT_DELETE_ALL:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_DELETE_ALL:  // 22. Delete all authentication device 
+            strcpy(cmd_str, "AT+RMAAD\r\n");
             break; 
         
-        case HC05_AT_SEARCH:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_SEARCH:  // 23. Search authentication device 
+            sprintf(cmd_str, "AT+FSAD=%s\r\n", param); 
             break; 
         
-        case HC05_AT_COUNT:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_COUNT:  // 24. Get authentication device count 
+            strcpy(cmd_str, "AT+ADCN?\r\n");
             break; 
         
-        case HC05_AT_RECENT:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_RECENT:  // 25. Most recently used authenticated device 
+            strcpy(cmd_str, "AT+MRAD?\r\n");
             break; 
         
-        case HC05_AT_STATE:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_STATE:  // 26. Get the module working state 
+            strcpy(cmd_str, "AT+STATE?\r\n");
             break; 
         
-        case HC05_AT_SPP:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_SPP:  // 27. Initialze the SPP profile lib 
+            strcpy(cmd_str, "AT+INIT\r\n");
             break; 
         
-        case HC05_AT_INQUIRY:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_INQUIRY:  // 28. Inquiry Bluetooth device 
+            strcpy(cmd_str, "AT+INQ\r\n");
             break; 
         
-        case HC05_AT_CANCEL:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_CANCEL:  // 29. Cancel inquiry Bluetooth device 
+            strcpy(cmd_str, "AT+INQC\r\n");
             break; 
         
-        case HC05_AT_MATCH:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_MATCH:  // 30. Equipment matching 
+            sprintf(cmd_str, "AT+PAIR=%s\r\n", param); 
             break; 
         
-        case HC05_AT_CONN_DEV:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_CONN_DEV:  // 31. Connect device 
+            sprintf(cmd_str, "AT+LINK=%s\r\n", param); 
             break; 
         
-        case HC05_AT_DISCONNECT:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_DISCONNECT:  // 32. Disconnect 
+            strcpy(cmd_str, "AT+DISC\r\n");
             break; 
         
-        case HC05_AT_SAVING:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_SAVING:  // 33. Energy saving mode 
+            sprintf(cmd_str, "AT+ENSNIFF=%s\r\n", param); 
             break; 
         
-        case HC05_AT_EXERT:
-            strcpy(cmd_str, "AT+\r\n");
+        case HC05_AT_EXERT:  // 34. Exerts energy saving mode 
+            sprintf(cmd_str, "AT+EXSNIFF=%s\r\n", param); 
             break; 
         default:
             break; 

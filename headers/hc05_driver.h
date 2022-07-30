@@ -33,7 +33,7 @@
 
 // AT Command Mode 
 #define HC05_AT_CMD_MODE 1   // Controls the inclusion of AT command mode code 
-#define HC05_AT_CMD_LEN  20  // Max length of command string 
+#define HC05_AT_CMD_LEN  30  // Max length of command string 
 
 //=======================================================================================
 
@@ -68,7 +68,7 @@ typedef enum {
     HC05_AT_LED,          // 16. Set/check LED IO 
     HC05_AT_PIO,          // 17. Set PIO output 
     HC05_AT_SCAN,         // 18. Set/check scan parameter 
-    HC05_AT_SHIFF,        // 19. Set/check SHIFF parameter 
+    HC05_AT_SNIFF,        // 19. Set/check SNIFF parameter 
     HC05_AT_SECURITY,     // 20. Set/check security mode 
     HC05_AT_DELETE,       // 21. Delete authentication device 
     HC05_AT_DELETE_ALL,   // 22. Delete all authentication device 
@@ -98,19 +98,6 @@ typedef enum {
     HC05_SET,
     HC05_CHECK
 } hc05_at_operation_t; 
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- */
-typedef enum {
-    HC05_MM_SLAVE,
-    HC05_MM_MASTER,
-    HC05_MM_SLAVE_LOOP,
-} hc05_module_mode_t; 
 
 #endif  // HC05_AT_CMD_MODE
 
