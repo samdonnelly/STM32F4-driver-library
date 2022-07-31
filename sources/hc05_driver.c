@@ -18,6 +18,7 @@
 
 // Drivers 
 #include "hc05_driver.h"
+#include "uart_comm.h"
 
 // Libraries 
 #if HC05_AT_CMD_MODE
@@ -40,6 +41,16 @@
 // AT Command Mode 
 
 #if HC05_AT_CMD_MODE
+
+// Test 1 - String verification  
+// User end:
+//  - Input command, parameter (if needed) and operation (if needed) into PuTTy 
+//  - Receive the AT command string back to verify the string 
+// Code end: 
+//  - Read input from user 
+//  - Call hc05_at_command and use the user input for arguments 
+//  - hc05_at_command will format the string 
+
 
 // This code will be used once to configure the module as needed then only the data mode 
 // will be used. 
@@ -208,9 +219,14 @@ void hc05_at_command(
         case HC05_AT_EXERT:  // 34. Exerts energy saving mode 
             sprintf(cmd_str, "AT+EXSNIFF=%s\r\n", param); 
             break; 
+        
         default:
+            strcpy(cmd_str, "Invalid command\r\n");
             break; 
     }
+
+    // Print the cmd_string to the terminal 
+    uart2_sendstring(cmd_str); 
 }
 
 #endif  // HC05_AT_CMD_MODE
