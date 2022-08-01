@@ -42,15 +42,8 @@
 
 #if HC05_AT_CMD_MODE
 
-// Test 1 - String verification  
-// User end:
-//  - Input command, parameter (if needed) and operation (if needed) into PuTTy 
-//  - Receive the AT command string back to verify the string 
-// Code end: 
-//  - Read input from user 
-//  - Call hc05_at_command and use the user input for arguments 
-//  - hc05_at_command will format the string 
-
+// Test 2 - UART string format and send verification 
+// Test 3 - UART string receive verification and command response verification 
 
 // This code will be used once to configure the module as needed then only the data mode 
 // will be used. 

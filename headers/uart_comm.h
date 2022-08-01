@@ -154,6 +154,16 @@ typedef enum {
 // UART Initialization 
 
 /**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param baud_rate 
+ */
+void uart1_init(uint8_t baud_rate);
+
+
+/**
  * @brief UART2 initialization
  * 
  * @details Configures UART2 which is connected to the serial port of the dev board. 
@@ -178,7 +188,74 @@ void uart2_init(uint8_t baud_rate);
 
 
 //=======================================================================================
-// UART2 Send Functions 
+// Send Functions 
+
+//===================================================
+// UART1 send functions 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param character : character written to data register 
+ */
+void uart1_sendchar(uint8_t character);
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param string : string to send using UART2 
+ */
+void uart1_sendstring(char *string);
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param digit : number from 0-9 that gets printed to the serial terminal 
+ */
+void uart1_send_digit(uint8_t digit);
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param number : signed 16-bit number that gets printed to the serial terminal 
+ */
+void uart1_send_integer(int16_t integer);
+
+
+/**
+ * @brief 
+ * 
+ * @details \ 
+ * 
+ * @param num_spaces : number of blank spaces that get sent to the 
+ */
+void uart1_send_spaces(uint8_t num_spaces);
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+void uart2_send_new_line(void);
+
+//=================================================== // UART1 send functions 
+
+
+//===================================================
+// UART2 send functions 
 
 /**
  * @brief UART2 send character to serial terminal 
@@ -253,6 +330,8 @@ void uart2_send_spaces(uint8_t num_spaces);
  * 
  */
 void uart2_send_new_line(void);
+
+//=================================================== // UART2 send functions 
 
 //=======================================================================================
 
