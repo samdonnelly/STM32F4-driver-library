@@ -50,7 +50,7 @@
  * 
  */
 typedef enum {
-    HC05_AT_TEST,         // 1. Test command 
+    HC05_AT_TEST = 1,     // 1. Test command 
     HC05_AT_RESET,        // 2. Reset 
     HC05_AT_FIRMWARE,     // 3. Get firmware version 
     HC05_AT_DEFAULT,      // 4. Restore default 
