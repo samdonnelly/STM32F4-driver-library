@@ -28,20 +28,18 @@
 // Enums 
 
 /**
- * @brief UART2 baud rate 
+ * @brief UART baud rate 
  * 
- * @details Passed as an argument to uart2_baud_select that allows the user to define 
+ * @details Passed as an argument to uart_baud_select that allows the user to define 
  *          the baud rate of UART2. The baud rates here are defined from 0-X and not 
  *          the actual value of the baud rate. This method is chosen to prevent the need 
  *          to define large numbers for the baud rate. 
  * 
- * @see uart2_baud_select
- * 
  */
 typedef enum {
-    UART2_BAUD_9600,
-    UART2_BAUD_115200
-} uart2_baud_rate_t;
+    UART_BAUD_9600,
+    UART_BAUD_115200
+} uart_baud_rate_t;
 
 /**
  * @brief Fractional portion of UART baud rate setup 
@@ -153,8 +151,11 @@ typedef enum {
 //=======================================================================================
 // UART Initialization 
 
+//===================================================
+// UART1 initialization 
+
 /**
- * @brief 
+ * @brief UART1 initialization 
  * 
  * @details 
  * 
@@ -162,6 +163,11 @@ typedef enum {
  */
 void uart1_init(uint8_t baud_rate);
 
+//=================================================== // UART1 initialization 
+
+
+//===================================================
+// UART2 initialization 
 
 /**
  * @brief UART2 initialization
@@ -183,6 +189,8 @@ void uart1_init(uint8_t baud_rate);
  * 
  */
 void uart2_init(uint8_t baud_rate);
+
+//=================================================== // UART2 initialization 
 
 //=======================================================================================
 
@@ -231,25 +239,6 @@ void uart1_send_digit(uint8_t digit);
  * @param number : signed 16-bit number that gets printed to the serial terminal 
  */
 void uart1_send_integer(int16_t integer);
-
-
-/**
- * @brief 
- * 
- * @details \ 
- * 
- * @param num_spaces : number of blank spaces that get sent to the 
- */
-void uart1_send_spaces(uint8_t num_spaces);
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- */
-void uart2_send_new_line(void);
 
 //=================================================== // UART1 send functions 
 
@@ -337,7 +326,35 @@ void uart2_send_new_line(void);
 
 
 //=======================================================================================
-// UART2 Read Functions
+// Read Functions
+
+//===================================================
+// UART1 read functions 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @return uint8_t : 
+ */
+uint8_t uart1_getchar(void);
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param string_to_fill : 
+ */
+void uart1_getstr(char *string_to_fill);
+
+//=================================================== // UART1 read functions 
+
+
+//===================================================
+// UART2 read functions 
 
 /**
  * @brief UART2 get character from serial terminal 
@@ -370,6 +387,8 @@ uint8_t uart2_getchar(void);
  * @param string_to_fill : pointer to string used to store the string input 
  */
 void uart2_getstr(char *string_to_fill);
+
+//=================================================== // UART2 read functions
 
 //=======================================================================================
 
