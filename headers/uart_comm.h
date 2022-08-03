@@ -122,10 +122,10 @@ typedef enum {
  * 
  */
 typedef enum {
-    UART2_CHAR_SPACE_OFFSET = 32,
-    UART2_CHAR_PLUS_OFFSET  = 43,
-    UART2_CHAR_MINUS_OFFSET = 45,
-    UART2_CHAR_DIGIT_OFFSET = 48
+    UART_CHAR_SPACE_OFFSET = 32,
+    UART_CHAR_PLUS_OFFSET  = 43,
+    UART_CHAR_MINUS_OFFSET = 45,
+    UART_CHAR_DIGIT_OFFSET = 48
 } uart2_char_offset_t;
 
 

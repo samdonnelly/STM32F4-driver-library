@@ -36,6 +36,7 @@
  *          to make uart2_init easier to use by allowing for a baud rate to be passsed 
  *          when initializing UART2 as opposed to fractional and mantissa parameters. 
  * 
+ * @see uart1_init
  * @see uart2_init
  * @see uart_fractional_baud_t
  * @see uart_mantissa_baud_t
@@ -51,6 +52,7 @@ void uart_baud_select(
 
 //=======================================================================================
 
+// TODO combine UART1 and UART2 functions into general functions 
 
 //=======================================================================================
 // Initialization 
@@ -249,7 +251,7 @@ void uart1_sendstring(char *string)
     // Loop until null character of string is reached. 
     while (*string)
     {
-        uart2_sendchar(*string);
+        uart1_sendchar(*string);
         string++;
     }
 }
@@ -259,7 +261,7 @@ void uart1_sendstring(char *string)
 void uart1_send_digit(uint8_t digit)
 {
     // Convert the digit into the ASCII character equivalent 
-    uart2_sendchar(digit + UART2_CHAR_DIGIT_OFFSET);
+    uart1_sendchar(digit + UART_CHAR_DIGIT_OFFSET);
 }
 
 
@@ -274,28 +276,28 @@ void uart1_send_integer(int16_t integer)
     {
         // 2's complememt the integer so the correct value is printed
         integer = -(integer);
-        uart2_sendchar(UART2_CHAR_MINUS_OFFSET);
+        uart1_sendchar(UART_CHAR_MINUS_OFFSET);
     }
     else 
     {
-        uart2_sendchar(UART2_CHAR_PLUS_OFFSET);
+        uart1_sendchar(UART_CHAR_PLUS_OFFSET);
     }
 
     // Parse and print each digit
     digit = (uint8_t)((integer / DIVIDE_10000) % REMAINDER_10);
-    uart2_send_digit(digit);
+    uart1_send_digit(digit);
 
     digit = (uint8_t)((integer / DIVIDE_1000) % REMAINDER_10);
-    uart2_send_digit(digit);
+    uart1_send_digit(digit);
 
     digit = (uint8_t)((integer / DIVIDE_100) % REMAINDER_10);
-    uart2_send_digit(digit);
+    uart1_send_digit(digit);
 
     digit = (uint8_t)((integer / DIVIDE_10) % REMAINDER_10);
-    uart2_send_digit(digit);
+    uart1_send_digit(digit);
 
     digit = (uint8_t)((integer / DIVIDE_1) % REMAINDER_10);
-    uart2_send_digit(digit);
+    uart1_send_digit(digit);
 }
 
 //=================================================== // UART1 send 
@@ -332,7 +334,7 @@ void uart2_sendstring(char *string)
 void uart2_send_digit(uint8_t digit)
 {
     // Convert the digit into the ASCII character equivalent 
-    uart2_sendchar(digit + UART2_CHAR_DIGIT_OFFSET);
+    uart2_sendchar(digit + UART_CHAR_DIGIT_OFFSET);
 }
 
 
@@ -347,11 +349,11 @@ void uart2_send_integer(int16_t integer)
     {
         // 2's complememt the integer so the correct value is printed
         integer = -(integer);
-        uart2_sendchar(UART2_CHAR_MINUS_OFFSET);
+        uart2_sendchar(UART_CHAR_MINUS_OFFSET);
     }
     else 
     {
-        uart2_sendchar(UART2_CHAR_PLUS_OFFSET);
+        uart2_sendchar(UART_CHAR_PLUS_OFFSET);
     }
 
     // Parse and print each digit
@@ -377,7 +379,7 @@ void uart2_send_spaces(uint8_t num_spaces)
 {
     for (uint8_t i = 0; i < num_spaces; i++)
     {
-        uart2_sendchar(UART2_CHAR_SPACE_OFFSET);
+        uart2_sendchar(UART_CHAR_SPACE_OFFSET);
     }
 }
 
@@ -410,7 +412,7 @@ uint8_t uart1_getchar(void)
 // UART1 get string from serial terminal
 void uart1_getstr(char *string_to_fill)
 {
-    // Store the character input from uart2_getchar()
+    // Store the character input from uart1_getchar()
     uint8_t input;
 
     // Run until a carriage return is seen
@@ -419,14 +421,14 @@ void uart1_getstr(char *string_to_fill)
         // Wait for data to be available then read and store it 
         if (USART1->SR & (SET_BIT << SHIFT_5))
         {
-            input = uart2_getchar();
+            input = uart1_getchar();
             *string_to_fill = input;
             string_to_fill++;
         }
     } 
     while(input != UART2_STRING_CARRIAGE);
 
-    // Add a null character to the end if the string 
+    // Add a null character to the end of the string 
     *string_to_fill = UART2_STRING_NULL;
 }
 
@@ -463,7 +465,7 @@ void uart2_getstr(char *string_to_fill)
     } 
     while(input != UART2_STRING_CARRIAGE);
 
-    // Add a null character to the end if the string 
+    // Add a null character to the end of the string 
     *string_to_fill = UART2_STRING_NULL;
 }
 

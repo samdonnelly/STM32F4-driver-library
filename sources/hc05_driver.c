@@ -32,10 +32,12 @@
 //=======================================================================================
 // Initialization 
 
-
+// TODO initialize GPIOs 
 
 //=======================================================================================
 
+// TODO change the UART buad rate for AT command mode 
+// TODO add GPIO output and input (voltaile pin read) control 
 
 //=======================================================================================
 // AT Command Mode 
