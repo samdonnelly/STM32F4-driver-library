@@ -19,6 +19,8 @@
 // Drivers 
 #include "hc05_driver.h"
 #include "uart_comm.h"
+#include "gpio_driver.h"
+#include "timers.h"
 
 // Libraries 
 #if HC05_AT_CMD_MODE
@@ -32,12 +34,71 @@
 //=======================================================================================
 // Initialization 
 
-// TODO initialize GPIOs 
+// HC-05 initialization 
+void hc05_init(
+    uint8_t pin34_status,
+    uint8_t en_status, 
+    uint8_t state_status)
+{
+    // Initialize GPIOs if requested 
+
+    if (pin34_status)  // AT command enable 
+    {
+        gpioa_init(PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+        gpioa_write(GPIOX_PIN_8, GPIO_LOW); 
+    }
+    
+    if (en_status)  // Module power enable 
+    {
+        gpioa_init(PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+        gpioa_write(GPIOX_PIN_12, GPIO_HIGH); 
+    }
+    
+    // State feedback - to know when you're connected to a device 
+    if (state_status) gpioa_init(PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+
+    // Allow the module to initialize itself 
+    tim9_delay_ms(HC05_INIT_DELAY); 
+}
 
 //=======================================================================================
 
 // TODO change the UART buad rate for AT command mode 
 // TODO add GPIO output and input (voltaile pin read) control 
+
+
+//=======================================================================================
+// Data Mode 
+
+// Transition in data mode from AT command mode 
+void hc05_goto_data_mode(uint8_t baud_rate)
+{
+    // Set en pin to low to turn off the module 
+    gpioa_write(GPIOX_PIN_12, GPIO_LOW); 
+
+    // Set pin 34 pin to low to prevent entering AT command mode 
+    gpioa_write(GPIOX_PIN_8, GPIO_LOW); 
+
+    // 
+    tim9_delay_ms(100); 
+
+    // Reconfigure the baud rate to the data mode setting 
+    uart1_init(baud_rate); 
+
+    // Set en pin to high to turn on the module 
+    gpioa_write(GPIOX_PIN_12, GPIO_HIGH); 
+
+    // Short delay to let the moule init 
+    tim9_delay_ms(HC05_INIT_DELAY); 
+}
+
+// 
+void hc05_data_mode(void)
+{
+    // TODO call UART1 from here. 
+}
+
+//=======================================================================================
 
 //=======================================================================================
 // AT Command Mode 
@@ -51,6 +112,29 @@
 // will be used. 
 
 // TODO add HC-05 standard configs 
+
+// Transition into AT command mode from data mode 
+void hc05_goto_at_command(void)
+{
+    // Set en pin to low to turn off the module 
+    gpioa_write(GPIOX_PIN_12, GPIO_LOW); 
+
+    // Set pin 34 pin to high to ensure you enter AT command mode 
+    gpioa_write(GPIOX_PIN_8, GPIO_HIGH); 
+
+    // 
+    tim9_delay_ms(100); 
+
+    // Configure the baud rate for the AT command mode speed 
+    uart1_init(UART_BAUD_38400); 
+
+    // Set the en pin to high to turn on the module 
+    gpioa_write(GPIOX_PIN_12, GPIO_HIGH); 
+
+    // Short delay to let the module init 
+    tim9_delay_ms(HC05_INIT_DELAY); 
+}
+
 
 // Send AT commands and record responses 
 void hc05_at_command(

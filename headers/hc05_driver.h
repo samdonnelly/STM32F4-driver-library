@@ -30,6 +30,7 @@
 // HC-05 paramters 
 #define HC05_ADDRESS 0 
 #define HC05_DEFAULT_PIN 1234
+#define HC05_INIT_DELAY 500
 
 // AT Command Mode 
 #define HC05_AT_CMD_MODE 1   // Controls the inclusion of AT command mode code 
@@ -41,7 +42,43 @@
 //=======================================================================================
 // Enums 
 
-#if HC05_AT_CMD_MODE
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HC05_PIN34_DISABLE, 
+    HC05_PIN34_ENABLE
+} hc05_pin34_status_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HC05_EN_DISABLE, 
+    HC05_EN_ENABLE
+} hc05_en_status_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HC05_STATE_DISABLE, 
+    HC05_STATE_ENABLE
+} hc05_state_status_t; 
+
+
+// #if HC05_AT_CMD_MODE
 
 /**
  * @brief HC-05 AT Commands 
@@ -99,7 +136,7 @@ typedef enum {
     HC05_CHECK
 } hc05_at_operation_t; 
 
-#endif  // HC05_AT_CMD_MODE
+// #endif  // HC05_AT_CMD_MODE
 
 //=======================================================================================
 
@@ -114,7 +151,59 @@ typedef hc05_at_operation_t AT_OPR;
 
 
 //=======================================================================================
-// Function prototype 
+// Initialization functions 
+
+/**
+ * @brief HC-05 initialization 
+ * 
+ * @details 
+ * 
+ * @param pin34_state 
+ * @param en_state 
+ * @param state_state 
+ */
+void hc05_init(
+    uint8_t pin34_status,
+    uint8_t en_status, 
+    uint8_t state_status); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data Mode 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+void hc05_goto_data_mode(uint8_t baud_rate); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+void hc05_data_mode(void); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// AT Command mode 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+void hc05_goto_at_command(void); 
+
 
 /**
  * @brief HC-05 AT Command Mode 

@@ -33,22 +33,22 @@
  * 
  */
 typedef enum {
-    GPIOB_PIN_0  = 0x0001,
-    GPIOB_PIN_1  = 0x0002,
-    GPIOB_PIN_2  = 0x0004,
-    GPIOB_PIN_3  = 0x0008,
-    GPIOB_PIN_4  = 0x0010,
-    GPIOB_PIN_5  = 0x0020,
-    GPIOB_PIN_6  = 0x0040,
-    GPIOB_PIN_7  = 0x0080,
-    GPIOB_PIN_8  = 0x0100,
-    GPIOB_PIN_9  = 0x0200,
-    GPIOB_PIN_10 = 0x0400,
-    GPIOB_PIN_11 = 0x0800,
-    GPIOB_PIN_12 = 0x1000,
-    GPIOB_PIN_13 = 0x2000,
-    GPIOB_PIN_14 = 0x4000,
-    GPIOB_PIN_15 = 0x8000
+    GPIOX_PIN_0  = 0x0001,
+    GPIOX_PIN_1  = 0x0002,
+    GPIOX_PIN_2  = 0x0004,
+    GPIOX_PIN_3  = 0x0008,
+    GPIOX_PIN_4  = 0x0010,
+    GPIOX_PIN_5  = 0x0020,
+    GPIOX_PIN_6  = 0x0040,
+    GPIOX_PIN_7  = 0x0080,
+    GPIOX_PIN_8  = 0x0100,
+    GPIOX_PIN_9  = 0x0200,
+    GPIOX_PIN_10 = 0x0400,
+    GPIOX_PIN_11 = 0x0800,
+    GPIOX_PIN_12 = 0x1000,
+    GPIOX_PIN_13 = 0x2000,
+    GPIOX_PIN_14 = 0x4000,
+    GPIOX_PIN_15 = 0x8000
 } gpiob_pin_num_t;
 
 
@@ -124,6 +124,25 @@ typedef enum {
 // Initialization functions 
 
 /**
+ * @brief GPIOA initialization 
+ * 
+ * @details 
+ * 
+ * @param pin_num
+ * @param moder 
+ * @param otyper 
+ * @param ospeedr 
+ * @param pupdr 
+ */
+void gpioa_init(
+    uint8_t  pin_num,
+    uint32_t moder,
+    uint32_t otyper,
+    uint32_t ospeedr,
+    uint32_t pupdr);
+
+
+/**
  * @brief GPIOB initialization 
  * 
  * @details 
@@ -148,6 +167,25 @@ void gpiob_init(
 // Write functions 
 
 /**
+ * @brief GPIOA write
+ * 
+ * @details This function writes "A" pins congigured as GPIO to either high or low (on or
+ *          off). Arguments include the pin number to write to and the state to write the 
+ *          pin to. The pin number can be specified using the gpio_pin_num_t enum and the 
+ *          pin state can be specified using the gpio_pin_state_t enum. 
+ * 
+ * @see gpio_pin_state_t
+ * @see gpio_pin_num_t
+ * 
+ * @param pin_num : GPIOA pin to write to (0-15)
+ * @param pin_state : on (1) or off (0) state
+ */
+void gpioa_write(
+    uint16_t pin_num,
+    uint8_t  pin_state);
+
+
+/**
  * @brief GPIOB write
  * 
  * @details This function writes "B" pins congigured as GPIO to either high or low (on or
@@ -164,5 +202,22 @@ void gpiob_init(
 void gpiob_write(
     uint16_t pin_num,
     uint8_t  pin_state);
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read functions 
+
+/**
+ * @brief GPIOA read 
+ * 
+ * @details 
+ * 
+ * @param pin_num 
+ * @return uint8_t 
+ */
+uint8_t gpioa_read(
+    uint16_t pin_num); 
 
 //=======================================================================================

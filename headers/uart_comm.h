@@ -37,8 +37,9 @@
  * 
  */
 typedef enum {
-    UART_BAUD_9600,
-    UART_BAUD_115200
+    UART_BAUD_9600,    // 9600 bits/s 
+    UART_BAUD_38400,   // 38400 bits/s 
+    UART_BAUD_115200   // 115200 bits/s 
 } uart_baud_rate_t;
 
 /**

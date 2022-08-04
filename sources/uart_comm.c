@@ -118,7 +118,7 @@ void uart1_init(uint8_t baud_rate)
     // a) Clear the USART_CR1 register 
     USART1->CR1 = CLEAR;
 
-    // b) Sef the UE bit in the USART_CR1 register 
+    // b) Set the UE bit in the USART_CR1 register 
     USART1->CR1 |= (SET_BIT << SHIFT_13);
 
     // c) Clear the M bit in the USART_CR1 register for 8-bit data 
@@ -214,6 +214,9 @@ void uart_baud_select(
         case UART_BAUD_9600:
             *baud_frac = UART_42_9600_FRAC;
             *baud_mant = UART_42_9600_MANT;
+            break;
+        
+        case UART_BAUD_38400:
             break;
         
         case UART_BAUD_115200:
