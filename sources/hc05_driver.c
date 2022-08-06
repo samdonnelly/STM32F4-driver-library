@@ -79,7 +79,8 @@ void hc05_goto_data_mode(uint8_t baud_rate)
     // Set pin 34 pin to low to prevent entering AT command mode 
     gpioa_write(GPIOX_PIN_8, GPIO_LOW); 
 
-    // 
+    // Short delay to ensure power off
+    // TODO make this into a real time timer so it's not blocking 
     tim9_delay_ms(100); 
 
     // Reconfigure the baud rate to the data mode setting 
@@ -122,7 +123,7 @@ void hc05_goto_at_command(void)
     // Set pin 34 pin to high to ensure you enter AT command mode 
     gpioa_write(GPIOX_PIN_8, GPIO_HIGH); 
 
-    // 
+    // Short delay to ensure power off
     tim9_delay_ms(100); 
 
     // Configure the baud rate for the AT command mode speed 
