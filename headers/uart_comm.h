@@ -62,7 +62,8 @@ typedef enum {
  * 
  */
 typedef enum {
-    UART_42_9600_FRAC = 7
+    UART_42_9600_FRAC = 0x7,
+    UART_84_38400_FRAC = 0xB
 } uart_fractional_baud_t;
 
 
@@ -86,7 +87,8 @@ typedef enum {
  * 
  */
 typedef enum {
-    UART_42_9600_MANT = 273
+    UART_42_9600_MANT = 273,
+    UART_84_38400_MANT = 136
 } uart_mantissa_baud_t;
 
 

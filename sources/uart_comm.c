@@ -217,6 +217,8 @@ void uart_baud_select(
             break;
         
         case UART_BAUD_38400:
+            *baud_frac = UART_84_38400_FRAC;
+            *baud_mant = UART_84_38400_MANT;
             break;
         
         case UART_BAUD_115200:
@@ -412,11 +414,11 @@ uint8_t uart1_getchar(void)
 }
 
 
-// UART1 get string from serial terminal
+// UART1 get string 
 void uart1_getstr(char *string_to_fill)
 {
     // Store the character input from uart1_getchar()
-    uint8_t input;
+    uint8_t input = 0;
 
     // Run until a carriage return is seen
     do
@@ -453,7 +455,7 @@ uint8_t uart2_getchar(void)
 void uart2_getstr(char *string_to_fill)
 {
     // Store the character input from uart2_getchar()
-    uint8_t input;
+    uint8_t input = 0;
 
     // Run until a carriage return is seen
     do

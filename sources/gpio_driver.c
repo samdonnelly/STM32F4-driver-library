@@ -75,6 +75,8 @@ void gpiob_init(
 //=======================================================================================
 // Write functions 
 
+// TODO see if the ODR register can be used instead of the BSRR register 
+
 // GPIOA write 
 // TODO why not just pass pin_num as uint32_t? 
 void gpioa_write(
@@ -128,9 +130,39 @@ void gpiob_write(
 // Read functions 
 
 // GPIOA read 
-uint8_t gpioa_read(uint16_t pin_num)
+uint8_t gpio_read(
+    uint8_t gpio, 
+    uint16_t pin_num)
 {
-    // 
+    // TODO figure out how to pass the register to the function and call it via pointer 
+    //      here to reduce the amount of code 
+
+    // Local variables 
+    uint16_t gpio_input; 
+    uint8_t gpio_state = 0; 
+
+    switch (gpio)
+    {
+        case GPIO_A:
+            gpio_input = (GPIOA->IDR) & pin_num; 
+            break; 
+        
+        case GPIO_B:
+            gpio_input = (GPIOB->IDR) & pin_num;  
+            break; 
+        
+        case GPIO_C:
+            gpio_input = (GPIOC->IDR) & pin_num; 
+            break;
+        
+        default:
+            gpio_input = 0; 
+            break; 
+    }
+
+    if (gpio_input) gpio_state = 1; 
+
+    return gpio_state; 
 }
 
 //=======================================================================================

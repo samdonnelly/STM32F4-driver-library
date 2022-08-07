@@ -25,9 +25,22 @@
 //=======================================================================================
 // Enums 
 
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    GPIO_A,
+    GPIO_B,
+    GPIO_C
+} gpio_x_t; 
+
+
 // TODO when you get rid of HAL then change this back to GPIO_PIN_X
 /**
- * @brief GPIOB pin number 
+ * @brief GPIO pin number 
  * 
  * @details 
  * 
@@ -49,7 +62,7 @@ typedef enum {
     GPIOX_PIN_13 = 0x2000,
     GPIOX_PIN_14 = 0x4000,
     GPIOX_PIN_15 = 0x8000
-} gpiob_pin_num_t;
+} gpio_pin_num_t;
 
 
 /**
@@ -214,10 +227,14 @@ void gpiob_write(
  * 
  * @details 
  * 
- * @param pin_num 
+ * @see gpio_pin_num_t
+ * 
+ * @param gpio : which GPIO to access (A, B, C, etc.) 
+ * @param pin_num : GPIO pin specified by gpio_pin_num_t
  * @return uint8_t 
  */
-uint8_t gpioa_read(
+uint8_t gpio_read(
+    uint8_t gpio, 
     uint16_t pin_num); 
 
 //=======================================================================================
