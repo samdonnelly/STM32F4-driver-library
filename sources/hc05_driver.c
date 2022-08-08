@@ -63,9 +63,10 @@ void hc05_init(
 
 //=======================================================================================
 
-// TODO change the UART buad rate for AT command mode 
-// TODO add GPIO output and input (voltaile pin read) control 
-
+// TODO Tests 
+// - Connect to a device (android) using a bluetoth terminal 
+// - Write serial terminal input, read input and send it to the module and verify it is sent
+//   using a bluetooth terminal 
 
 //=======================================================================================
 // Data Mode 
@@ -73,6 +74,8 @@ void hc05_init(
 // Transition in data mode from AT command mode 
 void hc05_goto_data_mode(uint8_t baud_rate)
 {
+    // TODO note that this code is not needed when AT command mode is  not inlcuded 
+    
     // Set en pin to low to turn off the module 
     gpioa_write(GPIOX_PIN_12, GPIO_LOW); 
 
@@ -96,6 +99,7 @@ void hc05_goto_data_mode(uint8_t baud_rate)
 // 
 void hc05_data_mode(void)
 {
+    // TODO verify the state pin input (connected to a device) before sending data 
     // TODO call UART1 from here. 
 }
 
@@ -105,9 +109,6 @@ void hc05_data_mode(void)
 // AT Command Mode 
 
 #if HC05_AT_CMD_MODE
-
-// Test 2 - UART string format and send verification 
-// Test 3 - UART string receive verification and command response verification 
 
 // Transition into AT command mode from data mode 
 void hc05_goto_at_command(void)
@@ -295,15 +296,13 @@ void hc05_at_command(
             break; 
         
         default:
+            // TODO check to see if this works 
             strcpy(response, "Invalid command\r\n");
-            break; 
+            return; 
     }
 
     // Send the command to the module 
     uart1_sendstring(cmd_str); 
-
-    // This function will likely not run in a real time situation so it's not important 
-    // that it is clocking while looking for a response. 
 
     // TODO create a timeout fault situation 
 
