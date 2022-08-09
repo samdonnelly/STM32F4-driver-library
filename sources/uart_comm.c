@@ -135,6 +135,7 @@ void uart1_init(uint8_t baud_rate)
 
     // f) Clear buffer  
     while (!(USART1->SR & (SET_BIT << SHIFT_6)));
+    // while(USART2->SR & (SET_BIT << SHIFT_5)) uart1_getchar();
 }
 
 //=================================================== // UART1 initialization 
@@ -196,8 +197,9 @@ void uart2_init(uint8_t baud_rate)
     USART2->CR1 |= (SET_BIT << SHIFT_2);
     USART2->CR1 |= (SET_BIT << SHIFT_3); 
 
-    // f) Clear buffer  
+    // f) Clear buffers 
     while (!(USART2->SR & (SET_BIT << SHIFT_6)));
+    while(USART2->SR & (SET_BIT << SHIFT_5)) uart2_getchar();
 }
 
 //=================================================== // UART2 initialization
@@ -431,7 +433,9 @@ void uart1_getstr(char *string_to_fill)
             string_to_fill++;
         }
     } 
-    while(input != UART2_STRING_CARRIAGE);
+    // while(input != UART2_STRING_CARRIAGE);
+    // while(input != UART2_STRING_NULL);
+    while(input != UART2_STRING_NL);
 
     // Add a null character to the end of the string 
     *string_to_fill = UART2_STRING_NULL;

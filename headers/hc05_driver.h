@@ -30,7 +30,7 @@
 // HC-05 paramters 
 #define HC05_ADDRESS 0 
 #define HC05_DEFAULT_PIN 1234
-#define HC05_INIT_DELAY 500
+#define HC05_INIT_DELAY 100
 
 // AT Command Mode 
 #define HC05_AT_CMD_MODE 1   // Controls the inclusion of AT command mode code 

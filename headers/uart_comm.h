@@ -145,6 +145,7 @@ typedef enum {
  */
 typedef enum {
     UART2_STRING_NULL     = 0,  // '\0' == 0
+    UART2_STRING_NL       = 10, // '\n' == 10
     UART2_STRING_CARRIAGE = 13  // '\r' == 13
 } uart2_string_formatters_t;
 
