@@ -117,6 +117,7 @@ void uart1_init(uint8_t baud_rate)
 
     // a) Clear the USART_CR1 register 
     USART1->CR1 = CLEAR;
+    USART1->BRR = CLEAR; 
 
     // b) Set the UE bit in the USART_CR1 register 
     USART1->CR1 |= (SET_BIT << SHIFT_13);
@@ -135,7 +136,7 @@ void uart1_init(uint8_t baud_rate)
 
     // f) Clear buffer  
     while (!(USART1->SR & (SET_BIT << SHIFT_6)));
-    // while(USART2->SR & (SET_BIT << SHIFT_5)) uart1_getchar();
+    while(USART2->SR & (SET_BIT << SHIFT_5)) uart1_getchar();
 }
 
 //=================================================== // UART1 initialization 
