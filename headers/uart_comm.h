@@ -25,6 +25,14 @@
 
 
 //=======================================================================================
+// Macros 
+
+#define UART_DR_CLEAR_TIMER 10   // Timer used while clearing the data register during init 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Enums 
 
 /**
@@ -144,10 +152,18 @@ typedef enum {
  * 
  */
 typedef enum {
-    UART2_STRING_NULL     = 0,  // '\0' == 0
-    UART2_STRING_NL       = 10, // '\n' == 10
-    UART2_STRING_CARRIAGE = 13  // '\r' == 13
-} uart2_string_formatters_t;
+    UART_STRING_NULL     = 0,  // '\0' == 0
+    UART_STRING_NL       = 10, // '\n' == 10
+    UART_STRING_CARRIAGE = 13  // '\r' == 13
+} uart_string_termination_t;
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data Types 
+
+typedef uart_string_termination_t STR_TERM; 
 
 //=======================================================================================
 
@@ -165,7 +181,9 @@ typedef enum {
  * 
  * @param baud_rate 
  */
-void uart1_init(uint8_t baud_rate);
+void uart1_init(
+    uint8_t baud_rate,
+    USART_TypeDef *uart);
 
 //=================================================== // UART1 initialization 
 
@@ -195,6 +213,19 @@ void uart1_init(uint8_t baud_rate);
 void uart2_init(uint8_t baud_rate);
 
 //=================================================== // UART2 initialization 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param baud_rate 
+ * @param uart 
+ */
+void uart_set_baud_rate(
+    uint8_t baud_rate,
+    USART_TypeDef *uart); 
 
 //=======================================================================================
 
@@ -352,7 +383,9 @@ uint8_t uart1_getchar(void);
  * 
  * @param string_to_fill : 
  */
-void uart1_getstr(char *string_to_fill);
+void uart1_getstr(
+    char *string_to_fill,
+    STR_TERM end_of_string);
 
 //=================================================== // UART1 read functions 
 

@@ -33,8 +33,9 @@
 #define HC05_INIT_DELAY 100
 
 // AT Command Mode 
-#define HC05_AT_CMD_MODE 1   // Controls the inclusion of AT command mode code 
-#define HC05_AT_CMD_LEN  30  // Max length of command string 
+#define HC05_AT_CMD_MODE 1        // Controls the inclusion of AT command mode code 
+#define HC05_AT_CMD_LEN  30       // Max length of command string 
+#define HC05_AT_CMD_RESP_STR 43   // 43 == '+' which is the start of a parmeter response 
 
 //=======================================================================================
 
@@ -171,12 +172,37 @@ void hc05_init(
 
 
 //=======================================================================================
-// Data Mode 
+// Power functions 
 
 /**
  * @brief 
  * 
  * @details 
+ * 
+ */
+void hc05_enable(void); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+void hc05_disable(void); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Transition functions 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ *          Note that this function is not available when HC05_AT_CMD_MODE is set to 0 
+ *          as there is no reason the divice would be out of data mode. 
  * 
  */
 void hc05_goto_data_mode(uint8_t baud_rate); 
@@ -188,13 +214,13 @@ void hc05_goto_data_mode(uint8_t baud_rate);
  * @details 
  * 
  */
-void hc05_data_mode(void); 
+void hc05_goto_at_command(void); 
 
 //=======================================================================================
 
 
 //=======================================================================================
-// AT Command mode 
+// Mode functions 
 
 /**
  * @brief 
@@ -202,7 +228,7 @@ void hc05_data_mode(void);
  * @details 
  * 
  */
-void hc05_goto_at_command(void); 
+void hc05_data_mode(void); 
 
 
 /**

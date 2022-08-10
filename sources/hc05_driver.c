@@ -72,6 +72,30 @@ void hc05_init(
 // - Write serial terminal input, read input and send it to the module and verify it is sent
 //   using a bluetooth terminal 
 
+
+//=======================================================================================
+// Power functions 
+
+//
+void hc05_enable(void)
+{
+    // TODO ensure data transfer is complete (if in progress) first 
+
+    // Set en pin to low to turn off the module 
+    gpioa_write(GPIOX_PIN_12, GPIO_HIGH); 
+}
+
+
+// 
+void hc05_disable(void)
+{
+    // Set en pin to high to turn on the module 
+    gpioa_write(GPIOX_PIN_12, GPIO_LOW); 
+}
+
+//=======================================================================================
+
+
 //=======================================================================================
 // Data Mode 
 
@@ -93,22 +117,20 @@ void hc05_data_mode(void)
 void hc05_goto_data_mode(uint8_t baud_rate)
 {    
     // Set en pin to low to turn off the module 
-    gpioa_write(GPIOX_PIN_12, GPIO_LOW); 
+    hc05_disable();  
 
     // Set pin 34 pin to low to prevent entering AT command mode 
     gpioa_write(GPIOX_PIN_8, GPIO_LOW); 
 
-    // Reconfigure the baud rate to the data mode setting 
-    // uart1_init(baud_rate); 
-    USART1->BRR |= (UART_42_9600_FRAC << SHIFT_0);  // Fractional 
-    USART1->BRR |= (UART_42_9600_MANT << SHIFT_4);  // Mantissa 
-
     // Short delay to ensure power off
     // TODO make this into a real time timer so it's not blocking 
-    tim9_delay_ms(500); 
+    tim9_delay_ms(HC05_INIT_DELAY); 
+
+    // Reconfigure the baud rate to the data mode setting 
+    uart_set_baud_rate(baud_rate, USART1); 
 
     // Set en pin to high to turn on the module 
-    gpioa_write(GPIOX_PIN_12, GPIO_HIGH); 
+    hc05_enable(); 
 }
 
 
@@ -116,19 +138,19 @@ void hc05_goto_data_mode(uint8_t baud_rate)
 void hc05_goto_at_command(void)
 {
     // Set en pin to low to turn off the module 
-    gpioa_write(GPIOX_PIN_12, GPIO_LOW); 
+    hc05_disable(); 
 
     // Set pin 34 pin to high to ensure you enter AT command mode 
     gpioa_write(GPIOX_PIN_8, GPIO_HIGH); 
 
-    // Configure the baud rate for the AT command mode speed 
-    uart1_init(UART_BAUD_38400);  
-
     // Short delay to ensure power off
-    tim9_delay_ms(500); 
+    tim9_delay_ms(HC05_INIT_DELAY); 
+
+    // Configure the baud rate for the AT command mode speed 
+    uart_set_baud_rate(UART_BAUD_38400, USART1);  
 
     // Set the en pin to high to turn on the module 
-    gpioa_write(GPIOX_PIN_12, GPIO_HIGH); 
+    hc05_enable(); 
 }
 
 
@@ -141,6 +163,7 @@ void hc05_at_command(
 {
     // Local variables 
     char cmd_str[HC05_AT_CMD_LEN]; 
+    char clear_dr[4]; 
 
     // Command to send 
     switch (command)
@@ -295,7 +318,6 @@ void hc05_at_command(
             break; 
         
         default:
-            // TODO check to see if this works 
             strcpy(response, "Invalid command\r\n");
             return; 
     }
@@ -307,7 +329,10 @@ void hc05_at_command(
 
     // Wait for data to be send back from the module then read it 
     while (!(USART1->SR & (SET_BIT << SHIFT_5))); 
-    uart1_getstr(response); 
+    uart1_getstr(response, UART_STRING_NL); 
+    
+    // If the command did not fail then clear the "OK\r\n" response from the DR 
+    if (*response == HC05_AT_CMD_RESP_STR) uart1_getstr(clear_dr, UART_STRING_NL); 
 }
 
 #endif  // HC05_AT_CMD_MODE

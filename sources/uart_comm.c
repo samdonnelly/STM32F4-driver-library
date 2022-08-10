@@ -16,6 +16,7 @@
 // Includes 
 
 #include "uart_comm.h"
+#include "timers.h"
 
 //=======================================================================================
 
@@ -57,7 +58,7 @@ void uart_baud_select(
 //=======================================================================================
 // Initialization 
 
-//==============================================================
+//===================================================
 // UART Setup Steps 
 //  1. Configure the pins 
 //     a) Enable the UART Clock - RCC_APB1 register
@@ -73,70 +74,46 @@ void uart_baud_select(
 //     d) Set the baud rate 
 //     e) Enable the TX/RX by setting the TE and RE bits in USART_CR1 register 
 //     f) Clear buffer 
-//==============================================================
+//===================================================
 
 
 //===================================================
 // UART1 initialization 
 
+//===================================================
+// Pin information for UART1
+//  PA9:  TX
+//  PA10: RX
+// 
+// Pin information for UART2
+//  PA2: TX
+//  PA3: RX
+//===================================================
 
-void uart1_init(uint8_t baud_rate)
+void uart1_init(
+    uint8_t baud_rate,
+    USART_TypeDef *uart)
 {
-    // Baud rate setup variables 
-    uint16_t baud_frac;
-    uint16_t baud_mant;
-
-    //==============================================================
-    // Pin information for UART1
-    //  PA9:  TX
-    //  PA10: RX
-    //==============================================================
-
-    // 1. Pin Setup 
-
-    // a) Enable UART1 Clock - RCC_APB2 register, bit 4
+    // Enable UART1 Clock - RCC_APB2 register, bit 4
     RCC->APB2ENR |= (SET_BIT << SHIFT_4);
 
-    // b) Enable GPIOA clock for TX and RX pins - RCC_AHB1 register, bit 0
+    // Enable GPIOA clock for TX and RX pins - RCC_AHB1 register, bit 0
     RCC->AHB1ENR |= (SET_BIT << SHIFT_0);
 
-    // c) Configure the UART pins for alternative functions - GPIOA_MODER register 
+    // Configure the UART pins for alternative functions - GPIOA_MODER register 
     GPIOA->MODER |= (SET_2 << SHIFT_18);
     GPIOA->MODER |= (SET_2 << SHIFT_20);
 
-    // d) Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
+    // Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
     GPIOA->OSPEEDR |= (SET_3 << SHIFT_18);
     GPIOA->OSPEEDR |= (SET_3 << SHIFT_20);
 
-    // e) Set the alternative function high ([1]) register for USART1 (AF7)
+    // Set the alternative function high ([1]) register for USART1 (AF7)
     GPIOA->AFR[1] |= (SET_7 << SHIFT_4); 
     GPIOA->AFR[1] |= (SET_7 << SHIFT_8);
 
-
-    // 2. UART Configuration 
-
-    // a) Clear the USART_CR1 register 
-    USART1->CR1 = CLEAR;
-    USART1->BRR = CLEAR; 
-
-    // b) Set the UE bit in the USART_CR1 register 
-    USART1->CR1 |= (SET_BIT << SHIFT_13);
-
-    // c) Clear the M bit in the USART_CR1 register for 8-bit data 
-    USART1->CR1 &= ~(SET_BIT << SHIFT_12);
-
-    // d) Set the baud rate 
-    uart_baud_select(baud_rate, &baud_frac, &baud_mant);
-    USART1->BRR |= (baud_frac << SHIFT_0);  // Fractional 
-    USART1->BRR |= (baud_mant << SHIFT_4);  // Mantissa 
-
-    // e) Enable the TX/RX by setting the RE and TE bits in USART_CR1 register 
-    USART1->CR1 |= (SET_BIT << SHIFT_2);
-    USART1->CR1 |= (SET_BIT << SHIFT_3); 
-
-    // f) Clear buffer  
-    while (!(USART1->SR & (SET_BIT << SHIFT_6)));
-    while(USART2->SR & (SET_BIT << SHIFT_5)) uart1_getchar();
+    // UART Configuration 
+    uart_set_baud_rate(baud_rate, uart); 
 }
 
 //=================================================== // UART1 initialization 
@@ -150,12 +127,6 @@ void uart2_init(uint8_t baud_rate)
     // Baud rate setup variables 
     uint16_t baud_frac;
     uint16_t baud_mant;
-
-    //==============================================================
-    // Pin information for UART2
-    //  PA2: TX
-    //  PA3: RX
-    //==============================================================
 
     // 1. Pin Setup 
 
@@ -204,6 +175,44 @@ void uart2_init(uint8_t baud_rate)
 }
 
 //=================================================== // UART2 initialization
+
+
+// UART Configuration 
+void uart_set_baud_rate(
+    uint8_t baud_rate,
+    USART_TypeDef *uart)
+{
+    // Baud rate setup variables 
+    uint16_t baud_frac;
+    uint16_t baud_mant;
+
+    // Clear the USART_CR1 register 
+    uart->CR1 = CLEAR;
+    uart->BRR = CLEAR; 
+
+    // Set the UE bit in the USART_CR1 register 
+    uart->CR1 |= (SET_BIT << SHIFT_13);
+
+    // Clear the M bit in the USART_CR1 register for 8-bit data 
+    uart->CR1 &= ~(SET_BIT << SHIFT_12);
+
+    // Set the baud rate 
+    uart_baud_select(baud_rate, &baud_frac, &baud_mant);
+    uart->BRR |= (baud_frac << SHIFT_0);  // Fractional 
+    uart->BRR |= (baud_mant << SHIFT_4);  // Mantissa 
+
+    // Enable the TX/RX by setting the RE and TE bits in USART_CR1 register 
+    uart->CR1 |= (SET_BIT << SHIFT_2);
+    uart->CR1 |= (SET_BIT << SHIFT_3); 
+
+    // Clear buffers  
+    while (!(uart->SR & (SET_BIT << SHIFT_6)));
+    while(uart->SR & (SET_BIT << SHIFT_5)) 
+    {
+        uart1_getchar();
+        tim9_delay_ms(UART_DR_CLEAR_TIMER); 
+    }
+}
 
 
 // Select the fractional and mantissa portions of the baud rate setup 
@@ -418,7 +427,9 @@ uint8_t uart1_getchar(void)
 
 
 // UART1 get string 
-void uart1_getstr(char *string_to_fill)
+void uart1_getstr(
+    char *string_to_fill, 
+    STR_TERM end_of_string)
 {
     // Store the character input from uart1_getchar()
     uint8_t input = 0;
@@ -434,12 +445,10 @@ void uart1_getstr(char *string_to_fill)
             string_to_fill++;
         }
     } 
-    // while(input != UART2_STRING_CARRIAGE);
-    // while(input != UART2_STRING_NULL);
-    while(input != UART2_STRING_NL);
+    while(input != end_of_string);
 
     // Add a null character to the end of the string 
-    *string_to_fill = UART2_STRING_NULL;
+    *string_to_fill = UART_STRING_NULL;
 }
 
 //=================================================== // UART1 read 
@@ -473,10 +482,10 @@ void uart2_getstr(char *string_to_fill)
             string_to_fill++;
         }
     } 
-    while(input != UART2_STRING_CARRIAGE);
+    while(input != UART_STRING_CARRIAGE);
 
     // Add a null character to the end of the string 
-    *string_to_fill = UART2_STRING_NULL;
+    *string_to_fill = UART_STRING_NULL;
 }
 
 //=================================================== // UART2 read 
