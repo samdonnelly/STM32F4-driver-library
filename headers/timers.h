@@ -30,6 +30,11 @@
 #define RESET_COUNT 0        // Used to reset count registers 
 #define PREFIX_SCALAR 1000   // Scalar between microseconds and milliseconds 
 
+// Standard delays 
+#define TIM9_1MS    1    // 1 ms delay 
+#define TIM9_10MS   10   // 10 ms delay 
+#define TIM9_100MS  100  // 100 ms delay 
+
 //=======================================================================================
 
 

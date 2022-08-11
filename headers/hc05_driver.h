@@ -28,20 +28,34 @@
 // Macros 
 
 // HC-05 paramters 
-#define HC05_ADDRESS 0 
-#define HC05_DEFAULT_PIN 1234
-#define HC05_INIT_DELAY 100
+#define HC05_ADDRESS      0 
+#define HC05_DEFAULT_PIN  1234
+#define HC05_INIT_DELAY   100
 
 // AT Command Mode 
-#define HC05_AT_CMD_MODE 1        // Controls the inclusion of AT command mode code 
-#define HC05_AT_CMD_LEN  30       // Max length of command string 
-#define HC05_AT_CMD_RESP_STR 43   // 43 == '+' which is the start of a parmeter response 
+#define HC05_AT_EN          1    // Controls the inclusion of AT command mode code 
+#define HC05_AT_CMD_LEN     30   // Max length of command string 
+#define HC05_AT_DR_CLR_LEN  4    // Length of "OK\r\n" that follows an AT parameter response 
+#define HC05_AT_RESP_STR    43   // 43 == '+' which is the start of a parmeter response 
+#define HC05_AT_RESP_COUNT  200  // Timout counter to receeive an AT cmd response 
 
 //=======================================================================================
 
 
 //=======================================================================================
 // Enums 
+
+/**
+ * @brief HC-05 mode 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    HC05_DATA_MODE, 
+    HC05_AT_CMD_MODE
+} hc05_mode_t; 
+
 
 /**
  * @brief 
@@ -145,6 +159,7 @@ typedef enum {
 //=======================================================================================
 // Data types 
 
+typedef hc05_mode_t HC05_MODE; 
 typedef hc05_at_commnds_t AT_CMD; 
 typedef hc05_at_operation_t AT_OPR; 
 
@@ -204,17 +219,12 @@ void hc05_disable(void);
  *          Note that this function is not available when HC05_AT_CMD_MODE is set to 0 
  *          as there is no reason the divice would be out of data mode. 
  * 
+ * @param mode 
+ * @param baud_rate 
  */
-void hc05_goto_data_mode(uint8_t baud_rate); 
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- */
-void hc05_goto_at_command(void); 
+void hc05_change_mode(
+    HC05_MODE mode, 
+    UART_BAUD baud_rate); 
 
 //=======================================================================================
 

@@ -152,9 +152,9 @@ typedef enum {
  * 
  */
 typedef enum {
-    UART_STRING_NULL     = 0,  // '\0' == 0
-    UART_STRING_NL       = 10, // '\n' == 10
-    UART_STRING_CARRIAGE = 13  // '\r' == 13
+    UART_STR_TERM_NULL     = 0,  // '\0' == 0
+    UART_STR_TERM_NL       = 10, // '\n' == 10
+    UART_STR_TERM_CARRIAGE = 13  // '\r' == 13
 } uart_string_termination_t;
 
 //=======================================================================================
@@ -163,6 +163,7 @@ typedef enum {
 //=======================================================================================
 // Data Types 
 
+typedef uart_baud_rate_t UART_BAUD; 
 typedef uart_string_termination_t STR_TERM; 
 
 //=======================================================================================
@@ -182,8 +183,8 @@ typedef uart_string_termination_t STR_TERM;
  * @param baud_rate 
  */
 void uart1_init(
-    uint8_t baud_rate,
-    USART_TypeDef *uart);
+    USART_TypeDef *uart, 
+    uint8_t baud_rate);
 
 //=================================================== // UART1 initialization 
 

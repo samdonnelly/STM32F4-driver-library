@@ -19,6 +19,8 @@
 
 //=======================================================================================
 
+// TODO see if you can read the clock speed during tim9_init so you can adjust the counter 
+// This will make maintain an accurate (blocking) delay 
 
 //=======================================================================================
 // Initialization 

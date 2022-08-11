@@ -23,10 +23,10 @@
 #include "timers.h"
 
 // Libraries 
-#if HC05_AT_CMD_MODE
+#if HC05_AT_EN
 #include "string.h"
 #include <stdio.h>
-#endif  // HC05_AT_CMD_MODE
+#endif  // HC05_AT_EN
 
 //=======================================================================================
 
@@ -111,45 +111,28 @@ void hc05_data_mode(void)
 //=======================================================================================
 // AT Command Mode 
 
-#if HC05_AT_CMD_MODE
+#if HC05_AT_EN
 
-// Transition in data mode from AT command mode 
-void hc05_goto_data_mode(uint8_t baud_rate)
-{    
-    // Set en pin to low to turn off the module 
-    hc05_disable();  
+// TODO test that this combined function works 
 
-    // Set pin 34 pin to low to prevent entering AT command mode 
-    gpioa_write(GPIOX_PIN_8, GPIO_LOW); 
-
-    // Short delay to ensure power off
-    // TODO make this into a real time timer so it's not blocking 
-    tim9_delay_ms(HC05_INIT_DELAY); 
-
-    // Reconfigure the baud rate to the data mode setting 
-    uart_set_baud_rate(baud_rate, USART1); 
-
-    // Set en pin to high to turn on the module 
-    hc05_enable(); 
-}
-
-
-// Transition into AT command mode from data mode 
-void hc05_goto_at_command(void)
+// Change the module mode 
+void hc05_change_mode(
+    HC05_MODE mode, 
+    UART_BAUD baud_rate)
 {
-    // Set en pin to low to turn off the module 
+    // Turn off the module 
     hc05_disable(); 
 
     // Set pin 34 pin to high to ensure you enter AT command mode 
-    gpioa_write(GPIOX_PIN_8, GPIO_HIGH); 
+    gpioa_write(GPIOX_PIN_8, mode); 
 
     // Short delay to ensure power off
     tim9_delay_ms(HC05_INIT_DELAY); 
 
     // Configure the baud rate for the AT command mode speed 
-    uart_set_baud_rate(UART_BAUD_38400, USART1);  
+    uart_set_baud_rate(USART1, baud_rate);  
 
-    // Set the en pin to high to turn on the module 
+    // Turn the module back on 
     hc05_enable(); 
 }
 
@@ -162,10 +145,11 @@ void hc05_at_command(
     char *response)
 {
     // Local variables 
-    char cmd_str[HC05_AT_CMD_LEN]; 
-    char clear_dr[4]; 
+    char cmd_str[HC05_AT_CMD_LEN];            // String that holds the AT command 
+    char clear_dr[HC05_AT_DR_CLR_LEN];        // String used to clear the DR if needed 
+    uint8_t at_timeout = HC05_AT_RESP_COUNT;  // AT cmd response timout counter 
 
-    // Command to send 
+    // Create the command string to send based on the specified AT command 
     switch (command)
     {
         case HC05_AT_TEST:  // 1. Test command 
@@ -325,14 +309,24 @@ void hc05_at_command(
     // Send the command to the module 
     uart1_sendstring(cmd_str); 
 
-    // TODO create a timeout fault situation 
+    // TODO test this timeout 
 
-    // Wait for data to be send back from the module then read it 
-    while (!(USART1->SR & (SET_BIT << SHIFT_5))); 
-    uart1_getstr(response, UART_STRING_NL); 
-    
-    // If the command did not fail then clear the "OK\r\n" response from the DR 
-    if (*response == HC05_AT_CMD_RESP_STR) uart1_getstr(clear_dr, UART_STRING_NL); 
+    // Wait for data to be send back from the module before reading 
+    do 
+    {
+        if (USART1->SR & (SET_BIT << SHIFT_5)) 
+        {
+            // Read the module response 
+            uart1_getstr(response, UART_STR_TERM_NL); 
+
+            // If a cmd response was received then clear the "OK\r\n" from the DR that follows 
+            if (*response == HC05_AT_RESP_STR) uart1_getstr(clear_dr, UART_STR_TERM_NL);
+
+            break; 
+        }
+        tim9_delay_ms(TIM9_1MS);  // AT mode doesn't run in real time so blocking is ok 
+    }
+    while (at_timeout--);  
 }
 
 #endif  // HC05_AT_CMD_MODE

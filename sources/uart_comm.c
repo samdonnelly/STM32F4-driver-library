@@ -91,8 +91,8 @@ void uart_baud_select(
 //===================================================
 
 void uart1_init(
-    uint8_t baud_rate,
-    USART_TypeDef *uart)
+    USART_TypeDef *uart, 
+    uint8_t baud_rate)
 {
     // Enable UART1 Clock - RCC_APB2 register, bit 4
     RCC->APB2ENR |= (SET_BIT << SHIFT_4);
@@ -448,7 +448,7 @@ void uart1_getstr(
     while(input != end_of_string);
 
     // Add a null character to the end of the string 
-    *string_to_fill = UART_STRING_NULL;
+    *string_to_fill = UART_STR_TERM_NULL;
 }
 
 //=================================================== // UART1 read 
@@ -482,10 +482,10 @@ void uart2_getstr(char *string_to_fill)
             string_to_fill++;
         }
     } 
-    while(input != UART_STRING_CARRIAGE);
+    while(input != UART_STR_TERM_CARRIAGE);
 
     // Add a null character to the end of the string 
-    *string_to_fill = UART_STRING_NULL;
+    *string_to_fill = UART_STR_TERM_NULL;
 }
 
 //=================================================== // UART2 read 
