@@ -56,9 +56,9 @@ void hc05_init(
     if (en_status)  // Module power enable 
     {
         gpioa_init(PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-        gpioa_write(GPIOX_PIN_12, GPIO_LOW); 
+        hc05_pwr_off(); 
         tim9_delay_ms(HC05_INIT_DELAY); 
-        gpioa_write(GPIOX_PIN_12, GPIO_HIGH); 
+        hc05_pwr_on(); 
     }
     
     // State feedback - to know when you're connected to a device 
@@ -76,8 +76,8 @@ void hc05_init(
 //=======================================================================================
 // Power functions 
 
-//
-void hc05_enable(void)
+// Turn on the module 
+void hc05_pwr_on(void)
 {
     // TODO ensure data transfer is complete (if in progress) first 
 
@@ -86,8 +86,8 @@ void hc05_enable(void)
 }
 
 
-// 
-void hc05_disable(void)
+// Turn off the module 
+void hc05_pwr_off(void)
 {
     // Set en pin to high to turn on the module 
     gpioa_write(GPIOX_PIN_12, GPIO_LOW); 
@@ -97,23 +97,9 @@ void hc05_disable(void)
 
 
 //=======================================================================================
-// Data Mode 
+// Transition functions 
 
-// HC-05 data mode 
-void hc05_data_mode(void)
-{
-    // TODO verify the state pin input (connected to a device) before sending data 
-    // TODO call UART1 from here. 
-}
-
-//=======================================================================================
-
-//=======================================================================================
-// AT Command Mode 
-
-#if HC05_AT_EN
-
-// TODO test that this combined function works 
+#if HC05_AT_EN 
 
 // Change the module mode 
 void hc05_change_mode(
@@ -121,7 +107,7 @@ void hc05_change_mode(
     UART_BAUD baud_rate)
 {
     // Turn off the module 
-    hc05_disable(); 
+    hc05_pwr_off(); 
 
     // Set pin 34 pin to high to ensure you enter AT command mode 
     gpioa_write(GPIOX_PIN_8, mode); 
@@ -133,9 +119,28 @@ void hc05_change_mode(
     uart_set_baud_rate(USART1, baud_rate);  
 
     // Turn the module back on 
-    hc05_enable(); 
+    hc05_pwr_on(); 
 }
 
+#endif  // HC05_AT_CMD_MODE
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Mode functions 
+
+// HC-05 data mode 
+void hc05_data_mode(void)
+{
+    // TODO verify the state pin input (connected to a device) before sending data 
+    // TODO call UART1 from here. 
+}
+
+
+#if HC05_AT_EN
+
+// TODO test that this combined function works 
 
 // Send AT commands and record responses 
 void hc05_at_command(

@@ -195,7 +195,7 @@ void hc05_init(
  * @details 
  * 
  */
-void hc05_enable(void); 
+void hc05_pwr_on(void); 
 
 
 /**
@@ -204,7 +204,7 @@ void hc05_enable(void);
  * @details 
  * 
  */
-void hc05_disable(void); 
+void hc05_pwr_off(void); 
 
 //=======================================================================================
 
@@ -213,14 +213,31 @@ void hc05_disable(void);
 // Transition functions 
 
 /**
- * @brief 
+ * @brief HC-05 change operating mode 
  * 
- * @details 
- *          Note that this function is not available when HC05_AT_CMD_MODE is set to 0 
- *          as there is no reason the divice would be out of data mode. 
+ * @details This functions allows for changing between the two operating modes of the module 
+ *          through software. The two modes are Data mode (default) which is used to send and 
+ *          receive information with other bluetooth devices, and AT Command mode which allows 
+ *          you to modify the module settings. This function takes the desired operating mode 
+ *          and the mode baud rate as arguments. The mode argument requires the use of 
+ *          hc05_mode_t and the baud rate argument requires the use of uart_baud_rate_t in 
+ *          the uart driver. <br><br>
+ *          
+ *          AT Command mode has a fixed baud rate of 38400 bps. Data mode is whatever baud 
+ *          rate gets set during AT Command mode. THe default Data mode baud rate is 9600 bps.
+ *          <br><br> 
+ *          
+ *          Note that this function is not available when HC05_AT_CMD_MODE is set to 0. If this 
+ *          is set to 0 then this indicates in the code that only data mode will be used. 
+ *          <br><br> 
  * 
- * @param mode 
- * @param baud_rate 
+ * @see hc05_mode_t
+ * @see uart_baud_rate_t
+ * @see hc05_at_command
+ * @see hc05_data_mode
+ * 
+ * @param mode : Moudle mode - either Data mode (default) or AT Command mode 
+ * @param baud_rate : Baud rate of the selected mode 
  */
 void hc05_change_mode(
     HC05_MODE mode, 
