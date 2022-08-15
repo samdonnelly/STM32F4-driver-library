@@ -22,8 +22,10 @@
 #include "stm32f411xe.h"
 #include "tools.h"
 
-// Device Drivers 
+// Communication drivers 
 #include "uart_comm.h"
+#include "gpio_driver.h"
+#include "timers.h"
 
 //=======================================================================================
 

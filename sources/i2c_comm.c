@@ -314,7 +314,7 @@ void i2c1_stop(void)
 // I2C1 read SR1 and SR2 to an unused variable to clear ADDR
 void i2c1_clear_addr(void)
 {
-    uint16_t read_clear = (I2C1->SR1) | (I2C1->SR2);
+    dummy_read(((I2C1->SR1) | (I2C1->SR2))); 
 }
 
 // I2C1 wait for ADDR bit to set

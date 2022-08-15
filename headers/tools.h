@@ -18,6 +18,13 @@
 //=======================================================================================
 // Macros 
 
+//===================================================
+// Functions 
+
+#define dummy_read(x) ((void)x)  // For clearing registers 
+
+//===================================================
+
 // Different ways to write zero for readability 
 #define CLEAR 0
 #define RESET_ZERO 0

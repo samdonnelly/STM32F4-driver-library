@@ -219,9 +219,6 @@ void spi2_write(
     uint8_t *write_data, 
     uint32_t data_len)
 {
-    // Local variables 
-    uint16_t dummy_read; 
-
     // Iterate through all data to be sent 
     for (uint32_t i = 0; i < data_len; i++)
     {
@@ -237,8 +234,8 @@ void spi2_write(
     spi2_bsy_wait();
 
     // Read the data and status registers to clear the RX buffer and overrun error bit
-    dummy_read = SPI2->DR;
-    dummy_read = SPI2->SR;
+    dummy_read(SPI2->DR); 
+    dummy_read(SPI2->SR); 
 }
 
 

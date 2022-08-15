@@ -18,8 +18,6 @@
 
 // Drivers 
 #include "hc05_driver.h"
-#include "gpio_driver.h"
-#include "timers.h"
 
 // Libraries 
 #if HC05_AT_EN
@@ -152,8 +150,6 @@ void hc05_at_command(
     char cmd_str[HC05_AT_CMD_LEN];            // String that holds the AT command 
     char clear_dr[HC05_AT_DR_CLR_LEN];        // String used to clear the DR if needed 
     uint16_t at_timeout = HC05_AT_RESP_COUNT;  // AT cmd response timout counter 
-    volatile uint16_t stat_reg = 0; 
-    uint8_t dummy_read = 0; 
 
     // Create the command string to send based on the specified AT command 
     switch (command)
@@ -315,7 +311,7 @@ void hc05_at_command(
     // TODO find a way to get rid of warnings for dummy reads 
 
     // Read the data register to clear it before looking fot actual data 
-    dummy_read = (uint8_t)(USART1->DR); 
+    dummy_read(USART1->DR); 
 
     // Send the command to the module 
     uart1_sendstring(cmd_str); 
@@ -323,9 +319,7 @@ void hc05_at_command(
     // Wait for data to be send back from the module before reading 
     do 
     {
-        stat_reg = USART1->SR & (SET_BIT << SHIFT_5);
-        // if (USART1->SR & (SET_BIT << SHIFT_5)) 
-        if (stat_reg)
+        if (USART1->SR & (SET_BIT << SHIFT_5)) 
         {
             // Read the module response 
             uart1_getstr(response, UART_STR_TERM_NL); 
