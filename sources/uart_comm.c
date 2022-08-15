@@ -113,7 +113,7 @@ void uart1_init(
     GPIOA->AFR[1] |= (SET_7 << SHIFT_8);
 
     // UART Configuration 
-    uart_set_baud_rate(baud_rate, uart); 
+    uart_set_baud_rate(uart, baud_rate); 
 }
 
 //=================================================== // UART1 initialization 
@@ -179,35 +179,35 @@ void uart2_init(uint8_t baud_rate)
 
 // UART Configuration 
 void uart_set_baud_rate(
-    uint8_t baud_rate,
-    USART_TypeDef *uart)
+    USART_TypeDef *uart, 
+    uint8_t baud_rate)
 {
     // Baud rate setup variables 
     uint16_t baud_frac;
     uint16_t baud_mant;
 
     // Clear the USART_CR1 register 
-    uart->CR1 = CLEAR;
-    uart->BRR = CLEAR; 
+    USART1->CR1 = CLEAR;
+    USART1->BRR = CLEAR; 
 
     // Set the UE bit in the USART_CR1 register 
-    uart->CR1 |= (SET_BIT << SHIFT_13);
+    USART1->CR1 |= (SET_BIT << SHIFT_13);
 
     // Clear the M bit in the USART_CR1 register for 8-bit data 
-    uart->CR1 &= ~(SET_BIT << SHIFT_12);
+    USART1->CR1 &= ~(SET_BIT << SHIFT_12);
 
     // Set the baud rate 
     uart_baud_select(baud_rate, &baud_frac, &baud_mant);
-    uart->BRR |= (baud_frac << SHIFT_0);  // Fractional 
-    uart->BRR |= (baud_mant << SHIFT_4);  // Mantissa 
+    USART1->BRR |= (baud_frac << SHIFT_0);  // Fractional 
+    USART1->BRR |= (baud_mant << SHIFT_4);  // Mantissa 
 
     // Enable the TX/RX by setting the RE and TE bits in USART_CR1 register 
-    uart->CR1 |= (SET_BIT << SHIFT_2);
-    uart->CR1 |= (SET_BIT << SHIFT_3); 
+    USART1->CR1 |= (SET_BIT << SHIFT_2);
+    USART1->CR1 |= (SET_BIT << SHIFT_3); 
 
     // Clear buffers  
-    while (!(uart->SR & (SET_BIT << SHIFT_6)));
-    while(uart->SR & (SET_BIT << SHIFT_5)) 
+    while (!(USART1->SR & (SET_BIT << SHIFT_6)));
+    while(USART1->SR & (SET_BIT << SHIFT_5)) 
     {
         uart1_getchar();
         tim9_delay_ms(UART_DR_CLEAR_TIMER); 

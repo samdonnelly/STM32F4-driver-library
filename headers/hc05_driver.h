@@ -18,8 +18,12 @@
 //=======================================================================================
 // Includes
 
+// Toolkit 
 #include "stm32f411xe.h"
 #include "tools.h"
+
+// Device Drivers 
+#include "uart_comm.h"
 
 //=======================================================================================
 
@@ -37,7 +41,7 @@
 #define HC05_AT_CMD_LEN     30   // Max length of command string 
 #define HC05_AT_DR_CLR_LEN  4    // Length of "OK\r\n" that follows an AT parameter response 
 #define HC05_AT_RESP_STR    43   // 43 == '+' which is the start of a parmeter response 
-#define HC05_AT_RESP_COUNT  200  // Timout counter to receeive an AT cmd response 
+#define HC05_AT_RESP_COUNT  65000  // Timout counter to receeive an AT cmd response 
 
 //=======================================================================================
 

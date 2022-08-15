@@ -225,8 +225,8 @@ void uart2_init(uint8_t baud_rate);
  * @param uart 
  */
 void uart_set_baud_rate(
-    uint8_t baud_rate,
-    USART_TypeDef *uart); 
+    USART_TypeDef *uart, 
+    uint8_t baud_rate); 
 
 //=======================================================================================
 

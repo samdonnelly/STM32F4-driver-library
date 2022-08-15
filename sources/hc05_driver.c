@@ -18,7 +18,6 @@
 
 // Drivers 
 #include "hc05_driver.h"
-#include "uart_comm.h"
 #include "gpio_driver.h"
 #include "timers.h"
 
@@ -152,7 +151,9 @@ void hc05_at_command(
     // Local variables 
     char cmd_str[HC05_AT_CMD_LEN];            // String that holds the AT command 
     char clear_dr[HC05_AT_DR_CLR_LEN];        // String used to clear the DR if needed 
-    uint8_t at_timeout = HC05_AT_RESP_COUNT;  // AT cmd response timout counter 
+    uint16_t at_timeout = HC05_AT_RESP_COUNT;  // AT cmd response timout counter 
+    volatile uint16_t stat_reg = 0; 
+    uint8_t dummy_read = 0; 
 
     // Create the command string to send based on the specified AT command 
     switch (command)
@@ -311,15 +312,20 @@ void hc05_at_command(
             return; 
     }
 
+    // TODO find a way to get rid of warnings for dummy reads 
+
+    // Read the data register to clear it before looking fot actual data 
+    dummy_read = (uint8_t)(USART1->DR); 
+
     // Send the command to the module 
     uart1_sendstring(cmd_str); 
-
-    // TODO test this timeout 
 
     // Wait for data to be send back from the module before reading 
     do 
     {
-        if (USART1->SR & (SET_BIT << SHIFT_5)) 
+        stat_reg = USART1->SR & (SET_BIT << SHIFT_5);
+        // if (USART1->SR & (SET_BIT << SHIFT_5)) 
+        if (stat_reg)
         {
             // Read the module response 
             uart1_getstr(response, UART_STR_TERM_NL); 
@@ -329,9 +335,11 @@ void hc05_at_command(
 
             break; 
         }
-        tim9_delay_ms(TIM9_1MS);  // AT mode doesn't run in real time so blocking is ok 
+        tim9_delay_us(TIM9_1US);  // AT mode doesn't run in real time so blocking is ok 
     }
-    while (at_timeout--);  
+    while (--at_timeout);  
+
+    if (!at_timeout) strcpy(response, "Timeout\r\n"); 
 }
 
 #endif  // HC05_AT_CMD_MODE
