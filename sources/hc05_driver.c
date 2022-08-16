@@ -148,8 +148,6 @@ void hc05_at_command(
     char clear_dr[HC05_AT_DR_CLR_LEN];        // String used to clear the DR if needed 
     uint16_t at_timeout = HC05_AT_RESP_COUNT;  // AT cmd response timout counter 
 
-    // TODO make sure the timeout below works with all commands 
-
     // Create the command string to send based on the specified AT command 
     switch (command)
     {
@@ -313,6 +311,8 @@ void hc05_at_command(
     // Send the command to the module 
     uart1_sendstring(cmd_str); 
 
+    // TODO extend the timeout to work with all commands (ex. cmd #4) 
+
     // Wait for data to be send back from the module before reading 
     do 
     {
@@ -328,7 +328,7 @@ void hc05_at_command(
         }
         tim9_delay_us(TIM9_1US);  // AT mode doesn't run in real time so blocking is ok 
     }
-    while (--at_timeout);  
+    while (--at_timeout); 
 
     if (!at_timeout) strcpy(response, "Timeout\r\n"); 
 }
