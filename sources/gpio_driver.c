@@ -28,7 +28,7 @@
 // GPIOA init
 // TODO skip steps that are not needed when initializing an input 
 void gpioa_init(
-    uint8_t  pin_num,
+    uint16_t pin_num,
     uint32_t moder,
     uint32_t otyper,
     uint32_t ospeedr,

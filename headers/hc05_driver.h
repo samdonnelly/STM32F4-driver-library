@@ -39,11 +39,11 @@
 #define HC05_INIT_DELAY   100
 
 // AT Command Mode 
-#define HC05_AT_EN          1    // Controls the inclusion of AT command mode code 
-#define HC05_AT_CMD_LEN     30   // Max length of command string 
-#define HC05_AT_DR_CLR_LEN  4    // Length of "OK\r\n" that follows an AT parameter response 
-#define HC05_AT_RESP_STR    43   // 43 == '+' which is the start of a parmeter response 
-#define HC05_AT_RESP_COUNT  65000  // Timout counter to receeive an AT cmd response 
+#define HC05_AT_EN          1      // Controls the inclusion of AT command mode code 
+#define HC05_AT_CMD_LEN     30     // Max length of command string 
+#define HC05_AT_DR_CLR_LEN  4      // Length of "OK\r\n" that follows an AT parameter response 
+#define HC05_AT_RESP_STR    43     // 43 == '+' which is the start of a parmeter response 
+#define HC05_AT_RESP_COUNT  65535  // Timout counter to receeive an AT cmd response 
 
 //=======================================================================================
 

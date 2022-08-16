@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HC-05 bluetooth driver 
+ * @brief HC-05 Bluetooth driver 
  * 
  * @version 0.1
  * @date 2022-07-25
@@ -76,9 +76,7 @@ void hc05_init(
 // Turn on the module 
 void hc05_pwr_on(void)
 {
-    // TODO ensure data transfer is complete (if in progress) first 
-
-    // Set en pin to low to turn off the module 
+    // Set en pin to high to turn on the module 
     gpioa_write(GPIOX_PIN_12, GPIO_HIGH); 
 }
 
@@ -86,7 +84,8 @@ void hc05_pwr_on(void)
 // Turn off the module 
 void hc05_pwr_off(void)
 {
-    // Set en pin to high to turn on the module 
+    // TODO ensure data transfer is complete (if in progress) first 
+    // Set en pin to low to turn off the module 
     gpioa_write(GPIOX_PIN_12, GPIO_LOW); 
 }
 
@@ -137,8 +136,6 @@ void hc05_data_mode(void)
 
 #if HC05_AT_EN
 
-// TODO test that this combined function works 
-
 // Send AT commands and record responses 
 void hc05_at_command(
     AT_CMD command, 
@@ -150,6 +147,8 @@ void hc05_at_command(
     char cmd_str[HC05_AT_CMD_LEN];            // String that holds the AT command 
     char clear_dr[HC05_AT_DR_CLR_LEN];        // String used to clear the DR if needed 
     uint16_t at_timeout = HC05_AT_RESP_COUNT;  // AT cmd response timout counter 
+
+    // TODO make sure the timeout below works with all commands 
 
     // Create the command string to send based on the specified AT command 
     switch (command)
@@ -308,9 +307,7 @@ void hc05_at_command(
             return; 
     }
 
-    // TODO find a way to get rid of warnings for dummy reads 
-
-    // Read the data register to clear it before looking fot actual data 
+    // Read the data register to clear it before looking for actual data 
     dummy_read(USART1->DR); 
 
     // Send the command to the module 

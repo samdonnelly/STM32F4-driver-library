@@ -150,7 +150,7 @@ typedef enum {
  * @param pupdr 
  */
 void gpioa_init(
-    uint8_t  pin_num,
+    uint16_t pin_num,
     uint32_t moder,
     uint32_t otyper,
     uint32_t ospeedr,
