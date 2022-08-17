@@ -261,7 +261,7 @@ void hc05_change_mode(
  * @details 
  * 
  */
-void hc05_data_mode(void); 
+void hc05_data_mode(char *data); 
 
 
 /**

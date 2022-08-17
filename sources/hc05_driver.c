@@ -69,15 +69,13 @@ void hc05_init(
 // - Write serial terminal input, read input and send it to the module and verify it is sent
 //   using a bluetooth terminal 
 
-
 //=======================================================================================
 // Power functions 
 
 // Turn on the module 
 void hc05_pwr_on(void)
 {
-    // Set en pin to high to turn on the module 
-    gpioa_write(GPIOX_PIN_12, GPIO_HIGH); 
+    gpioa_write(GPIOX_PIN_12, GPIO_HIGH);  // Set en pin to high to turn on the module 
 }
 
 
@@ -85,8 +83,7 @@ void hc05_pwr_on(void)
 void hc05_pwr_off(void)
 {
     // TODO ensure data transfer is complete (if in progress) first 
-    // Set en pin to low to turn off the module 
-    gpioa_write(GPIOX_PIN_12, GPIO_LOW); 
+    gpioa_write(GPIOX_PIN_12, GPIO_LOW);  // Set en pin to low to turn off the module 
 }
 
 //=======================================================================================
@@ -127,10 +124,10 @@ void hc05_change_mode(
 // Mode functions 
 
 // HC-05 data mode 
-void hc05_data_mode(void)
+void hc05_data_mode(char *data)
 {
     // TODO verify the state pin input (connected to a device) before sending data 
-    // TODO call UART1 from here. 
+    uart1_sendstring(data); 
 }
 
 
@@ -306,7 +303,7 @@ void hc05_at_command(
     }
 
     // Read the data register to clear it before looking for actual data 
-    dummy_read(USART1->DR); 
+    uart_clear_dr(USART1); 
 
     // Send the command to the module 
     uart1_sendstring(cmd_str); 
