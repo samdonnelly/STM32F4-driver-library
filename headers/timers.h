@@ -35,9 +35,10 @@
 #define TIM9_10MS   10   // 10 ms delay 
 #define TIM9_100MS  100  // 100 ms delay 
 
-#define TIM9_1US    1    // 1 ms delay 
-#define TIM9_10US   10   // 10 ms delay 
-#define TIM9_100US  100  // 100 ms delay 
+#define TIM9_1US    1    // 1 us delay 
+#define TIM9_2US    2    // 2 us delay 
+#define TIM9_10US   10   // 10 us delay 
+#define TIM9_100US  100  // 100 us delay 
 
 //=======================================================================================
 

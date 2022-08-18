@@ -323,9 +323,10 @@ void hc05_at_command(
 
             break; 
         }
-        tim9_delay_us(TIM9_1US);  // AT mode doesn't run in real time so blocking is ok 
+        tim9_delay_us(TIM9_2US);  // AT mode doesn't run in real time so blocking is ok 
     }
     while (--at_timeout); 
+    // while (at_timeout); 
 
     if (!at_timeout) strcpy(response, "Timeout\r\n"); 
 }
