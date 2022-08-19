@@ -64,10 +64,6 @@ void hc05_init(
 
 //=======================================================================================
 
-// TODO Tests 
-// - Connect to a device (android) using a bluetoth terminal 
-// - Write serial terminal input, read input and send it to the module and verify it is sent
-//   using a bluetooth terminal 
 
 //=======================================================================================
 // Power functions 
@@ -82,7 +78,7 @@ void hc05_pwr_on(void)
 // Turn off the module 
 void hc05_pwr_off(void)
 {
-    // TODO ensure data transfer is complete (if in progress) first 
+    // TODO ensure data transfer is complete (if in progress) first - control driver 
     gpioa_write(GPIOX_PIN_12, GPIO_LOW);  // Set en pin to low to turn off the module 
 }
 
@@ -123,11 +119,19 @@ void hc05_change_mode(
 //=======================================================================================
 // Mode functions 
 
-// HC-05 data mode 
-void hc05_data_mode(char *data)
+// HC-05 data mode send data 
+void hc05_data_mode_send(char *send_data)
 {
-    // TODO verify the state pin input (connected to a device) before sending data 
-    uart1_sendstring(data); 
+    // TODO verify the state pin input before sending data - control driver 
+    uart1_sendstring(send_data); 
+}
+
+
+// HC-05 data mode read data 
+void hc05_data_mode_receive(char *receive_data)
+{
+    // TODO verify the state pin input before looking for data - control driver 
+    uart1_getstr(receive_data, UART_STR_TERM_CARRIAGE); 
 }
 
 
@@ -308,8 +312,6 @@ void hc05_at_command(
     // Send the command to the module 
     uart1_sendstring(cmd_str); 
 
-    // TODO extend the timeout to work with all commands (ex. cmd #4) 
-
     // Wait for data to be send back from the module before reading 
     do 
     {
@@ -326,7 +328,6 @@ void hc05_at_command(
         tim9_delay_us(TIM9_2US);  // AT mode doesn't run in real time so blocking is ok 
     }
     while (--at_timeout); 
-    // while (at_timeout); 
 
     if (!at_timeout) strcpy(response, "Timeout\r\n"); 
 }

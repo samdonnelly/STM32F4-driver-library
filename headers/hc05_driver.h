@@ -240,7 +240,7 @@ void hc05_pwr_off(void);
  * @see hc05_mode_t
  * @see uart_baud_rate_t
  * @see hc05_at_command
- * @see hc05_data_mode
+ * @see hc05_data_mode_send
  * 
  * @param mode : Moudle mode - either Data mode (default) or AT Command mode 
  * @param baud_rate : Baud rate of the selected mode 
@@ -260,8 +260,19 @@ void hc05_change_mode(
  * 
  * @details 
  * 
+ * @param send_data 
  */
-void hc05_data_mode(char *data); 
+void hc05_data_mode_send(char *send_data); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param receive_data 
+ */
+void hc05_data_mode_receive(char *receive_data); 
 
 
 /**

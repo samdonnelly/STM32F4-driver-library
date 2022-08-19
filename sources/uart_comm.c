@@ -433,6 +433,13 @@ void uart1_getstr(
 {
     // Store the character input from uart1_getchar()
     uint8_t input = 0;
+    char str_test[10]; 
+    uint8_t a = 0; 
+
+    for (uint8_t i = 0; i < 10; i++)
+    {
+        str_test[i] = '\0'; 
+    }
 
     // Run until a carriage return is seen
     do
@@ -443,6 +450,11 @@ void uart1_getstr(
             input = uart1_getchar();
             *string_to_fill = input;
             string_to_fill++;
+            if (a < 10)
+            {
+                str_test[a] = input; 
+                a++;
+            } 
         }
     } 
     while(input != end_of_string);
