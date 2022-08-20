@@ -28,23 +28,29 @@
 //=======================================================================================
 
 
+// TODO Control driver todo's: 
+//  - Make sure data transfer is complete before turning off the module 
+//  - Verify the state pin shows connected before any data transfer 
+//  - When about to send data (to Android) look for a prompt message to start 
+
+
 //=======================================================================================
 // Initialization 
 
 // HC-05 initialization 
 void hc05_init(
-    uint8_t pin34_status,
-    uint8_t en_status, 
-    uint8_t state_status)
+    hc05_pin34_status_t pin34_status,
+    hc05_en_status_t    en_status, 
+    hc05_state_status_t state_status)
 {
     //==============================================================
     // Pin information for HC-05 GPIOs 
-    //  PA8:  pin 34 
+    //  PA8:  pin 34 (AT cmd mode trigger)
     //  PA11: STATE 
     //  PA12: EN (enable) 
     //==============================================================
 
-    if (pin34_status)  // AT command enable 
+    if (pin34_status)  // AT Command mode enable 
     {
         gpioa_init(PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
         gpioa_write(GPIOX_PIN_8, GPIO_LOW); 
@@ -58,7 +64,7 @@ void hc05_init(
         hc05_pwr_on(); 
     }
     
-    // State feedback - to know when you're connected to a device 
+    // State feedback enable 
     if (state_status) gpioa_init(PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
 }
 
@@ -71,15 +77,14 @@ void hc05_init(
 // Turn on the module 
 void hc05_pwr_on(void)
 {
-    gpioa_write(GPIOX_PIN_12, GPIO_HIGH);  // Set en pin to high to turn on the module 
+    gpioa_write(GPIOX_PIN_12, GPIO_HIGH);  // Set EN pin to high to turn on the module 
 }
 
 
 // Turn off the module 
 void hc05_pwr_off(void)
 {
-    // TODO ensure data transfer is complete (if in progress) first - control driver 
-    gpioa_write(GPIOX_PIN_12, GPIO_LOW);  // Set en pin to low to turn off the module 
+    gpioa_write(GPIOX_PIN_12, GPIO_LOW);  // Set EN pin to low to turn off the module 
 }
 
 //=======================================================================================
@@ -92,22 +97,23 @@ void hc05_pwr_off(void)
 
 // Change the module mode 
 void hc05_change_mode(
-    HC05_MODE mode, 
-    UART_BAUD baud_rate)
+    hc05_mode_t mode, 
+    uart_baud_rate_t baud_rate, 
+    uart_clock_speed_t clock_speed)
 {
-    // Turn off the module 
+    // Turn the module off 
     hc05_pwr_off(); 
 
-    // Set pin 34 pin to high to ensure you enter AT command mode 
+    // Set pin 34 on the moudle depending on the requested mode 
     gpioa_write(GPIOX_PIN_8, mode); 
 
     // Short delay to ensure power off
     tim9_delay_ms(HC05_INIT_DELAY); 
 
-    // Configure the baud rate for the AT command mode speed 
-    uart_set_baud_rate(USART1, baud_rate);  
+    // Configure the baud rate depending on the requested mode 
+    uart_set_baud_rate(USART1, baud_rate, clock_speed);  
 
-    // Turn the module back on 
+    // Turn the module on 
     hc05_pwr_on(); 
 }
 
@@ -122,7 +128,6 @@ void hc05_change_mode(
 // HC-05 data mode send data 
 void hc05_data_mode_send(char *send_data)
 {
-    // TODO verify the state pin input before sending data - control driver 
     uart1_sendstring(send_data); 
 }
 
@@ -130,8 +135,7 @@ void hc05_data_mode_send(char *send_data)
 // HC-05 data mode read data 
 void hc05_data_mode_receive(char *receive_data)
 {
-    // TODO verify the state pin input before looking for data - control driver 
-    uart1_getstr(receive_data, UART_STR_TERM_CARRIAGE); 
+    uart_getstr(USART1, receive_data, UART_STR_TERM_CARRIAGE); 
 }
 
 
@@ -139,14 +143,14 @@ void hc05_data_mode_receive(char *receive_data)
 
 // Send AT commands and record responses 
 void hc05_at_command(
-    AT_CMD command, 
-    AT_OPR operation, 
+    hc05_at_commnds_t command, 
+    hc05_at_operation_t operation, 
     char *param, 
     char *response)
 {
     // Local variables 
-    char cmd_str[HC05_AT_CMD_LEN];            // String that holds the AT command 
-    char clear_dr[HC05_AT_DR_CLR_LEN];        // String used to clear the DR if needed 
+    char cmd_str[HC05_AT_CMD_LEN];             // String that holds the AT command 
+    char clear_dr[HC05_AT_DR_CLR_LEN];         // String used to clear the DR if needed 
     uint16_t at_timeout = HC05_AT_RESP_COUNT;  // AT cmd response timout counter 
 
     // Create the command string to send based on the specified AT command 
@@ -318,10 +322,10 @@ void hc05_at_command(
         if (USART1->SR & (SET_BIT << SHIFT_5)) 
         {
             // Read the module response 
-            uart1_getstr(response, UART_STR_TERM_NL); 
+            uart_getstr(USART1, response, UART_STR_TERM_NL); 
 
             // If a cmd response was received then clear the "OK\r\n" from the DR that follows 
-            if (*response == HC05_AT_RESP_STR) uart1_getstr(clear_dr, UART_STR_TERM_NL);
+            if (*response == HC05_AT_RESP_STR) uart_getstr(USART1, clear_dr, UART_STR_TERM_NL);
 
             break; 
         }
@@ -329,7 +333,7 @@ void hc05_at_command(
     }
     while (--at_timeout); 
 
-    if (!at_timeout) strcpy(response, "Timeout\r\n"); 
+    if (!at_timeout) strcpy(response, "Timeout\r\n");  // No response seen 
 }
 
 #endif  // HC05_AT_CMD_MODE

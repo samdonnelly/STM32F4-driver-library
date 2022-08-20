@@ -47,9 +47,10 @@
  * @param baud_mant : mantissa portion of UART2 baud rate setup
  */
 void uart_baud_select(
-    uint8_t baud_rate,
-    uint16_t *baud_frac,
-    uint16_t *baud_mant);
+    uart_baud_rate_t baud_rate,
+    uart_clock_speed_t clock_speed, 
+    uart_fractional_baud_t *baud_frac,
+    uart_mantissa_baud_t *baud_mant);
 
 //=======================================================================================
 
@@ -90,9 +91,10 @@ void uart_baud_select(
 //  PA3: RX
 //===================================================
 
-void uart1_init(
+void uart_init(
     USART_TypeDef *uart, 
-    uint8_t baud_rate)
+    uart_baud_rate_t baud_rate,
+    uart_clock_speed_t clock_speed)
 {
     // Enable UART1 Clock - RCC_APB2 register, bit 4
     RCC->APB2ENR |= (SET_BIT << SHIFT_4);
@@ -113,7 +115,7 @@ void uart1_init(
     GPIOA->AFR[1] |= (SET_7 << SHIFT_8);
 
     // UART Configuration 
-    uart_set_baud_rate(uart, baud_rate); 
+    uart_set_baud_rate(uart, baud_rate, clock_speed); 
 }
 
 //=================================================== // UART1 initialization 
@@ -122,11 +124,13 @@ void uart1_init(
 //===================================================
 // UART2 initialization 
 
-void uart2_init(uint8_t baud_rate)
+void uart2_init(
+    uart_baud_rate_t baud_rate,
+    uart_clock_speed_t clock_speed)
 {
     // Baud rate setup variables 
-    uint16_t baud_frac;
-    uint16_t baud_mant;
+    uart_fractional_baud_t baud_frac;
+    uart_mantissa_baud_t baud_mant;
 
     // 1. Pin Setup 
 
@@ -161,7 +165,7 @@ void uart2_init(uint8_t baud_rate)
     USART2->CR1 &= ~(SET_BIT << SHIFT_12);
 
     // d) Set the baud rate 
-    uart_baud_select(baud_rate, &baud_frac, &baud_mant);
+    uart_baud_select(baud_rate, clock_speed, &baud_frac, &baud_mant);
     USART2->BRR |= (baud_frac << SHIFT_0);  // Fractional 
     USART2->BRR |= (baud_mant << SHIFT_4);  // Mantissa 
 
@@ -180,36 +184,37 @@ void uart2_init(uint8_t baud_rate)
 // UART Configuration 
 void uart_set_baud_rate(
     USART_TypeDef *uart, 
-    uint8_t baud_rate)
+    uart_baud_rate_t baud_rate,
+    uart_clock_speed_t clock_speed)
 {
     // Baud rate setup variables 
-    uint16_t baud_frac;
-    uint16_t baud_mant;
+    uart_fractional_baud_t baud_frac;
+    uart_mantissa_baud_t baud_mant;
 
     // Clear the USART_CR1 register 
-    USART1->CR1 = CLEAR;
-    USART1->BRR = CLEAR; 
+    uart->CR1 = CLEAR;
+    uart->BRR = CLEAR; 
 
     // Set the UE bit in the USART_CR1 register 
-    USART1->CR1 |= (SET_BIT << SHIFT_13);
+    uart->CR1 |= (SET_BIT << SHIFT_13);
 
     // Clear the M bit in the USART_CR1 register for 8-bit data 
-    USART1->CR1 &= ~(SET_BIT << SHIFT_12);
+    uart->CR1 &= ~(SET_BIT << SHIFT_12);
 
     // Set the baud rate 
-    uart_baud_select(baud_rate, &baud_frac, &baud_mant);
-    USART1->BRR |= (baud_frac << SHIFT_0);  // Fractional 
-    USART1->BRR |= (baud_mant << SHIFT_4);  // Mantissa 
+    uart_baud_select(baud_rate, clock_speed, &baud_frac, &baud_mant);
+    uart->BRR |= (baud_frac << SHIFT_0);  // Fractional 
+    uart->BRR |= (baud_mant << SHIFT_4);  // Mantissa 
 
     // Enable the TX/RX by setting the RE and TE bits in USART_CR1 register 
-    USART1->CR1 |= (SET_BIT << SHIFT_2);
-    USART1->CR1 |= (SET_BIT << SHIFT_3); 
+    uart->CR1 |= (SET_BIT << SHIFT_2);
+    uart->CR1 |= (SET_BIT << SHIFT_3); 
 
     // Clear buffers  
-    while (!(USART1->SR & (SET_BIT << SHIFT_6)));
-    while(USART1->SR & (SET_BIT << SHIFT_5)) 
+    while (!(uart->SR & (SET_BIT << SHIFT_6)));
+    while(uart->SR & (SET_BIT << SHIFT_5)) 
     {
-        uart1_getchar();
+        uart_getchar(uart);
         tim9_delay_ms(UART_DR_CLEAR_TIMER); 
     }
 }
@@ -217,23 +222,47 @@ void uart_set_baud_rate(
 
 // Select the fractional and mantissa portions of the baud rate setup 
 void uart_baud_select(
-    uint8_t baud_rate,
-    uint16_t *baud_frac,
-    uint16_t *baud_mant)
+    uart_baud_rate_t baud_rate,
+    uart_clock_speed_t clock_speed, 
+    uart_fractional_baud_t *baud_frac,
+    uart_mantissa_baud_t *baud_mant)
 {
-    switch (baud_rate)
+    switch (clock_speed)
     {
-        case UART_BAUD_9600:
-            *baud_frac = UART_42_9600_FRAC;
-            *baud_mant = UART_42_9600_MANT;
+        case UART_CLOCK_42:
+            switch (baud_rate)
+            {
+                case UART_BAUD_9600:
+                    *baud_frac = UART_42_9600_FRAC;
+                    *baud_mant = UART_42_9600_MANT;
+                    break;
+                
+                default:
+                    break;
+            }
             break;
-        
-        case UART_BAUD_38400:
-            *baud_frac = UART_84_38400_FRAC;
-            *baud_mant = UART_84_38400_MANT;
-            break;
-        
-        case UART_BAUD_115200:
+
+        case UART_CLOCK_84:
+            switch (baud_rate)
+            {
+                case UART_BAUD_9600:
+                    *baud_frac = UART_84_9600_FRAC;
+                    *baud_mant = UART_84_9600_MANT;
+                    break;
+                
+                case UART_BAUD_38400:
+                    *baud_frac = UART_84_38400_FRAC;
+                    *baud_mant = UART_84_38400_MANT;
+                    break;
+                
+                case UART_BAUD_115200:
+                    *baud_frac = UART_84_115200_FRAC;
+                    *baud_mant = UART_84_115200_MANT;
+                    break;
+                
+                default:
+                    break;
+            }
             break;
         
         default:
@@ -416,45 +445,33 @@ void uart2_send_new_line(void)
 // Read Data 
 
 //===================================================
-// UART1 read 
+// UART read 
 
-// UART1 get character from serial terminal 
-uint8_t uart1_getchar(void)
+// UART get character from serial terminal 
+uint8_t uart_getchar(USART_TypeDef *uart)
 {
-    // Read and return data from data register 
-    return (uint8_t)(USART1->DR);
+    return (uint8_t)(uart->DR);  // Read and return data from data register 
 }
 
 
-// UART1 get string 
-void uart1_getstr(
+// UART get string 
+void uart_getstr(
+    USART_TypeDef *uart, 
     char *string_to_fill, 
-    STR_TERM end_of_string)
+    uart_string_termination_t end_of_string)
 {
-    // Store the character input from uart1_getchar()
+    // Store the character input from uart_getchar()
     uint8_t input = 0;
-    char str_test[10]; 
-    uint8_t a = 0; 
-
-    for (uint8_t i = 0; i < 10; i++)
-    {
-        str_test[i] = '\0'; 
-    }
 
     // Run until a carriage return is seen
     do
     {
         // Wait for data to be available then read and store it 
-        if (USART1->SR & (SET_BIT << SHIFT_5))
+        if (uart->SR & (SET_BIT << SHIFT_5))
         {
-            input = uart1_getchar();
+            input = uart_getchar(uart);
             *string_to_fill = input;
             string_to_fill++;
-            if (a < 10)
-            {
-                str_test[a] = input; 
-                a++;
-            } 
         }
     } 
     while(input != end_of_string);

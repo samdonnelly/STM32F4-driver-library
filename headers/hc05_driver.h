@@ -163,16 +163,6 @@ typedef enum {
 
 
 //=======================================================================================
-// Data types 
-
-typedef hc05_mode_t HC05_MODE; 
-typedef hc05_at_commnds_t AT_CMD; 
-typedef hc05_at_operation_t AT_OPR; 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Initialization functions 
 
 /**
@@ -180,14 +170,14 @@ typedef hc05_at_operation_t AT_OPR;
  * 
  * @details 
  * 
- * @param pin34_state 
- * @param en_state 
- * @param state_state 
+ * @param pin34_status 
+ * @param en_status 
+ * @param state_status 
  */
 void hc05_init(
-    uint8_t pin34_status,
-    uint8_t en_status, 
-    uint8_t state_status); 
+    hc05_pin34_status_t pin34_status,
+    hc05_en_status_t    en_status, 
+    hc05_state_status_t state_status); 
 
 //=======================================================================================
 
@@ -246,8 +236,9 @@ void hc05_pwr_off(void);
  * @param baud_rate : Baud rate of the selected mode 
  */
 void hc05_change_mode(
-    HC05_MODE mode, 
-    UART_BAUD baud_rate); 
+    hc05_mode_t mode, 
+    uart_baud_rate_t baud_rate, 
+    uart_clock_speed_t clock_speed); 
 
 //=======================================================================================
 
@@ -286,8 +277,8 @@ void hc05_data_mode_receive(char *receive_data);
  * @param response 
  */
 void hc05_at_command(
-    AT_CMD command, 
-    AT_OPR operation, 
+    hc05_at_commnds_t command, 
+    hc05_at_operation_t operation, 
     char *param, 
     char *response); 
 

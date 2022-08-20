@@ -50,6 +50,18 @@ typedef enum {
     UART_BAUD_115200   // 115200 bits/s 
 } uart_baud_rate_t;
 
+
+/**
+ * @brief UART clock speed 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    UART_CLOCK_42,   // APBX clock speed = 42 MHz 
+    UART_CLOCK_84    // APBX clock speed = 84 MHz 
+} uart_clock_speed_t; 
+
 /**
  * @brief Fractional portion of UART baud rate setup 
  * 
@@ -71,7 +83,9 @@ typedef enum {
  */
 typedef enum {
     UART_42_9600_FRAC = 0x7,
-    UART_84_38400_FRAC = 0xB
+    UART_84_9600_FRAC = 0xE,
+    UART_84_38400_FRAC = 0xB, 
+    UART_84_115200_FRAC = 0x9
 } uart_fractional_baud_t;
 
 
@@ -95,8 +109,10 @@ typedef enum {
  * 
  */
 typedef enum {
-    UART_42_9600_MANT = 273,
-    UART_84_38400_MANT = 136
+    UART_42_9600_MANT = 0x111,
+    UART_84_9600_MANT = 0x222, 
+    UART_84_38400_MANT = 0x88, 
+    UART_84_115200_MANT = 0x2D
 } uart_mantissa_baud_t;
 
 
@@ -161,15 +177,6 @@ typedef enum {
 
 
 //=======================================================================================
-// Data Types 
-
-typedef uart_baud_rate_t UART_BAUD; 
-typedef uart_string_termination_t STR_TERM; 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // UART Initialization 
 
 //===================================================
@@ -182,9 +189,10 @@ typedef uart_string_termination_t STR_TERM;
  * 
  * @param baud_rate 
  */
-void uart1_init(
+void uart_init(
     USART_TypeDef *uart, 
-    uint8_t baud_rate);
+    uart_baud_rate_t baud_rate, 
+    uart_clock_speed_t clock_speed);
 
 //=================================================== // UART1 initialization 
 
@@ -211,7 +219,9 @@ void uart1_init(
  * @param baud_rate : baud rate to initialize UART2 with - defined by uart2_baud_rate_t
  * 
  */
-void uart2_init(uint8_t baud_rate);
+void uart2_init(
+    uart_baud_rate_t baud_rate, 
+    uart_clock_speed_t clock_speed);
 
 //=================================================== // UART2 initialization 
 
@@ -226,7 +236,8 @@ void uart2_init(uint8_t baud_rate);
  */
 void uart_set_baud_rate(
     USART_TypeDef *uart, 
-    uint8_t baud_rate); 
+    uart_baud_rate_t baud_rate,
+    uart_clock_speed_t clock_speed); 
 
 //=======================================================================================
 
@@ -374,7 +385,7 @@ void uart2_send_new_line(void);
  * 
  * @return uint8_t : 
  */
-uint8_t uart1_getchar(void);
+uint8_t uart_getchar(USART_TypeDef *uart);
 
 
 /**
@@ -384,9 +395,10 @@ uint8_t uart1_getchar(void);
  * 
  * @param string_to_fill : 
  */
-void uart1_getstr(
+void uart_getstr(
+    USART_TypeDef *uart, 
     char *string_to_fill,
-    STR_TERM end_of_string);
+    uart_string_termination_t end_of_string);
 
 //=================================================== // UART1 read functions 
 
