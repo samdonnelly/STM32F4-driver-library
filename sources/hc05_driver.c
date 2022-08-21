@@ -128,7 +128,7 @@ void hc05_change_mode(
 // HC-05 data mode send data 
 void hc05_data_mode_send(char *send_data)
 {
-    uart1_sendstring(send_data); 
+    uart_sendstring(USART1, send_data); 
 }
 
 
@@ -314,7 +314,7 @@ void hc05_at_command(
     uart_clear_dr(USART1); 
 
     // Send the command to the module 
-    uart1_sendstring(cmd_str); 
+    uart_sendstring(USART1, cmd_str); 
 
     // Wait for data to be send back from the module before reading 
     do 

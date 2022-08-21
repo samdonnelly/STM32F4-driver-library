@@ -245,56 +245,8 @@ void uart_set_baud_rate(
 //=======================================================================================
 // Send Functions 
 
-//===================================================
-// UART1 send functions 
-
 /**
  * @brief 
- * 
- * @details 
- * 
- * @param character : character written to data register 
- */
-void uart1_sendchar(uint8_t character);
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param string : string to send using UART2 
- */
-void uart1_sendstring(char *string);
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param digit : number from 0-9 that gets printed to the serial terminal 
- */
-void uart1_send_digit(uint8_t digit);
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param number : signed 16-bit number that gets printed to the serial terminal 
- */
-void uart1_send_integer(int16_t integer);
-
-//=================================================== // UART1 send functions 
-
-
-//===================================================
-// UART2 send functions 
-
-/**
- * @brief UART2 send character to serial terminal 
  * 
  * @details Takes a single character and writes it to the data register of UART2. 
  *          Waits until the Transmission Complete (TC) bit (bit 6) in the status
@@ -302,48 +254,50 @@ void uart1_send_integer(int16_t integer);
  * 
  * @param character : character written to data register 
  */
-void uart2_sendchar(uint8_t character);
+void uart_sendchar(
+    USART_TypeDef *uart, 
+    uint8_t character);
 
 
 /**
- * @brief UART2 send string to serial terminal
+ * @brief 
  * 
  * @details Iterates through each character of a string and sends each character to the 
  *          serial terminal by calling uart2_sendchar.
  * 
- * @see uart2_sendchar
- * 
  * @param string : string to send using UART2 
  */
-void uart2_sendstring(char *string);
+void uart_sendstring(
+    USART_TypeDef *uart, 
+    char *string);
 
 
 /**
- * @brief UART2 send a numeric digit to the serial terminal 
+ * @brief 
  * 
  * @details Pass a number from 0-9 to print it to the serial terminal. The function 
  *          takes the digit, offsets it to the corresponding character (ex. 9 -> '9')
  *          and sends it to the serial terminal using uart2_sendchar.
  * 
- * @see uart2_sendchar
- * 
  * @param digit : number from 0-9 that gets printed to the serial terminal 
  */
-void uart2_send_digit(uint8_t digit);
+void uart_send_digit(
+    USART_TypeDef *uart, 
+    uint8_t digit);
 
 
 /**
- * @brief UART2 send an integer to the serial terminal 
+ * @brief 
  * 
  * @details Takes a signed 16-bit integer, parses the digits and send them to the serial
  *          terminal one at a time using uart2_send_digit along with the correct sign of 
  *          the number. 
  * 
- * @see uart2_send_digit
- * 
  * @param number : signed 16-bit number that gets printed to the serial terminal 
  */
-void uart2_send_integer(int16_t integer);
+void uart_send_integer(
+    USART_TypeDef *uart, 
+    int16_t integer);
 
 
 /**
@@ -353,9 +307,12 @@ void uart2_send_integer(int16_t integer);
  *          by num_spaces. This is usedful for formatting outputs to the serial 
  *          terminal. 
  * 
+ * @param uart 
  * @param num_spaces : number of blank spaces that get sent to the 
  */
-void uart2_send_spaces(uint8_t num_spaces);
+void uart_send_spaces(
+    USART_TypeDef *uart, 
+    uint8_t num_spaces);
 
 
 /**
@@ -364,10 +321,9 @@ void uart2_send_spaces(uint8_t num_spaces);
  * @details When called the serial terminal output will go to the beginning of a new 
  *          line. Useful for formatting outputs to the serial terminal. 
  * 
+ * @param uart 
  */
-void uart2_send_new_line(void);
-
-//=================================================== // UART2 send functions 
+void uart_send_new_line(USART_TypeDef *uart);
 
 //=======================================================================================
 
@@ -375,46 +331,16 @@ void uart2_send_new_line(void);
 //=======================================================================================
 // Read Functions
 
-//===================================================
-// UART1 read functions 
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @return uint8_t : 
- */
-uint8_t uart_getchar(USART_TypeDef *uart);
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param string_to_fill : 
- */
-void uart_getstr(
-    USART_TypeDef *uart, 
-    char *string_to_fill,
-    uart_string_termination_t end_of_string);
-
-//=================================================== // UART1 read functions 
-
-
-//===================================================
-// UART2 read functions 
-
 /**
  * @brief UART2 get character from serial terminal 
  * 
  * @details Read a byte from the UART2 data register that gets populated by data 
  *          sent from the serial terminal and return the data (single character). 
  * 
+ * @param uart 
  * @return uint8_t : returns character from data register 
  */
-uint8_t uart2_getchar(void);
+uint8_t uart_getchar(USART_TypeDef *uart);
 
 
 /**
@@ -434,11 +360,14 @@ uint8_t uart2_getchar(void);
  * 
  * @see uart2_getchar
  * 
+ * @param uart 
  * @param string_to_fill : pointer to string used to store the string input 
+ * @param end_of_string 
  */
-void uart2_getstr(char *string_to_fill);
-
-//=================================================== // UART2 read functions
+void uart_getstr(
+    USART_TypeDef *uart, 
+    char *string_to_fill,
+    uart_string_termination_t end_of_string);
 
 //=======================================================================================
 
@@ -456,6 +385,5 @@ void uart2_getstr(char *string_to_fill);
 void uart_clear_dr(USART_TypeDef *uart); 
 
 //=======================================================================================
-
 
 #endif  // _UART_COMM_H_
