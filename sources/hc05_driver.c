@@ -35,10 +35,20 @@
 
 
 //=======================================================================================
+// Variables 
+
+// Module info 
+hc05_mod_info_t hc05_module; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 // HC-05 initialization 
 void hc05_init(
+    USART_TypeDef *uart, 
     hc05_pin34_status_t pin34_status,
     hc05_en_status_t    en_status, 
     hc05_state_status_t state_status)
@@ -50,13 +60,22 @@ void hc05_init(
     //  PA12: EN (enable) 
     //==============================================================
 
-    if (pin34_status)  // AT Command mode enable 
+    // Module info
+    // TODO why doesn't a hc05_module pointer work here? 
+    hc05_module.hc05_uart = uart; 
+    hc05_module.at_pin = GPIOX_PIN_8; 
+    hc05_module.en_pin = GPIOX_PIN_12; 
+    hc05_module.state_pin = GPIOX_PIN_11;
+
+    // AT Command mode enable 
+    if (pin34_status) 
     {
         gpio_init(GPIOA, PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
-        gpio_write(GPIOA, GPIOX_PIN_8, GPIO_LOW); 
+        gpio_write(GPIOA, hc05_module.at_pin, GPIO_LOW); 
     }
     
-    if (en_status)  // Module power enable 
+    // Module power enable 
+    if (en_status) 
     {
         gpio_init(GPIOA, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
         hc05_pwr_off(); 
@@ -74,17 +93,17 @@ void hc05_init(
 //=======================================================================================
 // Power functions 
 
-// Turn on the module 
+// Set EN pin to high to turn on the module 
 void hc05_pwr_on(void)
 {
-    gpio_write(GPIOA, GPIOX_PIN_12, GPIO_HIGH);  // Set EN pin to high to turn on the module 
+    gpio_write(GPIOA, hc05_module.en_pin, GPIO_HIGH); 
 }
 
 
-// Turn off the module 
+// Set EN pin to low to turn off the module 
 void hc05_pwr_off(void)
 {
-    gpio_write(GPIOA, GPIOX_PIN_12, GPIO_LOW);  // Set EN pin to low to turn off the module 
+    gpio_write(GPIOA, hc05_module.en_pin, GPIO_LOW); 
 }
 
 //=======================================================================================
@@ -105,13 +124,13 @@ void hc05_change_mode(
     hc05_pwr_off(); 
 
     // Set pin 34 on the moudle depending on the requested mode 
-    gpio_write(GPIOA, GPIOX_PIN_8, mode); 
+    gpio_write(GPIOA, hc05_module.at_pin, mode); 
 
     // Short delay to ensure power off
     tim9_delay_ms(HC05_INIT_DELAY); 
 
     // Configure the baud rate depending on the requested mode 
-    uart_set_baud_rate(USART1, baud_rate, clock_speed);  
+    uart_set_baud_rate(hc05_module.hc05_uart, baud_rate, clock_speed);  
 
     // Turn the module on 
     hc05_pwr_on(); 
@@ -128,14 +147,14 @@ void hc05_change_mode(
 // HC-05 data mode send data 
 void hc05_data_mode_send(char *send_data)
 {
-    uart_sendstring(USART1, send_data); 
+    uart_sendstring(hc05_module.hc05_uart, send_data); 
 }
 
 
 // HC-05 data mode read data 
 void hc05_data_mode_receive(char *receive_data)
 {
-    uart_getstr(USART1, receive_data, UART_STR_TERM_NL); 
+    uart_getstr(hc05_module.hc05_uart, receive_data, UART_STR_TERM_NL); 
 }
 
 
@@ -311,21 +330,22 @@ void hc05_at_command(
     }
 
     // Read the data register to clear it before looking for actual data 
-    uart_clear_dr(USART1); 
+    uart_clear_dr(hc05_module.hc05_uart); 
 
     // Send the command to the module 
-    uart_sendstring(USART1, cmd_str); 
+    uart_sendstring(hc05_module.hc05_uart, cmd_str); 
 
     // Wait for data to be send back from the module before reading 
     do 
     {
-        if (USART1->SR & (SET_BIT << SHIFT_5)) 
+        if (hc05_module.hc05_uart->SR & (SET_BIT << SHIFT_5)) 
         {
             // Read the module response 
-            uart_getstr(USART1, response, UART_STR_TERM_NL); 
+            uart_getstr(hc05_module.hc05_uart, response, UART_STR_TERM_NL); 
 
             // If a cmd response was received then clear the "OK\r\n" from the DR that follows 
-            if (*response == HC05_AT_RESP_STR) uart_getstr(USART1, clear_dr, UART_STR_TERM_NL);
+            if (*response == HC05_AT_RESP_STR) 
+                uart_getstr(hc05_module.hc05_uart, clear_dr, UART_STR_TERM_NL);
 
             break; 
         }

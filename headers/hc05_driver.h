@@ -163,6 +163,35 @@ typedef enum {
 
 
 //=======================================================================================
+// Structures 
+
+/**
+ * @brief HC-05 module info 
+ * 
+ * @details 
+ * 
+ */
+typedef struct hc05_mod_info_s
+{
+    // UART used by the module 
+    USART_TypeDef *hc05_uart; 
+
+    // Pin for AT Command mode enable 
+    gpio_pin_num_t at_pin; 
+
+    // Pin for power enable 
+    gpio_pin_num_t en_pin; 
+
+    // Pin for connection status feedback 
+    gpio_pin_num_t state_pin; 
+
+} hc05_mod_info_t;
+
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization functions 
 
 /**
@@ -175,6 +204,7 @@ typedef enum {
  * @param state_status 
  */
 void hc05_init(
+    USART_TypeDef *uart, 
     hc05_pin34_status_t pin34_status,
     hc05_en_status_t    en_status, 
     hc05_state_status_t state_status); 
