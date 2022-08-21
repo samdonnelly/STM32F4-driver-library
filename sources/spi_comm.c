@@ -122,13 +122,13 @@ uint8_t spi2_init(
     switch (num_slaves)
     {
         case SPI2_2_SLAVE:  // Initialize PB12 as GPIO
-            gpiob_init(PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+            gpio_init(GPIOB, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
             spi2_slave_deselect(SPI2_SS_2);  // Deselect slave 
             // Case has no break so PB9 will also be initialized
             // TODO check if no break statement works 
 
         case SPI2_1_SLAVE:  // Initialize PB9 as GPIO 
-            gpiob_init(PIN_9, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+            gpio_init(GPIOB, PIN_9, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
             spi2_slave_deselect(SPI2_SS_1);  // Deselect slave 
             break;
 
@@ -183,14 +183,14 @@ void spi2_bsy_wait(void)
 // Select an SPI2 slave 
 void spi2_slave_select(uint16_t slave_num)
 {
-    gpiob_write(slave_num, GPIO_LOW);
+    gpio_write(GPIOB, slave_num, GPIO_LOW);
 }
 
 
 // Deselect an SPI2 slave 
 void spi2_slave_deselect(uint16_t slave_num)
 {
-    gpiob_write(slave_num, GPIO_HIGH);
+    gpio_write(GPIOB, slave_num, GPIO_HIGH);
 }
 
 //=======================================================================================

@@ -27,19 +27,6 @@
 //=======================================================================================
 // Enums 
 
-/**
- * @brief 
- * 
- * @details 
- * 
- */
-typedef enum {
-    GPIO_A,
-    GPIO_B,
-    GPIO_C
-} gpio_x_t; 
-
-
 // TODO when you get rid of HAL then change this back to GPIO_PIN_X
 /**
  * @brief GPIO pin number 
@@ -143,37 +130,20 @@ typedef enum {
  * 
  * @details 
  * 
- * @param pin_num
+ * @param gpio 
+ * @param pin_num 
  * @param moder 
  * @param otyper 
  * @param ospeedr 
  * @param pupdr 
  */
-void gpioa_init(
-    uint16_t pin_num,
-    uint32_t moder,
-    uint32_t otyper,
-    uint32_t ospeedr,
-    uint32_t pupdr);
-
-
-/**
- * @brief GPIOB initialization 
- * 
- * @details 
- * 
- * @param pin_num
- * @param moder 
- * @param otyper 
- * @param ospeedr 
- * @param pupdr 
- */
-void gpiob_init(
-    uint16_t pin_num,
-    uint32_t moder,
-    uint32_t otyper,
-    uint32_t ospeedr,
-    uint32_t pupdr);
+void gpio_init(
+    GPIO_TypeDef  *gpio, 
+    pin_selector_t pin_num,
+    gpio_moder_t   moder,
+    gpio_otyper_t  otyper,
+    gpio_ospeedr_t ospeedr,
+    gpio_pupdr_t   pupdr);
 
 //=======================================================================================
 
@@ -195,28 +165,10 @@ void gpiob_init(
  * @param pin_num : GPIOA pin to write to (0-15)
  * @param pin_state : on (1) or off (0) state
  */
-void gpioa_write(
-    uint16_t pin_num,
-    uint8_t  pin_state);
-
-
-/**
- * @brief GPIOB write
- * 
- * @details This function writes "B" pins congigured as GPIO to either high or low (on or
- *          off). Arguments include the pin number to write to and the state to write the 
- *          pin to. The pin number can be specified using the gpio_pin_num_t enum and the 
- *          pin state can be specified using the gpio_pin_state_t enum. 
- * 
- * @see gpio_pin_state_t
- * @see gpio_pin_num_t
- * 
- * @param pin_num : GPIOB pin to write to (0-15)
- * @param pin_state : on (1) or off (0) state
- */
-void gpiob_write(
-    uint16_t pin_num,
-    uint8_t  pin_state);
+void gpio_write(
+    GPIO_TypeDef *gpio, 
+    gpio_pin_num_t pin_num,
+    gpio_pin_state_t pin_state);
 
 //=======================================================================================
 
@@ -236,8 +188,8 @@ void gpiob_write(
  * @return uint8_t 
  */
 uint8_t gpio_read(
-    uint8_t gpio, 
-    uint16_t pin_num); 
+    GPIO_TypeDef *gpio, 
+    gpio_pin_num_t pin_num); 
 
 //=======================================================================================
 

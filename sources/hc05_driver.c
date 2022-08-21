@@ -52,20 +52,20 @@ void hc05_init(
 
     if (pin34_status)  // AT Command mode enable 
     {
-        gpioa_init(PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
-        gpioa_write(GPIOX_PIN_8, GPIO_LOW); 
+        gpio_init(GPIOA, PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+        gpio_write(GPIOA, GPIOX_PIN_8, GPIO_LOW); 
     }
     
     if (en_status)  // Module power enable 
     {
-        gpioa_init(PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+        gpio_init(GPIOA, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
         hc05_pwr_off(); 
         tim9_delay_ms(HC05_INIT_DELAY); 
         hc05_pwr_on(); 
     }
     
     // State feedback enable 
-    if (state_status) gpioa_init(PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+    if (state_status) gpio_init(GPIOA, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
 }
 
 //=======================================================================================
@@ -77,14 +77,14 @@ void hc05_init(
 // Turn on the module 
 void hc05_pwr_on(void)
 {
-    gpioa_write(GPIOX_PIN_12, GPIO_HIGH);  // Set EN pin to high to turn on the module 
+    gpio_write(GPIOA, GPIOX_PIN_12, GPIO_HIGH);  // Set EN pin to high to turn on the module 
 }
 
 
 // Turn off the module 
 void hc05_pwr_off(void)
 {
-    gpioa_write(GPIOX_PIN_12, GPIO_LOW);  // Set EN pin to low to turn off the module 
+    gpio_write(GPIOA, GPIOX_PIN_12, GPIO_LOW);  // Set EN pin to low to turn off the module 
 }
 
 //=======================================================================================
@@ -105,7 +105,7 @@ void hc05_change_mode(
     hc05_pwr_off(); 
 
     // Set pin 34 on the moudle depending on the requested mode 
-    gpioa_write(GPIOX_PIN_8, mode); 
+    gpio_write(GPIOA, GPIOX_PIN_8, mode); 
 
     // Short delay to ensure power off
     tim9_delay_ms(HC05_INIT_DELAY); 
@@ -135,7 +135,7 @@ void hc05_data_mode_send(char *send_data)
 // HC-05 data mode read data 
 void hc05_data_mode_receive(char *receive_data)
 {
-    uart_getstr(USART1, receive_data, UART_STR_TERM_CARRIAGE); 
+    uart_getstr(USART1, receive_data, UART_STR_TERM_NL); 
 }
 
 
