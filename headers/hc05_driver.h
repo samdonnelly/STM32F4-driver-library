@@ -25,6 +25,8 @@
 // Communication drivers 
 #include "uart_comm.h"
 #include "gpio_driver.h"
+
+// Other drivers 
 #include "timers.h"
 
 //=======================================================================================
@@ -34,9 +36,7 @@
 // Macros 
 
 // HC-05 paramters 
-#define HC05_ADDRESS      0 
-#define HC05_DEFAULT_PIN  1234
-#define HC05_INIT_DELAY   100
+#define HC05_INIT_DELAY   100  // ms delay to ensure full power cycle 
 
 // AT Command Mode 
 #define HC05_AT_EN          1      // Controls the inclusion of AT command mode code 
@@ -54,7 +54,11 @@
 /**
  * @brief HC-05 mode 
  * 
- * @details 
+ * @details The HC-05 module has two modes: Data mode (default) and AT Command mode. This 
+ *          enum is passed as an argument to hc05_change_mode to indicate which mode to 
+ *          put the module into. 
+ * 
+ * @see hc05_change_mode
  * 
  */
 typedef enum {
@@ -64,9 +68,14 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief HC-05 pin 34 status 
  * 
- * @details 
+ * @details Pin 34 on the module is used to trigger AT command mode without needing to press
+ *          the pushbutton in the module. This enum is passed as an argument to hc05_init 
+ *          to indicate whether this functionality will be used or not. If so then a GPIO will 
+ *          be configured for it. 
+ * 
+ * @see hc05_init
  * 
  */
 typedef enum {
@@ -76,9 +85,13 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief HC-05 EN pin status 
  * 
- * @details 
+ * @details The EN pin is used to enable power to the module so it can be turned on and off. 
+ *          This enum is passed as an argument to hc05_init to indicate whether this 
+ *          functionality will be used or not. If so then a GPIO will be configured for it. 
+ * 
+ * @see hc05_init
  * 
  */
 typedef enum {
@@ -88,9 +101,13 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief HC-05 STATE pin status 
  * 
- * @details 
+ * @details The STATE pin provides feedback as to whether the module is connected to a device 
+ *          or not. This enum is passed as an argument to hc05_init to indicate whether this 
+ *          feedback will be used or not. If so then a GPIO pin will be configured for it. 
+ * 
+ * @see hc05_init
  * 
  */
 typedef enum {
@@ -99,12 +116,15 @@ typedef enum {
 } hc05_state_status_t; 
 
 
-// #if HC05_AT_CMD_MODE
-
 /**
  * @brief HC-05 AT Commands 
  * 
- * @details 
+ * @details This enum contains all the AT Command mode commands used to configure the module. 
+ *          These values are used in the hc05_at_command function to match the users requested 
+ *          command and generate a command string that gets sent to the module. See the HC-05 
+ *          documentation for more information on AT commands. 
+ * 
+ * @see hc05_at_command
  * 
  */
 typedef enum {
@@ -146,9 +166,13 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief HC-05 AT command operation 
  * 
- * @details 
+ * @details This enum is an argument passed to the hc05_at_command function to indicate whether 
+ *          the user wants to set a parameter, check a parameter, or do nothing (in cases where
+ *          there is only the ability to check). 
+ * 
+ * @see hc05_at_command
  * 
  */
 typedef enum {
@@ -156,8 +180,6 @@ typedef enum {
     HC05_SET,
     HC05_CHECK
 } hc05_at_operation_t; 
-
-// #endif  // HC05_AT_CMD_MODE
 
 //=======================================================================================
 
@@ -168,7 +190,8 @@ typedef enum {
 /**
  * @brief HC-05 module info 
  * 
- * @details 
+ * @details Data record of the module that stores device specific information such as the 
+ *          GPIO pins used for control and feedback as well as which UART the module is on. 
  * 
  */
 typedef struct hc05_mod_info_s

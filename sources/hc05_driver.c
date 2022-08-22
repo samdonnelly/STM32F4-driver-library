@@ -21,24 +21,25 @@
 
 // Libraries 
 #if HC05_AT_EN
-#include "string.h"
+#include <string.h>
 #include <stdio.h>
 #endif  // HC05_AT_EN
 
 //=======================================================================================
 
+// TODO Device driver todo's: 
+//  - Make the code able to support multiple devices (linked list) 
 
 // TODO Control driver todo's: 
 //  - Make sure data transfer is complete before turning off the module 
 //  - Verify the state pin shows connected before any data transfer 
 //  - When about to send data (to Android) look for a prompt message to start 
 
-
 //=======================================================================================
 // Variables 
 
 // Module info 
-hc05_mod_info_t hc05_module; 
+hc05_mod_info_t hc05_module;
 
 //=======================================================================================
 
@@ -60,8 +61,7 @@ void hc05_init(
     //  PA12: EN (enable) 
     //==============================================================
 
-    // Module info
-    // TODO why doesn't a hc05_module pointer work here? 
+    // Initialize module info
     hc05_module.hc05_uart = uart; 
     hc05_module.at_pin = GPIOX_PIN_8; 
     hc05_module.en_pin = GPIOX_PIN_12; 
@@ -123,7 +123,7 @@ void hc05_change_mode(
     // Turn the module off 
     hc05_pwr_off(); 
 
-    // Set pin 34 on the moudle depending on the requested mode 
+    // Set pin 34 on the module depending on the requested mode 
     gpio_write(GPIOA, hc05_module.at_pin, mode); 
 
     // Short delay to ensure power off
@@ -144,14 +144,14 @@ void hc05_change_mode(
 //=======================================================================================
 // Mode functions 
 
-// HC-05 data mode send data 
+// HC-05 data mode - send data 
 void hc05_data_mode_send(char *send_data)
 {
     uart_sendstring(hc05_module.hc05_uart, send_data); 
 }
 
 
-// HC-05 data mode read data 
+// HC-05 data mode - read data 
 void hc05_data_mode_receive(char *receive_data)
 {
     uart_getstr(hc05_module.hc05_uart, receive_data, UART_STR_TERM_NL); 
@@ -160,7 +160,7 @@ void hc05_data_mode_receive(char *receive_data)
 
 #if HC05_AT_EN
 
-// Send AT commands and record responses 
+// HC-05 AT Command mode - send AT commands and record responses 
 void hc05_at_command(
     hc05_at_commnds_t command, 
     hc05_at_operation_t operation, 
@@ -329,13 +329,13 @@ void hc05_at_command(
             return; 
     }
 
-    // Read the data register to clear it before looking for actual data 
+    // Clear the data register before looking for actual data 
     uart_clear_dr(hc05_module.hc05_uart); 
 
-    // Send the command to the module 
+    // Send the AT command to the module 
     uart_sendstring(hc05_module.hc05_uart, cmd_str); 
 
-    // Wait for data to be send back from the module before reading 
+    // Wait for data to be sent back until timeout 
     do 
     {
         if (hc05_module.hc05_uart->SR & (SET_BIT << SHIFT_5)) 
