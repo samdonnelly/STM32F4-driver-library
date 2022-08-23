@@ -191,7 +191,8 @@ typedef enum {
  * @brief HC-05 module info 
  * 
  * @details Data record of the module that stores device specific information such as the 
- *          GPIO pins used for control and feedback as well as which UART the module is on. 
+ *          GPIO pins used for control and feedback as well as which UART port the module 
+ *          is on. 
  * 
  */
 typedef struct hc05_mod_info_s
@@ -220,11 +221,20 @@ typedef struct hc05_mod_info_s
 /**
  * @brief HC-05 initialization 
  * 
- * @details 
+ * @details Enables GPIO pins for use with the module and assigns module information to 
+ *          an instance of the hc05_mod_info_t structure that gets referenced throughout 
+ *          the driver. <br><br>
+ *          
+ *          Which GPIOs to enable can be chosen using the arguments to this function. The 
+ *          GPIO pins avialable for the module include: <br> 
+ *            - AT cmd enable pin (pin 34) (output) --> pin PA8 <br> 
+ *            - EN pin (output) --> pin PA11 <br> 
+ *            - STATE pin (input) --> pin PA12 <br> 
  * 
- * @param pin34_status 
- * @param en_status 
- * @param state_status 
+ * @param uart : USART port used for the module 
+ * @param pin34_status : AT cmd enable pin status 
+ * @param en_status : EN pin status 
+ * @param state_status : STATE pin status 
  */
 void hc05_init(
     USART_TypeDef *uart, 
@@ -239,18 +249,26 @@ void hc05_init(
 // Power functions 
 
 /**
- * @brief 
+ * @brief HC-05 power on 
  * 
- * @details 
+ * @details Turns the module on by using the EN pin GPIO output. <br> 
+ *          NOTE: The EN pin must be enabled for on/off control. If is not enabled then the 
+ *                module will remain on whenever there is power supplied to the Vcc pin. 
+ * 
+ * @see hc05_init
  * 
  */
 void hc05_pwr_on(void); 
 
 
 /**
- * @brief 
+ * @brief HC-05 power off 
  * 
- * @details 
+ * @details Turns the module off by using the EN pin GPIO output. <br> 
+ *          NOTE: The EN pin must be enabled for on/off control. If is not enabled then the 
+ *                module will remain on whenever there is power supplied to the Vcc pin.
+ * 
+ * @see hc05_init 
  * 
  */
 void hc05_pwr_off(void); 
@@ -267,26 +285,22 @@ void hc05_pwr_off(void);
  * @details This functions allows for changing between the two operating modes of the module 
  *          through software. The two modes are Data mode (default) which is used to send and 
  *          receive information with other bluetooth devices, and AT Command mode which allows 
- *          you to modify the module settings. This function takes the desired operating mode 
- *          and the mode baud rate as arguments. The mode argument requires the use of 
- *          hc05_mode_t and the baud rate argument requires the use of uart_baud_rate_t in 
- *          the uart driver. <br><br>
+ *          you to modify the module settings. <br><br>
  *          
  *          AT Command mode has a fixed baud rate of 38400 bps. Data mode is whatever baud 
- *          rate gets set during AT Command mode. THe default Data mode baud rate is 9600 bps.
+ *          rate gets set during AT Command mode. The default Data mode baud rate is 9600 bps.
  *          <br><br> 
  *          
- *          Note that this function is not available when HC05_AT_CMD_MODE is set to 0. If this 
+ *          NOTE: this function is not available when HC05_AT_CMD_MODE is set to 0. If this 
  *          is set to 0 then this indicates in the code that only data mode will be used. 
  *          <br><br> 
  * 
- * @see hc05_mode_t
- * @see uart_baud_rate_t
  * @see hc05_at_command
  * @see hc05_data_mode_send
  * 
  * @param mode : Moudle mode - either Data mode (default) or AT Command mode 
  * @param baud_rate : Baud rate of the selected mode 
+ * @param clock_speed : Clock speed of the USART port used by the module 
  */
 void hc05_change_mode(
     hc05_mode_t mode, 
@@ -300,34 +314,41 @@ void hc05_change_mode(
 // Mode functions 
 
 /**
- * @brief 
+ * @brief HC-05 Data mode send 
  * 
- * @details 
+ * @details Sends a string of data to the module which in turn gets sent out over 
+ *          Bluetooth to a connected device. 
  * 
- * @param send_data 
+ * @param send_data : pointer to the data string to send 
  */
 void hc05_data_mode_send(char *send_data); 
 
 
 /**
- * @brief 
+ * @brief HC-05 Data mode receive 
  * 
- * @details 
+ * @details Reads a string of data from the module that was obtained over Bluetooth from 
+ *          a connected device. 
  * 
- * @param receive_data 
+ * @param receive_data : pointer to the buffer that stores the received data string 
  */
 void hc05_data_mode_receive(char *receive_data); 
 
 
 /**
- * @brief HC-05 AT Command Mode 
+ * @brief HC-05 AT Command mode 
  * 
- * @details 
+ * @details This function is used to send AT commands and read the response from the module. 
+ *          The arguments specify the command (see documentation), operation (check, set, or 
+ *          neither), and the command parameter (if their is one) desired and use that info 
+ *          to generate a command string that gets sent to the module. The modules response 
+ *          is recorded in the 'response' buffer. 
+ *          
  * 
- * @param command 
- * @param operation 
- * @param param 
- * @param response 
+ * @param command : number indicating the AT command 
+ * @param operation : indicated whether to set or check a parameter 
+ * @param param : parameter used when during set operations 
+ * @param response : pointer to a buffer that stores the module response 
  */
 void hc05_at_command(
     hc05_at_commnds_t command, 

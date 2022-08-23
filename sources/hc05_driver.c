@@ -147,6 +147,7 @@ void hc05_change_mode(
 // HC-05 data mode - send data 
 void hc05_data_mode_send(char *send_data)
 {
+    // TODO should have the ability to also send digits if desired 
     uart_sendstring(hc05_module.hc05_uart, send_data); 
 }
 
