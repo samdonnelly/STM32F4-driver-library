@@ -131,13 +131,13 @@ void i2c1_btf_wait(void);
 
 // I2C1 Initialization 
 void i2c1_init(
-    uint8_t sda_pin,
-    uint8_t scl_pin,
-    uint8_t run_mode,
-    uint8_t apb1_freq,
-    uint8_t fm_duty_cycle,
+    i2c1_sda_pin_t sda_pin,
+    i2c1_scl_pin_t scl_pin,
+    i2c_run_mode_t run_mode,
+    i2c_apb1_freq_t apb1_freq,
+    i2c_fm_duty_cycle_t fm_duty_cycle,
     uint8_t ccr_reg,
-    uint8_t trise_reg)
+    i2c_trise_setpoint_t trise_reg)
 {
     //==============================================================
     // Pin information for I2C1
@@ -145,6 +145,17 @@ void i2c1_init(
     //  PB7: SDA
     //  PB8: SCL
     //  PB9: SDA
+    // 
+    // Pin information for I2C2
+    //  PB3:  SDA
+    //  PB9:  SDA
+    //  PB10: SCL
+    // 
+    // Pin information for I2C3
+    //  PA8: SCL
+    //  PB4: SDA
+    //  PB8: SDA
+    //  PC9: SDA
     //==============================================================
 
     // 1. Enable the I2C clock and the GPIO clock. 
@@ -252,43 +263,6 @@ void i2c1_init(
 
     // 8. Program the I2C_CR1 register to enable the peripheral
     I2C1->CR1 |= (SET_BIT << SHIFT_0);
-}
-
-// I2C2 Initialization 
-void i2c2_init(
-    uint8_t sda_pin,
-    uint8_t scl_pin,
-    uint8_t run_mode,
-    uint8_t apb1_freq,
-    uint8_t fm_duty_cycle,
-    uint8_t ccr_reg,
-    uint8_t trise_reg)
-{
-    //==============================================================
-    // Pin information for I2C2
-    //  PB3:  SDA
-    //  PB9:  SDA
-    //  PB10: SCL
-    //==============================================================
-}
-
-// I2C3 Initialization 
-void i2c3_init(
-    uint8_t sda_pin,
-    uint8_t scl_pin,
-    uint8_t run_mode,
-    uint8_t apb1_freq,
-    uint8_t fm_duty_cycle,
-    uint8_t ccr_reg,
-    uint8_t trise_reg)
-{
-    //==============================================================
-    // Pin information for I2C3
-    //  PA8: SCL
-    //  PB4: SDA
-    //  PB8: SDA
-    //  PC9: SDA
-    //==============================================================
 }
 
 //=======================================================================================

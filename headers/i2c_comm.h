@@ -274,107 +274,18 @@ typedef enum {
  * @param ccr_reg : calculated clock control register value
  * @param trise_reg : calculated trise time 
  * 
- * @see i2c1_scl_pin_t
- * @see i2c1_sda_pin_t
- * @see i2c_run_mode_t
- * @see i2c_apb1_freq_t
- * @see i2c_fm_duty_cycle_t
  * @see i2c_fm_ccr_setpoint_t
  * @see i2c_sm_ccr_setpoint_t
- * @see i2c_trise_setpoint_t
  * 
  */
 void i2c1_init(
-    uint8_t sda_pin,
-    uint8_t scl_pin,
-    uint8_t run_mode,
-    uint8_t apb1_freq,
-    uint8_t fm_duty_cycle,
+    i2c1_sda_pin_t sda_pin,
+    i2c1_scl_pin_t scl_pin,
+    i2c_run_mode_t run_mode,
+    i2c_apb1_freq_t apb1_freq,
+    i2c_fm_duty_cycle_t fm_duty_cycle,
     uint8_t ccr_reg,
-    uint8_t trise_reg);
-
-
-/**
- * @brief I2C2 Initialization 
- * 
- * @details Configures I2C2 using two of the pins specified below. One SCL and one SDA 
- *          must be selected. The enums referenced in the comments below are used to 
- *          define the inputs to the function. Refer to the reference manual for 
- *          detailed information on configuring the pins. <br><br>
- *          
- *          Pin information for I2C2:  <br>
- *              PB3:  SDA              <br>
- *              PB9:  SDA              <br>
- *              PB10: SCL              <br><br>
- * 
- * @param sda_pin : SDA pin used for I2C1
- * @param scl_pin : SCL pin used for I2C1
- * @param run_mode : specifies Sm or Fm mode 
- * @param apb1_freq : configured APB1 clock frquency 
- * @param fm_duty_cycle : Fm mode duty cycle (no affect in Sm mode)
- * @param ccr_reg : calculated clock control register value
- * @param trise_reg : calculated trise time 
- * 
- * @see i2c2_scl_pin_t
- * @see i2c2_sda_pin_t
- * @see i2c_run_mode_t
- * @see i2c_apb1_freq_t
- * @see i2c_fm_duty_cycle_t
- * @see i2c_fm_ccr_setpoint_t
- * @see i2c_sm_ccr_setpoint_t
- * @see i2c_trise_setpoint_t
- * 
- */
-void i2c2_init(
-    uint8_t sda_pin,
-    uint8_t scl_pin,
-    uint8_t run_mode,
-    uint8_t apb1_freq,
-    uint8_t fm_duty_cycle,
-    uint8_t ccr_reg,
-    uint8_t trise_reg);
-
-
-/**
- * @brief I2C3 Initialization 
- * 
- * @details Configures I2C3 using two of the pins specified below. One SCL and one SDA 
- *          must be selected. The enums referenced in the comments below are used to 
- *          define the inputs to the function. Refer to the reference manual for 
- *          detailed information on configuring the pins. <br><br>
- *          
- *          Pin information for I2C3: <br>
- *              PA8: SCL              <br>
- *              PB4: SDA              <br>
- *              PB8: SDA              <br>
- *              PC9: SDA              <br><br>
- * 
- * @param sda_pin : SDA pin used for I2C1
- * @param scl_pin : SCL pin used for I2C1
- * @param run_mode : specifies Sm or Fm mode 
- * @param apb1_freq : configured APB1 clock frquency 
- * @param fm_duty_cycle : Fm mode duty cycle (no affect in Sm mode)
- * @param ccr_reg : calculated clock control register value
- * @param trise_reg : calculated trise time 
- * 
- * @see i2c3_scl_pin_t
- * @see i2c3_sda_pin_t
- * @see i2c_run_mode_t
- * @see i2c_apb1_freq_t
- * @see i2c_fm_duty_cycle_t
- * @see i2c_fm_ccr_setpoint_t
- * @see i2c_sm_ccr_setpoint_t
- * @see i2c_trise_setpoint_t
- * 
- */
-void i2c3_init(
-    uint8_t sda_pin,
-    uint8_t scl_pin,
-    uint8_t run_mode,
-    uint8_t apb1_freq,
-    uint8_t fm_duty_cycle,
-    uint8_t ccr_reg,
-    uint8_t trise_reg);
+    i2c_trise_setpoint_t trise_reg);
 
 
 /**
