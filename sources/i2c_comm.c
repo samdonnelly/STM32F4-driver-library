@@ -136,7 +136,7 @@ void i2c1_init(
     i2c_run_mode_t run_mode,
     i2c_apb1_freq_t apb1_freq,
     i2c_fm_duty_cycle_t fm_duty_cycle,
-    uint8_t ccr_reg,
+    i2c_ccr_setpoint_t ccr_reg,
     i2c_trise_setpoint_t trise_reg)
 {
     //==============================================================

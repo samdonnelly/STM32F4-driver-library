@@ -172,30 +172,15 @@ typedef enum {
 
 
 /**
- * @brief I2C Fm CCR setpoint
+ * @brief I2C CCR setpoint
  * 
  * @details The i2c init functions take this an argument to program the clock control 
- *          register when initializing in Fm mode. <br><br>
+ *          register when initializing in Fm/Sm mode. <br><br>
  *          
  *          enum code: I2C_CCR_FM_(X_1)_(X_2)_(X_3)           <br>
  *              X_1: Duty cycle - ex. 169 -> 16/9 in Fm mode  <br>
  *              X_2: PCLK1 frquency (MHz)                     <br>
  *              X_3: SCL frquency (kHz)                       <br><br>
- *          
- *          Note: A calculation must be done to determine the numbers that work together.
- *                See the Reference Manual for more information. 
- * 
- */
-typedef enum {
-    I2C_CCR_FM_169_42_400 = 5
-} i2c_fm_ccr_setpoint_t;
-
-
-/**
- * @brief I2C Sm CCR setpoint
- * 
- * @details The i2c init functions take this an argument to program the clock control 
- *          register when initializing in Sm mode. <br><br>
  *          
  *          enum code: I2C_CCR_SM_(X_1)_(X_2)  <br>
  *              X_1: PCLK1 frquency (MHz)      <br>
@@ -206,8 +191,9 @@ typedef enum {
  * 
  */
 typedef enum {
+    I2C_CCR_FM_169_42_400 = 5,
     I2C_CCR_SM_42_100 = 210
-} i2c_sm_ccr_setpoint_t;
+} i2c_ccr_setpoint_t;
 
 
 /**
@@ -284,7 +270,7 @@ void i2c1_init(
     i2c_run_mode_t run_mode,
     i2c_apb1_freq_t apb1_freq,
     i2c_fm_duty_cycle_t fm_duty_cycle,
-    uint8_t ccr_reg,
+    i2c_ccr_setpoint_t ccr_reg,
     i2c_trise_setpoint_t trise_reg);
 
 
