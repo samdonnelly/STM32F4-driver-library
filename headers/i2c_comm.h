@@ -227,7 +227,7 @@ typedef enum {
 
 
 //=======================================================================================
-// Function Prototypes
+// Initialization 
 
 /**
  * @brief I2C1 Initialization 
@@ -273,6 +273,11 @@ void i2c1_init(
     i2c_ccr_setpoint_t ccr_reg,
     i2c_trise_setpoint_t trise_reg);
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Register functions 
 
 /**
  * @brief I2C1 start condition generation 
@@ -282,7 +287,7 @@ void i2c1_init(
  *          the master when the start condition is generated. 
  * 
  */
-void i2c1_start(void);
+void i2c_start(I2C_TypeDef *i2c);
 
 
 /**
@@ -293,7 +298,7 @@ void i2c1_start(void);
  *          reverts back to slave mode. 
  * 
  */
-void i2c1_stop(void);
+void i2c_stop(I2C_TypeDef *i2c);
 
 
 /**
@@ -304,8 +309,13 @@ void i2c1_stop(void);
  *          the master. 
  * 
  */
-void i2c1_clear_addr(void);
+void i2c_clear_addr(I2C_TypeDef *i2c);
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Write data 
 
 /**
  * @brief I2C1 write address 
@@ -314,9 +324,12 @@ void i2c1_clear_addr(void);
  *          device. This function is called after the start condition has been generated. 
  *          Only 7-bit addresses are supported. 
  * 
+ * @param i2c : pointer to the I2C port 
  * @param i2c1_address : 7-bit address of slave device on the bus 
  */
-void i2c1_write_address(uint8_t i2c1_address);
+void i2c_write_address(
+    I2C_TypeDef *i2c, 
+    uint8_t i2c1_address);
 
 
 /**
@@ -326,11 +339,20 @@ void i2c1_write_address(uint8_t i2c1_address);
  *          been cleared. The function takes a pointer to the data that will be send over 
  *          the bus and the size of the data so it knows how many bytes to send. 
  * 
+ * @param i2c : pointer to the I2C port 
  * @param data : pointer to data to be sent over the bus 
  * @param data_size : integer indicating the number of bytes to be sent 
  */
-void i2c1_write_master_mode(uint8_t *data, uint8_t data_size);
+void i2c_write_master_mode(
+    I2C_TypeDef *i2c, 
+    uint8_t *data, 
+    uint8_t data_size);
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Read data 
 
 /**
  * @brief I2C1 read data
@@ -343,7 +365,10 @@ void i2c1_write_master_mode(uint8_t *data, uint8_t data_size);
  * @param data : pointer that data is placed into 
  * @param data_size : integer indicating the number of bytes to be receieved
  */
-void i2c1_read_master_mode(uint8_t *data, uint8_t data_size);
+void i2c_read_master_mode(
+    I2C_TypeDef *i2c, 
+    uint8_t *data, 
+    uint8_t data_size);
 
 //=======================================================================================
 

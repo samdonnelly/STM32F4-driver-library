@@ -631,20 +631,20 @@ void mpu6050_write(
     uint8_t *mpu6050_reg_value)
 {
     // Create start condition to initiate master mode 
-    i2c1_start(); 
+    i2c_start(I2C1); 
 
     // Send the MPU6050 address with a write offset
-    i2c1_write_address(mpu6050_address + MPU6050_W_OFFSET);
-    i2c1_clear_addr();
+    i2c_write_address(I2C1, mpu6050_address + MPU6050_W_OFFSET);
+    i2c_clear_addr(I2C1);
 
     // Send the register address that is going to be written to 
-    i2c1_write_master_mode(&mpu6050_register, MPU6050_REG_1_BYTE);
+    i2c_write_master_mode(I2C1, &mpu6050_register, MPU6050_REG_1_BYTE);
 
     // Write the data to the MPU6050 
-    i2c1_write_master_mode(mpu6050_reg_value, mpu6050_reg_size);
+    i2c_write_master_mode(I2C1, mpu6050_reg_value, mpu6050_reg_size);
 
     // Create a stop condition
-    i2c1_stop(); 
+    i2c_stop(I2C1); 
 }
 
 
@@ -656,26 +656,26 @@ void mpu6050_read(
     uint8_t *mpu6050_reg_value)
 {
     // Create start condition to initiate master mode 
-    i2c1_start(); 
+    i2c_start(I2C1); 
 
     // Send the MPU6050 address with a write offset 
-    i2c1_write_address(mpu6050_address + MPU6050_W_OFFSET);
-    i2c1_clear_addr();
+    i2c_write_address(I2C1, mpu6050_address + MPU6050_W_OFFSET);
+    i2c_clear_addr(I2C1);
 
     // Send the register address that is going to be read 
-    i2c1_write_master_mode(&mpu6050_register, MPU6050_REG_1_BYTE);
+    i2c_write_master_mode(I2C1, &mpu6050_register, MPU6050_REG_1_BYTE);
 
     // Create another start signal 
-    i2c1_start(); 
+    i2c_start(I2C1); 
 
     // Send the MPU6050 address with a read offset 
-    i2c1_write_address(mpu6050_address + MPU6050_R_OFFSET);
+    i2c_write_address(I2C1, mpu6050_address + MPU6050_R_OFFSET);
 
     // Read the data sent by the MPU6050 
-    i2c1_read_master_mode(mpu6050_reg_value, mpu6050_reg_size);
+    i2c_read_master_mode(I2C1, mpu6050_reg_value, mpu6050_reg_size);
 
     // Create a stop condition
-    i2c1_stop(); 
+    i2c_stop(I2C1); 
 }
 
 

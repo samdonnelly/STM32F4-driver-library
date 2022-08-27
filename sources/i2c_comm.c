@@ -35,7 +35,7 @@
  *          successfully matched in slave mode. This event must occur before proceeding 
  *          to transfer data. 
  */
-void i2c1_addr_wait(void);
+void i2c_addr_wait(I2C_TypeDef *i2c);
 
 
 /**
@@ -47,7 +47,7 @@ void i2c1_addr_wait(void);
  *          the bus which allows the master to send a stop or restart condition. 
  * 
  */
-void i2c1_clear_ack(void);
+void i2c_clear_ack(I2C_TypeDef *i2c);
 
 
 /**
@@ -59,7 +59,7 @@ void i2c1_clear_ack(void);
  *          also be set before generating a start condition. 
  * 
  */
-void i2c1_set_ack(void);
+void i2c_set_ack(I2C_TypeDef *i2c);
 
 
 /**
@@ -71,7 +71,7 @@ void i2c1_set_ack(void);
  *          more data is available. 
  * 
  */
-void i2c1_rxne_wait(void);
+void i2c_rxne_wait(I2C_TypeDef *i2c);
 
 
 /**
@@ -84,7 +84,7 @@ void i2c1_rxne_wait(void);
  *          register. 
  * 
  */
-void i2c1_txe_wait(void);
+void i2c_txe_wait(I2C_TypeDef *i2c);
 
 
 /**
@@ -98,7 +98,7 @@ void i2c1_txe_wait(void);
  *          generated.
  * 
  */
-void i2c1_btf_wait(void);
+void i2c_btf_wait(I2C_TypeDef *i2c);
 
 //=======================================================================================
 
@@ -234,12 +234,12 @@ void i2c1_init(
         
         case I2C_MODE_FM_2:
             i2c->CCR |= (SET_BIT << SHIFT_15);
-            i2c->CCR &= ~(SET_BIT << SHIFT_14);  // Set duty cycle 
+            i2c->CCR &= ~(SET_BIT << SHIFT_14);  // Set duty cycle to 2 
             break;
 
         case I2C_MODE_FM_169: 
             i2c->CCR |= (SET_BIT << SHIFT_15);
-            i2c->CCR |= (SET_BIT << SHIFT_14);  // Set duty cycle 
+            i2c->CCR |= (SET_BIT << SHIFT_14);  // Set duty cycle to 16/9 
             break;
         
         default:
@@ -265,59 +265,59 @@ void i2c1_init(
 // I2C1 register functions
 
 // I2C1 generate start condition 
-void i2c1_start(void)
+void i2c_start(I2C_TypeDef *i2c)
 {
-    i2c1_set_ack();                              // Enable acknowledgement bit 
-    I2C1->CR1 |= (SET_BIT << SHIFT_8);           // Set start generation bit 
-    while(!(I2C1->SR1 & (SET_BIT << SHIFT_0)));  // Wait for start bit to set 
+    i2c_set_ack(i2c);                              // Enable acknowledgement bit 
+    i2c->CR1 |= (SET_BIT << SHIFT_8);           // Set start generation bit 
+    while(!(i2c->SR1 & (SET_BIT << SHIFT_0)));  // Wait for start bit to set 
 }
 
 // I2C1 generate a stop condition by setting the stop generation bit 
-void i2c1_stop(void)
+void i2c_stop(I2C_TypeDef *i2c)
 {
-    I2C1->CR1 |= (SET_BIT << SHIFT_9);
+    i2c->CR1 |= (SET_BIT << SHIFT_9);
 }
 
 // I2C1 read SR1 and SR2 to an unused variable to clear ADDR
-void i2c1_clear_addr(void)
+void i2c_clear_addr(I2C_TypeDef *i2c)
 {
-    dummy_read(((I2C1->SR1) | (I2C1->SR2))); 
+    dummy_read(((i2c->SR1) | (i2c->SR2))); 
 }
 
 // I2C1 wait for ADDR bit to set
-void i2c1_addr_wait(void)
+void i2c_addr_wait(I2C_TypeDef *i2c)
 {
-    while(!(I2C1->SR1 & (SET_BIT << SHIFT_1)));
+    while(!(i2c->SR1 & (SET_BIT << SHIFT_1)));
 }
 
 // I2C1 clear the ACK bit to send a NACK pulse to slave device 
-void i2c1_clear_ack(void)
+void i2c_clear_ack(I2C_TypeDef *i2c)
 {
-    I2C1->CR1 &= ~(SET_BIT << SHIFT_10);
+    i2c->CR1 &= ~(SET_BIT << SHIFT_10);
 }
 
 // I2C1 set the ACK bit to tell the slave that data has been receieved
-void i2c1_set_ack(void)
+void i2c_set_ack(I2C_TypeDef *i2c)
 {
-    I2C1->CR1 |= (SET_BIT << SHIFT_10);
+    i2c->CR1 |= (SET_BIT << SHIFT_10);
 }
 
 // I2C1 wait for RxNE bit to set indicating data is ready 
-void i2c1_rxne_wait(void)
+void i2c_rxne_wait(I2C_TypeDef *i2c)
 {
-    while(!(I2C1->SR1 & (SET_BIT << SHIFT_6)));
+    while(!(i2c->SR1 & (SET_BIT << SHIFT_6)));
 }
 
 // I2C1 wait for TxE bit to set 
-void i2c1_txe_wait(void)
+void i2c_txe_wait(I2C_TypeDef *i2c)
 {
-    while(!(I2C1->SR1 & (SET_BIT << SHIFT_7)));
+    while(!(i2c->SR1 & (SET_BIT << SHIFT_7)));
 }
 
 // I2C1 wait for BTF to set
-void i2c1_btf_wait(void)
+void i2c_btf_wait(I2C_TypeDef *i2c)
 {
-    while(!(I2C1->SR1 & (SET_BIT << SHIFT_2)));
+    while(!(i2c->SR1 & (SET_BIT << SHIFT_2)));
 }
 
 //=======================================================================================
@@ -327,24 +327,29 @@ void i2c1_btf_wait(void)
 // Write I2C1 
 
 // I2C1 send address 
-void i2c1_write_address(uint8_t i2c1_address)
+void i2c_write_address(
+    I2C_TypeDef *i2c, 
+    uint8_t i2c1_address)
 {
-    I2C1->DR = i2c1_address;  // Send slave address 
-    i2c1_addr_wait();         // Wait for ADDR to set
+    i2c->DR = i2c1_address;  // Send slave address 
+    i2c_addr_wait(i2c);      // Wait for ADDR to set
 }
 
 // I2C1 send data to a device
-void i2c1_write_master_mode(uint8_t *data, uint8_t data_size)
+void i2c_write_master_mode(
+    I2C_TypeDef *i2c, 
+    uint8_t *data, 
+    uint8_t data_size)
 {
     for (uint8_t i = 0; i < data_size; i++)
     {
-        i2c1_txe_wait();   // Wait for TxE bit to set 
-        I2C1->DR = *data;  // Send data 
-        data++;            // Increment memory 
+        i2c_txe_wait(i2c);  // Wait for TxE bit to set 
+        i2c->DR = *data;    // Send data 
+        data++;             // Increment memory 
     }
 
     // Wait for BTF to set
-    i2c1_btf_wait();
+    i2c_btf_wait(i2c);
 }
 
 //=======================================================================================
@@ -354,7 +359,10 @@ void i2c1_write_master_mode(uint8_t *data, uint8_t data_size)
 // Read I2C1
 
 // I2C1 read data from a device
-void i2c1_read_master_mode(uint8_t *data, uint8_t data_size)
+void i2c_read_master_mode(
+    I2C_TypeDef *i2c, 
+    uint8_t *data, 
+    uint8_t data_size)
 {
     // Check the amount of data to be receieved 
     switch(data_size)
@@ -364,49 +372,49 @@ void i2c1_read_master_mode(uint8_t *data, uint8_t data_size)
 
         case I2C_1_BYTE:  // One-byte transmission 
             // Clear the ACK bit to send a NACK pulse to the slave
-            i2c1_clear_ack();
+            i2c_clear_ack(i2c);
 
             // Read SR1 and SR2 to clear ADDR
-            i2c1_clear_addr();
+            i2c_clear_addr(i2c);
 
             // Generate stop condition
-            i2c1_stop();
+            i2c_stop(i2c);
 
             // Wait for RxNE bit to set indicating data is ready 
-            i2c1_rxne_wait();
+            i2c_rxne_wait(i2c);
 
             // Read the data regsiter
-            *data = I2C1->DR;
+            *data = i2c->DR;
 
             break;
 
         default:  // Greater than one-byte transmission 
             // Read SR1 and SR2 to clear ADDR
-            i2c1_clear_addr();
+            i2c_clear_addr(i2c);
 
             // Normal reading 
             for (uint8_t i = 0; i < (data_size - I2C_2_BYTE); i++)
             {
-                i2c1_rxne_wait();  // Wait for RxNE bit to set indicating data is ready 
-                *data = I2C1->DR;  // Read data
-                i2c1_set_ack();    // Set the ACK bit 
-                data++;            // Increment memeory location 
+                i2c_rxne_wait(i2c);  // Wait for RxNE bit to set indicating data is ready 
+                *data = i2c->DR;     // Read data
+                i2c_set_ack(i2c);    // Set the ACK bit 
+                data++;              // Increment memeory location 
             }
 
             // Read the second last data byte 
-            i2c1_rxne_wait();
-            *data = I2C1->DR;
+            i2c_rxne_wait(i2c);
+            *data = i2c->DR;
 
             // Clear the ACK bit to send a NACK pulse to the slave
-            i2c1_clear_ack();
+            i2c_clear_ack(i2c);
 
             // Generate stop condition
-            i2c1_stop();
+            i2c_stop(i2c);
 
             // Read the last data byte
             data++;
-            i2c1_rxne_wait();
-            *data = I2C1->DR;
+            i2c_rxne_wait(i2c);
+            *data = i2c->DR;
 
             break;
     }
