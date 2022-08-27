@@ -131,11 +131,11 @@ void i2c1_btf_wait(void);
 
 // I2C1 Initialization 
 void i2c1_init(
+    I2C_TypeDef *i2c, 
     i2c1_sda_pin_t sda_pin,
     i2c1_scl_pin_t scl_pin,
     i2c_run_mode_t run_mode,
     i2c_apb1_freq_t apb1_freq,
-    i2c_fm_duty_cycle_t fm_duty_cycle,
     i2c_ccr_setpoint_t ccr_reg,
     i2c_trise_setpoint_t trise_reg)
 {
@@ -211,16 +211,16 @@ void i2c1_init(
     }
 
     // 3. Reset the I2C - enable then disable reset bit 
-    I2C1->CR1 |=  (SET_BIT << SHIFT_15);
-    I2C1->CR1 &= ~(SET_BIT << SHIFT_15);
+    i2c->CR1 |=  (SET_BIT << SHIFT_15);
+    i2c->CR1 &= ~(SET_BIT << SHIFT_15);
 
 
     // 4. Ensure PE is disabled before setting up the I2C
-    I2C1->CR1 |= (CLEAR_BIT << SHIFT_0);
+    i2c->CR1 |= (CLEAR_BIT << SHIFT_0);
 
 
     // 5. Program the peripheral input clock in I2C_CR2 register
-    I2C1->CR2 |= (apb1_freq << SHIFT_0);
+    i2c->CR2 |= (apb1_freq << SHIFT_0);
 
 
     // 6. Configure the clock control register 
@@ -228,25 +228,18 @@ void i2c1_init(
     // a) Choose Sm or Fm mode 
     switch(run_mode)
     {
-        case I2C_SM_MODE:
-            I2C1->CCR &= ~(SET_BIT << SHIFT_15);
+        case I2C_MODE_SM:
+            i2c->CCR &= ~(SET_BIT << SHIFT_15);
             break;
         
-        case I2C_FM_MODE:
-            I2C1->CCR |= (SET_BIT << SHIFT_15);
-            
-            // Only applies in Fm mode - chooses duty cycle 
-            switch(fm_duty_cycle)
-            {
-                case I2C_FM_DUTY_2:
-                    I2C1->CCR &= ~(SET_BIT << SHIFT_14);
-                    break;
-                case I2C_FM_DUTY_169:
-                    I2C1->CCR |= (SET_BIT << SHIFT_14);
-                    break;
-                default:
-                    break;
-            }
+        case I2C_MODE_FM_2:
+            i2c->CCR |= (SET_BIT << SHIFT_15);
+            i2c->CCR &= ~(SET_BIT << SHIFT_14);  // Set duty cycle 
+            break;
+
+        case I2C_MODE_FM_169: 
+            i2c->CCR |= (SET_BIT << SHIFT_15);
+            i2c->CCR |= (SET_BIT << SHIFT_14);  // Set duty cycle 
             break;
         
         default:
@@ -254,15 +247,15 @@ void i2c1_init(
     }
 
     // b) Calculated clock control register based on PCLK1 & SCL frquency 
-    I2C1->CCR |= (ccr_reg << SHIFT_0);
+    i2c->CCR |= (ccr_reg << SHIFT_0);
 
 
     // 7. Configure the rise time register
-    I2C1->TRISE |= (trise_reg << SHIFT_0);
+    i2c->TRISE |= (trise_reg << SHIFT_0);
 
 
     // 8. Program the I2C_CR1 register to enable the peripheral
-    I2C1->CR1 |= (SET_BIT << SHIFT_0);
+    i2c->CR1 |= (SET_BIT << SHIFT_0);
 }
 
 //=======================================================================================

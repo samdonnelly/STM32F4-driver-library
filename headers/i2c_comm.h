@@ -132,36 +132,27 @@ typedef enum {
  * @brief I2C run mode selection 
  * 
  * @details I2C can run in standard (SM) or fast (FM) mode. The mode dictates the range 
- *          of SCL clock frequencies that can be run. The i2c init functions uses this 
+ *          of SCL clock frequencies that can be run. The I2C init functions uses this 
  *          enum as an input when the function is called so it can set the desired
- *          run mode. 
+ *          run mode. <br><br>
+ *          
+ *          When I2C is initialized in FM mode for faster clock frequencies the duty 
+ *          cycle can be chosen: <br>
+ *           - I2C_MODE_FM_2: duty cycle = t_low/t_high = 2 <br>
+ *           - I2C_MODE_FM_169: duty cycle = t_low/t_high = 16/9 
  * 
  */
 typedef enum {
-    I2C_SM_MODE,
-    I2C_FM_MODE
+    I2C_MODE_SM,
+    I2C_MODE_FM_2, 
+    I2C_MODE_FM_169
 } i2c_run_mode_t;
-
-
-/**
- * @brief I2C Fm mode duty cycle 
- * 
- * @details When I2C is initialized in FM mode for faster clock frequencies the duty 
- *          cycle can be chosen. The i2c init functions take this as an argument. If the 
- *          i2c is going to be initialized in Sm mode then this input in the init function 
- *          has no effect. 
- * 
- */
-typedef enum {
-    I2C_FM_DUTY_2,   // t_low/t_high = 2
-    I2C_FM_DUTY_169  // t_low/t_high = 16/9
-} i2c_fm_duty_cycle_t;
 
 
 /**
  * @brief I2C AP1 frequency 
  * 
- * @details The i2c init functions take this as an argument in order to program the 
+ * @details The I2C init functions take this as an argument in order to program the 
  *          peripheral input clock based in the frequency of APB1. 
  * 
  */
@@ -174,7 +165,7 @@ typedef enum {
 /**
  * @brief I2C CCR setpoint
  * 
- * @details The i2c init functions take this an argument to program the clock control 
+ * @details The I2C init functions take this an argument to program the clock control 
  *          register when initializing in Fm/Sm mode. <br><br>
  *          
  *          enum code: I2C_CCR_FM_(X_1)_(X_2)_(X_3)           <br>
@@ -199,7 +190,7 @@ typedef enum {
 /**
  * @brief I2C TRISE setpoint
  * 
- * @details The i2c init functions take this as an argument to program the rise timer 
+ * @details The I2C init functions take this as an argument to program the rise timer 
  *          register based on the clock frequency and max rise time which changes based 
  *          on the run mode. <br><br> 
  *          
@@ -220,7 +211,7 @@ typedef enum {
 /**
  * @brief I2C data size 
  * 
- * @details This is a general enum used for specifying i2c message sizes when sending or 
+ * @details This is a general enum used for specifying I2C message sizes when sending or 
  *          receiving data. 
  * 
  */
@@ -251,25 +242,34 @@ typedef enum {
  *              PB7: SDA              <br> 
  *              PB8: SCL              <br>
  *              PB9: SDA              <br><br>
+ *          
+ *          Pin information for I2C2: <br>
+ *              PB3:  SDA              <br>
+ *              PB9:  SDA              <br> 
+ *              PB10: SCL              <br><br>
+ *          
+ *          Pin information for I2C3: <br>
+ *              PA8: SCL              <br>
+ *              PB4: SDA              <br> 
+ *              PB8: SDA              <br>
+ *              PC9: SDA              <br><br>
  * 
- * @param sda_pin : SDA pin used for I2C1
- * @param scl_pin : SCL pin used for I2C1
+ * @param i2c : I2C port to initialize 
+ * @param sda_pin : pin used for SDA  
+ * @param scl_pin : pin used for SCL 
  * @param run_mode : specifies Sm or Fm mode 
  * @param apb1_freq : configured APB1 clock frquency 
  * @param fm_duty_cycle : Fm mode duty cycle (no affect in Sm mode)
  * @param ccr_reg : calculated clock control register value
  * @param trise_reg : calculated trise time 
  * 
- * @see i2c_fm_ccr_setpoint_t
- * @see i2c_sm_ccr_setpoint_t
- * 
  */
 void i2c1_init(
+    I2C_TypeDef *i2c, 
     i2c1_sda_pin_t sda_pin,
     i2c1_scl_pin_t scl_pin,
     i2c_run_mode_t run_mode,
     i2c_apb1_freq_t apb1_freq,
-    i2c_fm_duty_cycle_t fm_duty_cycle,
     i2c_ccr_setpoint_t ccr_reg,
     i2c_trise_setpoint_t trise_reg);
 
@@ -277,7 +277,7 @@ void i2c1_init(
 /**
  * @brief I2C1 start condition generation 
  * 
- * @details This must be called by the master to begin an i2c read or write 
+ * @details This must be called by the master to begin an I2C read or write 
  *          transmisssion. The controller is in slave mode when idle but becomes 
  *          the master when the start condition is generated. 
  * 
@@ -288,7 +288,7 @@ void i2c1_start(void);
 /**
  * @brief I2C1 stop condition condition 
  * 
- * @details This must be called in order to end an i2c read or write transmission. 
+ * @details This must be called in order to end an I2C read or write transmission. 
  *          Once the stop condition is sent then the controller releases the bus and 
  *          reverts back to slave mode. 
  * 
