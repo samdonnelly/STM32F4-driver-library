@@ -33,8 +33,29 @@
 //=======================================================================================
 // Macros 
 
+// Device parameters 
+#define M8Q_I2C_7_BIT_ADDR 0x42  // M8Q I2C address (default) 
+#define M8Q_I2C_8_BIT_ADDR 0x84  // M8Q I2C address (default) shifted to accomodate R/W bit 
+
+// Communication 
 #define M8Q_DATA_LEN 30    // Max length of data string recieved from the module 
-#define M8Q_I2C_ADDR 0x42  // M8Q I2C address (default) 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Enums 
+
+/**
+ * @brief M8Q read and write bit offset 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    M8Q_W_OFFSET, 
+    M8Q_R_OFFSET
+} m8q_rw_offset_t; 
 
 //=======================================================================================
 

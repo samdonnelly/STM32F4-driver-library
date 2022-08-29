@@ -361,7 +361,7 @@ void i2c_write_master_mode(
  *          been cleared. The function takes a pointer where it will store the recieved 
  *          data and the size of the data so it knows how many bytes to read. 
  *          
- * 
+ * @param i2c : pointer to the I2C port 
  * @param data : pointer that data is placed into 
  * @param data_size : integer indicating the number of bytes to be receieved
  */
