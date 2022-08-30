@@ -267,7 +267,7 @@ void i2c1_init(
 // I2C1 generate start condition 
 void i2c_start(I2C_TypeDef *i2c)
 {
-    i2c_set_ack(i2c);                              // Enable acknowledgement bit 
+    i2c_set_ack(i2c);                           // Enable acknowledgement bit 
     i2c->CR1 |= (SET_BIT << SHIFT_8);           // Set start generation bit 
     while(!(i2c->SR1 & (SET_BIT << SHIFT_0)));  // Wait for start bit to set 
 }
@@ -278,7 +278,7 @@ void i2c_stop(I2C_TypeDef *i2c)
     i2c->CR1 |= (SET_BIT << SHIFT_9);
 }
 
-// I2C1 read SR1 and SR2 to an unused variable to clear ADDR
+// Read the SR1 and SR2 registers to clear ADDR
 void i2c_clear_addr(I2C_TypeDef *i2c)
 {
     dummy_read(((i2c->SR1) | (i2c->SR2))); 
@@ -364,7 +364,7 @@ void i2c_read_master_mode(
     uint8_t *data, 
     uint8_t data_size)
 {
-    // Check the amount of data to be receieved 
+    // Check the amount of data to be received 
     switch(data_size)
     {
         case I2C_0_BYTE:  // No data specified - no transmission

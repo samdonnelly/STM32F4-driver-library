@@ -179,29 +179,8 @@ typedef enum {
 //=======================================================================================
 // UART Initialization 
 
-//===================================================
-// UART1 initialization 
-
 /**
  * @brief UART1 initialization 
- * 
- * @details 
- * 
- * @param baud_rate 
- */
-void uart_init(
-    USART_TypeDef *uart, 
-    uart_baud_rate_t baud_rate, 
-    uart_clock_speed_t clock_speed);
-
-//=================================================== // UART1 initialization 
-
-
-//===================================================
-// UART2 initialization 
-
-/**
- * @brief UART2 initialization
  * 
  * @details Configures UART2 which is connected to the serial port of the dev board. 
  *          This allows for communication with the serial terminal. Additional
@@ -214,25 +193,24 @@ void uart_init(
  *              PA2: TX                 <br>
  *              PA3: RX                 <br>
  * 
- * @see uart2_baud_rate_t
- * 
- * @param baud_rate : baud rate to initialize UART2 with - defined by uart2_baud_rate_t
- * 
+ * @param uart : pointer to the UART port 
+ * @param baud_rate : 
+ * @param clock_speed : 
  */
-void uart2_init(
+void uart_init(
+    USART_TypeDef *uart, 
     uart_baud_rate_t baud_rate, 
     uart_clock_speed_t clock_speed);
 
-//=================================================== // UART2 initialization 
-
 
 /**
- * @brief 
+ * @brief Set the UART baud rate 
  * 
  * @details 
  * 
- * @param baud_rate 
- * @param uart 
+ * @param baud_rate : 
+ * @param uart : 
+ * @param clock_speed : 
  */
 void uart_set_baud_rate(
     USART_TypeDef *uart, 
