@@ -420,4 +420,53 @@ void i2c_read_master_mode(
     }
 }
 
+
+// Test read function for reading to a character and not a length - for M8Q 
+void i2c_read_to_term(
+    I2C_TypeDef *i2c, 
+    uint8_t *data)
+{
+    // Read SR1 and SR2 to clear ADDR
+    i2c_clear_addr(i2c);
+
+    // Normal reading 
+    do
+    {
+        i2c_rxne_wait(i2c);   // Wait for RxNE bit to set indicating data is ready 
+        *data = i2c->DR;      // Read data
+        i2c_set_ack(i2c);     // Set the ACK bit 
+        data++;               // Increment memeory location 
+    } 
+    while (*data != 42);  // 42 == '*' --> Start of checksum in the M8Q NMEA message 
+
+    // Read checksum 
+    i2c_rxne_wait(i2c); 
+    *data = i2c->DR; 
+    i2c_set_ack(i2c); 
+    data++; 
+    i2c_rxne_wait(i2c); 
+    *data = i2c->DR; 
+    i2c_set_ack(i2c); 
+    data++; 
+
+    // Read the second last data byte 
+    i2c_rxne_wait(i2c);
+    *data = i2c->DR;
+    data++; 
+
+    // Clear the ACK bit to send a NACK pulse to the slave
+    i2c_clear_ack(i2c);
+
+    // Generate stop condition
+    i2c_stop(i2c);
+
+    // Read the last data byte
+    i2c_rxne_wait(i2c);
+    *data = i2c->DR;
+    data++; 
+
+    // Add a NULL termination 
+    *data = 0; 
+}
+
 //=======================================================================================

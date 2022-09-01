@@ -370,6 +370,12 @@ void i2c_read_master_mode(
     uint8_t *data, 
     uint8_t data_size);
 
+
+// Test read function for reading to a character and not a length - for M8Q 
+void i2c_read_to_term(
+    I2C_TypeDef *i2c, 
+    uint8_t *data);
+
 //=======================================================================================
 
 
