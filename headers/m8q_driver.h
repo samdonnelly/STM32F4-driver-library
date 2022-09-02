@@ -25,8 +25,6 @@
 // Communication drivers 
 #include "i2c_comm.h"
 
-// Other drivers 
-
 //=======================================================================================
 
 
@@ -39,6 +37,9 @@
 
 // Communication 
 #define M8Q_DATA_LEN 30    // Max length of data string recieved from the module 
+
+#define M8Q_READ_ADDR_DATA_SIZE 0xFD    // Register address to start reading data size 
+#define M8Q_READ_ADDR_DATA_STREAM 0xFF  // Register address where the data stream is read 
 
 //=======================================================================================
 
@@ -79,19 +80,6 @@ typedef enum {
 void m8q_read_nmea(
     I2C_TypeDef *i2c, 
     uint8_t *data); 
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- */
-typedef enum {
-    M8Q_READ_ADDR_0XFD = 0xFD,  // 
-    M8Q_READ_ADDR_0XFE = 0xFE,  // 
-    M8Q_READ_ADDR_0XFF = 0xFF   // 
-} m8q_read_address_t; 
 
 //=======================================================================================
 

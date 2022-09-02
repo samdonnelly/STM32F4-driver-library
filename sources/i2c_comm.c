@@ -50,28 +50,28 @@ void i2c_addr_wait(I2C_TypeDef *i2c);
 void i2c_clear_ack(I2C_TypeDef *i2c);
 
 
-/**
- * @brief I2C1 set acknowledge bit 
- * 
- * @details Setting the acknowledge bit is used to tell a slave device that data has been 
- *          recieved so the slave can proceed to send the next byte of data. This function 
- *          is called immediately after the data register is read. The acknowledge bit must
- *          also be set before generating a start condition. 
- * 
- */
-void i2c_set_ack(I2C_TypeDef *i2c);
+// /**
+//  * @brief I2C1 set acknowledge bit 
+//  * 
+//  * @details Setting the acknowledge bit is used to tell a slave device that data has been 
+//  *          recieved so the slave can proceed to send the next byte of data. This function 
+//  *          is called immediately after the data register is read. The acknowledge bit must
+//  *          also be set before generating a start condition. 
+//  * 
+//  */
+// void i2c_set_ack(I2C_TypeDef *i2c);
 
 
-/**
- * @brief I2C1 wait for RxNE bit to set 
- * 
- * @details The RxNE bit indicates that there is data in the data register to be read from 
- *          the slave. This functions waits for the bit to set before proceeding to read 
- *          the data register. Once the data register is read then this bit clears until 
- *          more data is available. 
- * 
- */
-void i2c_rxne_wait(I2C_TypeDef *i2c);
+// /**
+//  * @brief I2C1 wait for RxNE bit to set 
+//  * 
+//  * @details The RxNE bit indicates that there is data in the data register to be read from 
+//  *          the slave. This functions waits for the bit to set before proceeding to read 
+//  *          the data register. Once the data register is read then this bit clears until 
+//  *          more data is available. 
+//  * 
+//  */
+// void i2c_rxne_wait(I2C_TypeDef *i2c);
 
 
 /**
@@ -362,7 +362,7 @@ void i2c_write_master_mode(
 void i2c_read_master_mode(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
-    uint8_t data_size)
+    uint16_t data_size)
 {
     // Check the amount of data to be received 
     switch(data_size)
