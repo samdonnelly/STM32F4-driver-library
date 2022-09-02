@@ -61,8 +61,43 @@ typedef enum {
 
 
 //=======================================================================================
-// Function Prototypes 
+// Read 
 
+/**
+ * @brief Read an NMEA message from the M8Q 
+ * 
+ * @details Reads the number of bytes available then proceeds to read a NMEA message from 
+ *          the M8Q. This utilizes the "DDC Random Read Access" method for U-blox devices. 
+ *          "DDC Current Address Read Access" method is not used because the length of 
+ *          NMEA messages changes. 
+ *          
+ *          *******
+ * 
+ * @param i2c : 
+ * @param data : 
+ */
+void m8q_read_nmea(
+    I2C_TypeDef *i2c, 
+    uint8_t *data); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    M8Q_READ_ADDR_0XFD = 0xFD,  // 
+    M8Q_READ_ADDR_0XFE = 0xFE,  // 
+    M8Q_READ_ADDR_0XFF = 0xFF   // 
+} m8q_read_address_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Write 
 
 
 
