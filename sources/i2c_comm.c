@@ -38,16 +38,16 @@
 void i2c_addr_wait(I2C_TypeDef *i2c);
 
 
-/**
- * @brief I2C1 clear acknowledge bit 
- * 
- * @details This function is used to clear the acknowledge bit which sends a NACK pulse to 
- *          the slave device. The NACK pulse is sent after the last byte of data has been 
- *          recieved from the slave. Once the slave sees the pulse it releases control of 
- *          the bus which allows the master to send a stop or restart condition. 
- * 
- */
-void i2c_clear_ack(I2C_TypeDef *i2c);
+// /**
+//  * @brief I2C1 clear acknowledge bit 
+//  * 
+//  * @details This function is used to clear the acknowledge bit which sends a NACK pulse to 
+//  *          the slave device. The NACK pulse is sent after the last byte of data has been 
+//  *          recieved from the slave. Once the slave sees the pulse it releases control of 
+//  *          the bus which allows the master to send a stop or restart condition. 
+//  * 
+//  */
+// void i2c_clear_ack(I2C_TypeDef *i2c);
 
 
 // /**

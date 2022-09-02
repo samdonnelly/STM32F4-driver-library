@@ -34,6 +34,9 @@ void m8q_read_nmea(
 {
     // Local variables
     uint16_t data_size = 0; 
+    uint8_t reg_0xFD = 0; 
+    uint8_t reg_0xFE = 0; 
+    uint8_t reg_0xFF = 0; 
     uint8_t address = M8Q_READ_ADDR_DATA_SIZE;  
 
     // Generate a start condition 
@@ -53,16 +56,51 @@ void m8q_read_nmea(
     i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + M8Q_R_OFFSET);  
     i2c_clear_addr(i2c); 
 
-    // Read the first two bytes to get the data size 
-    i2c_rxne_wait(i2c);                              // Wait for data to be ready 
-    data_size |= (uint16_t)((i2c->DR) << SHIFT_8);   // Read data
-    i2c_set_ack(i2c);                                // Indicated that data has been read 
-    i2c_rxne_wait(i2c);  
-    data_size |= (uint16_t)(i2c->DR); 
+    //===================================================
+    // Read data 
+
+    // Read the data size (high byte - 0xFD) 
+    i2c_rxne_wait(i2c); 
+    reg_0xFD = i2c->DR; 
     i2c_set_ack(i2c); 
 
-    // Read the device data using the data length 
-    i2c_read_master_mode(i2c, data, data_size); 
+    // Read the data size (low byte - 0xFE) 
+    i2c_rxne_wait(i2c);  
+    reg_0xFE = i2c->DR; 
+    i2c_clear_ack(i2c);
+
+    // Generate stop condition
+    i2c_stop(i2c);
+
+    // Read the data stream (0xFF) 
+    i2c_rxne_wait(i2c);
+    reg_0xFF = i2c->DR;
+
+    //===================================================
+
+    //===================================================
+    // Display the results 
+
+    uart_sendstring(USART2, "Register 0xFD: "); 
+    uart_send_integer(USART2, (int16_t)reg_0xFD); 
+    uart_sendstring(USART2, "    "); 
+
+    uart_sendstring(USART2, "Register 0xFE: "); 
+    uart_send_integer(USART2, (int16_t)reg_0xFE); 
+    uart_sendstring(USART2, "    "); 
+
+    data_size = (uint16_t)((reg_0xFD << SHIFT_8) | reg_0xFE); 
+    uart_sendstring(USART2, "Data size: "); 
+    uart_send_integer(USART2, (int16_t)data_size); 
+    uart_sendstring(USART2, "    "); 
+
+    uart_sendstring(USART2, "Register 0xFF: "); 
+    uart_sendchar(USART2, reg_0xFF); 
+    uart_sendstring(USART2, "  \r"); 
+
+    //===================================================
+
+    // uart_send_new_line(USART2); 
 }
 
 //=======================================================================================
