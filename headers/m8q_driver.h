@@ -79,7 +79,7 @@ typedef enum {
  * @param i2c : 
  * @param data : 
  */
-void m8q_read_nmea(
+uint8_t m8q_read_nmea(
     I2C_TypeDef *i2c, 
     uint8_t *data); 
 
