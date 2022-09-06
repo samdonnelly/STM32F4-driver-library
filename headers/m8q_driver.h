@@ -40,8 +40,9 @@
 // Communication 
 #define M8Q_DATA_LEN 30    // Max length of data string recieved from the module 
 
-#define M8Q_READ_ADDR_DATA_SIZE 0xFD    // Register address to start reading data size 
-#define M8Q_READ_ADDR_DATA_STREAM 0xFF  // Register address where the data stream is read 
+#define M8Q_READ_DS_ADDR 0xFD    // Register address to start reading data size 
+
+#define M8Q_INVALID_NMEA 0xff   // NMEA invalid data stream return value 
 
 //=======================================================================================
 
@@ -60,6 +61,26 @@ typedef enum {
     M8Q_R_OFFSET
 } m8q_rw_offset_t; 
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    M8Q_NMEA_READ_INVALID, 
+    M8Q_NMEA_READ_VALID
+} m8q_nmea_read_status_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data types 
+
+typedef m8q_nmea_read_status_t NMEA_VALID; 
+
 //=======================================================================================
 
 
@@ -76,12 +97,44 @@ typedef enum {
  *          
  *          *******
  * 
- * @param i2c : 
- * @param data : 
+ * @param i2c : pointer to the I2C port used 
+ * @param data : pointer to array that will store a single NMEA message 
+ * @return NMEA_VALID : valid read indicator 
  */
-uint8_t m8q_read_nmea(
+NMEA_VALID m8q_read_nmea(
     I2C_TypeDef *i2c, 
     uint8_t *data); 
+
+
+/**
+ * @brief Read the NMEA data stream size 
+ * 
+ * @details Read registers 0xFD and 0xFE to get the size of the NMEA data stream. If this 
+ *          value is not zero then there is data available to be read. This function can be 
+ *          used as an indication that data is available to be read. 
+ *          
+ *          This function uses a "DDC Random Read Access" method to specify the data size 
+ *          registers. 
+ * 
+ * @param i2c : pointer to the I2C port used 
+ * @param data_size : pointer to store the size of the NMEA data stream 
+ */
+void m8q_read_nmea_ds(
+    I2C_TypeDef *i2c, 
+    uint16_t *data_size); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param i2c 
+ * @param data_check 
+ */
+void m8q_check_nmea_stream(
+    I2C_TypeDef *i2c, 
+    uint8_t *data_check); 
 
 //=======================================================================================
 
