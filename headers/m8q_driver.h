@@ -43,6 +43,7 @@
 #define M8Q_READ_DS_ADDR 0xFD    // Register address to start reading data size 
 
 #define M8Q_INVALID_NMEA 0xff   // NMEA invalid data stream return value 
+#define M8Q_VALID_NMEA   0x24   // 0x24 == '$' --> start of valid NMEA message 
 
 //=======================================================================================
 
