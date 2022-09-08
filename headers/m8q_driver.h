@@ -25,8 +25,6 @@
 // Communication drivers 
 #include "i2c_comm.h"
 
-#include "uart_comm.h"
-
 //=======================================================================================
 
 
@@ -37,13 +35,13 @@
 #define M8Q_I2C_7_BIT_ADDR 0x42  // M8Q I2C address (default) 
 #define M8Q_I2C_8_BIT_ADDR 0x84  // M8Q I2C address (default) shifted to accomodate R/W bit 
 
-// Communication 
-#define M8Q_DATA_LEN 30    // Max length of data string recieved from the module 
-
+// M8Q registers 
 #define M8Q_READ_DS_ADDR 0xFD    // Register address to start reading data size 
 
+// NMEA message format 
 #define M8Q_INVALID_NMEA 0xff   // NMEA invalid data stream return value 
 #define M8Q_VALID_NMEA   0x24   // 0x24 == '$' --> start of valid NMEA message 
+#define M8Q_END_NMEA     0x2A   // 0x2A == '*' --> indicates end of NMEA payload 
 
 //=======================================================================================
 
@@ -54,7 +52,8 @@
 /**
  * @brief M8Q read and write bit offset 
  * 
- * @details 
+ * @details Used in conjunction with the module I2C address to indicate a read or write 
+ *          operation when communicating over I2C. 
  * 
  */
 typedef enum {
@@ -64,9 +63,12 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief M8Q valid read indicator 
  * 
- * @details 
+ * @details Used to define a valid or invalid read of NMEA message data in the m8q_read_nmea
+ *          function. 
+ * 
+ * @see m8q_read_nmea
  * 
  */
 typedef enum {
@@ -86,17 +88,34 @@ typedef m8q_nmea_read_status_t NMEA_VALID;
 
 
 //=======================================================================================
-// Read 
+// Initialization 
+
+/**
+ * @brief M8Q initialization 
+ * 
+ * @details To be implemented. 
+ * 
+ */
+void m8q_init(void); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// NMEA Read 
 
 /**
  * @brief Read an NMEA message from the M8Q 
  * 
- * @details Reads the number of bytes available then proceeds to read a NMEA message from 
- *          the M8Q. This utilizes the "DDC Random Read Access" method for U-blox devices. 
- *          "DDC Current Address Read Access" method is not used because the length of 
- *          NMEA messages changes. 
- *          
- *          *******
+ * @details Checks for a valid data stream using m8q_check_nmea_stream, and if valid then 
+ *          proceeds to read a single NMEA message. The function returns an indication 
+ *          of whether the read was valid or not. If there was no data (or unknown data) the 
+ *          function return will indicate an invalid read, and if there is data then it will 
+ *          indicate a valid read and the data buffer passed to the function will be filled. 
+ *          This function has to be called for each NMEA message available. 
+ * 
+ * @see m8q_check_nmea_stream
+ * @see m8q_nmea_read_status_t
  * 
  * @param i2c : pointer to the I2C port used 
  * @param data : pointer to array that will store a single NMEA message 
@@ -108,17 +127,16 @@ NMEA_VALID m8q_read_nmea(
 
 
 /**
- * @brief Read the NMEA data stream size 
+ * @brief Read the size of the available NMEA data 
  * 
- * @details Read registers 0xFD and 0xFE to get the size of the NMEA data stream. If this 
- *          value is not zero then there is data available to be read. This function can be 
+ * @details Reads registers 0xFD and 0xFE to get the number of available NMEA message bytes. 
+ *          If this value is zero then there is no available data to be read. A non-zero value 
+ *          will indicate the total NMEA message bytes available, however it does not indicate 
+ *          the number of messages contained within the data size. This function can be 
  *          used as an indication that data is available to be read. 
- *          
- *          This function uses a "DDC Random Read Access" method to specify the data size 
- *          registers. 
  * 
  * @param i2c : pointer to the I2C port used 
- * @param data_size : pointer to store the size of the NMEA data stream 
+ * @param data_size : pointer to single-integer buffer to store the NMEA data stream size 
  */
 void m8q_read_nmea_ds(
     I2C_TypeDef *i2c, 
@@ -126,12 +144,16 @@ void m8q_read_nmea_ds(
 
 
 /**
- * @brief 
+ * @brief Check the NMEA data stream 
  * 
- * @details 
+ * @details Reads the data stream register (0xFF) and stores the result in the argument 
+ *          data_check. This function can be used to check for a valid data stream. If the 
+ *          returned result if 0xff then there is no data to be read and the steam is not 
+ *          valid. If '$' (36d) is returned then there a valid data steam (NMEA message) 
+ *          waiting to be read. 
  * 
- * @param i2c 
- * @param data_check 
+ * @param i2c : pointer to I2C port used 
+ * @param data_check : pointer to single-integer buffer to store register 0xFF value 
  */
 void m8q_check_nmea_stream(
     I2C_TypeDef *i2c, 
@@ -141,10 +163,17 @@ void m8q_check_nmea_stream(
 
 
 //=======================================================================================
-// Write 
+// NMEA Write 
+//=======================================================================================
 
 
+//=======================================================================================
+// PUBX read 
+//=======================================================================================
 
+
+//=======================================================================================
+// PUBX write 
 //=======================================================================================
 
 #endif  // _M8Q_DRIVER_H_ 

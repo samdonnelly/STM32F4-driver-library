@@ -407,10 +407,26 @@ void i2c_read_master_mode(
     uint16_t data_size);
 
 
-// Test read function for reading to a character and not a length - for M8Q 
+/**
+ * @brief I2C read data until a termination character is seen 
+ * 
+ * @details This function is for reading data of unknown or varying length. It reads 
+ *          data in the same way as i2c_read_master_mode but takes a termination character
+ *          and the number of bytes left to read after the termination character as 
+ *          arguments. Once the termination character is seen then the transaction will 
+ *          be stopped based on how many bytes remain to be read. There must be at least one 
+ *          byte left to read. 
+ * 
+ * @param i2c : pointer to the I2C port used 
+ * @param data : pointer to the buffer that stores read data 
+ * @param term_char : termination character to indicate when to stop reading 
+ * @param bytes_remain : number of bytes left to read after the termination character 
+ */
 void i2c_read_to_term(
     I2C_TypeDef *i2c, 
-    uint8_t *data);
+    uint8_t *data, 
+    uint8_t term_char, 
+    uint16_t bytes_remain);
 
 //=======================================================================================
 
