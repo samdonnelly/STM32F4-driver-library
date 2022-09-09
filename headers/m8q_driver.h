@@ -176,4 +176,22 @@ void m8q_check_nmea_stream(
 // PUBX write 
 //=======================================================================================
 
+
+//=======================================================================================
+// Message processing 
+
+// How to parse received NMEA messages 
+
+// How to format outgoing NMEA messages 
+
+// How to take user input for configuration NMEA messages 
+
+// How to parse received UBX messages 
+
+// How to format outgoing UBX messages 
+
+// How to take user input to specify a UBX message 
+
+//=======================================================================================
+
 #endif  // _M8Q_DRIVER_H_ 
