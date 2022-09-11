@@ -443,4 +443,14 @@ void i2c_read_to_term(
     *data = 0; 
 }
 
+
+// 
+void i2c_read_to_len(
+    I2C_TypeDef *i2c, 
+    uint8_t *data, 
+    uint8_t len_to_read)
+{
+    // 
+}
+
 //=======================================================================================

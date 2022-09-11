@@ -428,6 +428,21 @@ void i2c_read_to_term(
     uint8_t term_char, 
     uint16_t bytes_remain);
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param i2c 
+ * @param data 
+ * @param len_to_read 
+ */
+void i2c_read_to_len(
+    I2C_TypeDef *i2c, 
+    uint8_t *data, 
+    uint8_t len_to_read); 
+
 //=======================================================================================
 
 
