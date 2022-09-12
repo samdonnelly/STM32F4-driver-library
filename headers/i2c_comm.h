@@ -430,7 +430,7 @@ void i2c_read_to_term(
 
 
 /**
- * @brief 
+ * @brief I2C read to the length byte(s) in a message 
  * 
  * @details 
  * 

@@ -450,7 +450,21 @@ void i2c_read_to_len(
     uint8_t *data, 
     uint8_t len_to_read)
 {
-    // 
+    // Read I2C data like normal until a defined length (len_to_read) but don't stop the 
+    // transaction (?). You might have to stop it if you use the original read function. 
+
+    // Once that length is reached, record the value/byte(s) at that point in the message. 
+    // (this will tell you the length of the payload) 
+
+    // Correct the length to accomodate for whatever remains after the payload (ex. 
+    // checksum) 
+    // TODO add this as an argument? 
+
+    // Continue a normal read to the specified remaining message length and stop the 
+    // transaction. 
+
+    // Add a termination/NULL character? You will need to offset the 'data' address for 
+    // when you return from the I2C read function. 
 }
 
 //=======================================================================================
