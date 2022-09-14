@@ -221,6 +221,23 @@ void uart_set_baud_rate(
 
 
 //=======================================================================================
+// Register functions 
+
+/**
+ * @brief Check if data is available for reading 
+ * 
+ * @details 
+ * 
+ * @param uart : pointer to the UART port used 
+ * @return uint8_t : Status of available data 
+ */
+uint8_t uart_data_ready(
+    USART_TypeDef *uart); 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Send Functions 
 
 /**

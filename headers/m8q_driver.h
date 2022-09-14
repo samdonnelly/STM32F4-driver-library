@@ -24,12 +24,16 @@
 
 // Communication drivers 
 #include "i2c_comm.h"
+#include "uart_comm.h"
 
 //=======================================================================================
 
 
 //=======================================================================================
 // Macros 
+
+// Device configuration 
+#define M8Q_USER_CONFIG 1   // When set to non-zero then user config code becomes available 
 
 // Device parameters 
 #define M8Q_I2C_7_BIT_ADDR 0x42  // M8Q I2C address (default) 
@@ -42,6 +46,10 @@
 #define M8Q_INVALID_NMEA 0xff   // NMEA invalid data stream return value 
 #define M8Q_VALID_NMEA   0x24   // 0x24 == '$' --> start of valid NMEA message 
 #define M8Q_END_NMEA     0x2A   // 0x2A == '*' --> indicates end of NMEA payload 
+
+// NMEA messages 
+#define M8Q_NMEA_RATE   40   // Message ID for NMEA RATE 
+#define M8Q_NMEA_CONFIG 41   // Message ID for NMEA CONFIG 
 
 //=======================================================================================
 
@@ -196,6 +204,25 @@ void m8q_check_nmea_stream(
 // How to format outgoing UBX messages 
 
 // How to take user input to specify a UBX message 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// User Configuration 
+
+/**
+ * @brief M8Q user configuration 
+ * 
+ * @details This function allows the user to change the settings of the receiver. This is 
+ *          done by taking user inputs from the serial terminal that specify the desired 
+ *          settings. This input is redirected to the receiver in the form of an NMEA or 
+ *          UBX message depending on what is input. Other message types are not supported. 
+ * 
+ * @param i2c : pointer to the I2C port used 
+ */
+void m8q_user_config(
+    I2C_TypeDef *i2c); 
 
 //=======================================================================================
 

@@ -240,6 +240,20 @@ void uart_baud_select(
 
 
 //=======================================================================================
+// Register functions 
+
+// Check if data is available for reading 
+uint8_t uart_data_ready(
+    USART_TypeDef *uart)
+{
+    if (uart->SR & (SET_BIT << SHIFT_5)) return TRUE; 
+    else return FALSE; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Send Data 
 
 // UART send character to serial terminal 

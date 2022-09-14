@@ -156,3 +156,38 @@ void m8q_check_nmea_stream(
 //=======================================================================================
 // Message processing 
 //=======================================================================================
+
+
+//=======================================================================================
+// User Configuration 
+
+#if M8Q_USER_CONFIG
+
+// M8Q user configuration 
+void m8q_user_config(
+    I2C_TypeDef *i2c)
+{
+    // Local variables 
+
+    // Check if there is user input waiting 
+    if (uart_data_ready(USART2))
+    {
+        // Read the input into an array 
+
+        // Read the first byte to identify the message type 
+
+        // Parse the data according to the message type. If an invalid message than 
+        // abort the config. 
+
+        // Calculate a checksum 
+
+        // Append the checksum and termination characters onto the message 
+
+        // Print the message to the terminal (for testing) 
+        // Send the message to the receiver (application) 
+    }
+}
+
+#endif   // M8Q_USER_CONFIG
+
+//=======================================================================================
