@@ -34,6 +34,7 @@
 
 // Device configuration 
 #define M8Q_USER_CONFIG 1   // When set to non-zero then user config code becomes available 
+#define M8Q_CONFIG_MSG  75  // Config message max length 
 
 // Device parameters 
 #define M8Q_I2C_7_BIT_ADDR 0x42  // M8Q I2C address (default) 
@@ -48,8 +49,13 @@
 #define M8Q_END_NMEA     0x2A   // 0x2A == '*' --> indicates end of NMEA payload 
 
 // NMEA messages 
-#define M8Q_NMEA_RATE   40   // Message ID for NMEA RATE 
-#define M8Q_NMEA_CONFIG 41   // Message ID for NMEA CONFIG 
+#define M8Q_NMEA_RATE          40   // Message ID for NMEA RATE 
+#define M8Q_NMEA_RATE_ARGS     7    // Number of arguments in RATE message 
+#define M8Q_NMEA_CONFIG        41   // Message ID for NMEA CONFIG 
+#define M8Q_NMEA_CONFIG_ARGS   5    // Number of arguments in CONFIG message 
+
+// UBX message format 
+#define M8Q_UBX_SYNC1 0x42   // 0x42 == 'B' --> Start of UBX message (0xB562) 
 
 //=======================================================================================
 
@@ -91,6 +97,7 @@ typedef enum {
 // Data types 
 
 typedef m8q_nmea_read_status_t NMEA_VALID; 
+typedef uint16_t NMEA_CHECKSUM; 
 
 //=======================================================================================
 
