@@ -23,6 +23,38 @@
 
 
 //=======================================================================================
+// Function prototypes 
+
+/**
+ * @brief M8Q NMEA config function 
+ * 
+ * @details 
+ * 
+ * @param i2c : pointer to the I2C port used 
+ * @param msg : pointer to the message string 
+ */
+void m8q_nmea_config(
+    I2C_TypeDef *i2c, 
+    uint8_t *msg); 
+
+
+/**
+ * @brief M8Q NMEA message calculation 
+ * 
+ * @details Calculates the NMEA config message checksum to be sent along with the message 
+ *          to the receiver using an exlusive OR (XOR) operation on all bytes of the 
+ *          message string. 
+ * 
+ * @param msg : pointer to message string 
+ * @return NMEA_CHECKSUM : checksum of an NMEA message to be sent to the receiver 
+ */
+NMEA_CHECKSUM m8q_nmea_checksum(
+    uint8_t *msg); 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 // 
@@ -168,24 +200,108 @@ void m8q_user_config(
     I2C_TypeDef *i2c)
 {
     // Local variables 
+    uint8_t nmea_config_msg[M8Q_CONFIG_MSG]; 
 
     // Check if there is user input waiting 
     if (uart_data_ready(USART2))
     {
-        // Read the input into an array 
+        // Read the input 
+        uart_getstr(USART2, (char *)nmea_config_msg, UART_STR_TERM_CARRIAGE); 
 
-        // Read the first byte to identify the message type 
+        // Identify the message type 
+        switch (nmea_config_msg[0])
+        {
+            case M8Q_VALID_NMEA: 
+                m8q_nmea_config(i2c, nmea_config_msg); 
+                break;
 
-        // Parse the data according to the message type. If an invalid message than 
-        // abort the config. 
-
-        // Calculate a checksum 
-
-        // Append the checksum and termination characters onto the message 
+            case M8Q_UBX_SYNC1:
+                uart_sendstring(USART2, "Could be a UBX message\r\n"); 
+                break;
+            
+            default:
+                uart_sendstring(USART2, "Unknown message type\r\n"); 
+                break;
+        }
 
         // Print the message to the terminal (for testing) 
         // Send the message to the receiver (application) 
     }
+}
+
+
+// M8Q NMEA config function 
+void m8q_nmea_config(
+    I2C_TypeDef *i2c, 
+    uint8_t *msg)
+{
+    // Local variables 
+    uint8_t *msg_ptr = msg; 
+    uint8_t msg_args = 0; 
+    uint8_t msg_arg_count = 0; 
+    uint8_t msg_arg_mask = 0; 
+
+    // Check message header 
+    if (str_compare("$PUBX,", (char *)msg, BYTE_0))
+    {
+        // Check message ID 
+        if (str_compare("40,", (char *)msg, BYTE_6)) 
+            msg_args = M8Q_NMEA_RATE_ARGS; 
+        
+        else if (str_compare("41,", (char *)msg, BYTE_6)) 
+            msg_args = M8Q_NMEA_CONFIG_ARGS; 
+
+        else
+            uart_sendstring(USART2, "not a supported PUBX ID\r\n");
+        
+        // Check the number of message inputs 
+        msg_ptr += BYTE_9; 
+        while(*msg_ptr != CR_CAHR) 
+        {
+            if (*msg_ptr == COMMA_CHAR)
+            {
+                msg_arg_mask = 0; 
+            }
+            else 
+            {
+                if (!msg_arg_mask)
+                {
+                    msg_arg_count++; 
+                    msg_arg_mask++; 
+                }
+            }
+            msg_ptr++; 
+        }
+
+        // Check if the message is valid 
+        if (msg_arg_count == msg_args)
+        {
+            // Calculate a checksum 
+            // m8q_nmea_checksum(msg);
+            uart_sendstring(USART2, "Valid PUBX message\r\n"); 
+
+            // Append the checksum and termination characters onto the message 
+            // Use the msg_ptr here as it's already at the correct memory location 
+
+            // Pass the message along to the NMEA send function 
+        } 
+        else
+        {
+            uart_sendstring(USART2, "Invalid formatting of PUBX message\r\n"); 
+        }
+    }
+    else 
+    {
+        uart_sendstring(USART2, "not PUBX\r\n"); 
+    }
+}
+
+
+// M8Q NMEA message calculation 
+NMEA_CHECKSUM m8q_nmea_checksum(
+    uint8_t *msg)
+{
+    // 
 }
 
 #endif   // M8Q_USER_CONFIG
