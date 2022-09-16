@@ -65,8 +65,13 @@
 // String formatting 
 #define NULL_CHAR   0    // '\0' == 0
 #define NL_CHAR     10   // '\n' == 10
-#define CR_CAHR     13   // '\r' == 13
+#define CR_CHAR     13   // '\r' == 13
+#define AST_CHAR    42   // '*'  == 42
 #define COMMA_CHAR  44   // ','  == 44
+
+#define HEX_NUM_TO_LET  0x09  // Inflection point for the below offsets 
+#define HEX_TO_NUM_CHAR 0x30  // Offset from a hex number to the equivalent char number 
+#define HEX_TO_LET_CHAR 0x37  // Offset from a hex letter to the equivalent char letter 
 
 //=======================================================================================
 

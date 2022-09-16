@@ -19,6 +19,11 @@
 // Device drivers 
 #include "m8q_driver.h"
 
+// Standard Libraries 
+#if M8Q_USER_CONFIG
+#include <stdio.h> 
+#endif  // M8Q_USER_CONFIG
+
 //=======================================================================================
 
 
@@ -240,6 +245,8 @@ void m8q_nmea_config(
     uint8_t msg_args = 0; 
     uint8_t msg_arg_count = 0; 
     uint8_t msg_arg_mask = 0; 
+    NMEA_CHECKSUM checksum = 0; 
+    char term_str[M8Q_NMEA_END_MSG]; 
 
     // Check message header 
     if (str_compare("$PUBX,", (char *)msg, BYTE_0))
@@ -255,39 +262,47 @@ void m8q_nmea_config(
             uart_sendstring(USART2, "not a supported PUBX ID\r\n");
         
         // Check the number of message inputs 
-        msg_ptr += BYTE_9; 
-        while(*msg_ptr != CR_CAHR) 
-        {
-            if (*msg_ptr == COMMA_CHAR)
+        if (msg_args)
+        {            
+            msg_ptr += BYTE_9; 
+
+            while(*msg_ptr != CR_CHAR) 
             {
-                msg_arg_mask = 0; 
-            }
-            else 
-            {
-                if (!msg_arg_mask)
+                if (*msg_ptr == COMMA_CHAR)
                 {
-                    msg_arg_count++; 
-                    msg_arg_mask++; 
+                    msg_arg_mask = 0; 
                 }
+                else 
+                {
+                    if (!msg_arg_mask)
+                    {
+                        msg_arg_count++; 
+                        msg_arg_mask++; 
+                    }
+                }
+                msg_ptr++; 
             }
-            msg_ptr++; 
-        }
 
-        // Check if the message is valid 
-        if (msg_arg_count == msg_args)
-        {
-            // Calculate a checksum 
-            // m8q_nmea_checksum(msg);
-            uart_sendstring(USART2, "Valid PUBX message\r\n"); 
+            // Check if the message is valid 
+            if (msg_arg_count == msg_args)
+            {
+                // Calculate a checksum 
+                checksum = m8q_nmea_checksum(msg);
 
-            // Append the checksum and termination characters onto the message 
-            // Use the msg_ptr here as it's already at the correct memory location 
+                // Append the checksum and termination characters onto the message 
+                sprintf(term_str, "*%c%c\r\n", (char)(checksum >> SHIFT_8), (char)(checksum)); 
 
-            // Pass the message along to the NMEA send function 
-        } 
-        else
-        {
-            uart_sendstring(USART2, "Invalid formatting of PUBX message\r\n"); 
+                for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) *msg_ptr++ = (uint8_t)term_str[i]; 
+
+                // Check the message format 
+                uart_sendstring(USART2, (char *)msg); 
+
+                // Pass the message along to the NMEA send function 
+            } 
+            else
+            {
+                uart_sendstring(USART2, "Invalid formatting of PUBX message\r\n"); 
+            }
         }
     }
     else 
@@ -301,7 +316,30 @@ void m8q_nmea_config(
 NMEA_CHECKSUM m8q_nmea_checksum(
     uint8_t *msg)
 {
-    // 
+    // Local variables 
+    NMEA_CHECKSUM checksum = 0; 
+    uint8_t xor_result = 0; 
+    uint8_t checksum_char = 0; 
+
+    msg++;  // Ignore the "$" at the beginning of the message 
+
+    // Perform and exlusive OR (XOR) on the NMEA message 
+    while (*msg != CR_CHAR) 
+    {
+        xor_result = xor_result ^ *msg;
+        msg++; 
+    }
+
+    // Format the checksum 
+    for (uint8_t i = 0; i < M8Q_NMEA_CS_LEN; i++)
+    {
+        checksum_char = (xor_result & (FILTER_4_MSB >> SHIFT_4*i)) >> SHIFT_4*(1-i); 
+        if (checksum_char <= HEX_NUM_TO_LET) checksum_char += HEX_TO_NUM_CHAR; 
+        else checksum_char += HEX_TO_LET_CHAR; 
+        checksum |= (uint16_t)(checksum_char << SHIFT_8*(1-i)); 
+    }
+
+    return checksum; 
 }
 
 #endif   // M8Q_USER_CONFIG

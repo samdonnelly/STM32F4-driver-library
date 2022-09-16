@@ -47,6 +47,8 @@
 #define M8Q_INVALID_NMEA 0xff   // NMEA invalid data stream return value 
 #define M8Q_VALID_NMEA   0x24   // 0x24 == '$' --> start of valid NMEA message 
 #define M8Q_END_NMEA     0x2A   // 0x2A == '*' --> indicates end of NMEA payload 
+#define M8Q_NMEA_END_MSG 6      // Length of string to append to NMEA message after payload 
+#define M8Q_NMEA_CS_LEN  2      // Number of characters in NMEA message checksum 
 
 // NMEA messages 
 #define M8Q_NMEA_RATE          40   // Message ID for NMEA RATE 
