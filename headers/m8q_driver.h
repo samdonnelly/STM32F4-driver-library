@@ -143,7 +143,7 @@ void m8q_init(void);
  * @param data : pointer to array that will store a single NMEA message 
  * @return NMEA_VALID : valid read indicator 
  */
-NMEA_VALID m8q_read_nmea(
+NMEA_VALID m8q_nmea_read(
     I2C_TypeDef *i2c, 
     uint8_t *data); 
 
@@ -160,7 +160,7 @@ NMEA_VALID m8q_read_nmea(
  * @param i2c : pointer to the I2C port used 
  * @param data_size : pointer to single-integer buffer to store the NMEA data stream size 
  */
-void m8q_read_nmea_ds(
+void m8q_nmea_read_ds(
     I2C_TypeDef *i2c, 
     uint16_t *data_size); 
 
@@ -177,7 +177,7 @@ void m8q_read_nmea_ds(
  * @param i2c : pointer to I2C port used 
  * @param data_check : pointer to single-integer buffer to store register 0xFF value 
  */
-void m8q_check_nmea_stream(
+void m8q_nmea_check_stream(
     I2C_TypeDef *i2c, 
     uint8_t *data_check); 
 
@@ -186,6 +186,19 @@ void m8q_check_nmea_stream(
 
 //=======================================================================================
 // NMEA Write 
+
+/**
+ * @brief M8Q NMEA write 
+ * 
+ * @details Writes an NMEA message to the receiver using a specified I2C interface 
+ * 
+ * @param i2c : pointer to I2C port used 
+ * @param data : pointer to data buffer that contains the NMEA message 
+ */
+void m8q_nmea_write(
+    I2C_TypeDef *i2c, 
+    uint8_t *data); 
+
 //=======================================================================================
 
 
