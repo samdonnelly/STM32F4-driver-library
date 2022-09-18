@@ -86,15 +86,10 @@ void m8q_init(void)
 
 
 //=======================================================================================
-// Message identification 
-//=======================================================================================
-
-
-//=======================================================================================
 // NMEA Read 
 
-// Read an NMEA message from the M8Q 
-NMEA_VALID m8q_nmea_read(
+// Read a message from the M8Q 
+NMEA_VALID m8q_read(
     I2C_TypeDef *i2c, 
     uint8_t *data)
 {
@@ -103,15 +98,14 @@ NMEA_VALID m8q_nmea_read(
     uint8_t data_check = 0; 
 
     // Check for a valid data stream 
-    m8q_nmea_check_stream(i2c, &data_check); 
+    m8q_check_data_stream(i2c, &data_check); 
 
-    // Check the result 
     switch (data_check)
     {
-        case M8Q_INVALID_NMEA:  // No data stream available 
+        case M8Q_NO_DATA:  // No data stream available 
             break;
 
-        case M8Q_VALID_NMEA:  // Valid data stream - start of NMEA message 
+        case M8Q_NMEA_START:  // Valid data stream - start of NMEA message 
             // Generate a start condition 
             i2c_start(i2c); 
 
@@ -120,7 +114,7 @@ NMEA_VALID m8q_nmea_read(
             i2c_clear_addr(i2c);  
 
             // Read the rest of the data stream until "\r\n" 
-            i2c_read_to_term(i2c, data, M8Q_END_NMEA, I2C_4_BYTE); 
+            i2c_read_to_term(i2c, data, M8Q_NMEA_END_PAY, I2C_4_BYTE); 
 
             read_status = M8Q_NMEA_READ_VALID; 
             break;
@@ -134,13 +128,13 @@ NMEA_VALID m8q_nmea_read(
 
 
 // Read the NMEA data stream size 
-void m8q_nmea_read_ds(
+void m8q_check_data_size(
     I2C_TypeDef *i2c, 
     uint16_t *data_size)
 {
     // Local variables 
-    uint8_t num_bytes[BYTE_2];            // Store the high and low byte of the data size 
-    uint8_t address = M8Q_READ_DS_ADDR;   // Address of high byte for the data size 
+    uint8_t num_bytes[BYTE_2];        // Store the high and low byte of the data size 
+    uint8_t address = M8Q_REG_0XFD;   // Address of high byte for the data size 
 
     // Generate a start condition 
     i2c_start(i2c); 
@@ -167,8 +161,8 @@ void m8q_nmea_read_ds(
 }
 
 
-// Check for a valid NMEA data stream 
-void m8q_nmea_check_stream(
+// Read the current value at the data stream register 
+void m8q_check_data_stream(
     I2C_TypeDef *i2c, 
     uint8_t *data_check)
 {
@@ -189,8 +183,10 @@ void m8q_nmea_check_stream(
 //=======================================================================================
 // NMEA write 
 
-// 
-void m8q_nmea_write(
+// TODO send a save command/mask after writing a CFG message. 
+
+// M8Q write 
+void m8q_write(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint8_t data_size)
@@ -208,19 +204,6 @@ void m8q_nmea_write(
     // Generate a stop condition 
     i2c_stop(I2C1); 
 }
-
-//=======================================================================================
-
-
-//=======================================================================================
-// PUBX read 
-//=======================================================================================
-
-
-//=======================================================================================
-// PUBX write 
-
-// TODO send a save command/mask after writing a CFG message. 
 
 //=======================================================================================
 
@@ -249,6 +232,11 @@ uint8_t m8q_message_size(
 
 
 //=======================================================================================
+// Getters 
+//=======================================================================================
+
+
+//=======================================================================================
 // User Configuration 
 
 #if M8Q_USER_CONFIG
@@ -269,7 +257,7 @@ void m8q_user_config(
         // Identify the message type 
         switch (nmea_config_msg[0])
         {
-            case M8Q_VALID_NMEA:  // NMEA message 
+            case M8Q_NMEA_START:  // NMEA message 
                 m8q_nmea_config(i2c, nmea_config_msg); 
                 break;
 
@@ -352,19 +340,8 @@ void m8q_nmea_config(
                 sprintf(term_str, "*%c%c\r\n", (char)(checksum >> SHIFT_8), (char)(checksum)); 
                 for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) *msg_ptr++ = (uint8_t)term_str[i]; 
 
-                // Check the message format 
-                uart_send_new_line(USART2); 
-                uart_sendstring(USART2, (char *)msg); 
-
-                // Check the message size 
-                uart_send_new_line(USART2); 
-                uart_sendstring(USART2, "Message length: "); 
-                uart_send_integer(USART2, (int16_t)m8q_message_size(msg, NULL_CHAR));
-                uart_send_new_line(USART2); 
-
                 // Pass the message along to the NMEA send function 
                 m8q_nmea_write(I2C1, msg, m8q_message_size(msg, NULL_CHAR));
-                
 
                 // Send confirmation message to terminal 
                 uart_send_new_line(USART2); 

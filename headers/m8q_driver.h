@@ -41,14 +41,18 @@
 #define M8Q_I2C_8_BIT_ADDR 0x84  // M8Q I2C address (default) shifted to accomodate R/W bit 
 
 // M8Q registers 
-#define M8Q_READ_DS_ADDR 0xFD    // Register address to start reading data size 
+#define M8Q_REG_0XFD 0xFD    // Available bytes (high byte) register 
+#define M8Q_REG_0XFE 0xFE    // Available bytes (low byte) register 
+#define M8Q_REG_0XFF 0xFF    // Data stream register 
+
+// M8Q messages 
+#define M8Q_NO_DATA  0xff   // NMEA invalid data stream return value 
 
 // NMEA message format 
-#define M8Q_INVALID_NMEA 0xff   // NMEA invalid data stream return value 
-#define M8Q_VALID_NMEA   0x24   // 0x24 == '$' --> start of valid NMEA message 
-#define M8Q_END_NMEA     0x2A   // 0x2A == '*' --> indicates end of NMEA payload 
-#define M8Q_NMEA_END_MSG 6      // Length of string to append to NMEA message after payload 
-#define M8Q_NMEA_CS_LEN  2      // Number of characters in NMEA message checksum 
+#define M8Q_NMEA_START    0x24   // 0x24 == '$' --> start of NMEA message 
+#define M8Q_NMEA_END_PAY  0x2A   // 0x2A == '*' --> indicates end of NMEA message payload 
+#define M8Q_NMEA_END_MSG  6      // Length of string to append to NMEA message after payload 
+#define M8Q_NMEA_CS_LEN   2      // Number of characters in NMEA message checksum 
 
 // NMEA messages 
 #define M8Q_NMEA_RATE          40   // Message ID for NMEA RATE 
@@ -58,6 +62,8 @@
 
 // UBX message format 
 #define M8Q_UBX_SYNC1 0x42   // 0x42 == 'B' --> Start of UBX message (0xB562) 
+
+// UBX messages 
 
 //=======================================================================================
 
@@ -119,15 +125,10 @@ void m8q_init(void);
 
 
 //=======================================================================================
-// Message identification 
-//=======================================================================================
-
-
-//=======================================================================================
-// NMEA Read 
+// Read functions 
 
 /**
- * @brief Read an NMEA message from the M8Q 
+ * @brief Read a message from the M8Q 
  * 
  * @details Checks for a valid data stream using m8q_check_nmea_stream, and if valid then 
  *          proceeds to read a single NMEA message. The function returns an indication 
@@ -143,7 +144,7 @@ void m8q_init(void);
  * @param data : pointer to array that will store a single NMEA message 
  * @return NMEA_VALID : valid read indicator 
  */
-NMEA_VALID m8q_nmea_read(
+NMEA_VALID m8q_read(
     I2C_TypeDef *i2c, 
     uint8_t *data); 
 
@@ -160,13 +161,13 @@ NMEA_VALID m8q_nmea_read(
  * @param i2c : pointer to the I2C port used 
  * @param data_size : pointer to single-integer buffer to store the NMEA data stream size 
  */
-void m8q_nmea_read_ds(
+void m8q_check_data_size(
     I2C_TypeDef *i2c, 
     uint16_t *data_size); 
 
 
 /**
- * @brief Check the NMEA data stream 
+ * @brief Read the current value at the data stream register 
  * 
  * @details Reads the data stream register (0xFF) and stores the result in the argument 
  *          data_check. This function can be used to check for a valid data stream. If the 
@@ -177,7 +178,7 @@ void m8q_nmea_read_ds(
  * @param i2c : pointer to I2C port used 
  * @param data_check : pointer to single-integer buffer to store register 0xFF value 
  */
-void m8q_nmea_check_stream(
+void m8q_check_data_stream(
     I2C_TypeDef *i2c, 
     uint8_t *data_check); 
 
@@ -185,31 +186,21 @@ void m8q_nmea_check_stream(
 
 
 //=======================================================================================
-// NMEA Write 
+// Write functions 
 
 /**
- * @brief M8Q NMEA write 
+ * @brief M8Q write 
  * 
  * @details Writes an NMEA message to the receiver using a specified I2C interface 
  * 
  * @param i2c : pointer to I2C port used 
  * @param data : pointer to data buffer that contains the NMEA message 
  */
-void m8q_nmea_write(
+void m8q_write(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint8_t data_size); 
 
-//=======================================================================================
-
-
-//=======================================================================================
-// PUBX read 
-//=======================================================================================
-
-
-//=======================================================================================
-// PUBX write 
 //=======================================================================================
 
 
@@ -228,6 +219,11 @@ void m8q_nmea_write(
 
 // How to take user input to specify a UBX message 
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Getters 
 //=======================================================================================
 
 
