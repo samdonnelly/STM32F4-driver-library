@@ -197,7 +197,8 @@ void m8q_nmea_check_stream(
  */
 void m8q_nmea_write(
     I2C_TypeDef *i2c, 
-    uint8_t *data); 
+    uint8_t *data, 
+    uint8_t data_size); 
 
 //=======================================================================================
 
@@ -245,6 +246,16 @@ void m8q_nmea_write(
  */
 void m8q_user_config(
     I2C_TypeDef *i2c); 
+
+
+/**
+ * @brief M8Q NMEA config user interface 
+ * 
+ * @details Prints a prompt to the serial terminal to guide the user during configuration 
+ *          of the receiver. 
+ * 
+ */
+void m8q_nmea_config_ui(void); 
 
 //=======================================================================================
 
