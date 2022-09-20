@@ -105,7 +105,7 @@ typedef enum {
 // Data types 
 
 typedef m8q_nmea_read_status_t NMEA_VALID; 
-typedef uint16_t NMEA_CHECKSUM; 
+typedef uint16_t CHECKSUM; 
 
 //=======================================================================================
 

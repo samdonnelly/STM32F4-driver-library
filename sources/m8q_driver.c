@@ -36,7 +36,7 @@
  * @details 
  * 
  * @param i2c : pointer to the I2C port used 
- * @param msg : pointer to the message string 
+ * @param msg : pointer to the input message buffer  
  */
 void m8q_nmea_config(
     I2C_TypeDef *i2c, 
@@ -44,16 +44,56 @@ void m8q_nmea_config(
 
 
 /**
- * @brief M8Q NMEA message calculation 
+ * @brief M8Q NMEA checkusm calculation 
  * 
  * @details Calculates the NMEA config message checksum to be sent along with the message 
  *          to the receiver using an exlusive OR (XOR) operation on all bytes of the 
  *          message string. 
  * 
- * @param msg : pointer to message string 
- * @return NMEA_CHECKSUM : checksum of an NMEA message to be sent to the receiver 
+ * @param msg : pointer to message buffer  
+ * @return CHECKSUM : checksum of an NMEA message to be sent to the receiver 
  */
-NMEA_CHECKSUM m8q_nmea_checksum(
+CHECKSUM m8q_nmea_checksum(
+    uint8_t *msg); 
+
+
+/**
+ * @brief M8Q UBX config function 
+ * 
+ * @details 
+ * 
+ * @param i2c : pointer to the I2C port used 
+ * @param input_msg : pointer to the input message buffer 
+ */
+void m8q_ubx_config(
+    I2C_TypeDef *i2c, 
+    uint8_t *input_msg); 
+
+
+/**
+ * @brief M8Q UBX message conversion 
+ * 
+ * @details 
+ * 
+ * @param i2c 
+ * @param input_msg 
+ * @param new_msg 
+ */
+void m8q_ubx_msg_convert(
+    I2C_TypeDef *i2c, 
+    uint8_t *input_msg, 
+    uint8_t *new_msg); 
+
+
+/**
+ * @brief M8Q UBX checksum calculation 
+ * 
+ * @details 
+ * 
+ * @param msg : pointer to message buffer 
+ * @return CHECKSUM : checksum of a UBX message to be sent to the receiver 
+ */
+CHECKSUM m8q_ubx_checksum(
     uint8_t *msg); 
 
 
@@ -246,33 +286,33 @@ void m8q_user_config(
     I2C_TypeDef *i2c)
 {
     // Local variables 
-    uint8_t nmea_config_msg[M8Q_CONFIG_MSG]; 
+    uint8_t config_msg[M8Q_CONFIG_MSG]; 
 
     // Check if there is user input waiting 
     if (uart_data_ready(USART2))
     {
         // Read the input 
-        uart_getstr(USART2, (char *)nmea_config_msg, UART_STR_TERM_CARRIAGE); 
+        uart_getstr(USART2, (char *)config_msg, UART_STR_TERM_CARRIAGE); 
 
         // Identify the message type 
-        switch (nmea_config_msg[0])
+        switch (config_msg[0])
         {
             case M8Q_NMEA_START:  // NMEA message 
-                m8q_nmea_config(i2c, nmea_config_msg); 
+                m8q_nmea_config(i2c, config_msg); 
                 break;
 
             case M8Q_UBX_SYNC1:  // UBX message 
-                uart_send_new_line(USART2); 
-                uart_sendstring(USART2, "Could be a UBX message\r\n"); 
-                m8q_nmea_config_ui(); 
+                m8q_ubx_config(i2c, config_msg); 
                 break;
             
             default:  // Unknown input 
                 uart_send_new_line(USART2); 
                 uart_sendstring(USART2, "Unknown message type\r\n"); 
-                m8q_nmea_config_ui(); 
                 break;
         }
+
+        // Prompt the user for the next message 
+        m8q_nmea_config_ui();
     }
 }
 
@@ -287,7 +327,7 @@ void m8q_nmea_config(
     uint8_t msg_args = 0; 
     uint8_t msg_arg_count = 0; 
     uint8_t msg_arg_mask = 0; 
-    NMEA_CHECKSUM checksum = 0; 
+    CHECKSUM checksum = 0; 
     char term_str[M8Q_NMEA_END_MSG]; 
 
     // Check message header and ID 
@@ -341,7 +381,7 @@ void m8q_nmea_config(
                 for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) *msg_ptr++ = (uint8_t)term_str[i]; 
 
                 // Pass the message along to the NMEA send function 
-                m8q_nmea_write(I2C1, msg, m8q_message_size(msg, NULL_CHAR));
+                m8q_write(I2C1, msg, m8q_message_size(msg, NULL_CHAR));
 
                 // Send confirmation message to terminal 
                 uart_send_new_line(USART2); 
@@ -359,18 +399,15 @@ void m8q_nmea_config(
         uart_send_new_line(USART2); 
         uart_sendstring(USART2, "Only PUBX messages are supported\r\n"); 
     }
-
-    // Prompt for the next message 
-    m8q_nmea_config_ui(); 
 }
 
 
 // M8Q NMEA message calculation 
-NMEA_CHECKSUM m8q_nmea_checksum(
+CHECKSUM m8q_nmea_checksum(
     uint8_t *msg)
 {
     // Local variables 
-    NMEA_CHECKSUM checksum = 0; 
+    CHECKSUM checksum = 0; 
     uint8_t xor_result = 0; 
     uint8_t checksum_char = 0; 
 
@@ -393,6 +430,188 @@ NMEA_CHECKSUM m8q_nmea_checksum(
     }
 
     return checksum; 
+}
+
+
+// M8Q UBX config function 
+void m8q_ubx_config(
+    I2C_TypeDef *i2c, 
+    uint8_t *input_msg)
+{
+    // Local variables 
+    uint8_t send_msg[M8Q_CONFIG_MSG];   // Formatted UBX message to send to the receiver 
+    uint8_t resp_msg[M8Q_CONFIG_MSG];   // UBX message response from the receiver 
+    uint8_t payload_len = 0; 
+    uint8_t *msg_ptr = input_msg;       // Pointer to the input message buffer 
+
+    // Check the header and class 
+    if (str_compare("B5,62,06,", (char *)input_msg, BYTE_0))
+    {
+        // CFG (0x09) 
+        if (str_compare("09,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // DAT (0x06) 
+        else if (str_compare("06,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // HNR (0x5C) 
+        else if (str_compare("5C,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // MSG (0x01) 
+        else if (str_compare("01,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // NAV5 (0x24) 
+        else if (str_compare("24,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // NMEA (0x17) 
+        else if (str_compare("17,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // ODO (0x1E) 
+        else if (str_compare("1E,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // PM2 (0x3B) 
+        else if (str_compare("3B,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // PMS (0x86) 
+        else if (str_compare("86,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // PRT (0x00) 
+        else if (str_compare("00,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // RATE (0x08) 
+        else if (str_compare("08,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // RST (0x04) 
+        else if (str_compare("04,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        // RXM (0x11) 
+        else if (str_compare("11,", (char *)input_msg, BYTE_9)) 
+            payload_len = M8Q_NMEA_RATE_ARGS; 
+
+        else 
+        {
+            uart_send_new_line(USART2); 
+            uart_sendstring(USART2, "Unsupported UBX message ID\r\n");
+        }
+
+        // Valid ID seen 
+        if (payload_len) 
+        {
+            // Check action item 
+            if (str_compare("poll", (char *)input_msg, BYTE_12))
+            {
+                // Poll the message  
+
+                // Make bytes 12-15 zero characters (for no payload) 
+                msg_ptr += BYTE_12; 
+                for (uint8_t i = 0; i < 4; i++) *msg_ptr++ = 48;                 
+
+                // Terminate the buffer with NULL 
+                *msg_ptr++ = NULL_CHAR; 
+
+                // convert the message up to the checksum into the proper format 
+                m8q_ubx_msg_convert(i2c, input_msg, send_msg); 
+
+                uart_send_new_line(USART2); 
+                uart_sendstring(USART2, "Message converted.");
+                // uart_sendstring(USART2, (char *)input_msg); 
+                uart_send_new_line(USART2);
+            }
+            else
+            {
+                // Send a config 
+
+                // Make sure this section fully checks formatting before converting 
+
+                uart_send_new_line(USART2); 
+                uart_sendstring(USART2, "UBX config not yet supported\r\n");
+
+                // Check for a valid length input 
+
+                // Check the number of message inputs 
+
+                // Check that the number of inputs is valid 
+
+                // Terminate the buffer with NULL 
+            }
+
+            // convert the message up to the checksum into the proper format 
+
+            // Calculate the checksum 
+
+            // Add the checksum to the end
+        }
+    }
+    else
+    {
+        uart_send_new_line(USART2); 
+        uart_sendstring(USART2, "Unknown message type\r\n"); 
+    }
+}
+
+
+// M8Q UBX message convert 
+void m8q_ubx_msg_convert(
+    I2C_TypeDef *i2c, 
+    uint8_t *input_msg, 
+    uint8_t *new_msg)
+{
+    // Local variable 
+    uint8_t char1 = 0; 
+    uint8_t char2 = 0; 
+
+    // 
+    for (uint8_t input_counter = 0; *input_msg != NULL_CHAR; input_counter++) 
+    {
+        if (input_counter < 6)  // Header + Class + ID + payload length 
+        {
+            if ((*input_msg >= 48) && (*input_msg <= 57)) 
+                char1 = *input_msg++ - HEX_TO_NUM_CHAR; 
+            else if ((*input_msg >= 65) && (*input_msg <= 70))
+                char1 = *input_msg++ - HEX_TO_LET_CHAR; 
+            else  
+            { // Not valid 
+                char1 = 0; 
+                input_msg++; 
+            }
+            
+            if ((*input_msg >= 48) && (*input_msg <= 57)) 
+                char2 = *input_msg++ - HEX_TO_NUM_CHAR; 
+            else if ((*input_msg >= 65) && (*input_msg <= 70))
+                char2 = *input_msg++ - HEX_TO_LET_CHAR; 
+            else  
+            { // Not valid 
+                char2 = 0; 
+                input_msg++; 
+            }
+            
+            *new_msg++ = (char1 << SHIFT_4) | char2; 
+            if (input_counter != 4) input_msg++;  // bypass the comma 
+        }
+        // else   // Payload 
+        // {
+        //     // 
+        // }
+    }
+}
+
+
+// M8Q UBX checksum calculation 
+CHECKSUM m8q_ubx_checksum(
+    uint8_t *msg)
+{
+    // 
 }
 
 
