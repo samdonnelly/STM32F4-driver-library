@@ -61,9 +61,26 @@
 #define M8Q_NMEA_CONFIG_ARGS   5    // Number of arguments in CONFIG message 
 
 // UBX message format 
-#define M8Q_UBX_SYNC1 0x42   // 0x42 == 'B' --> Start of UBX message (0xB562) 
+#define M8Q_UBX_SYNC1 0x42      // 0x42 == 'B' --> Start of UBX message (0xB562) 
+#define M8Q_UBX_PAY_CHAR_LEN 4  // Terminal input characters to specify payload length 
+#define M8Q_UBX_CS_CALC_LEN  4  // Length to add to the payload length to calculate checksum 
+#define M8Q_UBX_HEADER_LEN   6  // Number of bytes before the payload 
+#define M8Q_UBX_CS_LEN       2  // Number of bytes in a UBC message checksum 
 
 // UBX messages 
+#define M8Q_UBX_CFG_CFG_LEN  12  // CFG message payload byte length 
+#define M8Q_UBX_CFG_DAT_LEN  44  // DAT message payload byte length 
+#define M8Q_UBX_CFG_HNR_LEN  4   // HNR message payload byte length 
+#define M8Q_UBX_CFG_MSG_LEN  2   // MSG message payload byte length 
+#define M8Q_UBX_CFG_NAV5_LEN 36  // NAV5 message payload byte length 
+#define M8Q_UBX_CFG_NMEA_LEN 4   // NMEA message payload byte length 
+#define M8Q_UBX_CFG_ODO_LEN  20  // ODO message payload byte length 
+#define M8Q_UBX_CFG_PM2_LEN  44  // PM2 message payload byte length 
+#define M8Q_UBX_CFG_PMS_LEN  8   // PMS message payload byte length 
+#define M8Q_UBX_CFG_PRT_LEN  1   // PRT message payload byte length 
+#define M8Q_UBX_CFG_RATE_LEN 6   // RATE message payload byte length 
+#define M8Q_UBX_CFG_RST_LEN  4   // RST message payload byte length 
+#define M8Q_UBX_CFG_RXM_LEN  2   // RXM message payload byte length 
 
 //=======================================================================================
 
@@ -98,6 +115,18 @@ typedef enum {
     M8Q_NMEA_READ_VALID
 } m8q_nmea_read_status_t; 
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    M8Q_UBX_MSG_CONV_FAIL, 
+    M8Q_UBX_MSG_CONV_SUCC
+} m8q_ubx_msg_convert_status_t; 
+
 //=======================================================================================
 
 
@@ -106,6 +135,7 @@ typedef enum {
 
 typedef m8q_nmea_read_status_t NMEA_VALID; 
 typedef uint16_t CHECKSUM; 
+typedef m8q_ubx_msg_convert_status_t UBX_MSG_STATUS; 
 
 //=======================================================================================
 

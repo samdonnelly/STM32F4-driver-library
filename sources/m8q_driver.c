@@ -79,7 +79,7 @@ void m8q_ubx_config(
  * @param input_msg 
  * @param new_msg 
  */
-void m8q_ubx_msg_convert(
+UBX_MSG_STATUS m8q_ubx_msg_convert(
     I2C_TypeDef *i2c, 
     uint8_t *input_msg, 
     uint8_t *new_msg); 
@@ -91,10 +91,12 @@ void m8q_ubx_msg_convert(
  * @details 
  * 
  * @param msg : pointer to message buffer 
+ * @param len : Length of checksum calculation range 
  * @return CHECKSUM : checksum of a UBX message to be sent to the receiver 
  */
 CHECKSUM m8q_ubx_checksum(
-    uint8_t *msg); 
+    uint8_t *msg, 
+    uint8_t len); 
 
 
 /**
@@ -439,65 +441,72 @@ void m8q_ubx_config(
     uint8_t *input_msg)
 {
     // Local variables 
-    uint8_t send_msg[M8Q_CONFIG_MSG];   // Formatted UBX message to send to the receiver 
-    uint8_t resp_msg[M8Q_CONFIG_MSG];   // UBX message response from the receiver 
+    uint8_t config_msg[M8Q_CONFIG_MSG];   // Formatted UBX message to send to the receiver 
+    // uint8_t resp_msg[M8Q_CONFIG_MSG];   // UBX message response from the receiver 
     uint8_t payload_len = 0; 
+    uint8_t checksum_calc_len = 0; 
+    CHECKSUM checksum = 0; 
     uint8_t *msg_ptr = input_msg;       // Pointer to the input message buffer 
+
+    for (uint8_t i = 0; i < M8Q_CONFIG_MSG; i++)
+    {
+        config_msg[i] = 254; 
+    }
 
     // Check the header and class 
     if (str_compare("B5,62,06,", (char *)input_msg, BYTE_0))
     {
         // CFG (0x09) 
         if (str_compare("09,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_CFG_LEN; 
 
         // DAT (0x06) 
         else if (str_compare("06,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_DAT_LEN; 
 
         // HNR (0x5C) 
         else if (str_compare("5C,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_HNR_LEN; 
 
         // MSG (0x01) 
         else if (str_compare("01,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_MSG_LEN; 
 
         // NAV5 (0x24) 
         else if (str_compare("24,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_NAV5_LEN; 
 
         // NMEA (0x17) 
         else if (str_compare("17,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_NMEA_LEN; 
 
         // ODO (0x1E) 
         else if (str_compare("1E,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_ODO_LEN; 
 
         // PM2 (0x3B) 
         else if (str_compare("3B,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_PM2_LEN; 
 
         // PMS (0x86) 
         else if (str_compare("86,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_PMS_LEN; 
 
         // PRT (0x00) 
         else if (str_compare("00,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_PRT_LEN; 
 
         // RATE (0x08) 
         else if (str_compare("08,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_RATE_LEN; 
 
         // RST (0x04) 
         else if (str_compare("04,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_RST_LEN; 
 
         // RXM (0x11) 
         else if (str_compare("11,", (char *)input_msg, BYTE_9)) 
-            payload_len = M8Q_NMEA_RATE_ARGS; 
+            payload_len = M8Q_UBX_CFG_RXM_LEN; 
 
         else 
         {
@@ -509,48 +518,54 @@ void m8q_ubx_config(
         if (payload_len) 
         {
             // Check action item 
-            if (str_compare("poll", (char *)input_msg, BYTE_12))
+            if (str_compare("poll", (char *)input_msg, BYTE_12))  // Send a poll request 
             {
-                // Poll the message  
-
-                // Make bytes 12-15 zero characters (for no payload) 
+                // Make the payload length zero and re-terminate the buffer 
                 msg_ptr += BYTE_12; 
-                for (uint8_t i = 0; i < 4; i++) *msg_ptr++ = 48;                 
-
-                // Terminate the buffer with NULL 
+                for (uint8_t i = 0; i < M8Q_UBX_PAY_CHAR_LEN; i++) *msg_ptr++ = ZERO_CHAR; 
                 *msg_ptr++ = NULL_CHAR; 
 
-                // convert the message up to the checksum into the proper format 
-                m8q_ubx_msg_convert(i2c, input_msg, send_msg); 
+                // 
+                payload_len = 0; 
+
+                // Set the checksum calculation range 
+                checksum_calc_len = M8Q_UBX_CS_CALC_LEN; 
+
+                //===================================================
+                // Add to after this if-else block 
+
+                // Convert the input message to the proper UBX message format 
+                m8q_ubx_msg_convert(i2c, input_msg, config_msg); 
+
+                // Calculate the checksum 
+                checksum = m8q_ubx_checksum(config_msg, checksum_calc_len); 
+
+                // Add the checksum to the end of the message buffer 
+                config_msg[M8Q_UBX_HEADER_LEN + payload_len] = (uint8_t)(checksum >> SHIFT_8); 
+                config_msg[M8Q_UBX_HEADER_LEN + payload_len + BYTE_1] = (uint8_t)(checksum); 
+
+                // Send he UBX message 
+                // message length = M8Q_UBX_HEADER_LEN + payload_len + M8Q_UBX_CS_LEN
 
                 uart_send_new_line(USART2); 
                 uart_sendstring(USART2, "Message converted.");
                 // uart_sendstring(USART2, (char *)input_msg); 
                 uart_send_new_line(USART2);
-            }
-            else
-            {
-                // Send a config 
 
-                // Make sure this section fully checks formatting before converting 
+                //===================================================
+            }
+            else  // Send a configuration 
+            {
+                // Read the length 
+
+                // Check the number of inputs 
+
+                // Set the checksum calculation range 
+                checksum_calc_len = payload_len + M8Q_UBX_CS_CALC_LEN; 
 
                 uart_send_new_line(USART2); 
                 uart_sendstring(USART2, "UBX config not yet supported\r\n");
-
-                // Check for a valid length input 
-
-                // Check the number of message inputs 
-
-                // Check that the number of inputs is valid 
-
-                // Terminate the buffer with NULL 
             }
-
-            // convert the message up to the checksum into the proper format 
-
-            // Calculate the checksum 
-
-            // Add the checksum to the end
         }
     }
     else
@@ -562,56 +577,83 @@ void m8q_ubx_config(
 
 
 // M8Q UBX message convert 
-void m8q_ubx_msg_convert(
+UBX_MSG_STATUS m8q_ubx_msg_convert(
     I2C_TypeDef *i2c, 
     uint8_t *input_msg, 
     uint8_t *new_msg)
 {
     // Local variable 
-    uint8_t char1 = 0; 
-    uint8_t char2 = 0; 
+    UBX_MSG_STATUS status = M8Q_UBX_MSG_CONV_FAIL; 
+    uint8_t char_count = 0; 
+    uint8_t low_nibble = 0; 
+    uint8_t high_nibble = 0; 
 
-    // 
-    for (uint8_t input_counter = 0; *input_msg != NULL_CHAR; input_counter++) 
+    // Loop through the user input 
+    while (TRUE)
     {
-        if (input_counter < 6)  // Header + Class + ID + payload length 
+        if (*input_msg != NULL_CHAR)
         {
-            if ((*input_msg >= 48) && (*input_msg <= 57)) 
-                char1 = *input_msg++ - HEX_TO_NUM_CHAR; 
-            else if ((*input_msg >= 65) && (*input_msg <= 70))
-                char1 = *input_msg++ - HEX_TO_LET_CHAR; 
-            else  
-            { // Not valid 
-                char1 = 0; 
-                input_msg++; 
+            low_nibble = *input_msg++; 
+
+            if (low_nibble != COMMA_CHAR)
+            {
+                // Check the character validity 
+                if ((low_nibble >= ZERO_CHAR) && (low_nibble <= NINE_CHAR))
+                    low_nibble -= HEX_TO_NUM_CHAR; 
+                
+                else if ((low_nibble >= A_CHAR) && (low_nibble <= F_CHAR)) 
+                    low_nibble -= HEX_TO_LET_CHAR; 
+                
+                else 
+                    break; 
+                
+                // Format two characters into one byte 
+                if (char_count)  // Format byte
+                    *new_msg++ = (high_nibble << SHIFT_4) | low_nibble; 
+                
+                else  // Store the byte 
+                    high_nibble = low_nibble; 
+
+                char_count = 1 - char_count;
             }
-            
-            if ((*input_msg >= 48) && (*input_msg <= 57)) 
-                char2 = *input_msg++ - HEX_TO_NUM_CHAR; 
-            else if ((*input_msg >= 65) && (*input_msg <= 70))
-                char2 = *input_msg++ - HEX_TO_LET_CHAR; 
-            else  
-            { // Not valid 
-                char2 = 0; 
-                input_msg++; 
+            else 
+            {
+                if (char_count) break; 
             }
-            
-            *new_msg++ = (char1 << SHIFT_4) | char2; 
-            if (input_counter != 4) input_msg++;  // bypass the comma 
         }
-        // else   // Payload 
-        // {
-        //     // 
-        // }
+        else
+        {
+            if (!char_count) status = M8Q_UBX_MSG_CONV_SUCC; 
+            break; 
+        }
     }
+    
+    return status; 
 }
 
 
 // M8Q UBX checksum calculation 
 CHECKSUM m8q_ubx_checksum(
-    uint8_t *msg)
+    uint8_t *msg, 
+    uint8_t len)
 {
-    // 
+    // Local variables 
+    uint8_t checksum_A = 0; 
+    uint8_t checksum_B = 0; 
+    CHECKSUM checksum = 0; 
+
+    // Exclude the sync characters from the checksum calculation 
+    msg += BYTE_2; 
+
+    // Calculate the checksum 
+    for (uint8_t i = 0; i < len; i++)
+    {
+        checksum_A += *msg++; 
+        checksum_B += checksum_A; 
+    }
+
+    checksum = (checksum_A << SHIFT_8) | checksum_B; 
+    return checksum; 
 }
 
 
