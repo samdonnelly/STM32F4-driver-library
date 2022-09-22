@@ -444,11 +444,13 @@ void i2c_read_to_term(
 }
 
 
-// 
+// I2C read data of a certain length that is defined within the message 
 void i2c_read_to_len(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
-    uint8_t len_to_read)
+    uint8_t len_location, 
+    uint8_t len_bytes, 
+    uint8_t add_bytes)
 {
     // Read I2C data like normal until a defined length (len_to_read) but don't stop the 
     // transaction (?). You might have to stop it if you use the original read function. 

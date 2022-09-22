@@ -131,12 +131,12 @@ void m8q_init(void)
 // NMEA Read 
 
 // Read a message from the M8Q 
-NMEA_VALID m8q_read(
+M8Q_READ_STAT m8q_read(
     I2C_TypeDef *i2c, 
     uint8_t *data)
 {
     // Local variables 
-    NMEA_VALID read_status = M8Q_NMEA_READ_INVALID; 
+    M8Q_READ_STAT read_status = M8Q_READ_INVALID; 
     uint8_t data_check = 0; 
 
     // Check for a valid data stream 
@@ -147,7 +147,7 @@ NMEA_VALID m8q_read(
         case M8Q_NO_DATA:  // No data stream available 
             break;
 
-        case M8Q_NMEA_START:  // Valid data stream - start of NMEA message 
+        case M8Q_NMEA_START:  // Start of NMEA message 
             // Generate a start condition 
             i2c_start(i2c); 
 
@@ -158,8 +158,22 @@ NMEA_VALID m8q_read(
             // Read the rest of the data stream until "\r\n" 
             i2c_read_to_term(i2c, data, M8Q_NMEA_END_PAY, I2C_4_BYTE); 
 
-            read_status = M8Q_NMEA_READ_VALID; 
+            read_status = M8Q_READ_VALID; 
             break;
+        
+        case M8Q_UBX_START:  // Start of UBX message 
+            // Generate a start condition 
+            i2c_start(i2c); 
+
+            // Send the device address with a read offset 
+            i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + M8Q_R_OFFSET); 
+            i2c_clear_addr(i2c);  
+
+            // Read the rest of the UBX message 
+            i2c_read_to_len(i2c, data, M8Q_UBX_LENGTH_OFST, M8Q_UBX_LENGTH_LEN, M8Q_UBX_CS_LEN); 
+
+            read_status = M8Q_READ_VALID; 
+            break; 
 
         default:  // Unknown data stream 
             break;
@@ -223,7 +237,7 @@ void m8q_check_data_stream(
 
 
 //=======================================================================================
-// NMEA write 
+// Write 
 
 // TODO send a save command/mask after writing a CFG message. 
 
@@ -441,17 +455,12 @@ void m8q_ubx_config(
     uint8_t *input_msg)
 {
     // Local variables 
+    uint8_t *msg_ptr = input_msg;         // Copy of pointer to input message buffer 
     uint8_t config_msg[M8Q_CONFIG_MSG];   // Formatted UBX message to send to the receiver 
-    // uint8_t resp_msg[M8Q_CONFIG_MSG];   // UBX message response from the receiver 
-    uint8_t payload_len = 0; 
-    uint8_t checksum_calc_len = 0; 
-    CHECKSUM checksum = 0; 
-    uint8_t *msg_ptr = input_msg;       // Pointer to the input message buffer 
-
-    for (uint8_t i = 0; i < M8Q_CONFIG_MSG; i++)
-    {
-        config_msg[i] = 254; 
-    }
+    uint8_t resp_msg[M8Q_CONFIG_MSG];     // UBX message response from the receiver 
+    uint8_t payload_len = 0;              // Variable payload length - message dependent 
+    uint8_t checksum_calc_len = 0;        // Bytes length over which to calculate the checksum 
+    CHECKSUM checksum = 0;                // Formatted UBX message checksum 
 
     // Check the header and class 
     if (str_compare("B5,62,06,", (char *)input_msg, BYTE_0))
@@ -522,14 +531,14 @@ void m8q_ubx_config(
             {
                 // Make the payload length zero and re-terminate the buffer 
                 msg_ptr += BYTE_12; 
-                for (uint8_t i = 0; i < M8Q_UBX_PAY_CHAR_LEN; i++) *msg_ptr++ = ZERO_CHAR; 
+                for (uint8_t i = 0; i < BYTE_4; i++) *msg_ptr++ = ZERO_CHAR; 
                 *msg_ptr++ = NULL_CHAR; 
 
-                // 
+                // Poll requests have no payload 
                 payload_len = 0; 
 
                 // Set the checksum calculation range 
-                checksum_calc_len = M8Q_UBX_CS_CALC_LEN; 
+                checksum_calc_len = M8Q_UBX_MSG_FMT_LEN; 
 
                 //===================================================
                 // Add to after this if-else block 
@@ -544,13 +553,16 @@ void m8q_ubx_config(
                 config_msg[M8Q_UBX_HEADER_LEN + payload_len] = (uint8_t)(checksum >> SHIFT_8); 
                 config_msg[M8Q_UBX_HEADER_LEN + payload_len + BYTE_1] = (uint8_t)(checksum); 
 
-                // Send he UBX message 
-                // message length = M8Q_UBX_HEADER_LEN + payload_len + M8Q_UBX_CS_LEN
+                // Send the UBX message 
+                m8q_write(i2c, config_msg, M8Q_UBX_HEADER_LEN + payload_len + M8Q_UBX_CS_LEN); 
 
-                uart_send_new_line(USART2); 
-                uart_sendstring(USART2, "Message converted.");
-                // uart_sendstring(USART2, (char *)input_msg); 
-                uart_send_new_line(USART2);
+                // Read the message response 
+                while(!(m8q_read(i2c, resp_msg))); 
+
+                // uart_send_new_line(USART2); 
+                // uart_sendstring(USART2, "Message converted.");
+                // uart_sendstring(USART2, (char *)resp_msg); 
+                // uart_send_new_line(USART2);
 
                 //===================================================
             }
@@ -561,7 +573,7 @@ void m8q_ubx_config(
                 // Check the number of inputs 
 
                 // Set the checksum calculation range 
-                checksum_calc_len = payload_len + M8Q_UBX_CS_CALC_LEN; 
+                checksum_calc_len = payload_len + M8Q_UBX_MSG_FMT_LEN; 
 
                 uart_send_new_line(USART2); 
                 uart_sendstring(USART2, "UBX config not yet supported\r\n");

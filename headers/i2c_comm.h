@@ -430,18 +430,22 @@ void i2c_read_to_term(
 
 
 /**
- * @brief I2C read to the length byte(s) in a message 
+ * @brief I2C read data of a certain length that is defined within the message 
  * 
  * @details 
  * 
- * @param i2c 
- * @param data 
- * @param len_to_read 
+ * @param i2c : pointer to the I2C port used 
+ * @param data : pointer to buffer that stores the read data  
+ * @param len_location : where the message length is located in the message 
+ * @param len_bytes : number of bytes used to define the length within the message 
+ * @param add_bytes : additional bytes to read at the end of the message (if needed) 
  */
 void i2c_read_to_len(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
-    uint8_t len_to_read); 
+    uint8_t len_location, 
+    uint8_t len_bytes, 
+    uint8_t add_bytes); 
 
 //=======================================================================================
 

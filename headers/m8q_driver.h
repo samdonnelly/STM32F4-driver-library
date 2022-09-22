@@ -61,11 +61,13 @@
 #define M8Q_NMEA_CONFIG_ARGS   5    // Number of arguments in CONFIG message 
 
 // UBX message format 
-#define M8Q_UBX_SYNC1 0x42      // 0x42 == 'B' --> Start of UBX message (0xB562) 
-#define M8Q_UBX_PAY_CHAR_LEN 4  // Terminal input characters to specify payload length 
-#define M8Q_UBX_CS_CALC_LEN  4  // Length to add to the payload length to calculate checksum 
-#define M8Q_UBX_HEADER_LEN   6  // Number of bytes before the payload 
-#define M8Q_UBX_CS_LEN       2  // Number of bytes in a UBC message checksum 
+#define M8Q_UBX_START        181   // 181 == 0xB5 --> Start of received UBX message 
+#define M8Q_UBX_SYNC1        0x42  // 0x42 == 'B' --> Start of user config UBX message 
+#define M8Q_UBX_MSG_FMT_LEN  4     // Message format length: CLASS + ID + LENGTH 
+#define M8Q_UBX_LENGTH_OFST  4     // LENGTH field offset from start of UBX message frame 
+#define M8Q_UBX_LENGTH_LEN   2     // LENGTH field length 
+#define M8Q_UBX_HEADER_LEN   6     // Number of bytes before the payload 
+#define M8Q_UBX_CS_LEN       2     // Number of bytes in a UBC message checksum 
 
 // UBX messages 
 #define M8Q_UBX_CFG_CFG_LEN  12  // CFG message payload byte length 
@@ -111,9 +113,9 @@ typedef enum {
  * 
  */
 typedef enum {
-    M8Q_NMEA_READ_INVALID, 
-    M8Q_NMEA_READ_VALID
-} m8q_nmea_read_status_t; 
+    M8Q_READ_INVALID, 
+    M8Q_READ_VALID
+} m8q_read_status_t; 
 
 
 /**
@@ -133,7 +135,7 @@ typedef enum {
 //=======================================================================================
 // Data types 
 
-typedef m8q_nmea_read_status_t NMEA_VALID; 
+typedef m8q_read_status_t M8Q_READ_STAT; 
 typedef uint16_t CHECKSUM; 
 typedef m8q_ubx_msg_convert_status_t UBX_MSG_STATUS; 
 
@@ -172,9 +174,9 @@ void m8q_init(void);
  * 
  * @param i2c : pointer to the I2C port used 
  * @param data : pointer to array that will store a single NMEA message 
- * @return NMEA_VALID : valid read indicator 
+ * @return M8Q_READ_STAT : valid read indicator 
  */
-NMEA_VALID m8q_read(
+M8Q_READ_STAT m8q_read(
     I2C_TypeDef *i2c, 
     uint8_t *data); 
 
