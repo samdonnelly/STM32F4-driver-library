@@ -433,8 +433,11 @@ void i2c_read_to_term(
  * @brief I2C read data of a certain length that is defined within the message 
  * 
  * @details 
+ *          ***Note: Reading the length in the message is currently only supported 
+ *                   for little endian format. 
  * 
  * @param i2c : pointer to the I2C port used 
+ * @param address : 
  * @param data : pointer to buffer that stores the read data  
  * @param len_location : where the message length is located in the message 
  * @param len_bytes : number of bytes used to define the length within the message 
@@ -442,6 +445,7 @@ void i2c_read_to_term(
  */
 void i2c_read_to_len(
     I2C_TypeDef *i2c, 
+    uint8_t address, 
     uint8_t *data, 
     uint8_t len_location, 
     uint8_t len_bytes, 

@@ -162,15 +162,23 @@ M8Q_READ_STAT m8q_read(
             break;
         
         case M8Q_UBX_START:  // Start of UBX message 
+            // 
+            *data++ = data_check; 
+
             // Generate a start condition 
             i2c_start(i2c); 
 
             // Send the device address with a read offset 
             i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + M8Q_R_OFFSET); 
-            i2c_clear_addr(i2c);  
+            i2c_clear_addr(i2c); 
 
             // Read the rest of the UBX message 
-            i2c_read_to_len(i2c, data, M8Q_UBX_LENGTH_OFST, M8Q_UBX_LENGTH_LEN, M8Q_UBX_CS_LEN); 
+            i2c_read_to_len(i2c, 
+                            M8Q_I2C_8_BIT_ADDR + M8Q_R_OFFSET, 
+                            data, 
+                            M8Q_UBX_LENGTH_OFST-BYTE_1, 
+                            M8Q_UBX_LENGTH_LEN, 
+                            M8Q_UBX_CS_LEN); 
 
             read_status = M8Q_READ_VALID; 
             break; 
@@ -454,6 +462,11 @@ void m8q_ubx_config(
     I2C_TypeDef *i2c, 
     uint8_t *input_msg)
 {
+    // TODO 
+    //  - Either create a clear buffer function or get rid of message buffer setting loop 
+    //  - MSG has 2 or 3 required payload lengths - need a better system 
+    //  - Polling messages should be able to retain the specified msg ID payload length 
+
     // Local variables 
     uint8_t *msg_ptr = input_msg;         // Copy of pointer to input message buffer 
     uint8_t config_msg[M8Q_CONFIG_MSG];   // Formatted UBX message to send to the receiver 
@@ -461,6 +474,13 @@ void m8q_ubx_config(
     uint8_t payload_len = 0;              // Variable payload length - message dependent 
     uint8_t checksum_calc_len = 0;        // Bytes length over which to calculate the checksum 
     CHECKSUM checksum = 0;                // Formatted UBX message checksum 
+    uint16_t msg_len = 0; 
+
+    for (uint8_t i = 0; i < M8Q_CONFIG_MSG; i++)
+    {
+        config_msg[i] = 255; 
+        resp_msg[i] = 255; 
+    }
 
     // Check the header and class 
     if (str_compare("B5,62,06,", (char *)input_msg, BYTE_0))
@@ -517,25 +537,24 @@ void m8q_ubx_config(
         else if (str_compare("11,", (char *)input_msg, BYTE_9)) 
             payload_len = M8Q_UBX_CFG_RXM_LEN; 
 
+        // Not a valid ID 
         else 
         {
             uart_send_new_line(USART2); 
             uart_sendstring(USART2, "Unsupported UBX message ID\r\n");
         }
 
-        // Valid ID seen 
+        // Check if a valid ID was seen 
         if (payload_len) 
         {
             // Check action item 
             if (str_compare("poll", (char *)input_msg, BYTE_12))  // Send a poll request 
             {
                 // Make the payload length zero and re-terminate the buffer 
+                payload_len = 0; 
                 msg_ptr += BYTE_12; 
                 for (uint8_t i = 0; i < BYTE_4; i++) *msg_ptr++ = ZERO_CHAR; 
                 *msg_ptr++ = NULL_CHAR; 
-
-                // Poll requests have no payload 
-                payload_len = 0; 
 
                 // Set the checksum calculation range 
                 checksum_calc_len = M8Q_UBX_MSG_FMT_LEN; 
@@ -559,10 +578,19 @@ void m8q_ubx_config(
                 // Read the message response 
                 while(!(m8q_read(i2c, resp_msg))); 
 
-                // uart_send_new_line(USART2); 
-                // uart_sendstring(USART2, "Message converted.");
-                // uart_sendstring(USART2, (char *)resp_msg); 
-                // uart_send_new_line(USART2);
+                msg_len = (resp_msg[5] << SHIFT_8) | resp_msg[4]; 
+
+                uart_send_new_line(USART2); 
+                uart_sendstring(USART2, "Receiver raw response: \r\n"); 
+                for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN + msg_len + M8Q_UBX_CS_LEN); i++)
+                {
+                    uart_send_integer(USART2, (int16_t)resp_msg[i]); 
+                    uart_send_new_line(USART2);
+                }
+
+                uart_send_new_line(USART2); 
+                uart_sendstring(USART2, "Message sent and received.");
+                uart_send_new_line(USART2); 
 
                 //===================================================
             }

@@ -447,23 +447,34 @@ void i2c_read_to_term(
 // I2C read data of a certain length that is defined within the message 
 void i2c_read_to_len(
     I2C_TypeDef *i2c, 
+    uint8_t address, 
     uint8_t *data, 
     uint8_t len_location, 
     uint8_t len_bytes, 
     uint8_t add_bytes)
 {
-    // Read I2C data like normal until a defined length (len_to_read) but don't stop the 
-    // transaction (?). You might have to stop it if you use the original read function. 
+    // Local variables 
+    uint16_t msg_length = 0; 
 
-    // Once that length is reached, record the value/byte(s) at that point in the message. 
-    // (this will tell you the length of the payload) 
+    // Read up to and including the part of the message that specifies the length 
+    i2c_read_master_mode(i2c, data, len_location + len_bytes); 
 
-    // Correct the length to accomodate for whatever remains after the payload (ex. 
-    // checksum) 
-    // TODO add this as an argument? 
-
-    // Continue a normal read to the specified remaining message length and stop the 
-    // transaction. 
+    // Extract the length and correct it using the 'add_bytes' argument 
+    data += len_location; 
+    if (len_bytes == BYTE_1)
+        msg_length = (uint16_t)(*data++) + add_bytes; 
+    else if (len_bytes == BYTE_2)
+    {
+        msg_length  = (uint16_t)(*data++); 
+        msg_length |= (uint16_t)(*data++ << SHIFT_8); 
+        msg_length += add_bytes; 
+    }
+    
+    // Read the rest of the message 
+    i2c_start(i2c); 
+    i2c_write_address(i2c, address); 
+    i2c_clear_addr(i2c); 
+    i2c_read_master_mode(i2c, data, msg_length); 
 
     // Add a termination/NULL character? You will need to offset the 'data' address for 
     // when you return from the I2C read function. 
