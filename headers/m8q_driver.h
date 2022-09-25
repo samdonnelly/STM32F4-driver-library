@@ -33,7 +33,7 @@
 // Macros 
 
 // Device configuration 
-#define M8Q_USER_CONFIG 1   // When set to non-zero then user config code becomes available 
+#define M8Q_USER_CONFIG 0   // When set to non-zero then user config code becomes available 
 #define M8Q_CONFIG_MSG  75  // Config message max length 
 
 // Device parameters 

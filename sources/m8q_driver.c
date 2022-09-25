@@ -41,23 +41,7 @@
  */
 uint8_t m8q_message_size(
     uint8_t *msg, 
-    uint8_t term_char);
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param msg 
- * @param term_char 
- * @param start_byte 
- * @return uint16_t 
- */
-uint16_t m8q_msg_arg_count(
-    uint8_t *msg, 
-    uint8_t term_char, 
-    uint8_t start_byte); 
+    uint8_t term_char); 
 
 
 /**
@@ -182,7 +166,7 @@ M8Q_READ_STAT m8q_read(
             break;
         
         case M8Q_UBX_START:  // Start of UBX message 
-            // 
+            // Capture the byte checked in the message response 
             *data++ = data_check; 
 
             // Generate a start condition 
@@ -312,40 +296,6 @@ uint8_t m8q_message_size(
     return msg_len; 
 }
 
-
-// M8Q message argument counter 
-uint16_t m8q_msg_arg_count(
-    uint8_t *msg, 
-    uint8_t term_char, 
-    uint8_t start_byte)
-{
-    // Local variables 
-    uint16_t msg_arg_count = 0; 
-    uint8_t msg_arg_mask = 0; 
-
-    // Where the arguments start in the message 
-    msg += start_byte; 
-
-    while(*msg != term_char) 
-    {
-        if (*msg == COMMA_CHAR)
-        {
-            msg_arg_mask = 0; 
-        }
-        else 
-        {
-            if (!msg_arg_mask)
-            {
-                msg_arg_count++;   // Count an input 
-                msg_arg_mask++;    // Prevent from double counting an input 
-            }
-        }
-        msg++; 
-    }
-
-    return msg_arg_count; 
-}
-
 //=======================================================================================
 
 
@@ -429,8 +379,6 @@ void m8q_nmea_config(
         // Check the number of message inputs 
         if (msg_args)
         {
-            // if (m8q_msg_arg_count(msg, CR_CHAR, BYTE_9) == msg_args); 
-
             msg_ptr += BYTE_9; 
 
             while(*msg_ptr != CR_CHAR) 
@@ -523,7 +471,6 @@ void m8q_ubx_config(
     uint8_t config_msg[M8Q_CONFIG_MSG];   // Formatted UBX message to send to the receiver 
     uint8_t resp_msg[M8Q_CONFIG_MSG];     // UBX message response from the receiver 
     CHECKSUM checksum = 0;                // Formatted UBX message checksum 
-    uint16_t msg_len = 0; 
 
     // User inputs 
     uint8_t input_msg_len = m8q_message_size(input_msg, CR_CHAR); 
@@ -567,16 +514,14 @@ void m8q_ubx_config(
                     pl_len = (pl_len_input[1] << SHIFT_8) | pl_len_input[0]; 
 
                     // Check the argument format 
-                    // TODO document the byte offsets - here I had to change 17->16
-                    // if (pl_len == m8q_msg_arg_count(input_msg, CR_CHAR, BYTE_16))
-                    if (input_msg_len < BYTE_17) input_msg_len++; 
-                    byte_count = 0; 
+                    if (input_msg_len < BYTE_17) 
+                        input_msg_len++;  // correction for variable payload length 
+                    
+                    byte_count = 0;  // Reset the byte count to check payload length 
+                    
                     if (m8q_ubx_msg_convert(i2c, input_msg_len-BYTE_17, BYTE_17,
                                             input_msg, &byte_count, pl_arg_input))
-                    {
-                        uart_send_new_line(USART2); 
-                        uart_sendstring(USART2, "Payload format is valid.\r\n");
-                        
+                    {                        
                         if (pl_len == byte_count)
                             format_ok++; 
                         
@@ -601,48 +546,40 @@ void m8q_ubx_config(
 
             if (format_ok)
             {
-                // // Convert the input message to the proper UBX message format 
-                // if (m8q_ubx_msg_convert(i2c, input_msg_len, BYTE_0, 
-                //                         input_msg, &byte_count, config_msg))
-                // {
-                //     // Calculate the checksum 
-                //     checksum = m8q_ubx_checksum(config_msg, M8Q_UBX_MSG_FMT_LEN+pl_len); 
+                // Convert the input message to the proper UBX message format 
+                if (m8q_ubx_msg_convert(i2c, input_msg_len, BYTE_0, 
+                                        input_msg, &byte_count, config_msg))
+                {
+                    // Calculate the checksum 
+                    checksum = m8q_ubx_checksum(config_msg, M8Q_UBX_MSG_FMT_LEN+pl_len); 
 
-                //     // Add the checksum to the end of the message buffer 
-                //     config_msg[M8Q_UBX_HEADER_LEN+pl_len] = (uint8_t)(checksum >> SHIFT_8); 
-                //     config_msg[M8Q_UBX_HEADER_LEN+pl_len+BYTE_1] = (uint8_t)(checksum); 
+                    // Add the checksum to the end of the message buffer 
+                    config_msg[M8Q_UBX_HEADER_LEN+pl_len] = (uint8_t)(checksum >> SHIFT_8); 
+                    config_msg[M8Q_UBX_HEADER_LEN+pl_len+BYTE_1] = (uint8_t)(checksum); 
 
-                //     // Send the UBX message 
-                //     m8q_write(i2c, config_msg, M8Q_UBX_HEADER_LEN + payload_len + M8Q_UBX_CS_LEN); 
+                    // Send the UBX message 
+                    m8q_write(i2c, config_msg, M8Q_UBX_HEADER_LEN + pl_len + M8Q_UBX_CS_LEN); 
 
-                //     // Read the message response 
-                //     while(!(m8q_read(i2c, resp_msg))); 
+                    // Read the message response 
+                    while(!(m8q_read(i2c, resp_msg))); 
 
-                //     msg_len = (resp_msg[5] << SHIFT_8) | resp_msg[4]; 
+                    pl_len = (resp_msg[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
+                                                        resp_msg[M8Q_UBX_LENGTH_OFST]; 
 
-                //     uart_send_new_line(USART2); 
-                //     uart_sendstring(USART2, "Receiver raw response: \r\n"); 
-                //     for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN + msg_len + M8Q_UBX_CS_LEN); i++)
-                //     {
-                //         uart_send_integer(USART2, (int16_t)resp_msg[i]); 
-                //         uart_send_new_line(USART2);
-                //     }
+                    uart_send_new_line(USART2); 
+                    uart_sendstring(USART2, "Message sent. Receiver response: \r\n"); 
 
-                //     uart_send_new_line(USART2); 
-                //     uart_sendstring(USART2, "Message sent and received.");
-                //     uart_send_new_line(USART2); 
-                //     uart_send_new_line(USART2); 
-                //     uart_sendstring(USART2, "Message conversion successful.\r\n");  
-                //     uart_send_new_line(USART2); 
-                // }
-                // else
-                // {
-                //     uart_send_new_line(USART2); 
-                //     uart_sendstring(USART2, "Message conversion failed. Check format.\r\n");
-                // }
-
-                uart_send_new_line(USART2); 
-                uart_sendstring(USART2, "Format OK.\r\n");
+                    for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN+pl_len+M8Q_UBX_CS_LEN); i++)
+                    {
+                        uart_send_integer(USART2, (int16_t)resp_msg[i]); 
+                        uart_send_new_line(USART2);
+                    }
+                }
+                else
+                {
+                    uart_send_new_line(USART2); 
+                    uart_sendstring(USART2, "Message conversion failed. Check format.\r\n");
+                }
             } 
         } 
         else 
