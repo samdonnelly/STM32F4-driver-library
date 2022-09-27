@@ -43,6 +43,13 @@ uint8_t m8q_message_size(
     uint8_t *msg, 
     uint8_t term_char); 
 
+//=======================================================================================
+
+
+//=======================================================================================
+// User config peripheral functions 
+
+#if M8Q_USER_CONFIG 
 
 /**
  * @brief M8Q NMEA config function 
@@ -114,7 +121,9 @@ UBX_MSG_STATUS m8q_ubx_msg_convert(
  */
 CHECKSUM m8q_ubx_checksum(
     uint8_t *msg, 
-    uint16_t len);  
+    uint16_t len); 
+
+#endif  // M8Q_USER_CONFIG
 
 //=======================================================================================
 
@@ -139,6 +148,8 @@ M8Q_READ_STAT m8q_read(
     I2C_TypeDef *i2c, 
     uint8_t *data)
 {
+    // TODO make sure this functions reads all available messages (& stores them) in one go 
+    
     // Local variables 
     M8Q_READ_STAT read_status = M8Q_READ_INVALID; 
     uint8_t data_check = 0; 

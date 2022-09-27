@@ -1,31 +1,28 @@
 /**
- * @file potentiometer_read.h
+ * @file m8q_controller.h
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief 
+ * @brief SAM-M8Q GPS controller 
  * 
  * @version 0.1
- * @date 2022-08-23
+ * @date 2022-09-26
  * 
  * @copyright Copyright (c) 2022
  * 
  */
 
-#ifndef _ADC_DRIVER_H_
-#define _ADC_DRIVER_H_
+#ifndef _M8Q_CONTROLLER_H_ 
+#define _M8Q_CONTROLLER_H_ 
 
 //=======================================================================================
 // Includes 
 
-// Toolkit 
-#include "stm32f411xe.h"
-#include "tools.h"
+// Device drivers 
+#include "m8q_driver.h"
 
-// Communication drivers 
-
-// Other drivers 
+// Libraries 
 
 //=======================================================================================
 
-#endif  // _ADC_DRIVER_H_
+#endif  // _M8Q_CONTROLLER_H_ 
