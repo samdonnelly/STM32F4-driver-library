@@ -129,6 +129,97 @@ CHECKSUM m8q_ubx_checksum(
 
 
 //=======================================================================================
+// Messages 
+
+// NMEA POSITION message fields  
+typedef struct m8q_nmea_pos_s 
+{
+    char time[BYTE_9];        // UTC time 
+    char lat[BYTE_11];        // Latitude 
+    char NS[BYTE_1];          // North/South indicator 
+    char lon[BYTE_11];        // Longitude 
+    char EW[BYTE_1];          // East/West indicator 
+    char altRef[BYTE_9];      // Altitude above user datum ellipsoid 
+    char navStat[BYTE_2];     // Navigation status 
+    char hAcc[BYTE_5];        // Horizontal accuracy estimate 
+    char vAcc[BYTE_5];        // Vertical accuracy estimate 
+    char SOG[BYTE_6];         // Speed over ground 
+    char COG[BYTE_6];         // Course over ground 
+    char vVel[BYTE_6];        // Vertical velocity (+ downwards) 
+    char diffAge[BYTE_1];     // Age of differential corrections 
+    char HDOP[BYTE_5];        // Horizontal dilution of precision 
+    char VDOP[BYTE_5];        // Vertical dilution of precision 
+    char TDOP[BYTE_5];        // Time dilution of precision 
+    char numSvs[BYTE_2];      // Number of satellites ued in the navigation solution 
+    char reserved[BYTE_1];    // reserved --> 0 
+    char DR[BYTE_1];          // DR used 
+} 
+m8q_nmea_pos_t;
+
+
+// NMEA TIME message fields 
+typedef struct m8q_nmea_time_s
+{
+    char time[BYTE_9]; 
+    char date[BYTE_6]; 
+} 
+m8q_nmea_time_t;
+
+
+// NMEA RATE message fields 
+typedef struct m8q_nmea_rate_s
+{
+    char msgID[BYTE_8]; 
+} 
+m8q_nmea_rate_t; 
+
+
+// NMEA message data 
+typedef struct m8q_msg_data_s
+{
+    m8q_nmea_pos_t pos_data;      // POSITION message 
+    m8q_nmea_time_t time_data;    // TIME message 
+    m8q_nmea_rate_t rate_data;    // RATE message 
+} 
+m8q_msg_data_t; 
+
+
+// NMEA message data instance 
+m8q_msg_data_t m8q_msg_data; 
+
+
+// NMEA POSITION message 
+static char* position[M8Q_NMEA_POS_ARGS] = { m8q_msg_data.pos_data.time, 
+                                             m8q_msg_data.pos_data.lat, 
+                                             m8q_msg_data.pos_data.NS, 
+                                             m8q_msg_data.pos_data.lon, 
+                                             m8q_msg_data.pos_data.EW, 
+                                             m8q_msg_data.pos_data.altRef, 
+                                             m8q_msg_data.pos_data.navStat, 
+                                             m8q_msg_data.pos_data.hAcc, 
+                                             m8q_msg_data.pos_data.vAcc,
+                                             m8q_msg_data.pos_data.SOG,
+                                             m8q_msg_data.pos_data.COG,
+                                             m8q_msg_data.pos_data.vVel,
+                                             m8q_msg_data.pos_data.diffAge,
+                                             m8q_msg_data.pos_data.HDOP,
+                                             m8q_msg_data.pos_data.VDOP,
+                                             m8q_msg_data.pos_data.TDOP,
+                                             m8q_msg_data.pos_data.numSvs,
+                                             m8q_msg_data.pos_data.reserved,
+                                             m8q_msg_data.pos_data.DR }; 
+
+// NMEA TIME message 
+static char* time[M8Q_NMEA_TIME_ARGS] = { m8q_msg_data.time_data.time, 
+                                          m8q_msg_data.time_data.date }; 
+
+// NMEA RATE message 
+static char* rate[M8Q_NMEA_RATE_ARGS] = { m8q_msg_data.rate_data.msgID }; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 // 

@@ -59,6 +59,8 @@
 #define M8Q_NMEA_RATE_ARGS     7    // Number of arguments in RATE message 
 #define M8Q_NMEA_CONFIG        41   // Message ID for NMEA CONFIG 
 #define M8Q_NMEA_CONFIG_ARGS   5    // Number of arguments in CONFIG message 
+#define M8Q_NMEA_POS_ARGS      19   // Number of data fields in POSITION 
+#define M8Q_NMEA_TIME_ARGS     10   // Number of data fields in TIME 
 
 // UBX message format 
 #define M8Q_UBX_START        181   // 181 == 0xB5 --> Start of received UBX message 
@@ -70,19 +72,6 @@
 #define M8Q_UBX_CS_LEN       2     // Number of bytes in a UBC message checksum 
 
 // UBX messages 
-#define M8Q_UBX_CFG_CFG_LEN  12  // CFG message payload byte length 
-#define M8Q_UBX_CFG_DAT_LEN  44  // DAT message payload byte length 
-#define M8Q_UBX_CFG_HNR_LEN  4   // HNR message payload byte length 
-#define M8Q_UBX_CFG_MSG_LEN  2   // MSG message payload byte length 
-#define M8Q_UBX_CFG_NAV5_LEN 36  // NAV5 message payload byte length 
-#define M8Q_UBX_CFG_NMEA_LEN 4   // NMEA message payload byte length 
-#define M8Q_UBX_CFG_ODO_LEN  20  // ODO message payload byte length 
-#define M8Q_UBX_CFG_PM2_LEN  44  // PM2 message payload byte length 
-#define M8Q_UBX_CFG_PMS_LEN  8   // PMS message payload byte length 
-#define M8Q_UBX_CFG_PRT_LEN  1   // PRT message payload byte length 
-#define M8Q_UBX_CFG_RATE_LEN 6   // RATE message payload byte length 
-#define M8Q_UBX_CFG_RST_LEN  4   // RST message payload byte length 
-#define M8Q_UBX_CFG_RXM_LEN  2   // RXM message payload byte length 
 
 //=======================================================================================
 
