@@ -134,25 +134,25 @@ CHECKSUM m8q_ubx_checksum(
 // NMEA POSITION message fields  
 typedef struct m8q_nmea_pos_s 
 {
-    char time[BYTE_9];        // UTC time 
-    char lat[BYTE_11];        // Latitude 
-    char NS[BYTE_1];          // North/South indicator 
-    char lon[BYTE_11];        // Longitude 
-    char EW[BYTE_1];          // East/West indicator 
-    char altRef[BYTE_9];      // Altitude above user datum ellipsoid 
-    char navStat[BYTE_2];     // Navigation status 
-    char hAcc[BYTE_5];        // Horizontal accuracy estimate 
-    char vAcc[BYTE_5];        // Vertical accuracy estimate 
-    char SOG[BYTE_6];         // Speed over ground 
-    char COG[BYTE_6];         // Course over ground 
-    char vVel[BYTE_6];        // Vertical velocity (+ downwards) 
-    char diffAge[BYTE_1];     // Age of differential corrections 
-    char HDOP[BYTE_5];        // Horizontal dilution of precision 
-    char VDOP[BYTE_5];        // Vertical dilution of precision 
-    char TDOP[BYTE_5];        // Time dilution of precision 
-    char numSvs[BYTE_2];      // Number of satellites ued in the navigation solution 
-    char reserved[BYTE_1];    // reserved --> 0 
-    char DR[BYTE_1];          // DR used 
+    char time    [BYTE_9];     // UTC time 
+    char lat     [BYTE_11];    // Latitude 
+    char NS      [BYTE_1];     // North/South indicator 
+    char lon     [BYTE_11];    // Longitude 
+    char EW      [BYTE_1];     // East/West indicator 
+    char altRef  [BYTE_9];     // Altitude above user datum ellipsoid 
+    char navStat [BYTE_2];     // Navigation status 
+    char hAcc    [BYTE_5];     // Horizontal accuracy estimate 
+    char vAcc    [BYTE_5];     // Vertical accuracy estimate 
+    char SOG     [BYTE_6];     // Speed over ground 
+    char COG     [BYTE_6];     // Course over ground 
+    char vVel    [BYTE_6];     // Vertical velocity (+ downwards) 
+    char diffAge [BYTE_1];     // Age of differential corrections 
+    char HDOP    [BYTE_5];     // Horizontal dilution of precision 
+    char VDOP    [BYTE_5];     // Vertical dilution of precision 
+    char TDOP    [BYTE_5];     // Time dilution of precision 
+    char numSvs  [BYTE_2];     // Number of satellites ued in the navigation solution 
+    char res     [BYTE_1];     // Reserved --> 0 
+    char DR      [BYTE_1];     // DR used 
 } 
 m8q_nmea_pos_t;
 
@@ -160,8 +160,14 @@ m8q_nmea_pos_t;
 // NMEA TIME message fields 
 typedef struct m8q_nmea_time_s
 {
-    char time[BYTE_9]; 
-    char date[BYTE_6]; 
+    char time     [BYTE_9];     // UTC time 
+    char date     [BYTE_6];     // UTC date 
+    char utcTow   [BYTE_9];     // UTC time of week 
+    char utcWk    [BYTE_4];     // UTC week number 
+    char leapSec  [BYTE_3];     // Leap seconds 
+    char clkBias  [BYTE_8];     // Receiver clock bias 
+    char clkDrift [BYTE_10];    // Receiver clock drift 
+    char tpGran   [BYTE_3];     // Time pulse granularity 
 } 
 m8q_nmea_time_t;
 
@@ -169,7 +175,13 @@ m8q_nmea_time_t;
 // NMEA RATE message fields 
 typedef struct m8q_nmea_rate_s
 {
-    char msgID[BYTE_8]; 
+    char msgID [BYTE_8];    // NMEA message identifier 
+    char rddc  [BYTE_1];    // Output rate on DDC 
+    char rus1  [BYTE_1];    // Output rate on USART 1
+    char rus2  [BYTE_1];    // Output rate on USART 2
+    char rusb  [BYTE_1];    // Output rate on USB 
+    char rspi  [BYTE_1];    // Output rate on SPI 
+    char res   [BYTE_1];    // Reserved --> 0
 } 
 m8q_nmea_rate_t; 
 
@@ -177,7 +189,7 @@ m8q_nmea_rate_t;
 // NMEA message data 
 typedef struct m8q_msg_data_s
 {
-    m8q_nmea_pos_t pos_data;      // POSITION message 
+    m8q_nmea_pos_t  pos_data;     // POSITION message 
     m8q_nmea_time_t time_data;    // TIME message 
     m8q_nmea_rate_t rate_data;    // RATE message 
 } 
@@ -206,15 +218,27 @@ static char* position[M8Q_NMEA_POS_ARGS] = { m8q_msg_data.pos_data.time,
                                              m8q_msg_data.pos_data.VDOP,
                                              m8q_msg_data.pos_data.TDOP,
                                              m8q_msg_data.pos_data.numSvs,
-                                             m8q_msg_data.pos_data.reserved,
+                                             m8q_msg_data.pos_data.res,
                                              m8q_msg_data.pos_data.DR }; 
 
 // NMEA TIME message 
 static char* time[M8Q_NMEA_TIME_ARGS] = { m8q_msg_data.time_data.time, 
-                                          m8q_msg_data.time_data.date }; 
+                                          m8q_msg_data.time_data.date, 
+                                          m8q_msg_data.time_data.utcTow, 
+                                          m8q_msg_data.time_data.utcWk, 
+                                          m8q_msg_data.time_data.leapSec, 
+                                          m8q_msg_data.time_data.clkBias, 
+                                          m8q_msg_data.time_data.clkDrift, 
+                                          m8q_msg_data.time_data.tpGran }; 
 
 // NMEA RATE message 
-static char* rate[M8Q_NMEA_RATE_ARGS] = { m8q_msg_data.rate_data.msgID }; 
+static char* rate[M8Q_NMEA_RATE_ARGS] = { m8q_msg_data.rate_data.msgID, 
+                                          m8q_msg_data.rate_data.rddc, 
+                                          m8q_msg_data.rate_data.rus1, 
+                                          m8q_msg_data.rate_data.rus2, 
+                                          m8q_msg_data.rate_data.rusb, 
+                                          m8q_msg_data.rate_data.rspi, 
+                                          m8q_msg_data.rate_data.res }; 
 
 //=======================================================================================
 
