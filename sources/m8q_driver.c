@@ -28,12 +28,12 @@
 
 
 //=======================================================================================
-// Function prototypes 
+// Message processing functions 
 
 /**
- * @brief 
+ * @brief M8Q message size 
  * 
- * @details 
+ * @details Calculated the size of a message based on on a termination character. 
  * 
  * @param msg 
  * @param term_char 
@@ -42,6 +42,22 @@
 uint8_t m8q_message_size(
     uint8_t *msg, 
     uint8_t term_char); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param msg 
+ * @param arg_num 
+ * @param data 
+ */
+void m8q_nmea_parse(
+    uint8_t *msg, 
+    uint8_t start_byte, 
+    uint8_t arg_num, 
+    uint8_t **data); 
 
 //=======================================================================================
 
@@ -134,25 +150,25 @@ CHECKSUM m8q_ubx_checksum(
 // NMEA POSITION message fields  
 typedef struct m8q_nmea_pos_s 
 {
-    char time    [BYTE_9];     // UTC time 
-    char lat     [BYTE_11];    // Latitude 
-    char NS      [BYTE_1];     // North/South indicator 
-    char lon     [BYTE_11];    // Longitude 
-    char EW      [BYTE_1];     // East/West indicator 
-    char altRef  [BYTE_9];     // Altitude above user datum ellipsoid 
-    char navStat [BYTE_2];     // Navigation status 
-    char hAcc    [BYTE_5];     // Horizontal accuracy estimate 
-    char vAcc    [BYTE_5];     // Vertical accuracy estimate 
-    char SOG     [BYTE_6];     // Speed over ground 
-    char COG     [BYTE_6];     // Course over ground 
-    char vVel    [BYTE_6];     // Vertical velocity (+ downwards) 
-    char diffAge [BYTE_1];     // Age of differential corrections 
-    char HDOP    [BYTE_5];     // Horizontal dilution of precision 
-    char VDOP    [BYTE_5];     // Vertical dilution of precision 
-    char TDOP    [BYTE_5];     // Time dilution of precision 
-    char numSvs  [BYTE_2];     // Number of satellites ued in the navigation solution 
-    char res     [BYTE_1];     // Reserved --> 0 
-    char DR      [BYTE_1];     // DR used 
+    uint8_t time    [BYTE_9];     // UTC time 
+    uint8_t lat     [BYTE_11];    // Latitude 
+    uint8_t NS      [BYTE_1];     // North/South indicator 
+    uint8_t lon     [BYTE_11];    // Longitude 
+    uint8_t EW      [BYTE_1];     // East/West indicator 
+    uint8_t altRef  [BYTE_9];     // Altitude above user datum ellipsoid 
+    uint8_t navStat [BYTE_2];     // Navigation status 
+    uint8_t hAcc    [BYTE_5];     // Horizontal accuracy estimate 
+    uint8_t vAcc    [BYTE_5];     // Vertical accuracy estimate 
+    uint8_t SOG     [BYTE_6];     // Speed over ground 
+    uint8_t COG     [BYTE_6];     // Course over ground 
+    uint8_t vVel    [BYTE_6];     // Vertical velocity (+ downwards) 
+    uint8_t diffAge [BYTE_1];     // Age of differential corrections 
+    uint8_t HDOP    [BYTE_5];     // Horizontal dilution of precision 
+    uint8_t VDOP    [BYTE_5];     // Vertical dilution of precision 
+    uint8_t TDOP    [BYTE_5];     // Time dilution of precision 
+    uint8_t numSvs  [BYTE_2];     // Number of satellites ued in the navigation solution 
+    uint8_t res     [BYTE_1];     // Reserved --> 0 
+    uint8_t DR      [BYTE_1];     // DR used 
 } 
 m8q_nmea_pos_t;
 
@@ -160,14 +176,14 @@ m8q_nmea_pos_t;
 // NMEA TIME message fields 
 typedef struct m8q_nmea_time_s
 {
-    char time     [BYTE_9];     // UTC time 
-    char date     [BYTE_6];     // UTC date 
-    char utcTow   [BYTE_9];     // UTC time of week 
-    char utcWk    [BYTE_4];     // UTC week number 
-    char leapSec  [BYTE_3];     // Leap seconds 
-    char clkBias  [BYTE_8];     // Receiver clock bias 
-    char clkDrift [BYTE_10];    // Receiver clock drift 
-    char tpGran   [BYTE_3];     // Time pulse granularity 
+    uint8_t time     [BYTE_9];     // UTC time 
+    uint8_t date     [BYTE_6];     // UTC date 
+    uint8_t utcTow   [BYTE_9];     // UTC time of week 
+    uint8_t utcWk    [BYTE_4];     // UTC week number 
+    uint8_t leapSec  [BYTE_3];     // Leap seconds 
+    uint8_t clkBias  [BYTE_8];     // Receiver clock bias 
+    uint8_t clkDrift [BYTE_10];    // Receiver clock drift 
+    uint8_t tpGran   [BYTE_3];     // Time pulse granularity 
 } 
 m8q_nmea_time_t;
 
@@ -175,13 +191,13 @@ m8q_nmea_time_t;
 // NMEA RATE message fields 
 typedef struct m8q_nmea_rate_s
 {
-    char msgID [BYTE_8];    // NMEA message identifier 
-    char rddc  [BYTE_1];    // Output rate on DDC 
-    char rus1  [BYTE_1];    // Output rate on USART 1
-    char rus2  [BYTE_1];    // Output rate on USART 2
-    char rusb  [BYTE_1];    // Output rate on USB 
-    char rspi  [BYTE_1];    // Output rate on SPI 
-    char res   [BYTE_1];    // Reserved --> 0
+    uint8_t msgID [BYTE_8];    // NMEA message identifier 
+    uint8_t rddc  [BYTE_1];    // Output rate on DDC 
+    uint8_t rus1  [BYTE_1];    // Output rate on USART 1
+    uint8_t rus2  [BYTE_1];    // Output rate on USART 2
+    uint8_t rusb  [BYTE_1];    // Output rate on USB 
+    uint8_t rspi  [BYTE_1];    // Output rate on SPI 
+    uint8_t res   [BYTE_1];    // Reserved --> 0
 } 
 m8q_nmea_rate_t; 
 
@@ -201,44 +217,44 @@ m8q_msg_data_t m8q_msg_data;
 
 
 // NMEA POSITION message 
-static char* position[M8Q_NMEA_POS_ARGS] = { m8q_msg_data.pos_data.time, 
-                                             m8q_msg_data.pos_data.lat, 
-                                             m8q_msg_data.pos_data.NS, 
-                                             m8q_msg_data.pos_data.lon, 
-                                             m8q_msg_data.pos_data.EW, 
-                                             m8q_msg_data.pos_data.altRef, 
-                                             m8q_msg_data.pos_data.navStat, 
-                                             m8q_msg_data.pos_data.hAcc, 
-                                             m8q_msg_data.pos_data.vAcc,
-                                             m8q_msg_data.pos_data.SOG,
-                                             m8q_msg_data.pos_data.COG,
-                                             m8q_msg_data.pos_data.vVel,
-                                             m8q_msg_data.pos_data.diffAge,
-                                             m8q_msg_data.pos_data.HDOP,
-                                             m8q_msg_data.pos_data.VDOP,
-                                             m8q_msg_data.pos_data.TDOP,
-                                             m8q_msg_data.pos_data.numSvs,
-                                             m8q_msg_data.pos_data.res,
-                                             m8q_msg_data.pos_data.DR }; 
+static uint8_t* position[M8Q_NMEA_POS_ARGS] = { m8q_msg_data.pos_data.time, 
+                                                m8q_msg_data.pos_data.lat, 
+                                                m8q_msg_data.pos_data.NS, 
+                                                m8q_msg_data.pos_data.lon, 
+                                                m8q_msg_data.pos_data.EW, 
+                                                m8q_msg_data.pos_data.altRef, 
+                                                m8q_msg_data.pos_data.navStat, 
+                                                m8q_msg_data.pos_data.hAcc, 
+                                                m8q_msg_data.pos_data.vAcc,
+                                                m8q_msg_data.pos_data.SOG,
+                                                m8q_msg_data.pos_data.COG,
+                                                m8q_msg_data.pos_data.vVel,
+                                                m8q_msg_data.pos_data.diffAge,
+                                                m8q_msg_data.pos_data.HDOP,
+                                                m8q_msg_data.pos_data.VDOP,
+                                                m8q_msg_data.pos_data.TDOP,
+                                                m8q_msg_data.pos_data.numSvs,
+                                                m8q_msg_data.pos_data.res,
+                                                m8q_msg_data.pos_data.DR }; 
 
 // NMEA TIME message 
-static char* time[M8Q_NMEA_TIME_ARGS] = { m8q_msg_data.time_data.time, 
-                                          m8q_msg_data.time_data.date, 
-                                          m8q_msg_data.time_data.utcTow, 
-                                          m8q_msg_data.time_data.utcWk, 
-                                          m8q_msg_data.time_data.leapSec, 
-                                          m8q_msg_data.time_data.clkBias, 
-                                          m8q_msg_data.time_data.clkDrift, 
-                                          m8q_msg_data.time_data.tpGran }; 
+static uint8_t* time[M8Q_NMEA_TIME_ARGS] = { m8q_msg_data.time_data.time, 
+                                             m8q_msg_data.time_data.date, 
+                                             m8q_msg_data.time_data.utcTow, 
+                                             m8q_msg_data.time_data.utcWk, 
+                                             m8q_msg_data.time_data.leapSec, 
+                                             m8q_msg_data.time_data.clkBias, 
+                                             m8q_msg_data.time_data.clkDrift, 
+                                             m8q_msg_data.time_data.tpGran }; 
 
 // NMEA RATE message 
-static char* rate[M8Q_NMEA_RATE_ARGS] = { m8q_msg_data.rate_data.msgID, 
-                                          m8q_msg_data.rate_data.rddc, 
-                                          m8q_msg_data.rate_data.rus1, 
-                                          m8q_msg_data.rate_data.rus2, 
-                                          m8q_msg_data.rate_data.rusb, 
-                                          m8q_msg_data.rate_data.rspi, 
-                                          m8q_msg_data.rate_data.res }; 
+static uint8_t* rate[M8Q_NMEA_RATE_ARGS] = { m8q_msg_data.rate_data.msgID, 
+                                             m8q_msg_data.rate_data.rddc, 
+                                             m8q_msg_data.rate_data.rus1, 
+                                             m8q_msg_data.rate_data.rus2, 
+                                             m8q_msg_data.rate_data.rusb, 
+                                             m8q_msg_data.rate_data.rspi, 
+                                             m8q_msg_data.rate_data.res }; 
 
 //=======================================================================================
 
@@ -249,7 +265,9 @@ static char* rate[M8Q_NMEA_RATE_ARGS] = { m8q_msg_data.rate_data.msgID,
 // 
 void m8q_init(void)
 {
-    // TODO configure GPIO for txReady pin if desired 
+    // TODO 
+    // - configure GPIO for txReady pin if desired 
+    // - Initialize message arrays to zero? 
 }
 
 //=======================================================================================
@@ -377,7 +395,9 @@ void m8q_check_data_stream(
 //=======================================================================================
 // Write 
 
-// TODO send a save command/mask after writing a CFG message. 
+// TODO 
+// - How will sending be handled? Send all messages or select messages? Send every pass 
+//   or only when requested? 
 
 // M8Q write 
 void m8q_write(
@@ -422,11 +442,43 @@ uint8_t m8q_message_size(
     return msg_len; 
 }
 
+
+// M8Q NMEA message parse 
+void m8q_nmea_parse(
+    uint8_t *msg, 
+    uint8_t start_byte, 
+    uint8_t arg_num, 
+    uint8_t **data)
+{
+    // Local variables 
+    uint8_t data_byte = 0; 
+    uint8_t arg_index = 0; 
+    uint8_t arg_len = 0; 
+    
+    // Increment to the first data field and calculate the first data field length 
+    msg += start_byte; 
+    arg_len = *(&data[arg_index] + 1) - data[arg_index]; 
+
+    // Read and parse the message 
+    while (*msg != AST_CHAR)
+    {
+        // Increment msg index 
+        msg++; 
+    }
+
+    // Terminate last data field array 
+}
+
 //=======================================================================================
 
 
 //=======================================================================================
 // Getters 
+//=======================================================================================
+
+
+//=======================================================================================
+// Setters 
 //=======================================================================================
 
 

@@ -55,12 +55,12 @@
 #define M8Q_NMEA_CS_LEN   2      // Number of characters in NMEA message checksum 
 
 // NMEA messages 
-#define M8Q_NMEA_RATE          40   // Message ID for NMEA RATE 
-#define M8Q_NMEA_RATE_ARGS     7    // Number of arguments in RATE message 
-#define M8Q_NMEA_CONFIG        41   // Message ID for NMEA CONFIG 
-#define M8Q_NMEA_CONFIG_ARGS   5    // Number of arguments in CONFIG message 
+#define M8Q_NMEA_RATE_ARGS     7    // Number of data fields in RATE  
+#define M8Q_NMEA_CONFIG_ARGS   5    // Number of data fields in CONFIG  
 #define M8Q_NMEA_POS_ARGS      19   // Number of data fields in POSITION 
 #define M8Q_NMEA_TIME_ARGS     10   // Number of data fields in TIME 
+#define M8Q_NMEA_PUBX_ARG_OFST 9    // First data field offset for PUBX messages 
+#define M8Q_NMEA_STRD_ARG_OFST 7    // First data field offset for standard messages 
 
 // UBX message format 
 #define M8Q_UBX_START        181   // 181 == 0xB5 --> Start of received UBX message 
