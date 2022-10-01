@@ -24,6 +24,9 @@
 #include <stdio.h> 
 #endif  // M8Q_USER_CONFIG
 
+// #include <stdio.h> 
+// #include <stdlib.h>
+
 //=======================================================================================
 
 
@@ -169,6 +172,7 @@ typedef struct m8q_nmea_pos_s
     uint8_t numSvs  [BYTE_2];     // Number of satellites ued in the navigation solution 
     uint8_t res     [BYTE_1];     // Reserved --> 0 
     uint8_t DR      [BYTE_1];     // DR used 
+    uint8_t eom     [BYTE_1];     // End of memory --> used for parsing function only 
 } 
 m8q_nmea_pos_t;
 
@@ -184,6 +188,7 @@ typedef struct m8q_nmea_time_s
     uint8_t clkBias  [BYTE_8];     // Receiver clock bias 
     uint8_t clkDrift [BYTE_10];    // Receiver clock drift 
     uint8_t tpGran   [BYTE_3];     // Time pulse granularity 
+    uint8_t eom      [BYTE_1];     // End of memory --> used for parsing function only 
 } 
 m8q_nmea_time_t;
 
@@ -191,13 +196,14 @@ m8q_nmea_time_t;
 // NMEA RATE message fields 
 typedef struct m8q_nmea_rate_s
 {
-    uint8_t msgID [BYTE_8];    // NMEA message identifier 
-    uint8_t rddc  [BYTE_1];    // Output rate on DDC 
-    uint8_t rus1  [BYTE_1];    // Output rate on USART 1
-    uint8_t rus2  [BYTE_1];    // Output rate on USART 2
-    uint8_t rusb  [BYTE_1];    // Output rate on USB 
-    uint8_t rspi  [BYTE_1];    // Output rate on SPI 
-    uint8_t res   [BYTE_1];    // Reserved --> 0
+    uint8_t msgID [BYTE_8];     // NMEA message identifier 
+    uint8_t rddc  [BYTE_1];     // Output rate on DDC 
+    uint8_t rus1  [BYTE_1];     // Output rate on USART 1
+    uint8_t rus2  [BYTE_1];     // Output rate on USART 2
+    uint8_t rusb  [BYTE_1];     // Output rate on USB 
+    uint8_t rspi  [BYTE_1];     // Output rate on SPI 
+    uint8_t res   [BYTE_1];     // Reserved --> 0
+    uint8_t eom   [BYTE_1];     // End of memory --> used for parsing function only 
 } 
 m8q_nmea_rate_t; 
 
@@ -217,44 +223,47 @@ m8q_msg_data_t m8q_msg_data;
 
 
 // NMEA POSITION message 
-static uint8_t* position[M8Q_NMEA_POS_ARGS] = { m8q_msg_data.pos_data.time, 
-                                                m8q_msg_data.pos_data.lat, 
-                                                m8q_msg_data.pos_data.NS, 
-                                                m8q_msg_data.pos_data.lon, 
-                                                m8q_msg_data.pos_data.EW, 
-                                                m8q_msg_data.pos_data.altRef, 
-                                                m8q_msg_data.pos_data.navStat, 
-                                                m8q_msg_data.pos_data.hAcc, 
-                                                m8q_msg_data.pos_data.vAcc,
-                                                m8q_msg_data.pos_data.SOG,
-                                                m8q_msg_data.pos_data.COG,
-                                                m8q_msg_data.pos_data.vVel,
-                                                m8q_msg_data.pos_data.diffAge,
-                                                m8q_msg_data.pos_data.HDOP,
-                                                m8q_msg_data.pos_data.VDOP,
-                                                m8q_msg_data.pos_data.TDOP,
-                                                m8q_msg_data.pos_data.numSvs,
-                                                m8q_msg_data.pos_data.res,
-                                                m8q_msg_data.pos_data.DR }; 
+static uint8_t* position[M8Q_NMEA_POS_ARGS+1] = { m8q_msg_data.pos_data.time, 
+                                                  m8q_msg_data.pos_data.lat, 
+                                                  m8q_msg_data.pos_data.NS, 
+                                                  m8q_msg_data.pos_data.lon, 
+                                                  m8q_msg_data.pos_data.EW, 
+                                                  m8q_msg_data.pos_data.altRef, 
+                                                  m8q_msg_data.pos_data.navStat, 
+                                                  m8q_msg_data.pos_data.hAcc, 
+                                                  m8q_msg_data.pos_data.vAcc,
+                                                  m8q_msg_data.pos_data.SOG,
+                                                  m8q_msg_data.pos_data.COG,
+                                                  m8q_msg_data.pos_data.vVel,
+                                                  m8q_msg_data.pos_data.diffAge,
+                                                  m8q_msg_data.pos_data.HDOP,
+                                                  m8q_msg_data.pos_data.VDOP,
+                                                  m8q_msg_data.pos_data.TDOP,
+                                                  m8q_msg_data.pos_data.numSvs,
+                                                  m8q_msg_data.pos_data.res,
+                                                  m8q_msg_data.pos_data.DR, 
+                                                  m8q_msg_data.pos_data.eom }; 
 
 // NMEA TIME message 
-static uint8_t* time[M8Q_NMEA_TIME_ARGS] = { m8q_msg_data.time_data.time, 
-                                             m8q_msg_data.time_data.date, 
-                                             m8q_msg_data.time_data.utcTow, 
-                                             m8q_msg_data.time_data.utcWk, 
-                                             m8q_msg_data.time_data.leapSec, 
-                                             m8q_msg_data.time_data.clkBias, 
-                                             m8q_msg_data.time_data.clkDrift, 
-                                             m8q_msg_data.time_data.tpGran }; 
+static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] = { m8q_msg_data.time_data.time, 
+                                               m8q_msg_data.time_data.date, 
+                                               m8q_msg_data.time_data.utcTow, 
+                                               m8q_msg_data.time_data.utcWk, 
+                                               m8q_msg_data.time_data.leapSec, 
+                                               m8q_msg_data.time_data.clkBias, 
+                                               m8q_msg_data.time_data.clkDrift, 
+                                               m8q_msg_data.time_data.tpGran, 
+                                               m8q_msg_data.time_data.eom }; 
 
 // NMEA RATE message 
-static uint8_t* rate[M8Q_NMEA_RATE_ARGS] = { m8q_msg_data.rate_data.msgID, 
-                                             m8q_msg_data.rate_data.rddc, 
-                                             m8q_msg_data.rate_data.rus1, 
-                                             m8q_msg_data.rate_data.rus2, 
-                                             m8q_msg_data.rate_data.rusb, 
-                                             m8q_msg_data.rate_data.rspi, 
-                                             m8q_msg_data.rate_data.res }; 
+static uint8_t* rate[M8Q_NMEA_RATE_ARGS+1] = { m8q_msg_data.rate_data.msgID, 
+                                               m8q_msg_data.rate_data.rddc, 
+                                               m8q_msg_data.rate_data.rus1, 
+                                               m8q_msg_data.rate_data.rus2, 
+                                               m8q_msg_data.rate_data.rusb, 
+                                               m8q_msg_data.rate_data.rspi, 
+                                               m8q_msg_data.rate_data.res, 
+                                               m8q_msg_data.rate_data.eom }; 
 
 //=======================================================================================
 
@@ -296,6 +305,9 @@ M8Q_READ_STAT m8q_read(
             break;
 
         case M8Q_NMEA_START:  // Start of NMEA message 
+            // Capture the byte checked in the message response 
+            *data++ = data_check;
+
             // Generate a start condition 
             i2c_start(i2c); 
 
@@ -305,6 +317,19 @@ M8Q_READ_STAT m8q_read(
 
             // Read the rest of the data stream until "\r\n" 
             i2c_read_to_term(i2c, data, M8Q_NMEA_END_PAY, I2C_4_BYTE); 
+
+            // Parse the message data 
+            if (str_compare("PUBX,00,", (char *)data, BYTE_0))
+                m8q_nmea_parse(data, 
+                            M8Q_NMEA_PUBX_ARG_OFST-BYTE_1, 
+                            M8Q_NMEA_POS_ARGS, 
+                            position); 
+            
+            else if (str_compare("PUBX,04,", (char *)data, BYTE_0))
+                m8q_nmea_parse(data, 
+                            M8Q_NMEA_PUBX_ARG_OFST-BYTE_1, 
+                            M8Q_NMEA_TIME_ARGS, 
+                            time); 
 
             read_status = M8Q_READ_VALID; 
             break;
@@ -451,22 +476,61 @@ void m8q_nmea_parse(
     uint8_t **data)
 {
     // Local variables 
-    uint8_t data_byte = 0; 
     uint8_t arg_index = 0; 
     uint8_t arg_len = 0; 
+    uint8_t data_index = 0; 
+
+    // Make sure the data array has a valid length 
+    if (!arg_num) return; 
     
-    // Increment to the first data field and calculate the first data field length 
+    // Increment to the first data field 
     msg += start_byte; 
-    arg_len = *(&data[arg_index] + 1) - data[arg_index]; 
+
+    // // Calculate the first data field length 
+    arg_len = *(&data[data_index] + 1) - data[data_index];  
 
     // Read and parse the message 
-    while (*msg != AST_CHAR)
+    while (TRUE)
     {
-        // Increment msg index 
-        msg++; 
-    }
+        // Check for end of message data 
+        if (*msg != AST_CHAR)
+        {
+            // Check for argument separation 
+            if (*msg != COMMA_CHAR)
+            {
+                // Record the byte if there is space 
+                if (arg_index < arg_len)
+                {
+                    data[data_index][arg_index] = *msg; 
+                    arg_index++; 
+                }
+            }
+            else
+            {
+                // Terminate the argument if needed 
+                if (arg_index < arg_len) data[data_index][arg_index] = NULL_CHAR; 
 
-    // Terminate last data field array 
+                // Increment jagged array index 
+                data_index++; 
+
+                // Exit if the storage array has been exceeded 
+                if (data_index >= arg_num) break; 
+
+                // Reset arg index and calculate the new argument length 
+                arg_index = 0; 
+                arg_len = *(&data[data_index] + 1) - data[data_index]; 
+            }
+
+            // Increment msg index 
+            msg++; 
+        }
+        else
+        {
+            // Terminate the argument if needed 
+            if (arg_index < arg_len) data[data_index][arg_index] = NULL_CHAR; 
+            break; 
+        }
+    }
 }
 
 //=======================================================================================
