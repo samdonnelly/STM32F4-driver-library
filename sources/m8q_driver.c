@@ -24,9 +24,6 @@
 #include <stdio.h> 
 #endif  // M8Q_USER_CONFIG
 
-// #include <stdio.h> 
-// #include <stdlib.h>
-
 //=======================================================================================
 
 
@@ -277,6 +274,8 @@ void m8q_init(void)
     // TODO 
     // - configure GPIO for txReady pin if desired 
     // - Initialize message arrays to zero? 
+    // - Send UBX and NMEA config messages to change the receiver from the default 
+    //   config to the desired config. 
 }
 
 //=======================================================================================
