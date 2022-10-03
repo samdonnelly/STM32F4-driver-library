@@ -33,7 +33,7 @@
 // Macros 
 
 // Device configuration 
-#define M8Q_USER_CONFIG 0   // When set to non-zero then user config code becomes available 
+#define M8Q_USER_CONFIG 1   // When set to non-zero then user config code becomes available 
 #define M8Q_CONFIG_MSG  75  // Config message max length 
 
 // Device parameters 
@@ -48,19 +48,32 @@
 // M8Q messages 
 #define M8Q_NO_DATA  0xff   // NMEA invalid data stream return value 
 
+
 // NMEA message format 
 #define M8Q_NMEA_START    0x24   // 0x24 == '$' --> start of NMEA message 
 #define M8Q_NMEA_END_PAY  0x2A   // 0x2A == '*' --> indicates end of NMEA message payload 
 #define M8Q_NMEA_END_MSG  6      // Length of string to append to NMEA message after payload 
 #define M8Q_NMEA_CS_LEN   2      // Number of characters in NMEA message checksum 
+#define M8Q_PUBX_ID_OFST  6      // Starting position of PUBX message ID in message string 
+
 
 // NMEA messages 
-#define M8Q_NMEA_RATE_ARGS     7    // Number of data fields in RATE  
-#define M8Q_NMEA_CONFIG_ARGS   5    // Number of data fields in CONFIG  
+#define M8Q_NMEA_RATE_ARGS     7    // Number of data fields in RATE 
+
+#define M8Q_NMEA_CONFIG_ARGS   5    // Number of data fields in CONFIG 
+
 #define M8Q_NMEA_POS_ARGS      19   // Number of data fields in POSITION 
+#define M8Q_NMEA_POS_ID        48   // "0" == 48 --> Message ID for POSITION 
+
+#define M8Q_NMEA_SV_ARGS       7    // Number of data fields in SVSTATUS 
+#define M8Q_NMEA_SV_ID         51   // "3" == 51 --> Message ID for SVSTATUS 
+
 #define M8Q_NMEA_TIME_ARGS     10   // Number of data fields in TIME 
+#define M8Q_NMEA_TIME_ID       52   // "4" == 52 --> Message ID for TIME 
+
 #define M8Q_NMEA_PUBX_ARG_OFST 9    // First data field offset for PUBX messages 
 #define M8Q_NMEA_STRD_ARG_OFST 7    // First data field offset for standard messages 
+
 
 // UBX message format 
 #define M8Q_UBX_START        181   // 181 == 0xB5 --> Start of received UBX message 
@@ -139,8 +152,13 @@ typedef m8q_ubx_msg_convert_status_t UBX_MSG_STATUS;
  * 
  * @details To be implemented. 
  * 
+ * @param config_msgs 
  */
-void m8q_init(void); 
+void m8q_init(
+    I2C_TypeDef *i2c, 
+    uint8_t msg_num, 
+    uint8_t msg_index, 
+    uint8_t *config_msgs); 
 
 //=======================================================================================
 

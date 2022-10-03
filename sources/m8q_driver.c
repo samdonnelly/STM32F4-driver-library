@@ -45,6 +45,17 @@ uint8_t m8q_message_size(
 
 
 /**
+ * @brief M8Q NMEA message sort 
+ * 
+ * @details 
+ * 
+ * @param msg : 
+ */
+void m8q_nmea_sort(
+    uint8_t *msg); 
+
+
+/**
  * @brief 
  * 
  * @details 
@@ -220,47 +231,56 @@ m8q_msg_data_t m8q_msg_data;
 
 
 // NMEA POSITION message 
-static uint8_t* position[M8Q_NMEA_POS_ARGS+1] = { m8q_msg_data.pos_data.time, 
-                                                  m8q_msg_data.pos_data.lat, 
-                                                  m8q_msg_data.pos_data.NS, 
-                                                  m8q_msg_data.pos_data.lon, 
-                                                  m8q_msg_data.pos_data.EW, 
-                                                  m8q_msg_data.pos_data.altRef, 
-                                                  m8q_msg_data.pos_data.navStat, 
-                                                  m8q_msg_data.pos_data.hAcc, 
-                                                  m8q_msg_data.pos_data.vAcc,
-                                                  m8q_msg_data.pos_data.SOG,
-                                                  m8q_msg_data.pos_data.COG,
-                                                  m8q_msg_data.pos_data.vVel,
-                                                  m8q_msg_data.pos_data.diffAge,
-                                                  m8q_msg_data.pos_data.HDOP,
-                                                  m8q_msg_data.pos_data.VDOP,
-                                                  m8q_msg_data.pos_data.TDOP,
-                                                  m8q_msg_data.pos_data.numSvs,
-                                                  m8q_msg_data.pos_data.res,
-                                                  m8q_msg_data.pos_data.DR, 
-                                                  m8q_msg_data.pos_data.eom }; 
+static uint8_t* position[M8Q_NMEA_POS_ARGS+1] = 
+{ 
+    m8q_msg_data.pos_data.time, 
+    m8q_msg_data.pos_data.lat, 
+    m8q_msg_data.pos_data.NS, 
+    m8q_msg_data.pos_data.lon, 
+    m8q_msg_data.pos_data.EW, 
+    m8q_msg_data.pos_data.altRef, 
+    m8q_msg_data.pos_data.navStat, 
+    m8q_msg_data.pos_data.hAcc, 
+    m8q_msg_data.pos_data.vAcc,
+    m8q_msg_data.pos_data.SOG,
+    m8q_msg_data.pos_data.COG,
+    m8q_msg_data.pos_data.vVel,
+    m8q_msg_data.pos_data.diffAge,
+    m8q_msg_data.pos_data.HDOP,
+    m8q_msg_data.pos_data.VDOP,
+    m8q_msg_data.pos_data.TDOP,
+    m8q_msg_data.pos_data.numSvs,
+    m8q_msg_data.pos_data.res,
+    m8q_msg_data.pos_data.DR, 
+    m8q_msg_data.pos_data.eom 
+}; 
 
 // NMEA TIME message 
-static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] = { m8q_msg_data.time_data.time, 
-                                               m8q_msg_data.time_data.date, 
-                                               m8q_msg_data.time_data.utcTow, 
-                                               m8q_msg_data.time_data.utcWk, 
-                                               m8q_msg_data.time_data.leapSec, 
-                                               m8q_msg_data.time_data.clkBias, 
-                                               m8q_msg_data.time_data.clkDrift, 
-                                               m8q_msg_data.time_data.tpGran, 
-                                               m8q_msg_data.time_data.eom }; 
+static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] = 
+{ 
+    m8q_msg_data.time_data.time, 
+    m8q_msg_data.time_data.date, 
+    m8q_msg_data.time_data.utcTow, 
+    m8q_msg_data.time_data.utcWk, 
+    m8q_msg_data.time_data.leapSec, 
+    m8q_msg_data.time_data.clkBias, 
+    m8q_msg_data.time_data.clkDrift, 
+    m8q_msg_data.time_data.tpGran, 
+    m8q_msg_data.time_data.eom 
+}; 
 
 // NMEA RATE message 
-static uint8_t* rate[M8Q_NMEA_RATE_ARGS+1] = { m8q_msg_data.rate_data.msgID, 
-                                               m8q_msg_data.rate_data.rddc, 
-                                               m8q_msg_data.rate_data.rus1, 
-                                               m8q_msg_data.rate_data.rus2, 
-                                               m8q_msg_data.rate_data.rusb, 
-                                               m8q_msg_data.rate_data.rspi, 
-                                               m8q_msg_data.rate_data.res, 
-                                               m8q_msg_data.rate_data.eom }; 
+static uint8_t* rate[M8Q_NMEA_RATE_ARGS+1] = 
+{ 
+    m8q_msg_data.rate_data.msgID, 
+    m8q_msg_data.rate_data.rddc, 
+    m8q_msg_data.rate_data.rus1, 
+    m8q_msg_data.rate_data.rus2, 
+    m8q_msg_data.rate_data.rusb, 
+    m8q_msg_data.rate_data.rspi, 
+    m8q_msg_data.rate_data.res, 
+    m8q_msg_data.rate_data.eom 
+}; 
 
 //=======================================================================================
 
@@ -269,13 +289,33 @@ static uint8_t* rate[M8Q_NMEA_RATE_ARGS+1] = { m8q_msg_data.rate_data.msgID,
 // Initialization 
 
 // 
-void m8q_init(void)
+void m8q_init(
+    I2C_TypeDef *i2c, 
+    uint8_t msg_num, 
+    uint8_t msg_index, 
+    uint8_t *config_msgs)
 {
     // TODO 
     // - configure GPIO for txReady pin if desired 
-    // - Initialize message arrays to zero? 
-    // - Send UBX and NMEA config messages to change the receiver from the default 
-    //   config to the desired config. 
+
+    // Send configuration messages 
+    for (uint8_t i = 0; i < msg_num; i++)
+    {
+        // Identify the message type 
+        switch (*(config_msgs + i*msg_index))
+        {
+            case M8Q_NMEA_START:  // NMEA message 
+                m8q_nmea_config(i2c, (config_msgs + i*msg_index)); 
+                break;
+
+            case M8Q_UBX_SYNC1:  // UBX message 
+                m8q_ubx_config(i2c, (config_msgs + i*msg_index)); 
+                break;
+            
+            default:  // Unknown config message 
+                break;
+        }
+    }
 }
 
 //=======================================================================================
@@ -317,18 +357,8 @@ M8Q_READ_STAT m8q_read(
             // Read the rest of the data stream until "\r\n" 
             i2c_read_to_term(i2c, data, M8Q_NMEA_END_PAY, I2C_4_BYTE); 
 
-            // Parse the message data 
-            if (str_compare("PUBX,00,", (char *)data, BYTE_0))
-                m8q_nmea_parse(data, 
-                            M8Q_NMEA_PUBX_ARG_OFST-BYTE_1, 
-                            M8Q_NMEA_POS_ARGS, 
-                            position); 
-            
-            else if (str_compare("PUBX,04,", (char *)data, BYTE_0))
-                m8q_nmea_parse(data, 
-                            M8Q_NMEA_PUBX_ARG_OFST-BYTE_1, 
-                            M8Q_NMEA_TIME_ARGS, 
-                            time); 
+            // Parse the message data into its data record 
+            m8q_nmea_sort(data); 
 
             read_status = M8Q_READ_VALID; 
             break;
@@ -464,6 +494,37 @@ uint8_t m8q_message_size(
     }
 
     return msg_len; 
+}
+
+
+// M8Q NMEA message sort 
+void m8q_nmea_sort(
+    uint8_t *msg)
+{
+    // Local variables 
+    uint8_t *msg_ptr = msg; 
+
+    // Go to location of message ID 
+    msg_ptr += M8Q_PUBX_ID_OFST; 
+
+    // Identify the message and parse the message data 
+    switch (*msg_ptr)
+    {
+        case M8Q_NMEA_POS_ID:  // 0x00 --> POSITION 
+            m8q_nmea_parse(msg, M8Q_NMEA_PUBX_ARG_OFST-BYTE_1, M8Q_NMEA_POS_ARGS, position); 
+            break;
+        
+        case M8Q_NMEA_SV_ID: // 0x03 --> SVSTATUS 
+            // Not supported yet 
+            break;
+
+        case M8Q_NMEA_TIME_ID: // 0x04 --> TIME  
+            m8q_nmea_parse(msg, M8Q_NMEA_PUBX_ARG_OFST-BYTE_1, M8Q_NMEA_TIME_ARGS, time); 
+            break;
+        
+        default:
+            break;
+    }
 }
 
 
@@ -808,13 +869,14 @@ void m8q_ubx_config(
                                                         resp_msg[M8Q_UBX_LENGTH_OFST]; 
 
                     uart_send_new_line(USART2); 
-                    uart_sendstring(USART2, "Message sent. Receiver response: \r\n"); 
+                    uart_sendstring(USART2, "UBX configuration message sent\r\n"); 
+                    // uart_sendstring(USART2, "Message sent. Receiver response: \r\n"); 
 
-                    for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN+pl_len+M8Q_UBX_CS_LEN); i++)
-                    {
-                        uart_send_integer(USART2, (int16_t)resp_msg[i]); 
-                        uart_send_new_line(USART2);
-                    }
+                    // for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN+pl_len+M8Q_UBX_CS_LEN); i++)
+                    // {
+                    //     uart_send_integer(USART2, (int16_t)resp_msg[i]); 
+                    //     uart_send_new_line(USART2);
+                    // }
                 }
                 else
                 {
