@@ -19,11 +19,6 @@
 // Device drivers 
 #include "m8q_driver.h"
 
-// Standard Libraries 
-#if M8Q_USER_CONFIG
-#include <stdio.h> 
-#endif  // M8Q_USER_CONFIG
-
 //=======================================================================================
 
 
@@ -74,9 +69,7 @@ void m8q_nmea_parse(
 
 
 //=======================================================================================
-// User config peripheral functions 
-
-#if M8Q_USER_CONFIG 
+// Message configuration functions 
 
 /**
  * @brief M8Q NMEA config function 
@@ -149,8 +142,6 @@ UBX_MSG_STATUS m8q_ubx_msg_convert(
 CHECKSUM m8q_ubx_checksum(
     uint8_t *msg, 
     uint16_t len); 
-
-#endif  // M8Q_USER_CONFIG
 
 //=======================================================================================
 
@@ -288,7 +279,7 @@ static uint8_t* rate[M8Q_NMEA_RATE_ARGS+1] =
 //=======================================================================================
 // Initialization 
 
-// 
+// M8Q initialization 
 void m8q_init(
     I2C_TypeDef *i2c, 
     uint8_t msg_num, 
@@ -298,9 +289,18 @@ void m8q_init(
     // TODO 
     // - configure GPIO for txReady pin if desired 
 
+    // Local variables 
+    uint8_t data_stream = 0; 
+
     // Send configuration messages 
     for (uint8_t i = 0; i < msg_num; i++)
     {
+        // Print message to terminal for verification 
+        uart_send_new_line(USART2); 
+        uart_sendstring(USART2, "Config message: "); 
+        uart_sendstring(USART2, (char *)(config_msgs + i*msg_index)); 
+        uart_send_new_line(USART2); 
+
         // Identify the message type 
         switch (*(config_msgs + i*msg_index))
         {
@@ -309,10 +309,12 @@ void m8q_init(
                 break;
 
             case M8Q_UBX_SYNC1:  // UBX message 
+                // while (data_stream != M8Q_NO_DATA) m8q_check_data_stream(i2c, &data_stream); 
                 m8q_ubx_config(i2c, (config_msgs + i*msg_index)); 
                 break;
             
             default:  // Unknown config message 
+                uart_sendstring(USART2, "Unknown message type.\r\n"); 
                 break;
         }
     }
@@ -607,7 +609,7 @@ void m8q_nmea_parse(
 
 
 //=======================================================================================
-// User Configuration 
+// User Configuration Mode 
 
 #if M8Q_USER_CONFIG
 
@@ -623,6 +625,8 @@ void m8q_user_config(
     {
         // Read the input 
         uart_getstr(USART2, (char *)config_msg, UART_STR_TERM_CARRIAGE); 
+
+        uart_send_new_line(USART2); 
 
         // Identify the message type 
         switch (config_msg[0])
@@ -646,6 +650,21 @@ void m8q_user_config(
     }
 }
 
+
+// M8Q NMEA config user interface 
+void m8q_nmea_config_ui(void)
+{
+    uart_send_new_line(USART2); 
+    uart_sendstring(USART2, ">>> Config message: "); 
+}
+
+#endif   // M8Q_USER_CONFIG
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Message configuration functions 
 
 // M8Q NMEA config function 
 void m8q_nmea_config(
@@ -673,10 +692,7 @@ void m8q_nmea_config(
 
         // Unsupported message ID 
         else
-        {
-            uart_send_new_line(USART2); 
-            uart_sendstring(USART2, "Unsupported PUBX message ID\r\n");
-        }
+            uart_sendstring(USART2, "Unsupported PUBX message ID.\r\n");
 
         // Check the number of message inputs 
         if (msg_args)
@@ -714,21 +730,14 @@ void m8q_nmea_config(
                 m8q_write(I2C1, msg, m8q_message_size(msg, NULL_CHAR));
 
                 // Send confirmation message to terminal 
-                uart_send_new_line(USART2); 
-                uart_sendstring(USART2, "NMEA configuration message sent\r\n"); 
+                uart_sendstring(USART2, "NMEA configuration message sent.\r\n"); 
             } 
             else
-            {
-                uart_send_new_line(USART2); 
-                uart_sendstring(USART2, "Invalid formatting of PUBX message\r\n"); 
-            }
+                uart_sendstring(USART2, "Invalid formatting of PUBX message.\r\n"); 
         }
     }
     else 
-    {
-        uart_send_new_line(USART2); 
-        uart_sendstring(USART2, "Only PUBX messages are supported\r\n"); 
-    }
+        uart_sendstring(USART2, "Only PUBX messages are supported.\r\n"); 
 }
 
 
@@ -785,12 +794,6 @@ void m8q_ubx_config(
     uint16_t byte_count = 0; 
     uint8_t format_ok = 0; 
 
-    for (uint8_t i = 0; i < M8Q_CONFIG_MSG; i++)
-    {
-        config_msg[i] = 255; 
-        resp_msg[i] = 255; 
-    }
-
     // Check the sync characters and class 
     if (str_compare("B5,62,06,", (char *)input_msg, BYTE_0))
     {
@@ -828,22 +831,13 @@ void m8q_ubx_config(
                             format_ok++; 
                         
                         else 
-                        {
-                            uart_send_new_line(USART2); 
                             uart_sendstring(USART2, "Payload length doesn't match size.\r\n");
-                        }
                     } 
                     else
-                    {
-                        uart_send_new_line(USART2); 
                         uart_sendstring(USART2, "Invalid payload format.\r\n");
-                    }
                 }
                 else
-                {
-                    uart_send_new_line(USART2); 
                     uart_sendstring(USART2, "Invalid payload length format.\r\n");
-                }
             }
 
             if (format_ok)
@@ -868,34 +862,34 @@ void m8q_ubx_config(
                     pl_len = (resp_msg[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
                                                         resp_msg[M8Q_UBX_LENGTH_OFST]; 
 
-                    uart_send_new_line(USART2); 
-                    uart_sendstring(USART2, "UBX configuration message sent\r\n"); 
-                    // uart_sendstring(USART2, "Message sent. Receiver response: \r\n"); 
+                    // Communicate the results 
+                    uart_sendstring(USART2, "UBX configuration message sent.\r\n"); 
 
-                    // for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN+pl_len+M8Q_UBX_CS_LEN); i++)
-                    // {
-                    //     uart_send_integer(USART2, (int16_t)resp_msg[i]); 
-                    //     uart_send_new_line(USART2);
-                    // }
+                    if (resp_msg[M8Q_UBX_CLASS_OFST] == M8Q_UBX_ACK_CLASS)
+                    {
+                        if (resp_msg[M8Q_UBX_ID_OFST] == M8Q_UBX_ACK_ID)
+                            uart_sendstring(USART2, "Message acknowledged.\r\n"); 
+                        else
+                            uart_sendstring(USART2, "Message not acknowledged.\r\n"); 
+                    }
+                    else
+                    {
+                        for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN+pl_len+M8Q_UBX_CS_LEN); i++)
+                        {
+                            uart_send_integer(USART2, (int16_t)resp_msg[i]); 
+                            uart_send_new_line(USART2);
+                        }
+                    }
                 }
                 else
-                {
-                    uart_send_new_line(USART2); 
                     uart_sendstring(USART2, "Message conversion failed. Check format.\r\n");
-                }
             } 
         } 
         else 
-        {
-            uart_send_new_line(USART2); 
             uart_sendstring(USART2, "Invalid ID format.\r\n"); 
-        }
     }
     else
-    {
-        uart_send_new_line(USART2); 
         uart_sendstring(USART2, "Unknown message type.\r\n"); 
-    }
 }
 
 
@@ -996,15 +990,5 @@ CHECKSUM m8q_ubx_checksum(
     checksum = (checksum_A << SHIFT_8) | checksum_B; 
     return checksum; 
 }
-
-
-// M8Q NMEA config user interface 
-void m8q_nmea_config_ui(void)
-{
-    uart_send_new_line(USART2); 
-    uart_sendstring(USART2, ">>> Config message: "); 
-}
-
-#endif   // M8Q_USER_CONFIG
 
 //=======================================================================================

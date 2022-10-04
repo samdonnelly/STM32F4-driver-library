@@ -25,6 +25,10 @@
 // Communication drivers 
 #include "i2c_comm.h"
 #include "uart_comm.h"
+#include "timers.h" 
+
+// Standard Libraries 
+#include <stdio.h> 
 
 //=======================================================================================
 
@@ -33,7 +37,7 @@
 // Macros 
 
 // Device configuration 
-#define M8Q_USER_CONFIG 1   // When set to non-zero then user config code becomes available 
+#define M8Q_USER_CONFIG 0   // When set to non-zero then user config code becomes available 
 #define M8Q_CONFIG_MSG  75  // Config message max length 
 
 // Device parameters 
@@ -79,12 +83,19 @@
 #define M8Q_UBX_START        181   // 181 == 0xB5 --> Start of received UBX message 
 #define M8Q_UBX_SYNC1        0x42  // 0x42 == 'B' --> Start of user config UBX message 
 #define M8Q_UBX_MSG_FMT_LEN  4     // Message format length: CLASS + ID + LENGTH 
-#define M8Q_UBX_LENGTH_OFST  4     // LENGTH field offset from start of UBX message frame 
 #define M8Q_UBX_LENGTH_LEN   2     // LENGTH field length 
 #define M8Q_UBX_HEADER_LEN   6     // Number of bytes before the payload 
 #define M8Q_UBX_CS_LEN       2     // Number of bytes in a UBC message checksum 
 
+#define M8Q_UBX_SYNC1_OFST   0   // 
+#define M8Q_UBX_SYNC2_OFST   1   // 
+#define M8Q_UBX_CLASS_OFST   2   // 
+#define M8Q_UBX_ID_OFST      3   // 
+#define M8Q_UBX_LENGTH_OFST  4   // LENGTH field offset from start of UBX message frame 
+
 // UBX messages 
+#define M8Q_UBX_ACK_CLASS 0x05   // 
+#define M8Q_UBX_ACK_ID    0x01   // 
 
 //=======================================================================================
 
