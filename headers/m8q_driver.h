@@ -127,7 +127,8 @@ typedef enum {
  */
 typedef enum {
     M8Q_READ_INVALID, 
-    M8Q_READ_VALID
+    M8Q_READ_NMEA, 
+    M8Q_READ_UBX
 } m8q_read_status_t; 
 
 

@@ -22,6 +22,12 @@
 //=======================================================================================
 
 
+// TODO 
+// - Reduce the amount of terminal outputs 
+// - Add TX_READY functionality 
+// - Add getters for desired message data 
+
+
 //=======================================================================================
 // Message processing functions 
 
@@ -56,6 +62,7 @@ void m8q_nmea_sort(
  * @details 
  * 
  * @param msg 
+ * @param start_byte 
  * @param arg_num 
  * @param data 
  */
@@ -117,9 +124,12 @@ void m8q_ubx_config(
  * @details 
  * 
  * @param i2c 
+ * @param input_msg_len 
+ * @param input_msg_start 
  * @param input_msg 
+ * @param new_msg_byte_count 
  * @param new_msg 
- * @param term_char : 
+ * @return UBX_MSG_STATUS 
  */
 UBX_MSG_STATUS m8q_ubx_msg_convert(
     I2C_TypeDef *i2c, 
@@ -192,33 +202,17 @@ typedef struct m8q_nmea_time_s
 m8q_nmea_time_t;
 
 
-// NMEA RATE message fields 
-typedef struct m8q_nmea_rate_s
-{
-    uint8_t msgID [BYTE_8];     // NMEA message identifier 
-    uint8_t rddc  [BYTE_1];     // Output rate on DDC 
-    uint8_t rus1  [BYTE_1];     // Output rate on USART 1
-    uint8_t rus2  [BYTE_1];     // Output rate on USART 2
-    uint8_t rusb  [BYTE_1];     // Output rate on USB 
-    uint8_t rspi  [BYTE_1];     // Output rate on SPI 
-    uint8_t res   [BYTE_1];     // Reserved --> 0
-    uint8_t eom   [BYTE_1];     // End of memory --> used for parsing function only 
-} 
-m8q_nmea_rate_t; 
-
-
 // NMEA message data 
 typedef struct m8q_msg_data_s
 {
     m8q_nmea_pos_t  pos_data;     // POSITION message 
     m8q_nmea_time_t time_data;    // TIME message 
-    m8q_nmea_rate_t rate_data;    // RATE message 
 } 
 m8q_msg_data_t; 
 
 
 // NMEA message data instance 
-m8q_msg_data_t m8q_msg_data; 
+static m8q_msg_data_t m8q_msg_data; 
 
 
 // NMEA POSITION message 
@@ -260,19 +254,6 @@ static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] =
     m8q_msg_data.time_data.eom 
 }; 
 
-// NMEA RATE message 
-static uint8_t* rate[M8Q_NMEA_RATE_ARGS+1] = 
-{ 
-    m8q_msg_data.rate_data.msgID, 
-    m8q_msg_data.rate_data.rddc, 
-    m8q_msg_data.rate_data.rus1, 
-    m8q_msg_data.rate_data.rus2, 
-    m8q_msg_data.rate_data.rusb, 
-    m8q_msg_data.rate_data.rspi, 
-    m8q_msg_data.rate_data.res, 
-    m8q_msg_data.rate_data.eom 
-}; 
-
 //=======================================================================================
 
 
@@ -286,12 +267,6 @@ void m8q_init(
     uint8_t msg_index, 
     uint8_t *config_msgs)
 {
-    // TODO 
-    // - configure GPIO for txReady pin if desired 
-
-    // Local variables 
-    uint8_t data_stream = 0; 
-
     // Send configuration messages 
     for (uint8_t i = 0; i < msg_num; i++)
     {
@@ -309,7 +284,6 @@ void m8q_init(
                 break;
 
             case M8Q_UBX_SYNC1:  // UBX message 
-                // while (data_stream != M8Q_NO_DATA) m8q_check_data_stream(i2c, &data_stream); 
                 m8q_ubx_config(i2c, (config_msgs + i*msg_index)); 
                 break;
             
@@ -330,9 +304,7 @@ void m8q_init(
 M8Q_READ_STAT m8q_read(
     I2C_TypeDef *i2c, 
     uint8_t *data)
-{
-    // TODO make sure this functions reads all available messages (& stores them) in one go 
-    
+{    
     // Local variables 
     M8Q_READ_STAT read_status = M8Q_READ_INVALID; 
     uint8_t data_check = 0; 
@@ -362,7 +334,7 @@ M8Q_READ_STAT m8q_read(
             // Parse the message data into its data record 
             m8q_nmea_sort(data); 
 
-            read_status = M8Q_READ_VALID; 
+            read_status = M8Q_READ_NMEA; 
             break;
         
         case M8Q_UBX_START:  // Start of UBX message 
@@ -384,7 +356,7 @@ M8Q_READ_STAT m8q_read(
                             M8Q_UBX_LENGTH_LEN, 
                             M8Q_UBX_CS_LEN); 
 
-            read_status = M8Q_READ_VALID; 
+            read_status = M8Q_READ_UBX; 
             break; 
 
         default:  // Unknown data stream 
@@ -395,7 +367,7 @@ M8Q_READ_STAT m8q_read(
 }
 
 
-// Read the NMEA data stream size 
+// Read the data stream size 
 void m8q_check_data_size(
     I2C_TypeDef *i2c, 
     uint16_t *data_size)
@@ -451,10 +423,6 @@ void m8q_check_data_stream(
 //=======================================================================================
 // Write 
 
-// TODO 
-// - How will sending be handled? Send all messages or select messages? Send every pass 
-//   or only when requested? 
-
 // M8Q write 
 void m8q_write(
     I2C_TypeDef *i2c, 
@@ -489,11 +457,8 @@ uint8_t m8q_message_size(
     // Local variables 
     uint8_t msg_len = 0; 
 
-    while (*msg != term_char)
-    {
-        msg_len++; 
-        msg++; 
-    }
+    // Calculate message size 
+    while (*msg++ != term_char) msg_len++; 
 
     return msg_len; 
 }
@@ -600,11 +565,6 @@ void m8q_nmea_parse(
 
 //=======================================================================================
 // Getters 
-//=======================================================================================
-
-
-//=======================================================================================
-// Setters 
 //=======================================================================================
 
 
@@ -856,14 +816,14 @@ void m8q_ubx_config(
                     // Send the UBX message 
                     m8q_write(i2c, config_msg, M8Q_UBX_HEADER_LEN + pl_len + M8Q_UBX_CS_LEN); 
 
-                    // Read the message response 
-                    while(!(m8q_read(i2c, resp_msg))); 
-
-                    pl_len = (resp_msg[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
-                                                        resp_msg[M8Q_UBX_LENGTH_OFST]; 
+                    // Read the UBX CFG response 
+                    while(m8q_read(i2c, resp_msg) != M8Q_READ_UBX); 
 
                     // Communicate the results 
-                    uart_sendstring(USART2, "UBX configuration message sent.\r\n"); 
+                    uart_sendstring(USART2, "UBX configuration message sent.\r\n");
+
+                    pl_len = (resp_msg[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
+                                                        resp_msg[M8Q_UBX_LENGTH_OFST];  
 
                     if (resp_msg[M8Q_UBX_CLASS_OFST] == M8Q_UBX_ACK_CLASS)
                     {
