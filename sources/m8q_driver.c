@@ -25,6 +25,7 @@
 // TODO 
 // - Reduce the amount of terminal outputs 
 // - Add TX_READY functionality 
+// - Add low power mode functionality (setter?) 
 // - Add getters for desired message data 
 
 
@@ -34,11 +35,12 @@
 /**
  * @brief M8Q message size 
  * 
- * @details Calculated the size of a message based on on a termination character. 
+ * @details Calculates the size of a message by counting up until a termination character 
+ *          is seen. The termination character is not counted as part of the length. 
  * 
- * @param msg 
- * @param term_char 
- * @return uint8_t 
+ * @param msg : pointer to the message of unknown length 
+ * @param term_char : character or byte that signifies the end of the message 
+ * @return uint8_t : length of the message 
  */
 uint8_t m8q_message_size(
     uint8_t *msg, 
@@ -48,23 +50,33 @@ uint8_t m8q_message_size(
 /**
  * @brief M8Q NMEA message sort 
  * 
- * @details 
+ * @details Identifies which NMEA message has been received so an appropriate function 
+ *          call to m8q_nmea_parse can be made. If a message received doesn't match any of the 
+ *          created data records then the message is ignored. This function gets called 
+ *          by the m8q_read function after is reads an incoming NMEA message. 
  * 
- * @param msg : 
+ * @see m8q_nmea_parse
+ * @see m8q_read 
+ * 
+ * @param msg : pointer to the message to analyze 
  */
 void m8q_nmea_sort(
     uint8_t *msg); 
 
 
 /**
- * @brief 
+ * @brief M8Q NMEA message parse 
  * 
- * @details 
+ * @details Parses a full NMEA message payload into it's fields and stores the information 
+ *          in the message data record. This function gets called by m8q_nmea_sort when 
+ *          an NMEA message with a data record is seen. 
  * 
- * @param msg 
- * @param start_byte 
- * @param arg_num 
- * @param data 
+ * @see m8q_nmea_sort
+ * 
+ * @param msg : pointer to the message being parsed 
+ * @param start_byte : byte to start parsing data - where the payload starts 
+ * @param arg_num : number of fields the payload of the message carries 
+ * @param data : double pointer to the message data record where the information is stored 
  */
 void m8q_nmea_parse(
     uint8_t *msg, 
