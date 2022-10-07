@@ -27,6 +27,8 @@
 // - Add TX_READY functionality 
 // - Add low power mode functionality (setter?) 
 // - Add getters for desired message data 
+// - m8q_check_data_size is providing unreliable results - troubleshoot 
+//     - Maybe I'm not using it correctly? 
 
 
 //=======================================================================================
@@ -577,6 +579,23 @@ void m8q_nmea_parse(
 
 //=======================================================================================
 // Getters 
+
+// 
+float m8q_get_lat(void)
+{
+    // volatile float latitude = 0; 
+    // latitude = (float)atof((char *)position[1]); 
+    // return latitude; 
+    return (float)atof((char *)position[1]); 
+}
+
+
+// 
+float m8q_get_long(void)
+{
+    // 
+}
+
 //=======================================================================================
 
 

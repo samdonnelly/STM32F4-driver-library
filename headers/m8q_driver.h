@@ -29,6 +29,7 @@
 
 // Standard Libraries 
 #include <stdio.h> 
+#include <stdlib.h>
 
 //=======================================================================================
 
@@ -256,25 +257,27 @@ void m8q_write(
 
 
 //=======================================================================================
-// Message processing 
-
-// How to parse received NMEA messages 
-
-// How to format outgoing NMEA messages 
-
-// How to take user input for configuration NMEA messages 
-
-// How to parse received UBX messages 
-
-// How to format outgoing UBX messages 
-
-// How to take user input to specify a UBX message 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Getters 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @return float 
+ */
+float m8q_get_lat(void); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @return float 
+ */
+float m8q_get_long(void); 
+
 //=======================================================================================
 
 
