@@ -266,7 +266,8 @@ void m8q_write(
  * 
  * @return float 
  */
-float m8q_get_lat(void); 
+// float m8q_get_lat(void); 
+void m8q_get_lat(int16_t *deg_min, int32_t *min_frac); 
 
 
 /**

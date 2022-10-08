@@ -581,12 +581,39 @@ void m8q_nmea_parse(
 // Getters 
 
 // 
-float m8q_get_lat(void)
+// float m8q_get_lat(void)
+void m8q_get_lat(int16_t *deg_min, int32_t *min_frac)
 {
+    // Local variables 
+    uint8_t deg_min_array[4];   // Integer portion of the minute 
+    uint8_t min_frac_array[6];  // Fractional part of the minute 
+
+    // Copy the latitude into integer and fractional parts 
+    for (uint8_t i = 0; i < 11; i++)
+    {
+        // 
+        if (i < 4)
+        {
+            // 
+            deg_min_array[i] = position[1][i]; 
+        }
+        else if (i > 4)
+        {
+            // 
+            min_frac_array[i-5] = position[1][i]; 
+        }
+    }
+
+    // Convert each number 
+    *deg_min = atoi((char *)deg_min_array); 
+    *min_frac = atoi((char *)min_frac_array); 
+    // *deg_min = sscanf((char *)deg_min_array, "%d", (int *)deg_min); 
+    // *min_frac = sscanf((char *)min_frac_array, "%d", (int *)min_frac_array); 
+
     // volatile float latitude = 0; 
     // latitude = (float)atof((char *)position[1]); 
     // return latitude; 
-    return (float)atof((char *)position[1]); 
+    // return (float)atof((char *)position[1]); 
 }
 
 
