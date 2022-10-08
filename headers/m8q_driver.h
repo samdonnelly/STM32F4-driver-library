@@ -42,8 +42,7 @@
 #define M8Q_CONFIG_MSG  75  // Config message max length 
 
 // Device parameters 
-#define M8Q_I2C_7_BIT_ADDR 0x42  // M8Q I2C address (default) 
-#define M8Q_I2C_8_BIT_ADDR 0x84  // M8Q I2C address (default) shifted to accomodate R/W bit 
+#define M8Q_I2C_8_BIT_ADDR 0x84  // M8Q I2C address (default - 0x42 << 1) 
 
 // M8Q registers 
 #define M8Q_REG_0XFD 0xFD    // Available bytes (high byte) register 
@@ -78,6 +77,13 @@
 
 #define M8Q_NMEA_PUBX_ARG_OFST 9    // First data field offset for PUBX messages 
 #define M8Q_NMEA_STRD_ARG_OFST 7    // First data field offset for standard messages 
+
+
+// NMEA data fields 
+#define M8Q_LAT_INT_LEN   4  // 
+#define M8Q_LAT_FRAC_LEN  6  // 
+#define M8Q_LON_INT_LEN   5  // 
+#define M8Q_LON_FRAC_LEN  6  // 
 
 
 // UBX message format 
@@ -143,6 +149,53 @@ typedef enum {
     M8Q_UBX_MSG_CONV_FAIL, 
     M8Q_UBX_MSG_CONV_SUCC
 } m8q_ubx_msg_convert_status_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    M8Q_POS_TIME, 
+    M8Q_POS_LAT, 
+    M8Q_POS_NS, 
+    M8Q_POS_LON, 
+    M8Q_POS_EW, 
+    M8Q_POS_ALTREF, 
+    M8Q_POS_NAVSTAT, 
+    M8Q_POS_HACC, 
+    M8Q_POS_VACC, 
+    M8Q_POS_SOG, 
+    M8Q_POS_COG, 
+    M8Q_POS_VVEL, 
+    M8Q_POS_DIFFAGE, 
+    M8Q_POS_HDOP, 
+    M8Q_POS_VDOP, 
+    M8Q_POS_TDOP, 
+    M8Q_POS_NUMSVS, 
+    M8Q_POS_RES, 
+    M8Q_POS_DR 
+} m8q_pos_fields_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    M8Q_TIME_TIME, 
+    M8Q_TIME_DATE, 
+    M8Q_TIME_UTCTOW, 
+    M8Q_TIME_UTCWK, 
+    M8Q_TIME_LEAPSEC, 
+    M8Q_TIME_CLKBIAS, 
+    M8Q_TIME_CLKDRIFT, 
+    M8Q_TIME_TPGRAN 
+} m8q_time_fields_t; 
 
 //=======================================================================================
 
@@ -260,24 +313,75 @@ void m8q_write(
 // Getters 
 
 /**
- * @brief 
+ * @brief M8Q latitude getter 
  * 
  * @details 
  * 
- * @return float 
+ * @param deg_min 
+ * @param min_frac 
  */
-// float m8q_get_lat(void); 
-void m8q_get_lat(int16_t *deg_min, int32_t *min_frac); 
+void m8q_get_lat(uint16_t *deg_min, uint32_t *min_frac); 
 
 
 /**
- * @brief 
+ * @brief M8Q North/South getter 
  * 
  * @details 
  * 
- * @return float 
+ * @return uint8_t 
  */
-float m8q_get_long(void); 
+uint8_t m8q_get_NS(void); 
+
+
+/**
+ * @brief M8Q longitude getter 
+ * 
+ * @details 
+ * 
+ * @param deg_min 
+ * @param min_frac 
+ */
+void m8q_get_long(uint16_t *deg_min, uint32_t *min_frac); 
+
+
+/**
+ * @brief M8Q East/West getter 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t m8q_get_EW(void); 
+
+
+/**
+ * @brief M8Q navigation status getter 
+ * 
+ * @details 
+ * 
+ * @return uint16_t 
+ */
+uint16_t m8q_get_navstat(void); 
+
+
+/**
+ * @brief M8Q time getter 
+ * 
+ * @details 
+ * 
+ * @param time 
+ */
+void m8q_get_time(uint8_t *utc_time); 
+
+
+/**
+ * @brief M8Q date getter 
+ * 
+ * @details 
+ * 
+ * @param date 
+ */
+void m8q_get_date(uint8_t *utc_date); 
 
 //=======================================================================================
 
