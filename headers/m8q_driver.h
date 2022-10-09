@@ -80,10 +80,7 @@
 
 
 // NMEA data fields 
-#define M8Q_LAT_INT_LEN   4  // 
-#define M8Q_LAT_FRAC_LEN  6  // 
-#define M8Q_LON_INT_LEN   5  // 
-#define M8Q_LON_FRAC_LEN  6  // 
+#define M8Q_COO_DATA_LEN  5  // 
 
 
 // UBX message format 

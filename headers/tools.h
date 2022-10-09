@@ -68,6 +68,7 @@
 #define CR_CHAR     13   // '\r' == 13
 #define AST_CHAR    42   // '*'  == 42
 #define COMMA_CHAR  44   // ','  == 44
+#define PERIOD_CHAR 46   // '.'  == 46 
 #define ZERO_CHAR   48   // '0'  == 48
 #define NINE_CHAR   57   // '9'  == 57 
 #define A_CHAR      65   // 'A'  == 65

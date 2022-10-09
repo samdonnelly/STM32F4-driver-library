@@ -26,7 +26,6 @@
 // - Reduce the amount of terminal outputs 
 // - Add TX_READY functionality 
 // - Add low power mode functionality (setter?) 
-// - Add getters for desired message data 
 // - m8q_check_data_size is providing unreliable results - troubleshoot 
 //     - Maybe I'm not using it correctly? 
 // - Remove the pointer to buffer in m8q_read --> the point of the data records and 
@@ -588,21 +587,27 @@ void m8q_nmea_parse(
 void m8q_get_lat(uint16_t *deg_min, uint32_t *min_frac)
 {
     // Local variables 
-    uint8_t deg_min_array[M8Q_LAT_INT_LEN];    // Integer portion of the minute 
-    uint8_t min_frac_array[M8Q_LAT_FRAC_LEN];  // Fractional part of the minute 
+    uint8_t deg_min_array[M8Q_COO_DATA_LEN];          // Integer portion of the minute 
+    uint8_t min_frac_array[M8Q_COO_DATA_LEN+BYTE_1];  // Fractional part of the minute 
+    uint8_t lat_length = 2*M8Q_COO_DATA_LEN + BYTE_1;
 
     // Copy the latitude into integer and fractional parts 
-    for (uint8_t i = 0; i < (M8Q_LAT_INT_LEN + M8Q_LAT_FRAC_LEN + 1); i++)
+    for (uint8_t i = 0; i < lat_length; i++)
     {
-        if (i < M8Q_LAT_INT_LEN)
+        if (i < (M8Q_COO_DATA_LEN-BYTE_1))
             deg_min_array[i] = position[M8Q_POS_LAT][i]; 
-        else if (i > M8Q_LAT_INT_LEN)
-            min_frac_array[i-(M8Q_LAT_INT_LEN+1)] = position[M8Q_POS_LAT][i]; 
+        
+        else if (i == (M8Q_COO_DATA_LEN-BYTE_1))
+            deg_min_array[i] = NULL_CHAR; 
+        
+        else if (i < (2*M8Q_COO_DATA_LEN))
+            min_frac_array[i-M8Q_COO_DATA_LEN] = position[M8Q_POS_LAT][i]; 
+        
+        else
+            min_frac_array[i-M8Q_COO_DATA_LEN] = NULL_CHAR; 
     }
 
     // Convert each number 
-    // *deg_min = atoi((char *)deg_min_array); 
-    // *min_frac = atoi((char *)min_frac_array); 
     sscanf((char *)deg_min_array, "%hu", deg_min); 
     sscanf((char *)min_frac_array, "%lu", min_frac); 
 }
@@ -611,7 +616,6 @@ void m8q_get_lat(uint16_t *deg_min, uint32_t *min_frac)
 // M8Q North/South getter 
 uint8_t m8q_get_NS(void)
 {
-    // return position[M8Q_POS_NS][0]; 
     return *(position[M8Q_POS_NS]); 
 }
 
@@ -620,27 +624,27 @@ uint8_t m8q_get_NS(void)
 void m8q_get_long(uint16_t *deg_min, uint32_t *min_frac)
 {
     // Local variables 
-    // uint8_t deg_min_array[M8Q_LON_INT_LEN];    // Integer portion of the minute 
-    uint8_t deg_min_array[6];    // Integer portion of the minute 
-    uint8_t min_frac_array[M8Q_LON_FRAC_LEN];  // Fractional part of the minute 
-    // char *ptr; 
-    // uint32_t value = 0; 
+    uint8_t deg_min_array[M8Q_COO_DATA_LEN+BYTE_1];   // Integer portion of the minute 
+    uint8_t min_frac_array[M8Q_COO_DATA_LEN+BYTE_1];  // Fractional part of the minute 
+    uint8_t lat_length = 2*M8Q_COO_DATA_LEN + BYTE_2;
 
     // Copy the latitude into integer and fractional parts 
-    for (uint8_t i = 0; i < (M8Q_LON_INT_LEN + M8Q_LON_FRAC_LEN + 1); i++)
+    for (uint8_t i = 0; i < lat_length; i++)
     {
-        if (i < M8Q_LON_INT_LEN)
+        if (i < M8Q_COO_DATA_LEN)
             deg_min_array[i] = position[M8Q_POS_LON][i]; 
-        else if (i > M8Q_LON_INT_LEN)
-            min_frac_array[i-(M8Q_LON_INT_LEN+1)] = position[M8Q_POS_LON][i]; 
+        
+        else if (i == M8Q_COO_DATA_LEN)
+            deg_min_array[i] = NULL_CHAR; 
+        
+        else if (i < (2*M8Q_COO_DATA_LEN + BYTE_1))
+            min_frac_array[i-(M8Q_COO_DATA_LEN + BYTE_1)] = position[M8Q_POS_LON][i]; 
+        
         else
-            deg_min_array[i] = NULL_CHAR; // TODO must be NULL terminated for reliability
+            min_frac_array[i-(M8Q_COO_DATA_LEN + BYTE_1)] = NULL_CHAR; 
     }
 
     // Convert each number 
-    // *deg_min = atoi((char *)deg_min_array); 
-    // *min_frac = atoi((char *)min_frac_array); 
-
     sscanf((char *)deg_min_array, "%hu", deg_min); 
     sscanf((char *)min_frac_array, "%lu", min_frac); 
 }
@@ -649,7 +653,6 @@ void m8q_get_long(uint16_t *deg_min, uint32_t *min_frac)
 // M8Q East/West getter 
 uint8_t m8q_get_EW(void)
 {
-    // return position[M8Q_POS_EW][0]; 
     return *(position[M8Q_POS_EW]);
 }
 
@@ -662,8 +665,8 @@ uint16_t m8q_get_navstat(void)
     uint16_t navstat_low = 0; 
 
     // Format the status 
-    navstat_high = position[M8Q_POS_NAVSTAT][0] << SHIFT_8; 
-    navstat_low = position[M8Q_POS_NAVSTAT][1]; 
+    navstat_high = position[M8Q_POS_NAVSTAT][BYTE_0] << SHIFT_8; 
+    navstat_low = position[M8Q_POS_NAVSTAT][BYTE_1]; 
 
     return (navstat_high | navstat_low); 
 }
