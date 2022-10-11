@@ -25,6 +25,7 @@
 // Communication drivers 
 #include "i2c_comm.h"
 #include "uart_comm.h"
+#include "gpio_driver.h"
 #include "timers.h" 
 
 // Standard Libraries 
