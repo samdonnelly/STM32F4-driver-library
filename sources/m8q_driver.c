@@ -287,11 +287,12 @@ void m8q_init(
     // Configure a GPIO for low power mode 
     // TODO figure out which GPIO to use that also works 
     // gpio_init(GPIOC, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
-    gpio_init(GPIOA, PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+    // gpio_init(GPIOA, PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
     // gpio_write(GPIOC, GPIOX_PIN_12, GPIO_HIGH); 
-    gpio_write(GPIOA, GPIOX_PIN_8, GPIO_HIGH); 
+    // gpio_write(GPIOA, GPIOX_PIN_8, GPIO_HIGH); 
 
     // Configure a GPIO for TX_READY 
+    gpio_init(GPIOA, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_PD);
 
     // Send configuration messages 
     for (uint8_t i = 0; i < msg_num; i++)
