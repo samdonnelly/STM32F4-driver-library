@@ -284,15 +284,17 @@ void m8q_init(
     uint8_t msg_index, 
     uint8_t *config_msgs)
 {
-    // Configure a GPIO for low power mode 
-    // TODO figure out which GPIO to use that also works 
-    // gpio_init(GPIOC, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
-    // gpio_init(GPIOA, PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
-    // gpio_write(GPIOC, GPIOX_PIN_12, GPIO_HIGH); 
-    // gpio_write(GPIOA, GPIOX_PIN_8, GPIO_HIGH); 
+    // TODO consider making a file for general purpose inits that apply to everything 
+    // Enable GPIOC clock - RCC_AHB1ENR register, bit 2 - this is needed for GPIO to work 
+    RCC->AHB1ENR |= (SET_BIT << SHIFT_2);
 
-    // Configure a GPIO for TX_READY 
-    gpio_init(GPIOA, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_PD);
+    // Configure a GPIO output for low power mode 
+    // TODO figure out which GPIO to use that also works 
+    gpio_init(GPIOC, PIN_10, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+    gpio_write(GPIOC, GPIOX_PIN_10, GPIO_HIGH);
+
+    // Configure a GPIO input for TX_READY 
+    gpio_init(GPIOC, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_PD);
 
     // Send configuration messages 
     for (uint8_t i = 0; i < msg_num; i++)
