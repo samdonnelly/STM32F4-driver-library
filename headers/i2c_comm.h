@@ -28,6 +28,19 @@
 // Enums 
 
 /**
+ * @brief I2C read and write bit offset 
+ * 
+ * @details Used in conjunction with an I2C module address to indicate a read or write 
+ *          operation at bit 0. 
+ * 
+ */
+typedef enum {
+    I2C_W_OFFSET, 
+    I2C_R_OFFSET
+} i2c_rw_offset_t; 
+
+
+/**
  * @brief I2C1 available SCL pins 
  * 
  * @details These pins are the available I2C1 SCL pins on the chip. The values associated 

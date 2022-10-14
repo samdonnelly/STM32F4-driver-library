@@ -24,8 +24,6 @@
 
 // TODO 
 // - Reduce the amount of terminal outputs 
-// - Add TX_READY functionality 
-// - Add low power mode functionality (setter?) 
 // - m8q_check_data_size is providing unreliable results - troubleshoot 
 //     - Maybe I'm not using it correctly? 
 // - Remove the pointer to buffer in m8q_read --> the point of the data records and 
@@ -354,7 +352,7 @@ M8Q_READ_STAT m8q_read(
             i2c_start(i2c); 
 
             // Send the device address with a read offset 
-            i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + M8Q_R_OFFSET); 
+            i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
             i2c_clear_addr(i2c);  
 
             // Read the rest of the data stream until "\r\n" 
@@ -374,12 +372,12 @@ M8Q_READ_STAT m8q_read(
             i2c_start(i2c); 
 
             // Send the device address with a read offset 
-            i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + M8Q_R_OFFSET); 
+            i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
             i2c_clear_addr(i2c); 
 
             // Read the rest of the UBX message 
             i2c_read_to_len(i2c, 
-                            M8Q_I2C_8_BIT_ADDR + M8Q_R_OFFSET, 
+                            M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET, 
                             data, 
                             M8Q_UBX_LENGTH_OFST-BYTE_1, 
                             M8Q_UBX_LENGTH_LEN, 
@@ -409,7 +407,7 @@ void m8q_check_data_size(
     i2c_start(i2c); 
 
     // Write the slave address with write access 
-    i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + M8Q_W_OFFSET); 
+    i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
     i2c_clear_addr(i2c); 
 
     // Send the first data size register address to start reading from there 
@@ -419,7 +417,7 @@ void m8q_check_data_size(
     i2c_start(i2c); 
 
     // Send the device address again with a read offset 
-    i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + M8Q_R_OFFSET);  
+    i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET);  
     i2c_clear_addr(i2c); 
 
     // Read the data size registers 
@@ -439,7 +437,7 @@ void m8q_check_data_stream(
     i2c_start(i2c); 
 
     // Send the device address with a read offset 
-    i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + M8Q_R_OFFSET); 
+    i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
     i2c_clear_addr(i2c); 
 
     // Read the first byte of the data stream 
@@ -462,7 +460,7 @@ void m8q_write(
     i2c_start(I2C1); 
 
     // Send the device address with a write offset 
-    i2c_write_address(I2C1, M8Q_I2C_8_BIT_ADDR + M8Q_W_OFFSET); 
+    i2c_write_address(I2C1, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
     i2c_clear_addr(I2C1); 
 
     // Send data (at least 2 bytes) 
@@ -595,6 +593,13 @@ void m8q_nmea_parse(
 //=======================================================================================
 // Getters 
 
+// M8Q TX-Ready getter 
+uint8_t m8q_get_tx_ready(void)
+{
+    return gpio_read(GPIOC, GPIOX_PIN_11); 
+}
+
+
 // M8Q latitude getter 
 void m8q_get_lat(uint16_t *deg_min, uint32_t *min_frac)
 {
@@ -697,6 +702,18 @@ void m8q_get_date(uint8_t *utc_date)
 {
     for (uint8_t i = 0; i < 6; i++)
         *utc_date++ = time[M8Q_TIME_DATE][i]; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Setters 
+
+// M8Q Low Power Mode setter 
+void m8q_set_low_power(gpio_pin_state_t pin_state)
+{
+    gpio_write(GPIOC, GPIOX_PIN_10, pin_state);
 }
 
 //=======================================================================================

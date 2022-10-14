@@ -109,25 +109,12 @@
 // Enums 
 
 /**
- * @brief M8Q read and write bit offset 
- * 
- * @details Used in conjunction with the module I2C address to indicate a read or write 
- *          operation when communicating over I2C. 
- * 
- */
-typedef enum {
-    M8Q_W_OFFSET, 
-    M8Q_R_OFFSET
-} m8q_rw_offset_t; 
-
-
-/**
  * @brief M8Q valid read indicator 
  * 
- * @details Used to define a valid or invalid read of NMEA message data in the m8q_read_nmea
- *          function. 
+ * @details Used to define a valid or invalid message read in the m8q_read function. The enum 
+ *          returns the result indicating the type of message read, if any. 
  * 
- * @see m8q_read_nmea
+ * @see m8q_read
  * 
  */
 typedef enum {
@@ -138,9 +125,11 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief M8Q UBX message conversion status 
  * 
- * @details 
+ * @details Indicates whether a UBX message string was successfully converted into a format 
+ *          readable by the receiver. Message strings come from the receiver config file or 
+ *          user input during user config operation. 
  * 
  */
 typedef enum {
@@ -150,7 +139,7 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief M8Q NMEA POSITION message data fields 
  * 
  * @details 
  * 
@@ -311,6 +300,16 @@ void m8q_write(
 // Getters 
 
 /**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t m8q_get_tx_ready(void); 
+
+
+/**
  * @brief M8Q latitude getter 
  * 
  * @details 
@@ -380,6 +379,21 @@ void m8q_get_time(uint8_t *utc_time);
  * @param date 
  */
 void m8q_get_date(uint8_t *utc_date); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Setters 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param pin_state 
+ */
+void m8q_set_low_power(gpio_pin_state_t pin_state); 
 
 //=======================================================================================
 
