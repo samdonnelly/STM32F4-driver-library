@@ -96,7 +96,12 @@ void m8q_nmea_parse(
 /**
  * @brief M8Q NMEA config function 
  * 
- * @details 
+ * @details Checks the format of an outgoing NMEA message and prepares it for sending. 
+ *          If the message is not formatted correctly it will not send. THe function 
+ *          calls m8q_nmea_checksum in order to append that information to the end 
+ *          of the message. 
+ * 
+ * @see m8q_nmea_checksum 
  * 
  * @param i2c : pointer to the I2C port used 
  * @param msg : pointer to the input message buffer  
@@ -837,7 +842,7 @@ void m8q_nmea_config(
                 sprintf(term_str, "*%c%c\r\n", (char)(checksum >> SHIFT_8), (char)(checksum)); 
                 for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) *msg_ptr++ = (uint8_t)term_str[i]; 
 
-                // Pass the message along to the NMEA send function 
+                // Pass the message along to the M8Q write function 
                 m8q_write(I2C1, msg, m8q_message_size(msg, NULL_CHAR));
 
                 // Send confirmation message to terminal 
