@@ -97,7 +97,7 @@ void m8q_nmea_parse(
  * @brief M8Q NMEA config function 
  * 
  * @details Checks the format of an outgoing NMEA message and prepares it for sending. 
- *          If the message is not formatted correctly it will not send. THe function 
+ *          If the message is not formatted correctly it will not send. The function 
  *          calls m8q_nmea_checksum in order to append that information to the end 
  *          of the message. 
  * 
@@ -128,7 +128,15 @@ CHECKSUM m8q_nmea_checksum(
 /**
  * @brief M8Q UBX config function 
  * 
- * @details 
+ * @details Checks the format of an outgoing UBX message and prepares it for sending. 
+ *          If the message is not formatted correctly it will not send. The function 
+ *          calls m8q_ubx_checksum in order to append that information to the end 
+ *          of the message. UBX messages are input by users as strings of ASCII characters 
+ *          but UBX messages are sent as numbers. This function converts messages 
+ *          using m8q_ubx_msg_convert before sending. 
+ * 
+ * @see m8q_ubx_checksum 
+ * @see m8q_ubx_msg_convert
  * 
  * @param i2c : pointer to the I2C port used 
  * @param input_msg : pointer to the input message buffer 
