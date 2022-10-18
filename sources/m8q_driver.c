@@ -24,8 +24,6 @@
 
 // TODO 
 // - Reduce the amount of terminal outputs 
-// - m8q_check_data_size is providing unreliable results - troubleshoot 
-//     - Maybe I'm not using it correctly? 
 // - Remove the pointer to buffer in m8q_read --> the point of the data records and 
 //   getters is to only get the information you need, not the while string. Create a 
 //   global (to this driver only) record to store UBC response messages (ubx_config) so 
@@ -149,15 +147,19 @@ void m8q_ubx_config(
 /**
  * @brief M8Q UBX message conversion 
  * 
- * @details 
+ * @details Converts a UBX message ASCII character string into it's equivalent decimal 
+ *          value so that it can be properly interpreted by the receiver when the message 
+ *          is sent. This function gets called by m8q_ubx_config. 
  * 
- * @param i2c 
- * @param input_msg_len 
- * @param input_msg_start 
- * @param input_msg 
- * @param new_msg_byte_count 
- * @param new_msg 
- * @return UBX_MSG_STATUS 
+ * @see m8q_ubx_config
+ * 
+ * @param i2c : pointer to the I2C port used 
+ * @param input_msg_len : length of the message string being converted 
+ * @param input_msg_start : starting byte o message string being converted 
+ * @param input_msg : pointer to message string buffer 
+ * @param new_msg_byte_count : stores the byte count of the converted message 
+ * @param new_msg : pointer to the new (converted) message string buffer 
+ * @return UBX_MSG_STATUS : status of the conversion 
  */
 UBX_MSG_STATUS m8q_ubx_msg_convert(
     I2C_TypeDef *i2c, 
@@ -171,7 +173,9 @@ UBX_MSG_STATUS m8q_ubx_msg_convert(
 /**
  * @brief M8Q UBX checksum calculation 
  * 
- * @details 
+ * @details Calculates the checksum of the UBX message. This function is called after 
+ *          the message has been verified to be valid and it has been fully converted to 
+ *          a readable format for the receiver. 
  * 
  * @param msg : pointer to message buffer 
  * @param len : Length of checksum calculation range 
@@ -300,7 +304,6 @@ void m8q_init(
     RCC->AHB1ENR |= (SET_BIT << SHIFT_2);
 
     // Configure a GPIO output for low power mode 
-    // TODO figure out which GPIO to use that also works 
     gpio_init(GPIOC, PIN_10, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
     gpio_write(GPIOC, GPIOX_PIN_10, GPIO_HIGH);
 
@@ -338,7 +341,7 @@ void m8q_init(
 
 
 //=======================================================================================
-// NMEA Read 
+// Read functions 
 
 // Read a message from the M8Q 
 M8Q_READ_STAT m8q_read(
@@ -461,7 +464,7 @@ void m8q_check_data_stream(
 
 
 //=======================================================================================
-// Write 
+// Write functions 
 
 // M8Q write 
 void m8q_write(
@@ -504,7 +507,7 @@ uint8_t m8q_message_size(
 }
 
 
-// M8Q NMEA message sort 
+// NMEA message sort 
 void m8q_nmea_sort(
     uint8_t *msg)
 {
@@ -535,7 +538,7 @@ void m8q_nmea_sort(
 }
 
 
-// M8Q NMEA message parse 
+// NMEA message parse 
 void m8q_nmea_parse(
     uint8_t *msg, 
     uint8_t start_byte, 
@@ -606,14 +609,14 @@ void m8q_nmea_parse(
 //=======================================================================================
 // Getters 
 
-// M8Q TX-Ready getter 
+// TX-Ready getter 
 uint8_t m8q_get_tx_ready(void)
 {
     return gpio_read(GPIOC, GPIOX_PIN_11); 
 }
 
 
-// M8Q latitude getter 
+// Latitude getter 
 void m8q_get_lat(uint16_t *deg_min, uint32_t *min_frac)
 {
     // Local variables 
@@ -643,14 +646,14 @@ void m8q_get_lat(uint16_t *deg_min, uint32_t *min_frac)
 }
 
 
-// M8Q North/South getter 
+// North/South getter 
 uint8_t m8q_get_NS(void)
 {
     return *(position[M8Q_POS_NS]); 
 }
 
 
-// M8Q longitude getter 
+// Longitude getter 
 void m8q_get_long(uint16_t *deg_min, uint32_t *min_frac)
 {
     // Local variables 
@@ -680,14 +683,14 @@ void m8q_get_long(uint16_t *deg_min, uint32_t *min_frac)
 }
 
 
-// M8Q East/West getter 
+// East/West getter 
 uint8_t m8q_get_EW(void)
 {
     return *(position[M8Q_POS_EW]);
 }
 
 
-// M8Q navigation status getter 
+// Navigation status getter 
 uint16_t m8q_get_navstat(void)
 {
     // Local variables 
@@ -702,7 +705,7 @@ uint16_t m8q_get_navstat(void)
 }
 
 
-// M8Q time getter 
+// Time getter 
 void m8q_get_time(uint8_t *utc_time)
 {
     for (uint8_t i = 0; i < 9; i++)
@@ -710,7 +713,7 @@ void m8q_get_time(uint8_t *utc_time)
 }
 
 
-// M8Q date getter 
+// Date getter 
 void m8q_get_date(uint8_t *utc_date)
 {
     for (uint8_t i = 0; i < 6; i++)
@@ -723,7 +726,7 @@ void m8q_get_date(uint8_t *utc_date)
 //=======================================================================================
 // Setters 
 
-// M8Q Low Power Mode setter 
+// Low Power Mode setter 
 void m8q_set_low_power(gpio_pin_state_t pin_state)
 {
     gpio_write(GPIOC, GPIOX_PIN_10, pin_state);
@@ -790,7 +793,7 @@ void m8q_nmea_config_ui(void)
 //=======================================================================================
 // Message configuration functions 
 
-// M8Q NMEA config function 
+// NMEA config function 
 void m8q_nmea_config(
     I2C_TypeDef *i2c, 
     uint8_t *msg)
@@ -865,7 +868,7 @@ void m8q_nmea_config(
 }
 
 
-// M8Q NMEA message calculation 
+// NMEA message calculation 
 CHECKSUM m8q_nmea_checksum(
     uint8_t *msg)
 {
@@ -896,7 +899,7 @@ CHECKSUM m8q_nmea_checksum(
 }
 
 
-// M8Q UBX config function 
+// UBX config function 
 void m8q_ubx_config(
     I2C_TypeDef *i2c, 
     uint8_t *input_msg)
@@ -1017,7 +1020,7 @@ void m8q_ubx_config(
 }
 
 
-// M8Q UBX message convert 
+// UBX message convert 
 UBX_MSG_STATUS m8q_ubx_msg_convert(
     I2C_TypeDef *i2c, 
     uint8_t input_msg_len, 
@@ -1091,7 +1094,7 @@ UBX_MSG_STATUS m8q_ubx_msg_convert(
 }
 
 
-// M8Q UBX checksum calculation 
+// UBX checksum calculation 
 CHECKSUM m8q_ubx_checksum(
     uint8_t *msg, 
     uint16_t len)
