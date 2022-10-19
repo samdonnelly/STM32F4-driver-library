@@ -153,7 +153,6 @@ void m8q_ubx_config(
  * 
  * @see m8q_ubx_config
  * 
- * @param i2c : pointer to the I2C port used 
  * @param input_msg_len : length of the message string being converted 
  * @param input_msg_start : starting byte o message string being converted 
  * @param input_msg : pointer to message string buffer 
@@ -162,7 +161,6 @@ void m8q_ubx_config(
  * @return UBX_MSG_STATUS : status of the conversion 
  */
 UBX_MSG_STATUS m8q_ubx_msg_convert(
-    I2C_TypeDef *i2c, 
     uint8_t input_msg_len,
     uint8_t input_msg_start, 
     uint8_t *input_msg, 
@@ -235,55 +233,64 @@ m8q_nmea_time_t;
 
 
 // NMEA message data 
-typedef struct m8q_msg_data_s
+typedef struct m8q_comm_data_s
 {
-    m8q_nmea_pos_t  pos_data;     // POSITION message 
-    m8q_nmea_time_t time_data;    // TIME message 
+    // Messages 
+    m8q_nmea_pos_t  pos_data;     // POSITION 
+    m8q_nmea_time_t time_data;    // TIME 
+
+    // Communications 
+    I2C_TypeDef *i2c; 
+    GPIO_TypeDef *gpio; 
+
+    // Pins 
+    pin_selector_t pwr_save;      // Low power mode 
+    pin_selector_t tx_ready;      // TX-Ready 
 } 
-m8q_msg_data_t; 
+m8q_comm_data_t; 
 
 
 // NMEA message data instance 
-static m8q_msg_data_t m8q_msg_data; 
+static m8q_comm_data_t m8q_comm_data; 
 
 
 // NMEA POSITION message 
 static uint8_t* position[M8Q_NMEA_POS_ARGS+1] = 
 { 
-    m8q_msg_data.pos_data.time, 
-    m8q_msg_data.pos_data.lat, 
-    m8q_msg_data.pos_data.NS, 
-    m8q_msg_data.pos_data.lon, 
-    m8q_msg_data.pos_data.EW, 
-    m8q_msg_data.pos_data.altRef, 
-    m8q_msg_data.pos_data.navStat, 
-    m8q_msg_data.pos_data.hAcc, 
-    m8q_msg_data.pos_data.vAcc,
-    m8q_msg_data.pos_data.SOG,
-    m8q_msg_data.pos_data.COG,
-    m8q_msg_data.pos_data.vVel,
-    m8q_msg_data.pos_data.diffAge,
-    m8q_msg_data.pos_data.HDOP,
-    m8q_msg_data.pos_data.VDOP,
-    m8q_msg_data.pos_data.TDOP,
-    m8q_msg_data.pos_data.numSvs,
-    m8q_msg_data.pos_data.res,
-    m8q_msg_data.pos_data.DR, 
-    m8q_msg_data.pos_data.eom 
+    m8q_comm_data.pos_data.time, 
+    m8q_comm_data.pos_data.lat, 
+    m8q_comm_data.pos_data.NS, 
+    m8q_comm_data.pos_data.lon, 
+    m8q_comm_data.pos_data.EW, 
+    m8q_comm_data.pos_data.altRef, 
+    m8q_comm_data.pos_data.navStat, 
+    m8q_comm_data.pos_data.hAcc, 
+    m8q_comm_data.pos_data.vAcc,
+    m8q_comm_data.pos_data.SOG,
+    m8q_comm_data.pos_data.COG,
+    m8q_comm_data.pos_data.vVel,
+    m8q_comm_data.pos_data.diffAge,
+    m8q_comm_data.pos_data.HDOP,
+    m8q_comm_data.pos_data.VDOP,
+    m8q_comm_data.pos_data.TDOP,
+    m8q_comm_data.pos_data.numSvs,
+    m8q_comm_data.pos_data.res,
+    m8q_comm_data.pos_data.DR, 
+    m8q_comm_data.pos_data.eom 
 }; 
 
 // NMEA TIME message 
 static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] = 
 { 
-    m8q_msg_data.time_data.time, 
-    m8q_msg_data.time_data.date, 
-    m8q_msg_data.time_data.utcTow, 
-    m8q_msg_data.time_data.utcWk, 
-    m8q_msg_data.time_data.leapSec, 
-    m8q_msg_data.time_data.clkBias, 
-    m8q_msg_data.time_data.clkDrift, 
-    m8q_msg_data.time_data.tpGran, 
-    m8q_msg_data.time_data.eom 
+    m8q_comm_data.time_data.time, 
+    m8q_comm_data.time_data.date, 
+    m8q_comm_data.time_data.utcTow, 
+    m8q_comm_data.time_data.utcWk, 
+    m8q_comm_data.time_data.leapSec, 
+    m8q_comm_data.time_data.clkBias, 
+    m8q_comm_data.time_data.clkDrift, 
+    m8q_comm_data.time_data.tpGran, 
+    m8q_comm_data.time_data.eom 
 }; 
 
 //=======================================================================================
@@ -295,20 +302,29 @@ static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] =
 // M8Q initialization 
 void m8q_init(
     I2C_TypeDef *i2c, 
+    GPIO_TypeDef *gpio, 
+    pin_selector_t pwr_save_pin, 
+    pin_selector_t tx_ready_pin, 
     uint8_t msg_num, 
-    uint8_t msg_index, 
+    uint8_t msg_max_size, 
     uint8_t *config_msgs)
 {
+    // Initialize the device communication info 
+    m8q_comm_data.i2c = i2c; 
+    m8q_comm_data.gpio = gpio; 
+    m8q_comm_data.pwr_save = pwr_save_pin; 
+    m8q_comm_data.tx_ready = tx_ready_pin; 
+
     // TODO consider making a file for general purpose inits that apply to everything 
     // Enable GPIOC clock - RCC_AHB1ENR register, bit 2 - this is needed for GPIO to work 
     RCC->AHB1ENR |= (SET_BIT << SHIFT_2);
 
     // Configure a GPIO output for low power mode 
-    gpio_init(GPIOC, PIN_10, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+    gpio_pin_init(GPIOC, PIN_10, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
     gpio_write(GPIOC, GPIOX_PIN_10, GPIO_HIGH);
 
     // Configure a GPIO input for TX_READY 
-    gpio_init(GPIOC, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_PD);
+    gpio_pin_init(GPIOC, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_PD);
 
     // Send configuration messages 
     for (uint8_t i = 0; i < msg_num; i++)
@@ -316,18 +332,18 @@ void m8q_init(
         // Print message to terminal for verification 
         uart_send_new_line(USART2); 
         uart_sendstring(USART2, "Config message: "); 
-        uart_sendstring(USART2, (char *)(config_msgs + i*msg_index)); 
+        uart_sendstring(USART2, (char *)(config_msgs + i*msg_max_size)); 
         uart_send_new_line(USART2); 
 
         // Identify the message type 
-        switch (*(config_msgs + i*msg_index))
+        switch (*(config_msgs + i*msg_max_size))
         {
             case M8Q_NMEA_START:  // NMEA message 
-                m8q_nmea_config(i2c, (config_msgs + i*msg_index)); 
+                m8q_nmea_config(i2c, (config_msgs + i*msg_max_size)); 
                 break;
 
             case M8Q_UBX_SYNC1:  // UBX message 
-                m8q_ubx_config(i2c, (config_msgs + i*msg_index)); 
+                m8q_ubx_config(i2c, (config_msgs + i*msg_max_size)); 
                 break;
             
             default:  // Unknown config message 
@@ -854,7 +870,7 @@ void m8q_nmea_config(
                 for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) *msg_ptr++ = (uint8_t)term_str[i]; 
 
                 // Pass the message along to the M8Q write function 
-                m8q_write(I2C1, msg, m8q_message_size(msg, NULL_CHAR));
+                m8q_write(i2c, msg, m8q_message_size(msg, NULL_CHAR));
 
                 // Send confirmation message to terminal 
                 uart_sendstring(USART2, "NMEA configuration message sent.\r\n"); 
@@ -925,7 +941,7 @@ void m8q_ubx_config(
     if (str_compare("B5,62,06,", (char *)input_msg, BYTE_0))
     {
         // Validate the ID formatting 
-        if (m8q_ubx_msg_convert(i2c, BYTE_2, BYTE_9, input_msg, &byte_count, &msg_id_input))
+        if (m8q_ubx_msg_convert(BYTE_2, BYTE_9, input_msg, &byte_count, &msg_id_input))
         {
             // Check payload length 
             if (str_compare("poll", (char *)input_msg, BYTE_12))  // Poll request 
@@ -939,7 +955,7 @@ void m8q_ubx_config(
             else  // Not (necessarily) a poll request 
             {
                 // Read the specified payload length and check the format 
-                if (m8q_ubx_msg_convert(i2c, BYTE_4, BYTE_12, 
+                if (m8q_ubx_msg_convert(BYTE_4, BYTE_12, 
                                         input_msg, &byte_count, pl_len_input))
                 {
                     // Format the payload length 
@@ -951,7 +967,7 @@ void m8q_ubx_config(
                     
                     byte_count = 0;  // Reset the byte count to check payload length 
                     
-                    if (m8q_ubx_msg_convert(i2c, input_msg_len-BYTE_17, BYTE_17,
+                    if (m8q_ubx_msg_convert(input_msg_len-BYTE_17, BYTE_17,
                                             input_msg, &byte_count, pl_arg_input))
                     {                        
                         if (pl_len == byte_count)
@@ -970,7 +986,7 @@ void m8q_ubx_config(
             if (format_ok)
             {
                 // Convert the input message to the proper UBX message format 
-                if (m8q_ubx_msg_convert(i2c, input_msg_len, BYTE_0, 
+                if (m8q_ubx_msg_convert(input_msg_len, BYTE_0, 
                                         input_msg, &byte_count, config_msg))
                 {
                     // Calculate the checksum 
@@ -1022,7 +1038,6 @@ void m8q_ubx_config(
 
 // UBX message convert 
 UBX_MSG_STATUS m8q_ubx_msg_convert(
-    I2C_TypeDef *i2c, 
     uint8_t input_msg_len, 
     uint8_t input_msg_start, 
     uint8_t *input_msg, 

@@ -195,12 +195,21 @@ typedef m8q_ubx_msg_convert_status_t UBX_MSG_STATUS;
  * 
  * @details To be implemented. 
  * 
- * @param config_msgs 
+ * @param i2c : pointer to I2C port used for receiver communication 
+ * @param gpio : pointer to GPIO port used for receiver peripherals 
+ * @param pwr_save_pin : pin used low power mode trigger (peripheral) 
+ * @param tx_ready_pin : pin used for tx_ready indication (peripheral) 
+ * @param msg_num : number of configuration messages to send 
+ * @param msg_max_size : maximum config message size (see config file) 
+ * @param config_msgs : pointer to buffer that storages the config messages 
  */
 void m8q_init(
     I2C_TypeDef *i2c, 
+    GPIO_TypeDef *gpio, 
+    pin_selector_t pwr_save_pin, 
+    pin_selector_t tx_ready_pin, 
     uint8_t msg_num, 
-    uint8_t msg_index, 
+    uint8_t msg_max_size, 
     uint8_t *config_msgs); 
 
 //=======================================================================================
