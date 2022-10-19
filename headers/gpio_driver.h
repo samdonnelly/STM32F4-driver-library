@@ -126,7 +126,18 @@ typedef enum {
 // Initialization functions 
 
 /**
- * @brief GPIOA initialization 
+ * @brief GPIO communication initialization 
+ * 
+ * @details Initializes the GPIO clocks so that all peripheralls can use the different 
+ *          GPIO ports (A, B, C...). If this is not done then initialized pins will 
+ *          not work. 
+ * 
+ */
+void gpio_port_init(void); 
+
+
+/**
+ * @brief GPIO pin initialization 
  * 
  * @details 
  * 
@@ -137,7 +148,7 @@ typedef enum {
  * @param ospeedr 
  * @param pupdr 
  */
-void gpio_init(
+void gpio_pin_init(
     GPIO_TypeDef  *gpio, 
     pin_selector_t pin_num,
     gpio_moder_t   moder,

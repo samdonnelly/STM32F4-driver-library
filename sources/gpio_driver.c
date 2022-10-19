@@ -24,9 +24,22 @@
 //=======================================================================================
 // Initialization 
 
-// GPIO init
-// TODO skip steps that are not needed when initializing an input 
-void gpio_init(
+// GPIO communication initialization 
+void gpio_port_init(void)
+{
+    // Enable GPIOA clock - RCC_AHB1ENR register, bit 0 
+    RCC->AHB1ENR |= (SET_BIT << SHIFT_0);
+
+    // Enable GPIOB clock - RCC_AHB1ENR register, bit 1 
+    RCC->AHB1ENR |= (SET_BIT << SHIFT_1);
+
+    // Enable GPIOC clock - RCC_AHB1ENR register, bit 2 
+    RCC->AHB1ENR |= (SET_BIT << SHIFT_2);
+}
+
+
+// GPIO pin initialization 
+void gpio_pin_init(
     GPIO_TypeDef  *gpio, 
     pin_selector_t pin_num,
     gpio_moder_t   moder,

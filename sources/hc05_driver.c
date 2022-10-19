@@ -70,21 +70,21 @@ void hc05_init(
     // AT Command mode enable 
     if (pin34_status) 
     {
-        gpio_init(GPIOA, PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+        gpio_pin_init(GPIOA, PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
         gpio_write(GPIOA, hc05_module.at_pin, GPIO_LOW); 
     }
     
     // Module power enable 
     if (en_status) 
     {
-        gpio_init(GPIOA, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+        gpio_pin_init(GPIOA, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
         hc05_pwr_off(); 
         tim9_delay_ms(HC05_INIT_DELAY); 
         hc05_pwr_on(); 
     }
     
     // State feedback enable 
-    if (state_status) gpio_init(GPIOA, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+    if (state_status) gpio_pin_init(GPIOA, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
 }
 
 //=======================================================================================
