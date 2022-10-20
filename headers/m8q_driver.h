@@ -91,6 +91,8 @@
 // UBX messages 
 #define M8Q_UBX_ACK_CLASS        0x05    // Class of ACK message 
 #define M8Q_UBX_ACK_ID           0x01    // ID of ACK message 
+#define M8Q_TIME_CHAR_LEN        9       // Number of characters for the time in NMEA messages 
+#define M8Q_DATE_CHAR_LEN        6       // Number of characters for the date in NMEA messages 
 
 //=======================================================================================
 
@@ -288,7 +290,6 @@ void m8q_check_data_stream(
  * @param data : pointer to data buffer that contains the NMEA message 
  */
 void m8q_write(
-    I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint8_t data_size); 
 

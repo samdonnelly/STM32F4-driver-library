@@ -101,11 +101,9 @@ void m8q_nmea_parse(
  * 
  * @see m8q_nmea_checksum 
  * 
- * @param i2c : pointer to the I2C port used 
  * @param msg : pointer to the input message buffer  
  */
 void m8q_nmea_config(
-    I2C_TypeDef *i2c, 
     uint8_t *msg); 
 
 
@@ -315,15 +313,22 @@ void m8q_init(
     m8q_comm_data.pwr_save = pwr_save_pin; 
     m8q_comm_data.tx_ready = tx_ready_pin; 
 
-    // TODO consider making a file for general purpose inits that apply to everything 
+    // TODO delete clock initialization and replace pin inits after testing 
     // Enable GPIOC clock - RCC_AHB1ENR register, bit 2 - this is needed for GPIO to work 
     RCC->AHB1ENR |= (SET_BIT << SHIFT_2);
 
     // Configure a GPIO output for low power mode 
+    // gpio_pin_init(m8q_comm_data.gpio, 
+    //               m8q_comm_data.pwr_save, 
+    //               MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+    // m8q_set_low_power(GPIO_HIGH); 
     gpio_pin_init(GPIOC, PIN_10, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
     gpio_write(GPIOC, GPIOX_PIN_10, GPIO_HIGH);
 
     // Configure a GPIO input for TX_READY 
+    // gpio_pin_init(m8q_comm_data.gpio, 
+    //               m8q_comm_data.tx_ready, 
+    //               MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
     gpio_pin_init(GPIOC, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_PD);
 
     // Send configuration messages 
@@ -339,7 +344,7 @@ void m8q_init(
         switch (*(config_msgs + i*msg_max_size))
         {
             case M8Q_NMEA_START:  // NMEA message 
-                m8q_nmea_config(i2c, (config_msgs + i*msg_max_size)); 
+                m8q_nmea_config((config_msgs + i*msg_max_size)); 
                 break;
 
             case M8Q_UBX_SYNC1:  // UBX message 
@@ -370,6 +375,8 @@ M8Q_READ_STAT m8q_read(
 
     // Check for a valid data stream 
     m8q_check_data_stream(i2c, &data_check); 
+    // m8q_check_data_stream(m8q_comm_data.i2c, &data_check); 
+
 
     switch (data_check)
     {
@@ -382,13 +389,17 @@ M8Q_READ_STAT m8q_read(
 
             // Generate a start condition 
             i2c_start(i2c); 
+            // i2c_start(m8q_comm_data.i2c); 
 
             // Send the device address with a read offset 
             i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
             i2c_clear_addr(i2c);  
+            // i2c_write_address(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
+            // i2c_clear_addr(m8q_comm_data.i2c);  
 
             // Read the rest of the data stream until "\r\n" 
             i2c_read_to_term(i2c, data, M8Q_NMEA_END_PAY, I2C_4_BYTE); 
+            // i2c_read_to_term(m8q_comm_data.i2c, data, M8Q_NMEA_END_PAY, I2C_4_BYTE); 
 
             // Parse the message data into its data record 
             m8q_nmea_sort(data); 
@@ -402,10 +413,13 @@ M8Q_READ_STAT m8q_read(
 
             // Generate a start condition 
             i2c_start(i2c); 
+            // i2c_start(m8q_comm_data.i2c); 
 
             // Send the device address with a read offset 
             i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
             i2c_clear_addr(i2c); 
+            // i2c_write_address(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
+            // i2c_clear_addr(m8q_comm_data.i2c); 
 
             // Read the rest of the UBX message 
             i2c_read_to_len(i2c, 
@@ -414,6 +428,12 @@ M8Q_READ_STAT m8q_read(
                             M8Q_UBX_LENGTH_OFST-BYTE_1, 
                             M8Q_UBX_LENGTH_LEN, 
                             M8Q_UBX_CS_LEN); 
+            // i2c_read_to_len(m8q_comm_data.i2c, 
+            //                 M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET, 
+            //                 data, 
+            //                 M8Q_UBX_LENGTH_OFST-BYTE_1, 
+            //                 M8Q_UBX_LENGTH_LEN, 
+            //                 M8Q_UBX_CS_LEN); 
 
             read_status = M8Q_READ_UBX; 
             break; 
@@ -437,23 +457,31 @@ void m8q_check_data_size(
 
     // Generate a start condition 
     i2c_start(i2c); 
+    // i2c_start(m8q_comm_data.i2c); 
 
     // Write the slave address with write access 
     i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
     i2c_clear_addr(i2c); 
+    // i2c_write_address(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
+    // i2c_clear_addr(m8q_comm_data.i2c); 
 
     // Send the first data size register address to start reading from there 
     i2c_write_master_mode(i2c, &address, I2C_1_BYTE); 
+    // i2c_write_master_mode(m8q_comm_data.i2c, &address, I2C_1_BYTE); 
 
     // Generate another start condition 
     i2c_start(i2c); 
+    // i2c_start(m8q_comm_data.i2c); 
 
     // Send the device address again with a read offset 
     i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET);  
     i2c_clear_addr(i2c); 
+    // i2c_write_address(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET);  
+    // i2c_clear_addr(m8q_comm_data.i2c); 
 
     // Read the data size registers 
     i2c_read_master_mode(i2c, num_bytes, I2C_2_BYTE); 
+    // i2c_read_master_mode(m8q_comm_data.i2c, num_bytes, I2C_2_BYTE); 
 
     // Format the data into the data size 
     *data_size = (uint16_t)((num_bytes[BYTE_0] << SHIFT_8) | num_bytes[BYTE_1]); 
@@ -467,13 +495,17 @@ void m8q_check_data_stream(
 {
     // Generate a start condition 
     i2c_start(i2c); 
+    // i2c_start(m8q_comm_data.i2c); 
 
     // Send the device address with a read offset 
     i2c_write_address(i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
     i2c_clear_addr(i2c); 
+    // s(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
+    // i2c_clear_addr(m8q_comm_data.i2c); 
 
     // Read the first byte of the data stream 
     i2c_read_master_mode(i2c, data_check, I2C_1_BYTE); 
+    // i2c_read_master_mode(m8q_comm_data.i2c, data_check, I2C_1_BYTE); 
 }
 
 //=======================================================================================
@@ -484,22 +516,26 @@ void m8q_check_data_stream(
 
 // M8Q write 
 void m8q_write(
-    I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint8_t data_size)
 {
     // Generate a start condition 
     i2c_start(I2C1); 
+    // i2c_start(m8q_comm_data.i2c); 
 
     // Send the device address with a write offset 
     i2c_write_address(I2C1, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
     i2c_clear_addr(I2C1); 
+    // i2c_write_address(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
+    // i2c_clear_addr(m8q_comm_data.i2c); 
 
     // Send data (at least 2 bytes) 
     i2c_write_master_mode(I2C1, data, data_size); 
+    // i2c_write_master_mode(m8q_comm_data.i2c, data, data_size); 
 
     // Generate a stop condition 
     i2c_stop(I2C1); 
+    // i2c_stop(m8q_comm_data.i2c); 
 }
 
 //=======================================================================================
@@ -628,6 +664,7 @@ void m8q_nmea_parse(
 // TX-Ready getter 
 uint8_t m8q_get_tx_ready(void)
 {
+    // return gpio_read(m8q_comm_data.gpio, SET_BIT << m8q_comm_data.tx_ready); 
     return gpio_read(GPIOC, GPIOX_PIN_11); 
 }
 
@@ -724,7 +761,7 @@ uint16_t m8q_get_navstat(void)
 // Time getter 
 void m8q_get_time(uint8_t *utc_time)
 {
-    for (uint8_t i = 0; i < 9; i++)
+    for (uint8_t i = 0; i < M8Q_TIME_CHAR_LEN; i++)
         *utc_time++ = time[M8Q_TIME_TIME][i]; 
 }
 
@@ -732,7 +769,7 @@ void m8q_get_time(uint8_t *utc_time)
 // Date getter 
 void m8q_get_date(uint8_t *utc_date)
 {
-    for (uint8_t i = 0; i < 6; i++)
+    for (uint8_t i = 0; i < M8Q_DATE_CHAR_LEN; i++)
         *utc_date++ = time[M8Q_TIME_DATE][i]; 
 }
 
@@ -745,6 +782,7 @@ void m8q_get_date(uint8_t *utc_date)
 // Low Power Mode setter 
 void m8q_set_low_power(gpio_pin_state_t pin_state)
 {
+    // gpio_write(m8q_comm_data.gpio, (SET_BIT << m8q_comm_data.pwr_save), pin_state);
     gpio_write(GPIOC, GPIOX_PIN_10, pin_state);
 }
 
@@ -776,10 +814,13 @@ void m8q_user_config(
         {
             case M8Q_NMEA_START:  // NMEA message 
                 m8q_nmea_config(i2c, config_msg); 
+                // m8q_nmea_config(m8q_comm_data.i2c, config_msg); 
+
                 break;
 
             case M8Q_UBX_SYNC1:  // UBX message 
                 m8q_ubx_config(i2c, config_msg); 
+                // m8q_ubx_config(m8q_comm_data.i2c, config_msg); 
                 break;
             
             default:  // Unknown input 
@@ -811,7 +852,6 @@ void m8q_nmea_config_ui(void)
 
 // NMEA config function 
 void m8q_nmea_config(
-    I2C_TypeDef *i2c, 
     uint8_t *msg)
 {
     // Local variables 
@@ -870,7 +910,7 @@ void m8q_nmea_config(
                 for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) *msg_ptr++ = (uint8_t)term_str[i]; 
 
                 // Pass the message along to the M8Q write function 
-                m8q_write(i2c, msg, m8q_message_size(msg, NULL_CHAR));
+                m8q_write(msg, m8q_message_size(msg, NULL_CHAR));
 
                 // Send confirmation message to terminal 
                 uart_sendstring(USART2, "NMEA configuration message sent.\r\n"); 
@@ -997,10 +1037,11 @@ void m8q_ubx_config(
                     config_msg[M8Q_UBX_HEADER_LEN+pl_len+BYTE_1] = (uint8_t)(checksum); 
 
                     // Send the UBX message 
-                    m8q_write(i2c, config_msg, M8Q_UBX_HEADER_LEN + pl_len + M8Q_UBX_CS_LEN); 
+                    m8q_write(config_msg, M8Q_UBX_HEADER_LEN + pl_len + M8Q_UBX_CS_LEN); 
 
                     // Read the UBX CFG response 
                     while(m8q_read(i2c, resp_msg) != M8Q_READ_UBX); 
+                    // while(m8q_read(m8q_comm_data.i2c, resp_msg) != M8Q_READ_UBX); 
 
                     // Communicate the results 
                     uart_sendstring(USART2, "UBX configuration message sent.\r\n");
