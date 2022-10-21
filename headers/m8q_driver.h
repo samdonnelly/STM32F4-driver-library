@@ -176,15 +176,55 @@ typedef enum {
     M8Q_TIME_TPGRAN 
 } m8q_time_fields_t; 
 
+
+/**
+ * @brief M8Q NMEA message error codes 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    M8Q_NMEA_ERROR_NONE,  // No error 
+    M8Q_NMEA_ERROR_1,     // Unsupported PUBX message ID
+    M8Q_NMEA_ERROR_2,     // Invalid formatting of PUBX message
+    M8Q_NMEA_ERROR_3      // Only PUBX messages are supported
+} m8q_nmea_error_code_t; 
+
+
+/**
+ * @brief M8Q UBX message error codes 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    M8Q_UBX_ERROR_NONE,  // No error 
+    M8Q_UBX_ERROR_1,     // Payload length doesn't match size 
+    M8Q_UBX_ERROR_2,     // Invalid payload format 
+    M8Q_UBX_ERROR_3,     // Invalid payload length format 
+    M8Q_UBX_ERROR_4,     // Message conversion failed. Check format. 
+    M8Q_UBX_ERROR_5,     // Invalid ID format 
+    M8Q_UBX_ERROR_6,     // Unknown message type 
+    M8Q_UBX_ERROR_7,     // Message not acknowledged 
+    M8Q_UBX_ERROR_8      // Response message sent 
+} m8q_ubx_error_code_t; 
+
 //=======================================================================================
 
 
 //=======================================================================================
 // Data types 
 
-typedef m8q_read_status_t M8Q_READ_STAT; 
 typedef uint16_t CHECKSUM; 
+
+// Status 
+typedef m8q_read_status_t M8Q_READ_STAT; 
 typedef m8q_ubx_msg_convert_status_t UBX_MSG_STATUS; 
+
+// Error codes 
+typedef uint16_t M8Q_MSG_ERROR_CODE; 
+typedef m8q_nmea_error_code_t M8Q_NMEA_ERROR_CODE; 
+typedef m8q_ubx_error_code_t M8Q_UBX_ERROR_CODE; 
 
 //=======================================================================================
 
@@ -204,8 +244,9 @@ typedef m8q_ubx_msg_convert_status_t UBX_MSG_STATUS;
  * @param msg_num : number of configuration messages to send 
  * @param msg_max_size : maximum config message size (see config file) 
  * @param config_msgs : pointer to buffer that storages the config messages 
+ * @return M8Q_INIT_ERROR_CODE : code that indicates the config message that caused an error 
  */
-void m8q_init(
+M8Q_MSG_ERROR_CODE m8q_init(
     I2C_TypeDef *i2c, 
     GPIO_TypeDef *gpio, 
     pin_selector_t pwr_save_pin, 
@@ -233,12 +274,10 @@ void m8q_init(
  * @see m8q_check_nmea_stream
  * @see m8q_nmea_read_status_t
  * 
- * @param i2c : pointer to the I2C port used 
  * @param data : pointer to array that will store a single NMEA message 
  * @return M8Q_READ_STAT : valid read indicator 
  */
 M8Q_READ_STAT m8q_read(
-    I2C_TypeDef *i2c, 
     uint8_t *data); 
 
 
@@ -251,11 +290,9 @@ M8Q_READ_STAT m8q_read(
  *          the number of messages contained within the data size. This function can be 
  *          used as an indication that data is available to be read. 
  * 
- * @param i2c : pointer to the I2C port used 
  * @param data_size : pointer to single-integer buffer to store the NMEA data stream size 
  */
 void m8q_check_data_size(
-    I2C_TypeDef *i2c, 
     uint16_t *data_size); 
 
 
@@ -268,11 +305,9 @@ void m8q_check_data_size(
  *          valid. If '$' (36d) is returned then there a valid data steam (NMEA message) 
  *          waiting to be read. 
  * 
- * @param i2c : pointer to I2C port used 
  * @param data_check : pointer to single-integer buffer to store register 0xFF value 
  */
 void m8q_check_data_stream(
-    I2C_TypeDef *i2c, 
     uint8_t *data_check); 
 
 //=======================================================================================
