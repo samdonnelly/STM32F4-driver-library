@@ -23,11 +23,8 @@
 
 
 // TODO 
-// - Reduce the amount of terminal outputs 
-// - Remove the pointer to buffer in m8q_read --> the point of the data records and 
-//   getters is to only get the information you need, not the while string. Create a 
-//   global (to this driver only) record to store UBX response messages (ubx_config) so 
-//   you can get rid of the pointer to buffer argument. 
+// - Create better macros to define array lengths 
+// - Test error handling in both normal and user config mode 
 
 
 //=======================================================================================
@@ -234,8 +231,10 @@ m8q_nmea_time_t;
 typedef struct m8q_comm_data_s
 {
     // Messages 
-    m8q_nmea_pos_t  pos_data;     // POSITION 
-    m8q_nmea_time_t time_data;    // TIME 
+    m8q_nmea_pos_t  pos_data;           // POSITION 
+    m8q_nmea_time_t time_data;          // TIME 
+    uint8_t ubx_resp[M8Q_CONFIG_MSG];   // Buffer to store incoming UBX messages 
+    uint8_t nmea_resp[2*M8Q_CONFIG_MSG];  // 
 
     // Communications 
     I2C_TypeDef *i2c; 
@@ -365,12 +364,13 @@ M8Q_MSG_ERROR_CODE m8q_init(
 // Read functions 
 
 // Read a message from the M8Q 
-M8Q_READ_STAT m8q_read(
-    uint8_t *data)
+M8Q_READ_STAT m8q_read(void)
 {    
     // Local variables 
     M8Q_READ_STAT read_status = M8Q_READ_INVALID; 
     uint8_t data_check = 0; 
+    uint8_t *nmea_data = m8q_comm_data.nmea_resp; 
+    uint8_t *ubx_data  = m8q_comm_data.ubx_resp; 
 
     // Check for a valid data stream 
     m8q_check_data_stream(&data_check); 
@@ -382,7 +382,7 @@ M8Q_READ_STAT m8q_read(
 
         case M8Q_NMEA_START:  // Start of NMEA message 
             // Capture the byte checked in the message response 
-            *data++ = data_check;
+            *nmea_data++ = data_check; 
 
             // Generate a start condition 
             i2c_start(m8q_comm_data.i2c); 
@@ -392,17 +392,17 @@ M8Q_READ_STAT m8q_read(
             i2c_clear_addr(m8q_comm_data.i2c);  
 
             // Read the rest of the data stream until "\r\n" 
-            i2c_read_to_term(m8q_comm_data.i2c, data, M8Q_NMEA_END_PAY, I2C_4_BYTE); 
+            i2c_read_to_term(m8q_comm_data.i2c, nmea_data, M8Q_NMEA_END_PAY, I2C_4_BYTE); 
 
             // Parse the message data into its data record 
-            m8q_nmea_sort(data); 
+            m8q_nmea_sort(nmea_data); 
 
             read_status = M8Q_READ_NMEA; 
             break;
         
         case M8Q_UBX_START:  // Start of UBX message 
             // Capture the byte checked in the message response 
-            *data++ = data_check; 
+            *ubx_data++ = data_check; 
 
             // Generate a start condition 
             i2c_start(m8q_comm_data.i2c); 
@@ -414,7 +414,7 @@ M8Q_READ_STAT m8q_read(
             // Read the rest of the UBX message 
             i2c_read_to_len(m8q_comm_data.i2c, 
                             M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET, 
-                            data, 
+                            ubx_data, 
                             M8Q_UBX_LENGTH_OFST-BYTE_1, 
                             M8Q_UBX_LENGTH_LEN, 
                             M8Q_UBX_CS_LEN); 
@@ -759,6 +759,7 @@ void m8q_user_config(
 {
     // Local variables 
     uint8_t config_msg[2*M8Q_CONFIG_MSG]; 
+    uint8_t ubx_pl_len = 0; 
 
     // Check if there is user input waiting 
     if (uart_data_ready(USART2))
@@ -772,14 +773,22 @@ void m8q_user_config(
         switch (config_msg[0])
         {
             case M8Q_NMEA_START:  // NMEA message 
-                m8q_nmea_config(i2c, config_msg); 
-                // m8q_nmea_config(m8q_comm_data.i2c, config_msg); 
-
+                m8q_nmea_config(m8q_comm_data.i2c, config_msg); 
                 break;
 
             case M8Q_UBX_SYNC1:  // UBX message 
-                m8q_ubx_config(i2c, config_msg); 
-                // m8q_ubx_config(m8q_comm_data.i2c, config_msg); 
+                m8q_ubx_config(m8q_comm_data.i2c, config_msg); 
+                // Communicate the results 
+                // pl_len = (resp_msg[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
+                //                                 resp_msg[M8Q_UBX_LENGTH_OFST];  
+                ubx_pl_len = (m8q_comm_data.ubx_resp[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
+                              m8q_comm_data.ubx_resp[M8Q_UBX_LENGTH_OFST]; 
+                
+                for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN+ubx_pl_len+M8Q_UBX_CS_LEN); i++)
+                {
+                    uart_send_integer(USART2, (int16_t)resp_msg[i]); 
+                    uart_send_new_line(USART2);
+                }
                 break;
             
             default:  // Unknown input 
@@ -835,7 +844,6 @@ M8Q_NMEA_ERROR_CODE m8q_nmea_config(
 
         // Unsupported message ID 
         else
-            // uart_sendstring(USART2, "Unsupported PUBX message ID.\r\n");
             error_code = M8Q_NMEA_ERROR_1; 
 
         // Check the number of message inputs 
@@ -874,12 +882,10 @@ M8Q_NMEA_ERROR_CODE m8q_nmea_config(
                 m8q_write(msg, m8q_message_size(msg, NULL_CHAR));
             } 
             else
-                // uart_sendstring(USART2, "Invalid formatting of PUBX message.\r\n"); 
                 error_code = M8Q_NMEA_ERROR_2; 
         }
     }
     else 
-        // uart_sendstring(USART2, "Only PUBX messages are supported.\r\n"); 
         error_code = M8Q_NMEA_ERROR_3; 
     
     return error_code; 
@@ -924,7 +930,6 @@ M8Q_UBX_ERROR_CODE m8q_ubx_config(
     // Local variables 
     uint8_t *msg_ptr = input_msg;         // Copy of pointer to input message buffer 
     uint8_t config_msg[M8Q_CONFIG_MSG];   // Formatted UBX message to send to the receiver 
-    uint8_t resp_msg[M8Q_CONFIG_MSG];     // UBX message response from the receiver 
     CHECKSUM checksum = 0;                // Formatted UBX message checksum 
     M8Q_UBX_ERROR_CODE error_code = M8Q_UBX_ERROR_NONE; 
 
@@ -976,15 +981,12 @@ M8Q_UBX_ERROR_CODE m8q_ubx_config(
                             format_ok++; 
                         
                         else 
-                            // uart_sendstring(USART2, "Payload length doesn't match size.\r\n");
                             error_code = M8Q_UBX_ERROR_1; 
                     } 
                     else
-                        // uart_sendstring(USART2, "Invalid payload format.\r\n");
                         error_code = M8Q_UBX_ERROR_2; 
                 }
                 else
-                    // uart_sendstring(USART2, "Invalid payload length format.\r\n");
                     error_code = M8Q_UBX_ERROR_3; 
             }
 
@@ -1005,47 +1007,25 @@ M8Q_UBX_ERROR_CODE m8q_ubx_config(
                     m8q_write(config_msg, M8Q_UBX_HEADER_LEN + pl_len + M8Q_UBX_CS_LEN); 
 
                     // Read the UBX CFG response 
-                    while(m8q_read(resp_msg) != M8Q_READ_UBX); 
+                    while(m8q_read() != M8Q_READ_UBX); 
 
-                    // Communicate the results 
-                    pl_len = (resp_msg[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
-                                                        resp_msg[M8Q_UBX_LENGTH_OFST];  
-
-                    if (resp_msg[M8Q_UBX_CLASS_OFST] == M8Q_UBX_ACK_CLASS)
+                    // Check the response type 
+                    if (m8q_comm_data.ubx_resp[M8Q_UBX_CLASS_OFST] == M8Q_UBX_ACK_CLASS) 
                     {
-                        if (resp_msg[M8Q_UBX_ID_OFST] == M8Q_UBX_ACK_ID)
-                            uart_sendstring(USART2, "Message acknowledged.\r\n"); 
-                        else
-                            // uart_sendstring(USART2, "Message not acknowledged.\r\n"); 
+                        if (m8q_comm_data.ubx_resp[M8Q_UBX_ID_OFST] != M8Q_UBX_ACK_ID)
                             error_code = M8Q_UBX_ERROR_7; 
-                        
-                        // if (resp_msg[M8Q_UBX_ID_OFST] != M8Q_UBX_ACK_ID)
-                        //     error_code = M8Q_UBX_ERROR_7; 
                     }
                     else
-                    {
-#if M8Q_USER_CONFIG 
-                        for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN+pl_len+M8Q_UBX_CS_LEN); i++)
-                        {
-                            uart_send_integer(USART2, (int16_t)resp_msg[i]); 
-                            uart_send_new_line(USART2);
-                        }
-#else 
-                        error_code = M8Q_UBX_ERROR_8; 
-#endif  // M8Q_USER_CONFIG
-                    }
+                        if (!M8Q_USER_CONFIG) error_code = M8Q_UBX_ERROR_8; 
                 }
                 else
-                    // uart_sendstring(USART2, "Message conversion failed. Check format.\r\n");
                     error_code = M8Q_UBX_ERROR_4; 
             } 
         } 
         else 
-            // uart_sendstring(USART2, "Invalid ID format.\r\n"); 
             error_code = M8Q_UBX_ERROR_5; 
     }
     else
-        // uart_sendstring(USART2, "Unknown message type.\r\n"); 
         error_code = M8Q_UBX_ERROR_6; 
     
     return error_code; 

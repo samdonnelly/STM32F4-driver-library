@@ -277,8 +277,9 @@ M8Q_MSG_ERROR_CODE m8q_init(
  * @param data : pointer to array that will store a single NMEA message 
  * @return M8Q_READ_STAT : valid read indicator 
  */
-M8Q_READ_STAT m8q_read(
-    uint8_t *data); 
+// M8Q_READ_STAT m8q_read(
+//     uint8_t *data); 
+M8Q_READ_STAT m8q_read(void); 
 
 
 /**
