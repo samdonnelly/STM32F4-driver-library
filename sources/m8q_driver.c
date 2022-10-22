@@ -181,6 +181,21 @@ CHECKSUM m8q_ubx_checksum(
 //=======================================================================================
 
 
+//================================================================================
+// User config functions 
+
+/**
+ * @brief M8Q NMEA config user interface 
+ * 
+ * @details Prints a prompt to the serial terminal to guide the user during configuration 
+ *          of the receiver. 
+ * 
+ */
+void m8q_user_config_prompt(void); 
+
+//================================================================================
+
+
 //=======================================================================================
 // Messages 
 
@@ -753,13 +768,26 @@ void m8q_set_low_power(gpio_pin_state_t pin_state)
 
 #if M8Q_USER_CONFIG
 
+// 
+void m8q_user_config_init(
+    I2C_TypeDef *i2c) 
+{
+    // Initialize I2C pointer 
+    m8q_comm_data.i2c = i2c; 
+
+    // Prompt the user for the first message 
+    m8q_user_config_prompt();
+}
+
+
 // M8Q user configuration 
-void m8q_user_config(
-    I2C_TypeDef *i2c)
+void m8q_user_config(void)
 {
     // Local variables 
+    M8Q_MSG_ERROR_CODE error_code = 0; 
     uint8_t config_msg[2*M8Q_CONFIG_MSG]; 
     uint8_t ubx_pl_len = 0; 
+    uint8_t ubx_ack_clear_counter = 0; 
 
     // Check if there is user input waiting 
     if (uart_data_ready(USART2))
@@ -773,21 +801,31 @@ void m8q_user_config(
         switch (config_msg[0])
         {
             case M8Q_NMEA_START:  // NMEA message 
-                m8q_nmea_config(m8q_comm_data.i2c, config_msg); 
+                error_code = m8q_nmea_config(config_msg); 
                 break;
 
             case M8Q_UBX_SYNC1:  // UBX message 
-                m8q_ubx_config(m8q_comm_data.i2c, config_msg); 
+                error_code = m8q_ubx_config(config_msg); 
+
                 // Communicate the results 
-                // pl_len = (resp_msg[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
-                //                                 resp_msg[M8Q_UBX_LENGTH_OFST];  
-                ubx_pl_len = (m8q_comm_data.ubx_resp[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
-                              m8q_comm_data.ubx_resp[M8Q_UBX_LENGTH_OFST]; 
-                
-                for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN+ubx_pl_len+M8Q_UBX_CS_LEN); i++)
-                {
-                    uart_send_integer(USART2, (int16_t)resp_msg[i]); 
-                    uart_send_new_line(USART2);
+                if (!error_code)
+                { 
+                    ubx_pl_len = (m8q_comm_data.ubx_resp[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
+                                  m8q_comm_data.ubx_resp[M8Q_UBX_LENGTH_OFST]; 
+                    
+                    for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN+ubx_pl_len+M8Q_UBX_CS_LEN); i++)
+                    {
+                        uart_send_integer(USART2, (int16_t)m8q_comm_data.ubx_resp[i]); 
+                        uart_send_new_line(USART2);
+                    }
+
+                    // Clear the ACK message? 
+                    while (ubx_ack_clear_counter < 10)
+                    {
+                        if (m8q_read() == M8Q_READ_UBX) break; 
+                        ubx_ack_clear_counter++; 
+                    }
+                    // while(m8q_read() != M8Q_READ_UBX); 
                 }
                 break;
             
@@ -797,14 +835,22 @@ void m8q_user_config(
                 break;
         }
 
+        // Print any error codes 
+        if (error_code)
+        {
+            uart_sendstring(USART2, "Error code: "); 
+            uart_send_integer(USART2, (int16_t)error_code); 
+            uart_send_new_line(USART2); 
+        }
+
         // Prompt the user for the next message 
-        m8q_nmea_config_ui();
+        m8q_user_config_prompt();
     }
 }
 
 
 // M8Q NMEA config user interface 
-void m8q_nmea_config_ui(void)
+void m8q_user_config_prompt(void)
 {
     uart_send_new_line(USART2); 
     uart_sendstring(USART2, ">>> Config message: "); 
@@ -935,6 +981,7 @@ M8Q_UBX_ERROR_CODE m8q_ubx_config(
 
     // User inputs 
     uint8_t input_msg_len = m8q_message_size(input_msg, CR_CHAR); 
+    uint8_t msg_len_pl_check = 0; 
     uint8_t msg_id_input = 0; 
     uint8_t pl_len_input[M8Q_UBX_LENGTH_LEN]; 
     uint8_t pl_arg_input[M8Q_CONFIG_MSG]; 
@@ -968,13 +1015,16 @@ M8Q_UBX_ERROR_CODE m8q_ubx_config(
                     // Format the payload length 
                     pl_len = (pl_len_input[1] << SHIFT_8) | pl_len_input[0]; 
 
-                    // Check the argument format 
-                    if (input_msg_len < BYTE_17) 
-                        input_msg_len++;  // correction for variable payload length 
-                    
                     byte_count = 0;  // Reset the byte count to check payload length 
+
+                    // Check the argument format 
+                    // if (input_msg_len < BYTE_17) 
+                    //     input_msg_len++;  // correction for variable payload length 
+                    if (input_msg_len >= BYTE_17) msg_len_pl_check = input_msg_len; 
                     
-                    if (m8q_ubx_msg_convert(input_msg_len-BYTE_17, BYTE_17,
+                    // if (m8q_ubx_msg_convert(input_msg_len-BYTE_17, BYTE_17,
+                    //                         input_msg, &byte_count, pl_arg_input))
+                    if (m8q_ubx_msg_convert(msg_len_pl_check, BYTE_17,
                                             input_msg, &byte_count, pl_arg_input))
                     {                        
                         if (pl_len == byte_count)

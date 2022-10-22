@@ -38,7 +38,7 @@
 // Macros 
 
 // Device configuration 
-#define M8Q_USER_CONFIG          0       // Sets the code to user config mode 
+#define M8Q_USER_CONFIG          1       // Sets the code to user config mode 
 #define M8Q_CONFIG_MSG           75      // Config message max length 
 
 // Device parameters 
@@ -438,27 +438,26 @@ void m8q_set_low_power(gpio_pin_state_t pin_state);
 // User Configuration 
 
 /**
+ * @brief M8Q user configuration initialization 
+ * 
+ * @details 
+ * 
+ * @param i2c : pointer to the I2C port used 
+ */
+void m8q_user_config_init(
+    I2C_TypeDef *i2c); 
+
+
+/**
  * @brief M8Q user configuration 
  * 
  * @details This function allows the user to change the settings of the receiver. This is 
  *          done by taking user inputs from the serial terminal that specify the desired 
  *          settings. This input is redirected to the receiver in the form of an NMEA or 
  *          UBX message depending on what is input. Other message types are not supported. 
- * 
- * @param i2c : pointer to the I2C port used 
+ *  
  */
-void m8q_user_config(
-    I2C_TypeDef *i2c); 
-
-
-/**
- * @brief M8Q NMEA config user interface 
- * 
- * @details Prints a prompt to the serial terminal to guide the user during configuration 
- *          of the receiver. 
- * 
- */
-void m8q_nmea_config_ui(void); 
+void m8q_user_config(void); 
 
 //=======================================================================================
 
