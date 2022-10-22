@@ -24,9 +24,7 @@
 
 // Communication drivers 
 #include "i2c_comm.h"
-#include "uart_comm.h"
 #include "gpio_driver.h"
-#include "timers.h" 
 
 // Standard Libraries 
 #include <stdio.h> 
@@ -38,8 +36,7 @@
 // Macros 
 
 // Device configuration 
-#define M8Q_USER_CONFIG          1       // Sets the code to user config mode 
-#define M8Q_CONFIG_MSG           75      // Config message max length 
+#define M8Q_USER_CONFIG          0       // Sets the code to user config mode 
 
 // Device parameters 
 #define M8Q_I2C_8_BIT_ADDR       0x84    // Receiver I2C address (default : 0x42 << 1) 
@@ -51,8 +48,11 @@
 
 // M8Q messages 
 #define M8Q_NO_DATA              0xff    // NMEA invalid data stream return value 
+#define M8Q_MSG_MAX_LEN          150     // Message buffer that can hold any message
+#define M8Q_PYL_MAX_LEN          100     // Message payload buffer to store any apyload length 
 
 // NMEA message format 
+#define M8Q_NMEA_MSG_MAX_LEN     150     // NMEA message buffer that can hold any received message
 #define M8Q_NMEA_START           0x24    // 0x24 == '$' --> start of NMEA message 
 #define M8Q_NMEA_END_PAY         0x2A    // 0x2A == '*' --> indicates end of NMEA message payload 
 #define M8Q_NMEA_END_MSG         6       // Length of string to append to NMEA message after payload 

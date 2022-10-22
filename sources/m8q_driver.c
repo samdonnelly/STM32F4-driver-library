@@ -19,12 +19,18 @@
 // Device drivers 
 #include "m8q_driver.h"
 
+// Communication drivers 
+#if M8Q_USER_CONFIG
+#include "uart_comm.h"
+#endif  // M8Q_USER_CONFIG
+
 //=======================================================================================
 
 
+//================================================================================
 // TODO 
-// - Create better macros to define array lengths 
-// - Test error handling in both normal and user config mode 
+// - Clean up UBX config function 
+//================================================================================
 
 
 //=======================================================================================
@@ -246,10 +252,10 @@ m8q_nmea_time_t;
 typedef struct m8q_comm_data_s
 {
     // Messages 
-    m8q_nmea_pos_t  pos_data;           // POSITION 
-    m8q_nmea_time_t time_data;          // TIME 
-    uint8_t ubx_resp[M8Q_CONFIG_MSG];   // Buffer to store incoming UBX messages 
-    uint8_t nmea_resp[2*M8Q_CONFIG_MSG];  // 
+    m8q_nmea_pos_t  pos_data;                 // POSITION message 
+    m8q_nmea_time_t time_data;                // TIME message 
+    uint8_t ubx_resp[M8Q_MSG_MAX_LEN];        // Buffer to store incoming UBX messages 
+    uint8_t nmea_resp[M8Q_NMEA_MSG_MAX_LEN];  // Buffer to store incoming NMEA messages 
 
     // Communications 
     I2C_TypeDef *i2c; 
@@ -785,7 +791,7 @@ void m8q_user_config(void)
 {
     // Local variables 
     M8Q_MSG_ERROR_CODE error_code = 0; 
-    uint8_t config_msg[2*M8Q_CONFIG_MSG]; 
+    uint8_t config_msg[M8Q_MSG_MAX_LEN]; 
     uint8_t ubx_pl_len = 0; 
     uint8_t ubx_ack_clear_counter = 0; 
 
@@ -900,9 +906,7 @@ M8Q_NMEA_ERROR_CODE m8q_nmea_config(
             while(*msg_ptr != CR_CHAR) 
             {
                 if (*msg_ptr == COMMA_CHAR)
-                {
                     msg_arg_mask = 0; 
-                }
                 else 
                 {
                     if (!msg_arg_mask)
@@ -974,22 +978,21 @@ M8Q_UBX_ERROR_CODE m8q_ubx_config(
     uint8_t *input_msg)
 {
     // Local variables 
-    uint8_t *msg_ptr = input_msg;         // Copy of pointer to input message buffer 
-    uint8_t config_msg[M8Q_CONFIG_MSG];   // Formatted UBX message to send to the receiver 
-    CHECKSUM checksum = 0;                // Formatted UBX message checksum 
+    uint8_t *msg_ptr = input_msg; 
+    uint8_t config_msg[M8Q_MSG_MAX_LEN];   // Formatted UBX message to send to the receiver 
+    CHECKSUM checksum = 0; 
     M8Q_UBX_ERROR_CODE error_code = M8Q_UBX_ERROR_NONE; 
 
     // User inputs 
     uint8_t input_msg_len = m8q_message_size(input_msg, CR_CHAR); 
     uint8_t msg_len_pl_check = 0; 
     uint8_t msg_id_input = 0; 
-    uint8_t pl_len_input[M8Q_UBX_LENGTH_LEN]; 
-    uint8_t pl_arg_input[M8Q_CONFIG_MSG]; 
+    uint8_t pl_inputs[M8Q_PYL_MAX_LEN]; 
 
     // Formatters 
     uint16_t pl_len = 0; 
     uint16_t byte_count = 0; 
-    uint8_t format_ok = 0; 
+    uint8_t  format_ok = 0; 
 
     // Check the sync characters and class 
     if (str_compare("B5,62,06,", (char *)input_msg, BYTE_0))
@@ -1010,22 +1013,18 @@ M8Q_UBX_ERROR_CODE m8q_ubx_config(
             {
                 // Read the specified payload length and check the format 
                 if (m8q_ubx_msg_convert(BYTE_4, BYTE_12, 
-                                        input_msg, &byte_count, pl_len_input))
+                                        input_msg, &byte_count, pl_inputs))
                 {
                     // Format the payload length 
-                    pl_len = (pl_len_input[1] << SHIFT_8) | pl_len_input[0]; 
+                    pl_len = (pl_inputs[1] << SHIFT_8) | pl_inputs[0]; 
 
                     byte_count = 0;  // Reset the byte count to check payload length 
 
-                    // Check the argument format 
-                    // if (input_msg_len < BYTE_17) 
-                    //     input_msg_len++;  // correction for variable payload length 
-                    if (input_msg_len >= BYTE_17) msg_len_pl_check = input_msg_len; 
+                    // Check the argument format  
+                    if (input_msg_len > BYTE_17) msg_len_pl_check = input_msg_len - BYTE_17; 
                     
-                    // if (m8q_ubx_msg_convert(input_msg_len-BYTE_17, BYTE_17,
-                    //                         input_msg, &byte_count, pl_arg_input))
                     if (m8q_ubx_msg_convert(msg_len_pl_check, BYTE_17,
-                                            input_msg, &byte_count, pl_arg_input))
+                                            input_msg, &byte_count, pl_inputs))
                     {                        
                         if (pl_len == byte_count)
                             format_ok++; 
