@@ -103,7 +103,7 @@
 /**
  * @brief M8Q valid read indicator 
  * 
- * @details Used to define a valid or invalid message read in the m8q_read function. The enum 
+ * @details Used to define a valid or invalid message read in the m8q_read function. m8q_read 
  *          returns the result indicating the type of message read, if any. 
  * 
  * @see m8q_read
@@ -121,7 +121,7 @@ typedef enum {
  * 
  * @details Indicates whether a UBX message string was successfully converted into a format 
  *          readable by the receiver. Message strings come from the receiver config file or 
- *          user input during user config operation. 
+ *          user input during user config mode. 
  * 
  */
 typedef enum {
@@ -133,7 +133,8 @@ typedef enum {
 /**
  * @brief M8Q NMEA POSITION message data fields 
  * 
- * @details 
+ * @details List of all data fields in the POSITION message. This enum allows for indexing 
+ *          of the POSITION fields for retreival data in getters. 
  * 
  */
 typedef enum {
@@ -160,9 +161,10 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief M8Q NMEA TIME message data fields 
  * 
- * @details 
+ * @details List of all data fields in the TIME message. This enum allows for indexing 
+ *          of the TIME fields for retreival data in getters. 
  * 
  */
 typedef enum {
@@ -180,7 +182,8 @@ typedef enum {
 /**
  * @brief M8Q NMEA message error codes 
  * 
- * @details 
+ * @details Codes used to indicate errors during NMEA message processing. These codes help 
+ *          with debugging. 
  * 
  */
 typedef enum {
@@ -194,7 +197,8 @@ typedef enum {
 /**
  * @brief M8Q UBX message error codes 
  * 
- * @details 
+ * @details Codes used to indicate errors during UBX message processing. These codes help 
+ *          with debugging. 
  * 
  */
 typedef enum {
@@ -206,7 +210,7 @@ typedef enum {
     M8Q_UBX_ERROR_5,     // Invalid ID format 
     M8Q_UBX_ERROR_6,     // Unknown message type 
     M8Q_UBX_ERROR_7,     // Message not acknowledged 
-    M8Q_UBX_ERROR_8      // Response message sent 
+    M8Q_UBX_ERROR_8      // Response message sent - only used during user config mode 
 } m8q_ubx_error_code_t; 
 
 //=======================================================================================
@@ -235,7 +239,19 @@ typedef m8q_ubx_error_code_t M8Q_UBX_ERROR_CODE;
 /**
  * @brief M8Q initialization 
  * 
- * @details To be implemented. 
+ * @details Initializes the receiver configuration and it's peripherals. The communication 
+ *          ports and peripheral pins passed as arguments are saved in the receivers data 
+ *          record for use throughout the driver. GPIO pins are initialized for power save 
+ *          mode and TX-ready operations. All the messages sepecified in the programs 
+ *          m8q_config file are sent to the receiver. If there are any errors sending config 
+ *          messages the return value of the function will indicate the message that caused 
+ *          an error and which error occured. M8Q_MSG_ERROR_CODE is a 16-bit value with the 
+ *          following breakdown: <br> 
+ *            - High byte: NMEA or UBX error code <br> 
+ *            - Low byte: Message index based on m8q_config file <br> 
+ * 
+ * @see m8q_nmea_error_code_t
+ * @see m8q_ubx_error_code_t
  * 
  * @param i2c : pointer to I2C port used for receiver communication 
  * @param gpio : pointer to GPIO port used for receiver peripherals 
@@ -264,30 +280,27 @@ M8Q_MSG_ERROR_CODE m8q_init(
 /**
  * @brief Read a message from the M8Q 
  * 
- * @details Checks for a valid data stream using m8q_check_nmea_stream, and if valid then 
- *          proceeds to read a single NMEA message. The function returns an indication 
+ * @details Checks for a valid data stream and if true then proceeds to read the next 
+ *          available message from the receiver. The function returns an indication 
  *          of whether the read was valid or not. If there was no data (or unknown data) the 
- *          function return will indicate an invalid read, and if there is data then it will 
- *          indicate a valid read and the data buffer passed to the function will be filled. 
- *          This function has to be called for each NMEA message available. 
+ *          function return will indicate an invalid read. If the data is valid and the message 
+ *          read then the message will be saved and used where needed, such as for getters 
+ *          or print outs in user config mode. 
  * 
  * @see m8q_check_nmea_stream
  * @see m8q_nmea_read_status_t
  * 
- * @param data : pointer to array that will store a single NMEA message 
  * @return M8Q_READ_STAT : valid read indicator 
  */
-// M8Q_READ_STAT m8q_read(
-//     uint8_t *data); 
 M8Q_READ_STAT m8q_read(void); 
 
 
 /**
- * @brief Read the size of the available NMEA data 
+ * @brief Read the number of available bytes from the M8Q 
  * 
  * @details Reads registers 0xFD and 0xFE to get the number of available NMEA message bytes. 
  *          If this value is zero then there is no available data to be read. A non-zero value 
- *          will indicate the total NMEA message bytes available, however it does not indicate 
+ *          will indicate the total message bytes available, however it does not indicate 
  *          the number of messages contained within the data size. This function can be 
  *          used as an indication that data is available to be read. 
  * 
@@ -302,11 +315,10 @@ void m8q_check_data_size(
  * 
  * @details Reads the data stream register (0xFF) and stores the result in the argument 
  *          data_check. This function can be used to check for a valid data stream. If the 
- *          returned result if 0xff then there is no data to be read and the steam is not 
- *          valid. If '$' (36d) is returned then there a valid data steam (NMEA message) 
- *          waiting to be read. 
+ *          returned result is 0xff then there is no data to be read and the steam is not 
+ *          valid. 
  * 
- * @param data_check : pointer to single-integer buffer to store register 0xFF value 
+ * @param data_check : pointer to one-byte buffer to store the data stream value 
  */
 void m8q_check_data_stream(
     uint8_t *data_check); 
