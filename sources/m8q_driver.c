@@ -195,7 +195,6 @@ CHECKSUM m8q_ubx_checksum(
  * 
  * @details Prints a prompt to the serial terminal to guide the user during configuration 
  *          of the receiver. 
- * 
  */
 void m8q_user_config_prompt(void); 
 

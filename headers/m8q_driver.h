@@ -135,7 +135,6 @@ typedef enum {
  * 
  * @details List of all data fields in the POSITION message. This enum allows for indexing 
  *          of the POSITION fields for retreival data in getters. 
- * 
  */
 typedef enum {
     M8Q_POS_TIME, 
@@ -165,7 +164,6 @@ typedef enum {
  * 
  * @details List of all data fields in the TIME message. This enum allows for indexing 
  *          of the TIME fields for retreival data in getters. 
- * 
  */
 typedef enum {
     M8Q_TIME_TIME, 
@@ -184,7 +182,6 @@ typedef enum {
  * 
  * @details Codes used to indicate errors during NMEA message processing. These codes help 
  *          with debugging. 
- * 
  */
 typedef enum {
     M8Q_NMEA_ERROR_NONE,  // No error 
@@ -199,7 +196,6 @@ typedef enum {
  * 
  * @details Codes used to indicate errors during UBX message processing. These codes help 
  *          with debugging. 
- * 
  */
 typedef enum {
     M8Q_UBX_ERROR_NONE,  // No error 
@@ -332,10 +328,11 @@ void m8q_check_data_stream(
 /**
  * @brief M8Q write 
  * 
- * @details Writes an NMEA message to the receiver using a specified I2C interface 
+ * @details Sends messages to the receiever. This function is primarily used for setting the 
+ *          receivers configuration. 
  * 
- * @param i2c : pointer to I2C port used 
- * @param data : pointer to data buffer that contains the NMEA message 
+ * @param data : pointer to data buffer that contains the message 
+ * @param data_size : length of message being sent to the receiver 
  */
 void m8q_write(
     uint8_t *data, 
@@ -348,83 +345,111 @@ void m8q_write(
 // Getters 
 
 /**
- * @brief 
+ * @brief TX-ready getter 
  * 
- * @details 
+ * @details Returns the status of the TX-ready pin which indicates when data is available to 
+ *          be read. If the signal is high then data is available. The TX-ready pin is 
+ *          initialized in the m8q_init function. 
  * 
- * @return uint8_t 
+ * @return uint8_t : TX-ready pin status 
  */
 uint8_t m8q_get_tx_ready(void); 
 
 
 /**
- * @brief M8Q latitude getter 
+ * @brief Latitude getter 
  * 
- * @details 
+ * @details Reads the current latitude of the receiver. The integer portion of the latitude 
+ *          (degrees and minutes) is stored in deg_min and the decimal/fractional part (minutes) 
+ *          is stored in min_frac. The latitude is broken up into these two parts because the 
+ *          full latitude value is not always needed so being able to use just the fractional 
+ *          portion becomes easier. For more information on latitude formatting see the 
+ *          M8Q protocol specification documentation. 
  * 
- * @param deg_min 
- * @param min_frac 
+ * @param deg_min : degrees and minutes of the latitude 
+ * @param min_frac : fractional portion of the minutes in the latitude 
  */
 void m8q_get_lat(uint16_t *deg_min, uint32_t *min_frac); 
 
 
 /**
- * @brief M8Q North/South getter 
+ * @brief North/South getter 
  * 
- * @details 
+ * @details Returns the latitude North/South indicator. Note that this return value is in ASCII 
+ *          character form. For example, a return value of 78 corresponds to "N" for North. 
  * 
- * @return uint8_t 
+ * @return uint8_t : North/South indicator 
  */
 uint8_t m8q_get_NS(void); 
 
 
 /**
- * @brief M8Q longitude getter 
+ * @brief Longitude getter 
  * 
- * @details 
+ * @details Reads the current longitude of the receiver. The integer portion of the longitude 
+ *          (degrees and minutes) is stored in deg_min and the decimal/fractional part (minutes) 
+ *          is stored in min_frac. The longitude is broken up into these two parts because the 
+ *          full longitude value is not always needed so being able to use just the fractional 
+ *          portion becomes easier. For more information on longitude formatting see the 
+ *          M8Q protocol specification documentation. 
  * 
- * @param deg_min 
- * @param min_frac 
+ * @param deg_min : degrees and minutes of the longitude 
+ * @param min_frac : fractional portion of the minutes in the longitude 
  */
 void m8q_get_long(uint16_t *deg_min, uint32_t *min_frac); 
 
 
 /**
- * @brief M8Q East/West getter 
+ * @brief East/West getter 
  * 
- * @details 
+ * @details Returns the longitude East/West indicator. Note that this return value is in ASCII 
+ *          character form. For example, a return value of 69 corresponds to "E" for East. 
  * 
- * @return uint8_t 
+ * @return uint8_t : East/West indicator 
  */
 uint8_t m8q_get_EW(void); 
 
 
 /**
- * @brief M8Q navigation status getter 
+ * @brief Navigation status getter 
  * 
- * @details 
+ * @details Returns the navigation status of the receiver. Note that this return value is in 
+ *          ASCII character form and consists of two bytes. The 8 most significant bits of the 
+ *          16-bit return value holds the first character and the 8 least significant bits holds 
+ *          the second character. For example, a return value of 20038 corresponds to "NF" which 
+ *          stands for "No Fix". A list of all available statuses are listed below: <br> 
+ *            - NF = No Fix                                    <br> 
+ *            - DR = Dead reckoning only solution              <br> 
+ *            - G2 = Stand along 2D solution                   <br> 
+ *            - G3 = Stand along 3D solution                   <br> 
+ *            - D2 = Differential 2D solution                  <br> 
+ *            - D3 = Differential 3D solution                  <br> 
+ *            - RK = Combined GPS + dead reckoning solution    <br> 
+ *            - TT = Time only solution                        <br> 
  * 
- * @return uint16_t 
+ * @return uint16_t : Navigation status of the receiver 
  */
 uint16_t m8q_get_navstat(void); 
 
 
 /**
- * @brief M8Q time getter 
+ * @brief Time getter 
  * 
- * @details 
+ * @details Gets the current UTC time. Note that the time is returned as a character string 
+ *          in the format "hhmmss.ss". 
  * 
- * @param time 
+ * @param utc_time : pointer to buffer to store the UTC time 
  */
 void m8q_get_time(uint8_t *utc_time); 
 
 
 /**
- * @brief M8Q date getter 
+ * @brief Date getter 
  * 
- * @details 
+ * @details Gets the current UTC date. Note that the date is returned as a character string 
+ *          in the format "ddmmyy". 
  * 
- * @param date 
+ * @param utc_date : pointer to buffer to store the UTC date 
  */
 void m8q_get_date(uint8_t *utc_date); 
 
@@ -435,11 +460,15 @@ void m8q_get_date(uint8_t *utc_date);
 // Setters 
 
 /**
- * @brief 
+ * @brief Power save mode setter 
  * 
- * @details 
+ * @details Sets the output of the power save mode pin. If set to high then the receiver will 
+ *          enter power save mode where it will not report position information. If set low 
+ *          then the receiver will operate as normal. Note that communication with the receiver 
+ *          can't be achieved while in power save mode. The pin used for power save mode setting 
+ *          is initialized in the m8q_init function. 
  * 
- * @param pin_state 
+ * @param pin_state : desired output state of the power save mode pin 
  */
 void m8q_set_low_power(gpio_pin_state_t pin_state); 
 
@@ -450,9 +479,11 @@ void m8q_set_low_power(gpio_pin_state_t pin_state);
 // User Configuration 
 
 /**
- * @brief M8Q user configuration initialization 
+ * @brief User configuration initialization 
  * 
- * @details 
+ * @details Initializes user config mode. This function is called once during the setup/init 
+ *          procedure. Note that this function is only valid during user config mode which can 
+ *          be set by setting M8Q_USER_CONFIG to 1. 
  * 
  * @param i2c : pointer to the I2C port used 
  */
@@ -461,13 +492,15 @@ void m8q_user_config_init(
 
 
 /**
- * @brief M8Q user configuration 
+ * @brief User configuration 
  * 
- * @details This function allows the user to change the settings of the receiver. This is 
- *          done by taking user inputs from the serial terminal that specify the desired 
- *          settings. This input is redirected to the receiver in the form of an NMEA or 
- *          UBX message depending on what is input. Other message types are not supported. 
- *  
+ * @details User config mode allows the user to change the settings of the receiver using a 
+ *          serial terminal interface. Users input NMEA or UBX messages which get converted 
+ *          to proper message strings and then sent to the receiver. Is message formatting is 
+ *          not correct then error codes will be displayed on the terminal indicating the 
+ *          problem with the input message. This is done to help ensure garbage data is not 
+ *          sent to the reciever. Note that this function is only valid during user config mode
+ *          which can be set by setting M8Q_USER_CONFIG to 1. 
  */
 void m8q_user_config(void); 
 
