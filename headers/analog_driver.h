@@ -154,6 +154,17 @@ void adc_seq_len_set(
 // Read 
 
 /**
+ * @brief Start an ADC conversion 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_start(
+    ADC_TypeDef *adc); 
+
+
+/**
  * @brief ADC data register read 
  * 
  * @details 
@@ -163,6 +174,44 @@ void adc_seq_len_set(
  */
 uint16_t adc_dr(
     ADC_TypeDef *adc); 
+
+//================================================================================
+
+
+//================================================================================
+// Control 
+
+/**
+ * @brief Turn ADC on and off 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_on_off(
+    ADC_TypeDef *adc); 
+
+//================================================================================
+
+
+//================================================================================
+// Statuses 
+
+/**
+ * @brief Wait for start bit to set 
+ * 
+ * @details 
+ * 
+ */
+void adc_start_wait(void); 
+
+/**
+ * @brief ADC end of conversion 
+ * 
+ * @details 
+ * 
+ */
+void adc_eoc(void); 
 
 //================================================================================
 
