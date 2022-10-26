@@ -145,6 +145,27 @@ typedef enum {
     SET_8,
     SET_9,
     SET_10,
+    SET_11,
+    SET_12,
+    SET_13,
+    SET_14,
+    SET_15,
+    SET_16,
+    SET_17,
+    SET_18,
+    SET_19,
+    SET_20,
+    SET_21,
+    SET_22,
+    SET_23,
+    SET_24,
+    SET_25,
+    SET_26,
+    SET_27,
+    SET_28,
+    SET_29,
+    SET_30,
+    SET_31 
 } bit_setter_t;
 
 

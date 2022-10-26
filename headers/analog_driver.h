@@ -39,6 +39,20 @@
  * 
  */
 typedef enum {
+    ADC_PCLK2_2,   // PLCK2 divided by 2 
+    ADC_PCLK2_4,   // PLCK2 divided by 4 
+    ADC_PCLK2_6,   // PLCK2 divided by 6 
+    ADC_PCLK2_8    // PLCK2 divided by 8 
+} adc_prescalar_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
     ADC_CHANNEL_0,    // 
     ADC_CHANNEL_1,    // 
     ADC_CHANNEL_2,    // 
@@ -83,6 +97,20 @@ typedef enum {
  * 
  */
 typedef enum {
+    ADC_RES_12,   // 12-bit resolution (15 ADCCLK cycles) 
+    ADC_RES_10,   // 10-bit resolution (13 ADCCLK cycles) 
+    ADC_RES_8,    // 8-bit resolution (11 ADCCLK cycles) 
+    ADC_RES_6     // 6-bit resolution (9 ADCCLK cycles) 
+} adc_res_t;
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
     ADC_SEQ_1 = 1,    // 
     ADC_SEQ_2,        // 
     ADC_SEQ_3,        // 
@@ -101,11 +129,23 @@ typedef enum {
     ADC_SEQ_16        // 
 } adc_seq_num_t; 
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    ADC_EOC_SEQ,   // EOC bit set after each sequence of regular conversions 
+    ADC_EOC_EACH   // EOC bit set after each regular conversion 
+} adc_eoc_config_t; 
+
 //================================================================================
 
 
 //================================================================================
-// Function prototypes 
+// Initialization 
 
 /**
  * @brief ADC port initialization 
@@ -134,6 +174,317 @@ void adc_pin_init(
     adc_smp_cycles_t smp, 
     adc_seq_num_t seq_num); 
 
+//================================================================================
+
+
+//================================================================================
+// Read Registers 
+
+/**
+ * @brief ADC data register read 
+ * 
+ * @details 
+ *           // TODO move prototype to source file - only should be called once 
+ * 
+ * @param adc 
+ * @return uint16_t 
+ */
+uint16_t adc_dr(
+    ADC_TypeDef *adc); 
+
+//================================================================================
+
+
+//================================================================================
+// Status Registers 
+
+/**
+ * @brief Wait for start bit to set 
+ * 
+ * @details 
+ * 
+ */
+void adc_start_wait(ADC_TypeDef *adc); 
+
+/**
+ * @brief ADC end of conversion 
+ * 
+ * @details 
+ *          Set when the conversion of a regular group of channels is complete. 
+ *          Cleared by reading the data register. 
+ *          
+ *          0 --> conversion (EOCS=0) or sequence of conversions (EOCS=1) not complete 
+ *          1 --> conversion (EOCS=0) or sequence of conversions (EOCS=1) complete 
+ * 
+ */
+void adc_eoc_wait(ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Overrun bit status 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @return uint8_t 
+ */
+uint8_t adc_overrun(ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Analog watchdog bit status 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @return uint8_t 
+ */
+uint8_t adc_wd_flag(ADC_TypeDef *adc); 
+
+//================================================================================
+
+
+//================================================================================
+// Control Registers 
+
+/**
+ * @brief ADC prescalar 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param prescalar 
+ */
+void adc_prescalar(
+    ADC_TypeDef *adc,
+    adc_prescalar_t prescalar); 
+
+
+/**
+ * @brief Turn ADC on 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_on(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Turn ADC off 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_off(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Start an ADC conversion 
+ * 
+ * @details Sets by software and and cleared by hardware once the conversion starts. Note that 
+ *          no conversion will be launched unless the ADC is on. 
+ * 
+ * @see adc_on 
+ * 
+ * @param adc 
+ */
+void adc_start(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Enable CONT mode 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_cont_enable(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Disable CONT mode 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_cont_disable(
+    ADC_TypeDef *adc)
+
+
+/**
+ * @brief Set the ADC resolution 
+ * 
+ * @details 
+ *          // TODO move prototype to source - only to be used once during init 
+ * 
+ * @param adc 
+ * @param resolution 
+ */
+void adc_res(
+    ADC_TypeDef *adc, 
+    adc_res_t resolution); 
+
+
+/**
+ * @brief Analog watchdog enable on regular channels 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_wd_enable(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Analog watchdog disable on regular channels 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_wd_disable(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Enable SCAN mode 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_scan_enable(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Disable SCAN mode 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_scan_disable(
+    ADC_TypeDef *adc) 
+
+
+/**
+ * @brief Enable watchdog on a single channel in SCAN mode 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_wd_chan_scan_enable(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Disable watchdog on a single channel in SCAN mode
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_wd_chan_scan_disable(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Analog watchdog channel select 
+ * 
+ * @details Select the input channel to be guarded by the analog watchdog. 
+ * 
+ * @param adc 
+ * @param adc_channel 
+ */
+void adc_wd_chan_select(
+    ADC_TypeDef *adc, 
+    adc_channel_t adc_channel); 
+
+
+/**
+ * @brief End of Conversion (EOC) selection 
+ * 
+ * @details 
+ * 
+ * @see adc_eoc_wait 
+ * 
+ * @param adc 
+ * @param eoc_select 
+ */
+void adc_eoc_select(
+    ADC_TypeDef *adc, 
+    adc_eoc_config_t eoc_select); 
+
+//================================================================================
+
+
+//================================================================================
+// Sample Registers 
+
+/**
+ * @brief Set the sample time for the channel 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param channel 
+ * @param smp 
+ */
+void adc_smp(
+    ADC_TypeDef *adc, 
+    adc_channel_t channel, 
+    adc_smp_cycles_t smp); 
+
+//================================================================================
+
+
+//================================================================================
+// Watchdog Registers 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param hi_thresh 
+ * @param lo_thresh 
+ */
+void adc_wd_thresh(
+    ADC_TypeDef *adc, 
+    uint16_t hi_thresh, 
+    uint16_t lo_thresh); 
+
+//================================================================================
+
+
+//================================================================================
+// Sequence Registers 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param channel 
+ * @param seq_num 
+ */
+void adc_seq(
+    ADC_TypeDef *adc, 
+    adc_channel_t channel, 
+    adc_seq_num_t seq_num); 
+
 
 /**
  * @brief Regular channel sequence length setter 
@@ -146,72 +497,6 @@ void adc_pin_init(
 void adc_seq_len_set(
     ADC_TypeDef *adc, 
     adc_seq_num_t seq_len); 
-
-//================================================================================
-
-
-//================================================================================
-// Read 
-
-/**
- * @brief Start an ADC conversion 
- * 
- * @details 
- * 
- * @param adc 
- */
-void adc_start(
-    ADC_TypeDef *adc); 
-
-
-/**
- * @brief ADC data register read 
- * 
- * @details 
- * 
- * @param adc 
- * @return uint16_t 
- */
-uint16_t adc_dr(
-    ADC_TypeDef *adc); 
-
-//================================================================================
-
-
-//================================================================================
-// Control 
-
-/**
- * @brief Turn ADC on and off 
- * 
- * @details 
- * 
- * @param adc 
- */
-void adc_on_off(
-    ADC_TypeDef *adc); 
-
-//================================================================================
-
-
-//================================================================================
-// Statuses 
-
-/**
- * @brief Wait for start bit to set 
- * 
- * @details 
- * 
- */
-void adc_start_wait(void); 
-
-/**
- * @brief ADC end of conversion 
- * 
- * @details 
- * 
- */
-void adc_eoc(void); 
 
 //================================================================================
 
