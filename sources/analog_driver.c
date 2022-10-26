@@ -27,10 +27,14 @@
 // Initialization 
 
 // ADC port init 
-void adc_port_init(void)
+void adc_port_init(
+    adc_prescalar_t prescalar)
 {
     // Enable the ADC1 clock 
     RCC->APB2ENR |= (SET_BIT << SHIFT_8); 
+
+    // Set the ADC clock frequency 
+    adc_prescalar(ADC1_COMMON, prescalar); 
 }
 
 
@@ -43,10 +47,6 @@ void adc_pin_init(
     adc_smp_cycles_t smp, 
     adc_seq_num_t seq_num)
 {
-    // Notes: 
-    //  - This function gets called for each ADC channel being initialized so don't put 
-    //    code that only needs to be called once in here. 
-
     // Configure the GPIO for analog mode 
     // TODO add register functions to GPIO driver 
     gpio->MODER |= (SET_3 << (2*adc_pin)); 
@@ -88,7 +88,15 @@ void adc_pin_init(
 
 
 //================================================================================
-// Read Registers 
+// Read 
+
+// TODO come up with different read functions for single, continuous and scan modes 
+
+// Read process: (ADC must be on first) 
+// - Trigger a read 
+// - See if the start bit gets set 
+// - Wait for indication that the read is complete 
+// - Read the data register 
 
 // ADC data register read 
 uint16_t adc_dr(
@@ -118,9 +126,16 @@ void adc_eoc(ADC_TypeDef *adc)
 
 
 // Overrun bit status 
-uint8_t adc_overrun(ADC_TypeDef *adc)
+uint8_t adc_overrun_status(ADC_TypeDef *adc)
 {
     return ((adc->SR & (SET_BIT << SHIFT_5)) >> SHIFT_5); 
+}
+
+
+// Clear the overrun bit 
+void adc_overrun_clear(ADC_TypeDef *adc)
+{
+    adc->SR &= ~(SET_BIT << SHIFT_5); 
 }
 
 
@@ -138,7 +153,7 @@ uint8_t adc_wd_flag(ADC_TypeDef *adc)
 
 // ADC prescalar 
 void adc_prescalar(
-    ADC_TypeDef *adc,
+    ADC_Common_TypeDef *adc,
     adc_prescalar_t prescalar)
 {
     adc->CCR |= (prescalar << SHIFT_16); 

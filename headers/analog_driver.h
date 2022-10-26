@@ -150,14 +150,20 @@ typedef enum {
 /**
  * @brief ADC port initialization 
  * 
+ * @details 
+ *          One time initiialization code for the ADC 
+ * 
+ * @param prescalar 
  */
-void adc_port_init(void); 
+void adc_port_init(
+    adc_prescalar_t prescalar); 
 
 
 /**
  * @brief ADC pin initialization 
  * 
  * @details 
+ *          Init code for each ADC channel 
  * 
  * @param adc 
  * @param gpio 
@@ -178,7 +184,7 @@ void adc_pin_init(
 
 
 //================================================================================
-// Read Registers 
+// Read 
 
 /**
  * @brief ADC data register read 
@@ -228,7 +234,17 @@ void adc_eoc_wait(ADC_TypeDef *adc);
  * @param adc 
  * @return uint8_t 
  */
-uint8_t adc_overrun(ADC_TypeDef *adc); 
+uint8_t adc_overrun_status(ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Clear the overrun bit 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ */
+void adc_overrun_clear(ADC_TypeDef *adc); 
 
 
 /**
@@ -256,7 +272,7 @@ uint8_t adc_wd_flag(ADC_TypeDef *adc);
  * @param prescalar 
  */
 void adc_prescalar(
-    ADC_TypeDef *adc,
+    ADC_Common_TypeDef *adc,
     adc_prescalar_t prescalar); 
 
 
@@ -315,11 +331,11 @@ void adc_cont_enable(
  * @param adc 
  */
 void adc_cont_disable(
-    ADC_TypeDef *adc)
+    ADC_TypeDef *adc); 
 
 
 /**
- * @brief Set the ADC resolution 
+ * @brief 
  * 
  * @details 
  *          // TODO move prototype to source - only to be used once during init 
@@ -339,8 +355,7 @@ void adc_res(
  * 
  * @param adc 
  */
-void adc_wd_enable(
-    ADC_TypeDef *adc); 
+void adc_wd_enable(ADC_TypeDef *adc); 
 
 
 /**
@@ -373,7 +388,7 @@ void adc_scan_enable(
  * @param adc 
  */
 void adc_scan_disable(
-    ADC_TypeDef *adc) 
+    ADC_TypeDef *adc); 
 
 
 /**

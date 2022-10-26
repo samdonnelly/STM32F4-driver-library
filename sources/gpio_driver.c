@@ -27,6 +27,8 @@
 // GPIO communication initialization 
 void gpio_port_init(void)
 {
+    // TODO create a clocks driver to enable these and other clocks (RCC) 
+    
     // Enable GPIOA clock - RCC_AHB1ENR register, bit 0 
     RCC->AHB1ENR |= (SET_BIT << SHIFT_0);
 
