@@ -38,6 +38,9 @@ void adc_port_init(
     // Set the ADC clock frequency 
     adc_prescalar(ADC1_COMMON, prescalar); 
 
+    // Set scan mode? 
+    adc_scan_enable(ADC1); 
+
     // Set the channel resolution 
     adc_res(ADC1, resolution); 
 
