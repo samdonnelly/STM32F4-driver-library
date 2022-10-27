@@ -204,4 +204,24 @@ uint8_t gpio_read(
 
 //=======================================================================================
 
+
+//================================================================================
+// Register functions 
+
+/**
+ * @brief Set the GPIO mode 
+ * 
+ * @details 
+ * 
+ * @param gpio 
+ * @param moder 
+ * @param pin 
+ */
+void gpio_moder(
+    GPIO_TypeDef *gpio, 
+    gpio_moder_t moder, 
+    pin_selector_t pin); 
+
+//================================================================================
+
 #endif  // _GPIO_DRIVER_H_

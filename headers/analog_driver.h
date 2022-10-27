@@ -23,6 +23,7 @@
 #include "tools.h"
 
 // Communication drivers 
+#include "gpio_driver.h"
 
 // Other drivers 
 
@@ -153,10 +154,13 @@ typedef enum {
  * @details 
  *          One time initiialization code for the ADC 
  * 
- * @param prescalar 
+ * @param prescalar : 
+ * @param resolution : 
  */
 void adc_port_init(
-    adc_prescalar_t prescalar); 
+    adc_prescalar_t prescalar, 
+    adc_res_t resolution, 
+    adc_eoc_config_t eoc); 
 
 
 /**
@@ -177,8 +181,7 @@ void adc_pin_init(
     GPIO_TypeDef *gpio, 
     pin_selector_t adc_pin, 
     adc_channel_t adc_channel, 
-    adc_smp_cycles_t smp, 
-    adc_seq_num_t seq_num); 
+    adc_smp_cycles_t smp); 
 
 //================================================================================
 

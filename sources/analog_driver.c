@@ -28,13 +28,21 @@
 
 // ADC port init 
 void adc_port_init(
-    adc_prescalar_t prescalar)
+    adc_prescalar_t prescalar, 
+    adc_res_t resolution, 
+    adc_eoc_config_t eoc)
 {
     // Enable the ADC1 clock 
     RCC->APB2ENR |= (SET_BIT << SHIFT_8); 
 
     // Set the ADC clock frequency 
     adc_prescalar(ADC1_COMMON, prescalar); 
+
+    // Set the channel resolution 
+    adc_res(ADC1, resolution); 
+
+    // Set the EOC behavior 
+    adc_eoc_select(ADC1, eoc); 
 }
 
 
@@ -44,21 +52,19 @@ void adc_pin_init(
     GPIO_TypeDef *gpio, 
     pin_selector_t adc_pin, 
     adc_channel_t adc_channel, 
-    adc_smp_cycles_t smp, 
-    adc_seq_num_t seq_num)
+    adc_smp_cycles_t smp)
 {
     // Configure the GPIO for analog mode 
-    // TODO add register functions to GPIO driver 
-    gpio->MODER |= (SET_3 << (2*adc_pin)); 
+    gpio_moder(gpio, MODER_ANALOG, adc_pin); 
     // gpio->OSPEEDR |= (SET_3 << (2*adc_pin)); 
 
+    
     // Configure the ADC 
 
-    // Set the channel resolution 
+    // Set the sample time for the channel 
+    adc_smp(adc, adc_channel, smp);
 
     // Set the data alignment 
-
-    // Select end of conversion 
 
     // Set DMA settings 
 
@@ -66,22 +72,12 @@ void adc_pin_init(
     // Is this it's own function? 
 
     // Set scan conversion 
-    // Is this it's own function? 
-
-    // Set the sample time for the channel 
-    adc_smp(adc, adc_channel, smp); 
+    // Is this it's own function?  
     
     // Set the watchdog thresholds 
 
     // Select the channel that the watchdog watches 
     // Maybe make this it's own function so it can be changed on the go 
-
-    // Set the channel sequence number 
-    // TODO make independent of the init function 
-    adc_seq(adc, adc_channel, seq_num); 
-
-    // Set the ADC pre-scalar 
-    // ADC_CCR --> ADCPRE
 }
 
 //================================================================================
@@ -114,12 +110,12 @@ uint16_t adc_dr(
 // Wait for the start bit to set 
 void adc_start_wait(ADC_TypeDef *adc)
 {
-    while ((adc->SR) & (SET_BIT << SHIFT_4)); 
+    while (!((adc->SR) & (SET_BIT << SHIFT_4))); 
 }
 
 
 // Wait for end of ADC conversion 
-void adc_eoc(ADC_TypeDef *adc)
+void adc_eoc_wait(ADC_TypeDef *adc)
 {
     while((adc->SR) & (SET_BIT << SHIFT_1)); 
 }
@@ -160,6 +156,32 @@ void adc_prescalar(
 }
 
 
+// Set the ADC resolution 
+void adc_res(
+    ADC_TypeDef *adc, 
+    adc_res_t resolution)
+{
+    // Clear the resolution 
+    adc->CR1 &= ~(SET_3 << SHIFT_24); 
+
+    // Set the new resolution 
+    adc->CR1 |= (resolution << SHIFT_24); 
+}
+
+
+// End of Conversion (EOC) selection 
+void adc_eoc_select(
+    ADC_TypeDef *adc, 
+    adc_eoc_config_t eoc_select)
+{
+    // Clear the previous selection 
+    adc->CR2 &= ~(SET_BIT << SHIFT_10); 
+
+    // Select the new config 
+    adc->CR2 |= (eoc_select << SHIFT_10); 
+}
+
+
 // Turn ADC on 
 void adc_on(
     ADC_TypeDef *adc)
@@ -197,19 +219,6 @@ void adc_cont_disable(
     ADC_TypeDef *adc) 
 {
     adc->CR2 &= ~(SET_BIT << SHIFT_1); 
-}
-
-
-// Set the ADC resolution 
-void adc_res(
-    ADC_TypeDef *adc, 
-    adc_res_t resolution)
-{
-    // Clear the resolution 
-    adc->CR1 &= ~(SET_3 << SHIFT_24); 
-
-    // Set the new resolution 
-    adc->CR1 |= (resolution << SHIFT_24); 
 }
 
 
@@ -273,19 +282,6 @@ void adc_wd_chan_select(
     adc->CR1 |= (adc_channel << SHIFT_0); 
 }
 
-
-// End of Conversion (EOC) selection 
-void adc_eoc_select(
-    ADC_TypeDef *adc, 
-    adc_eoc_config_t eoc_select)
-{
-    // Clear the previous selection 
-    adc->CR2 &= ~(SET_BIT << SHIFT_10); 
-
-    // Select the new config 
-    adc->CR2 |= (eoc_select << SHIFT_10); 
-}
-
 //================================================================================
 
 
@@ -310,7 +306,7 @@ void adc_smp(
 //===============================================================================
 // Watchdog Registers 
 
-// 
+// Analog watchdog thresholds 
 void adc_wd_thresh(
     ADC_TypeDef *adc, 
     uint16_t hi_thresh, 
@@ -351,7 +347,7 @@ void adc_seq_len_set(
     ADC_TypeDef *adc, 
     adc_seq_num_t seq_len) 
 {
-    adc->SQR1 |= (seq_len << SHIFT_20); 
+    adc->SQR1 |= ((seq_len - ADC_SEQ_1) << SHIFT_20); 
 }
 
 //===============================================================================
