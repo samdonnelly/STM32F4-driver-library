@@ -38,9 +38,6 @@ void adc_port_init(
     // Set the ADC clock frequency 
     adc_prescalar(ADC1_COMMON, prescalar); 
 
-    // Set scan mode? 
-    adc_scan_enable(ADC1); 
-
     // Set the channel resolution 
     adc_res(ADC1, resolution); 
 
@@ -57,9 +54,8 @@ void adc_pin_init(
     adc_channel_t adc_channel, 
     adc_smp_cycles_t smp)
 {
-    // Configure the GPIO for analog mode 
+    // Configure the GPIO pin for analog mode 
     gpio_moder(gpio, MODER_ANALOG, adc_pin); 
-    // gpio->OSPEEDR |= (SET_3 << (2*adc_pin)); 
 
     
     // Configure the ADC 
@@ -120,7 +116,7 @@ void adc_start_wait(ADC_TypeDef *adc)
 // Wait for end of ADC conversion 
 void adc_eoc_wait(ADC_TypeDef *adc)
 {
-    while((adc->SR) & (SET_BIT << SHIFT_1)); 
+    while(!((adc->SR) & (SET_BIT << SHIFT_1))); 
 }
 
 
@@ -190,6 +186,7 @@ void adc_on(
     ADC_TypeDef *adc)
 {
     adc->CR2 |= (SET_BIT << SHIFT_0); 
+    tim9_delay_ms(ADC_STAB_TIME);       // Give ADC stabilization time 
 }
 
 
@@ -205,6 +202,7 @@ void adc_off(
 void adc_start(
     ADC_TypeDef *adc)
 {
+    adc->SR = CLEAR;   // Clear the status register 
     adc->CR2 |= (SET_BIT << SHIFT_30); 
 }
 
@@ -337,11 +335,11 @@ void adc_seq(
     //   be in the sequence more than once 
     // - Add overwriting capabilities 
     if (seq_num > ADC_SEQ_12) 
-        adc->SQR1 |= (channel << 5*(seq_num - ADC_SEQ_13)); 
+        adc->SQR1 |= (channel << (5*(seq_num - ADC_SEQ_13))); 
     else if (seq_num > ADC_SEQ_6) 
-        adc->SQR2 |= (channel << 5*(seq_num - ADC_SEQ_7)); 
+        adc->SQR2 |= (channel << (5*(seq_num - ADC_SEQ_7))); 
     else 
-        adc->SQR3 |= (channel << 5*(seq_num - ADC_SEQ_1)); 
+        adc->SQR3 |= (channel << (5*(seq_num - ADC_SEQ_1))); 
 }
 
 
