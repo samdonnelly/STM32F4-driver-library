@@ -57,9 +57,6 @@ void adc_pin_init(
     // Configure the GPIO pin for analog mode 
     gpio_moder(gpio, MODER_ANALOG, adc_pin); 
 
-    
-    // Configure the ADC 
-
     // Set the sample time for the channel 
     adc_smp(adc, adc_channel, smp);
 
@@ -87,17 +84,48 @@ void adc_pin_init(
 
 // TODO come up with different read functions for single, continuous and scan modes 
 
-// Read process: (ADC must be on first) 
-// - Trigger a read 
-// - See if the start bit gets set 
-// - Wait for indication that the read is complete 
-// - Read the data register 
-
 // ADC data register read 
 uint16_t adc_dr(
     ADC_TypeDef *adc)
 {
     return (uint16_t)(adc->DR); 
+}
+
+
+// Read the next single ADC conversion in the sequence 
+uint16_t adc_read_single_next(
+    ADC_TypeDef *adc)
+{
+    // Start and ADC conversion 
+    adc_start(adc); 
+
+    // Wait for start bit to set 
+    adc_start_wait(adc); 
+
+    // Wait for end of ADC conversion 
+    adc_eoc_wait(adc); 
+
+    // Read the data register 
+    return adc_dr(adc); 
+}
+
+
+// Read a select single ADC conversion 
+uint16_t adc_read_single_select(
+    ADC_TypeDef *adc, 
+    adc_channel_t channel)
+{
+    // Clear the existing sequence 
+    adc_seq_clear(adc); 
+
+    // Set the select channel as the next in the sequence 
+    adc_seq(adc, channel, ADC_SEQ_1); 
+
+    // Set the sequence length 
+    adc_seq_len_set(adc, ADC_SEQ_1); 
+
+    // Read the ADC value 
+    return adc_read_single_next(adc); 
 }
 
 //================================================================================
@@ -330,10 +358,6 @@ void adc_seq(
     adc_channel_t channel, 
     adc_seq_num_t seq_num)
 {
-    // TODO 
-    // - This must be called independent of the init function as the same channel can 
-    //   be in the sequence more than once 
-    // - Add overwriting capabilities 
     if (seq_num > ADC_SEQ_12) 
         adc->SQR1 |= (channel << (5*(seq_num - ADC_SEQ_13))); 
     else if (seq_num > ADC_SEQ_6) 
@@ -349,6 +373,16 @@ void adc_seq_len_set(
     adc_seq_num_t seq_len) 
 {
     adc->SQR1 |= ((seq_len - ADC_SEQ_1) << SHIFT_20); 
+}
+
+
+// ADC sequence clear 
+void adc_seq_clear(
+    ADC_TypeDef *adc)
+{
+    adc->SQR1 = CLEAR; 
+    adc->SQR2 = CLEAR; 
+    adc->SQR3 = CLEAR; 
 }
 
 //===============================================================================

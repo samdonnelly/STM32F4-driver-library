@@ -202,13 +202,43 @@ void adc_pin_init(
  * @brief ADC data register read 
  * 
  * @details 
- *           // TODO move prototype to source file - only should be called once 
  * 
  * @param adc 
  * @return uint16_t 
  */
 uint16_t adc_dr(
     ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Read the next single ADC conversion in the sequence 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @return uint16_t 
+ */
+uint16_t adc_read_single_next(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ *          Note: this function clears any pre-existing sequences. This function is meant 
+ *                to be used for systems where there are multiple ADC inputs but they only 
+ *                read periodically in a random order. If there is a specific read sequence 
+ *                then define the sequence during initialization and use adc_read_single_next
+ *                or the scan and/or cont modes with DMA. 
+ * 
+ * @param adc 
+ * @param channel 
+ * @return uint16_t 
+ */
+uint16_t adc_read_single_select(
+    ADC_TypeDef *adc, 
+    adc_channel_t channel); 
 
 //================================================================================
 
@@ -502,6 +532,8 @@ void adc_wd_thresh(
  * @brief 
  * 
  * @details 
+ *          This is called independently of the adc init function because the same 
+ *          pin/channel can be added to the sequence more than once. 
  * 
  * @param adc 
  * @param channel 
@@ -524,6 +556,17 @@ void adc_seq(
 void adc_seq_len_set(
     ADC_TypeDef *adc, 
     adc_seq_num_t seq_len); 
+
+
+/**
+ * @brief ADC sequence clear 
+ * 
+ * @details Clears all data in the SQRx registers which includes sequence order and length. 
+ * 
+ * @param adc 
+ */
+void adc_seq_clear(
+    ADC_TypeDef *adc); 
 
 //================================================================================
 
