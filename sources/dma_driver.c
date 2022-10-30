@@ -30,6 +30,22 @@
 
 // This register is used to configure the concerned stream 
 
+// Stream enable 
+void dma_stream_enable(
+    DMA_Stream_TypeDef *dma_stream)
+{
+    dma_stream->CR |= (SET_BIT << SHIFT_0); 
+}
+
+
+// Stream disable  
+void dma_stream_disable(
+    DMA_Stream_TypeDef *dma_stream)
+{
+    dma_stream->CR &= ~(SET_BIT << SHIFT_0); 
+}
+
+
 // DMA channel select 
 void dma_chsel(
     DMA_Stream_TypeDef *dma_stream, 
@@ -38,6 +54,17 @@ void dma_chsel(
     // Clear the channel then set the desired channel 
     dma_stream->CR &= ~(SET_7 << SHIFT_25); 
     dma_stream->CR |= (channel << SHIFT_25);  
+}
+
+
+// Data transfer direction 
+void dma_dir(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_direction_t dir)
+{
+    // Clear the data transfer direction then set the desired value 
+    dma_stream->CR &= ~(SET_3 << SHIFT_6); 
+    dma_stream->CR |= ~(dir << SHIFT_6); 
 }
 
 
@@ -74,19 +101,74 @@ void dma_priority(
 }
 
 
-// Stream enable 
-void dma_stream_enable(
-    DMA_Stream_TypeDef *dma_stream)
+// Memory data size 
+void dma_msize(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_data_size_t msize)
 {
-    dma_stream->CR |= (SET_BIT << SHIFT_0); 
+    // Clear the memory data size then set the desired value 
+    dma_stream->CR &= ~(SET_3 << SHIFT_13); 
+    dma_stream->CR |= ~(msize << SHIFT_13); 
 }
 
 
-// Stream disable  
-void dma_stream_disable(
-    DMA_Stream_TypeDef *dma_stream)
+// Memory increment mode 
+void dma_minc(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_addr_inc_mode_t minc)
 {
-    dma_stream->CR &= ~(SET_BIT << SHIFT_0); 
+    // Clear the memory increment mode then set the desired value 
+    dma_stream->CR &= ~(SET_BIT << SHIFT_10); 
+    dma_stream->CR |= ~(minc << SHIFT_10); 
 }
 
+
+// Peripheral data size 
+void dma_psize(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_data_size_t psize)
+{
+    // Clear the peripheral data size then set the desired value 
+    dma_stream->CR &= ~(SET_3 << SHIFT_11); 
+    dma_stream->CR |= ~(psize << SHIFT_11); 
+}
+
+
+// Peripheral increment mode 
+void dma_pinc(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_addr_inc_mode_t pinc)
+{
+    // Clear the peripheral increment mode then set the desired value 
+    dma_stream->CR &= ~(SET_BIT << SHIFT_10); 
+    dma_stream->CR |= ~(pinc << SHIFT_10); 
+}
+
+//================================================================================
+
+
+//================================================================================
+// DMA Stream x Number of Data Register 
+
+// Number of data items to transfer 
+void dma_ndt(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint16_t data_items)
+{
+    dma_stream->NDTR = data_items; 
+}
+
+//================================================================================
+
+
+//================================================================================
+// DMA Stream x Peripheral Address Register 
+
+// Peripheral address 
+void dma_par(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t per_addr)
+{
+    dma_stream->PAR = per_addr; 
+}
 //================================================================================

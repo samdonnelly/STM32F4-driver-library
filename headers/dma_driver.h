@@ -70,6 +70,19 @@ typedef enum {
 
 
 /**
+ * @brief Data transfer direction 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_DIR_PM,   // Peripheral-to-memory 
+    DMA_DIR_MP,   // Memory-to-peripheral 
+    DMA_DIR_MM    // Memory-to-memory 
+} dma_direction_t; 
+
+
+/**
  * @brief 
  * 
  * @detaiils 
@@ -81,6 +94,31 @@ typedef enum {
     DMA_BURST_8,    // Increment burst of 8 beats 
     DMA_BURST_16,   // Increment burst of 16 beats 
 } dma_burst_config_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_DATA_SIZE_BYTE,  // Byte (8-bits) 
+    DMA_DATA_SIZE_HALF,  // Half-word (16-bits) 
+    DMA_DATA_SIZE_WORD   // Word (32-bits) 
+} dma_data_size_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_ADDR_FIXED,      // Address pointer is fixed 
+    DMA_ADDR_INCREMENT   // Address pointer is incremented after each data transfer 
+} dma_addr_inc_mode_t; 
 
 //================================================================================
 
@@ -129,6 +167,19 @@ void dma_chsel(
 
 
 /**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @param dir 
+ */
+void dma_dir(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_direction_t dir); 
+
+
+/**
  * @brief Memory burst transfer configuration 
  * 
  * @details 
@@ -170,6 +221,103 @@ void dma_pburst(
 void dma_priority(
     DMA_Stream_TypeDef *dma_stream, 
     dma_priority_t priority); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @param msize 
+ */
+void dma_msize(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_data_size_t msize); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @param minc 
+ */
+void dma_minc(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_addr_inc_mode_t minc); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @param psize 
+ */
+void dma_psize(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_data_size_t psize); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @param pinc 
+ */
+void dma_pinc(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_addr_inc_mode_t pinc); 
+
+//================================================================================
+
+
+//================================================================================
+// DMA Stream x Number of Data Register 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ *          This register can only be written when the stream is disabled. 
+ *          When the stream is enabled this register is read only which indicates the 
+ *          remaining items to be transmitted. The rgister decrements after each DMA 
+ *          transfer. 
+ *          Once the transfer is complete, this register can either stay at zero (normal 
+ *          mode) or be reloaded automatically with the previosuly programmed value if 
+ *          the stream is in circular mode or the stream is enabled again. 
+ * 
+ * @param dma_stream 
+ * @param data_items 
+ */
+void dma_ndt(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint16_t data_items); 
+
+//================================================================================
+
+
+//================================================================================
+// DMA Stream x Peripheral Address Register 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ *          Base address of the data register from/to which the data will be read/written. 
+ *          THis register can only be written to when the stream is disabled. 
+ * 
+ * @param dma_stream 
+ * @param per_addr 
+ */
+void dma_par(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t per_addr); 
 
 //================================================================================
 
