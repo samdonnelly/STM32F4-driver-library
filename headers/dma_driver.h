@@ -120,6 +120,44 @@ typedef enum {
     DMA_ADDR_INCREMENT   // Address pointer is incremented after each data transfer 
 } dma_addr_inc_mode_t; 
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_FIFO_STAT_0,       // 
+    DMA_FIFO_STAT_1,       // 
+    DMA_FIFO_STAT_2,       // 
+    DMA_FIFO_STAT_3,       // 
+    DMA_FIFO_STAT_EMPTY,   // 
+    DMA_FIFO_STAT_FULL,    // 
+} dma_fifo_status_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_FIFO_THRESH_0,   // 
+    DMA_FIFO_THRESH_1,   // 
+    DMA_FIFO_THRESH_2,   // 
+    DMA_FIFO_THRESH_3    // 
+} dma_fifo_threshold_t; 
+
+//================================================================================
+
+
+//================================================================================
+// Data Types 
+
+typedef dma_fifo_status_t FIFO_STATUS; 
+
 //================================================================================
 
 
@@ -309,8 +347,9 @@ void dma_ndt(
  * @brief 
  * 
  * @details 
- *          Base address of the data register from/to which the data will be read/written. 
- *          THis register can only be written to when the stream is disabled. 
+ *          Base address of the peripheral data register from/to which the data will be 
+ *          read/written. 
+ *          This register can only be written to when the stream is disabled. 
  * 
  * @param dma_stream 
  * @param per_addr 
@@ -318,6 +357,102 @@ void dma_ndt(
 void dma_par(
     DMA_Stream_TypeDef *dma_stream, 
     uint32_t per_addr); 
+
+//================================================================================
+
+
+//================================================================================
+// DMA Stream x Memory Address Register 
+
+/**
+ * @brief Set memory 0 address 
+ * 
+ * @details 
+ *          Base address of memory area 0 from/to which the data will be read/written. 
+ *          These bits can only be written when the stream is disabled. 
+ * 
+ * @param dma_stream 
+ * @param m0ar 
+ */
+void dma_m0ar(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t m0ar); 
+
+
+/**
+ * @brief Set memory 1 address 
+ * 
+ * @details 
+ *          Base address of memory area 1 from/to which the data will be read/written. 
+ *          This register is used only in double buffer mode. 
+ *          These bits can only be written when the stream is disabled. 
+ * 
+ * @param dma_stream 
+ * @param m1ar 
+ */
+void dma_m1ar(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t m1ar); 
+
+//================================================================================
+
+
+//================================================================================
+// DMA Stream x FIFO Control Register 
+
+/**
+ * @brief Read the FIFO status 
+ * 
+ * @details 
+ *          These bits are not relevant in direct mode. 
+ * 
+ * @param dma_stream 
+ * @return FIFO_STATUS 
+ */
+FIFO_STATUS dma_fs(
+    DMA_Stream_TypeDef *dma_stream); 
+
+
+/**
+ * @brief Direct mode disable 
+ * 
+ * @details 
+ *          These bits can only be written when the stream is disabled. 
+ *          This is set by hardware if memory-to-memory mode is selected and the stream is 
+ *          enabled because the direct mode is not allowed in the memory-to-memory 
+ *          configuration. 
+ * 
+ * @param dma_stream 
+ */
+void dma_dm_disable(
+    DMA_Stream_TypeDef *dma_stream); 
+
+
+/**
+ * @brief Direct mode enable 
+ * 
+ * @details 
+ *          These bits can only be written when the stream is disabled. 
+ * 
+ * @param dma_stream 
+ */
+void dma_dm_enable(
+    DMA_Stream_TypeDef *dma_stream); 
+
+
+/**
+ * @brief FIFO threshold selection 
+ * 
+ * @details 
+ *          These bits are not used in direct mode. 
+ *          These bits can only be written when the stream is disabled. 
+ * 
+ * @param dma_stream 
+ * @param fth 
+ */
+void dma_fth(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_fifo_threshold_t fth); 
 
 //================================================================================
 

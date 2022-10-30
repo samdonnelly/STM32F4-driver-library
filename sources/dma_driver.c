@@ -172,3 +172,66 @@ void dma_par(
     dma_stream->PAR = per_addr; 
 }
 //================================================================================
+
+
+//================================================================================
+// DMA Stream x Memory Address Registers 
+
+// Set memory 0 base address 
+void dma_m0ar(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t m0ar)
+{
+    dma_stream->M0AR = m0ar; 
+}
+
+
+// Set memory 1 base address 
+void dma_m1ar(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t m1ar)
+{
+    dma_stream->M1AR = m1ar; 
+}
+
+//================================================================================
+
+
+//================================================================================
+// DMA Stream x FIFO Control Register 
+
+// Read the FIFO status 
+FIFO_STATUS dma_fs(
+    DMA_Stream_TypeDef *dma_stream)
+{
+    return ((dma_stream->FCR & (SET_7 << SHIFT_3)) >> SHIFT_3); 
+}
+
+
+// Direct mode disable 
+void dma_dm_disable(
+    DMA_Stream_TypeDef *dma_stream)
+{
+    dma_stream->FCR |= (SET_BIT << SHIFT_2); 
+}
+
+
+// Direct mode enable 
+void dma_dm_enable(
+    DMA_Stream_TypeDef *dma_stream)
+{
+    dma_stream->FCR &= ~(SET_BIT << SHIFT_2); 
+}
+
+
+// FIFO threshold selection 
+void dma_fth(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_fifo_threshold_t fth)
+{
+    // Clear the FIFO threshold selection then set the specified value 
+    dma_stream->FCR &= ~(SET_3 << SHIFT_0); 
+    dma_stream->FCR |= (fth << SHIFT_0); 
+}
+
+//================================================================================
