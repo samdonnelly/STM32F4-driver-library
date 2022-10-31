@@ -56,6 +56,24 @@ typedef enum {
 
 
 /**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_STREAM_0,    // 
+    DMA_STREAM_1,    // 
+    DMA_STREAM_2,    // 
+    DMA_STREAM_3,    // 
+    DMA_STREAM_4,    // 
+    DMA_STREAM_5,    // 
+    DMA_STREAM_6,    // 
+    DMA_STREAM_7     // 
+} dma_stream_t; 
+
+
+/**
  * @brief Priority level 
  * 
  * @details 
@@ -157,6 +175,67 @@ typedef enum {
 // Data Types 
 
 typedef dma_fifo_status_t FIFO_STATUS; 
+
+//================================================================================
+
+
+//================================================================================
+// DMA interrupt status registers 
+
+/**
+ * @brief Transfer complete interrupt flag 
+ * 
+ * @details 
+ * 
+ * @param dma 
+ * @param stream 
+ * @return uint8_t 
+ */
+uint8_t dma_tcif(
+    DMA_TypeDef *dma, 
+    dma_stream_t stream); 
+
+
+/**
+ * @brief Transfer error interrupt flag 
+ * 
+ * @details 
+ * 
+ * @param dma 
+ * @param stream 
+ * @return uint8_t 
+ */
+uint8_t dma_teif(
+    DMA_TypeDef *dma, 
+    dma_stream_t stream); 
+
+
+/**
+ * @brief Direct mode error interrupt flag 
+ * 
+ * @details 
+ * 
+ * @param dma 
+ * @param stream 
+ * @return uint8_t 
+ */
+uint8_t dma_dmeif(
+    DMA_TypeDef *dma, 
+    dma_stream_t stream); 
+
+
+/**
+ * @brief FIFO error interrupt flag 
+ * 
+ * @details 
+ * 
+ * @param dma 
+ * @param stream 
+ * @return uint8_t 
+ */
+uint8_t dma_feif(
+    DMA_TypeDef *dma, 
+    dma_stream_t stream); 
 
 //================================================================================
 

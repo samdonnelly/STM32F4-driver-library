@@ -26,6 +26,244 @@
 
 
 //================================================================================
+// DMA interrupt status registers 
+
+// Transfer complete interrupt flag 
+uint8_t dma_tcif(
+    DMA_TypeDef *dma, 
+    dma_stream_t stream)
+{
+    // Local variables 
+    uint8_t status = 0; 
+
+    // Read the flag status then clear the flag 
+    switch(stream)
+    {
+        case DMA_STREAM_0: 
+            status = (dma->LISR & (SET_BIT << SHIFT_5)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_5); 
+            break; 
+
+        case DMA_STREAM_1: 
+            status = (dma->LISR & (SET_BIT << SHIFT_11)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_11); 
+            break;
+
+        case DMA_STREAM_2:
+            status = (dma->LISR & (SET_BIT << SHIFT_21));
+            dma->LIFCR |= (SET_BIT << SHIFT_21);  
+            break; 
+
+        case DMA_STREAM_3:
+            status = (dma->LISR & (SET_BIT << SHIFT_27));
+            dma->LIFCR |= (SET_BIT << SHIFT_27);  
+            break;
+
+        case DMA_STREAM_4:
+            status = (dma->HISR & (SET_BIT << SHIFT_5));
+            dma->HIFCR |= (SET_BIT << SHIFT_5);  
+            break; 
+
+        case DMA_STREAM_5:
+            status = (dma->HISR & (SET_BIT << SHIFT_11));
+            dma->HIFCR |= (SET_BIT << SHIFT_11);  
+            break;
+        
+        case DMA_STREAM_6:
+            status = (dma->HISR & (SET_BIT << SHIFT_21));
+            dma->HIFCR |= (SET_BIT << SHIFT_21);  
+            break; 
+
+        case DMA_STREAM_7:
+            status = (dma->HISR & (SET_BIT << SHIFT_27));
+            dma->HIFCR |= (SET_BIT << SHIFT_27);  
+            break;
+
+        default: 
+            break;
+    }
+
+    return status; 
+}
+
+
+// Transfer error interrupt flag 
+uint8_t dma_teif(
+    DMA_TypeDef *dma, 
+    dma_stream_t stream)
+{
+    // Local variables 
+    uint8_t status = 0; 
+
+    switch(stream)
+    {
+        case DMA_STREAM_0: 
+            status = (dma->LISR & (SET_BIT << SHIFT_3)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_3); 
+            break; 
+
+        case DMA_STREAM_1: 
+            status = (dma->LISR & (SET_BIT << SHIFT_9)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_9); 
+            break;
+
+        case DMA_STREAM_2:
+            status = (dma->LISR & (SET_BIT << SHIFT_19)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_19); 
+            break; 
+
+        case DMA_STREAM_3:
+            status = (dma->LISR & (SET_BIT << SHIFT_25)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_25); 
+            break;
+
+        case DMA_STREAM_4:
+            status = (dma->HISR & (SET_BIT << SHIFT_3)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_3); 
+            break; 
+
+        case DMA_STREAM_5:
+            status = (dma->HISR & (SET_BIT << SHIFT_9)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_9); 
+            break;
+        
+        case DMA_STREAM_6:
+            status = (dma->HISR & (SET_BIT << SHIFT_19)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_19); 
+            break; 
+
+        case DMA_STREAM_7:
+            status = (dma->HISR & (SET_BIT << SHIFT_25)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_25); 
+            break;
+
+        default: 
+            break;
+    }
+
+    return status; 
+}
+
+
+// Direct mode error interrupt flag 
+uint8_t dma_dmeif(
+    DMA_TypeDef *dma, 
+    dma_stream_t stream)
+{
+    // Local variables 
+    uint8_t status = 0; 
+
+    switch(stream)
+    {
+        case DMA_STREAM_0: 
+            status = (dma->LISR & (SET_BIT << SHIFT_2)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_2); 
+            break; 
+
+        case DMA_STREAM_1: 
+            status = (dma->LISR & (SET_BIT << SHIFT_8)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_8); 
+            break;
+
+        case DMA_STREAM_2:
+            status = (dma->LISR & (SET_BIT << SHIFT_18)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_18); 
+            break; 
+
+        case DMA_STREAM_3:
+            status = (dma->LISR & (SET_BIT << SHIFT_24)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_24); 
+            break;
+
+        case DMA_STREAM_4:
+            status = (dma->HISR & (SET_BIT << SHIFT_2)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_2); 
+            break; 
+
+        case DMA_STREAM_5:
+            status = (dma->HISR & (SET_BIT << SHIFT_8)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_8); 
+            break;
+        
+        case DMA_STREAM_6:
+            status = (dma->HISR & (SET_BIT << SHIFT_18)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_18); 
+            break; 
+
+        case DMA_STREAM_7:
+            status = (dma->HISR & (SET_BIT << SHIFT_24)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_24); 
+            break;
+
+        default: 
+            break;
+    }
+
+    return status; 
+}
+
+
+// FIFO error interrupt flag 
+uint8_t dma_feif(
+    DMA_TypeDef *dma, 
+    dma_stream_t stream)
+{
+    // Local variables 
+    uint8_t status = 0; 
+
+    switch(stream)
+    {
+        case DMA_STREAM_0: 
+            status = (dma->LISR & (SET_BIT << SHIFT_0)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_0); 
+            break; 
+
+        case DMA_STREAM_1: 
+            status = (dma->LISR & (SET_BIT << SHIFT_6)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_6); 
+            break;
+
+        case DMA_STREAM_2:
+            status = (dma->LISR & (SET_BIT << SHIFT_16)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_16); 
+            break; 
+
+        case DMA_STREAM_3:
+            status = (dma->LISR & (SET_BIT << SHIFT_22)); 
+            dma->LIFCR |= (SET_BIT << SHIFT_22); 
+            break;
+
+        case DMA_STREAM_4:
+            status = (dma->HISR & (SET_BIT << SHIFT_0)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_0); 
+            break; 
+
+        case DMA_STREAM_5:
+            status = (dma->HISR & (SET_BIT << SHIFT_6)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_6); 
+            break;
+        
+        case DMA_STREAM_6:
+            status = (dma->HISR & (SET_BIT << SHIFT_16)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_16); 
+            break; 
+
+        case DMA_STREAM_7:
+            status = (dma->HISR & (SET_BIT << SHIFT_22)); 
+            dma->HIFCR |= (SET_BIT << SHIFT_22); 
+            break;
+
+        default: 
+            break;
+    }
+
+    return status; 
+}
+
+//================================================================================
+
+
+//================================================================================
 // DMA Stream x Configuration Register 
 
 // This register is used to configure the concerned stream 
