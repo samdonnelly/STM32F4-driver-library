@@ -22,6 +22,27 @@
 
 //================================================================================
 // Initialization 
+
+// Initialize a DMA peripheral 
+void dma_port_init(
+    DMA_TypeDef *dma)
+{
+    // Enable the DMA clock? 
+}
+
+// Configure a DMA stream 
+void dma_stream_init(
+    DMA_Stream_TypeDef *dma_stream)
+{
+    // Select channel 
+    // Select data transfer mode/direction 
+    // Set the priority level 
+    // Set the memory/peripheral data size and increment mode 
+    // Set the number of data items 
+    // Set the memory/peripheral addresses 
+    // Configure the FIFO 
+}
+
 //================================================================================
 
 

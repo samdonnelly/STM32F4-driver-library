@@ -180,6 +180,33 @@ typedef dma_fifo_status_t FIFO_STATUS;
 
 
 //================================================================================
+// Initialization 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param dma 
+ */
+void dma_port_init(
+    DMA_TypeDef *dma); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ */
+void dma_stream_init(
+    DMA_Stream_TypeDef *dma_stream); 
+
+//================================================================================
+
+
+//================================================================================
 // DMA interrupt status registers 
 
 /**
