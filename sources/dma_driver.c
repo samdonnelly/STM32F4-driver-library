@@ -27,20 +27,46 @@
 void dma_port_init(
     DMA_TypeDef *dma)
 {
-    // Enable the DMA clock? 
+    // Enable the DMA clock
+    if (dma == DMA1)
+        RCC->AHB1ENR |= (SET_BIT << SHIFT_21); 
+    else if (dma == DMA2)
+        RCC->AHB1ENR |= (SET_BIT << SHIFT_22); 
 }
 
 // Configure a DMA stream 
 void dma_stream_init(
     DMA_Stream_TypeDef *dma_stream)
 {
-    // Select channel 
-    // Select data transfer mode/direction 
-    // Set the priority level 
-    // Set the memory/peripheral data size and increment mode 
-    // Set the number of data items 
-    // Set the memory/peripheral addresses 
-    // Configure the FIFO 
+    // Disable the stream 
+    
+    // Read the EN bit until the stream reads as disabled 
+    
+    // Clear all the stream dedicated bits in the LISR and HISR registers 
+    
+    // Set the peripheral port address 
+    
+    // Set the memory address 
+    
+    // Configure the total number of data items to be transferred 
+    
+    // Select the DMA channel 
+    
+    // Configure flow control if necessary 
+    
+    // Configure the stream priority 
+    
+    // COnfigure the FIFO usage 
+    
+    // Configure the direction 
+    
+    // Configure increment/fixed memory mode 
+    
+    // Configure the burst 
+    
+    // Configure data widths 
+    
+    // Configure circular or double buffer mode if necessary 
 }
 
 //================================================================================
