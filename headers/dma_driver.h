@@ -44,14 +44,14 @@
  * 
  */
 typedef enum {
-    DMA_CHANNEL_0,   // 
-    DMA_CHANNEL_1,   // 
-    DMA_CHANNEL_2,   // 
-    DMA_CHANNEL_3,   // 
-    DMA_CHANNEL_4,   // 
-    DMA_CHANNEL_5,   // 
-    DMA_CHANNEL_6,   // 
-    DMA_CHANNEL_7    // 
+    DMA_CHNL_0,   // 
+    DMA_CHNL_1,   // 
+    DMA_CHNL_2,   // 
+    DMA_CHNL_3,   // 
+    DMA_CHNL_4,   // 
+    DMA_CHNL_5,   // 
+    DMA_CHNL_6,   // 
+    DMA_CHNL_7    // 
 } dma_channel_t; 
 
 
@@ -80,10 +80,10 @@ typedef enum {
  * 
  */
 typedef enum {
-    DMA_PRIORITY_LOW,    // Low priority 
-    DMA_PRIORITY_MED,    // Medium priority 
-    DMA_PRIORITY_HI,     // High priority
-    DMA_PRIORITY_VHI,    // Very high priority 
+    DMA_PRIOR_LOW,    // Low priority 
+    DMA_PRIOR_MED,    // Medium priority 
+    DMA_PRIOR_HI,     // High priority
+    DMA_PRIOR_VHI,    // Very high priority 
 } dma_priority_t; 
 
 
@@ -162,11 +162,57 @@ typedef enum {
  * 
  */
 typedef enum {
-    DMA_FIFO_THRESH_0,   // 
-    DMA_FIFO_THRESH_1,   // 
-    DMA_FIFO_THRESH_2,   // 
-    DMA_FIFO_THRESH_3    // 
+    DMA_FTH_0,       // 0 <= FIFO Level < 1/4 
+    DMA_FTH_1,       // 1/4 <= FIFO Level < 1/2 
+    DMA_FTH_2,       // 1/2 <= FIFO Level < 3/4 
+    DMA_FTH_3,       // 3/4 <= FIFO Level < FULL 
+    DMA_FTH_EMPTY,   // Empty 
+    DMA_FTH_FULL,    // Full 
+    DMA_FTH_NA       // Non-applicable --> Used for direct mode config 
 } dma_fifo_threshold_t; 
+
+
+
+typedef enum {
+    DMA_DIRECT_MODE,  // Direct mode (no FIFO threshold used) 
+    DMA_FIFO_MODE     // FIFO mode 
+} dma_fifo_mode_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_DBM_DISABLE,   // Disable double buffer mode 
+    DMA_DBM_ENABLE     // Enable double buffer mode 
+} dma_dbm_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @detaiils 
+ * 
+ */
+typedef enum {
+    DMA_CM_DISABLE,   // Circular mode disabled 
+    DMA_CM_ENABLE     // Circualr mode enabled 
+} dma_cm_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_FLOW_CTL_DMA,   // The DMA is the flow controller 
+    DMA_FLOW_CTL_PER    // The peripheral is the flow controller 
+} dma_flow_ctl_t; 
 
 //================================================================================
 
@@ -193,15 +239,54 @@ void dma_port_init(
     DMA_TypeDef *dma); 
 
 
+
 /**
  * @brief 
  * 
  * @details 
  * 
- * @param dma_stream 
+ * @param dam : 
+ * @param dma_stream : 
+ * @param per_addr : 
+ * @param dbm : 
+ * @param m0_addr : 
+ * @param m1_addr : 
+ * @param data_items : 
+ * @param channel : 
+ * @param flow_ctl : 
+ * @param priority : 
+ * @param fifo_thresh : 
+ * @param dir : 
+ * @param minc : 
+ * @param pinc : 
+ * @param mburst : 
+ * @param pburst : 
+ * @param msize : 
+ * @param psize : 
+ * @param cm : 
+ * 
  */
 void dma_stream_init(
-    DMA_Stream_TypeDef *dma_stream); 
+    DMA_TypeDef *dma, 
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t per_addr, 
+    dma_dbm_t dbm, 
+    uint32_t m0_addr, 
+    uint32_t m1_addr, 
+    uint16_t data_items, 
+    dma_channel_t channel, 
+    dma_flow_ctl_t flow_ctl, 
+    dma_priority_t priority, 
+    dma_fifo_threshold_t fifo_thresh, 
+    dma_fifo_mode_t fifo_mode, 
+    dma_direction_t dir, 
+    dma_addr_inc_mode_t minc, 
+    dma_addr_inc_mode_t pinc, 
+    dma_burst_config_t mburst, 
+    dma_burst_config_t pburst, 
+    dma_data_size_t msize, 
+    dma_data_size_t psize, 
+    dma_cm_t cm); 
 
 //================================================================================
 
@@ -210,57 +295,26 @@ void dma_stream_init(
 // DMA interrupt status registers 
 
 /**
- * @brief Transfer complete interrupt flag 
+ * @brief Clear all flags in all streams 
  * 
  * @details 
  * 
  * @param dma 
- * @param stream 
- * @return uint8_t 
  */
-uint8_t dma_tcif(
-    DMA_TypeDef *dma, 
-    dma_stream_t stream); 
+void dma_clear_int_flags(
+    DMA_TypeDef *dma); 
 
 
 /**
- * @brief Transfer error interrupt flag 
+ * @brief 
  * 
  * @details 
  * 
  * @param dma 
  * @param stream 
- * @return uint8_t 
+ * @return uint32_t 
  */
-uint8_t dma_teif(
-    DMA_TypeDef *dma, 
-    dma_stream_t stream); 
-
-
-/**
- * @brief Direct mode error interrupt flag 
- * 
- * @details 
- * 
- * @param dma 
- * @param stream 
- * @return uint8_t 
- */
-uint8_t dma_dmeif(
-    DMA_TypeDef *dma, 
-    dma_stream_t stream); 
-
-
-/**
- * @brief FIFO error interrupt flag 
- * 
- * @details 
- * 
- * @param dma 
- * @param stream 
- * @return uint8_t 
- */
-uint8_t dma_feif(
+uint32_t dma_read_int_flags(
     DMA_TypeDef *dma, 
     dma_stream_t stream); 
 
@@ -281,7 +335,7 @@ uint8_t dma_feif(
  * 
  * @param dma_stream 
  */
-void dma_stream_enable(
+void dma_stream_enable( 
     DMA_Stream_TypeDef *dma_stream); 
 
 
@@ -293,6 +347,18 @@ void dma_stream_enable(
  * @param dma_stream 
  */
 void dma_stream_disable(
+    DMA_Stream_TypeDef *dma_stream); 
+
+
+/**
+ * @brief Stream status 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @return uint8_t 
+ */
+uint8_t dma_stream_status(
     DMA_Stream_TypeDef *dma_stream); 
 
 
@@ -351,6 +417,45 @@ void dma_mburst(
 void dma_pburst(
     DMA_Stream_TypeDef *dma_stream, 
     dma_burst_config_t burst_config); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @param dbm 
+ */
+void dma_dbm(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_dbm_t dbm);
+
+
+/**
+ * @brief Circular mode 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @param cm 
+ */
+void dma_cm(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_cm_t cm); 
+
+
+/**
+ * @brief Peripheral flow control 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @param flow_ctl 
+ */
+void dma_flow_ctl(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_flow_ctl_t flow_ctl); 
 
 
 /**

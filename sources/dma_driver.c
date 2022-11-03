@@ -36,38 +36,79 @@ void dma_port_init(
 
 // Configure a DMA stream 
 void dma_stream_init(
-    DMA_Stream_TypeDef *dma_stream)
+    DMA_TypeDef *dma, 
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t per_addr, 
+    dma_dbm_t dbm, 
+    uint32_t m0_addr, 
+    uint32_t m1_addr, 
+    uint16_t data_items, 
+    dma_channel_t channel, 
+    dma_flow_ctl_t flow_ctl, 
+    dma_priority_t priority, 
+    dma_fifo_threshold_t fifo_thresh, 
+    dma_fifo_mode_t fifo_mode, 
+    dma_direction_t dir, 
+    dma_addr_inc_mode_t minc, 
+    dma_addr_inc_mode_t pinc, 
+    dma_burst_config_t mburst, 
+    dma_burst_config_t pburst, 
+    dma_data_size_t msize, 
+    dma_data_size_t psize, 
+    dma_cm_t cm)
 {
     // Disable the stream 
+    dma_stream_disable(dma_stream); 
     
-    // Read the EN bit until the stream reads as disabled 
-    
-    // Clear all the stream dedicated bits in the LISR and HISR registers 
+    // Clear all the stream interrupt flags LISR and HISR registers 
+    dma_clear_int_flags(dma); 
     
     // Set the peripheral port address 
+    dma_par(dma_stream, per_addr); 
     
-    // Set the memory address 
-    
+    // Set the memory address and subsequently double buffer mode if needed 
+    dma_dbm(dma_stream, dbm); 
+    dma_m0ar(dma_stream, m0_addr);           // Set buffer 0 
+    if (dbm) dma_m1ar(dma_stream, m1_addr);  // Set buffer 1 if double buffer mode is enabled
+
     // Configure the total number of data items to be transferred 
+    dma_ndt(dma_stream, data_items); 
     
     // Select the DMA channel 
+    dma_chsel(dma_stream, channel); 
     
     // Configure flow control if necessary 
+    dma_flow_ctl(dma_stream, flow_ctl); 
     
     // Configure the stream priority 
+    dma_priority(dma_stream, priority); 
     
-    // COnfigure the FIFO usage 
+    // Configure the FIFO usage 
+    dma_fth(dma_stream, fifo_thresh);  // Set the FIFO threshold 
+
+    if (fifo_mode)
+        dma_dm_disable(dma_stream);    // Enable FIFO mode 
+    else
+        dma_dm_enable(dma_stream);     // Enable Direct mode 
     
     // Configure the direction 
+    dma_dir(dma_stream, dir); 
     
     // Configure increment/fixed memory mode 
+    dma_minc(dma_stream, minc); 
+    dma_pinc(dma_stream, pinc); 
     
     // Configure the burst 
+    dma_mburst(dma_stream, mburst); 
+    dma_pburst(dma_stream, pburst); 
     
     // Configure data widths 
+    dma_msize(dma_stream, msize); 
+    dma_psize(dma_stream, psize); 
     
-    // Configure circular or double buffer mode if necessary 
-}
+    // Configure circular 
+    dma_cm(dma_stream, cm); 
+}  
 
 //================================================================================
 
@@ -75,236 +116,24 @@ void dma_stream_init(
 //================================================================================
 // DMA interrupt status registers 
 
-// Transfer complete interrupt flag 
-uint8_t dma_tcif(
-    DMA_TypeDef *dma, 
-    dma_stream_t stream)
+// Clear all the stream interrupt flags LISR and HISR registers 
+void dma_clear_int_flags(
+    DMA_TypeDef *dma)
 {
-    // Local variables 
-    uint8_t status = 0; 
-
-    // Read the flag status then clear the flag 
-    switch(stream)
-    {
-        case DMA_STREAM_0: 
-            status = (dma->LISR & (SET_BIT << SHIFT_5)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_5); 
-            break; 
-
-        case DMA_STREAM_1: 
-            status = (dma->LISR & (SET_BIT << SHIFT_11)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_11); 
-            break;
-
-        case DMA_STREAM_2:
-            status = (dma->LISR & (SET_BIT << SHIFT_21));
-            dma->LIFCR |= (SET_BIT << SHIFT_21);  
-            break; 
-
-        case DMA_STREAM_3:
-            status = (dma->LISR & (SET_BIT << SHIFT_27));
-            dma->LIFCR |= (SET_BIT << SHIFT_27);  
-            break;
-
-        case DMA_STREAM_4:
-            status = (dma->HISR & (SET_BIT << SHIFT_5));
-            dma->HIFCR |= (SET_BIT << SHIFT_5);  
-            break; 
-
-        case DMA_STREAM_5:
-            status = (dma->HISR & (SET_BIT << SHIFT_11));
-            dma->HIFCR |= (SET_BIT << SHIFT_11);  
-            break;
-        
-        case DMA_STREAM_6:
-            status = (dma->HISR & (SET_BIT << SHIFT_21));
-            dma->HIFCR |= (SET_BIT << SHIFT_21);  
-            break; 
-
-        case DMA_STREAM_7:
-            status = (dma->HISR & (SET_BIT << SHIFT_27));
-            dma->HIFCR |= (SET_BIT << SHIFT_27);  
-            break;
-
-        default: 
-            break;
-    }
-
-    return status; 
+    dma->LIFCR = ~((uint32_t)CLEAR); 
+    dma->HIFCR = ~((uint32_t)CLEAR); 
 }
 
 
-// Transfer error interrupt flag 
-uint8_t dma_teif(
+// Read the stream interrupt flags 
+uint32_t dma_read_int_flags(
     DMA_TypeDef *dma, 
     dma_stream_t stream)
 {
-    // Local variables 
-    uint8_t status = 0; 
-
-    switch(stream)
-    {
-        case DMA_STREAM_0: 
-            status = (dma->LISR & (SET_BIT << SHIFT_3)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_3); 
-            break; 
-
-        case DMA_STREAM_1: 
-            status = (dma->LISR & (SET_BIT << SHIFT_9)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_9); 
-            break;
-
-        case DMA_STREAM_2:
-            status = (dma->LISR & (SET_BIT << SHIFT_19)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_19); 
-            break; 
-
-        case DMA_STREAM_3:
-            status = (dma->LISR & (SET_BIT << SHIFT_25)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_25); 
-            break;
-
-        case DMA_STREAM_4:
-            status = (dma->HISR & (SET_BIT << SHIFT_3)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_3); 
-            break; 
-
-        case DMA_STREAM_5:
-            status = (dma->HISR & (SET_BIT << SHIFT_9)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_9); 
-            break;
-        
-        case DMA_STREAM_6:
-            status = (dma->HISR & (SET_BIT << SHIFT_19)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_19); 
-            break; 
-
-        case DMA_STREAM_7:
-            status = (dma->HISR & (SET_BIT << SHIFT_25)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_25); 
-            break;
-
-        default: 
-            break;
-    }
-
-    return status; 
-}
-
-
-// Direct mode error interrupt flag 
-uint8_t dma_dmeif(
-    DMA_TypeDef *dma, 
-    dma_stream_t stream)
-{
-    // Local variables 
-    uint8_t status = 0; 
-
-    switch(stream)
-    {
-        case DMA_STREAM_0: 
-            status = (dma->LISR & (SET_BIT << SHIFT_2)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_2); 
-            break; 
-
-        case DMA_STREAM_1: 
-            status = (dma->LISR & (SET_BIT << SHIFT_8)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_8); 
-            break;
-
-        case DMA_STREAM_2:
-            status = (dma->LISR & (SET_BIT << SHIFT_18)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_18); 
-            break; 
-
-        case DMA_STREAM_3:
-            status = (dma->LISR & (SET_BIT << SHIFT_24)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_24); 
-            break;
-
-        case DMA_STREAM_4:
-            status = (dma->HISR & (SET_BIT << SHIFT_2)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_2); 
-            break; 
-
-        case DMA_STREAM_5:
-            status = (dma->HISR & (SET_BIT << SHIFT_8)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_8); 
-            break;
-        
-        case DMA_STREAM_6:
-            status = (dma->HISR & (SET_BIT << SHIFT_18)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_18); 
-            break; 
-
-        case DMA_STREAM_7:
-            status = (dma->HISR & (SET_BIT << SHIFT_24)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_24); 
-            break;
-
-        default: 
-            break;
-    }
-
-    return status; 
-}
-
-
-// FIFO error interrupt flag 
-uint8_t dma_feif(
-    DMA_TypeDef *dma, 
-    dma_stream_t stream)
-{
-    // Local variables 
-    uint8_t status = 0; 
-
-    switch(stream)
-    {
-        case DMA_STREAM_0: 
-            status = (dma->LISR & (SET_BIT << SHIFT_0)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_0); 
-            break; 
-
-        case DMA_STREAM_1: 
-            status = (dma->LISR & (SET_BIT << SHIFT_6)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_6); 
-            break;
-
-        case DMA_STREAM_2:
-            status = (dma->LISR & (SET_BIT << SHIFT_16)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_16); 
-            break; 
-
-        case DMA_STREAM_3:
-            status = (dma->LISR & (SET_BIT << SHIFT_22)); 
-            dma->LIFCR |= (SET_BIT << SHIFT_22); 
-            break;
-
-        case DMA_STREAM_4:
-            status = (dma->HISR & (SET_BIT << SHIFT_0)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_0); 
-            break; 
-
-        case DMA_STREAM_5:
-            status = (dma->HISR & (SET_BIT << SHIFT_6)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_6); 
-            break;
-        
-        case DMA_STREAM_6:
-            status = (dma->HISR & (SET_BIT << SHIFT_16)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_16); 
-            break; 
-
-        case DMA_STREAM_7:
-            status = (dma->HISR & (SET_BIT << SHIFT_22)); 
-            dma->HIFCR |= (SET_BIT << SHIFT_22); 
-            break;
-
-        default: 
-            break;
-    }
-
-    return status; 
+    if (stream < DMA_STREAM_4)
+        return dma->LISR; 
+    else 
+        return dma->HISR; 
 }
 
 //================================================================================
@@ -327,7 +156,19 @@ void dma_stream_enable(
 void dma_stream_disable(
     DMA_Stream_TypeDef *dma_stream)
 {
+    // Disable the stream 
     dma_stream->CR &= ~(SET_BIT << SHIFT_0); 
+
+    // Read the EN bit until the stream reads as disabled 
+    while(dma_stream_status(dma_stream)); 
+}
+
+
+// Stream status 
+uint8_t dma_stream_status(
+    DMA_Stream_TypeDef *dma_stream)
+{
+    return (dma_stream->CR & (SET_BIT << SHIFT_0)); 
 }
 
 
@@ -372,6 +213,39 @@ void dma_pburst(
     // Clear the burst setting then set the desired burst configuration 
     dma_stream->CR &= ~(SET_3 << SHIFT_21); 
     dma_stream->CR |= (burst_config << SHIFT_21); 
+}
+
+
+// Double buffer mode 
+void dma_dbm(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_dbm_t dbm)
+{
+    // Clear the buffer mode setting then set the desired buffer configuration 
+    dma_stream->CR &= ~(SET_BIT << SHIFT_18); 
+    dma_stream->CR |= (dbm << SHIFT_18); 
+}
+
+
+// Circular mode 
+void dma_cm(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_cm_t cm)
+{
+    // Clear the circular mode setting then set the desired circular configuration 
+    dma_stream->CR &= ~(SET_BIT << SHIFT_8); 
+    dma_stream->CR |= (cm << SHIFT_8); 
+}
+
+
+// Peripheral flow control 
+void dma_flow_ctl(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_flow_ctl_t flow_ctl)
+{
+    // Clear the circular mode setting then set the desired circular configuration 
+    dma_stream->CR &= ~(SET_BIT << SHIFT_5); 
+    dma_stream->CR |= (flow_ctl << SHIFT_5); 
 }
 
 
