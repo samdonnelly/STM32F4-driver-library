@@ -23,73 +23,42 @@
 //================================================================================
 // Initialization 
 
-// Initialize a DMA peripheral 
-void dma_port_init(
-    DMA_TypeDef *dma)
+// Initialize the DMA stream 
+void dma_stream_init(
+    DMA_TypeDef *dma, 
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_channel_t channel, 
+    dma_direction_t dir, 
+    dma_cm_t cm, 
+    dma_priority_t priority, 
+    dma_addr_inc_mode_t minc, 
+    dma_addr_inc_mode_t pinc, 
+    dma_data_size_t msize, 
+    dma_data_size_t psize, 
+    dma_fifo_threshold_t fifo_thresh, 
+    dma_fifo_mode_t fifo_mode)
 {
     // Enable the DMA clock
     if (dma == DMA1)
         RCC->AHB1ENR |= (SET_BIT << SHIFT_21); 
     else if (dma == DMA2)
         RCC->AHB1ENR |= (SET_BIT << SHIFT_22); 
-}
-
-// Configure a DMA stream 
-void dma_stream_init(
-    DMA_TypeDef *dma, 
-    DMA_Stream_TypeDef *dma_stream, 
-    uint32_t per_addr, 
-    dma_dbm_t dbm, 
-    uint32_t m0_addr, 
-    uint32_t m1_addr, 
-    uint16_t data_items, 
-    dma_channel_t channel, 
-    dma_flow_ctl_t flow_ctl, 
-    dma_priority_t priority, 
-    dma_fifo_threshold_t fifo_thresh, 
-    dma_fifo_mode_t fifo_mode, 
-    dma_direction_t dir, 
-    dma_addr_inc_mode_t minc, 
-    dma_addr_inc_mode_t pinc, 
-    dma_burst_config_t mburst, 
-    dma_burst_config_t pburst, 
-    dma_data_size_t msize, 
-    dma_data_size_t psize, 
-    dma_cm_t cm)
-{
+    
     // Disable the stream 
     dma_stream_disable(dma_stream); 
     
     // Clear all the stream interrupt flags LISR and HISR registers 
     dma_clear_int_flags(dma); 
     
-    // Set the peripheral port address 
-    dma_par(dma_stream, per_addr); 
-    
-    // Set the memory address and subsequently double buffer mode if needed 
-    dma_dbm(dma_stream, dbm); 
-    dma_m0ar(dma_stream, m0_addr);           // Set buffer 0 
-    if (dbm) dma_m1ar(dma_stream, m1_addr);  // Set buffer 1 if double buffer mode is enabled
-
-    // Configure the total number of data items to be transferred 
-    dma_ndt(dma_stream, data_items); 
-    
     // Select the DMA channel 
     dma_chsel(dma_stream, channel); 
-    
-    // Configure flow control if necessary 
-    dma_flow_ctl(dma_stream, flow_ctl); 
     
     // Configure the stream priority 
     dma_priority(dma_stream, priority); 
     
     // Configure the FIFO usage 
-    dma_fth(dma_stream, fifo_thresh);  // Set the FIFO threshold 
-
-    if (fifo_mode)
-        dma_dm_disable(dma_stream);    // Enable FIFO mode 
-    else
-        dma_dm_enable(dma_stream);     // Enable Direct mode 
+    dma_fth(dma_stream, fifo_thresh); 
+    dma_dmdis(dma_stream, fifo_mode); 
     
     // Configure the direction 
     dma_dir(dma_stream, dir); 
@@ -98,17 +67,31 @@ void dma_stream_init(
     dma_minc(dma_stream, minc); 
     dma_pinc(dma_stream, pinc); 
     
-    // Configure the burst 
-    dma_mburst(dma_stream, mburst); 
-    dma_pburst(dma_stream, pburst); 
-    
     // Configure data widths 
     dma_msize(dma_stream, msize); 
     dma_psize(dma_stream, psize); 
     
     // Configure circular 
     dma_cm(dma_stream, cm); 
-}  
+} 
+
+
+// Configure the DMA stream 
+void dma_stream_config(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t per_addr, 
+    uint32_t mem_addr, 
+    uint16_t data_items)
+{
+    // Configure the total number of data items to be transferred 
+    dma_ndt(dma_stream, data_items); 
+
+    // Set the peripheral port address 
+    dma_par(dma_stream, per_addr); 
+
+    // Set the memory address and subsequently double buffer mode if needed 
+    dma_m0ar(dma_stream, mem_addr); 
+}
 
 //================================================================================
 
@@ -194,39 +177,6 @@ void dma_dir(
 }
 
 
-// Memory burst transfer configuration 
-void dma_mburst(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_burst_config_t burst_config)
-{
-    // Clear the burst setting then set the desired burst configuration 
-    dma_stream->CR &= ~(SET_3 << SHIFT_23); 
-    dma_stream->CR |= (burst_config << SHIFT_23); 
-}
-
-
-// Peripheral burst transfer configuration 
-void dma_pburst(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_burst_config_t burst_config)
-{
-    // Clear the burst setting then set the desired burst configuration 
-    dma_stream->CR &= ~(SET_3 << SHIFT_21); 
-    dma_stream->CR |= (burst_config << SHIFT_21); 
-}
-
-
-// Double buffer mode 
-void dma_dbm(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_dbm_t dbm)
-{
-    // Clear the buffer mode setting then set the desired buffer configuration 
-    dma_stream->CR &= ~(SET_BIT << SHIFT_18); 
-    dma_stream->CR |= (dbm << SHIFT_18); 
-}
-
-
 // Circular mode 
 void dma_cm(
     DMA_Stream_TypeDef *dma_stream, 
@@ -235,17 +185,6 @@ void dma_cm(
     // Clear the circular mode setting then set the desired circular configuration 
     dma_stream->CR &= ~(SET_BIT << SHIFT_8); 
     dma_stream->CR |= (cm << SHIFT_8); 
-}
-
-
-// Peripheral flow control 
-void dma_flow_ctl(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_flow_ctl_t flow_ctl)
-{
-    // Clear the circular mode setting then set the desired circular configuration 
-    dma_stream->CR &= ~(SET_BIT << SHIFT_5); 
-    dma_stream->CR |= (flow_ctl << SHIFT_5); 
 }
 
 
@@ -344,15 +283,6 @@ void dma_m0ar(
     dma_stream->M0AR = m0ar; 
 }
 
-
-// Set memory 1 base address 
-void dma_m1ar(
-    DMA_Stream_TypeDef *dma_stream, 
-    uint32_t m1ar)
-{
-    dma_stream->M1AR = m1ar; 
-}
-
 //================================================================================
 
 
@@ -367,19 +297,14 @@ FIFO_STATUS dma_fs(
 }
 
 
-// Direct mode disable 
-void dma_dm_disable(
-    DMA_Stream_TypeDef *dma_stream)
+// Direct/FIFO mode selection 
+void dma_dmdis(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_fifo_mode_t mode)
 {
-    dma_stream->FCR |= (SET_BIT << SHIFT_2); 
-}
-
-
-// Direct mode enable 
-void dma_dm_enable(
-    DMA_Stream_TypeDef *dma_stream)
-{
+    // Clear the mode then set the desired mode 
     dma_stream->FCR &= ~(SET_BIT << SHIFT_2); 
+    dma_stream->FCR |= (mode << SHIFT_2); 
 }
 
 

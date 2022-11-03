@@ -103,20 +103,6 @@ typedef enum {
 /**
  * @brief 
  * 
- * @detaiils 
- * 
- */
-typedef enum {
-    DMA_BURST_1,    // Single transfer 
-    DMA_BURST_4,    // Increment burst of 4 beats 
-    DMA_BURST_8,    // Increment burst of 8 beats 
-    DMA_BURST_16,   // Increment burst of 16 beats 
-} dma_burst_config_t; 
-
-
-/**
- * @brief 
- * 
  * @details 
  * 
  */
@@ -146,12 +132,12 @@ typedef enum {
  * 
  */
 typedef enum {
-    DMA_FIFO_STAT_0,       // 
-    DMA_FIFO_STAT_1,       // 
-    DMA_FIFO_STAT_2,       // 
-    DMA_FIFO_STAT_3,       // 
-    DMA_FIFO_STAT_EMPTY,   // 
-    DMA_FIFO_STAT_FULL,    // 
+    DMA_FIFO_STAT_0,       // 0 <= FIFO Level < 1/4 
+    DMA_FIFO_STAT_1,       // 1/4 <= FIFO Level < 1/2 
+    DMA_FIFO_STAT_2,       // 1/2 <= FIFO Level < 3/4 
+    DMA_FIFO_STAT_3,       // 3/4 <= FIFO Level < FULL 
+    DMA_FIFO_STAT_EMPTY,   // Empty 
+    DMA_FIFO_STAT_FULL,    // Full 
 } dma_fifo_status_t; 
 
 
@@ -162,13 +148,10 @@ typedef enum {
  * 
  */
 typedef enum {
-    DMA_FTH_0,       // 0 <= FIFO Level < 1/4 
-    DMA_FTH_1,       // 1/4 <= FIFO Level < 1/2 
-    DMA_FTH_2,       // 1/2 <= FIFO Level < 3/4 
-    DMA_FTH_3,       // 3/4 <= FIFO Level < FULL 
-    DMA_FTH_EMPTY,   // Empty 
-    DMA_FTH_FULL,    // Full 
-    DMA_FTH_NA       // Non-applicable --> Used for direct mode config 
+    DMA_FTH_1QTR,       // 1/4 full FIFO 
+    DMA_FTH_HALF,       // 1/2 full FIFO 
+    DMA_FTH_3QTR,       // 3/4 full FIFO 
+    DMA_FTH_FULL        // Full FIFO 
 } dma_fifo_threshold_t; 
 
 
@@ -182,18 +165,6 @@ typedef enum {
 /**
  * @brief 
  * 
- * @details 
- * 
- */
-typedef enum {
-    DMA_DBM_DISABLE,   // Disable double buffer mode 
-    DMA_DBM_ENABLE     // Enable double buffer mode 
-} dma_dbm_t; 
-
-
-/**
- * @brief 
- * 
  * @detaiils 
  * 
  */
@@ -201,18 +172,6 @@ typedef enum {
     DMA_CM_DISABLE,   // Circular mode disabled 
     DMA_CM_ENABLE     // Circualr mode enabled 
 } dma_cm_t; 
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- */
-typedef enum {
-    DMA_FLOW_CTL_DMA,   // The DMA is the flow controller 
-    DMA_FLOW_CTL_PER    // The peripheral is the flow controller 
-} dma_flow_ctl_t; 
 
 //================================================================================
 
@@ -229,64 +188,53 @@ typedef dma_fifo_status_t FIFO_STATUS;
 // Initialization 
 
 /**
- * @brief 
+ * @brief Initialize the DMA stream 
  * 
  * @details 
  * 
- * @param dma 
- */
-void dma_port_init(
-    DMA_TypeDef *dma); 
-
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param dam : 
+ * @param dma : 
  * @param dma_stream : 
- * @param per_addr : 
- * @param dbm : 
- * @param m0_addr : 
- * @param m1_addr : 
- * @param data_items : 
  * @param channel : 
- * @param flow_ctl : 
- * @param priority : 
- * @param fifo_thresh : 
  * @param dir : 
+ * @param cm : 
+ * @param priority : 
  * @param minc : 
  * @param pinc : 
- * @param mburst : 
- * @param pburst : 
  * @param msize : 
  * @param psize : 
- * @param cm : 
- * 
+ * @param fifo_thresh : 
+ * @param fifo_mode : 
  */
 void dma_stream_init(
     DMA_TypeDef *dma, 
     DMA_Stream_TypeDef *dma_stream, 
-    uint32_t per_addr, 
-    dma_dbm_t dbm, 
-    uint32_t m0_addr, 
-    uint32_t m1_addr, 
-    uint16_t data_items, 
     dma_channel_t channel, 
-    dma_flow_ctl_t flow_ctl, 
-    dma_priority_t priority, 
-    dma_fifo_threshold_t fifo_thresh, 
-    dma_fifo_mode_t fifo_mode, 
     dma_direction_t dir, 
+    dma_cm_t cm, 
+    dma_priority_t priority, 
     dma_addr_inc_mode_t minc, 
     dma_addr_inc_mode_t pinc, 
-    dma_burst_config_t mburst, 
-    dma_burst_config_t pburst, 
     dma_data_size_t msize, 
     dma_data_size_t psize, 
-    dma_cm_t cm); 
+    dma_fifo_threshold_t fifo_thresh, 
+    dma_fifo_mode_t fifo_mode); 
+
+
+/**
+ * @brief Configure the DMA stream 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @param per_addr 
+ * @param mem_addr 
+ * @param data_tems 
+ */
+void dma_stream_config(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t per_addr, 
+    uint32_t mem_addr, 
+    uint16_t data_items); 
 
 //================================================================================
 
@@ -390,49 +338,6 @@ void dma_dir(
 
 
 /**
- * @brief Memory burst transfer configuration 
- * 
- * @details 
- *          These bits can only be written if EN=0. 
- *          In direct mode, these bits are forced to 0x0 by hardware when EN=1. 
- * 
- * @param dma_stream 
- * @param burst_config 
- */
-void dma_mburst(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_burst_config_t burst_config); 
-
-
-/**
- * @brief Peripheral burst transfer configuration 
- * 
- * @details 
- *          These bits can only be written if EN=0. 
- *          In direct mode, these bits are forced to 0x0 by hardware. 
- * 
- * @param dma_stream 
- * @param burst_config 
- */
-void dma_pburst(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_burst_config_t burst_config); 
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param dma_stream 
- * @param dbm 
- */
-void dma_dbm(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_dbm_t dbm);
-
-
-/**
  * @brief Circular mode 
  * 
  * @details 
@@ -443,19 +348,6 @@ void dma_dbm(
 void dma_cm(
     DMA_Stream_TypeDef *dma_stream, 
     dma_cm_t cm); 
-
-
-/**
- * @brief Peripheral flow control 
- * 
- * @details 
- * 
- * @param dma_stream 
- * @param flow_ctl 
- */
-void dma_flow_ctl(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_flow_ctl_t flow_ctl); 
 
 
 /**
@@ -589,22 +481,6 @@ void dma_m0ar(
     DMA_Stream_TypeDef *dma_stream, 
     uint32_t m0ar); 
 
-
-/**
- * @brief Set memory 1 address 
- * 
- * @details 
- *          Base address of memory area 1 from/to which the data will be read/written. 
- *          This register is used only in double buffer mode. 
- *          These bits can only be written when the stream is disabled. 
- * 
- * @param dma_stream 
- * @param m1ar 
- */
-void dma_m1ar(
-    DMA_Stream_TypeDef *dma_stream, 
-    uint32_t m1ar); 
-
 //================================================================================
 
 
@@ -625,7 +501,7 @@ FIFO_STATUS dma_fs(
 
 
 /**
- * @brief Direct mode disable 
+ * @brief Direct/FIFO mode selection 
  * 
  * @details 
  *          These bits can only be written when the stream is disabled. 
@@ -634,21 +510,11 @@ FIFO_STATUS dma_fs(
  *          configuration. 
  * 
  * @param dma_stream 
+ * @param fth 
  */
-void dma_dm_disable(
-    DMA_Stream_TypeDef *dma_stream); 
-
-
-/**
- * @brief Direct mode enable 
- * 
- * @details 
- *          These bits can only be written when the stream is disabled. 
- * 
- * @param dma_stream 
- */
-void dma_dm_enable(
-    DMA_Stream_TypeDef *dma_stream); 
+void dma_fth(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_fifo_threshold_t fth); 
 
 
 /**
