@@ -510,11 +510,11 @@ FIFO_STATUS dma_fs(
  *          configuration. 
  * 
  * @param dma_stream 
- * @param fth 
+ * @param mode 
  */
-void dma_fth(
+void dma_dmdis(
     DMA_Stream_TypeDef *dma_stream, 
-    dma_fifo_threshold_t fth); 
+    dma_fifo_mode_t mode); 
 
 
 /**

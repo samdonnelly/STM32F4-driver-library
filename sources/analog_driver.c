@@ -28,21 +28,37 @@
 
 // ADC port init 
 void adc_port_init(
+    ADC_TypeDef *adc, 
+    ADC_Common_TypeDef *adc_common, 
     adc_prescalar_t prescalar, 
     adc_res_t resolution, 
-    adc_eoc_config_t eoc)
+    adc_eoc_config_t eoc, 
+    adc_scan_t scan, 
+    adc_cont_t cont, 
+    adc_dma_t dma, 
+    adc_dds_t dds)
 {
     // Enable the ADC1 clock 
-    RCC->APB2ENR |= (SET_BIT << SHIFT_8); 
+    if (adc == ADC1) RCC->APB2ENR |= (SET_BIT << SHIFT_8); 
 
     // Set the ADC clock frequency 
-    adc_prescalar(ADC1_COMMON, prescalar); 
+    adc_prescalar(adc_common, prescalar); 
 
     // Set the channel resolution 
-    adc_res(ADC1, resolution); 
+    adc_res(adc, resolution); 
 
     // Set the EOC behavior 
-    adc_eoc_select(ADC1, eoc); 
+    adc_eoc_select(adc, eoc); 
+
+    // Set scan conversion 
+    adc_scan(adc, scan);
+
+    // Set continuous conversion 
+    adc_cont(adc, cont); 
+
+    // Set DMA settings 
+    adc_dma(adc, dma); 
+    adc_dds(adc, dds); 
 }
 
 
@@ -60,15 +76,7 @@ void adc_pin_init(
     // Set the sample time for the channel 
     adc_smp(adc, adc_channel, smp);
 
-    // Set the data alignment 
-
-    // Set DMA settings 
-
-    // Set continuous conversion 
-    // Is this it's own function? 
-
-    // Set scan conversion 
-    // Is this it's own function?  
+    // Set the data alignment  
     
     // Set the watchdog thresholds 
 
@@ -92,26 +100,8 @@ uint16_t adc_dr(
 }
 
 
-// Read the next single ADC conversion in the sequence 
-uint16_t adc_read_single_next(
-    ADC_TypeDef *adc)
-{
-    // Start and ADC conversion 
-    adc_start(adc); 
-
-    // Wait for start bit to set 
-    adc_start_wait(adc); 
-
-    // Wait for end of ADC conversion 
-    adc_eoc_wait(adc); 
-
-    // Read the data register 
-    return adc_dr(adc); 
-}
-
-
 // Read a select single ADC conversion 
-uint16_t adc_read_single_select(
+uint16_t adc_read_single(
     ADC_TypeDef *adc, 
     adc_channel_t channel)
 {
@@ -124,8 +114,33 @@ uint16_t adc_read_single_select(
     // Set the sequence length 
     adc_seq_len_set(adc, ADC_SEQ_1); 
 
+    // Start and ADC conversion 
+    adc_start(adc); 
+
+    // Wait for end of ADC conversion 
+    adc_eoc_wait(adc); 
+
     // Read the ADC value 
-    return adc_read_single_next(adc); 
+    return adc_dr(adc); 
+}
+
+
+// Scan all ADC conversion in the sequence 
+void adc_scan_seq(
+    ADC_TypeDef *adc, 
+    adc_seq_num_t seq_len, 
+    uint16_t *adc_data)
+{
+    // Start and ADC conversion 
+    adc_start(adc); 
+
+    // Read the ADC sequence 
+    do 
+    {
+        adc_eoc_wait(adc);            // Wait for end of ADC conversion 
+        *adc_data++ = adc_dr(adc);    // Read the data 
+    } 
+    while (--seq_len); 
 }
 
 //================================================================================
@@ -174,6 +189,33 @@ uint8_t adc_wd_flag(ADC_TypeDef *adc)
 //================================================================================
 // Control Registers
 
+// Turn ADC on 
+void adc_on(
+    ADC_TypeDef *adc)
+{
+    adc->CR2 |= (SET_BIT << SHIFT_0); 
+    tim9_delay_ms(ADC_STAB_TIME);       // Give ADC stabilization time 
+}
+
+
+// Turn ADC off 
+void adc_off(
+    ADC_TypeDef *adc)
+{
+    adc->CR2 &= ~(SET_BIT << SHIFT_0); 
+}
+
+
+// Start an ADC conversion 
+void adc_start(
+    ADC_TypeDef *adc)
+{
+    adc->SR = CLEAR;                      // Clear the status register 
+    adc->CR2 |= (SET_BIT << SHIFT_30);    // Set the start bit 
+    adc_start_wait(adc);                  // Wait for the start bit to set 
+}
+
+
 // ADC prescalar 
 void adc_prescalar(
     ADC_Common_TypeDef *adc,
@@ -209,45 +251,47 @@ void adc_eoc_select(
 }
 
 
-// Turn ADC on 
-void adc_on(
-    ADC_TypeDef *adc)
+// SCAN mode 
+void adc_scan(
+    ADC_TypeDef *adc, 
+    adc_scan_t scan)
 {
-    adc->CR2 |= (SET_BIT << SHIFT_0); 
-    tim9_delay_ms(ADC_STAB_TIME);       // Give ADC stabilization time 
+    // Clear the scan configuration then set the desired configuration 
+    adc->CR1 &= ~(SET_BIT << SHIFT_8); 
+    adc->CR1 |= (scan << SHIFT_8); 
 }
 
 
-// Turn ADC off 
-void adc_off(
-    ADC_TypeDef *adc)
+// CONT mode 
+void adc_cont(
+    ADC_TypeDef *adc, 
+    adc_cont_t cont)
 {
-    adc->CR2 &= ~(SET_BIT << SHIFT_0); 
-}
-
-
-// Start an ADC conversion 
-void adc_start(
-    ADC_TypeDef *adc)
-{
-    adc->SR = CLEAR;   // Clear the status register 
-    adc->CR2 |= (SET_BIT << SHIFT_30); 
-}
-
-
-// Enable CONT mode 
-void adc_cont_enable(
-    ADC_TypeDef *adc) 
-{
-    adc->CR2 |= (SET_BIT << SHIFT_1); 
-}
-
-
-// Disable CONT mode 
-void adc_cont_disable(
-    ADC_TypeDef *adc) 
-{
+    // Clear the scan configuration then set the desired configuration 
     adc->CR2 &= ~(SET_BIT << SHIFT_1); 
+    adc->CR2 |= (cont << SHIFT_1); 
+}
+
+
+// DMA Mode 
+void adc_dma(
+    ADC_TypeDef *adc, 
+    adc_dma_t dma)
+{
+    // Clear the DMA configuration then set the desired configuration 
+    adc->CR2 &= ~(SET_BIT << SHIFT_8); 
+    adc->CR2 |= (dma << SHIFT_8); 
+}
+
+
+// DMA disable 
+void adc_dds(
+    ADC_TypeDef *adc, 
+    adc_dds_t dds)
+{
+    // Clear the DMA disable configuration then set the desired configuration 
+    adc->CR2 &= ~(SET_BIT << SHIFT_9); 
+    adc->CR2 |= (dds << SHIFT_9); 
 }
 
 
@@ -264,22 +308,6 @@ void adc_wd_disable(
     ADC_TypeDef *adc) 
 {
     adc->CR1 &= ~(SET_BIT << SHIFT_23); 
-}
-
-
-// Enable SCAN mode 
-void adc_scan_enable(
-    ADC_TypeDef *adc) 
-{
-    adc->CR1 |= (SET_BIT << SHIFT_8); 
-}
-
-
-// Disable SCAN mode 
-void adc_scan_disable(
-    ADC_TypeDef *adc) 
-{
-    adc->CR1 &= ~(SET_BIT << SHIFT_8); 
 }
 
 

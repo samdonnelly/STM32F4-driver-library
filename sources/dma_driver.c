@@ -52,16 +52,15 @@ void dma_stream_init(
     
     // Select the DMA channel 
     dma_chsel(dma_stream, channel); 
+
+    // Configure the direction 
+    dma_dir(dma_stream, dir); 
+
+    // Configure circular 
+    dma_cm(dma_stream, cm); 
     
     // Configure the stream priority 
     dma_priority(dma_stream, priority); 
-    
-    // Configure the FIFO usage 
-    dma_fth(dma_stream, fifo_thresh); 
-    dma_dmdis(dma_stream, fifo_mode); 
-    
-    // Configure the direction 
-    dma_dir(dma_stream, dir); 
     
     // Configure increment/fixed memory mode 
     dma_minc(dma_stream, minc); 
@@ -70,9 +69,10 @@ void dma_stream_init(
     // Configure data widths 
     dma_msize(dma_stream, msize); 
     dma_psize(dma_stream, psize); 
-    
-    // Configure circular 
-    dma_cm(dma_stream, cm); 
+
+    // Configure the FIFO usage 
+    dma_fth(dma_stream, fifo_thresh); 
+    dma_dmdis(dma_stream, fifo_mode); 
 } 
 
 
@@ -91,6 +91,9 @@ void dma_stream_config(
 
     // Set the memory address and subsequently double buffer mode if needed 
     dma_m0ar(dma_stream, mem_addr); 
+
+    // Enable the DMA stream 
+    dma_stream_enable(dma_stream); 
 }
 
 //================================================================================
@@ -173,7 +176,7 @@ void dma_dir(
 {
     // Clear the data transfer direction then set the desired value 
     dma_stream->CR &= ~(SET_3 << SHIFT_6); 
-    dma_stream->CR |= ~(dir << SHIFT_6); 
+    dma_stream->CR |= (dir << SHIFT_6); 
 }
 
 
@@ -206,7 +209,7 @@ void dma_msize(
 {
     // Clear the memory data size then set the desired value 
     dma_stream->CR &= ~(SET_3 << SHIFT_13); 
-    dma_stream->CR |= ~(msize << SHIFT_13); 
+    dma_stream->CR |= (msize << SHIFT_13); 
 }
 
 
@@ -217,7 +220,7 @@ void dma_minc(
 {
     // Clear the memory increment mode then set the desired value 
     dma_stream->CR &= ~(SET_BIT << SHIFT_10); 
-    dma_stream->CR |= ~(minc << SHIFT_10); 
+    dma_stream->CR |= (minc << SHIFT_10); 
 }
 
 
@@ -228,7 +231,7 @@ void dma_psize(
 {
     // Clear the peripheral data size then set the desired value 
     dma_stream->CR &= ~(SET_3 << SHIFT_11); 
-    dma_stream->CR |= ~(psize << SHIFT_11); 
+    dma_stream->CR |= (psize << SHIFT_11); 
 }
 
 
@@ -238,8 +241,8 @@ void dma_pinc(
     dma_addr_inc_mode_t pinc)
 {
     // Clear the peripheral increment mode then set the desired value 
-    dma_stream->CR &= ~(SET_BIT << SHIFT_10); 
-    dma_stream->CR |= ~(pinc << SHIFT_10); 
+    dma_stream->CR &= ~(SET_BIT << SHIFT_9); 
+    dma_stream->CR |= (pinc << SHIFT_9); 
 }
 
 //================================================================================

@@ -151,6 +151,54 @@ typedef enum {
     ADC_EOC_EACH   // EOC bit set after each regular conversion 
 } adc_eoc_config_t; 
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    ADC_SCAN_DISABLE,   // Disable SCAN mode 
+    ADC_SCAN_ENABLE     // Enable SCAN mode 
+} adc_scan_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    ADC_CONT_DISABLE,   // Disable CONT mode (single conversion mode) 
+    ADC_CONT_ENABLE     // Enable CONT mode 
+} adc_cont_t; 
+
+
+/**
+ * @brief DMA mode 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    ADC_DMA_DISABLE,   // 
+    ADC_DMA_ENABLE     // 
+} adc_dma_t; 
+
+
+/**
+ * @brief DMA Disable selection 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    ADC_DDS_DISABLE,    // No new DMA request is issued after the last transfer 
+    ADC_DDS_ENABLE      // DMA requets are issued as long as data are coverted 
+} adc_dds_t; 
+
 //================================================================================
 
 
@@ -163,13 +211,23 @@ typedef enum {
  * @details 
  *          One time initiialization code for the ADC 
  * 
- * @param prescalar : 
- * @param resolution : 
+ * @param adc 
+ * @param adc_common 
+ * @param prescalar 
+ * @param resolution 
+ * @param eoc 
+ * @param scan 
  */
 void adc_port_init(
+    ADC_TypeDef *adc, 
+    ADC_Common_TypeDef *adc_common, 
     adc_prescalar_t prescalar, 
     adc_res_t resolution, 
-    adc_eoc_config_t eoc); 
+    adc_eoc_config_t eoc, 
+    adc_scan_t scan, 
+    adc_cont_t cont, 
+    adc_dma_t dma, 
+    adc_dds_t dds); 
 
 
 /**
@@ -207,19 +265,7 @@ void adc_pin_init(
  * @return uint16_t 
  */
 uint16_t adc_dr(
-    ADC_TypeDef *adc); 
-
-
-/**
- * @brief Read the next single ADC conversion in the sequence 
- * 
- * @details 
- * 
- * @param adc 
- * @return uint16_t 
- */
-uint16_t adc_read_single_next(
-    ADC_TypeDef *adc); 
+    ADC_TypeDef *adc);  
 
 
 /**
@@ -236,9 +282,25 @@ uint16_t adc_read_single_next(
  * @param channel 
  * @return uint16_t 
  */
-uint16_t adc_read_single_select(
+uint16_t adc_read_single(
     ADC_TypeDef *adc, 
     adc_channel_t channel); 
+
+
+/**
+ * @brief Scan all ADC conversion in the sequence 
+ * 
+ * @details 
+ *          Note: this function is only to be used when DMA is not used. 
+ * 
+ * @param adc 
+ * @param seq_len 
+ * @param adc_data 
+ */
+void adc_scan_seq(
+    ADC_TypeDef *adc, 
+    adc_seq_num_t seq_len, 
+    uint16_t *adc_data); 
 
 //================================================================================
 
@@ -355,25 +417,55 @@ void adc_start(
 
 
 /**
- * @brief Enable CONT mode 
+ * @brief SCAN mode configuration 
  * 
  * @details 
  * 
  * @param adc 
+ * @param scan 
  */
-void adc_cont_enable(
-    ADC_TypeDef *adc); 
+void adc_scan(
+    ADC_TypeDef *adc, 
+    adc_scan_t scan); 
 
 
 /**
- * @brief Disable CONT mode 
+ * @brief CONT mode 
  * 
  * @details 
  * 
  * @param adc 
+ * @param cont 
  */
-void adc_cont_disable(
-    ADC_TypeDef *adc); 
+void adc_cont(
+    ADC_TypeDef *adc, 
+    adc_cont_t cont); 
+
+
+/**
+ * @brief DMA Mode 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param dma 
+ */
+void adc_dma(
+    ADC_TypeDef *adc, 
+    adc_dma_t dma); 
+
+
+/**
+ * @brief DMA disable 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param dds 
+ */
+void adc_dds(
+    ADC_TypeDef *adc, 
+    adc_dds_t dds); 
 
 
 /**
@@ -408,28 +500,6 @@ void adc_wd_enable(ADC_TypeDef *adc);
  * @param adc 
  */
 void adc_wd_disable(
-    ADC_TypeDef *adc); 
-
-
-/**
- * @brief Enable SCAN mode 
- * 
- * @details 
- * 
- * @param adc 
- */
-void adc_scan_enable(
-    ADC_TypeDef *adc); 
-
-
-/**
- * @brief Disable SCAN mode 
- * 
- * @details 
- * 
- * @param adc 
- */
-void adc_scan_disable(
     ADC_TypeDef *adc); 
 
 
