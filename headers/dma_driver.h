@@ -1,7 +1,7 @@
 /**
  * @file dma_driver.h
  * 
- * @author your name (you@domain.com)
+ * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
  * @brief Direct Memory Access (DMA) functions 
  * 
@@ -165,7 +165,7 @@ typedef enum {
 /**
  * @brief 
  * 
- * @detaiils 
+ * @details 
  * 
  */
 typedef enum {

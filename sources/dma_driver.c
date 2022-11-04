@@ -1,7 +1,7 @@
 /**
  * @file dma_driver.c
  * 
- * @author your name (you@domain.com)
+ * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
  * @brief Direct Memory Access (DMA) functions 
  * 
