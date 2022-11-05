@@ -22,10 +22,6 @@
 #include "stm32f411xe.h"
 #include "tools.h"
 
-// Communication drivers 
-
-// Other drivers 
-
 //================================================================================
 
 
@@ -33,48 +29,157 @@
 // Macros 
 
 // EXTI Lines 
-#define EXTI_LINE_1   0x00000001 
-#define EXTI_LINE_2   0x00000002 
-#define EXTI_LINE_3   0x00000004 
-#define EXTI_LINE_4   0x00000008 
-#define EXTI_LINE_5   0x00000010 
-#define EXTI_LINE_6   0x00000020 
-#define EXTI_LINE_7   0x00000040 
-#define EXTI_LINE_8   0x00000080 
-#define EXTI_LINE_9   0x00000100 
-#define EXTI_LINE_10  0x00000200 
-#define EXTI_LINE_11  0x00000400 
-#define EXTI_LINE_12  0x00000800 
-#define EXTI_LINE_13  0x00001000 
-#define EXTI_LINE_14  0x00002000 
-#define EXTI_LINE_15  0x00004000 
-#define EXTI_LINE_16  0x00008000 
-#define EXTI_LINE_17  0x00010000 
-#define EXTI_LINE_18  0x00020000 
-#define EXTI_LINE_21  0x00100000 
-#define EXTI_LINE_22  0x00200000 
+#define EXTI_L1   0x00000001 
+#define EXTI_L2   0x00000002 
+#define EXTI_L3   0x00000004 
+#define EXTI_L4   0x00000008 
+#define EXTI_L5   0x00000010 
+#define EXTI_L6   0x00000020 
+#define EXTI_L7   0x00000040 
+#define EXTI_L8   0x00000080 
+#define EXTI_L9   0x00000100 
+#define EXTI_L10  0x00000200 
+#define EXTI_L11  0x00000400 
+#define EXTI_L12  0x00000800 
+#define EXTI_L13  0x00001000 
+#define EXTI_L14  0x00002000 
+#define EXTI_L15  0x00004000 
+#define EXTI_L16  0x00008000 
+#define EXTI_L17  0x00010000 
+#define EXTI_L18  0x00020000 
+#define EXTI_L21  0x00100000 
+#define EXTI_L22  0x00200000 
+
+// IRQ Priority 
+#define EXTI_PRIORITY_0   0x0   // Highest priority 
+#define EXTI_PRIORITY_1   0x1 
+#define EXTI_PRIORITY_2   0x2 
+#define EXTI_PRIORITY_3   0x3 
+#define EXTI_PRIORITY_4   0x4 
+#define EXTI_PRIORITY_5   0x5 
+#define EXTI_PRIORITY_6   0x6 
+#define EXTI_PRIORITY_7   0x7 
+#define EXTI_PRIORITY_8   0x8 
+#define EXTI_PRIORITY_9   0x9 
+#define EXTI_PRIORITY_10  0xA 
+#define EXTI_PRIORITY_11  0xB 
+#define EXTI_PRIORITY_12  0xC 
+#define EXTI_PRIORITY_13  0xD 
+#define EXTI_PRIORITY_14  0xE 
+#define EXTI_PRIORITY_15  0xF   // Lowest priority 
 
 //================================================================================
 
 
 //================================================================================
 // Enums 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    EXTI_PORT_PA,   // 
+    EXTI_PORT_PB,   // 
+    EXTI_PORT_PC,   // 
+    EXTI_PORT_PD,   // 
+    EXTI_PORT_PE,   // 
+    EXTI_PORT_PH    // 
+} exti_port_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    EXTI_RISING,   // 
+    EXTI_FALLING   // 
+} exti_edge_trigger_t; 
+
 //================================================================================
 
 
 //================================================================================
-// Register Functions 
+// Initialization 
+
+/**
+ * @brief External interrupt initialization 
+ * 
+ * @details 
+ * 
+ */
+void exti_init(void); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param irqn 
+ * @param port 
+ * @param pin 
+ * @param im 
+ * @param trig_mode 
+ * @param trig 
+ * @param priority 
+ */
+void exti_config(
+    IRQn_Type irqn, 
+    exti_port_t port, 
+    pin_selector_t pin, 
+    uint32_t im, 
+    exti_edge_trigger_t trig_mode, 
+    uint32_t trig, 
+    uint8_t priority); 
+
+//================================================================================
+
+
+//================================================================================
+// SYSCFG Register Functions 
+
+/**
+ * @brief SYSCFG register source clear 
+ * 
+ * @details 
+ * 
+ */
+void syscfg_config_clear(void); 
+
+
+/**
+ * @brief SYSCFG register source set 
+ * 
+ * @details 
+ * 
+ * @param port 
+ * @param pin 
+ */
+void syscfg_config(
+    exti_port_t port, 
+    pin_selector_t pin); 
+
+//================================================================================
+
+
+//================================================================================
+// EXTI Register Functions 
 
 /**
  * @brief Interrupt mask register set 
  * 
  * @details 
+ *          Enables the EXTI by unmasking the event request on a given line. 
  * 
- * @param exti 
  * @param im 
  */
 void exti_imr_set(
-    EXTI_TypeDef *exti, 
     uint32_t im); 
 
 
@@ -82,12 +187,11 @@ void exti_imr_set(
  * @brief Interrupt mask register clear 
  * 
  * @details 
+ *          Disabled the EXTI by masking the event request on a given line. 
  * 
- * @param exti 
  * @param im 
  */
 void exti_imr_clear(
-    EXTI_TypeDef *exti, 
     uint32_t im); 
 
 
@@ -96,11 +200,9 @@ void exti_imr_clear(
  * 
  * @details 
  * 
- * @param exti 
  * @param em 
  */
 void exti_emr_set(
-    EXTI_TypeDef *exti, 
     uint32_t em); 
 
 
@@ -109,11 +211,9 @@ void exti_emr_set(
  * 
  * @details 
  * 
- * @param exti 
  * @param em 
  */
 void exti_emr_clear(
-    EXTI_TypeDef *exti, 
     uint32_t em); 
 
 
@@ -122,11 +222,9 @@ void exti_emr_clear(
  * 
  * @details 
  * 
- * @param exti 
  * @param rt 
  */
 void exti_rtsr_set(
-    EXTI_TypeDef *exti, 
     uint32_t rt); 
 
 
@@ -135,11 +233,9 @@ void exti_rtsr_set(
  * 
  * @details 
  * 
- * @param exti 
  * @param rt 
  */
 void exti_rtsr_clear(
-    EXTI_TypeDef *exti, 
     uint32_t rt); 
 
 
@@ -148,11 +244,9 @@ void exti_rtsr_clear(
  * 
  * @details 
  * 
- * @param exti 
  * @param ft 
  */
 void exti_ftsr_set(
-    EXTI_TypeDef *exti, 
     uint32_t ft); 
 
 
@@ -161,11 +255,9 @@ void exti_ftsr_set(
  * 
  * @details 
  * 
- * @param exti 
  * @param ft 
  */
 void exti_ftsr_clear(
-    EXTI_TypeDef *exti, 
     uint32_t ft); 
 
 
@@ -174,11 +266,9 @@ void exti_ftsr_clear(
  * 
  * @details 
  * 
- * @param exti 
  * @param swier 
  */
 void exti_swier_set(
-    EXTI_TypeDef *exti, 
     uint32_t swier); 
 
 
@@ -187,11 +277,9 @@ void exti_swier_set(
  * 
  * @details 
  * 
- * @param exti 
  * @param swier 
  */
 void exti_swier_clear(
-    EXTI_TypeDef *exti, 
     uint32_t swier); 
 
 
@@ -200,11 +288,9 @@ void exti_swier_clear(
  * 
  * @details 
  * 
- * @param exti 
  * @param pr 
  */
 void exti_pr_set(
-    EXTI_TypeDef *exti, 
     uint32_t pr); 
 
 
@@ -213,11 +299,9 @@ void exti_pr_set(
  * 
  * @details 
  * 
- * @param exti 
  * @param pr 
  */
 void exti_pr_clear(
-    EXTI_TypeDef *exti, 
     uint32_t pr); 
 
 //================================================================================
