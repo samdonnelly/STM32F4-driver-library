@@ -142,13 +142,24 @@ void exti_init(void);
  * @param priority 
  */
 void exti_config(
-    IRQn_Type irqn, 
     exti_port_t port, 
     pin_selector_t pin, 
     uint32_t im, 
     exti_rise_trigger_t rise_trig, 
     exti_fall_trigger_t fall_trig, 
-    uint32_t trig, 
+    uint32_t trig); 
+
+
+/**
+ * @brief NVIC configuration 
+ * 
+ * @details 
+ * 
+ * @param irqn 
+ * @param priority 
+ */
+void nvic_config(
+    IRQn_Type irqn, 
     uint8_t priority); 
 
 //================================================================================
@@ -278,6 +289,8 @@ void exti_ftsr_clear(
  * @brief Software interrupt event register set 
  * 
  * @details 
+ *          This allows for generation of an interrupt/event request using the software instead 
+ *          of an external device/peripheral trigger. 
  * 
  * @param swier 
  */

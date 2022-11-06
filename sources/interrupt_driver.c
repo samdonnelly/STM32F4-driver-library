@@ -23,13 +23,8 @@
 //================================================================================
 // Initialization 
 
-// Steps 
-// 1. Enable the SYSCFGEN bit in the RCC register 
-// 2. Configure the EXTI config register in the SYSCFG 
-// 3. Enable the EXTI using the Interrupt Mask Register (IMR) 
-// 4. Congigure the rising/falling edge trigger 
-// 5. Set the interrupt priority 
-// 6. Enable the interrupt 
+// Note that setting up interrupts is done by configuring the type of interrupt (ex. EXTI, 
+// ADC, etc. - independent) then configuring the interrupt lines (common) separately. 
 
 // External interrupt initialization 
 void exti_init(void)
@@ -44,14 +39,12 @@ void exti_init(void)
 
 // External interrupt configuration 
 void exti_config(
-    IRQn_Type irqn, 
     exti_port_t port, 
     pin_selector_t pin, 
     uint32_t im, 
     exti_rise_trigger_t rise_trig, 
     exti_fall_trigger_t fall_trig, 
-    uint32_t trig, 
-    uint8_t priority)
+    uint32_t trig)
 {
     // Configure the EXTI config register in SYSCFG - Define the interrupt source 
     syscfg_config(port, pin); 
@@ -66,7 +59,14 @@ void exti_config(
     // Configure the falling edge trigger 
     if (fall_trig) exti_ftsr_set(trig); 
     else exti_ftsr_set(trig); 
+}
 
+
+// NVIC configuration 
+void nvic_config(
+    IRQn_Type irqn, 
+    uint8_t priority)
+{
     // Set the interrupt priority 
     NVIC_SetPriority(irqn, priority);    // Built in NVIC function 
 
@@ -93,7 +93,6 @@ void syscfg_config_clear(void)
 // SYSCFG register source set 
 // TODO 
 // - this function uses "pin" instead of the appropriate EXTI 
-// - This function may only be EXTI interrupts and not all interrupts/events 
 void syscfg_config(
     exti_port_t port, 
     pin_selector_t pin)
