@@ -48,7 +48,8 @@ void exti_config(
     exti_port_t port, 
     pin_selector_t pin, 
     uint32_t im, 
-    exti_edge_trigger_t trig_mode, 
+    exti_rise_trigger_t rise_trig, 
+    exti_fall_trigger_t fall_trig, 
     uint32_t trig, 
     uint8_t priority)
 {
@@ -58,9 +59,13 @@ void exti_config(
     // Enable the EXTI 
     exti_imr_set(im); 
 
-    // Configure the edge trigger 
-    if (trig_mode) exti_ftsr_set(trig); 
+    // Configure the rising edge trigger 
+    if (rise_trig) exti_rtsr_set(trig); 
     else exti_rtsr_set(trig); 
+
+    // Configure the falling edge trigger 
+    if (fall_trig) exti_ftsr_set(trig); 
+    else exti_ftsr_set(trig); 
 
     // Set the interrupt priority 
     NVIC_SetPriority(irqn, priority);    // Built in NVIC function 
@@ -86,6 +91,9 @@ void syscfg_config_clear(void)
 
 
 // SYSCFG register source set 
+// TODO 
+// - this function uses "pin" instead of the appropriate EXTI 
+// - This function may only be EXTI interrupts and not all interrupts/events 
 void syscfg_config(
     exti_port_t port, 
     pin_selector_t pin)

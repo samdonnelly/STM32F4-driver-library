@@ -97,9 +97,21 @@ typedef enum {
  * 
  */
 typedef enum {
-    EXTI_RISING,   // 
-    EXTI_FALLING   // 
-} exti_edge_trigger_t; 
+    EXTI_RISE_TRIG_DISABLE,   // 
+    EXTI_RISE_TRIG_ENABLE     // 
+} exti_rise_trigger_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    EXTI_FALL_TRIG_DISABLE,   // 
+    EXTI_FALL_TRIG_ENABLE     // 
+} exti_fall_trigger_t; 
 
 //================================================================================
 
@@ -134,7 +146,8 @@ void exti_config(
     exti_port_t port, 
     pin_selector_t pin, 
     uint32_t im, 
-    exti_edge_trigger_t trig_mode, 
+    exti_rise_trigger_t rise_trig, 
+    exti_fall_trigger_t fall_trig, 
     uint32_t trig, 
     uint8_t priority); 
 
