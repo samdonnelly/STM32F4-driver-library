@@ -159,6 +159,18 @@ typedef enum {
  * 
  */
 typedef enum {
+    ADC_EOC_INT_DISABLE,   // 
+    ADC_EOC_INT_ENABLE,   // 
+} adc_eoc_int_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
     ADC_SCAN_DISABLE,   // Disable SCAN mode 
     ADC_SCAN_ENABLE     // Enable SCAN mode 
 } adc_scan_t; 
@@ -199,6 +211,54 @@ typedef enum {
     ADC_DDS_ENABLE      // DMA requets are issued as long as data are coverted 
 } adc_dds_t; 
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    ADC_WD_DISABLE,   // 
+    ADC_WD_ENABLE     // 
+} adc_wd_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    ADC_WD_SC_DISABLE,   // 
+    ADC_WD_SC_ENABLE     // 
+} adc_wd_sc_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    ADC_WD_INT_DISABLE,   // 
+    ADC_WD_INT_ENABLE     // 
+} adc_awdie_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    ADC_OVR_INT_DISABLE,   // 
+    ADC_OVR_INT_ENABLE     // 
+} adc_ovrie_t; 
+
 //================================================================================
 
 
@@ -217,6 +277,10 @@ typedef enum {
  * @param resolution 
  * @param eoc 
  * @param scan 
+ * @param cont 
+ * @param dma 
+ * @param dds 
+ * @param ovrie 
  */
 void adc_port_init(
     ADC_TypeDef *adc, 
@@ -227,7 +291,8 @@ void adc_port_init(
     adc_scan_t scan, 
     adc_cont_t cont, 
     adc_dma_t dma, 
-    adc_dds_t dds); 
+    adc_dds_t dds, 
+    adc_ovrie_t ovrie); 
 
 
 /**
@@ -240,8 +305,7 @@ void adc_port_init(
  * @param gpio 
  * @param adc_pin 
  * @param adc_channel 
- * @param adc_smp 
- * @param adc_seq_num : conversion number of channel in the regular sequence 
+ * @param smp 
  */
 void adc_pin_init(
     ADC_TypeDef *adc, 
@@ -250,23 +314,34 @@ void adc_pin_init(
     adc_channel_t adc_channel, 
     adc_smp_cycles_t smp); 
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param wd 
+ * @param wdsc 
+ * @param channel 
+ * @param hi_thresh 
+ * @param lo_thresh 
+ * @param awdie 
+ */
+void adc_wd_init(
+    ADC_TypeDef *adc, 
+    adc_wd_t wd, 
+    adc_wd_sc_t wdsc, 
+    adc_channel_t channel, 
+    uint16_t hi_thresh, 
+    uint16_t lo_thresh, 
+    adc_awdie_t awdie); 
+
 //================================================================================
 
 
 //================================================================================
 // Read 
-
-/**
- * @brief ADC data register read 
- * 
- * @details 
- * 
- * @param adc 
- * @return uint16_t 
- */
-uint16_t adc_dr(
-    ADC_TypeDef *adc);  
-
 
 /**
  * @brief 
@@ -309,28 +384,6 @@ void adc_scan_seq(
 // Status Registers 
 
 /**
- * @brief Wait for start bit to set 
- * 
- * @details 
- * 
- */
-void adc_start_wait(ADC_TypeDef *adc); 
-
-/**
- * @brief ADC end of conversion 
- * 
- * @details 
- *          Set when the conversion of a regular group of channels is complete. 
- *          Cleared by reading the data register. 
- *          
- *          0 --> conversion (EOCS=0) or sequence of conversions (EOCS=1) not complete 
- *          1 --> conversion (EOCS=0) or sequence of conversions (EOCS=1) complete 
- * 
- */
-void adc_eoc_wait(ADC_TypeDef *adc); 
-
-
-/**
  * @brief Overrun bit status 
  * 
  * @details 
@@ -368,19 +421,6 @@ uint8_t adc_wd_flag(ADC_TypeDef *adc);
 // Control Registers 
 
 /**
- * @brief ADC prescalar 
- * 
- * @details 
- * 
- * @param adc 
- * @param prescalar 
- */
-void adc_prescalar(
-    ADC_Common_TypeDef *adc,
-    adc_prescalar_t prescalar); 
-
-
-/**
  * @brief Turn ADC on 
  * 
  * @details 
@@ -414,183 +454,6 @@ void adc_off(
  */
 void adc_start(
     ADC_TypeDef *adc); 
-
-
-/**
- * @brief SCAN mode configuration 
- * 
- * @details 
- * 
- * @param adc 
- * @param scan 
- */
-void adc_scan(
-    ADC_TypeDef *adc, 
-    adc_scan_t scan); 
-
-
-/**
- * @brief CONT mode 
- * 
- * @details 
- * 
- * @param adc 
- * @param cont 
- */
-void adc_cont(
-    ADC_TypeDef *adc, 
-    adc_cont_t cont); 
-
-
-/**
- * @brief DMA Mode 
- * 
- * @details 
- * 
- * @param adc 
- * @param dma 
- */
-void adc_dma(
-    ADC_TypeDef *adc, 
-    adc_dma_t dma); 
-
-
-/**
- * @brief DMA disable 
- * 
- * @details 
- * 
- * @param adc 
- * @param dds 
- */
-void adc_dds(
-    ADC_TypeDef *adc, 
-    adc_dds_t dds); 
-
-
-/**
- * @brief 
- * 
- * @details 
- *          // TODO move prototype to source - only to be used once during init 
- * 
- * @param adc 
- * @param resolution 
- */
-void adc_res(
-    ADC_TypeDef *adc, 
-    adc_res_t resolution); 
-
-
-/**
- * @brief Analog watchdog enable on regular channels 
- * 
- * @details 
- * 
- * @param adc 
- */
-void adc_wd_enable(ADC_TypeDef *adc); 
-
-
-/**
- * @brief Analog watchdog disable on regular channels 
- * 
- * @details 
- * 
- * @param adc 
- */
-void adc_wd_disable(
-    ADC_TypeDef *adc); 
-
-
-/**
- * @brief Enable watchdog on a single channel in SCAN mode 
- * 
- * @details 
- * 
- * @param adc 
- */
-void adc_wd_chan_scan_enable(
-    ADC_TypeDef *adc); 
-
-
-/**
- * @brief Disable watchdog on a single channel in SCAN mode
- * 
- * @details 
- * 
- * @param adc 
- */
-void adc_wd_chan_scan_disable(
-    ADC_TypeDef *adc); 
-
-
-/**
- * @brief Analog watchdog channel select 
- * 
- * @details Select the input channel to be guarded by the analog watchdog. 
- * 
- * @param adc 
- * @param adc_channel 
- */
-void adc_wd_chan_select(
-    ADC_TypeDef *adc, 
-    adc_channel_t adc_channel); 
-
-
-/**
- * @brief End of Conversion (EOC) selection 
- * 
- * @details 
- * 
- * @see adc_eoc_wait 
- * 
- * @param adc 
- * @param eoc_select 
- */
-void adc_eoc_select(
-    ADC_TypeDef *adc, 
-    adc_eoc_config_t eoc_select); 
-
-//================================================================================
-
-
-//================================================================================
-// Sample Registers 
-
-/**
- * @brief Set the sample time for the channel 
- * 
- * @details 
- * 
- * @param adc 
- * @param channel 
- * @param smp 
- */
-void adc_smp(
-    ADC_TypeDef *adc, 
-    adc_channel_t channel, 
-    adc_smp_cycles_t smp); 
-
-//================================================================================
-
-
-//================================================================================
-// Watchdog Registers 
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param adc 
- * @param hi_thresh 
- * @param lo_thresh 
- */
-void adc_wd_thresh(
-    ADC_TypeDef *adc, 
-    uint16_t hi_thresh, 
-    uint16_t lo_thresh); 
 
 //================================================================================
 
@@ -626,17 +489,6 @@ void adc_seq(
 void adc_seq_len_set(
     ADC_TypeDef *adc, 
     adc_seq_num_t seq_len); 
-
-
-/**
- * @brief ADC sequence clear 
- * 
- * @details Clears all data in the SQRx registers which includes sequence order and length. 
- * 
- * @param adc 
- */
-void adc_seq_clear(
-    ADC_TypeDef *adc); 
 
 //================================================================================
 

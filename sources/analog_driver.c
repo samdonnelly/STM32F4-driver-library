@@ -18,9 +18,258 @@
 // Drivers 
 #include "analog_driver.h"
 
-// Libraries 
-
 //=======================================================================================
+
+
+//================================================================================
+// Function Prototypes 
+
+/**
+ * @brief ADC data register read 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @return uint16_t 
+ */
+uint16_t adc_dr(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Wait for start bit to set 
+ * 
+ * @details 
+ * 
+ */
+void adc_start_wait(ADC_TypeDef *adc); 
+
+
+/**
+ * @brief ADC end of conversion 
+ * 
+ * @details 
+ *          Set when the conversion of a regular group of channels is complete. 
+ *          Cleared by reading the data register. 
+ *          
+ *          0 --> conversion (EOCS=0) or sequence of conversions (EOCS=1) not complete 
+ *          1 --> conversion (EOCS=0) or sequence of conversions (EOCS=1) complete 
+ * 
+ */
+void adc_eoc_wait(ADC_TypeDef *adc); 
+
+
+/**
+ * @brief ADC prescalar 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param prescalar 
+ */
+void adc_prescalar(
+    ADC_Common_TypeDef *adc,
+    adc_prescalar_t prescalar); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ *          // TODO move prototype to source - only to be used once during init 
+ * 
+ * @param adc 
+ * @param resolution 
+ */
+void adc_res(
+    ADC_TypeDef *adc, 
+    adc_res_t resolution); 
+
+
+/**
+ * @brief End of Conversion (EOC) selection 
+ * 
+ * @details 
+ * 
+ * @see adc_eoc_wait 
+ * 
+ * @param adc 
+ * @param eoc_select 
+ */
+void adc_eoc_select(
+    ADC_TypeDef *adc, 
+    adc_eoc_config_t eoc_select); 
+
+
+/**
+ * @brief EOC interrupt 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param eocie 
+ */
+void adc_eocie(
+    ADC_TypeDef *adc, 
+    adc_eoc_int_t eocie); 
+
+
+/**
+ * @brief SCAN mode configuration 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param scan 
+ */
+void adc_scan(
+    ADC_TypeDef *adc, 
+    adc_scan_t scan); 
+
+
+/**
+ * @brief CONT mode 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param cont 
+ */
+void adc_cont(
+    ADC_TypeDef *adc, 
+    adc_cont_t cont); 
+
+
+/**
+ * @brief DMA Mode 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param dma 
+ */
+void adc_dma(
+    ADC_TypeDef *adc, 
+    adc_dma_t dma); 
+
+
+/**
+ * @brief DMA disable 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param dds 
+ */
+void adc_dds(
+    ADC_TypeDef *adc, 
+    adc_dds_t dds); 
+
+
+/**
+ * @brief Analog watchdog enable on regular channels 
+ * 
+ * @details 
+ * 
+ * @param wd 
+ */
+void adc_awden(
+    ADC_TypeDef *adc, 
+    adc_wd_t wd); 
+
+
+/**
+ * @brief Enable the watchdog on a single channel in scan mode
+ * 
+ * @details 
+ * 
+ * @param wdsc 
+ */
+void adc_awdsgl(
+    ADC_TypeDef *adc, 
+    adc_wd_sc_t wdsc); 
+
+
+/**
+ * @brief Analog watchdog channel select 
+ * 
+ * @details Select the input channel to be guarded by the analog watchdog. 
+ * 
+ * @param adc 
+ * @param adc_channel 
+ */
+void adc_wd_chan_select(
+    ADC_TypeDef *adc, 
+    adc_channel_t adc_channel); 
+
+
+/**
+ * @brief Analog watchdog interrupt 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param awdie 
+ */
+void adc_awdie(
+    ADC_TypeDef *adc, 
+    adc_awdie_t awdie); 
+
+
+/**
+ * @brief Overrun interrupt 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param ovrie 
+ */
+void adc_ovrie(
+    ADC_TypeDef *adc, 
+    adc_ovrie_t ovrie); 
+
+
+/**
+ * @brief Set the sample time for the channel 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param channel 
+ * @param smp 
+ */
+void adc_smp(
+    ADC_TypeDef *adc, 
+    adc_channel_t channel, 
+    adc_smp_cycles_t smp); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param adc 
+ * @param hi_thresh 
+ * @param lo_thresh 
+ */
+void adc_wd_thresh(
+    ADC_TypeDef *adc, 
+    uint16_t hi_thresh, 
+    uint16_t lo_thresh); 
+
+
+/**
+ * @brief ADC sequence clear 
+ * 
+ * @details Clears all data in the SQRx registers which includes sequence order and length. 
+ * 
+ * @param adc 
+ */
+void adc_seq_clear(
+    ADC_TypeDef *adc); 
+
+//================================================================================
 
 
 //================================================================================
@@ -36,7 +285,8 @@ void adc_port_init(
     adc_scan_t scan, 
     adc_cont_t cont, 
     adc_dma_t dma, 
-    adc_dds_t dds)
+    adc_dds_t dds, 
+    adc_ovrie_t ovrie)
 {
     // Enable the ADC1 clock 
     if (adc == ADC1) RCC->APB2ENR |= (SET_BIT << SHIFT_8); 
@@ -59,10 +309,13 @@ void adc_port_init(
     // Set DMA settings 
     adc_dma(adc, dma); 
     adc_dds(adc, dds); 
+
+    // Set overrun interrupt 
+    adc_ovrie(adc, ovrie); 
 }
 
 
-// ADC init 
+// ADC pin init 
 void adc_pin_init(
     ADC_TypeDef *adc, 
     GPIO_TypeDef *gpio, 
@@ -75,13 +328,33 @@ void adc_pin_init(
 
     // Set the sample time for the channel 
     adc_smp(adc, adc_channel, smp);
+}
 
-    // Set the data alignment  
-    
-    // Set the watchdog thresholds 
+
+// ADC watchdog setup 
+void adc_wd_init(
+    ADC_TypeDef *adc, 
+    adc_wd_t wd, 
+    adc_wd_sc_t wdsc, 
+    adc_channel_t channel, 
+    uint16_t hi_thresh, 
+    uint16_t lo_thresh, 
+    adc_awdie_t awdie)
+{
+    // Analog watchdog enable on regular channels 
+    adc_awden(adc, wd); 
+
+    // Enable the watchdog on a single channel in scan mode
+    adc_awdsgl(adc, wdsc); 
 
     // Select the channel that the watchdog watches 
-    // Maybe make this it's own function so it can be changed on the go 
+    adc_wd_chan_select(adc, channel); 
+
+    // Set the watchdog thresholds 
+    adc_wd_thresh(adc, hi_thresh, lo_thresh); 
+
+    // Analog watchdog interrupt 
+    adc_awdie(adc, awdie); 
 }
 
 //================================================================================
@@ -89,8 +362,6 @@ void adc_pin_init(
 
 //================================================================================
 // Read 
-
-// TODO come up with different read functions for single, continuous and scan modes 
 
 // ADC data register read 
 uint16_t adc_dr(
@@ -177,7 +448,7 @@ void adc_overrun_clear(ADC_TypeDef *adc)
 }
 
 
-// Analog watchdog bit status 
+// Analog watchdog flag 
 uint8_t adc_wd_flag(ADC_TypeDef *adc)
 {
     return (adc->SR & (SET_BIT << SHIFT_0)); 
@@ -230,10 +501,7 @@ void adc_res(
     ADC_TypeDef *adc, 
     adc_res_t resolution)
 {
-    // Clear the resolution 
     adc->CR1 &= ~(SET_3 << SHIFT_24); 
-
-    // Set the new resolution 
     adc->CR1 |= (resolution << SHIFT_24); 
 }
 
@@ -243,11 +511,18 @@ void adc_eoc_select(
     ADC_TypeDef *adc, 
     adc_eoc_config_t eoc_select)
 {
-    // Clear the previous selection 
     adc->CR2 &= ~(SET_BIT << SHIFT_10); 
-
-    // Select the new config 
     adc->CR2 |= (eoc_select << SHIFT_10); 
+}
+
+
+// EOC interrupt --> add to init 
+void adc_eocie(
+    ADC_TypeDef *adc, 
+    adc_eoc_int_t eocie)
+{
+    adc->CR1 &= ~(SET_BIT << SHIFT_5); 
+    adc->CR1 |= (eocie << SHIFT_5); 
 }
 
 
@@ -256,7 +531,6 @@ void adc_scan(
     ADC_TypeDef *adc, 
     adc_scan_t scan)
 {
-    // Clear the scan configuration then set the desired configuration 
     adc->CR1 &= ~(SET_BIT << SHIFT_8); 
     adc->CR1 |= (scan << SHIFT_8); 
 }
@@ -267,7 +541,6 @@ void adc_cont(
     ADC_TypeDef *adc, 
     adc_cont_t cont)
 {
-    // Clear the scan configuration then set the desired configuration 
     adc->CR2 &= ~(SET_BIT << SHIFT_1); 
     adc->CR2 |= (cont << SHIFT_1); 
 }
@@ -278,7 +551,6 @@ void adc_dma(
     ADC_TypeDef *adc, 
     adc_dma_t dma)
 {
-    // Clear the DMA configuration then set the desired configuration 
     adc->CR2 &= ~(SET_BIT << SHIFT_8); 
     adc->CR2 |= (dma << SHIFT_8); 
 }
@@ -289,41 +561,28 @@ void adc_dds(
     ADC_TypeDef *adc, 
     adc_dds_t dds)
 {
-    // Clear the DMA disable configuration then set the desired configuration 
     adc->CR2 &= ~(SET_BIT << SHIFT_9); 
     adc->CR2 |= (dds << SHIFT_9); 
 }
 
 
 // Analog watchdog enable on regular channels 
-void adc_wd_enable(
-    ADC_TypeDef *adc) 
-{
-    adc->CR1 |= (SET_BIT << SHIFT_23); 
-}
-
-
-// Analog watchdog disable on regular channels 
-void adc_wd_disable(
-    ADC_TypeDef *adc) 
+void adc_awden(
+    ADC_TypeDef *adc, 
+    adc_wd_t wd)
 {
     adc->CR1 &= ~(SET_BIT << SHIFT_23); 
+    adc->CR1 |= (wd << SHIFT_23); 
 }
 
 
-// Enable watchdog on a single channel in SCAN mode 
-void adc_wd_chan_scan_enable(
-    ADC_TypeDef *adc) 
-{
-    adc->CR1 |= (SET_BIT << SHIFT_9); 
-}
-
-
-// Disable watchdog on a single channel in SCAN mode 
-void adc_wd_chan_scan_disable(
-    ADC_TypeDef *adc) 
+// Enable the watchdog on a single channel in scan mode
+void adc_awdsgl(
+    ADC_TypeDef *adc, 
+    adc_wd_sc_t wdsc)
 {
     adc->CR1 &= ~(SET_BIT << SHIFT_9); 
+    adc->CR1 |= (wdsc << SHIFT_9); 
 }
 
 
@@ -332,11 +591,28 @@ void adc_wd_chan_select(
     ADC_TypeDef *adc, 
     adc_channel_t adc_channel) 
 {
-    // Clear the previous selection 
     adc->CR1 &= ~(SET_31 << SHIFT_0); 
-
-    // Select the channel 
     adc->CR1 |= (adc_channel << SHIFT_0); 
+}
+
+
+// Analog watchdog interrupt 
+void adc_awdie(
+    ADC_TypeDef *adc, 
+    adc_awdie_t awdie)
+{
+    adc->CR1 &= ~(SET_BIT << SHIFT_6); 
+    adc->CR1 |= (awdie << SHIFT_6); 
+}
+
+
+// Overrun interrupt --> add to init 
+void adc_ovrie(
+    ADC_TypeDef *adc, 
+    adc_ovrie_t ovrie)
+{
+    adc->CR1 &= ~(SET_BIT << SHIFT_26); 
+    adc->CR1 |= (ovrie << SHIFT_26); 
 }
 
 //================================================================================
