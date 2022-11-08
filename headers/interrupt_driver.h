@@ -75,19 +75,43 @@
 // Enums 
 
 /**
+ * @brief GPIO port to use for the EXTI line 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    EXTI_PA,   // 
+    EXTI_PB,   // 
+    EXTI_PC,   // 
+    EXTI_PD,   // 
+    EXTI_PE,   // 
+    EXTI_PH    // 
+} exti_port_t; 
+
+
+/**
  * @brief 
  * 
  * @details 
  * 
  */
 typedef enum {
-    EXTI_PORT_PA,   // 
-    EXTI_PORT_PB,   // 
-    EXTI_PORT_PC,   // 
-    EXTI_PORT_PD,   // 
-    EXTI_PORT_PE,   // 
-    EXTI_PORT_PH    // 
-} exti_port_t; 
+    EXTI_INT_MASKED,        // 
+    EXTI_INT_NOT_MASKED     // 
+} exti_int_mask_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    EXTI_EVENT_MASKED,         // 
+    EXTI_EVENT_NOT_MASKED      // 
+} exti_event_mask_t; 
 
 
 /**
@@ -133,21 +157,22 @@ void exti_init(void);
  * 
  * @details 
  * 
- * @param irqn 
  * @param port 
  * @param pin 
- * @param im 
- * @param trig_mode 
- * @param trig 
- * @param priority 
+ * @param exti_line 
+ * @param int_mask 
+ * @param event_mask 
+ * @param rise_trig 
+ * @param fall_trig 
  */
 void exti_config(
     exti_port_t port, 
     pin_selector_t pin, 
-    uint32_t im, 
+    uint32_t exti_line, 
+    exti_int_mask_t int_mask, 
+    exti_event_mask_t event_mask, 
     exti_rise_trigger_t rise_trig, 
-    exti_fall_trigger_t fall_trig, 
-    uint32_t trig); 
+    exti_fall_trigger_t fall_trig); 
 
 
 /**
@@ -161,174 +186,6 @@ void exti_config(
 void nvic_config(
     IRQn_Type irqn, 
     uint8_t priority); 
-
-//================================================================================
-
-
-//================================================================================
-// SYSCFG Register Functions 
-
-/**
- * @brief SYSCFG register source clear 
- * 
- * @details 
- * 
- */
-void syscfg_config_clear(void); 
-
-
-/**
- * @brief SYSCFG register source set 
- * 
- * @details 
- * 
- * @param port 
- * @param pin 
- */
-void syscfg_config(
-    exti_port_t port, 
-    pin_selector_t pin); 
-
-//================================================================================
-
-
-//================================================================================
-// EXTI Register Functions 
-
-/**
- * @brief Interrupt mask register set 
- * 
- * @details 
- *          Enables the EXTI by unmasking the event request on a given line. 
- * 
- * @param im 
- */
-void exti_imr_set(
-    uint32_t im); 
-
-
-/**
- * @brief Interrupt mask register clear 
- * 
- * @details 
- *          Disabled the EXTI by masking the event request on a given line. 
- * 
- * @param im 
- */
-void exti_imr_clear(
-    uint32_t im); 
-
-
-/**
- * @brief Event mask register set 
- * 
- * @details 
- * 
- * @param em 
- */
-void exti_emr_set(
-    uint32_t em); 
-
-
-/**
- * @brief Event mask register clear 
- * 
- * @details 
- * 
- * @param em 
- */
-void exti_emr_clear(
-    uint32_t em); 
-
-
-/**
- * @brief Rising trigger selection register set 
- * 
- * @details 
- * 
- * @param rt 
- */
-void exti_rtsr_set(
-    uint32_t rt); 
-
-
-/**
- * @brief Rising trigger selection register clear 
- * 
- * @details 
- * 
- * @param rt 
- */
-void exti_rtsr_clear(
-    uint32_t rt); 
-
-
-/**
- * @brief Falling trigger selection register set 
- * 
- * @details 
- * 
- * @param ft 
- */
-void exti_ftsr_set(
-    uint32_t ft); 
-
-
-/**
- * @brief Falling trigger selection register clear 
- * 
- * @details 
- * 
- * @param ft 
- */
-void exti_ftsr_clear(
-    uint32_t ft); 
-
-
-/**
- * @brief Software interrupt event register set 
- * 
- * @details 
- *          This allows for generation of an interrupt/event request using the software instead 
- *          of an external device/peripheral trigger. 
- * 
- * @param swier 
- */
-void exti_swier_set(
-    uint32_t swier); 
-
-
-/**
- * @brief Software interrupt event register clear 
- * 
- * @details 
- * 
- * @param swier 
- */
-void exti_swier_clear(
-    uint32_t swier); 
-
-
-/**
- * @brief Pending register set 
- * 
- * @details 
- * 
- * @param pr 
- */
-void exti_pr_set(
-    uint32_t pr); 
-
-
-/**
- * @brief Pending register clear 
- * 
- * @details 
- * 
- * @param pr 
- */
-void exti_pr_clear(
-    uint32_t pr); 
 
 //================================================================================
 
