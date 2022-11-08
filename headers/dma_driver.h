@@ -22,10 +22,6 @@
 #include "stm32f411xe.h"
 #include "tools.h"
 
-// Communication drivers 
-
-// Other drivers 
-
 //================================================================================
 
 
@@ -74,6 +70,31 @@ typedef enum {
 
 
 /**
+ * @brief Data transfer direction 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_DIR_PM,   // Peripheral-to-memory 
+    DMA_DIR_MP,   // Memory-to-peripheral 
+    DMA_DIR_MM    // Memory-to-memory 
+} dma_direction_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_CM_DISABLE,   // Circular mode disabled 
+    DMA_CM_ENABLE     // Circualr mode enabled 
+} dma_cm_t; 
+
+
+/**
  * @brief Priority level 
  * 
  * @details 
@@ -85,19 +106,6 @@ typedef enum {
     DMA_PRIOR_HI,     // High priority
     DMA_PRIOR_VHI,    // Very high priority 
 } dma_priority_t; 
-
-
-/**
- * @brief Data transfer direction 
- * 
- * @details 
- * 
- */
-typedef enum {
-    DMA_DIR_PM,   // Peripheral-to-memory 
-    DMA_DIR_MP,   // Memory-to-peripheral 
-    DMA_DIR_MM    // Memory-to-memory 
-} dma_direction_t; 
 
 
 /**
@@ -132,6 +140,66 @@ typedef enum {
  * 
  */
 typedef enum {
+    DMA_TCIE_DISABLE,   // 
+    DMA_TCIE_ENABLE     // 
+} dma_tcie_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_HTIE_DISABLE,   // 
+    DMA_HTIE_ENABLE     // 
+} dma_htie_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_TEIE_DISABLE,   // 
+    DMA_TEIE_ENABLE     // 
+} dma_teie_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_DMEIE_DISABLE,   // 
+    DMA_DMEIE_ENABLE     // 
+} dma_dmeie_t; 
+
+
+/**
+ * @brief FIFO error interrupt 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
+    DMA_FEIE_DISABLE,   // Disable the FIFO error interrupt 
+    DMA_FEIE_ENABLE     // Enable the FIFO error interrupt 
+} dma_feie_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+typedef enum {
     DMA_FIFO_STAT_0,       // 0 <= FIFO Level < 1/4 
     DMA_FIFO_STAT_1,       // 1/4 <= FIFO Level < 1/2 
     DMA_FIFO_STAT_2,       // 1/2 <= FIFO Level < 3/4 
@@ -148,15 +216,6 @@ typedef enum {
  * 
  */
 typedef enum {
-    DMA_FTH_1QTR,       // 1/4 full FIFO 
-    DMA_FTH_HALF,       // 1/2 full FIFO 
-    DMA_FTH_3QTR,       // 3/4 full FIFO 
-    DMA_FTH_FULL        // Full FIFO 
-} dma_fifo_threshold_t; 
-
-
-
-typedef enum {
     DMA_DIRECT_MODE,  // Direct mode (no FIFO threshold used) 
     DMA_FIFO_MODE     // FIFO mode 
 } dma_fifo_mode_t; 
@@ -169,9 +228,11 @@ typedef enum {
  * 
  */
 typedef enum {
-    DMA_CM_DISABLE,   // Circular mode disabled 
-    DMA_CM_ENABLE     // Circualr mode enabled 
-} dma_cm_t; 
+    DMA_FTH_1QTR,       // 1/4 full FIFO 
+    DMA_FTH_HALF,       // 1/2 full FIFO 
+    DMA_FTH_3QTR,       // 3/4 full FIFO 
+    DMA_FTH_FULL        // Full FIFO 
+} dma_fifo_threshold_t; 
 
 //================================================================================
 
@@ -202,8 +263,6 @@ typedef dma_fifo_status_t FIFO_STATUS;
  * @param pinc : 
  * @param msize : 
  * @param psize : 
- * @param fifo_thresh : 
- * @param fifo_mode : 
  */
 void dma_stream_init(
     DMA_TypeDef *dma, 
@@ -215,9 +274,7 @@ void dma_stream_init(
     dma_addr_inc_mode_t minc, 
     dma_addr_inc_mode_t pinc, 
     dma_data_size_t msize, 
-    dma_data_size_t psize, 
-    dma_fifo_threshold_t fifo_thresh, 
-    dma_fifo_mode_t fifo_mode); 
+    dma_data_size_t psize); 
 
 
 /**
@@ -235,6 +292,42 @@ void dma_stream_config(
     uint32_t per_addr, 
     uint32_t mem_addr, 
     uint16_t data_items); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @param mode 
+ * @param fth 
+ * @param feie 
+ */
+void dma_fifo_config(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_fifo_mode_t mode, 
+    dma_fifo_threshold_t fth, 
+    dma_feie_t feie); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param dma_stream 
+ * @param tcie 
+ * @param htie 
+ * @param teie 
+ * @param dmeie 
+ */
+void dma_int_config(
+    DMA_Stream_TypeDef *dma_stream,  
+    dma_tcie_t tcie, 
+    dma_htie_t htie, 
+    dma_teie_t teie, 
+    dma_dmeie_t dmeie); 
 
 //================================================================================
 
@@ -259,12 +352,13 @@ void dma_clear_int_flags(
  * @details 
  * 
  * @param dma 
- * @param stream 
- * @return uint32_t 
+ * @param lo_streams 
+ * @param hi_streams 
  */
-uint32_t dma_read_int_flags(
+void dma_int_flags(
     DMA_TypeDef *dma, 
-    dma_stream_t stream); 
+    uint32_t lo_streams, 
+    uint32_t hi_streams); 
 
 //================================================================================
 
@@ -297,190 +391,6 @@ void dma_stream_enable(
 void dma_stream_disable(
     DMA_Stream_TypeDef *dma_stream); 
 
-
-/**
- * @brief Stream status 
- * 
- * @details 
- * 
- * @param dma_stream 
- * @return uint8_t 
- */
-uint8_t dma_stream_status(
-    DMA_Stream_TypeDef *dma_stream); 
-
-
-/**
- * @brief DMA channel select 
- * 
- * @details 
- *          Note: The channel can only be selected when EN=0. 
- * 
- * @param dma_stream 
- * @param channel 
- */
-void dma_chsel(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_channel_t channel); 
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param dma_stream 
- * @param dir 
- */
-void dma_dir(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_direction_t dir); 
-
-
-/**
- * @brief Circular mode 
- * 
- * @details 
- * 
- * @param dma_stream 
- * @param cm 
- */
-void dma_cm(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_cm_t cm); 
-
-
-/**
- * @brief 
- * 
- * @details 
- *          These bits can only be written when EN=0. 
- * 
- * @param dma_stream 
- * @param priority 
- */
-void dma_priority(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_priority_t priority); 
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param dma_stream 
- * @param msize 
- */
-void dma_msize(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_data_size_t msize); 
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param dma_stream 
- * @param minc 
- */
-void dma_minc(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_addr_inc_mode_t minc); 
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param dma_stream 
- * @param psize 
- */
-void dma_psize(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_data_size_t psize); 
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @param dma_stream 
- * @param pinc 
- */
-void dma_pinc(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_addr_inc_mode_t pinc); 
-
-//================================================================================
-
-
-//================================================================================
-// DMA Stream x Number of Data Register 
-
-/**
- * @brief 
- * 
- * @details 
- *          This register can only be written when the stream is disabled. 
- *          When the stream is enabled this register is read only which indicates the 
- *          remaining items to be transmitted. The rgister decrements after each DMA 
- *          transfer. 
- *          Once the transfer is complete, this register can either stay at zero (normal 
- *          mode) or be reloaded automatically with the previosuly programmed value if 
- *          the stream is in circular mode or the stream is enabled again. 
- * 
- * @param dma_stream 
- * @param data_items 
- */
-void dma_ndt(
-    DMA_Stream_TypeDef *dma_stream, 
-    uint16_t data_items); 
-
-//================================================================================
-
-
-//================================================================================
-// DMA Stream x Peripheral Address Register 
-
-/**
- * @brief 
- * 
- * @details 
- *          Base address of the peripheral data register from/to which the data will be 
- *          read/written. 
- *          This register can only be written to when the stream is disabled. 
- * 
- * @param dma_stream 
- * @param per_addr 
- */
-void dma_par(
-    DMA_Stream_TypeDef *dma_stream, 
-    uint32_t per_addr); 
-
-//================================================================================
-
-
-//================================================================================
-// DMA Stream x Memory Address Register 
-
-/**
- * @brief Set memory 0 address 
- * 
- * @details 
- *          Base address of memory area 0 from/to which the data will be read/written. 
- *          These bits can only be written when the stream is disabled. 
- * 
- * @param dma_stream 
- * @param m0ar 
- */
-void dma_m0ar(
-    DMA_Stream_TypeDef *dma_stream, 
-    uint32_t m0ar); 
-
 //================================================================================
 
 
@@ -498,38 +408,6 @@ void dma_m0ar(
  */
 FIFO_STATUS dma_fs(
     DMA_Stream_TypeDef *dma_stream); 
-
-
-/**
- * @brief Direct/FIFO mode selection 
- * 
- * @details 
- *          These bits can only be written when the stream is disabled. 
- *          This is set by hardware if memory-to-memory mode is selected and the stream is 
- *          enabled because the direct mode is not allowed in the memory-to-memory 
- *          configuration. 
- * 
- * @param dma_stream 
- * @param mode 
- */
-void dma_dmdis(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_fifo_mode_t mode); 
-
-
-/**
- * @brief FIFO threshold selection 
- * 
- * @details 
- *          These bits are not used in direct mode. 
- *          These bits can only be written when the stream is disabled. 
- * 
- * @param dma_stream 
- * @param fth 
- */
-void dma_fth(
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_fifo_threshold_t fth); 
 
 //================================================================================
 
