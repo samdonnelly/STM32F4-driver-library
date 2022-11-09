@@ -24,6 +24,30 @@
 //=======================================================================================
 
 
+//================================================================================
+// Macros 
+
+// Alternate functions 
+#define GPIO_AF0    0x0     // AF0 
+#define GPIO_AF1    0x1     // AF1 
+#define GPIO_AF2    0x2     // AF2 
+#define GPIO_AF3    0x3     // AF3 
+#define GPIO_AF4    0x4     // AF4 
+#define GPIO_AF5    0x5     // AF5 
+#define GPIO_AF6    0x6     // AF6 
+#define GPIO_AF7    0x7     // AF7 
+#define GPIO_AF8    0x8     // AF8 
+#define GPIO_AF9    0x9     // AF9 
+#define GPIO_AF10   0xA     // AF10 
+#define GPIO_AF11   0xB     // AF11 
+#define GPIO_AF12   0xC     // AF12 
+#define GPIO_AF13   0xD     // AF13 
+#define GPIO_AF14   0xE     // AF14 
+#define GPIO_AF15   0xF     // AF15 
+
+//================================================================================
+
+
 //=======================================================================================
 // Enums 
 
@@ -208,6 +232,8 @@ uint8_t gpio_read(
 //================================================================================
 // Register functions 
 
+// TODO move these prototypes over to the source once they're no longer used in other files 
+
 /**
  * @brief Set the GPIO mode 
  * 
@@ -220,6 +246,66 @@ uint8_t gpio_read(
 void gpio_moder(
     GPIO_TypeDef *gpio, 
     gpio_moder_t moder, 
+    pin_selector_t pin); 
+
+
+/**
+ * @brief GPIO output type 
+ * 
+ * @details 
+ * 
+ * @param gpio 
+ * @param otyper 
+ * @param pin 
+ */
+void gpio_otyper(
+    GPIO_TypeDef *gpio, 
+    gpio_otyper_t otyper, 
+    pin_selector_t pin); 
+
+
+/**
+ * @brief GPIO output speed 
+ * 
+ * @details 
+ * 
+ * @param gpio 
+ * @param ospeedr 
+ * @param pin 
+ */
+void gpio_ospeedr(
+    GPIO_TypeDef *gpio, 
+    gpio_ospeedr_t ospeedr, 
+    pin_selector_t pin); 
+
+
+/**
+ * @brief GPIO pull-up/pull-down  
+ * 
+ * @details 
+ * 
+ * @param gpio 
+ * @param pupdr 
+ * @param pin 
+ */
+void gpio_pupdr(
+    GPIO_TypeDef *gpio, 
+    gpio_pupdr_t pupdr, 
+    pin_selector_t pin); 
+
+
+/**
+ * @brief GPIO alternate functions 
+ * 
+ * @details 
+ * 
+ * @param gpio 
+ * @param af 
+ * @param pin 
+ */
+void gpio_afr(
+    GPIO_TypeDef *gpio, 
+    uint8_t af, 
     pin_selector_t pin); 
 
 //================================================================================

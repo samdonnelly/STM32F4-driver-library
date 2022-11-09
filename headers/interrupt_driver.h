@@ -22,6 +22,9 @@
 #include "stm32f411xe.h"
 #include "tools.h"
 
+// Drivers 
+#include "gpio_driver.h"
+
 //================================================================================
 
 
@@ -157,8 +160,10 @@ void exti_init(void);
  * 
  * @details 
  * 
+ * @param gpio 
  * @param port 
  * @param pin 
+ * @param pull 
  * @param exti_line 
  * @param int_mask 
  * @param event_mask 
@@ -166,8 +171,10 @@ void exti_init(void);
  * @param fall_trig 
  */
 void exti_config(
+    GPIO_TypeDef *gpio, 
     exti_port_t port, 
     pin_selector_t pin, 
+    gpio_pupdr_t pull, 
     uint32_t exti_line, 
     exti_int_mask_t int_mask, 
     exti_event_mask_t event_mask, 

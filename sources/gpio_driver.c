@@ -49,17 +49,17 @@ void gpio_pin_init(
     gpio_ospeedr_t ospeedr,
     gpio_pupdr_t   pupdr)
 {
-    gpio->MODER   = (moder   != NONE) ? (gpio->MODER   |  (moder   << (pin_num*SHIFT_2)))
-                                      : (gpio->MODER   & ~(moder   << (pin_num*SHIFT_2)));
+    // Set the mode 
+    gpio_moder(gpio, moder, pin_num); 
 
-    gpio->OTYPER  = (otyper  != NONE) ? (gpio->OTYPER  |  (otyper  <<  pin_num))
-                                      : (gpio->OTYPER  & ~(otyper  <<  pin_num));
+    // Set the output type 
+    gpio_otyper(gpio, otyper, pin_num); 
 
-    gpio->OSPEEDR = (ospeedr != NONE) ? (gpio->OSPEEDR |  (ospeedr << (pin_num*SHIFT_2)))
-                                      : (gpio->OSPEEDR & ~(ospeedr << (pin_num*SHIFT_2)));
+    // Set the output speed 
+    gpio_ospeedr(gpio, ospeedr, pin_num); 
 
-    gpio->PUPDR   = (pupdr   != NONE) ? (gpio->PUPDR   |  (pupdr   << (pin_num*SHIFT_2)))
-                                      : (gpio->PUPDR   & ~(pupdr   << (pin_num*SHIFT_2)));
+    // Set as pull-up or pull-down 
+    gpio_pupdr(gpio, pupdr, pin_num); 
 }
 
 //=======================================================================================
@@ -99,18 +99,16 @@ void gpio_write(
 //=======================================================================================
 // Read functions 
 
-// GPIOA read 
+// GPIO read 
 uint8_t gpio_read(
     GPIO_TypeDef *gpio, 
     gpio_pin_num_t pin_num)
 {
     // Local variables 
-    uint16_t gpio_input; 
     uint8_t gpio_state = 0; 
 
     // Read the GPIO pin 
-    gpio_input = (gpio->IDR) & pin_num;
-    if (gpio_input) gpio_state = 1; 
+    if ((gpio->IDR) & pin_num) gpio_state = 1; 
 
     return gpio_state; 
 }
@@ -121,13 +119,69 @@ uint8_t gpio_read(
 //================================================================================
 // Register functions 
 
-// Set the GPIO mode 
+// GPIO mode 
 void gpio_moder(
     GPIO_TypeDef *gpio, 
     gpio_moder_t moder, 
     pin_selector_t pin)
 {
-    gpio->MODER |= (moder << (2*pin)); 
+    gpio->MODER &= ~(SET_3 << (SHIFT_2*pin)); 
+    gpio->MODER |= (moder << (SHIFT_2*pin)); 
+}
+
+
+// GPIO output type 
+void gpio_otyper(
+    GPIO_TypeDef *gpio, 
+    gpio_otyper_t otyper, 
+    pin_selector_t pin)
+{
+    gpio->OTYPER &= ~(SET_BIT << pin); 
+    gpio->OTYPER |= (otyper << pin); 
+}
+
+
+// GPIO output speed 
+void gpio_ospeedr(
+    GPIO_TypeDef *gpio, 
+    gpio_ospeedr_t ospeedr, 
+    pin_selector_t pin)
+{
+    gpio->OSPEEDR &= ~(SET_3 << (SHIFT_2*pin)); 
+    gpio->OSPEEDR |= (ospeedr << (SHIFT_2*pin)); 
+}
+
+
+// GPIO pull-up/pull-down  
+void gpio_pupdr(
+    GPIO_TypeDef *gpio, 
+    gpio_pupdr_t pupdr, 
+    pin_selector_t pin)
+{
+    gpio->PUPDR &= ~(SET_3 << (SHIFT_2*pin)); 
+    gpio->PUPDR |= (pupdr << (SHIFT_2*pin)); 
+}
+
+
+// GPIO alternate functions 
+void gpio_afr(
+    GPIO_TypeDef *gpio, 
+    uint8_t af, 
+    pin_selector_t pin)
+{
+    // Local variables 
+    uint8_t i = 0; 
+
+    // Adjust the AFR register index pin offset if needed 
+    if (pin > PIN_7) 
+    {
+        i++; 
+        pin -= PIN_8; 
+    }
+
+    // Clear and config the AFR for the correct pin 
+    gpio->AFR[i] &= ~(af << SHIFT_4*pin); 
+    gpio->AFR[i] |=  (af << SHIFT_4*pin); 
 }
 
 //================================================================================

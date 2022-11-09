@@ -146,14 +146,19 @@ void exti_init(void)
 
 // External interrupt configuration 
 void exti_config(
+    GPIO_TypeDef *gpio, 
     exti_port_t port, 
     pin_selector_t pin, 
+    gpio_pupdr_t pull, 
     uint32_t exti_line, 
     exti_int_mask_t int_mask, 
     exti_event_mask_t event_mask, 
     exti_rise_trigger_t rise_trig, 
     exti_fall_trigger_t fall_trig)
 {
+    // Configure an input pin for the interrupt 
+    gpio_pin_init(gpio, pin, MODER_INPUT, OTYPER_PP, OSPEEDR_FAST, pull); 
+
     // Configure the EXTI config register in SYSCFG - Defines the interrupt source 
     syscfg_config(port, pin); 
 

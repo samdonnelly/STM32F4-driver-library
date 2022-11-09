@@ -324,6 +324,7 @@ void adc_pin_init(
     adc_smp_cycles_t smp)
 {
     // Configure the GPIO pin for analog mode 
+    // TODO change this to the gpio_pin_init function and test it 
     gpio_moder(gpio, MODER_ANALOG, adc_pin); 
 
     // Set the sample time for the channel 
