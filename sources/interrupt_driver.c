@@ -182,10 +182,10 @@ void nvic_config(
     uint8_t priority)
 {
     // Set the interrupt priority 
-    NVIC_SetPriority(irqn, priority);    // Built in NVIC function 
+    NVIC_SetPriority(irqn, priority);    // Built-in NVIC function 
 
     // Enable the interrupt 
-    NVIC_EnableIRQ(irqn);                // Built in NVIC function 
+    NVIC_EnableIRQ(irqn);                // Built-in NVIC function 
 }
 
 //================================================================================

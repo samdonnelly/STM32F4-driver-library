@@ -32,26 +32,27 @@
 // Macros 
 
 // EXTI Lines 
-#define EXTI_L1   0x00000001 
-#define EXTI_L2   0x00000002 
-#define EXTI_L3   0x00000004 
-#define EXTI_L4   0x00000008 
-#define EXTI_L5   0x00000010 
-#define EXTI_L6   0x00000020 
-#define EXTI_L7   0x00000040 
-#define EXTI_L8   0x00000080 
-#define EXTI_L9   0x00000100 
-#define EXTI_L10  0x00000200 
-#define EXTI_L11  0x00000400 
-#define EXTI_L12  0x00000800 
-#define EXTI_L13  0x00001000 
-#define EXTI_L14  0x00002000 
-#define EXTI_L15  0x00004000 
-#define EXTI_L16  0x00008000 
-#define EXTI_L17  0x00010000 
-#define EXTI_L18  0x00020000 
-#define EXTI_L21  0x00100000 
-#define EXTI_L22  0x00200000 
+#define EXTI_L0   0x00000001 
+#define EXTI_L1   0x00000002 
+#define EXTI_L2   0x00000004 
+#define EXTI_L3   0x00000008 
+#define EXTI_L4   0x00000010 
+#define EXTI_L5   0x00000020 
+#define EXTI_L6   0x00000040 
+#define EXTI_L7   0x00000080 
+#define EXTI_L8   0x00000100 
+#define EXTI_L9   0x00000200 
+#define EXTI_L10  0x00000400 
+#define EXTI_L11  0x00000800 
+#define EXTI_L12  0x00001000 
+#define EXTI_L13  0x00002000 
+#define EXTI_L14  0x00004000 
+#define EXTI_L15  0x00008000 
+#define EXTI_L16  0x00010000 
+#define EXTI_L17  0x00020000 
+#define EXTI_L18  0x00040000 
+#define EXTI_L21  0x00200000 
+#define EXTI_L22  0x00400000 
 
 // IRQ Priority 
 #define EXTI_PRIORITY_0   0x0   // Highest priority 
