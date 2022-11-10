@@ -197,4 +197,22 @@ void nvic_config(
 
 //================================================================================
 
+
+//================================================================================
+// Control registers 
+
+/**
+ * @brief Pending register clear 
+ * 
+ * @details 
+ *          Used the macros defined for the EXTI lines above. 
+ *          Calling this function also clears the software interrupt event register. 
+ * 
+ * @param pr 
+ */
+void exti_pr_clear(
+    uint32_t pr); 
+
+//================================================================================
+
 #endif   // _INTERRUPT_DRIVER_H_

@@ -111,19 +111,6 @@ void exti_ftsr(
 void exti_swier_set(
     uint32_t swier); 
 
-
-/**
- * @brief Pending register clear 
- * 
- * @details 
- *          Used the macros defined for the EXTI lines above. 
- *          Calling this function also clears the software interrupt event register. 
- * 
- * @param pr 
- */
-void exti_pr_clear(
-    uint32_t pr); 
-
 //================================================================================
 
 

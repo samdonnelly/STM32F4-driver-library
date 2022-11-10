@@ -37,6 +37,9 @@ void gpio_port_init(void)
 
     // Enable GPIOC clock - RCC_AHB1ENR register, bit 2 
     RCC->AHB1ENR |= (SET_BIT << SHIFT_2);
+
+    // Enable GPIOD clock - RCC_AHB1ENR register, bit 3 
+    RCC->AHB1ENR |= (SET_BIT << SHIFT_3);
 }
 
 
