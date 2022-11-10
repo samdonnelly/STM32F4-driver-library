@@ -280,6 +280,7 @@ typedef enum {
  * @param cont 
  * @param dma 
  * @param dds 
+ * @param eocie 
  * @param ovrie 
  */
 void adc_port_init(
@@ -292,6 +293,7 @@ void adc_port_init(
     adc_cont_t cont, 
     adc_dma_t dma, 
     adc_dds_t dds, 
+    adc_eoc_int_t eocie, 
     adc_ovrie_t ovrie); 
 
 

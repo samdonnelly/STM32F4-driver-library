@@ -286,6 +286,7 @@ void adc_port_init(
     adc_cont_t cont, 
     adc_dma_t dma, 
     adc_dds_t dds, 
+    adc_eoc_int_t eocie, 
     adc_ovrie_t ovrie)
 {
     // Enable the ADC1 clock 
@@ -309,6 +310,9 @@ void adc_port_init(
     // Set DMA settings 
     adc_dma(adc, dma); 
     adc_dds(adc, dds); 
+
+    // Set the EOC interrupt 
+    adc_eocie(adc, eocie); 
 
     // Set overrun interrupt 
     adc_ovrie(adc, ovrie); 
