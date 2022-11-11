@@ -34,7 +34,7 @@
 //================================================================================
 // Macros 
 
-#define ADC_STAB_TIME 10   // Stabilization time in ms for ADC after being turned on 
+#define ADC_STAB_TIME 10   // Stabilization time (ms) for ADC after being turned on 
 
 //================================================================================
 
@@ -43,7 +43,7 @@
 // Enums 
 
 /**
- * @brief 
+ * @brief ADC clock prescalar 
  * 
  * @details 
  * 
@@ -57,33 +57,33 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief ADC channel number 
  * 
  * @details 
  * 
  */
 typedef enum {
-    ADC_CHANNEL_0,    // 
-    ADC_CHANNEL_1,    // 
-    ADC_CHANNEL_2,    // 
-    ADC_CHANNEL_3,    // 
-    ADC_CHANNEL_4,    // 
-    ADC_CHANNEL_5,    // 
-    ADC_CHANNEL_6,    // 
-    ADC_CHANNEL_7,    // 
-    ADC_CHANNEL_8,    // 
-    ADC_CHANNEL_9,    // 
-    ADC_CHANNEL_10,    // 
-    ADC_CHANNEL_11,    // 
-    ADC_CHANNEL_12,    // 
-    ADC_CHANNEL_13,    // 
-    ADC_CHANNEL_14,    // 
-    ADC_CHANNEL_15     // 
+    ADC_CHANNEL_0, 
+    ADC_CHANNEL_1, 
+    ADC_CHANNEL_2, 
+    ADC_CHANNEL_3, 
+    ADC_CHANNEL_4, 
+    ADC_CHANNEL_5, 
+    ADC_CHANNEL_6, 
+    ADC_CHANNEL_7, 
+    ADC_CHANNEL_8, 
+    ADC_CHANNEL_9, 
+    ADC_CHANNEL_10, 
+    ADC_CHANNEL_11, 
+    ADC_CHANNEL_12, 
+    ADC_CHANNEL_13, 
+    ADC_CHANNEL_14, 
+    ADC_CHANNEL_15  
 } adc_channel_t; 
 
 
 /**
- * @brief 
+ * @brief Sampling cycles selection 
  * 
  * @details 
  * 
@@ -101,7 +101,7 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief Resolution selection 
  * 
  * @details 
  * 
@@ -115,33 +115,33 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief Sequence number 
  * 
  * @details 
  * 
  */
 typedef enum {
-    ADC_SEQ_1 = 1,    // 
-    ADC_SEQ_2,        // 
-    ADC_SEQ_3,        // 
-    ADC_SEQ_4,        // 
-    ADC_SEQ_5,        // 
-    ADC_SEQ_6,        // 
-    ADC_SEQ_7,        // 
-    ADC_SEQ_8,        // 
-    ADC_SEQ_9,        // 
-    ADC_SEQ_10,       // 
-    ADC_SEQ_11,       // 
-    ADC_SEQ_12,       // 
-    ADC_SEQ_13,       // 
-    ADC_SEQ_14,       // 
-    ADC_SEQ_15,       // 
-    ADC_SEQ_16        // 
+    ADC_SEQ_1 = 1, 
+    ADC_SEQ_2,  
+    ADC_SEQ_3,  
+    ADC_SEQ_4,  
+    ADC_SEQ_5,  
+    ADC_SEQ_6,  
+    ADC_SEQ_7,  
+    ADC_SEQ_8,  
+    ADC_SEQ_9,  
+    ADC_SEQ_10, 
+    ADC_SEQ_11, 
+    ADC_SEQ_12, 
+    ADC_SEQ_13, 
+    ADC_SEQ_14, 
+    ADC_SEQ_15, 
+    ADC_SEQ_16 
 } adc_seq_num_t; 
 
 
 /**
- * @brief 
+ * @brief EOC selection 
  * 
  * @details 
  * 
@@ -153,50 +153,50 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief EOC interrupt selection 
  * 
  * @details 
  * 
  */
 typedef enum {
-    ADC_EOC_INT_DISABLE,   // 
-    ADC_EOC_INT_ENABLE,   // 
+    ADC_EOC_INT_DISABLE,   // Disable EOC interrupt 
+    ADC_EOC_INT_ENABLE     // Enable EOC interrupt 
 } adc_eoc_int_t; 
 
 
 /**
- * @brief 
+ * @brief Scan mode selection 
  * 
  * @details 
  * 
  */
 typedef enum {
-    ADC_SCAN_DISABLE,   // Disable SCAN mode 
-    ADC_SCAN_ENABLE     // Enable SCAN mode 
+    ADC_SCAN_DISABLE,   // Disable scan mode 
+    ADC_SCAN_ENABLE     // Enable scan mode 
 } adc_scan_t; 
 
 
 /**
- * @brief 
+ * @brief Continuous mode selection 
  * 
  * @details 
  * 
  */
 typedef enum {
-    ADC_CONT_DISABLE,   // Disable CONT mode (single conversion mode) 
-    ADC_CONT_ENABLE     // Enable CONT mode 
+    ADC_CONT_DISABLE,   // Disable continuous mode (single conversion mode) 
+    ADC_CONT_ENABLE     // Enable continuous mode 
 } adc_cont_t; 
 
 
 /**
- * @brief DMA mode 
+ * @brief DMA mode selection 
  * 
  * @details 
  * 
  */
 typedef enum {
-    ADC_DMA_DISABLE,   // 
-    ADC_DMA_ENABLE     // 
+    ADC_DMA_DISABLE,   // Disable DMA for ADC 
+    ADC_DMA_ENABLE     // Enable DMA for ADC 
 } adc_dma_t; 
 
 
@@ -213,50 +213,50 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief Watchdog selection 
  * 
  * @details 
  * 
  */
 typedef enum {
-    ADC_WD_DISABLE,   // 
-    ADC_WD_ENABLE     // 
+    ADC_WD_DISABLE,   // Disable the watchdog 
+    ADC_WD_ENABLE     // Enable the watchdog 
 } adc_wd_t; 
 
 
 /**
- * @brief 
+ * @brief Watchdog single channel selection 
  * 
  * @details 
  * 
  */
 typedef enum {
-    ADC_WD_SC_DISABLE,   // 
-    ADC_WD_SC_ENABLE     // 
+    ADC_WD_SC_DISABLE,   // Disable the watchdog single channel selection 
+    ADC_WD_SC_ENABLE     // Enable the watchdog single channel selection 
 } adc_wd_sc_t; 
 
 
 /**
- * @brief 
+ * @brief Watchdog interrupt selection 
  * 
  * @details 
  * 
  */
 typedef enum {
-    ADC_WD_INT_DISABLE,   // 
-    ADC_WD_INT_ENABLE     // 
+    ADC_WD_INT_DISABLE,   // Disable the watchdog interrupt 
+    ADC_WD_INT_ENABLE     // Enable the watchdog interrupt 
 } adc_awdie_t; 
 
 
 /**
- * @brief 
+ * @brief Overrun interrupt selection 
  * 
  * @details 
  * 
  */
 typedef enum {
-    ADC_OVR_INT_DISABLE,   // 
-    ADC_OVR_INT_ENABLE     // 
+    ADC_OVR_INT_DISABLE,   // Disable the overrun interrupt 
+    ADC_OVR_INT_ENABLE     // Enable the overrun interrupt 
 } adc_ovrie_t; 
 
 //================================================================================
