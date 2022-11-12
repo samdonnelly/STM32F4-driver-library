@@ -27,20 +27,28 @@
 /**
  * @brief ADC data register read 
  * 
- * @details 
+ * @details Reads the data register to get the convered ADC value. This function is only 
+ *          used by the read functions that are called only when DMA is not used. 
  * 
- * @param adc 
- * @return uint16_t 
+ * @see adc_read_single
+ * @see adc_scan_seq
+ * 
+ * @param adc : pointer to the ADC port used 
+ * @return uint16_t : converted ADC value 
  */
-uint16_t adc_dr(
-    ADC_TypeDef *adc); 
+uint16_t adc_dr(ADC_TypeDef *adc); 
 
 
 /**
  * @brief Wait for start bit to set 
  * 
- * @details 
+ * @details After triggering the start of an ADC conversion, the hardware will indicate 
+ *          when the conversion has started. This function is called immediately after 
+ *          adc_start and is used to wait until the conversion has started before proceeding. 
  * 
+ * @see adc_start 
+ * 
+ * @param adc : pointer to the ADC port used 
  */
 void adc_start_wait(ADC_TypeDef *adc); 
 
@@ -48,13 +56,16 @@ void adc_start_wait(ADC_TypeDef *adc);
 /**
  * @brief ADC end of conversion 
  * 
- * @details 
- *          Set when the conversion of a regular group of channels is complete. 
- *          Cleared by reading the data register. 
- *          
- *          0 --> conversion (EOCS=0) or sequence of conversions (EOCS=1) not complete 
- *          1 --> conversion (EOCS=0) or sequence of conversions (EOCS=1) complete 
+ * @details This function is used to wait for the end of conversion (EOC) flag to set. The 
+ *          EOC flag can be set either at the end of each conversion or at the end of a 
+ *          sequence of conversions depending on the configuration. This function is used 
+ *          in the read functions to indicate when to read the data register. After reading 
+ *          the data register then the EOC flag will clear. 
  * 
+ * @see adc_read_single
+ * @see adc_scan_seq
+ * 
+ * @param adc : pointer to the ADC port used 
  */
 void adc_eoc_wait(ADC_TypeDef *adc); 
 
@@ -64,7 +75,7 @@ void adc_eoc_wait(ADC_TypeDef *adc);
  * 
  * @details 
  * 
- * @param adc 
+ * @param adc : pointer to the common ADC port used 
  * @param prescalar 
  */
 void adc_prescalar(
@@ -78,7 +89,7 @@ void adc_prescalar(
  * @details 
  *          // TODO move prototype to source - only to be used once during init 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param resolution 
  */
 void adc_res(
@@ -93,7 +104,7 @@ void adc_res(
  * 
  * @see adc_eoc_wait 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param eoc_select 
  */
 void adc_eoc_select(
@@ -106,7 +117,7 @@ void adc_eoc_select(
  * 
  * @details 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param eocie 
  */
 void adc_eocie(
@@ -119,7 +130,7 @@ void adc_eocie(
  * 
  * @details 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param scan 
  */
 void adc_scan(
@@ -132,7 +143,7 @@ void adc_scan(
  * 
  * @details 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param cont 
  */
 void adc_cont(
@@ -145,7 +156,7 @@ void adc_cont(
  * 
  * @details 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param dma 
  */
 void adc_dma(
@@ -158,7 +169,7 @@ void adc_dma(
  * 
  * @details 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param dds 
  */
 void adc_dds(
@@ -171,6 +182,7 @@ void adc_dds(
  * 
  * @details 
  * 
+ * @param adc : pointer to the ADC port used 
  * @param wd 
  */
 void adc_awden(
@@ -183,6 +195,7 @@ void adc_awden(
  * 
  * @details 
  * 
+ * @param adc : pointer to the ADC port used 
  * @param wdsc 
  */
 void adc_awdsgl(
@@ -195,7 +208,7 @@ void adc_awdsgl(
  * 
  * @details Select the input channel to be guarded by the analog watchdog. 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param adc_channel 
  */
 void adc_wd_chan_select(
@@ -208,7 +221,7 @@ void adc_wd_chan_select(
  * 
  * @details 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param awdie 
  */
 void adc_awdie(
@@ -221,7 +234,7 @@ void adc_awdie(
  * 
  * @details 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param ovrie 
  */
 void adc_ovrie(
@@ -234,7 +247,7 @@ void adc_ovrie(
  * 
  * @details 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param channel 
  * @param smp 
  */
@@ -249,7 +262,7 @@ void adc_smp(
  * 
  * @details 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  * @param hi_thresh 
  * @param lo_thresh 
  */
@@ -264,10 +277,9 @@ void adc_wd_thresh(
  * 
  * @details Clears all data in the SQRx registers which includes sequence order and length. 
  * 
- * @param adc 
+ * @param adc : pointer to the ADC port used 
  */
-void adc_seq_clear(
-    ADC_TypeDef *adc); 
+void adc_seq_clear(ADC_TypeDef *adc); 
 
 //================================================================================
 
