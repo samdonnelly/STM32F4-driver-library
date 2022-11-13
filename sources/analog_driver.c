@@ -73,10 +73,16 @@ void adc_eoc_wait(ADC_TypeDef *adc);
 /**
  * @brief ADC prescalar 
  * 
- * @details 
+ * @details Sets the prescalar for the ADC circuitry. The prescalar divides the APB2 clock 
+ *          to set the ADC clock speed. The ADC has a maximum clock speed that it can operate 
+ *          at so dividing the APB2 clock is necessary. See the device datasheet for the max 
+ *          acceptable clock speed. 
+ * 
+ * @see adc_prescalar_t
+ * @see adc_port_init
  * 
  * @param adc : pointer to the common ADC port used 
- * @param prescalar 
+ * @param prescalar : clock divider that determines the ADC clock speed 
  */
 void adc_prescalar(
     ADC_Common_TypeDef *adc,
@@ -84,13 +90,16 @@ void adc_prescalar(
 
 
 /**
- * @brief 
+ * @brief ADC resolution 
  * 
- * @details 
- *          // TODO move prototype to source - only to be used once during init 
+ * @details Sets the resolution of the ADC conversions. The resolution is the number of bits 
+ *          used to represent the converted value meaning that a higher resolution will 
+ *          produce a more granular or precise result than a lower resolution. 
+ * 
+ * @see adc_res_t
  * 
  * @param adc : pointer to the ADC port used 
- * @param resolution 
+ * @param resolution : conversion resolution 
  */
 void adc_res(
     ADC_TypeDef *adc, 
@@ -100,12 +109,14 @@ void adc_res(
 /**
  * @brief End of Conversion (EOC) selection 
  * 
- * @details 
+ * @details Selects the EOC behavior for the ADC port. The EOC flag can either be set at the 
+ *          end of each conversion or at the end of a sequence of conversions. The EOC flag 
+ *          indicates when the data register is ready to be read. 
  * 
- * @see adc_eoc_wait 
+ * @see adc_eoc_config_t
  * 
  * @param adc : pointer to the ADC port used 
- * @param eoc_select 
+ * @param eoc_select : end of conversion behavior 
  */
 void adc_eoc_select(
     ADC_TypeDef *adc, 
@@ -113,12 +124,15 @@ void adc_eoc_select(
 
 
 /**
- * @brief EOC interrupt 
+ * @brief End of Conversion (EOC) interrupt 
  * 
- * @details 
+ * @details Selects the EOC interrupt configuration. This chooses whether to disable or enable 
+ *          the interrupt triggered when the EOC flag is set. 
+ * 
+ * @see adc_eoc_int_t
  * 
  * @param adc : pointer to the ADC port used 
- * @param eocie 
+ * @param eocie : EOC interrupt configuration 
  */
 void adc_eocie(
     ADC_TypeDef *adc, 
