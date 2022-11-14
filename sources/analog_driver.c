@@ -142,10 +142,13 @@ void adc_eocie(
 /**
  * @brief SCAN mode configuration 
  * 
- * @details 
+ * @details Allows for enabling or disabling of scan mode. Scan mode reads all the ADC 
+ *          conversions in the sequence one after the other automatically. 
+ * 
+ * @see adc_scan_t
  * 
  * @param adc : pointer to the ADC port used 
- * @param scan 
+ * @param scan : scan mode configuration 
  */
 void adc_scan(
     ADC_TypeDef *adc, 
@@ -155,10 +158,14 @@ void adc_scan(
 /**
  * @brief CONT mode 
  * 
- * @details 
+ * @details Allows for enabling and disabling of continuous mode. Continuous mode makes the 
+ *          next ADC conversion happen automatically after one conversion finishes. If in scan 
+ *          mode then after a scan is complete the scan will start over again. 
+ * 
+ * @see adc_cont_t
  * 
  * @param adc : pointer to the ADC port used 
- * @param cont 
+ * @param cont : continuous mode configuration 
  */
 void adc_cont(
     ADC_TypeDef *adc, 
@@ -168,10 +175,11 @@ void adc_cont(
 /**
  * @brief DMA Mode 
  * 
- * @details 
+ * @details Allows for enabling and disabling of the ADC DMA. The DMA will perform ADC 
+ *          conversions in the background. 
  * 
  * @param adc : pointer to the ADC port used 
- * @param dma 
+ * @param dma : DMA mode configuration 
  */
 void adc_dma(
     ADC_TypeDef *adc, 
@@ -181,10 +189,13 @@ void adc_dma(
 /**
  * @brief DMA disable 
  * 
- * @details 
+ * @details Allows for enabling and disabling of the DMA disable feature. If enabled then this 
+ *          feature will disable the DMA after the last transfer. 
+ * 
+ * @see adc_dds_t
  * 
  * @param adc : pointer to the ADC port used 
- * @param dds 
+ * @param dds : DMA disable configuration 
  */
 void adc_dds(
     ADC_TypeDef *adc, 
@@ -194,10 +205,14 @@ void adc_dds(
 /**
  * @brief Analog watchdog enable on regular channels 
  * 
- * @details 
+ * @details Select the watchdog configuration. If enabled then the watchdog will monitor the 
+ *          input voltage on the channels and trigger the watchdog flag if a voltage threshold 
+ *          is surpassed. 
+ * 
+ * @see adc_wd_t
  * 
  * @param adc : pointer to the ADC port used 
- * @param wd 
+ * @param wd : watchdog configuration 
  */
 void adc_awden(
     ADC_TypeDef *adc, 
@@ -208,6 +223,8 @@ void adc_awden(
  * @brief Enable the watchdog on a single channel in scan mode
  * 
  * @details 
+ * 
+ * @see adc_wd_sc_t
  * 
  * @param adc : pointer to the ADC port used 
  * @param wdsc 
