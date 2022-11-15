@@ -222,12 +222,15 @@ void adc_awden(
 /**
  * @brief Enable the watchdog on a single channel in scan mode
  * 
- * @details 
+ * @details Enables the watchdog on the channel identified using the adc_wd_sc_t function. 
+ * 
+ * @see adc_wd_chan_select
+ * @see adc_wd_sc_t
  * 
  * @see adc_wd_sc_t
  * 
  * @param adc : pointer to the ADC port used 
- * @param wdsc 
+ * @param wdsc : watchdog single channel configuration 
  */
 void adc_awdsgl(
     ADC_TypeDef *adc, 
@@ -239,8 +242,10 @@ void adc_awdsgl(
  * 
  * @details Select the input channel to be guarded by the analog watchdog. 
  * 
+ * @see adc_channel_t
+ * 
  * @param adc : pointer to the ADC port used 
- * @param adc_channel 
+ * @param adc_channel : ADC channel guarded by watchdog 
  */
 void adc_wd_chan_select(
     ADC_TypeDef *adc, 
@@ -250,10 +255,14 @@ void adc_wd_chan_select(
 /**
  * @brief Analog watchdog interrupt 
  * 
- * @details 
+ * @details Configures the interrupt for the watchdog. If the watchdog exceeds either its upper 
+ *          or lower voltage threshold (watchdog lfag set) then, if set, the watchdog interrupt 
+ *          will trip. 
+ * 
+ * @see adc_awdie_t
  * 
  * @param adc : pointer to the ADC port used 
- * @param awdie 
+ * @param awdie : watchdog interrupt configuration 
  */
 void adc_awdie(
     ADC_TypeDef *adc, 
@@ -263,10 +272,14 @@ void adc_awdie(
 /**
  * @brief Overrun interrupt 
  * 
- * @details 
+ * @details Configures the interrupt for the data overrun. The overrun bit will set if there 
+ *          has been a loss of data (data overwritten before being read in the data register) 
+ *          and this interrupt can be triggered when the overrun bit sets. 
+ * 
+ * @see adc_ovrie_t 
  * 
  * @param adc : pointer to the ADC port used 
- * @param ovrie 
+ * @param ovrie : overrun interrupt configuration 
  */
 void adc_ovrie(
     ADC_TypeDef *adc, 
@@ -276,11 +289,15 @@ void adc_ovrie(
 /**
  * @brief Set the sample time for the channel 
  * 
- * @details 
+ * @details Configure the sampling time of the ADC conversion on a specific channel. Longer 
+ *          sampling times lead to more accurate readings but take more time and vice versa. 
+ * 
+ * @see adc_channel_t
+ * @see adc_smp_cycles_t
  * 
  * @param adc : pointer to the ADC port used 
- * @param channel 
- * @param smp 
+ * @param channel : ADC channel being configured 
+ * @param smp : sampling tie configuration 
  */
 void adc_smp(
     ADC_TypeDef *adc, 
@@ -289,13 +306,16 @@ void adc_smp(
 
 
 /**
- * @brief 
+ * @brief Set the watchdog thresholds 
  * 
- * @details 
+ * @details Set the upper and lower voltage thresholds of the watchdog. If the ADC voltage 
+ *          does not fall between the threshold boundaries then the watchdog flag will be set. 
+ *          Note that the threshold values are up to 16 bit integers and are scaled to match the 
+ *          ADC voltage range. 
  * 
  * @param adc : pointer to the ADC port used 
- * @param hi_thresh 
- * @param lo_thresh 
+ * @param hi_thresh : upper watchdog threshold 
+ * @param lo_thresh : lower watchdog threshold 
  */
 void adc_wd_thresh(
     ADC_TypeDef *adc, 
