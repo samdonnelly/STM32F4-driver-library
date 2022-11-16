@@ -78,7 +78,7 @@ void dma_cm(
 /**
  * @brief 
  * 
- * @details 
+ * @details Higher priority streams will be served before lower priority streams. 
  *          These bits can only be written when EN=0. 
  * 
  * @param dma_stream 

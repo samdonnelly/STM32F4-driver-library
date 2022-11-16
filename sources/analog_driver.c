@@ -393,6 +393,7 @@ void adc_pin_init(
     // Configure the GPIO pin for analog mode 
     // TODO change this to the gpio_pin_init function and test it 
     gpio_moder(gpio, MODER_ANALOG, adc_pin); 
+    // gpio_pin_init(gpio, adc_pin, MODER_ANALOG, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
 
     // Set the sample time for the channel 
     adc_smp(adc, adc_channel, smp);
@@ -447,13 +448,13 @@ uint16_t adc_read_single(
     // Clear the existing sequence 
     adc_seq_clear(adc); 
 
-    // Set the select channel as the next in the sequence 
+    // Set the selected channel as the next in the sequence 
     adc_seq(adc, channel, ADC_SEQ_1); 
 
     // Set the sequence length 
     adc_seq_len_set(adc, ADC_SEQ_1); 
 
-    // Start and ADC conversion 
+    // Start the ADC conversion 
     adc_start(adc); 
 
     // Wait for end of ADC conversion 
@@ -470,7 +471,7 @@ void adc_scan_seq(
     adc_seq_num_t seq_len, 
     uint16_t *adc_data)
 {
-    // Start and ADC conversion 
+    // Start the ADC conversion 
     adc_start(adc); 
 
     // Read the ADC sequence 
@@ -533,7 +534,7 @@ void adc_on(
     ADC_TypeDef *adc)
 {
     adc->CR2 |= (SET_BIT << SHIFT_0); 
-    tim9_delay_ms(ADC_STAB_TIME);       // Give ADC stabilization time 
+    tim9_delay_ms(ADC_STAB_TIME);       // Give ADC time to stabilize 
 }
 
 

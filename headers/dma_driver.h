@@ -26,67 +26,58 @@
 
 
 //================================================================================
-// Macros 
-//================================================================================
-
-
-//================================================================================
 // Enums 
 
 /**
- * @brief 
+ * @brief DMA channel number 
  * 
- * @details 
- * 
+ * @details DMA ports have streams that they control and each stream can be assigned a 
+ *          channel. Each stream can only have one channel assigned but there are up to 7 
+ *          channels for the stream to use and the channel dictates what peripheral the 
+ *          stream working with. 
  */
 typedef enum {
-    DMA_CHNL_0,   // 
-    DMA_CHNL_1,   // 
-    DMA_CHNL_2,   // 
-    DMA_CHNL_3,   // 
-    DMA_CHNL_4,   // 
-    DMA_CHNL_5,   // 
-    DMA_CHNL_6,   // 
-    DMA_CHNL_7    // 
+    DMA_CHNL_0, 
+    DMA_CHNL_1, 
+    DMA_CHNL_2, 
+    DMA_CHNL_3, 
+    DMA_CHNL_4, 
+    DMA_CHNL_5, 
+    DMA_CHNL_6, 
+    DMA_CHNL_7 
 } dma_channel_t; 
 
 
 /**
- * @brief 
+ * @brief DMA stream number 
  * 
- * @details 
- * 
+ * @details Each DMA port has up to 7 possible streams that can be implemented simultaneously. 
+ *          The streams can be assigned to certain peripherals using their available channels. 
  */
 typedef enum {
-    DMA_STREAM_0,    // 
-    DMA_STREAM_1,    // 
-    DMA_STREAM_2,    // 
-    DMA_STREAM_3,    // 
-    DMA_STREAM_4,    // 
-    DMA_STREAM_5,    // 
-    DMA_STREAM_6,    // 
-    DMA_STREAM_7     // 
+    DMA_STREAM_0, 
+    DMA_STREAM_1, 
+    DMA_STREAM_2, 
+    DMA_STREAM_3, 
+    DMA_STREAM_4, 
+    DMA_STREAM_5, 
+    DMA_STREAM_6, 
+    DMA_STREAM_7 
 } dma_stream_t; 
 
 
 /**
  * @brief Data transfer direction 
- * 
- * @details 
- * 
  */
 typedef enum {
-    DMA_DIR_PM,   // Peripheral-to-memory 
-    DMA_DIR_MP,   // Memory-to-peripheral 
-    DMA_DIR_MM    // Memory-to-memory 
+    DMA_DIR_PM,      // Peripheral-to-memory 
+    DMA_DIR_MP,      // Memory-to-peripheral 
+    DMA_DIR_MM       // Memory-to-memory 
 } dma_direction_t; 
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief DMA circular mode configuration 
  */
 typedef enum {
     DMA_CM_DISABLE,   // Circular mode disabled 
@@ -95,10 +86,7 @@ typedef enum {
 
 
 /**
- * @brief Priority level 
- * 
- * @details 
- * 
+ * @brief Stream priority level 
  */
 typedef enum {
     DMA_PRIOR_LOW,    // Low priority 
@@ -109,23 +97,17 @@ typedef enum {
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief Size of individual piece of data being transferred by the DMA 
  */
 typedef enum {
-    DMA_DATA_SIZE_BYTE,  // Byte (8-bits) 
-    DMA_DATA_SIZE_HALF,  // Half-word (16-bits) 
-    DMA_DATA_SIZE_WORD   // Word (32-bits) 
+    DMA_DATA_SIZE_BYTE,      // Byte (8-bits) 
+    DMA_DATA_SIZE_HALF,      // Half-word (16-bits) 
+    DMA_DATA_SIZE_WORD       // Word (32-bits) 
 } dma_data_size_t; 
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief Source and destination buffer address behavior 
  */
 typedef enum {
     DMA_ADDR_FIXED,      // Address pointer is fixed 
@@ -134,58 +116,43 @@ typedef enum {
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief Transfer complete interrupt configuration 
  */
 typedef enum {
-    DMA_TCIE_DISABLE,   // 
-    DMA_TCIE_ENABLE     // 
+    DMA_TCIE_DISABLE,   // Transfer complete interrupt disabled 
+    DMA_TCIE_ENABLE     // Transfer complete interrupt enabled 
 } dma_tcie_t; 
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief Half transfer interrupt configuration 
  */
 typedef enum {
-    DMA_HTIE_DISABLE,   // 
-    DMA_HTIE_ENABLE     // 
+    DMA_HTIE_DISABLE,   // Data half transfer interrupt disable 
+    DMA_HTIE_ENABLE     // Data half transfer interrupt enable 
 } dma_htie_t; 
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief Transfer error interrupt configuration 
  */
 typedef enum {
-    DMA_TEIE_DISABLE,   // 
-    DMA_TEIE_ENABLE     // 
+    DMA_TEIE_DISABLE,   // Transfer error interrupt disable 
+    DMA_TEIE_ENABLE     // Transfer error interrupt enable 
 } dma_teie_t; 
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief Direct mode error interrupt configuration 
  */
 typedef enum {
-    DMA_DMEIE_DISABLE,   // 
-    DMA_DMEIE_ENABLE     // 
+    DMA_DMEIE_DISABLE,   // Direct mode transfer error interrupt disable 
+    DMA_DMEIE_ENABLE     // Direct mode transfer error interrupt enable 
 } dma_dmeie_t; 
 
 
 /**
- * @brief FIFO error interrupt 
- * 
- * @details 
- * 
+ * @brief FIFO error interrupt configuration 
  */
 typedef enum {
     DMA_FEIE_DISABLE,   // Disable the FIFO error interrupt 
@@ -194,18 +161,15 @@ typedef enum {
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief FIFO status 
  */
 typedef enum {
-    DMA_FIFO_STAT_0,       // 0 <= FIFO Level < 1/4 
-    DMA_FIFO_STAT_1,       // 1/4 <= FIFO Level < 1/2 
-    DMA_FIFO_STAT_2,       // 1/2 <= FIFO Level < 3/4 
-    DMA_FIFO_STAT_3,       // 3/4 <= FIFO Level < FULL 
-    DMA_FIFO_STAT_EMPTY,   // Empty 
-    DMA_FIFO_STAT_FULL,    // Full 
+    DMA_FIFO_STAT_0,         // 0 <= FIFO Level < 1/4 
+    DMA_FIFO_STAT_1,         // 1/4 <= FIFO Level < 1/2 
+    DMA_FIFO_STAT_2,         // 1/2 <= FIFO Level < 3/4 
+    DMA_FIFO_STAT_3,         // 3/4 <= FIFO Level < FULL 
+    DMA_FIFO_STAT_EMPTY,     // Empty 
+    DMA_FIFO_STAT_FULL,      // Full 
 } dma_fifo_status_t; 
 
 
