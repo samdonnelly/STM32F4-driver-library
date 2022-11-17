@@ -209,26 +209,26 @@ typedef dma_fifo_status_t FIFO_STATUS;
 /**
  * @brief Initialize the DMA stream 
  * 
- * @details This function defines the configuration of a specified stream in a specified 
+ * @details This function defines the characteristics of a specified stream in a specified 
  *          port. This function is called once for each stream being configured. 
  * 
- * @see 
- * @see 
- * @see 
- * @see 
- * @see 
- * @see 
+ * @see dma_channel_t
+ * @see dma_direction_t
+ * @see dma_cm_t
+ * @see dma_priority_t
+ * @see dma_addr_inc_mode_t
+ * @see dma_data_size_t
  * 
- * @param dma : 
- * @param dma_stream : 
- * @param channel : 
- * @param dir : 
- * @param cm : 
- * @param priority : 
- * @param minc : 
- * @param pinc : 
- * @param msize : 
- * @param psize : 
+ * @param dma : pointer to DMA port to initialize  
+ * @param dma_stream : pointer to DMA port stream to initialize  
+ * @param channel : channel of stream to use 
+ * @param dir : data transfer direction 
+ * @param cm : circular mode configuration 
+ * @param priority : stream priority configuration 
+ * @param minc : memory increment configuration 
+ * @param pinc : peripheral increment configuration 
+ * @param msize : memory data size 
+ * @param psize : peripheral data size 
  */
 void dma_stream_init(
     DMA_TypeDef *dma, 
@@ -246,12 +246,18 @@ void dma_stream_init(
 /**
  * @brief Configure the DMA stream 
  * 
- * @details 
+ * @details This functions configures the DMA data characteristics such as the number 
+ *          of data items in a transfer and the source and destination addresses. At the end 
+ *          of the function the stream is enabled. This function is separate from the stream 
+ *          initialization function because these data characteristics need to be reconfigured 
+ *          in the event of a transfer fault. 
  * 
- * @param dma_stream 
- * @param per_addr 
- * @param mem_addr 
- * @param data_tems 
+ * @see dma_stream_init
+ * 
+ * @param dma_stream : pointer to DMA port stream to configure 
+ * @param per_addr : peripheral address 
+ * @param mem_addr : memory address 
+ * @param data_items : number of items involved in the DMA transfer 
  */
 void dma_stream_config(
     DMA_Stream_TypeDef *dma_stream, 
