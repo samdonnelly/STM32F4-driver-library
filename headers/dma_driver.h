@@ -169,27 +169,21 @@ typedef enum {
     DMA_FIFO_STAT_2,         // 1/2 <= FIFO Level < 3/4 
     DMA_FIFO_STAT_3,         // 3/4 <= FIFO Level < FULL 
     DMA_FIFO_STAT_EMPTY,     // Empty 
-    DMA_FIFO_STAT_FULL,      // Full 
+    DMA_FIFO_STAT_FULL       // Full 
 } dma_fifo_status_t; 
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief FIFO configuration 
  */
 typedef enum {
-    DMA_DIRECT_MODE,  // Direct mode (no FIFO threshold used) 
-    DMA_FIFO_MODE     // FIFO mode 
+    DMA_DIRECT_MODE,    // Direct mode (no FIFO threshold used) 
+    DMA_FIFO_MODE       // FIFO mode 
 } dma_fifo_mode_t; 
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief FIFO threshold configuration 
  */
 typedef enum {
     DMA_FTH_1QTR,       // 1/4 full FIFO 
@@ -215,7 +209,15 @@ typedef dma_fifo_status_t FIFO_STATUS;
 /**
  * @brief Initialize the DMA stream 
  * 
- * @details 
+ * @details This function defines the configuration of a specified stream in a specified 
+ *          port. This function is called once for each stream being configured. 
+ * 
+ * @see 
+ * @see 
+ * @see 
+ * @see 
+ * @see 
+ * @see 
  * 
  * @param dma : 
  * @param dma_stream : 
