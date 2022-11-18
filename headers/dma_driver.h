@@ -267,14 +267,26 @@ void dma_stream_config(
 
 
 /**
- * @brief 
+ * @brief Configure FIFO mode 
  * 
- * @details 
+ * @details This function allows for configuring the FIFO for each stream. It is separate from 
+ *          the other initialization/configuration functions so that it can be ignored if not 
+ *          needed. FIFO mode allows for deciding how full to fill the FIFO with DMA data 
+ *          from the source before draining the FIFO buffer to the destination. An interrupt 
+ *          can also be configured for FIFO mode to indicate when the FIFO has reached it's 
+ *          threshold. <br>
+ *          
+ *          When FIFO mode is not used the system is in direct mode which means data will 
+ *          be sent to the destination as soon as it enters the FIFO from the source. 
  * 
- * @param dma_stream 
- * @param mode 
- * @param fth 
- * @param feie 
+ * @see dma_fifo_mode_t
+ * @see dma_fifo_threshold_t
+ * @see dma_feie_t
+ * 
+ * @param dma_stream : pointer to the DMA port stream to configure 
+ * @param mode : FIFO mode configuration 
+ * @param fth : FIFO threshold 
+ * @param feie : FIFO interrupt configuration 
  */
 void dma_fifo_config(
     DMA_Stream_TypeDef *dma_stream, 
@@ -284,15 +296,22 @@ void dma_fifo_config(
 
 
 /**
- * @brief 
+ * @brief Configure DMA interrupts 
  * 
- * @details 
+ * @details Allows for configuring what interrupts to use for each DMA stream. Each DMA stream 
+ *          will has it's own interrupt handler that it triggers. Interrupts can be enabled 
+ *          for full and half transfers as well as transfer errors. 
  * 
- * @param dma_stream 
- * @param tcie 
- * @param htie 
- * @param teie 
- * @param dmeie 
+ * @see dma_tcie_t
+ * @see dma_htie_t
+ * @see dma_teie_t
+ * @see dma_dmeie_t
+ * 
+ * @param dma_stream : pointer to the DMA port stream to configure 
+ * @param tcie : transfer complete interrupt configuration 
+ * @param htie : half transfer interrupt configuration 
+ * @param teie : transfer error interrupt configuration 
+ * @param dmeie : direct mode error interrupt configuration 
  */
 void dma_int_config(
     DMA_Stream_TypeDef *dma_stream,  
@@ -308,24 +327,34 @@ void dma_int_config(
 // DMA interrupt status registers 
 
 /**
- * @brief Clear all flags in all streams 
+ * @brief Clear all interrupt flags in all streams 
  * 
- * @details 
+ * @details Interrupt flags for all streams are grouped together in a few registers. This 
+ *          function clears the interrupts flags for all those registers and subsequently 
+ *          all the streams. This function is needed by interrupt handlers in order to exit 
+ *          the handler. 
  * 
- * @param dma 
+ * // TODO is a more granular interrupt flag clear method needed? 
+ * 
+ * @param dma : pointer to DMA port of which to clear flags 
  */
 void dma_clear_int_flags(
     DMA_TypeDef *dma); 
 
 
 /**
- * @brief 
+ * @brief Read the stream interrupt flags 
  * 
- * @details 
+ * @details This function reads all the DMA interrupt flags from all streams. This is done 
+ *          by reading the high and low stream number interrupt flag registers and storing 
+ *          the contents in the arguments passed to the function. It is left to the application 
+ *          to parse the register data as needed. 
  * 
- * @param dma 
- * @param lo_streams 
- * @param hi_streams 
+ * // TODO should there be a more granular flag read method? 
+ * 
+ * @param dma : pointer to the DMA port of which to read the interrupt flags 
+ * @param lo_streams : buffer to store interrupt flags for streams 0-3 
+ * @param hi_streams : buffer to store interrupt flags for streams 4-7 
  */
 void dma_int_flags(
     DMA_TypeDef *dma, 
@@ -339,26 +368,33 @@ void dma_int_flags(
 // DMA Stream x Configuration Register 
 
 /**
- * @brief 
+ * @brief Stream enable 
  * 
- * @details 
- *          Once enabled, a stream is unable to be configured so don't enable the stream 
- *          until this is complete. 
- *          Before enabling to start a new transfer the event flag corresponding to the stream 
- *          in DMA_LISR and DMA_HISR register must be cleared. 
+ * @details This functions enables a DMA stream which is required for it to start operating. 
+ *          Once enabled, a stream is unable to be configured until it is disabled again. <br>
+ *          
+ *          Before enabling, in order to start a new transfer, the interrupt flags for the 
+ *          given stream must be cleared. This is handled during stream initialization but 
+ *          may be require manual clearing if the DMA gets disabled for whatever reason. 
  * 
- * @param dma_stream 
+ * @see dma_stream_disable 
+ * @see dma_clear_int_flags
+ * 
+ * @param dma_stream : pointer to the DMA port stream to enable 
  */
 void dma_stream_enable( 
     DMA_Stream_TypeDef *dma_stream); 
 
 
 /**
- * @brief 
+ * @brief Stream disable 
  * 
- * @details 
+ * @details This function disables the specified DMA stream. This function will wait until 
+ *          register feedback that the stream has been disabled before exiting. <br>
+ *          
+ *          Streams must be disabled to stop their operation and to configure their behavior. 
  * 
- * @param dma_stream 
+ * @param dma_stream : pointer to the DMA port stream to disable 
  */
 void dma_stream_disable(
     DMA_Stream_TypeDef *dma_stream); 
@@ -372,11 +408,13 @@ void dma_stream_disable(
 /**
  * @brief Read the FIFO status 
  * 
- * @details 
+ * @details Reads the current state of the FIFO buffer - i.e. how full the buffer is. 
  *          These bits are not relevant in direct mode. 
  * 
- * @param dma_stream 
- * @return FIFO_STATUS 
+ * @see dma_fifo_status_t
+ * 
+ * @param dma_stream : pointer to the DMA port stream of the FIFO in question 
+ * @return FIFO_STATUS : FIFO buffer level 
  */
 FIFO_STATUS dma_fs(
     DMA_Stream_TypeDef *dma_stream); 

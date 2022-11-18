@@ -26,10 +26,12 @@
 /**
  * @brief Stream status 
  * 
- * @details 
+ * @details Reads the stream enable flag. This is used by the stream disable function 
+ *          to know when a stream is disabled (bit cleared). The enable flag can be cleared 
+ *          by hardware on the DMA end of transfer or if an error occurs. 
  * 
- * @param dma_stream 
- * @return uint8_t 
+ * @param dma_stream : pointer to DMA port stream in question 
+ * @return uint8_t : stream status - 0 = disabled, 1 = enabled 
  */
 uint8_t dma_stream_status(
     DMA_Stream_TypeDef *dma_stream); 
@@ -38,11 +40,15 @@ uint8_t dma_stream_status(
 /**
  * @brief DMA channel select 
  * 
- * @details 
- *          Note: The channel can only be selected when EN=0. 
+ * @details Selects the channel for a given DMA stream. Each stream has up to 8 channels 
+ *          to choose from, each with a different function. Only one channel can be assigned 
+ *          to the stream. <br> 
+ *          Note: The channel can only be selected when the stream is disabled 
  * 
- * @param dma_stream 
- * @param channel 
+ * @see dma_channel_t 
+ * 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param channel : channel to assign to the stream 
  */
 void dma_chsel(
     DMA_Stream_TypeDef *dma_stream, 
@@ -50,12 +56,13 @@ void dma_chsel(
 
 
 /**
- * @brief 
+ * @brief Data transfer direction 
  * 
- * @details 
+ * @details This configures the direction that data is transferred by the DMA - i.e. 
+ *          memory-to-memory, memory-to-peripheral or peripheral-to-memory. 
  * 
- * @param dma_stream 
- * @param dir 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param dir : data transfer direction 
  */
 void dma_dir(
     DMA_Stream_TypeDef *dma_stream, 
@@ -65,10 +72,15 @@ void dma_dir(
 /**
  * @brief Circular mode 
  * 
- * @details 
+ * @details Configures circular mode. Circular mode makes the DMA transfers start over 
+ *          automatically after finishing. If circular mode is not enabled then DMA 
+ *          transfers will stop once complete and will require the stream to be re-enabled 
+ *          to start a new transfer. 
  * 
- * @param dma_stream 
- * @param cm 
+ * @see dma_cm_t
+ * 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param cm : circular mode configuration 
  */
 void dma_cm(
     DMA_Stream_TypeDef *dma_stream, 
@@ -76,13 +88,15 @@ void dma_cm(
 
 
 /**
- * @brief 
+ * @brief Stream priority 
  * 
- * @details Higher priority streams will be served before lower priority streams. 
- *          These bits can only be written when EN=0. 
+ * @details Sets the priority of the DMA stream. Higher priority streams will be served before 
+ *          lower priority streams. These bits can only be written when the stream is disabled. 
  * 
- * @param dma_stream 
- * @param priority 
+ * @see dma_priority_t
+ * 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param priority : stream transfer priority 
  */
 void dma_priority(
     DMA_Stream_TypeDef *dma_stream, 
@@ -90,12 +104,16 @@ void dma_priority(
 
 
 /**
- * @brief 
+ * @brief Memory data size 
  * 
- * @details 
+ * @details Tells the stream the size of the data being transferred from memory. It is 
+ *          recommended to make the memory and peripheral data sizes the same. The memory 
+ *          can act as either the source or the destination. 
  * 
- * @param dma_stream 
- * @param msize 
+ * @see dma_data_size_t
+ * 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param msize : memory data size configuration 
  */
 void dma_msize(
     DMA_Stream_TypeDef *dma_stream, 
@@ -103,12 +121,22 @@ void dma_msize(
 
 
 /**
- * @brief 
+ * @brief Memory address increment 
  * 
- * @details 
+ * @details Defines the behavior of the memory address after transfers. This can either be 
+ *          defined as fixed, meaning the memory address doesn't change after a transfer, or 
+ *          it can be defined as increment, meaning the address will be incremented after 
+ *          each transfer. <br> 
+ *          
+ *          As an example, in peripheral-to-memory transfers such as ADC scan 
+ *          mode using DMA, you want to store more than one conversion in memory to prevent 
+ *          a loss of data. This can be done by getting the DMA to increment to the next address 
+ *          in a buffer automatically using increment mode. 
  * 
- * @param dma_stream 
- * @param minc 
+ * @see dma_addr_inc_mode_t
+ * 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param minc : memory address increment configuration 
  */
 void dma_minc(
     DMA_Stream_TypeDef *dma_stream, 
@@ -116,12 +144,17 @@ void dma_minc(
 
 
 /**
- * @brief 
+ * @brief Peripheral data size 
  * 
- * @details 
+ * @details Tells the stream the size of the data being transferred from the peripheral. It is 
+ *          recommended to make the memory and peripheral data sizes the same. The peripheral 
+ *          can act as either the source or the destination. In memory-to-memory transfers, this 
+ *          peripheral configuration acts as the destination memory configuration. 
  * 
- * @param dma_stream 
- * @param psize 
+ * @see dma_data_size_t
+ * 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param psize : peripheral data size configuration 
  */
 void dma_psize(
     DMA_Stream_TypeDef *dma_stream, 
@@ -129,12 +162,17 @@ void dma_psize(
 
 
 /**
- * @brief 
+ * @brief Peripheral address increment 
  * 
- * @details 
+ * @details Defines the behavior of the peripheral address after transfers. This can either be 
+ *          defined as fixed, meaning the peripheral address doesn't change after a transfer, or 
+ *          it can be defined as increment, meaning the address will be incremented after 
+ *          each transfer. 
  * 
- * @param dma_stream 
- * @param pinc 
+ * @see dma_addr_inc_mode_t
+ * 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param pinc : peripheral address increment configuration 
  */
 void dma_pinc(
     DMA_Stream_TypeDef *dma_stream, 
@@ -144,9 +182,10 @@ void dma_pinc(
 /**
  * @brief Transfer complete interrupt 
  * 
- * @details 
+ * @see dma_tcie_t
  * 
- * @param tcie : 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param tcie : transfer complete interrupt configuration 
  */
 void dma_tcie(
     DMA_Stream_TypeDef *dma_stream,  
@@ -156,9 +195,10 @@ void dma_tcie(
 /**
  * @brief Half transfer interrupt 
  * 
- * @details 
+ * @see dma_htie_t
  * 
- * @param htie : 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param htie : half transfer interrupt configuration 
  */
 void dma_htie(
     DMA_Stream_TypeDef *dma_stream,  
@@ -168,9 +208,10 @@ void dma_htie(
 /**
  * @brief Transfer error interrupt 
  * 
- * @details 
+ * @see dma_teie_t
  * 
- * @param teie : 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param teie : transfer error interrupt configuration 
  */
 void dma_teie(
     DMA_Stream_TypeDef *dma_stream,  
@@ -180,9 +221,10 @@ void dma_teie(
 /**
  * @brief Direct mode error interrupt 
  * 
- * @details 
+ * @see dma_dmeie_t
  * 
- * @param dmeie : 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param dmeie : direct mode error interrupt configuration 
  */
 void dma_dmeie(
     DMA_Stream_TypeDef *dma_stream,  
@@ -190,19 +232,19 @@ void dma_dmeie(
 
 
 /**
- * @brief 
+ * @brief Number of data items to transfer 
  * 
- * @details 
- *          This register can only be written when the stream is disabled. 
- *          When the stream is enabled this register is read only which indicates the 
- *          remaining items to be transmitted. The rgister decrements after each DMA 
- *          transfer. 
- *          Once the transfer is complete, this register can either stay at zero (normal 
- *          mode) or be reloaded automatically with the previosuly programmed value if 
- *          the stream is in circular mode or the stream is enabled again. 
+ * @details Tells the stream the number of data items needed to complete the transfer. 
+ *          This register can only be written when the stream is disabled. When the stream is 
+ *          enabled, this register is read only but can indicate the remaining items to be 
+ *          transmitted. The register decrements after each individual data transfer. Once 
+ *          the transfer is complete, this register can either stay at zero if in non-circular 
+ *          mode, or it can be reloaded automatically with the previosuly programmed value if 
+ *          in circular mode. If in non-circular mode, this register gets reloaded by enabling 
+ *          the stream again. 
  * 
- * @param dma_stream 
- * @param data_items 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param data_items : number of data items in a full transfer 
  */
 void dma_ndt(
     DMA_Stream_TypeDef *dma_stream, 
@@ -210,15 +252,14 @@ void dma_ndt(
 
 
 /**
- * @brief 
+ * @brief Peripheral address 
  * 
- * @details 
- *          Base address of the peripheral data register from/to which the data will be 
- *          read/written. 
- *          This register can only be written to when the stream is disabled. 
+ * @details Tells the stream the base address of the peripheral data register from/to which the 
+ *          data will be read/written if using a peripheral transfer mode. This register can 
+ *          only be written to when the stream is disabled. 
  * 
- * @param dma_stream 
- * @param per_addr 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param per_addr : peripheral address 
  */
 void dma_par(
     DMA_Stream_TypeDef *dma_stream, 
@@ -228,12 +269,13 @@ void dma_par(
 /**
  * @brief Set memory 0 address 
  * 
- * @details 
- *          Base address of memory area 0 from/to which the data will be read/written. 
- *          These bits can only be written when the stream is disabled. 
+ * @details Tells the stream the base address of memory area 0 from/to which the data will be 
+ *          read/written. These bits can only be written when the stream is disabled. This is 
+ *          the first of two memory addresses available. THe second address is only used for 
+ *          double buffer mode which is not implemented in this driver. 
  * 
- * @param dma_stream 
- * @param m0ar 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param m0ar : memory 0 address 
  */
 void dma_m0ar(
     DMA_Stream_TypeDef *dma_stream, 
@@ -241,12 +283,12 @@ void dma_m0ar(
 
 
 /**
- * @brief 
+ * @brief FIFO error interrupt 
  * 
- * @details 
+ * @see dma_feie_t
  * 
- * @param dma_stream 
- * @param feie 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param feie : FIFO error interrupt configuration 
  */
 void dma_feie(
     DMA_Stream_TypeDef *dma_stream, 
@@ -256,14 +298,21 @@ void dma_feie(
 /**
  * @brief Direct/FIFO mode selection 
  * 
- * @details 
- *          These bits can only be written when the stream is disabled. 
- *          This is set by hardware if memory-to-memory mode is selected and the stream is 
- *          enabled because the direct mode is not allowed in the memory-to-memory 
- *          configuration. 
+ * @details Configures FIFO mode. If FIFO mode is enabled then the FIFO buffer will be filled 
+ *          with data from the source by DMA transfers up to the defined FIFO buffer threshold 
+ *          at which point the FIFO will be drained to the destination. If not enabled, the 
+ *          stream will be in direct mode where the FIFO buffer is drained immediately after 
+ *          a data item enters it. <br> 
+ *          
+ *          If memory-to-memory mode is selected and the stream is enabled then FIFO mode is 
+ *          automatically enabled as direct mode is not allowed in this circumstance. This mode 
+ *          can only be written when the stream is disabled. 
  * 
- * @param dma_stream 
- * @param mode 
+ * @see dma_fifo_mode_t
+ * @see dma_fth
+ * 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param mode : FIFO mode configuration 
  */
 void dma_dmdis(
     DMA_Stream_TypeDef *dma_stream, 
@@ -273,12 +322,15 @@ void dma_dmdis(
 /**
  * @brief FIFO threshold selection 
  * 
- * @details 
- *          These bits are not used in direct mode. 
- *          These bits can only be written when the stream is disabled. 
+ * @details Configures the threshold of the FIFO buffer. When the buffer reaches this 
+ *          threshold then the data within it gets drained. This functionality is only used 
+ *          in FIFO mode. These bits can only be written when the stream is disabled. 
  * 
- * @param dma_stream 
- * @param fth 
+ * @see dma_fifo_threshold_t
+ * @see dma_dmdis
+ * 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param fth : FIFO threshold configuration 
  */
 void dma_fth(
     DMA_Stream_TypeDef *dma_stream, 
@@ -432,8 +484,6 @@ void dma_int_flags(
 //================================================================================
 // DMA Stream x Configuration Register 
 
-// This register is used to configure the concerned stream 
-
 // Stream enable 
 void dma_stream_enable(
     DMA_Stream_TypeDef *dma_stream)
@@ -467,7 +517,6 @@ void dma_chsel(
     DMA_Stream_TypeDef *dma_stream, 
     dma_channel_t channel) 
 {
-    // Clear the channel then set the desired channel 
     dma_stream->CR &= ~(SET_7 << SHIFT_25); 
     dma_stream->CR |= (channel << SHIFT_25);  
 }
@@ -478,7 +527,6 @@ void dma_dir(
     DMA_Stream_TypeDef *dma_stream, 
     dma_direction_t dir)
 {
-    // Clear the data transfer direction then set the desired value 
     dma_stream->CR &= ~(SET_3 << SHIFT_6); 
     dma_stream->CR |= (dir << SHIFT_6); 
 }
@@ -489,7 +537,6 @@ void dma_cm(
     DMA_Stream_TypeDef *dma_stream, 
     dma_cm_t cm)
 {
-    // Clear the circular mode setting then set the desired circular configuration 
     dma_stream->CR &= ~(SET_BIT << SHIFT_8); 
     dma_stream->CR |= (cm << SHIFT_8); 
 }
@@ -500,7 +547,6 @@ void dma_priority(
     DMA_Stream_TypeDef *dma_stream, 
     dma_priority_t priority)
 {
-    // Clear the priority then set the desired priority level 
     dma_stream->CR &= ~(SET_3 << SHIFT_16); 
     dma_stream->CR |= (priority << SHIFT_16); 
 }
@@ -511,7 +557,6 @@ void dma_msize(
     DMA_Stream_TypeDef *dma_stream, 
     dma_data_size_t msize)
 {
-    // Clear the memory data size then set the desired value 
     dma_stream->CR &= ~(SET_3 << SHIFT_13); 
     dma_stream->CR |= (msize << SHIFT_13); 
 }
@@ -522,7 +567,6 @@ void dma_minc(
     DMA_Stream_TypeDef *dma_stream, 
     dma_addr_inc_mode_t minc)
 {
-    // Clear the memory increment mode then set the desired value 
     dma_stream->CR &= ~(SET_BIT << SHIFT_10); 
     dma_stream->CR |= (minc << SHIFT_10); 
 }
@@ -533,7 +577,6 @@ void dma_psize(
     DMA_Stream_TypeDef *dma_stream, 
     dma_data_size_t psize)
 {
-    // Clear the peripheral data size then set the desired value 
     dma_stream->CR &= ~(SET_3 << SHIFT_11); 
     dma_stream->CR |= (psize << SHIFT_11); 
 }
@@ -615,6 +658,7 @@ void dma_par(
 {
     dma_stream->PAR = per_addr; 
 }
+
 //================================================================================
 
 
