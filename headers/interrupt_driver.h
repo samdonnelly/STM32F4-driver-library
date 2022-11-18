@@ -31,7 +31,7 @@
 //================================================================================
 // Macros 
 
-// EXTI Lines 
+// EXTI Lines - lines correspond to pins on a port 
 #define EXTI_L0   0x00000001 
 #define EXTI_L1   0x00000002 
 #define EXTI_L2   0x00000004 
@@ -81,64 +81,52 @@
 /**
  * @brief GPIO port to use for the EXTI line 
  * 
- * @details 
- * 
+ * @note This is used as opposed to the GPIO port pointers because an index for the ports is 
+ *       needed. 
  */
 typedef enum {
-    EXTI_PA,   // 
-    EXTI_PB,   // 
-    EXTI_PC,   // 
-    EXTI_PD,   // 
-    EXTI_PE,   // 
-    EXTI_PH    // 
+    EXTI_PA, 
+    EXTI_PB, 
+    EXTI_PC, 
+    EXTI_PD, 
+    EXTI_PE, 
+    EXTI_PH 
 } exti_port_t; 
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief External interrupt mask configuration 
  */
 typedef enum {
-    EXTI_INT_MASKED,        // 
-    EXTI_INT_NOT_MASKED     // 
+    EXTI_INT_MASKED,        // External interrupt masked - interrupt disabled 
+    EXTI_INT_NOT_MASKED     // External interrupt not masked - interrupt enabled 
 } exti_int_mask_t; 
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief External event mask configuration 
  */
 typedef enum {
-    EXTI_EVENT_MASKED,         // 
-    EXTI_EVENT_NOT_MASKED      // 
+    EXTI_EVENT_MASKED,         // External event masked - interrupt disabled 
+    EXTI_EVENT_NOT_MASKED      // External event not masked - interrupt enabled 
 } exti_event_mask_t; 
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief Interrupt rising edge trigger configuration 
  */
 typedef enum {
-    EXTI_RISE_TRIG_DISABLE,   // 
-    EXTI_RISE_TRIG_ENABLE     // 
+    EXTI_RISE_TRIG_DISABLE,     // Rising edge interrupt trigger disabled 
+    EXTI_RISE_TRIG_ENABLE       // Rising edge interrupt trigger enabled 
 } exti_rise_trigger_t; 
 
 
 /**
- * @brief 
- * 
- * @details 
- * 
+ * @brief Interrupt falling edge trigger configuration 
  */
 typedef enum {
-    EXTI_FALL_TRIG_DISABLE,   // 
-    EXTI_FALL_TRIG_ENABLE     // 
+    EXTI_FALL_TRIG_DISABLE,     // Falling edge interrupt trigger disabled 
+    EXTI_FALL_TRIG_ENABLE       // Falling edge interrupt trigger enabled 
 } exti_fall_trigger_t; 
 
 //================================================================================
@@ -150,26 +138,35 @@ typedef enum {
 /**
  * @brief External interrupt initialization 
  * 
- * @details 
- * 
+ * @details Enabled the clock needed for external interrupts and resets all EXTI port/pin 
+ *          configurations so they can be configured. This function is called once for all EXTI. 
  */
 void exti_init(void); 
 
 
 /**
- * @brief 
+ * @brief External interrupt configuration 
  * 
- * @details 
+ * @details This function configures the behavior of each external interrupt. This is called 
+ *          for each EXTI used. 
  * 
- * @param gpio 
- * @param port 
- * @param pin 
- * @param pull 
- * @param exti_line 
- * @param int_mask 
- * @param event_mask 
- * @param rise_trig 
- * @param fall_trig 
+ * @see exti_port_t
+ * @see pin_selector_t
+ * @see gpio_pupdr_t
+ * @see exti_int_mask_t
+ * @see exti_event_mask_t
+ * @see exti_rise_trigger_t
+ * @see exti_fall_trigger_t
+ * 
+ * @param gpio : pointer to GPIO port of EXTI pin 
+ * @param port : GPIO port index 
+ * @param pin : pin number of EXTI pin 
+ * @param pull : pull-up or pull-down pin configuration 
+ * @param exti_line : EXTI line being configured - see EXTI_LX macros above 
+ * @param int_mask : interrupt mask configuration 
+ * @param event_mask : event mask configuration 
+ * @param rise_trig : rising edge trigger configuration 
+ * @param fall_trig falling edge trigger configuration 
  */
 void exti_config(
     GPIO_TypeDef *gpio, 
@@ -186,10 +183,12 @@ void exti_config(
 /**
  * @brief NVIC configuration 
  * 
- * @details 
+ * @details This function sets the interrupt priority and enables the interrupt handler. 
+ *          Interrupts with a higher priority get served first. This needs to be called 
+ *          for each interrupt (not just external interrupts) being used on the system. 
  * 
- * @param irqn 
- * @param priority 
+ * @param irqn : index of interrupt function handler 
+ * @param priority : interrupt priority - see priority macros above 
  */
 void nvic_config(
     IRQn_Type irqn, 
@@ -204,11 +203,10 @@ void nvic_config(
 /**
  * @brief Pending register clear 
  * 
- * @details 
- *          Used the macros defined for the EXTI lines above. 
- *          Calling this function also clears the software interrupt event register. 
+ * @details Clears the pending bit that corresponds to the EXTI triggered. This function is 
+ *          needed by the EXTI function handlers in order to exit the handler. 
  * 
- * @param pr 
+ * @param pr : pending flag to clear for EXTI line - use EXTI_LX macros above 
  */
 void exti_pr_clear(
     uint32_t pr); 

@@ -26,8 +26,8 @@
 /**
  * @brief SYSCFG register source clear 
  * 
- * @details 
- * 
+ * @details Clears the external interrupt congiguration registers so that they can be 
+ *          configured without conflict. This is called once at the beginning of the code. 
  */
 void syscfg_config_clear(void); 
 
@@ -35,10 +35,15 @@ void syscfg_config_clear(void);
 /**
  * @brief SYSCFG register source set 
  * 
- * @details 
+ * @details This function defines the source of the interrupt. The port is written to the 
+ *          given event line defined by the pin number. EXTI line numbers correspond to pin 
+ *          numbers in a GPIO port. 
  * 
- * @param port 
- * @param pin 
+ * @see exti_port_t
+ * @see pin_selector_t
+ * 
+ * @param port : GPIO port index 
+ * @param pin : pin number of EXTI pin 
  */
 void syscfg_config(
     exti_port_t port, 
@@ -48,12 +53,12 @@ void syscfg_config(
 /**
  * @brief Interrupt mask
  * 
- * @details 
- *          Enables the EXTI by unmasking the event request on a given line. 
- *          Disabled the EXTI by masking the event request on a given line. 
+ * @details Enables or disables the external interrupt on a given line. 
  * 
- * @param mask 
- * @param im 
+ * @see exti_int_mask_t
+ * 
+ * @param mask : interrupt mask configuration 
+ * @param im : EXTI line to configure an external interrupt - use EXTI_LX macros above 
  */
 void exti_imr(
     exti_int_mask_t mask, 
@@ -63,10 +68,12 @@ void exti_imr(
 /**
  * @brief Event mask
  * 
- * @details 
+ * @details Enables or disables the external event on a given line. 
  * 
- * @param mask 
- * @param em 
+ * @see exti_event_mask_t
+ * 
+ * @param mask : event mask configuration 
+ * @param em : EXTI line to configure an external event - use EXTI_LX macros above 
  */
 void exti_emr(
     exti_event_mask_t mask, 
@@ -76,10 +83,13 @@ void exti_emr(
 /**
  * @brief Rising trigger selection
  * 
- * @details 
+ * @details Allows for configuring the rising edge signal on the EXTI to trigger an interrupt. 
+ *          Note that a pin can have both rising and falling edge triggers. 
  * 
- * @param rtsr 
- * @param rt 
+ * @see exti_rise_trigger_t
+ * 
+ * @param rtsr : rising edge interrupt trigger configuration 
+ * @param rt : EXTI line to configure the rising edge trigger - use EXTI_LX macros above 
  */
 void exti_rtsr(
     exti_rise_trigger_t rtsr, 
@@ -89,10 +99,13 @@ void exti_rtsr(
 /**
  * @brief Falling trigger selection
  * 
- * @details 
+ * @details Allows for configuring the falling edge signal on the EXTI to trigger an interrupt. 
+ *          Note that a pin can have both rising and falling edge triggers. 
  * 
- * @param ftsr 
- * @param ft 
+ * @see exti_fall_trigger_t
+ * 
+ * @param ftsr : falling edge interrupt trigger configuration 
+ * @param ft : EXTI line to configure the falling edge trigger - use EXTI_LX macros above 
  */
 void exti_ftsr(
     exti_fall_trigger_t ftsr, 
@@ -102,11 +115,10 @@ void exti_ftsr(
 /**
  * @brief Software interrupt event register set 
  * 
- * @details 
- *          This allows for generation of an interrupt/event request using the software instead 
+ * @details This allows for generation of an interrupt/event request using the software instead 
  *          of an external device/peripheral trigger. 
  * 
- * @param swier 
+ * @param swier : EXTI line for software to trigger an event on - use EXTI_LX macros above 
  */
 void exti_swier_set(
     uint32_t swier); 
