@@ -22,6 +22,9 @@
 // TODO see if you can read the clock speed during tim9_init so you can adjust the counter 
 // This will make maintain an accurate (blocking) delay 
 
+// TODO replace timer specific functions with general purpose functions with pointers to 
+//      timer ports 
+
 //=======================================================================================
 // Initialization 
 
@@ -54,7 +57,7 @@ void tim9_init(uint16_t prescalar)
 //=======================================================================================
 // Delays
 
-// microsecond delay function (blocking)
+// Microsecond delay function (blocking)
 void tim9_delay_us(uint16_t delay_us)
 {
     // Reset the counter 
@@ -65,7 +68,7 @@ void tim9_delay_us(uint16_t delay_us)
 }
 
 
-// millisecond delay function (blocking)
+// Millisecond delay function (blocking)
 void tim9_delay_ms(uint16_t delay_ms)
 {
     // Repeatedly call tim9_delay_us
