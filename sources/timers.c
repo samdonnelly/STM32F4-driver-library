@@ -51,6 +51,48 @@ void tim9_init(uint16_t prescalar)
     while(!(TIM9->SR & (SET_BIT << SHIFT_0)));
 }
 
+
+// Timer 1 setup 
+void tim1_init(
+    timer_us_prescalars_t prescalar)
+{
+    // Enable the timer clock 
+
+    // Set the clock prescalar 
+
+    // Enable the timer and wait for confirmation 
+}
+
+
+// Timer 2-5 setup 
+void tim_2_to_5_init(
+    TIM_TypeDef *timer, 
+    timer_us_prescalars_t prescalar)
+{
+    // Get the timer port index 
+    uint32_t index = (uint32_t)(&timer - TIM2_BASE) >> SHIFT_10; 
+
+    // Enable the timer clock 
+    RCC->APB1ENR |= (SET_BIT << index);
+
+    // Set the clock prescalar 
+
+    // Enable the timer and wait for confirmation 
+}
+
+
+// Timer 9-11 setup 
+void tim_9_to_11_init(
+    TIM_TypeDef *timer, 
+    timer_us_prescalars_t prescalar)
+{
+    // Enable the timer clock 
+
+    // Set the clock prescalar 
+
+    // Enable the timer and wait for confirmation 
+}
+
 //=======================================================================================
 
 
@@ -59,22 +101,31 @@ void tim9_init(uint16_t prescalar)
 
 // Microsecond delay function (blocking)
 void tim9_delay_us(uint16_t delay_us)
+// void tim_delay_us(
+//     TIM_TypeDef *timer, 
+//     uint16_t delay_us)
 {
     // Reset the counter 
-    TIM9->CNT = RESET_COUNT;
+    TIM9->CNT = RESET_COUNT; 
+    // timer->CNT = RESET_COUNT; 
 
     // Count up to specified value in blocking mode to produce delay 
-    while((TIM9->CNT) < delay_us);
+    while((TIM9->CNT) < delay_us); 
+    // while((timer->CNT) < delay_us); 
 }
 
 
 // Millisecond delay function (blocking)
 void tim9_delay_ms(uint16_t delay_ms)
+// void tim9_delay_ms(
+//     TIM_TypeDef *timer, 
+//     uint16_t delay_ms)
 {
     // Repeatedly call tim9_delay_us
     for (uint16_t i = 0; i < delay_ms; i++)
     {
         tim9_delay_us(PREFIX_SCALAR);
+        // tim_delay_us(timer, PREFIX_SCALAR);
     }
 }
 
