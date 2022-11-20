@@ -15,16 +15,16 @@
 #ifndef _TIMERS_H_
 #define _TIMERS_H_
 
-//=======================================================================================
+//================================================================================
 // Includes 
 
 #include "stm32f411xe.h"
 #include "tools.h"
 
-//=======================================================================================
+//================================================================================
 
 
-//=======================================================================================
+//================================================================================
 // Macros 
 
 #define RESET_COUNT 0        // Used to reset count registers 
@@ -40,10 +40,10 @@
 #define TIM9_10US   10   // 10 us delay 
 #define TIM9_100US  100  // 100 us delay 
 
-//=======================================================================================
+//================================================================================
 
 
-//=======================================================================================
+//================================================================================
 // Enums 
 
 /**
@@ -59,11 +59,37 @@ typedef enum {
     TIMERS_APB2_84MHZ_1US_PRESCALAR = 83
 } timer_us_prescalars_t;
 
-//=======================================================================================
+
+/**
+ * @brief Counter configuration 
+ */
+typedef enum {
+    TIM_CEN_DISABLE,    // Counter disable 
+    TIM_CEN_ENABLE      // Counter enable 
+} tim_cen_t; 
 
 
-//=======================================================================================
-// Function Prototypes
+/**
+ * @brief Update interrupt configuration 
+ */
+typedef enum {
+    TIM_UP_INT_DISABLE,    // Update interrupt disable 
+    TIM_UP_INT_ENABLE      // Update interrupt enable 
+} tim_up_int_t; 
+
+//================================================================================
+
+
+//================================================================================
+// Datatypes 
+
+typedef uint32_t TIM_COUNTER; 
+
+//================================================================================
+
+
+//================================================================================
+// Initialization 
 
 /**
  * @brief TIM9 initialization 
@@ -83,6 +109,50 @@ void tim9_init(uint16_t prescalar);
 
 
 /**
+ * @brief Timer 1 setup 
+ * 
+ * @details 
+ * 
+ * @param prescalar 
+ */
+void tim1_init(
+    timer_us_prescalars_t prescalar); 
+
+
+/**
+ * @brief Timer 2-5 setup 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param prescalar 
+ */
+void tim_2_to_5_init(
+    TIM_TypeDef *timer, 
+    timer_us_prescalars_t prescalar); 
+
+
+/**
+ * @brief Timer 9-11 setup 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param prescalar 
+ */
+void tim_9_to_11_init(
+    TIM_TypeDef *timer, 
+    timer_us_prescalars_t prescalar); 
+
+//================================================================================
+
+
+//================================================================================
+// Delay functions 
+
+// Note that all these functions produce blocking delays 
+
+/**
  * @brief TIM9 microsecond delay function (blocking)
  * 
  * @details TIM9 is initialized with a 1us frequency using tim9_init. This frequency 
@@ -99,6 +169,19 @@ void tim9_delay_us(uint16_t delay_us);
 
 
 /**
+ * @brief Microsecond delay function (blocking)
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param delay_us 
+ */
+void tim_delay_us(
+    TIM_TypeDef *timer, 
+    uint16_t delay_us); 
+
+
+/**
  * @brief TIM9 millisecond delay function (blocking)
  * 
  * @details This function allows for millisecond delays. It works by repeatedly calling
@@ -111,7 +194,141 @@ void tim9_delay_us(uint16_t delay_us);
  */
 void tim9_delay_ms(uint16_t delay_ms);
 
-//=======================================================================================
 
+/**
+ * @brief Millisecond delay function (blocking)
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param delay_ms 
+ */
+void tim_delay_ms(
+    TIM_TypeDef *timer, 
+    uint16_t delay_ms); 
+
+//================================================================================
+
+
+//================================================================================
+// Register functions 
+
+/**
+ * @brief Counter enable 
+ * 
+ * @details 
+ *          This function is available for all timers. 
+ * 
+ * @see tim_cen_t
+ * 
+ * @param timer : 
+ * @param cen :  
+ */
+void tim_cen(
+    TIM_TypeDef *timer, 
+    tim_cen_t cen); 
+
+
+/**
+ * @brief Update interrupt 
+ * 
+ * @details 
+ *          This function is available for all timers. 
+ * 
+ * @see tim_up_int_t
+ * 
+ * @param timer 
+ * @param uie 
+ */
+void tim_uie(
+    TIM_TypeDef *timer, 
+    tim_up_int_t uie); 
+
+
+/**
+ * @brief Update interrupt flag clear 
+ * 
+ * @details 
+ *          This function is available for all timers. 
+ * 
+ * @param timer 
+ */
+void tim_uif_clear(
+    TIM_TypeDef *timer); 
+
+
+/**
+ * @brief Update generation 
+ * 
+ * @details generates an update event via software. Automatically cleared by hardware. 
+ *          This function is available for all timers. 
+ * 
+ * @param timer 
+ */
+void tim_ug_set(
+    TIM_TypeDef *timer); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ *          This function is available for all timers. 
+ *          
+ *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
+ * 
+ * @param timer 
+ * @param counter 
+ */
+void tim_cnt_set(
+    TIM_TypeDef *timer, 
+    uint32_t counter); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ *          This function is available for all timers. 
+ *          
+ *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
+ * 
+ * @param timer 
+ * @return TIM_COUNTER 
+ */
+TIM_COUNTER tim_cnt_read(
+    TIM_TypeDef *timer); 
+
+
+/**
+ * @brief Set the counter clock prescalar 
+ * 
+ * @details 
+ *          This function is available for all timers. 
+ * 
+ * @param timer 
+ * @param prescalar 
+ */
+void tim_psc_set(
+    TIM_TypeDef *timer, 
+    timer_us_prescalars_t prescalar); 
+
+
+/**
+ * @brief Auto-reload register (ARR) set 
+ * 
+ * @details 
+ *          This function is available for all timers. 
+ *          
+ *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
+ * 
+ * @param timer 
+ * @param arr 
+ */
+void tim_arr_set(
+    TIM_TypeDef *timer, 
+    uint32_t arr); 
+
+//================================================================================
 
 #endif   // _TIMERS_H_
