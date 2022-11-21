@@ -100,6 +100,27 @@ void tim_9_to_11_init(
     // Enable the timer and wait for confirmation 
 }
 
+
+//==================================================
+// PWM setup 
+// 1. Set the ARR register to set the frequency 
+// 2. Set the CCRx register to set the duty cycle 
+// 3. Set the PWM mode (OCxM bits) in the CCMRx register 
+// 4. Enable the preload register by setting the OCxPE bit in the CCMRx register 
+// 5. Enable the auto-reload preload register by setting the ARPE bit in the CR1 register 
+// 6. Set the UG bit in the EGR register to initialize all the registers 
+// 7. Set the output capture polarity using the CCxP bit in the CCER register 
+// 8. The OCx output is enabled by the CCxE bit in the CCER register 
+// 9. Start the counter (when it's ready to be enabled) 
+//==================================================
+
+
+// PWM setup 
+void pwm_init(void)
+{
+    // 
+}
+
 //================================================================================
 
 
