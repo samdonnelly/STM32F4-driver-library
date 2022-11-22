@@ -47,13 +47,23 @@
 // Enums 
 
 /**
+ * @brief Timer channel 
+ */
+typedef enum {
+    TIM_CHANNEL_1, 
+    TIM_CHANNEL_2, 
+    TIM_CHANNEL_3, 
+    TIM_CHANNEL_4 
+} tim_channel_t; 
+
+
+/**
  * @brief Timer prescalars 
  * 
  * @details these prescalars are for generating a 1us count depending on the 
  *          frequency. The clock frequency of the timer gets divided by this prescalar 
  *          so that the clock counter only increments once per timer clock cycle. 
  *          See the reference manual for more information on calculating this value. 
- * 
  */
 typedef enum {
     TIMERS_APB2_84MHZ_1US_PRESCALAR = 83
@@ -70,12 +80,63 @@ typedef enum {
 
 
 /**
+ * @brief Auto-reload preload configuration 
+ */
+typedef enum {
+    TIM_ARPE_DISABLE,    // Auto-reload preload disable 
+    TIM_ARPE_ENABLE      // Auto-reload preload enable 
+} tim_arpe_t; 
+
+
+/**
  * @brief Update interrupt configuration 
  */
 typedef enum {
     TIM_UP_INT_DISABLE,    // Update interrupt disable 
     TIM_UP_INT_ENABLE      // Update interrupt enable 
 } tim_up_int_t; 
+
+
+/**
+ * @brief Output compare mode configuration 
+ */
+typedef enum {
+    TIM_OCM_FROZEN,    // CNT and CCR comparision has no effect on the outputs 
+    TIM_OCM_AM,        // Set output to active (high) on CNT and CCR match 
+    TIM_OCM_IM,        // Set output to inactive (low) on CNT and CCR match 
+    TIM_OCM_TOGGLE,    // Toggle the output on CNT and CCR match 
+    TIM_OCM_FI,        // Force the output inactive (low) 
+    TIM_OCM_FA,        // Force the output active (high) 
+    TIM_OCM_PWM1,      // Output is active (high) when CNT<CCR 
+    TIM_OCM_PWM2,      // Output is inactive (low) when CNT<CCR 
+} tim_ocm_t; 
+
+
+/**
+ * @brief Output compare preload configuration 
+ */
+typedef enum {
+    TIM_OCPE_DISABLE,    // Output compare preload disable 
+    TIM_OCPE_ENABLE      // Output compare preload enable 
+} tim_ocpe_t; 
+
+
+/**
+ * @brief Compare output polarity configuration 
+ */
+typedef enum {
+    TIM_CCP_AH,    // Output compare active high 
+    TIM_CCP_AL     // Output compare active low 
+} tim_ccp_t; 
+
+
+/**
+ * @brief Compare output on/off configuration 
+ */
+typedef enum {
+    TIM_CCE_OFF,    // Output compare not active 
+    TIM_CCE_ON      // Output compare signal is output on the corresponding output pin 
+} tim_cce_t; 
 
 //================================================================================
 
@@ -211,7 +272,7 @@ void tim_delay_ms(
 
 
 //================================================================================
-// Register functions 
+// Control register 
 
 /**
  * @brief Counter enable 
@@ -230,6 +291,26 @@ void tim_cen(
 
 
 /**
+ * @brief Auto-reload preload enable 
+ * 
+ * @details 
+ * 
+ * @see tim_arpe_t
+ * 
+ * @param timer 
+ * @param arpe 
+ */
+void tim_arpe(
+    TIM_TypeDef *timer, 
+    tim_arpe_t arpe); 
+
+//================================================================================
+
+
+//================================================================================
+// Interrupt register 
+
+/**
  * @brief Update interrupt 
  * 
  * @details 
@@ -244,6 +325,11 @@ void tim_uie(
     TIM_TypeDef *timer, 
     tim_up_int_t uie); 
 
+//================================================================================
+
+
+//================================================================================
+// Status register 
 
 /**
  * @brief Update interrupt flag clear 
@@ -256,6 +342,11 @@ void tim_uie(
 void tim_uif_clear(
     TIM_TypeDef *timer); 
 
+//================================================================================
+
+
+//================================================================================
+// Event generation register 
 
 /**
  * @brief Update generation 
@@ -268,6 +359,81 @@ void tim_uif_clear(
 void tim_ug_set(
     TIM_TypeDef *timer); 
 
+//================================================================================
+
+
+//================================================================================
+// Capture/compare mode registers 
+
+/**
+ * @brief Output compare mode selection 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param ocm 
+ * @param channel 
+ */
+void tim_ocm(
+    TIM_TypeDef *timer, 
+    tim_ocm_t ocm, 
+    tim_channel_t channel); 
+
+
+/**
+ * @brief Output compare preload enable 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param ocpe 
+ * @param channel 
+ */
+void tim_ocpe(
+    TIM_TypeDef *timer, 
+    tim_ocpe_t ocpe, 
+    tim_channel_t channel); 
+
+//================================================================================
+
+
+//================================================================================
+// Capture/compare enable registers 
+
+/**
+ * @brief Compare output polarity 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param ccp 
+ * @param channel 
+ */
+void tim_ccp(
+    TIM_TypeDef *timer, 
+    tim_ccp_t ccp, 
+    tim_channel_t channel); 
+
+
+/**
+ * @brief Compare output enable 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param cce 
+ * @param channel 
+ */
+void tim_cce(
+    TIM_TypeDef *timer, 
+    tim_cce_t cce, 
+    tim_channel_t channel); 
+
+//================================================================================
+
+
+//================================================================================
+// Counter register 
 
 /**
  * @brief 
@@ -299,6 +465,11 @@ void tim_cnt_set(
 TIM_COUNTER tim_cnt_read(
     TIM_TypeDef *timer); 
 
+//================================================================================
+
+
+//================================================================================
+// Prescaler register 
 
 /**
  * @brief Set the counter clock prescalar 
@@ -313,6 +484,11 @@ void tim_psc_set(
     TIM_TypeDef *timer, 
     timer_us_prescalars_t prescalar); 
 
+//================================================================================
+
+
+//================================================================================
+// Auto-reload register 
 
 /**
  * @brief Auto-reload register (ARR) set 
@@ -328,6 +504,26 @@ void tim_psc_set(
 void tim_arr_set(
     TIM_TypeDef *timer, 
     uint32_t arr); 
+
+//================================================================================
+
+
+//================================================================================
+// Capture/compare register 
+
+/**
+ * @brief Capture/compare value 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param ccr 
+ * @param channel 
+ */
+void tim_ccr(
+    TIM_TypeDef *timer, 
+    uint32_t ccr, 
+    tim_channel_t channel); 
 
 //================================================================================
 

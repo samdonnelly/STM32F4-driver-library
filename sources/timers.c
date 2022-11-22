@@ -19,6 +19,12 @@
 
 //================================================================================
 
+
+//================================================================================
+// Notes 
+// - This driver does not support input modes 
+//================================================================================
+
 // TODO see if you can read the clock speed during tim9_init so you can adjust the counter 
 // This will make maintain an accurate (blocking) delay 
 
@@ -178,7 +184,7 @@ void tim_delay_ms(
 
 
 //================================================================================
-// Register functions 
+// Control register 
 
 // Counter enable 
 void tim_cen(
@@ -189,6 +195,20 @@ void tim_cen(
     timer->CR1 |= (cen << SHIFT_0); 
 }
 
+// Auto-reload preload enable 
+void tim_arpe(
+    TIM_TypeDef *timer, 
+    tim_arpe_t arpe)
+{
+    timer->CR1 &= ~(SET_BIT << SHIFT_7); 
+    timer->CR1 |= (arpe << SHIFT_7); 
+}
+
+//================================================================================
+
+
+//================================================================================
+// Interrupt register 
 
 // Update interrupt 
 void tim_uie(
@@ -199,6 +219,11 @@ void tim_uie(
     timer->DIER |= (uie >> SHIFT_0); 
 }
 
+//================================================================================
+
+
+//================================================================================
+// Status register 
 
 // Update interrupt flag clear 
 void tim_uif_clear(
@@ -207,6 +232,11 @@ void tim_uif_clear(
     timer->SR &= ~(SET_BIT << SHIFT_0); 
 }
 
+//================================================================================
+
+
+//================================================================================
+// Event generation register 
 
 // Update generation 
 void tim_ug_set(
@@ -215,6 +245,81 @@ void tim_ug_set(
     timer->EGR |= (SET_BIT << SHIFT_0); 
 }
 
+//================================================================================
+
+
+//================================================================================
+// Capture/compare mode registers 
+
+// Output compare mode selection 
+void tim_ocm(
+    TIM_TypeDef *timer, 
+    tim_ocm_t ocm, 
+    tim_channel_t channel)
+{
+    if (channel < TIM_CHANNEL_3)
+    {
+        timer->CCMR1 &= ~(SET_7 << (SHIFT_4 + SHIFT_8*channel)); 
+        timer->CCMR1 |= (ocm << (SHIFT_4 + SHIFT_8*channel)); 
+    }
+    else 
+    {
+        timer->CCMR2 &= ~(SET_7 << (SHIFT_4 + SHIFT_8*(channel-TIM_CHANNEL_3))); 
+        timer->CCMR2 |= (ocm << (SHIFT_4 + SHIFT_8*(channel-TIM_CHANNEL_3))); 
+    }
+}
+
+
+// Output compare preload enable 
+void tim_ocpe(
+    TIM_TypeDef *timer, 
+    tim_ocpe_t ocpe, 
+    tim_channel_t channel)
+{
+    if (channel < TIM_CHANNEL_3)
+    {
+        timer->CCMR1 &= ~(SET_BIT << (SHIFT_3 + SHIFT_8*channel)); 
+        timer->CCMR1 |= (ocpe << (SHIFT_3 + SHIFT_8*channel)); 
+    }
+    else 
+    {
+        timer->CCMR2 &= ~(SET_BIT << (SHIFT_3 + SHIFT_8*(channel-TIM_CHANNEL_3))); 
+        timer->CCMR2 |= (ocpe << (SHIFT_3 + SHIFT_8*(channel-TIM_CHANNEL_3))); 
+    }
+}
+
+//================================================================================
+
+
+//================================================================================
+// Capture/compare enable registers 
+
+// Compare output polarity 
+void tim_ccp(
+    TIM_TypeDef *timer, 
+    tim_ccp_t ccp, 
+    tim_channel_t channel)
+{
+    timer->CCER &= ~(SET_BIT << (SHIFT_1 + SHIFT_4*channel)); 
+    timer->CCER |= (ccp << (SHIFT_1 + SHIFT_4*channel)); 
+}
+
+
+// Compare output enable 
+void tim_cce(
+    TIM_TypeDef *timer, 
+    tim_cce_t cce, 
+    tim_channel_t channel)
+{
+    timer->CCER &= ~(SET_BIT << (SHIFT_0 + SHIFT_4*channel)); 
+    timer->CCER |= (cce << (SHIFT_0 + SHIFT_4*channel)); 
+}
+
+//================================================================================
+
+
+//================================================================================
+// Counter register 
 
 // Timer counter set 
 void tim_cnt_set(
@@ -232,6 +337,11 @@ TIM_COUNTER tim_cnt_read(
     return timer->CNT; 
 }
 
+//================================================================================
+
+
+//================================================================================
+// Prescaler register 
 
 // Set the counter clock prescalar 
 void tim_psc_set(
@@ -241,6 +351,11 @@ void tim_psc_set(
     timer->PSC = prescalar; 
 }
 
+//================================================================================
+
+
+//================================================================================
+// Auto-reload register 
 
 // Auto-reload register (ARR) set 
 void tim_arr_set(
@@ -248,6 +363,41 @@ void tim_arr_set(
     uint32_t arr)
 {
     timer->ARR = arr; 
+}
+
+//================================================================================
+
+
+//================================================================================
+// Capture/compare register 
+
+// Capture/compare value 
+void tim_ccr(
+    TIM_TypeDef *timer, 
+    uint32_t ccr, 
+    tim_channel_t channel)
+{
+    switch (channel)
+    {
+        case TIM_CHANNEL_1:
+            timer->CCR1 = ccr; 
+            break;
+        
+        case TIM_CHANNEL_2:
+            timer->CCR2 = ccr; 
+            break;
+
+        case TIM_CHANNEL_3:
+            timer->CCR3 = ccr; 
+            break;
+
+        case TIM_CHANNEL_4:
+            timer->CCR4 = ccr; 
+            break;
+        
+        default:
+            break;
+    }
 }
 
 //================================================================================
