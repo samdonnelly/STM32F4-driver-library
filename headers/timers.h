@@ -66,7 +66,8 @@ typedef enum {
  *          See the reference manual for more information on calculating this value. 
  */
 typedef enum {
-    TIMERS_APB2_84MHZ_1US_PRESCALAR = 83
+    TIMERS_APB2_84MHZ_1US_PRESCALAR = 83, 
+    TIMERS_APB2_84MHZ_100US_PRESCALAR = 8399 
 } timer_us_prescalars_t;
 
 
@@ -198,12 +199,64 @@ void tim_2_to_5_init(
  * 
  * @details 
  * 
- * @param timer 
- * @param prescalar 
+ * @see tim_channel_t
+ * @see timer_us_prescalars_t
+ * @see tim_ocm_t
+ * @see tim_ocpe_t
+ * @see tim_arpe_t
+ * @see tim_ccp_t
+ * @see tim_cce_t
+ * @see tim_up_int_t
+ * 
+ * @param timer : 
+ * @param channel : 
+ * @param prescalar : 
+ * @param arr : 
+ * @param ocm : 
+ * @param ocpe : 
+ * @param arpe : 
+ * @param ccp : 
+ * @param cce : 
+ * @param uie : 
  */
 void tim_9_to_11_init(
     TIM_TypeDef *timer, 
-    timer_us_prescalars_t prescalar); 
+    tim_channel_t channel, 
+    timer_us_prescalars_t prescalar, 
+    uint16_t arr, 
+    tim_ocm_t ocm, 
+    tim_ocpe_t ocpe, 
+    tim_arpe_t arpe, 
+    tim_ccp_t ccp, 
+    tim_cce_t cce, 
+    tim_up_int_t uie); 
+
+//================================================================================
+
+
+//================================================================================
+// Timer enable 
+
+/**
+ * @brief Enable a timer 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ */
+void tim_enable(
+    TIM_TypeDef *timer); 
+
+
+/**
+ * @brief Disable a timer 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ */
+void tim_disable(
+    TIM_TypeDef *timer); 
 
 //================================================================================
 

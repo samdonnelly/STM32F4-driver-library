@@ -22,27 +22,28 @@
 
 //================================================================================
 // Notes 
-// - This driver does not support input modes 
+// - This driver does not yet support input modes 
 //================================================================================
 
-// TODO see if you can read the clock speed during tim9_init so you can adjust the counter 
-// This will make maintain an accurate (blocking) delay 
+
+//==================================================
+// PWM setup 
+// 1. Set the ARR register to set the frequency 
+// 2. Set the CCRx register to set the duty cycle 
+// 3. Set the PWM mode (OCxM bits) in the CCMRx register 
+// 4. Enable the preload register by setting the OCxPE bit in the CCMRx register 
+// 5. Enable the auto-reload preload register by setting the ARPE bit in the CR1 register 
+// 6. Set the UG bit in the EGR register to initialize all the registers 
+// 7. Set the output capture polarity using the CCxP bit in the CCER register 
+// 8. The OCx output is enabled by the CCxE bit in the CCER register 
+// 9. Start the counter (when it's ready to be enabled) 
+//==================================================
 
 // TODO replace timer specific functions with general purpose functions with pointers to 
 //      timer ports 
 
-// TODO add a PWM init function that just calls the other init functions with predefined values. 
-
 //================================================================================
 // Initialization 
-
-// ============================================================
-// Timer setup 
-// 1. Enable the timer clock
-// 2. Set the prescalar and the ARR
-// 3. Enable the timer, and wait for the update flag to set
-// ============================================================
-
 
 // Timer 9 setup 
 void tim9_init(uint16_t prescalar)
@@ -66,10 +67,6 @@ void tim1_init(
 {
     // Enable the timer clock 
     RCC->APB2ENR |= (SET_BIT << SHIFT_0);
-
-    // Set the clock prescalar 
-
-    // Enable the timer and wait for confirmation 
 }
 
 
@@ -83,48 +80,79 @@ void tim_2_to_5_init(
 
     // Enable the timer clock 
     RCC->APB1ENR |= (SET_BIT << index);
-
-    // Set the clock prescalar 
-
-    // Enable the timer and wait for confirmation 
 }
 
 
 // Timer 9-11 setup 
 void tim_9_to_11_init(
     TIM_TypeDef *timer, 
-    timer_us_prescalars_t prescalar)
+    tim_channel_t channel, 
+    timer_us_prescalars_t prescalar, 
+    uint16_t arr, 
+    tim_ocm_t ocm, 
+    tim_ocpe_t ocpe, 
+    tim_arpe_t arpe, 
+    tim_ccp_t ccp, 
+    tim_cce_t cce, 
+    tim_up_int_t uie)
 {
     // Get the timer port index 
-    uint32_t index = (uint32_t)(&timer - TIM9_BASE) >> SHIFT_10; 
+    uint32_t index = (uint32_t)timer - (uint32_t)TIM9_BASE >> SHIFT_10; 
 
     // Enable the timer clock 
     RCC->APB2ENR |= (SET_BIT << (index + SHIFT_16));
 
     // Set the clock prescalar 
+    tim_psc_set(timer, prescalar); 
 
-    // Enable the timer and wait for confirmation 
+    // Set the auto-reload register (ARR) 
+    tim_arr_set(timer, arr); 
+
+    // Set the capture/compare mode 
+    tim_ocm(timer, ocm, channel); 
+
+    // Configure the preload register 
+    tim_ocpe(timer, ocpe, channel); 
+
+    // Configure the auto-reload preload register 
+    tim_arpe(timer, arpe); 
+
+    // Set the output capture polarity 
+    tim_ccp(timer, ccp, channel); 
+
+    // Enable the OCx output 
+    tim_cce(timer, cce, channel); 
+
+    // Configure the update interrupt 
+    tim_uie(timer, uie); 
+
+    // Reset the counter 
+    tim_cnt_set(timer, RESET_COUNT); 
+
+    // Set the UG bit to initialize all registers 
+    tim_ug_set(timer); 
+}
+
+//================================================================================
+
+
+//================================================================================
+// Timer enable 
+
+// Enable a timer 
+void tim_enable(
+    TIM_TypeDef *timer)
+{
+    tim_cen(timer, TIM_CEN_ENABLE); 
+    // while(!(timer->SR & (SET_BIT << SHIFT_0)));
 }
 
 
-//==================================================
-// PWM setup 
-// 1. Set the ARR register to set the frequency 
-// 2. Set the CCRx register to set the duty cycle 
-// 3. Set the PWM mode (OCxM bits) in the CCMRx register 
-// 4. Enable the preload register by setting the OCxPE bit in the CCMRx register 
-// 5. Enable the auto-reload preload register by setting the ARPE bit in the CR1 register 
-// 6. Set the UG bit in the EGR register to initialize all the registers 
-// 7. Set the output capture polarity using the CCxP bit in the CCER register 
-// 8. The OCx output is enabled by the CCxE bit in the CCER register 
-// 9. Start the counter (when it's ready to be enabled) 
-//==================================================
-
-
-// PWM setup 
-void pwm_init(void)
+// Disable a timer 
+void tim_disable(
+    TIM_TypeDef *timer)
 {
-    // 
+    tim_cen(timer, TIM_CEN_DISABLE); 
 }
 
 //================================================================================
@@ -150,10 +178,10 @@ void tim_delay_us(
     uint16_t delay_us)
 {
     // Reset the counter 
-    timer->CNT = RESET_COUNT; 
+    tim_cnt_set(timer, RESET_COUNT); 
 
-    // Count up to specified value in blocking mode to produce delay 
-    while((timer->CNT) < delay_us); 
+    // Count up to the specified value in blocking mode to produce a delay 
+    while(tim_cnt_read(timer) < delay_us); 
 }
 
 
@@ -173,11 +201,8 @@ void tim_delay_ms(
     TIM_TypeDef *timer, 
     uint16_t delay_ms)
 {
-    // Repeatedly call the microsecond delay function 
     for (uint16_t i = 0; i < delay_ms; i++)
-    {
         tim_delay_us(timer, PREFIX_SCALAR); 
-    }
 }
 
 //================================================================================
