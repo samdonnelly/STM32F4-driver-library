@@ -87,11 +87,16 @@ void tim_2_to_5_output_init(
     // Get the timer port index 
     uint32_t index = ((uint32_t)timer - (uint32_t)TIM2_BASE) >> SHIFT_10; 
 
+    // Make sure appropriate timer port is called 
+    if (index > SET_3) return;  // timer not TIM2-5 
+
     // Enable the timer clock 
     RCC->APB1ENR |= (SET_BIT << index);
 
     // Configure the output pin 
-    // gpio_pin_init(gpio, pin, MODER_INPUT, OTYPER_PP, OSPEEDR_FAST, pull); 
+    gpio_pin_init(gpio, pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    if (timer == TIM2) gpio_afr(gpio, SET_BIT, pin); 
+    else gpio_afr(gpio, SET_2, pin); 
 
     // Set the counter direction 
     tim_dir(timer, dir); 
@@ -159,7 +164,6 @@ void tim_enable(
     TIM_TypeDef *timer)
 {
     tim_cen(timer, TIM_CEN_ENABLE); 
-    // while(!(timer->SR & (SET_BIT << SHIFT_0)));
 }
 
 
