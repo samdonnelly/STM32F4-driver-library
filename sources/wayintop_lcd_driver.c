@@ -41,54 +41,54 @@
 void hd44780u_init(void)
 {
     // 1. Wait for more than 40 ms after Vcc rises to 2.7V 
-    tim9_delay_ms(HD44780U_DELAY_050MS);
+    tim_delay_ms(TIM9, HD44780U_DELAY_050MS);
 
     // 2. Function set. Wait for more than 4.1 ms. 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
-    tim9_delay_ms(HD44780U_DELAY_005MS);
+    tim_delay_ms(TIM9, HD44780U_DELAY_005MS);
 
     // 3. Function set. Wait for more than 100 us. 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
-    tim9_delay_us(HD44780U_DELAY_200US);
+    tim_delay_us(TIM9, HD44780U_DELAY_200US);
 
     // 4. Function set. No specified wait time. 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
-    tim9_delay_ms(HD44780U_DELAY_010MS);
+    tim_delay_ms(TIM9, HD44780U_DELAY_010MS);
 
     // 5. Function set - Choose 4-bit mode
     // DL = 0 -> 4-bit data length 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X20);
-    tim9_delay_ms(HD44780U_DELAY_001MS);
+    tim_delay_ms(TIM9, HD44780U_DELAY_001MS);
 
     // 6. Function set - Specify the number of display lines and character font
     // N = 1  -> Sets the number of dsiplay lines to 2 
     // F = 0  -> Sets character font to 5x8 dots
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X28);
-    tim9_delay_ms(HD44780U_DELAY_001MS);
+    tim_delay_ms(TIM9, HD44780U_DELAY_001MS);
 
     // 7. Display off 
     // D = 0 -> Display off 
     // C = 0 -> Cursor not displayed 
     // B = 0 -> No blinking 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0x08);
-    tim9_delay_ms(HD44780U_DELAY_001MS);
+    tim_delay_ms(TIM9, HD44780U_DELAY_001MS);
 
     // 8. Display clear 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X01);
-    tim9_delay_ms(HD44780U_DELAY_001MS);
+    tim_delay_ms(TIM9, HD44780U_DELAY_001MS);
 
     // 9. Entry mode set 
     // I/D = 1 -> Increment 
     // S   = 0 -> No display shifting 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X06);
-    tim9_delay_ms(HD44780U_DELAY_001MS);
+    tim_delay_ms(TIM9, HD44780U_DELAY_001MS);
 
     // 10. Display on 
     // D = 1 -> Display on
     // C = 0 -> Cursor not displayed 
     // B = 0 -> No blinking 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);
-    tim9_delay_ms(HD44780U_DELAY_001MS);
+    tim_delay_ms(TIM9, HD44780U_DELAY_001MS);
 
     // Clear the display 
     hd44780u_clear();

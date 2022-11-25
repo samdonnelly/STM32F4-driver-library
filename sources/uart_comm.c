@@ -181,7 +181,7 @@ void uart_set_baud_rate(
     while(uart->SR & (SET_BIT << SHIFT_5)) 
     {
         uart_getchar(uart);
-        tim9_delay_ms(UART_DR_CLEAR_TIMER); 
+        tim_delay_ms(TIM9, UART_DR_CLEAR_TIMER); 
     }
 }
 

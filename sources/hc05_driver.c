@@ -79,7 +79,7 @@ void hc05_init(
     {
         gpio_pin_init(GPIOA, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
         hc05_pwr_off(); 
-        tim9_delay_ms(HC05_INIT_DELAY); 
+        tim_delay_ms(TIM9, HC05_INIT_DELAY); 
         hc05_pwr_on(); 
     }
     
@@ -127,7 +127,7 @@ void hc05_change_mode(
     gpio_write(GPIOA, hc05_module.at_pin, mode); 
 
     // Short delay to ensure power off
-    tim9_delay_ms(HC05_INIT_DELAY); 
+    tim_delay_ms(TIM9, HC05_INIT_DELAY); 
 
     // Configure the baud rate depending on the requested mode 
     uart_set_baud_rate(hc05_module.hc05_uart, baud_rate, clock_speed);  
@@ -350,7 +350,7 @@ void hc05_at_command(
 
             break; 
         }
-        tim9_delay_us(TIM9_2US);  // AT mode doesn't run in real time so blocking is ok 
+        tim_delay_us(TIM9, TIM9_2US);  // AT mode doesn't run in real time so blocking is ok 
     }
     while (--at_timeout); 
 

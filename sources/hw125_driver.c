@@ -507,7 +507,7 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     uint16_t num_read = HW125_PWR_ON_RES_CNT; 
 
     // Wait for >1ms - delay for after the supply voltage reaches above 2.2V
-    tim9_delay_ms(HW125_PWR_ON_COUNTER);
+    tim_delay_ms(TIM9, HW125_PWR_ON_COUNTER);
 
     // Deselect the sd card slave
     spi2_slave_deselect(hw125_slave_pin);
@@ -593,7 +593,7 @@ uint8_t hw125_initiate_init(
 
         // TODO change init_timer to a real-time timer to remove this delay 
         // Delay 1ms --> HW125_INIT_DELAY * HW125_INIT_TIMER = 1000ms (recommended delay) 
-        tim9_delay_ms(HW125_INIT_DELAY);
+        tim_delay_ms(TIM9, HW125_INIT_DELAY);
     }
     while((*resp == HW125_IDLE_STATE) && --init_timer);
 
