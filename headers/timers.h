@@ -342,76 +342,6 @@ void tim_delay_ms(
 
 
 //================================================================================
-// Control register 
-
-/**
- * @brief Counter enable 
- * 
- * @details 
- *          This function is available for all timers. 
- * 
- * @see tim_cen_t
- * 
- * @param timer : 
- * @param cen :  
- */
-void tim_cen(
-    TIM_TypeDef *timer, 
-    tim_cen_t cen); 
-
-
-/**
- * @brief Direction configuration 
- * 
- * @details 
- * 
- * @param timer 
- * @param dir 
- */
-void tim_dir(
-    TIM_TypeDef *timer, 
-    tim_dir_t dir); 
-
-
-/**
- * @brief Auto-reload preload enable 
- * 
- * @details 
- * 
- * @see tim_arpe_t
- * 
- * @param timer 
- * @param arpe 
- */
-void tim_arpe(
-    TIM_TypeDef *timer, 
-    tim_arpe_t arpe); 
-
-//================================================================================
-
-
-//================================================================================
-// Interrupt register 
-
-/**
- * @brief Update interrupt 
- * 
- * @details 
- *          This function is available for all timers. 
- * 
- * @see tim_up_int_t
- * 
- * @param timer 
- * @param uie 
- */
-void tim_uie(
-    TIM_TypeDef *timer, 
-    tim_up_int_t uie); 
-
-//================================================================================
-
-
-//================================================================================
 // Status register 
 
 /**
@@ -446,93 +376,7 @@ void tim_ug_set(
 
 
 //================================================================================
-// Capture/compare mode registers 
-
-/**
- * @brief Output compare mode selection 
- * 
- * @details 
- * 
- * @param timer 
- * @param ocm 
- * @param channel 
- */
-void tim_ocm(
-    TIM_TypeDef *timer, 
-    tim_ocm_t ocm, 
-    tim_channel_t channel); 
-
-
-/**
- * @brief Output compare preload enable 
- * 
- * @details 
- * 
- * @param timer 
- * @param ocpe 
- * @param channel 
- */
-void tim_ocpe(
-    TIM_TypeDef *timer, 
-    tim_ocpe_t ocpe, 
-    tim_channel_t channel); 
-
-//================================================================================
-
-
-//================================================================================
-// Capture/compare enable registers 
-
-/**
- * @brief Compare output polarity 
- * 
- * @details 
- * 
- * @param timer 
- * @param ccp 
- * @param channel 
- */
-void tim_ccp(
-    TIM_TypeDef *timer, 
-    tim_ccp_t ccp, 
-    tim_channel_t channel); 
-
-
-/**
- * @brief Compare output enable 
- * 
- * @details 
- * 
- * @param timer 
- * @param cce 
- * @param channel 
- */
-void tim_cce(
-    TIM_TypeDef *timer, 
-    tim_cce_t cce, 
-    tim_channel_t channel); 
-
-//================================================================================
-
-
-//================================================================================
 // Counter register 
-
-/**
- * @brief 
- * 
- * @details 
- *          This function is available for all timers. 
- *          
- *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
- * 
- * @param timer 
- * @param counter 
- */
-void tim_cnt_set(
-    TIM_TypeDef *timer, 
-    uint32_t counter); 
-
 
 /**
  * @brief 
@@ -547,46 +391,6 @@ void tim_cnt_set(
  */
 TIM_COUNTER tim_cnt_read(
     TIM_TypeDef *timer); 
-
-//================================================================================
-
-
-//================================================================================
-// Prescaler register 
-
-/**
- * @brief Set the counter clock prescalar 
- * 
- * @details 
- *          This function is available for all timers. 
- * 
- * @param timer 
- * @param prescalar 
- */
-void tim_psc_set(
-    TIM_TypeDef *timer, 
-    timer_us_prescalars_t prescalar); 
-
-//================================================================================
-
-
-//================================================================================
-// Auto-reload register 
-
-/**
- * @brief Auto-reload register (ARR) set 
- * 
- * @details 
- *          This function is available for all timers. 
- *          
- *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
- * 
- * @param timer 
- * @param arr 
- */
-void tim_arr_set(
-    TIM_TypeDef *timer, 
-    uint32_t arr); 
 
 //================================================================================
 
