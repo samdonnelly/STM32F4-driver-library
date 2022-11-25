@@ -18,8 +18,12 @@
 //================================================================================
 // Includes 
 
+// Tools 
 #include "stm32f411xe.h"
 #include "tools.h"
+
+// Drivers 
+#include "gpio_driver.h"
 
 //================================================================================
 
@@ -78,6 +82,15 @@ typedef enum {
     TIM_CEN_DISABLE,    // Counter disable 
     TIM_CEN_ENABLE      // Counter enable 
 } tim_cen_t; 
+
+
+/**
+ * @brief Direction configuration 
+ */
+typedef enum {
+    TIM_DIR_UP,       // Upcounting 
+    TIM_DIR_DOWN      // Downcounting 
+} tim_dir_t; 
 
 
 /**
@@ -182,53 +195,57 @@ void tim1_init(
 
 
 /**
- * @brief Timer 2-5 setup 
- * 
- * @details 
- * 
- * @param timer 
- * @param prescalar 
- */
-void tim_2_to_5_init(
-    TIM_TypeDef *timer, 
-    timer_us_prescalars_t prescalar); 
-
-
-/**
- * @brief Timer 9-11 setup 
+ * @brief Timer 2-5 output mode setup 
  * 
  * @details 
  * 
  * @see tim_channel_t
- * @see timer_us_prescalars_t
  * @see tim_ocm_t
  * @see tim_ocpe_t
  * @see tim_arpe_t
  * @see tim_ccp_t
  * @see tim_cce_t
- * @see tim_up_int_t
  * 
  * @param timer : 
  * @param channel : 
- * @param prescalar : 
+ * @param gpio : 
+ * @param pin : 
+ * @param dir : 
  * @param arr : 
  * @param ocm : 
  * @param ocpe : 
  * @param arpe : 
  * @param ccp : 
  * @param cce : 
- * @param uie : 
  */
-void tim_9_to_11_init(
+void tim_2_to_5_output_init(
     TIM_TypeDef *timer, 
     tim_channel_t channel, 
-    timer_us_prescalars_t prescalar, 
+    GPIO_TypeDef *gpio, 
+    pin_selector_t pin, 
+    tim_dir_t dir, 
     uint16_t arr, 
     tim_ocm_t ocm, 
     tim_ocpe_t ocpe, 
     tim_arpe_t arpe, 
     tim_ccp_t ccp, 
-    tim_cce_t cce, 
+    tim_cce_t cce); 
+
+
+/**
+ * @brief Timer 9-11 counter mode setup 
+ * 
+ * @details 
+ * 
+ * @param timer : pointer to timer port to initialize 
+ * @param prescalar : counter clock prescaler 
+ * @param arr : auto-reload register value 
+ * @param uie : update interrupt configuration 
+ */
+void tim_9_to_11_counter_init(
+    TIM_TypeDef *timer, 
+    timer_us_prescalars_t prescalar, 
+    uint16_t arr, 
     tim_up_int_t uie); 
 
 //================================================================================
@@ -341,6 +358,19 @@ void tim_delay_ms(
 void tim_cen(
     TIM_TypeDef *timer, 
     tim_cen_t cen); 
+
+
+/**
+ * @brief Direction configuration 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param dir 
+ */
+void tim_dir(
+    TIM_TypeDef *timer, 
+    tim_dir_t dir); 
 
 
 /**

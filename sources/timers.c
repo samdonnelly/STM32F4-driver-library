@@ -70,46 +70,37 @@ void tim1_init(
 }
 
 
-// Timer 2-5 setup 
-void tim_2_to_5_init(
-    TIM_TypeDef *timer, 
-    timer_us_prescalars_t prescalar)
-{
-    // Get the timer port index 
-    uint32_t index = (uint32_t)(&timer - TIM2_BASE) >> SHIFT_10; 
-
-    // Enable the timer clock 
-    RCC->APB1ENR |= (SET_BIT << index);
-}
-
-
-// Timer 9-11 setup 
-void tim_9_to_11_init(
+// Timer 2-5 output mode setup 
+void tim_2_to_5_output_init(
     TIM_TypeDef *timer, 
     tim_channel_t channel, 
-    timer_us_prescalars_t prescalar, 
+    GPIO_TypeDef *gpio, 
+    pin_selector_t pin, 
+    tim_dir_t dir, 
     uint16_t arr, 
     tim_ocm_t ocm, 
     tim_ocpe_t ocpe, 
     tim_arpe_t arpe, 
     tim_ccp_t ccp, 
-    tim_cce_t cce, 
-    tim_up_int_t uie)
+    tim_cce_t cce)
 {
     // Get the timer port index 
-    uint32_t index = (uint32_t)timer - (uint32_t)TIM9_BASE >> SHIFT_10; 
+    uint32_t index = ((uint32_t)timer - (uint32_t)TIM2_BASE) >> SHIFT_10; 
 
     // Enable the timer clock 
-    RCC->APB2ENR |= (SET_BIT << (index + SHIFT_16));
+    RCC->APB1ENR |= (SET_BIT << index);
 
-    // Set the clock prescalar 
-    tim_psc_set(timer, prescalar); 
+    // Configure the output pin 
+    // gpio_pin_init(gpio, pin, MODER_INPUT, OTYPER_PP, OSPEEDR_FAST, pull); 
 
-    // Set the auto-reload register (ARR) 
-    tim_arr_set(timer, arr); 
+    // Set the counter direction 
+    tim_dir(timer, dir); 
 
     // Set the capture/compare mode 
     tim_ocm(timer, ocm, channel); 
+
+    // Set the auto-reload register (ARR) 
+    tim_arr_set(timer, arr); 
 
     // Configure the preload register 
     tim_ocpe(timer, ocpe, channel); 
@@ -123,14 +114,38 @@ void tim_9_to_11_init(
     // Enable the OCx output 
     tim_cce(timer, cce, channel); 
 
-    // Configure the update interrupt 
-    tim_uie(timer, uie); 
-
     // Reset the counter 
     tim_cnt_set(timer, RESET_COUNT); 
 
     // Set the UG bit to initialize all registers 
     tim_ug_set(timer); 
+}
+
+
+// Timer 9-11 counter mode setup 
+void tim_9_to_11_counter_init(
+    TIM_TypeDef *timer, 
+    timer_us_prescalars_t prescalar, 
+    uint16_t arr, 
+    tim_up_int_t uie)
+{
+    // Get the timer port index 
+    uint32_t index = ((uint32_t)timer - (uint32_t)TIM9_BASE) >> SHIFT_10; 
+
+    // Enable the timer clock 
+    RCC->APB2ENR |= (SET_BIT << (index + SHIFT_16));
+
+    // Set the clock prescalar 
+    tim_psc_set(timer, prescalar); 
+
+    // Set the auto-reload register (ARR) 
+    tim_arr_set(timer, arr); 
+
+    // Configure the update interrupt 
+    tim_uie(timer, uie); 
+
+    // Reset the counter 
+    tim_cnt_set(timer, RESET_COUNT); 
 }
 
 //================================================================================
@@ -219,6 +234,17 @@ void tim_cen(
     timer->CR1 &= ~(SET_BIT << SHIFT_0); 
     timer->CR1 |= (cen << SHIFT_0); 
 }
+
+
+// Direction configuration 
+void tim_dir(
+    TIM_TypeDef *timer, 
+    tim_dir_t dir)
+{
+    timer->CR1 &= ~(SET_BIT << SHIFT_4); 
+    timer->CR1 |= (dir << SHIFT_4); 
+}
+
 
 // Auto-reload preload enable 
 void tim_arpe(
