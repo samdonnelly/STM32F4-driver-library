@@ -170,27 +170,11 @@ typedef uint32_t TIM_COUNTER;
 // Initialization 
 
 /**
- * @brief TIM9 initialization 
- * 
- * @details Initializes TIM9 in upcounting mode 
- * 
- * // TODO remove this function when all instances have been replaced 
- * 
- * @see timer_us_prescalars_t
- * @see tim9_delay_us
- * @see tim9_delay_ms
- * 
- * @param prescalar : value to divide the clock by to get a certain counting frequency
- */
-void tim9_init(uint16_t prescalar);
-
-
-/**
  * @brief Timer 1 initialization 
  * 
- * @details 
+ * @details This function is currently not implemented. 
  * 
- * @param prescalar 
+ * @param prescalar : timer clock prescaler 
  */
 void tim1_init(
     timer_us_prescalars_t prescalar); 

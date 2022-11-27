@@ -62,7 +62,7 @@ void tim_dir(
 /**
  * @brief Auto-reload preload enable 
  * 
- * @details 
+ * @details Determines whether the auto-reload register (ARR) is buffered or not. 
  * 
  * @see tim_arpe_t
  * 
@@ -77,13 +77,17 @@ void tim_arpe(
 /**
  * @brief Update interrupt 
  * 
- * @details Interrupt register 
+ * @details Configures the update event interrupt. If enabled, an interrupt will be generated 
+ *          for the specified timer when an update event occurs. An update event occurs when 
+ *          a counter overflow occurs (counter reaches ARR value) or the UG bit is set 
+ *          manually. <br> 
+ *          
  *          This function is available for all timers. 
  * 
  * @see tim_up_int_t
  * 
  * @param timer : pointer to timer to configure 
- * @param uie 
+ * @param uie : update event interrupt configuration 
  */
 void tim_uie(
     TIM_TypeDef *timer, 
@@ -93,8 +97,13 @@ void tim_uie(
 /**
  * @brief Set the counter clock prescalar 
  * 
- * @details Prescaler register 
+ * @details Configures the prescaler for the timer selected. The prescaler effectively 
+ *          divides the clock used for the timer which determines the rate at which the 
+ *          counter for the clock increments. <br> 
+ *          
  *          This function is available for all timers. 
+ * 
+ * @see timer_us_prescalars_t
  * 
  * @param timer : pointer to timer to configure 
  * @param prescalar 
@@ -107,13 +116,18 @@ void tim_psc_set(
 /**
  * @brief Auto-reload register (ARR) set 
  * 
- * @details Auto-reload register 
- *          This function is available for all timers. 
+ * @details Configures the auto-relaod value of the timer counter. In upcounting mode the 
+ *          counter will count to this reload value before resetting back to zero. In 
+ *          downcounting mode the counter will reset to the reload value. A counter reset 
+ *          is considered a counter overflow. The auto-reload value determines the signal 
+ *          frequency in PWM mode. <br> 
+ *          
+ *          This function is available for all timers. <br> 
  *          
  *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
  * 
  * @param timer : pointer to timer to configure 
- * @param arr 
+ * @param arr : auto-relaod register value 
  */
 void tim_arr_set(
     TIM_TypeDef *timer, 
@@ -121,15 +135,17 @@ void tim_arr_set(
 
 
 /**
- * @brief 
+ * @brief Counter set 
  * 
- * @details 
- *          This function is available for all timers. 
+ * @details Sets the value of the counter for the timer. Generally this is used for resetting 
+ *          the counter. <br> 
+ *          
+ *          This function is available for all timers. <br> 
  *          
  *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
  * 
  * @param timer : pointer to timer to configure 
- * @param counter 
+ * @param counter : counter register value 
  */
 void tim_cnt_set(
     TIM_TypeDef *timer, 
@@ -139,11 +155,15 @@ void tim_cnt_set(
 /**
  * @brief Output compare mode selection 
  * 
- * @details Capture/compare mode registers 
+ * @details Selects the output mode of the chosen timer. The channel for the timer must be 
+ *          specified. See the tim_ocm_t enum for different output mode. 
+ * 
+ * @see tim_ocm_t
+ * @see tim_channel_t
  * 
  * @param timer : pointer to timer to configure 
- * @param ocm 
- * @param channel 
+ * @param ocm : output compare mode configuration 
+ * @param channel : timer channel 
  */
 void tim_ocm(
     TIM_TypeDef *timer, 
@@ -154,11 +174,17 @@ void tim_ocm(
 /**
  * @brief Output compare preload enable 
  * 
- * @details Capture/compare mode registers 
+ * @details Configures the output compare preload. If the preload register is disabled then 
+ *          the CCR register can be written at any time and the new value is taken into 
+ *          account immediately. If enabled then CCR read/write operations use a preload 
+ *          register to hold the value which is then loaded on an update event. 
+ * 
+ * @see tim_ocpe_t
+ * @see tim_channel_t
  * 
  * @param timer : pointer to timer to configure 
- * @param ocpe 
- * @param channel 
+ * @param ocpe : output compare preload configuration 
+ * @param channel : timer channel 
  */
 void tim_ocpe(
     TIM_TypeDef *timer, 
@@ -169,11 +195,15 @@ void tim_ocpe(
 /**
  * @brief Compare output polarity 
  * 
- * @details Capture/compare enable registers 
+ * @details Configures the output polarity. In output compare mode this function sets the 
+ *          polarity as either active high or active low. 
+ * 
+ * @see tim_ccp_t
+ * @see tim_channel_t
  * 
  * @param timer : pointer to timer to configure 
- * @param ccp 
- * @param channel 
+ * @param ccp : compare output polarity 
+ * @param channel : timer channel 
  */
 void tim_ccp(
     TIM_TypeDef *timer, 
@@ -184,11 +214,16 @@ void tim_ccp(
 /**
  * @brief Compare output enable 
  * 
- * @details Capture/compare enable registers 
+ * @details Allows for enabling and disabling of the output or input. If output mode is 
+ *          enabled, compare output disabled means the OC is not active and compare output 
+ *          enabled means the OC signal is output to the corresponding output pin. 
+ * 
+ * @see tim_cce_t
+ * @see tim_channel_t
  * 
  * @param timer : pointer to timer to configure 
- * @param cce 
- * @param channel 
+ * @param cce : compare output enable 
+ * @param channel : timer channel 
  */
 void tim_cce(
     TIM_TypeDef *timer, 
@@ -200,23 +235,6 @@ void tim_cce(
 
 //================================================================================
 // Initialization 
-
-// TODO delete this function when all instances are replaced 
-// Timer 9 setup 
-void tim9_init(uint16_t prescalar)
-{
-    // 1. Enable the timer clock - TIM9 in the RCC_APB2ENR register 
-    RCC->APB2ENR |= (SET_BIT << SHIFT_16);
-
-    // 2. Set the prescalar and the auto-reload register (ARR) 
-    TIM9->PSC = prescalar;  // Set clock prescalar based on APB2 frequency
-    TIM9->ARR = 0xFFFF;     // Max ARR value 
-
-    // 3. Enable the timer and wait for the update flag to set
-    TIM9->CR1 |= (SET_BIT << SHIFT_0);
-    while(!(TIM9->SR & (SET_BIT << SHIFT_0)));
-}
-
 
 // Timer 1 setup 
 void tim1_init(
