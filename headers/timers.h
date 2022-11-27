@@ -64,14 +64,17 @@ typedef enum {
 /**
  * @brief Timer prescalars 
  * 
- * @details these prescalars are for generating a 1us count depending on the 
- *          frequency. The clock frequency of the timer gets divided by this prescalar 
- *          so that the clock counter only increments once per timer clock cycle. 
- *          See the reference manual for more information on calculating this value. 
+ * @details These are predefined prescalers for the timer counters. The name of each prescaler
+ *          defines the time taken for the timer counter to increment at a given clock frequency. 
+ *          For example, the prescaler TIM_84MHZ_1US_PSC is what you'd use if your timer clock 
+ *          is running at 84MHz and you wanted the timer counter to increment ever 1us. When 
+ *          choosing a prescaler it's important to know which timers run on which clock: <br> 
+ *          - Timers 1 and 9-11 run on APB2 clock frequency. <br> 
+ *          - Timers 2-5 run on APB1 clock frequency. <br> 
  */
 typedef enum {
-    TIMERS_APB2_84MHZ_1US_PRESCALAR = 83, 
-    TIMERS_APB2_84MHZ_100US_PRESCALAR = 8399 
+    TIM_84MHZ_1US_PSC = 83, 
+    TIM_84MHZ_100US_PSC = 8399 
 } timer_us_prescalars_t;
 
 
@@ -85,7 +88,7 @@ typedef enum {
 
 
 /**
- * @brief Direction configuration 
+ * @brief Counter direction configuration 
  */
 typedef enum {
     TIM_DIR_UP,       // Upcounting 
@@ -169,22 +172,21 @@ typedef uint32_t TIM_COUNTER;
 /**
  * @brief TIM9 initialization 
  * 
- * @details Initializes TIM9 using a specified prescalar to generate a specific counting
- *          frequency based on the clock frequency. This timer is used for generating 
- *          blocking delays. 
+ * @details Initializes TIM9 in upcounting mode 
+ * 
+ * // TODO remove this function when all instances have been replaced 
  * 
  * @see timer_us_prescalars_t
  * @see tim9_delay_us
  * @see tim9_delay_ms
  * 
  * @param prescalar : value to divide the clock by to get a certain counting frequency
- * 
  */
 void tim9_init(uint16_t prescalar);
 
 
 /**
- * @brief Timer 1 setup 
+ * @brief Timer 1 initialization 
  * 
  * @details 
  * 
@@ -195,28 +197,33 @@ void tim1_init(
 
 
 /**
- * @brief Timer 2-5 output mode setup 
+ * @brief Timer 2-5 output mode initialization 
  * 
- * @details 
+ * @details Initializes timer 2, 3, 4 or 5 to a desired output mode. Note that if a timer port 
+ *          that is not timer 2-5 is passed as an argument then no initialization will happen. 
+ *          This function must be called once for each timer that is to be initialized. <br> 
+ *          
+ *          Timers set up using this function can be used to control a pin output based on 
+ *          a timers sequence. An example is PWM output. 
  * 
  * @see tim_channel_t
+ * @see pin_selector_t
+ * @see tim_dir_t
  * @see tim_ocm_t
  * @see tim_ocpe_t
  * @see tim_arpe_t
  * @see tim_ccp_t
- * @see tim_cce_t
  * 
- * @param timer : 
- * @param channel : 
- * @param gpio : 
- * @param pin : 
- * @param dir : 
- * @param arr : 
- * @param ocm : 
- * @param ocpe : 
- * @param arpe : 
- * @param ccp : 
- * @param cce : 
+ * @param timer : pointer to timer port (2-5) being initialized 
+ * @param channel : timer port channel to use 
+ * @param gpio : pointer to GPIO port of chosen output pin 
+ * @param pin : output pin chosen 
+ * @param dir : counter direction 
+ * @param arr : auto-reload register value 
+ * @param ocm : output compare mode configuration 
+ * @param ocpe : output compare preload configuration 
+ * @param arpe : auto-reload preload register configuration 
+ * @param ccp : output compare polarity configuration 
  */
 void tim_2_to_5_output_init(
     TIM_TypeDef *timer, 
@@ -228,17 +235,24 @@ void tim_2_to_5_output_init(
     tim_ocm_t ocm, 
     tim_ocpe_t ocpe, 
     tim_arpe_t arpe, 
-    tim_ccp_t ccp, 
-    tim_cce_t cce); 
+    tim_ccp_t ccp); 
 
 
 /**
  * @brief Timer 9-11 counter mode setup 
  * 
- * @details 
+ * @details Initializes timer 9, 10 or 11 in upcounting mode. Note that if a timer port 
+ *          that is not timer 9-11 is passed as an argument then no initialization will happen. 
+ *          This function must be called once for each timer that is to be initialized. <br> 
+ *          
+ *          Timers set up using this function can be used to create precise timing sequences. 
+ *          Examples include blocking delays or periodic interrupts. 
  * 
- * @param timer : pointer to timer port to initialize 
- * @param prescalar : counter clock prescaler 
+ * @see timer_us_prescalars_t
+ * @see tim_up_int_t
+ * 
+ * @param timer : pointer to timer port (9-11) being initialized 
+ * @param prescalar : counter clock prescaler (clock divider) 
  * @param arr : auto-reload register value 
  * @param uie : update interrupt configuration 
  */
@@ -257,9 +271,11 @@ void tim_9_to_11_counter_init(
 /**
  * @brief Enable a timer 
  * 
- * @details 
+ * @details This is used to start a specified timer. Timer initialization must be called 
+ *          before calling this function but this function must be called in order for the 
+ *          timer to start functioning. 
  * 
- * @param timer 
+ * @param timer : pointer to timer port to enable 
  */
 void tim_enable(
     TIM_TypeDef *timer); 
@@ -268,9 +284,9 @@ void tim_enable(
 /**
  * @brief Disable a timer 
  * 
- * @details 
+ * @details This is used to stop a specified timer. 
  * 
- * @param timer 
+ * @param timer : pointer to timer port to disable 
  */
 void tim_disable(
     TIM_TypeDef *timer); 
@@ -281,31 +297,18 @@ void tim_disable(
 //================================================================================
 // Delay functions 
 
-// Note that all these functions produce blocking delays 
-
-/**
- * @brief TIM9 microsecond delay function (blocking)
- * 
- * @details TIM9 is initialized with a 1us frequency using tim9_init. This frequency 
- *          allows this function to increment the TIM9 count register once every 
- *          microsecond. The counter is incremented up to the limit specified by 
- *          delay_us. Note that this delay only works in blocking mode, otherwise 
- *          the dealy won't be accurate. 
- * 
- * @see tim9_init
- * 
- * @param delay_us : number of microseconds to delay 
- */
-void tim9_delay_us(uint16_t delay_us);
-
-
 /**
  * @brief Microsecond delay function (blocking)
  * 
- * @details 
+ * @details This function produces a blocking delay of a specified number of microseconds. 
+ *          Note that in order for this function to work properly, a timer must be set up to 
+ *          count every millisecond using the correct prescaler in timer_us_prescalars_t. 
+ *          See any of the timer counter initialization functions for details. 
  * 
- * @param timer 
- * @param delay_us 
+ * @see timer_us_prescalars_t
+ * 
+ * @param timer : pointer to timer used to produce the delay 
+ * @param delay_us : number of microseconds to delay 
  */
 void tim_delay_us(
     TIM_TypeDef *timer, 
@@ -313,26 +316,16 @@ void tim_delay_us(
 
 
 /**
- * @brief TIM9 millisecond delay function (blocking)
- * 
- * @details This function allows for millisecond delays. It works by repeatedly calling
- *          tim9_delay_us in 1000 microsecond (1 millisecond) increments. Note that this 
- *          delay only works in blocking mode, otherwise the delay won't be accurate. 
- * 
- * @see tim9_delay_us
- * 
- * @param delay_ms : number of milliseconds to delay
- */
-void tim9_delay_ms(uint16_t delay_ms);
-
-
-/**
  * @brief Millisecond delay function (blocking)
  * 
- * @details 
+ * @details This function produces a blocking delay of a specified number of milliseconds. 
+ *          This function repeatedly uses the microsecond delay function to get to the 
+ *          desired number of milliseconds. See tim_delay_us for more details. 
  * 
- * @param timer 
- * @param delay_ms 
+ * @see tim_delay_us
+ * 
+ * @param timer : pointer to timer used to produce the delay 
+ * @param delay_ms : number of milliseconds to delay 
  */
 void tim_delay_ms(
     TIM_TypeDef *timer, 
@@ -347,10 +340,12 @@ void tim_delay_ms(
 /**
  * @brief Update interrupt flag clear 
  * 
- * @details 
+ * @details Clears the interrupt flag that is set on an update event. This function is required 
+ *          in the interrupt handler functions in order to return from the ISR. <br> 
+ *          
  *          This function is available for all timers. 
  * 
- * @param timer 
+ * @param timer : pointer to timer that triggered the update event 
  */
 void tim_uif_clear(
     TIM_TypeDef *timer); 
@@ -364,10 +359,12 @@ void tim_uif_clear(
 /**
  * @brief Update generation 
  * 
- * @details generates an update event via software. Automatically cleared by hardware. 
+ * @details Allows for generating an update event manually through software. After calling this 
+ *          function the bit is automatically cleared by hardware. <br> 
+ *          
  *          This function is available for all timers. 
  * 
- * @param timer 
+ * @param timer : pointer to timer of which to trigger an update event 
  */
 void tim_ug_set(
     TIM_TypeDef *timer); 
@@ -379,15 +376,17 @@ void tim_ug_set(
 // Counter register 
 
 /**
- * @brief 
+ * @brief Counter read 
  * 
- * @details 
- *          This function is available for all timers. 
+ * @details Reads the counter value of a specified timer. The counter counts are a rate 
+ *          define by the prescaler and counts up to the auto-reload register value. <br> 
+ *          
+ *          This function is available for all timers. <br> 
  *          
  *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
  * 
- * @param timer 
- * @return TIM_COUNTER 
+ * @param timer : pointer to timer port of which to read its counter 
+ * @return TIM_COUNTER : current value of the counter 
  */
 TIM_COUNTER tim_cnt_read(
     TIM_TypeDef *timer); 
@@ -401,11 +400,17 @@ TIM_COUNTER tim_cnt_read(
 /**
  * @brief Capture/compare value 
  * 
- * @details 
+ * @details This functions sets the capture/compare register value for a specified timer. 
+ *          The value in this register is used as a reference for both capture and compare 
+ *          operations. For example, in PWM mode, this register value is compared to the 
+ *          counter value to know when to set the output pin to high or low so this register 
+ *          dictates the PWM duty cycle. 
  * 
- * @param timer 
- * @param ccr 
- * @param channel 
+ * @see tim_channel_t
+ * 
+ * @param timer : pointer to timer port of which to change the CCR value 
+ * @param ccr : CCR value to set 
+ * @param channel : timer channel 
  */
 void tim_ccr(
     TIM_TypeDef *timer, 

@@ -26,13 +26,17 @@
 /**
  * @brief Counter enable 
  * 
- * @details Control register 
+ * @details Enable the counter for the timer. Enabling the counter enables the timer itself. 
+ *          The counter is controlled using the timer enable and disable functions. <br> 
+ *          
  *          This function is available for all timers. 
  * 
  * @see tim_cen_t
+ * @see tim_enable
+ * @see tim_disable
  * 
- * @param timer : 
- * @param cen :  
+ * @param timer : pointer to timer to configure 
+ * @param cen : counter configuration 
  */
 void tim_cen(
     TIM_TypeDef *timer, 
@@ -40,12 +44,15 @@ void tim_cen(
 
 
 /**
- * @brief Direction configuration 
+ * @brief Counter direction configuration 
  * 
- * @details Control register 
+ * @details Controls the direction that the counter counts. The counter can either be 
+ *          upcounting or downcounting. 
  * 
- * @param timer 
- * @param dir 
+ * @see tim_dir_t
+ * 
+ * @param timer : pointer to timer to configure 
+ * @param dir : counter direction configuration 
  */
 void tim_dir(
     TIM_TypeDef *timer, 
@@ -55,12 +62,12 @@ void tim_dir(
 /**
  * @brief Auto-reload preload enable 
  * 
- * @details Control register 
+ * @details 
  * 
  * @see tim_arpe_t
  * 
- * @param timer 
- * @param arpe 
+ * @param timer : pointer to timer to configure 
+ * @param arpe : auto-reload preload configuration 
  */
 void tim_arpe(
     TIM_TypeDef *timer, 
@@ -75,7 +82,7 @@ void tim_arpe(
  * 
  * @see tim_up_int_t
  * 
- * @param timer 
+ * @param timer : pointer to timer to configure 
  * @param uie 
  */
 void tim_uie(
@@ -89,7 +96,7 @@ void tim_uie(
  * @details Prescaler register 
  *          This function is available for all timers. 
  * 
- * @param timer 
+ * @param timer : pointer to timer to configure 
  * @param prescalar 
  */
 void tim_psc_set(
@@ -105,7 +112,7 @@ void tim_psc_set(
  *          
  *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
  * 
- * @param timer 
+ * @param timer : pointer to timer to configure 
  * @param arr 
  */
 void tim_arr_set(
@@ -121,7 +128,7 @@ void tim_arr_set(
  *          
  *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
  * 
- * @param timer 
+ * @param timer : pointer to timer to configure 
  * @param counter 
  */
 void tim_cnt_set(
@@ -134,7 +141,7 @@ void tim_cnt_set(
  * 
  * @details Capture/compare mode registers 
  * 
- * @param timer 
+ * @param timer : pointer to timer to configure 
  * @param ocm 
  * @param channel 
  */
@@ -149,7 +156,7 @@ void tim_ocm(
  * 
  * @details Capture/compare mode registers 
  * 
- * @param timer 
+ * @param timer : pointer to timer to configure 
  * @param ocpe 
  * @param channel 
  */
@@ -164,7 +171,7 @@ void tim_ocpe(
  * 
  * @details Capture/compare enable registers 
  * 
- * @param timer 
+ * @param timer : pointer to timer to configure 
  * @param ccp 
  * @param channel 
  */
@@ -179,7 +186,7 @@ void tim_ccp(
  * 
  * @details Capture/compare enable registers 
  * 
- * @param timer 
+ * @param timer : pointer to timer to configure 
  * @param cce 
  * @param channel 
  */
@@ -231,8 +238,7 @@ void tim_2_to_5_output_init(
     tim_ocm_t ocm, 
     tim_ocpe_t ocpe, 
     tim_arpe_t arpe, 
-    tim_ccp_t ccp, 
-    tim_cce_t cce)
+    tim_ccp_t ccp)
 {
     // Get the timer port index 
     uint32_t index = ((uint32_t)timer - (uint32_t)TIM2_BASE) >> SHIFT_10; 
@@ -267,7 +273,7 @@ void tim_2_to_5_output_init(
     tim_ccp(timer, ccp, channel); 
 
     // Enable the OCx output 
-    tim_cce(timer, cce, channel); 
+    tim_cce(timer, TIM_CCE_ON, channel); 
 
     // Reset the counter 
     tim_cnt_set(timer, RESET_COUNT); 
@@ -333,18 +339,6 @@ void tim_disable(
 //================================================================================
 // Delay functions 
 
-// TODO delete this function when all instances are replaced 
-// Microsecond delay function (blocking)
-void tim9_delay_us(uint16_t delay_us)
-{
-    // Reset the counter 
-    TIM9->CNT = RESET_COUNT; 
-
-    // Count up to specified value in blocking mode to produce delay 
-    while((TIM9->CNT) < delay_us); 
-}
-
-
 // Microsecond delay function (blocking)
 void tim_delay_us(
     TIM_TypeDef *timer, 
@@ -355,18 +349,6 @@ void tim_delay_us(
 
     // Count up to the specified value in blocking mode to produce a delay 
     while(tim_cnt_read(timer) < delay_us); 
-}
-
-
-// TODO delete this function when all instances are replaced 
-// Millisecond delay function (blocking)
-void tim9_delay_ms(uint16_t delay_ms)
-{
-    // Repeatedly call tim9_delay_us
-    for (uint16_t i = 0; i < delay_ms; i++)
-    {
-        tim9_delay_us(PREFIX_SCALAR);
-    }
 }
 
 
