@@ -35,6 +35,8 @@
 
 #define HD44780U_MSG_PER_CMD 4  // Number of I2C bytes sent per one LCD screen command
 #define HD44780U_NUM_CHAR 80    // Number of character spaces on the display 
+#define HD44780U_LINE_LEN 20    // Number of characters per line on the LCD 
+#define HD44780U_ADDR_INC 1     // I2C address increment 
 
 //=======================================================================================
 
@@ -43,46 +45,37 @@
 // Enums 
 
 /**
- * @brief PCF8574 write addresses
+ * @brief PCF8574 I2C addresses
  * 
  * @details The PCF8574 is the i2c module that relays i2c messages from the controller 
  *          to the screen. The module has contacts on its surface that can be grounded to 
  *          manually set the i2c address. By default none of the contacts are grounded.
  *          The following are all the possible write addresses the module can have. The 
- *          addresses are defined in the deviced user manual. 
- * 
+ *          addresses are defined in the deviced user manual. All of the possible read 
+ *          addresses are simply each of the below write addresses +1. This means that 
+ *          only one of the below addresses needs to be associated with a device and 
+ *          the write and read address can be selected by the driver as needed. <br> 
+ *          
+ *          LLL : write address = 0x40, read address = 0x41 <br> 
+ *          LLH : write address = 0x42, read address = 0x43 <br> 
+ *          LHL : write address = 0x44, read address = 0x45 <br> 
+ *          LHH : write address = 0x46, read address = 0x47 <br> 
+ *          HLL : write address = 0x48, read address = 0x49 <br> 
+ *          HLH : write address = 0x4A, read address = 0x4B <br> 
+ *          HHL : write address = 0x4C, read address = 0x4D <br> 
+ *          HHH : write address = 0x4E, read address = 0x4F <br> 
  */
 typedef enum {
-    PCF8574_LLL_WRITE_ADDRESS = 0x40,
-    PCF8574_LLH_WRITE_ADDRESS = 0x42,
-    PCF8574_LHL_WRITE_ADDRESS = 0x44,
-    PCF8574_LHH_WRITE_ADDRESS = 0x46,
-    PCF8574_HLL_WRITE_ADDRESS = 0x48,
-    PCF8574_HLH_WRITE_ADDRESS = 0x4A,
-    PCF8574_HHL_WRITE_ADDRESS = 0x4C,
-    PCF8574_HHH_WRITE_ADDRESS = 0x4E
-} pcf8574_wrte_addresses_t;
+    PCF8574_ADDR_LLL = 0x40,
+    PCF8574_ADDR_LLH = 0x42,
+    PCF8574_ADDR_LHL = 0x44,
+    PCF8574_ADDR_LHH = 0x46,
+    PCF8574_ADDR_HLL = 0x48,
+    PCF8574_ADDR_HLH = 0x4A,
+    PCF8574_ADDR_HHL = 0x4C,
+    PCF8574_ADDR_HHH = 0x4E
+} pcf8574_addr_t;
 
-/**
- * @brief PCF8574 read addresses
- * 
- * @details The PCF8574 is the i2c module that relays i2c messages from the controller 
- *          to the screen. The module has contacts on its surface that can be grounded to 
- *          manually set the i2c address. By default none of the contacts are grounded.
- *          The following are all the possible read addresses the module can have. The 
- *          addresses are defined in the deviced user manual. 
- * 
- */
-typedef enum {
-    PCF8574_LLL_READ_ADDRESS = 0x41,
-    PCF8574_LLH_READ_ADDRESS = 0x43,
-    PCF8574_LHL_READ_ADDRESS = 0x45,
-    PCF8574_LHH_READ_ADDRESS = 0x47,
-    PCF8574_HLL_READ_ADDRESS = 0x49,
-    PCF8574_HLH_READ_ADDRESS = 0x4B,
-    PCF8574_HHL_READ_ADDRESS = 0x4D,
-    PCF8574_HHH_READ_ADDRESS = 0x4F
-} pcf8574_read_addresses_t;
 
 /**
  * @brief HD44780U delays 
@@ -103,6 +96,7 @@ typedef enum {
     HD44780U_DELAY_200US = 200
 } hd44780u_delays_t;
 
+
 /**
  * @brief HD44780U setup commands
  * 
@@ -121,6 +115,7 @@ typedef enum {
     HD44780U_SETUP_CMD_0X28 = 0x28,
     HD44780U_SETUP_CMD_0X30 = 0x30
 } hd44780u_setup_cmds_t;
+
 
 /**
  * @brief HD44780U configuration commands
@@ -147,6 +142,7 @@ typedef enum {
     HD44780U_CONFIG_CMD_0X0C = 0x0C,
     HD44780U_CONFIG_CMD_0X0D = 0x0D
 } hd44780u_config_cmds_t;
+
 
 /**
  * @brief HD44780U start of line address
@@ -181,11 +177,21 @@ typedef enum {
  *          The function hd44780u_send_instruc and the commands defined in 
  *          hd44780u_setup_cmds_t are used to configure the screen. 
  * 
+ * // TODO add a device instance argument when multiple devices becomes supported 
+ * 
  * @see hd44780u_send_instruc
  * @see hd44780u_setup_cmds_t
  * 
+ * @param i2c 
+ * @param timer 
+ * @param addr 
  */
-void hd44780u_init(void);
+void hd44780u_init(
+    I2C_TypeDef *i2c, 
+    TIM_TypeDef *timer, 
+    pcf8574_addr_t addr);
+// void hd44780u_init(void);
+
 
 /**
  * @brief HD44780U send command
@@ -204,6 +210,7 @@ void hd44780u_init(void);
  */
 void hd44780u_send_instruc(uint8_t hd44780u_cmd);
 
+
 /**
  * @brief HD44780U send data
  * 
@@ -221,6 +228,7 @@ void hd44780u_send_instruc(uint8_t hd44780u_cmd);
  */
 void hd44780u_send_data(uint8_t hd44780u_data);
 
+
 /**
  * @brief HD44780U send string
  * 
@@ -233,6 +241,7 @@ void hd44780u_send_data(uint8_t hd44780u_data);
  * @param print_string : string of data that gets printed to the screen
  */
 void hd44780u_send_string(char *print_string);
+
 
 /**
  * @brief HD44780U clear display 
@@ -248,6 +257,5 @@ void hd44780u_send_string(char *print_string);
 void hd44780u_clear(void);
 
 //=======================================================================================
-
 
 #endif  // _WAYINTOP_LCD_DRIVER_H_
