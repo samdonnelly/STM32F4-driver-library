@@ -341,6 +341,8 @@ void tim_enable(
     TIM_TypeDef *timer)
 {
     tim_cen(timer, TIM_CEN_ENABLE); 
+    if (!(timer->DIER & (SET_BIT << SHIFT_0)))
+        while(!(timer->SR & (SET_BIT << SHIFT_0)));
 }
 
 
