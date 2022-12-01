@@ -27,11 +27,23 @@
 //   be poor and in what exact steps of the initialization that this occurs. Most of the 
 //   time it seems to be ok and a manual reset tends to "fix" the problem. The exact 
 //   problem and fix is unknown. 
+// - The screen is really sensitive to timing. Adding delays between write operations 
+//   seems to be more reliable. 
 //===============================================================================
 
 
 //===============================================================================
 // Function Prototypes 
+
+/**
+ * @brief HD44780U send line 
+ * 
+ * @details 
+ * 
+ * @param data 
+ */
+void hd44780u_send_line(char *data); 
+
 
 /**
  * @brief Send data to screen 
@@ -91,6 +103,10 @@ void hd44780u_init(
     hd44780u_data_record.i2c = i2c;                               // I2C port used 
     hd44780u_data_record.write_addr = addr;                       // I2C write address 
     hd44780u_data_record.read_addr = addr + HD44780U_ADDR_INC;    // I2C read address 
+    hd44780u_clear_line(hd44780u_data_record.line1);              // Clear screen line 1
+    hd44780u_clear_line(hd44780u_data_record.line2);              // Clear screen line 2
+    hd44780u_clear_line(hd44780u_data_record.line3);              // Clear screen line 3
+    hd44780u_clear_line(hd44780u_data_record.line4);              // Clear screen line 4
 
     // Initialize the screen 
 
@@ -152,9 +168,9 @@ void hd44780u_init(
 
 
 //===============================================================================
-// Print data 
+// Send Functions 
 
-// HD44780U send a string of data string
+// HD44780U send a string of data 
 void hd44780u_send_string(char *print_string)
 {
     // Send one string character at a time
@@ -180,37 +196,50 @@ void hd44780u_clear(void)
     }
 }
 
-//===============================================================================
+
+// HD44780U send lines 
+void hd44780u_send_lines(void)
+{
+    hd44780u_send_instruc(HD44780U_START_L1);
+    hd44780u_send_line(hd44780u_data_record.line1);
+    // hd44780u_send_string(hd44780u_data_record.line1); 
+    
+    hd44780u_send_instruc(HD44780U_START_L2);
+    hd44780u_send_line(hd44780u_data_record.line2);
+    // hd44780u_send_string(hd44780u_data_record.line2); 
+    
+    hd44780u_send_instruc(HD44780U_START_L3);
+    hd44780u_send_line(hd44780u_data_record.line3);
+    // hd44780u_send_string(hd44780u_data_record.line3); 
+    
+    hd44780u_send_instruc(HD44780U_START_L4);
+    hd44780u_send_line(hd44780u_data_record.line4);
+    // hd44780u_send_string(hd44780u_data_record.line4); 
+}
 
 
-//===============================================================================
-// Send Functions 
+// HD44780U send line 
+void hd44780u_send_line(char *data)
+{
+    for(uint8_t i = 0; i < HD44780U_LINE_LEN; i++)
+    {
+        hd44780u_send_data((uint8_t)(*data++));
+    }
+}
+
 
 // HD44780U send a single byte of instruction information 
 void hd44780u_send_instruc(uint8_t hd44780u_cmd)
 {
     // Organize send data into a sendable format
-    uint8_t lcd_setup_data[HD44780U_MSG_PER_CMD];
-    lcd_setup_data[0] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
-    lcd_setup_data[1] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X08;
-    lcd_setup_data[2] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
-    lcd_setup_data[3] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X08;
+    uint8_t lcd_instruction[HD44780U_MSG_PER_CMD];
+    lcd_instruction[0] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
+    lcd_instruction[1] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X08;
+    lcd_instruction[2] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
+    lcd_instruction[3] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X08;
 
     // Send the data to the screen 
-    hd44780u_send(hd44780u_data_record.i2c, lcd_setup_data); 
-
-    // // Create start condition to initiate master mode 
-    // i2c_start(I2C1); 
-
-    // // Send the MPU6050 address with a write offset
-    // i2c_write_address(I2C1, PCF8574_ADDR_HHH);
-    // i2c_clear_addr(I2C1);
-
-    // // Send data over I2C1
-    // i2c_write_master_mode(I2C1, lcd_setup_data, HD44780U_MSG_PER_CMD);
-
-    // // Create a stop condition
-    // i2c_stop(I2C1);
+    hd44780u_send(hd44780u_data_record.i2c, lcd_instruction); 
 }
 
 
@@ -218,27 +247,14 @@ void hd44780u_send_instruc(uint8_t hd44780u_cmd)
 void hd44780u_send_data(uint8_t hd44780u_data)
 {
     // Organize send data into a sendable format
-    uint8_t lcd_print_data[HD44780U_MSG_PER_CMD];
-    lcd_print_data[0] = (hd44780u_data & 0xF0) | HD44780U_CONFIG_CMD_0X0D;
-    lcd_print_data[1] = (hd44780u_data & 0xF0) | HD44780U_CONFIG_CMD_0X09;
-    lcd_print_data[2] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0D;
-    lcd_print_data[3] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X09;
+    uint8_t lcd_display_data[HD44780U_MSG_PER_CMD];
+    lcd_display_data[0] = (hd44780u_data & 0xF0) | HD44780U_CONFIG_CMD_0X0D;
+    lcd_display_data[1] = (hd44780u_data & 0xF0) | HD44780U_CONFIG_CMD_0X09;
+    lcd_display_data[2] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0D;
+    lcd_display_data[3] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X09;
 
     // Send the data to the screen 
-    hd44780u_send(hd44780u_data_record.i2c, lcd_print_data); 
-    
-    // // Create start condition to initiate master mode 
-    // i2c_start(I2C1); 
-
-    // // Send the MPU6050 address with a write offset
-    // i2c_write_address(I2C1, PCF8574_ADDR_HHH);
-    // i2c_clear_addr(I2C1);
-
-    // // Send data over I2C1
-    // i2c_write_master_mode(I2C1, lcd_print_data, HD44780U_MSG_PER_CMD);
-
-    // // Create a stop condition
-    // i2c_stop(I2C1);
+    hd44780u_send(hd44780u_data_record.i2c, lcd_display_data); 
 }
 
 
@@ -248,22 +264,78 @@ void hd44780u_send(
     uint8_t *data)
 {
     // Create start condition to initiate master mode 
-    // i2c_start(I2C1); 
     i2c_start(i2c); 
 
     // Send the MPU6050 address with a write offset
-    // i2c_write_address(I2C1, PCF8574_ADDR_HHH);
-    // i2c_clear_addr(I2C1);
     i2c_write_address(i2c, hd44780u_data_record.write_addr);
     i2c_clear_addr(i2c);
 
     // Send data over I2C1
-    // i2c_write_master_mode(I2C1, data, HD44780U_MSG_PER_CMD); 
     i2c_write_master_mode(i2c, data, HD44780U_MSG_PER_CMD); 
 
     // Create a stop condition
-    // i2c_stop(I2C1); 
     i2c_stop(i2c); 
+}
+
+//===============================================================================
+
+
+//===============================================================================
+// Setters 
+
+// Screen position 
+
+// Line data set 
+void hd44780u_line_set(
+    hd44780u_lines_t line, 
+    char *line_data, 
+    uint8_t offset)
+{
+    // Local variables 
+    char *line_x_data; 
+    uint8_t index = offset; 
+
+    // Determine the line 
+    switch (line)
+    {
+        case HD44780U_L1:
+            line_x_data = hd44780u_data_record.line1; 
+            break;
+
+        case HD44780U_L2:
+            line_x_data = hd44780u_data_record.line2; 
+            break;
+
+        case HD44780U_L3:
+            line_x_data = hd44780u_data_record.line3; 
+            break;
+
+        case HD44780U_L4:
+            line_x_data = hd44780u_data_record.line4; 
+            break;
+        
+        default:
+            return; 
+    }
+
+    // Move to line position 
+    line_x_data += offset; 
+
+    // Copy the new line data to the data record 
+    while ((index < HD44780U_LINE_LEN) && (*line_data != NULL_CHAR))
+    {
+        *line_x_data++ = *line_data; 
+        line_data++; 
+        index++; 
+    }
+}
+
+
+// Clear a line 
+void hd44780u_clear_line(
+    char *data)
+{
+    for(uint8_t i = 0; i < HD44780U_NUM_CHAR; i++) *data++ = ' '; 
 }
 
 //===============================================================================

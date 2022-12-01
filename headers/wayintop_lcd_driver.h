@@ -163,6 +163,17 @@ typedef enum {
     HD44780U_START_L4 = 0xD4
 } hd44780u_line_start_position_t;
 
+
+/**
+ * @brief HD44780U lines 
+ */
+typedef enum {
+    HD44780U_L1,
+    HD44780U_L2,
+    HD44780U_L3,
+    HD44780U_L4
+} hd44780u_lines_t;
+
 //=======================================================================================
 
 
@@ -256,6 +267,46 @@ void hd44780u_send_string(char *print_string);
  */
 void hd44780u_clear(void);
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ */
+void hd44780u_send_lines(void); 
+
 //=======================================================================================
+
+
+//===============================================================================
+// Setters 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param line 
+ * @param line_data 
+ * @param offset 
+ */
+void hd44780u_line_set(
+    hd44780u_lines_t line, 
+    char *line_data, 
+    uint8_t offset); 
+
+
+/**
+ * @brief Clear a line 
+ * 
+ * @details 
+ * 
+ * @param data 
+ */
+void hd44780u_clear_line(
+    char *data); 
+
+//===============================================================================
 
 #endif  // _WAYINTOP_LCD_DRIVER_H_
