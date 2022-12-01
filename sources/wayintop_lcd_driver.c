@@ -36,13 +36,39 @@
 // Function Prototypes 
 
 /**
- * @brief HD44780U send line 
+ * @brief HD44780U send command
  * 
- * @details 
+ * @details This function is used for configuring settings on the screen. The 
+ *          hd44780u_init functions uses this function to send configuration commands. 
+ *          The function can also be used to set the cursor position by setting the 
+ *          DDRAM address value. The i2c driver is used to send the instructions. 
+ *          Before sending instructions, the instruction data is formatted using the 
+ *          hd44780u_config_cmds_t commands. 
  * 
- * @param data 
+ * @see hd44780u_init
+ * @see hd44780u_config_cmds_t
+ * 
+ * @param hd44780u_cmd : instruction to configure the screen 
  */
-void hd44780u_send_line(char *data); 
+void hd44780u_send_instruc(uint8_t hd44780u_cmd);
+
+
+/**
+ * @brief HD44780U send data
+ * 
+ * @details This function is used to print information onto the screen one byte at a time. 
+ *          The function can be called directly for printing a single character or 
+ *          hd44780u_send_string can be used to repeatedly call the function and print a 
+ *          string. hd44780u_clear uses this function to send blank characters to the 
+ *          screen. The i2c driver is used to send data. Before sending the data, the 
+ *          data is formatted using hd44780u_config_cmds_t commands. 
+ * 
+ * @see hd44780u_send_string
+ * @see hd44780u_config_cmds_t
+ * 
+ * @param hd44780u_data : command to be printed to the screen
+ */
+void hd44780u_send_data(uint8_t hd44780u_data);
 
 
 /**
@@ -57,6 +83,19 @@ void hd44780u_send_line(char *data);
 void hd44780u_send(
     I2C_TypeDef *i2c, 
     uint8_t *data);
+
+
+/**
+ * @brief Determine the line 
+ * 
+ * @details 
+ * 
+ * @param line 
+ * @param line_data 
+ */
+void hd44780u_identify_line(
+    hd44780u_lines_t line,
+    char *line_data); 
 
 //===============================================================================
 
@@ -93,7 +132,6 @@ static hd44780u_data_record_t hd44780u_data_record;
 // Initialization 
 
 // HD44780U screen init 
-// void hd44780u_init(void)
 void hd44780u_init(
     I2C_TypeDef *i2c, 
     TIM_TypeDef *timer, 
@@ -103,10 +141,10 @@ void hd44780u_init(
     hd44780u_data_record.i2c = i2c;                               // I2C port used 
     hd44780u_data_record.write_addr = addr;                       // I2C write address 
     hd44780u_data_record.read_addr = addr + HD44780U_ADDR_INC;    // I2C read address 
-    hd44780u_clear_line(hd44780u_data_record.line1);              // Clear screen line 1
-    hd44780u_clear_line(hd44780u_data_record.line2);              // Clear screen line 2
-    hd44780u_clear_line(hd44780u_data_record.line3);              // Clear screen line 3
-    hd44780u_clear_line(hd44780u_data_record.line4);              // Clear screen line 4
+    hd44780u_line_clear(HD44780U_L1);                             // Clear line 1 data 
+    hd44780u_line_clear(HD44780U_L2);                             // Clear line 2 data 
+    hd44780u_line_clear(HD44780U_L3);                             // Clear line 3 data 
+    hd44780u_line_clear(HD44780U_L4);                             // Clear line 4 data 
 
     // Initialize the screen 
 
@@ -160,18 +198,22 @@ void hd44780u_init(
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);
     tim_delay_ms(timer, HD44780U_DELAY_001MS); 
 
-    // Clear the display 
+    // Clear the display and pause briefly 
     hd44780u_clear();
+    tim_delay_ms(timer, HD44780U_DELAY_100MS);   // Helps screen to stabilize before use 
 }
 
 //===============================================================================
 
 
 //===============================================================================
-// Send Functions 
+// Send functions 
+
+// Add: position selector, send integer, send float 
 
 // HD44780U send a string of data 
-void hd44780u_send_string(char *print_string)
+void hd44780u_send_string(
+    char *print_string)
 {
     // Send one string character at a time
     while(*print_string)
@@ -197,39 +239,39 @@ void hd44780u_clear(void)
 }
 
 
-// HD44780U send lines 
-void hd44780u_send_lines(void)
+// Set cursor position 
+void hd44780u_cursor_pos(
+    hd44780u_line_start_position_t line_start, 
+    uint8_t offset)
 {
-    hd44780u_send_instruc(HD44780U_START_L1);
-    hd44780u_send_line(hd44780u_data_record.line1);
-    // hd44780u_send_string(hd44780u_data_record.line1); 
-    
-    hd44780u_send_instruc(HD44780U_START_L2);
-    hd44780u_send_line(hd44780u_data_record.line2);
-    // hd44780u_send_string(hd44780u_data_record.line2); 
-    
-    hd44780u_send_instruc(HD44780U_START_L3);
-    hd44780u_send_line(hd44780u_data_record.line3);
-    // hd44780u_send_string(hd44780u_data_record.line3); 
-    
-    hd44780u_send_instruc(HD44780U_START_L4);
-    hd44780u_send_line(hd44780u_data_record.line4);
-    // hd44780u_send_string(hd44780u_data_record.line4); 
+    // Check that the currsor remains on the specified line 
+    if (offset >= HD44780U_LINE_LEN) return; 
+
+    // Update the cursor position 
+    hd44780u_send_instruc(line_start + offset); 
 }
 
 
 // HD44780U send line 
-void hd44780u_send_line(char *data)
+void hd44780u_send_line(
+    hd44780u_lines_t line)
 {
+    // Local variables 
+    char *line_data = NULL; 
+
+    // Determine the line 
+    hd44780u_identify_line(line, line_data); 
+    if (line_data == NULL) return; 
+
+    // Send a line of data 
     for(uint8_t i = 0; i < HD44780U_LINE_LEN; i++)
-    {
-        hd44780u_send_data((uint8_t)(*data++));
-    }
+        hd44780u_send_data((uint8_t)(*line_data++));
 }
 
 
 // HD44780U send a single byte of instruction information 
-void hd44780u_send_instruc(uint8_t hd44780u_cmd)
+void hd44780u_send_instruc(
+    uint8_t hd44780u_cmd)
 {
     // Organize send data into a sendable format
     uint8_t lcd_instruction[HD44780U_MSG_PER_CMD];
@@ -244,7 +286,8 @@ void hd44780u_send_instruc(uint8_t hd44780u_cmd)
 
 
 // HD44780U send a single byte of printable data 
-void hd44780u_send_data(uint8_t hd44780u_data)
+void hd44780u_send_data(
+    uint8_t hd44780u_data)
 {
     // Organize send data into a sendable format
     uint8_t lcd_display_data[HD44780U_MSG_PER_CMD];
@@ -283,59 +326,81 @@ void hd44780u_send(
 //===============================================================================
 // Setters 
 
-// Screen position 
-
-// Line data set 
+// Set the content of a line on the screen 
 void hd44780u_line_set(
     hd44780u_lines_t line, 
-    char *line_data, 
+    char *data, 
     uint8_t offset)
 {
     // Local variables 
-    char *line_x_data; 
-    uint8_t index = offset; 
+    char *line_data = NULL; 
 
     // Determine the line 
-    switch (line)
-    {
-        case HD44780U_L1:
-            line_x_data = hd44780u_data_record.line1; 
-            break;
-
-        case HD44780U_L2:
-            line_x_data = hd44780u_data_record.line2; 
-            break;
-
-        case HD44780U_L3:
-            line_x_data = hd44780u_data_record.line3; 
-            break;
-
-        case HD44780U_L4:
-            line_x_data = hd44780u_data_record.line4; 
-            break;
-        
-        default:
-            return; 
-    }
+    hd44780u_identify_line(line, line_data); 
+    if (line_data == NULL) return; 
 
     // Move to line position 
-    line_x_data += offset; 
+    line_data += offset; 
 
     // Copy the new line data to the data record 
-    while ((index < HD44780U_LINE_LEN) && (*line_data != NULL_CHAR))
+    while ((offset++ < HD44780U_LINE_LEN) && (*data != NULL_CHAR))
     {
-        *line_x_data++ = *line_data; 
-        line_data++; 
-        index++; 
+        *line_data++ = *data++; 
+        // *line_data++ = *data; 
+        // data++; 
+        // index++; 
     }
 }
 
 
-// Clear a line 
-void hd44780u_clear_line(
-    char *data)
+// Clear the contents of a line 
+void hd44780u_line_clear(
+    hd44780u_lines_t line)
 {
-    for(uint8_t i = 0; i < HD44780U_NUM_CHAR; i++) *data++ = ' '; 
+    // Local variables 
+    char *line_data = NULL; 
+
+    // Determine the line 
+    hd44780u_identify_line(line, line_data); 
+    if (line_data == NULL) return; 
+
+    // Clear the contents of the line 
+    for(uint8_t i = 0; i < HD44780U_NUM_CHAR; i++) 
+        *line_data++ = ' '; 
+}
+
+//===============================================================================
+
+
+//===============================================================================
+// Misc functions 
+
+// Determine the line 
+void hd44780u_identify_line(
+    hd44780u_lines_t line,
+    char *line_data)
+{
+    switch (line)
+    {
+        case HD44780U_L1:
+            line_data = hd44780u_data_record.line1; 
+            break;
+
+        case HD44780U_L2:
+            line_data = hd44780u_data_record.line2; 
+            break;
+
+        case HD44780U_L3:
+            line_data = hd44780u_data_record.line3; 
+            break;
+
+        case HD44780U_L4:
+            line_data = hd44780u_data_record.line4; 
+            break;
+        
+        default:
+            break; 
+    }
 }
 
 //===============================================================================

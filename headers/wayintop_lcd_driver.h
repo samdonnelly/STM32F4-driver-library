@@ -16,7 +16,7 @@
 #define _WAYINTOP_LCD_DRIVER_H_
 
 
-//=======================================================================================
+//===============================================================================
 // Includes 
 
 // Tools 
@@ -27,10 +27,10 @@
 #include "timers.h"
 #include "i2c_comm.h"
 
-//=======================================================================================
+//===============================================================================
 
 
-//=======================================================================================
+//===============================================================================
 // Macros
 
 #define HD44780U_MSG_PER_CMD 4  // Number of I2C bytes sent per one LCD screen command
@@ -38,10 +38,10 @@
 #define HD44780U_LINE_LEN 20    // Number of characters per line on the LCD 
 #define HD44780U_ADDR_INC 1     // I2C address increment 
 
-//=======================================================================================
+//===============================================================================
 
 
-//=======================================================================================
+//===============================================================================
 // Enums 
 
 /**
@@ -174,11 +174,38 @@ typedef enum {
     HD44780U_L4
 } hd44780u_lines_t;
 
-//=======================================================================================
+
+/**
+ * @brief HD44780U cursor offset 
+ */
+typedef enum {
+    HD44780U_CURSOR_OFFSET_0,
+    HD44780U_CURSOR_OFFSET_1,
+    HD44780U_CURSOR_OFFSET_2,
+    HD44780U_CURSOR_OFFSET_3, 
+    HD44780U_CURSOR_OFFSET_4, 
+    HD44780U_CURSOR_OFFSET_5, 
+    HD44780U_CURSOR_OFFSET_6, 
+    HD44780U_CURSOR_OFFSET_7, 
+    HD44780U_CURSOR_OFFSET_8, 
+    HD44780U_CURSOR_OFFSET_9, 
+    HD44780U_CURSOR_OFFSET_10, 
+    HD44780U_CURSOR_OFFSET_11, 
+    HD44780U_CURSOR_OFFSET_12, 
+    HD44780U_CURSOR_OFFSET_13, 
+    HD44780U_CURSOR_OFFSET_14, 
+    HD44780U_CURSOR_OFFSET_15, 
+    HD44780U_CURSOR_OFFSET_16, 
+    HD44780U_CURSOR_OFFSET_17, 
+    HD44780U_CURSOR_OFFSET_18, 
+    HD44780U_CURSOR_OFFSET_19 
+} hd44780u_cursor_offset_t;
+
+//===============================================================================
 
 
-//=======================================================================================
-// Function Prototypes
+//===============================================================================
+// Initialization 
 
 /**
  * @brief HD44780U screen initialization
@@ -201,44 +228,12 @@ void hd44780u_init(
     I2C_TypeDef *i2c, 
     TIM_TypeDef *timer, 
     pcf8574_addr_t addr);
-// void hd44780u_init(void);
+
+//===============================================================================
 
 
-/**
- * @brief HD44780U send command
- * 
- * @details This function is used for configuring settings on the screen. The 
- *          hd44780u_init functions uses this function to send configuration commands. 
- *          The function can also be used to set the cursor position by setting the 
- *          DDRAM address value. The i2c driver is used to send the instructions. 
- *          Before sending instructions, the instruction data is formatted using the 
- *          hd44780u_config_cmds_t commands. 
- * 
- * @see hd44780u_init
- * @see hd44780u_config_cmds_t
- * 
- * @param hd44780u_cmd : instruction to configure the screen 
- */
-void hd44780u_send_instruc(uint8_t hd44780u_cmd);
-
-
-/**
- * @brief HD44780U send data
- * 
- * @details This function is used to print information onto the screen one byte at a time. 
- *          The function can be called directly for printing a single character or 
- *          hd44780u_send_string can be used to repeatedly call the function and print a 
- *          string. hd44780u_clear uses this function to send blank characters to the 
- *          screen. The i2c driver is used to send data. Before sending the data, the 
- *          data is formatted using hd44780u_config_cmds_t commands. 
- * 
- * @see hd44780u_send_string
- * @see hd44780u_config_cmds_t
- * 
- * @param hd44780u_data : command to be printed to the screen
- */
-void hd44780u_send_data(uint8_t hd44780u_data);
-
+//===============================================================================
+// Send functions 
 
 /**
  * @brief HD44780U send string
@@ -269,14 +264,29 @@ void hd44780u_clear(void);
 
 
 /**
- * @brief 
+ * @brief Set cursor position 
  * 
  * @details 
  * 
+ * @param line_start 
+ * @param offset 
  */
-void hd44780u_send_lines(void); 
+void hd44780u_cursor_pos(
+    hd44780u_line_start_position_t line_start, 
+    uint8_t offset); 
 
-//=======================================================================================
+
+/**
+ * @brief HD44780U send line 
+ * 
+ * @details 
+ * 
+ * @param line : 
+ */
+void hd44780u_send_line(
+    hd44780u_lines_t line); 
+
+//===============================================================================
 
 
 //===============================================================================
@@ -302,10 +312,10 @@ void hd44780u_line_set(
  * 
  * @details 
  * 
- * @param data 
+ * @param line : 
  */
-void hd44780u_clear_line(
-    char *data); 
+void hd44780u_line_clear(
+    hd44780u_lines_t line); 
 
 //===============================================================================
 
