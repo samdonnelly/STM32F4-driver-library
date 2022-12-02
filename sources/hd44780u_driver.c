@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Wayintop 2004 LCD screen (HD44780U + PCF8574) driver
+ * @brief HD44780U + PCF8574 20x4 LCD screen driver 
  * 
  * @version 0.1
  * @date 2022-02-11
@@ -15,7 +15,7 @@
 //===============================================================================
 // Includes 
 
-#include "wayintop_lcd_driver.h"
+#include "hd44780u_driver.h"
 
 //===============================================================================
 
