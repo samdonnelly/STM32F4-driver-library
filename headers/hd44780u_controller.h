@@ -31,7 +31,7 @@
 //================================================================================
 // Macros 
 
-#define HD44780U_NUM_STATES 7    // Number of states for the device 
+#define HD44780U_NUM_STATES 8    // Number of states for the device 
 
 //================================================================================
 
@@ -43,13 +43,14 @@
  * @brief HD44780U controller states 
  */
 typedef enum {
-    HD44780U_INIT_STATE, 
-    HD44780U_IDLE_STATE, 
-    HD44780U_WRITE_STATE, 
-    HD44780U_READ_STATE, 
-    HD44780U_LOW_PWR_STATE, 
-    HD44780U_FAULT_STATE, 
-    HD44780U_RESET_STATE 
+    HD44780U_INIT_STATE,                    // Initialization state 
+    HD44780U_IDLE_STATE,                    // Idle state 
+    HD44780U_WRITE_STATE,                   // Write state 
+    HD44780U_READ_STATE,                    // Read state 
+    HD44780U_LOW_PWR_TRANS_STATE,           // Low power mode transition state 
+    HD44780U_LOW_PWR_STATE,                 // Low power state 
+    HD44780U_FAULT_STATE,                   // Fault state 
+    HD44780U_RESET_STATE                    // Reset state 
 } hd44780u_states_t; 
 
 //================================================================================
@@ -95,15 +96,156 @@ typedef void (*hd44780u_state_functions_t)(
 
 
 //================================================================================
-// Function prototypes 
+// Control functions 
 
-
+/**
+ * @brief 
+ * 
+ */
 void hd44780u_controller_init(void); 
 
 
-
+/**
+ * @brief 
+ * 
+ */
 void hd44780u_controller(void); 
 
+//================================================================================
+
+
+//================================================================================
+// Setters 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param display_data 
+ * @param line_offset 
+ */
+void hd44780u_line1_set(
+    char *display_data, 
+    hd44780u_cursor_offset_t line_offset); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ */
+void hd44780u_line1_clear(void); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param display_data 
+ * @param line_offset 
+ */
+void hd44780u_line2_set(
+    char *display_data, 
+    hd44780u_cursor_offset_t line_offset); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ */
+void hd44780u_line2_clear(void); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param display_data 
+ * @param line_offset 
+ */
+void hd44780u_line3_set(
+    char *display_data, 
+    hd44780u_cursor_offset_t line_offset); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ */
+void hd44780u_line3_clear(void); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param display_data 
+ * @param line_offset 
+ */
+void hd44780u_line4_set(
+    char *display_data, 
+    hd44780u_cursor_offset_t line_offset); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ */
+void hd44780u_line4_clear(void); 
+
+
+/**
+ * @brief Set write flag 
+ * 
+ * @details 
+ */
+void hd44780_set_write_flag(void); 
+
+
+// Read flag 
+/**
+ * @brief Set read flag 
+ * 
+ * @details 
+ */
+void hd44780u_set_read_flag(void); 
+
+
+/**
+ * @brief Set low power mode flag 
+ * 
+ * @details 
+ */
+void hd44780u_set_low_pwr_flag(void); 
+
+
+/**
+ * @brief Clear low power mode flag 
+ * 
+ * @details 
+ */
+void hd44780u_clear_low_pwr_flag(void); 
+
+
+/**
+ * @brief Set reset flag 
+ * 
+ * @details 
+ */
+void hd44780u_set_reset_flag(void); 
+
+//================================================================================
+
+
+//================================================================================
+// Getters 
 //================================================================================
 
 #endif   // _HD44780U_CONTROLLER_H_ 

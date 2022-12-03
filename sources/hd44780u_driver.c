@@ -36,6 +36,13 @@
 // Function Prototypes 
 
 /**
+ * @brief HD44780U screen re-initialization 
+ * 
+ * @details Used in the HD44780U controller for resetting the device 
+ */
+void hd44780u_re_init(void); 
+
+/**
  * @brief HD44780U send command
  * 
  * @details This function is used for configuring settings on the screen. The 
@@ -93,8 +100,9 @@ void hd44780u_send(
 // HD44780U data record 
 typedef struct hd44780u_data_record_s 
 {
-    // I2C port used by the device 
-    I2C_TypeDef *i2c; 
+    // Peripheral ports used by the device 
+    I2C_TypeDef *i2c;                // I2C port 
+    TIM_TypeDef *tim;                // Timer 
 
     // Device I2C addresses 
     uint8_t write_addr;              // Write address 
@@ -126,6 +134,7 @@ void hd44780u_init(
 {
     // Initialize the device record 
     hd44780u_data_record.i2c = i2c;                               // I2C port used 
+    hd44780u_data_record.tim = timer;                             // Timer port 
     hd44780u_data_record.write_addr = addr;                       // I2C write address 
     hd44780u_data_record.read_addr = addr + HD44780U_ADDR_INC;    // I2C read address 
     hd44780u_line_clear(HD44780U_L1);                             // Clear line 1 data 
@@ -136,58 +145,68 @@ void hd44780u_init(
     // Initialize the screen 
 
     // Wait for more than 40 ms after Vcc rises to 2.7V 
-    tim_delay_ms(timer, HD44780U_DELAY_100MS);
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_100MS);
 
     // Function set. Wait for more than 4.1 ms. 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
-    tim_delay_ms(timer, HD44780U_DELAY_005MS); 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_005MS); 
 
     // Function set. Wait for more than 100 us. 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
-    tim_delay_ms(timer, HD44780U_DELAY_001MS); 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
 
     // Function set. No specified wait time. 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
-    tim_delay_ms(timer, HD44780U_DELAY_010MS); 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_010MS); 
 
     // Function set - Choose 4-bit mode
     // DL = 0 -> 4-bit data length 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X20);
-    tim_delay_ms(timer, HD44780U_DELAY_010MS); 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_010MS); 
 
     // Function set - Specify the number of display lines and character font
     // N = 1  -> Sets the number of dsiplay lines to 2 
     // F = 0  -> Sets character font to 5x8 dots
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X28);
-    tim_delay_ms(timer, HD44780U_DELAY_001MS); 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
 
     // Display off 
     // D = 0 -> Display off 
     // C = 0 -> Cursor not displayed 
     // B = 0 -> No blinking 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0x08);
-    tim_delay_ms(timer, HD44780U_DELAY_001MS); 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
 
     // Display clear 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X01);
-    tim_delay_ms(timer, HD44780U_DELAY_001MS); 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
 
     // Entry mode set 
     // I/D = 1 -> Increment 
     // S   = 0 -> No display shifting 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X06);
-    tim_delay_ms(timer, HD44780U_DELAY_001MS); 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
 
     // Display on 
     // D = 1 -> Display on
     // C = 0 -> Cursor not displayed 
     // B = 0 -> No blinking 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);
-    tim_delay_ms(timer, HD44780U_DELAY_001MS); 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
 
     // Clear the display and pause briefly 
     hd44780u_clear();
-    tim_delay_ms(timer, HD44780U_DELAY_500MS);   // Helps screen to stabilize before use 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_500MS);   // Helps screen to stabilize before use 
+}
+
+
+// HD44780U screen re-initialization 
+void hd44780u_re_init(void)
+{
+    hd44780u_init(
+        hd44780u_data_record.i2c, 
+        hd44780u_data_record.tim, 
+        hd44780u_data_record.write_addr); 
 }
 
 //===============================================================================

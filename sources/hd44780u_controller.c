@@ -79,7 +79,18 @@ void hd44780u_read_state(
  * 
  * @param hd44780u_device 
  */
-void hd44780u_low_power_state(
+void hd44780u_low_pwr_trans_state(
+    hd44780u_trackers_t hd44780u_device); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param hd44780u_device 
+ */
+void hd44780u_low_pwr_state(
     hd44780u_trackers_t hd44780u_device); 
 
 
@@ -120,7 +131,8 @@ static hd44780u_state_functions_t state_table[HD44780U_NUM_STATES] =
     &hd44780u_idle_state, 
     &hd44780u_write_state, 
     &hd44780u_read_state, 
-    &hd44780u_low_power_state, 
+    &hd44780u_low_pwr_trans_state, 
+    &hd44780u_low_pwr_state, 
     &hd44780u_fault_state, 
     &hd44780u_reset_state 
 }; 
@@ -162,7 +174,6 @@ void hd44780u_controller(void)
     // Fault state 
     if (hd44780u_device_trackers.fault_code)
     {
-        // Check the current state status 
         if (next_state == HD44780U_FAULT_STATE)
         {
             if (hd44780u_device_trackers.reset)
@@ -199,7 +210,7 @@ void hd44780u_controller(void)
                     next_state = HD44780U_READ_STATE; 
 
                 else if (hd44780u_device_trackers.low_power)
-                    next_state = HD44780U_LOW_PWR_STATE; 
+                    next_state = HD44780U_LOW_PWR_TRANS_STATE; 
                 
                 break; 
 
@@ -221,9 +232,16 @@ void hd44780u_controller(void)
                 
                 break; 
 
+            case HD44780U_LOW_PWR_TRANS_STATE: 
+                if (hd44780u_device_trackers.low_power)
+                    next_state = HD44780U_LOW_PWR_STATE; 
+                else 
+                    next_state = HD44780U_IDLE_STATE; 
+                break; 
+
             case HD44780U_LOW_PWR_STATE: 
                 if (!(hd44780u_device_trackers.low_power))
-                    next_state = HD44780U_IDLE_STATE; 
+                    next_state = HD44780U_LOW_PWR_TRANS_STATE; 
                 break; 
 
             default: 
@@ -243,62 +261,99 @@ void hd44780u_controller(void)
 //================================================================================
 // State functions 
 
-// 
+// Initialization state 
 void hd44780u_init_state(
     hd44780u_trackers_t hd44780u_device)
 {
     // Clear reset flag 
+    hd44780u_device_trackers.reset = CLEAR_BIT; 
+
     // Clear startup flag 
+    hd44780u_device_trackers.startup = CLEAR_BIT; 
 }
 
 
-// 
+// Idle state 
 void hd44780u_idle_state(
     hd44780u_trackers_t hd44780u_device)
 {
-    // Do basically nothing 
+    // Do nothing when not needed 
 }
 
 
-// 
+// Write state 
 void hd44780u_write_state(
     hd44780u_trackers_t hd44780u_device)
 {
+    // Write all line contents 
+    hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_OFFSET_0);
+    hd44780u_send_line(HD44780U_L1); 
+
+    hd44780u_cursor_pos(HD44780U_START_L2, HD44780U_CURSOR_OFFSET_0);
+    hd44780u_send_line(HD44780U_L2); 
+    
+    hd44780u_cursor_pos(HD44780U_START_L3, HD44780U_CURSOR_OFFSET_0);
+    hd44780u_send_line(HD44780U_L3); 
+    
+    hd44780u_cursor_pos(HD44780U_START_L4, HD44780U_CURSOR_OFFSET_0);
+    hd44780u_send_line(HD44780U_L4); 
+
     // Clear the write flag 
+    hd44780u_device_trackers.write = CLEAR_BIT; 
 }
 
 
-// 
+// Read state 
 void hd44780u_read_state(
     hd44780u_trackers_t hd44780u_device)
 {
+    // Check read message for faults and set fault code if needed 
+
+    // Store read messages 
+
     // Clear the read flag 
+    hd44780u_device_trackers.read = CLEAR_BIT; 
 }
 
 
-// 
-void hd44780u_low_power_state(
+// Low power mode transition state 
+void hd44780u_low_pwr_trans_state(
     hd44780u_trackers_t hd44780u_device)
 {
-    // Put the screen in low power mode. 
-    // Should this just be a transition state? You'd call this then return to idle 
-    // then go to a different state to bring the screen out of low power. 
+    // Enable or disable low power depending on the low power flag 
+    if (hd44780u_device_trackers.low_power)
+        hd44780u_send_instruc(HD44780U_SETUP_CMD_0x08);   // Turn the display off 
+    else 
+        hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);   // Turn the display on rrr
 }
 
 
-// 
+// Low power mode state 
+void hd44780u_low_pwr_state(
+    hd44780u_trackers_t hd44780u_device)
+{
+    // Idle state where the controller can do nothing but wait for the low power mode 
+    // flag to clear 
+}
+
+
+// Fault state 
 void hd44780u_fault_state(
     hd44780u_trackers_t hd44780u_device)
 {
-    // 
+    // Display the fault code on the screen 
 }
 
 
-// 
+// Reset state 
 void hd44780u_reset_state(
     hd44780u_trackers_t hd44780u_device)
 {
     // Clear the fault code 
+    hd44780u_device_trackers.fault_code = CLEAR; 
+
+    // Call device init function again 
+    hd44780u_re_init(); 
 }
 
 //================================================================================
@@ -306,6 +361,105 @@ void hd44780u_reset_state(
 
 //================================================================================
 // Setters 
+
+// Set screen line 1 content 
+void hd44780u_line1_set(
+    char *display_data, 
+    hd44780u_cursor_offset_t line_offset)
+{
+    hd44780u_line_set(HD44780U_L1, display_data, line_offset); 
+}
+
+
+// Clear screen line 1 
+void hd44780u_line1_clear(void)
+{
+    hd44780u_line_clear(HD44780U_L1); 
+}
+
+
+// Set screen line 2 content 
+void hd44780u_line2_set(
+    char *display_data, 
+    hd44780u_cursor_offset_t line_offset)
+{
+    hd44780u_line_set(HD44780U_L2, display_data, line_offset); 
+}
+
+
+// Clear screen line 2 
+void hd44780u_line2_clear(void)
+{
+    hd44780u_line_clear(HD44780U_L2); 
+}
+
+
+// Set screen line 3 content 
+void hd44780u_line3_set(
+    char *display_data, 
+    hd44780u_cursor_offset_t line_offset)
+{
+    hd44780u_line_set(HD44780U_L3, display_data, line_offset); 
+}
+
+
+// Clear screen line 3 
+void hd44780u_line3_clear(void)
+{
+    hd44780u_line_clear(HD44780U_L3); 
+}
+
+
+// Set screen line 4 content 
+void hd44780u_line4_set(
+    char *display_data, 
+    hd44780u_cursor_offset_t line_offset)
+{
+    hd44780u_line_set(HD44780U_L4, display_data, line_offset); 
+}
+
+
+// Clear screen line 4 
+void hd44780u_line4_clear(void)
+{
+    hd44780u_line_clear(HD44780U_L4); 
+}
+
+
+// Set write flag 
+void hd44780_set_write_flag(void)
+{
+    hd44780u_device_trackers.write = SET_BIT; 
+}
+
+
+// Set read flag 
+void hd44780u_set_read_flag(void)
+{
+    hd44780u_device_trackers.read = SET_BIT; 
+}
+
+
+// Set low power mode flag 
+void hd44780u_set_low_pwr_flag(void)
+{
+    hd44780u_device_trackers.low_power = SET_BIT; 
+}
+
+
+// Clear low power mode flag 
+void hd44780u_clear_low_pwr_flag(void)
+{
+    hd44780u_device_trackers.low_power = CLEAR_BIT; 
+}
+
+
+// Set reset flag 
+void hd44780u_set_reset_flag(void)
+{
+    hd44780u_device_trackers.reset = SET_BIT; 
+}
+
 //================================================================================
 
 
