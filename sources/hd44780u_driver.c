@@ -36,31 +36,6 @@
 // Function Prototypes 
 
 /**
- * @brief HD44780U screen re-initialization 
- * 
- * @details Used in the HD44780U controller for resetting the device 
- */
-void hd44780u_re_init(void); 
-
-/**
- * @brief HD44780U send command
- * 
- * @details This function is used for configuring settings on the screen. The 
- *          hd44780u_init functions uses this function to send configuration commands. 
- *          The function can also be used to set the cursor position by setting the 
- *          DDRAM address value. The i2c driver is used to send the instructions. 
- *          Before sending instructions, the instruction data is formatted using the 
- *          hd44780u_config_cmds_t commands. 
- * 
- * @see hd44780u_init
- * @see hd44780u_config_cmds_t
- * 
- * @param hd44780u_cmd : instruction to configure the screen 
- */
-void hd44780u_send_instruc(uint8_t hd44780u_cmd);
-
-
-/**
  * @brief HD44780U send data
  * 
  * @details This function is used to print information onto the screen one byte at a time. 
