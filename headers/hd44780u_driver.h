@@ -32,9 +32,10 @@
 //===============================================================================
 // Macros
 
-#define HD44780U_MSG_PER_CMD 4  // Number of I2C bytes sent per one LCD screen command
-#define HD44780U_NUM_CHAR 80    // Number of character spaces on the display 
-#define HD44780U_LINE_LEN 20    // Number of characters per line on the LCD 
+#define HD44780U_NUM_LINES 4    // Number of lines on the screen 
+#define HD44780U_MSG_PER_CMD 4  // Number of I2C bytes sent per one screen command
+#define HD44780U_NUM_CHAR 80    // Number of character spaces on the screen 
+#define HD44780U_LINE_LEN 20    // Number of characters per line on the screem 
 #define HD44780U_ADDR_INC 1     // I2C address increment 
 
 //===============================================================================
