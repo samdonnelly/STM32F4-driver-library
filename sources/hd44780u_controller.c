@@ -65,6 +65,9 @@ void hd44780u_write_state(
  * @brief 
  * 
  * @details 
+ *          Currently this state does nothing 
+ * 
+ * // TODO add read functionaility if possible 
  * 
  * @param hd44780u_device 
  */
@@ -436,6 +439,8 @@ void hd44780_set_write_flag(void)
 // Set read flag 
 void hd44780u_set_read_flag(void)
 {
+    // TODO change this setter to take a read message address once reads are possible 
+    
     hd44780u_device_trackers.read = SET_BIT; 
 }
 
@@ -465,6 +470,27 @@ void hd44780u_set_reset_flag(void)
 
 //================================================================================
 // Getters 
+
+// Get state 
+hd44780u_states_t hd44780u_get_state(void)
+{
+    return hd44780u_device_trackers.state; 
+}
+
+
+// Get fault code 
+FAULT_CODE hd44780u_get_fault_code(void)
+{
+    return hd44780u_device_trackers.fault_code; 
+}
+
+
+// Get read message 
+void hd44780u_get_read_msg(char *read_msg)
+{
+    strcpy(read_msg, hd44780u_device_trackers.read_msg); 
+}
+
 //================================================================================
 
 //================================================================================
