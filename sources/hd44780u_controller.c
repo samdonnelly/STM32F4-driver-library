@@ -21,99 +21,136 @@
 
 
 //================================================================================
-// Notes 
-//================================================================================
-
-
-//================================================================================
 // Function prototypes 
 
 /**
- * @brief 
+ * @brief HD44780U initialization state 
  * 
- * @details 
+ * @details Initializes the controller, in particular the device tracker parameters. This is the 
+ *          first state of the state machine and is called upon startup. Once it is complete it 
+ *          directs the state machine into the idle state. This state will only be called again 
+ *          if the controller/device undergoes a reset. 
  * 
- * @param hd44780u_device 
+ * @see hd44780u_trackers_t
+ * 
+ * @param hd44780u_device : device tracker that defines control characteristics 
  */
 void hd44780u_init_state(
     hd44780u_trackers_t hd44780u_device); 
 
 
 /**
- * @brief 
+ * @brief HD44780U idle state 
  * 
- * @details 
+ * @details Resting state of the device during normal operation. When the screen is not performing 
+ *          a task then the controller defaults to the idle state where no action is taken until a 
+ *          flag is set that changes the state. Having this state allows for the code to get in and 
+ *          out as quickly as possible when no work needs to be doen. 
  * 
- * @param hd44780u_device 
+ * @param hd44780u_device : device tracker that defines control characteristics 
  */
 void hd44780u_idle_state(
     hd44780u_trackers_t hd44780u_device); 
 
 
 /**
- * @brief 
+ * @brief HD44780U write state 
  * 
- * @details 
+ * @details Writes the contents of the devices data record to the screen. To trigger this state, the 
+ *          write flag should be set via the setter function. At the end of this state, the write flag 
+ *          is automatically cleared the state machine returns to idle if no other flags are set. <br> 
+ *          
+ *          The contents of the data record can be updated through the use of any of the line set or 
+ *          line clear functions. The results of updating the data record won't be visible on the 
+ *          screen until the write state occurs. 
  * 
- * @param hd44780u_device 
+ * @see hd44780_set_write_flag
+ * @see hd44780u_line1_set
+ * @see hd44780u_line1_clear
+ * @see hd44780u_line2_set
+ * @see hd44780u_line2_clear
+ * @see hd44780u_line3_set
+ * @see hd44780u_line3_clear
+ * @see hd44780u_line4_set
+ * @see hd44780u_line4_clear
+ * 
+ * @param hd44780u_device : device tracker that defines control characteristics 
  */
 void hd44780u_write_state(
     hd44780u_trackers_t hd44780u_device); 
 
 
 /**
- * @brief 
+ * @brief HD44780U read state 
  * 
- * @details 
- *          Currently this state does nothing 
+ * @details Currently this state does nothing, it is only a placeholder for a working read state. This 
+ *          state is called when the read flag is set via the setter function. Once this state is called 
+ *          the read flag is instantly cleared and the controller returns to the idle state if no 
+ *          other flags are set. <br> 
+ *          
+ *          Ideally this state could read status information from the screen such as fault codes. 
+ *          However, reading from the screen is not yet supported and it is unknown what information 
+ *          can be read. Once read functionaility is implemented, the read flag setter function should 
+ *          be changed to take a message specifier as an argument. <br> 
+ *          
+ *          To get the contents of a device read (once functionality is added), the read message getter 
+ *          can be called to obtain the return message. 
  * 
- * // TODO add read functionaility if possible 
+ * @see hd44780_set_read_flag
+ * @see hd44780u_get_read_msg
  * 
- * @param hd44780u_device 
+ * @param hd44780u_device : device tracker that defines control characteristics 
  */
 void hd44780u_read_state(
     hd44780u_trackers_t hd44780u_device); 
 
 
 /**
- * @brief 
+ * @brief HD44780U low power mode transition state 
  * 
- * @details 
+ * @details Allows for transitioning into the controllers low power mode state. When the low power 
+ *          mode flag is set, the controller will call this state which in turn shuts the screen 
+ *          off and then proceeds immediately into the low power mode state. When the low power 
+ *          mode flag is cleared, the controller will move from the low power mode state into 
+ *          this state where the screen gets turned back on before returning to idle. 
  * 
- * @param hd44780u_device 
+ * @see hd44780u_set_low_pwr_flag
+ * @see hd44780u_clear_low_pwr_flag
+ * 
+ * @param hd44780u_device : device tracker that defines control characteristics 
  */
 void hd44780u_low_pwr_trans_state(
     hd44780u_trackers_t hd44780u_device); 
 
 
 /**
- * @brief 
+ * @brief HD44780U low power mode state 
  * 
  * @details 
  * 
- * @param hd44780u_device 
+ * @param hd44780u_device : device tracker that defines control characteristics 
  */
 void hd44780u_low_pwr_state(
     hd44780u_trackers_t hd44780u_device); 
 
 
 /**
- * @brief 
+ * @brief HD44780U fault state 
  * 
  * @details 
  * 
- * @param hd44780u_device 
+ * @param hd44780u_device : device tracker that defines control characteristics 
  */
 void hd44780u_fault_state(
     hd44780u_trackers_t hd44780u_device); 
 
 
 /**
- * @brief 
+ * @brief HD44780U reset state 
  * 
  * @details 
  * 
- * @param hd44780u_device 
+ * @param hd44780u_device : device tracker that defines control characteristics 
  */
 void hd44780u_reset_state(
     hd44780u_trackers_t hd44780u_device); 
@@ -127,7 +164,7 @@ void hd44780u_reset_state(
 // Instance of the device tracker record 
 static hd44780u_trackers_t hd44780u_device_trackers; 
 
-// Function pointers 
+// Function pointers to controller states 
 static hd44780u_state_functions_t state_table[HD44780U_NUM_STATES] = 
 {
     &hd44780u_init_state, 
