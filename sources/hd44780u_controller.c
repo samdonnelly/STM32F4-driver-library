@@ -488,7 +488,7 @@ FAULT_CODE hd44780u_get_fault_code(void)
 // Get read message 
 void hd44780u_get_read_msg(char *read_msg)
 {
-    strcpy(read_msg, hd44780u_device_trackers.read_msg); 
+    strcpy(read_msg, (char *)hd44780u_device_trackers.read_msg); 
 }
 
 //================================================================================
