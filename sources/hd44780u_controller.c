@@ -157,6 +157,8 @@ void hd44780u_low_pwr_state(
  *          This state takes the highest priority meaning the controller will enter this state 
  *          regardless of any other flags set. 
  * 
+ * @see hd44780u_get_fault_code
+ * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
 void hd44780u_fault_state(
@@ -166,7 +168,13 @@ void hd44780u_fault_state(
 /**
  * @brief HD44780U reset state 
  * 
- * @details 
+ * @details Resets the device and controller to it's default state. This state is the second 
+ *          highest priority behind the fault state and is triggered by setting the reset bit. 
+ *          In this state the fault code is cleared and the device initialization is called 
+ *          again. The reset state can be called from any state and is used to reset the 
+ *          system but in most cases is called after the fault state. 
+ * 
+ * @see hd44780u_set_reset_flag
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
@@ -399,7 +407,7 @@ void hd44780u_low_pwr_state(
 void hd44780u_fault_state(
     hd44780u_trackers_t hd44780u_device)
 {
-    // Display the fault code on the screen 
+    // Waits for the reset state to be called 
 }
 
 
@@ -493,9 +501,7 @@ void hd44780_set_write_flag(void)
 
 // Set read flag 
 void hd44780u_set_read_flag(void)
-{
-    // TODO change this setter to take a read message address once reads are possible 
-    
+{    
     hd44780u_device_trackers.read = SET_BIT; 
 }
 
@@ -527,7 +533,7 @@ void hd44780u_set_reset_flag(void)
 // Getters 
 
 // Get state 
-hd44780u_states_t hd44780u_get_state(void)
+STATE hd44780u_get_state(void)
 {
     return hd44780u_device_trackers.state; 
 }

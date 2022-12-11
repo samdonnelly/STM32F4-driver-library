@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HD44780U + PCF8574 20x4 LCD screen driver 
+ * @brief HD44780U + PCF8574 20x4 LCD screen driver header 
  * 
  * @version 0.1
  * @date 2022-02-11
@@ -35,7 +35,7 @@
 #define HD44780U_NUM_LINES 4    // Number of lines on the screen 
 #define HD44780U_MSG_PER_CMD 4  // Number of I2C bytes sent per one screen command
 #define HD44780U_NUM_CHAR 80    // Number of character spaces on the screen 
-#define HD44780U_LINE_LEN 20    // Number of characters per line on the screem 
+#define HD44780U_LINE_LEN 20    // Number of characters per line on the screen 
 #define HD44780U_ADDR_INC 1     // I2C address increment 
 
 //===============================================================================
@@ -85,7 +85,6 @@ typedef enum {
  *          various delays needed throughout the initialization sequence. 
  * 
  * @see hd44780u_init
- * 
  */
 typedef enum {
     HD44780U_DELAY_001MS = 1,
@@ -104,7 +103,6 @@ typedef enum {
  *          user manual. The following values are the needed initialization instructions. 
  * 
  * @see hd44780u_init
- * 
  */
 typedef enum {
     HD44780U_SETUP_CMD_0X01 = 0x01,
@@ -134,7 +132,6 @@ typedef enum {
  * 
  * @see hd44780u_send_instruc
  * @see hd44780u_send_data
- * 
  */
 typedef enum {
     HD44780U_CONFIG_CMD_0X08 = 0x08,
@@ -154,7 +151,6 @@ typedef enum {
  *          for the order in the enum below. These addresses can be used to format 
  *          the information that gets sent to the screen particularily in application 
  *          code where screen messages are more specific. 
- * 
  */
 typedef enum {
     HD44780U_START_L1 = 0x80,
@@ -165,7 +161,7 @@ typedef enum {
 
 
 /**
- * @brief HD44780U lines 
+ * @brief HD44780U line numbers 
  */
 typedef enum {
     HD44780U_L1,
@@ -213,16 +209,21 @@ typedef enum {
  * @details This function configures the screen for displaying data. The steps for 
  *          manually configuring the device are outlined in the devices user manual. 
  *          The function hd44780u_send_instruc and the commands defined in 
- *          hd44780u_setup_cmds_t are used to configure the screen. 
+ *          hd44780u_setup_cmds_t are used to configure the screen. <br> 
+ *          
+ *          Note that the timer passed as an argument to this function should be 
+ *          initialized as a blocking timer. This init function relies of delays 
+ *          between commands sent to the device in order to succeed. 
  * 
  * // TODO add a device instance argument when multiple devices becomes supported 
  * 
  * @see hd44780u_send_instruc
  * @see hd44780u_setup_cmds_t
+ * @see pcf8574_addr_t
  * 
- * @param i2c 
- * @param timer 
- * @param addr 
+ * @param i2c : pointer to i2c port used 
+ * @param timer : pointer to timer port used 
+ * @param addr : i2c address of screen being initialized 
  */
 void hd44780u_init(
     I2C_TypeDef *i2c, 
@@ -284,18 +285,20 @@ void hd44780u_send_string(char *print_string);
  *          to send the blank characters. 
  * 
  * @see hd44780u_send_data
- * 
  */
 void hd44780u_clear(void);
 
 
 /**
- * @brief Set cursor position 
+ * @brief HD44780U set cursor position 
  * 
- * @details 
+ * @details Sets the cursor position on the screen. The cursor position will dictate where 
+ *          text begins to appear on the screen when the screen is written to. This function 
+ *          is used by the controller to set specific line content. It can also be used 
+ *          without the controller to configure the screen as needed. 
  * 
- * @param line_start 
- * @param offset 
+ * @param line_start : line on the screen of where the cursor should go 
+ * @param offset : character offset on the specified line to determine final location of cursor 
  */
 void hd44780u_cursor_pos(
     hd44780u_line_start_position_t line_start, 
@@ -305,9 +308,9 @@ void hd44780u_cursor_pos(
 /**
  * @brief HD44780U send line 
  * 
- * @details 
+ * @details Sends the contents of a line in the data record to the screen for viewing. 
  * 
- * @param line : 
+ * @param line : line of the data record to write to the screen 
  */
 void hd44780u_send_line(
     hd44780u_lines_t line); 
@@ -319,13 +322,25 @@ void hd44780u_send_line(
 // Setters 
 
 /**
- * @brief 
+ * @brief HD44780U set the contents of a line 
  * 
- * @details 
+ * @details Updates the contents of a specific line to specified text in the device data 
+ *          record. <br> 
+ *          
+ *          A pointer to a character string of what to write to the line is passed as an 
+ *          argument along with the position offset. The position offset determines the 
+ *          the character position, starting from the left side of the screen, that the 
+ *          string starts writing to. A string longer than the screen line length minus 
+ *          the offset will be truncated at the end of the line and not continued onto the 
+ *          next line. A line of the screen is 20 characters long. This setter updates only 
+ *          the data record of the device, meaning the contents will not be seen on the 
+ *          screen until the write state is triggered. Note that this function does not 
+ *          erase the old contents of the line, it simply overwrites them starting at the 
+ *          offset.
  * 
- * @param line 
- * @param line_data 
- * @param offset 
+ * @param line : line content to update 
+ * @param line_data : pointer to character string used to update the line 
+ * @param offset : offset of where to start writing the character string 
  */
 void hd44780u_line_set(
     hd44780u_lines_t line, 
@@ -334,11 +349,15 @@ void hd44780u_line_set(
 
 
 /**
- * @brief Clear a line 
+ * @brief HD44780U clear a line 
  * 
- * @details 
+ * @details Clears all the contents of a specific line in the data record. <br> 
+ *          
+ *          This function will overwrite the existing contents and replace it with blanks. 
+ *          This function will update the devices data record and won't be seen on the screen 
+ *          until the write state is triggered. 
  * 
- * @param line : 
+ * @param line : line content to update 
  */
 void hd44780u_line_clear(
     hd44780u_lines_t line); 

@@ -29,6 +29,8 @@
 //   problem and fix is unknown. 
 // - The screen is really sensitive to timing. Adding delays between write operations 
 //   seems to be more reliable. 
+// - To send numbers to the screen, scanf can be used to integrate a number into a 
+//   character string and the character string can be sent to the screen. 
 //===============================================================================
 
 
@@ -59,7 +61,7 @@ void hd44780u_send_data(uint8_t hd44780u_data);
  * @details Takes instruction and data information from the user send functions and 
  *          sends it to the screen via I2C. 
  * 
- * @param i2c : 
+ * @param i2c : pointer to I2C port used 
  * @param data : pointer to data to send 
  */
 void hd44780u_send(
@@ -169,13 +171,13 @@ void hd44780u_init(
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);
     tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
 
-    // Clear the display and pause briefly 
+    // Clear the display and pause briefly - the pause helps the screen to stabilize before use 
     hd44780u_clear();
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_500MS);   // Helps screen to stabilize before use 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_500MS); 
 }
 
 
-// HD44780U screen re-initialization 
+// HD44780U screen re-initialization - used by the device controller 
 void hd44780u_re_init(void)
 {
     hd44780u_init(
@@ -189,8 +191,6 @@ void hd44780u_re_init(void)
 
 //===============================================================================
 // Send functions 
-
-// Add: position selector, send integer, send float 
 
 // HD44780U send a string of data 
 void hd44780u_send_string(
@@ -289,7 +289,7 @@ void hd44780u_send(
     i2c_write_address(i2c, hd44780u_data_record.write_addr);
     i2c_clear_addr(i2c);
 
-    // Send data over I2C1
+    // Send data over I2C
     i2c_write_master_mode(i2c, data, HD44780U_MSG_PER_CMD); 
 
     // Create a stop condition
