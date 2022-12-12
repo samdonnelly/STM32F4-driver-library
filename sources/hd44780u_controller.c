@@ -325,6 +325,9 @@ void hd44780u_controller(void)
 }
 
 //================================================================================
+
+
+//================================================================================
 // State functions 
 
 // Initialization state 
@@ -533,14 +536,14 @@ void hd44780u_set_reset_flag(void)
 // Getters 
 
 // Get state 
-STATE hd44780u_get_state(void)
+HD44780U_STATE hd44780u_get_state(void)
 {
     return hd44780u_device_trackers.state; 
 }
 
 
 // Get fault code 
-FAULT_CODE hd44780u_get_fault_code(void)
+HD44780U_FAULT_CODE hd44780u_get_fault_code(void)
 {
     return hd44780u_device_trackers.fault_code; 
 }

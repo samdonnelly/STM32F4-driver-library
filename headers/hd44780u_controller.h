@@ -84,8 +84,8 @@ hd44780u_trackers_t;
 //===============================================================================
 // Datatypes 
 
-typedef uint8_t FAULT_CODE; 
-typedef hd44780u_states_t STATE; 
+typedef uint8_t HD44780U_FAULT_CODE; 
+typedef hd44780u_states_t HD44780U_STATE; 
 
 //===============================================================================
 
@@ -328,9 +328,9 @@ void hd44780u_set_reset_flag(void);
  * 
  * @see hd44780u_states_t
  * 
- * @return STATE : current state machine state of the HD44780U controller 
+ * @return HD44780U_STATE : current state machine state of the HD44780U controller 
  */
-STATE hd44780u_get_state(void); 
+HD44780U_STATE hd44780u_get_state(void); 
 
 
 /**
@@ -339,9 +339,9 @@ STATE hd44780u_get_state(void);
  * @details Returns the current fault code of the controller. This information can be 
  *          used for logging. There is only one reset all possible fault codes. 
  * 
- * @return FAULT_CODE : fault code of the device 
+ * @return HD44780U_FAULT_CODE : fault code of the device 
  */
-FAULT_CODE hd44780u_get_fault_code(void); 
+HD44780U_FAULT_CODE hd44780u_get_fault_code(void); 
 
 
 /**

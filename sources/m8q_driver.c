@@ -223,7 +223,7 @@ typedef struct m8q_nmea_pos_s
     uint8_t HDOP    [BYTE_5];     // Horizontal dilution of precision 
     uint8_t VDOP    [BYTE_5];     // Vertical dilution of precision 
     uint8_t TDOP    [BYTE_5];     // Time dilution of precision 
-    uint8_t numSvs  [BYTE_2];     // Number of satellites ued in the navigation solution 
+    uint8_t numSvs  [BYTE_2];     // Number of satellites used in the navigation solution 
     uint8_t res     [BYTE_1];     // Reserved --> 0 
     uint8_t DR      [BYTE_1];     // DR used 
     uint8_t eom     [BYTE_1];     // End of memory --> used for parsing function only 
