@@ -33,61 +33,61 @@
 // Function prototypes 
 
 /**
- * @brief 
+ * @brief M8Q initialization state 
  * 
  * @details 
  * 
- * @param m8q_device 
+ * @param m8q_device : device tracker that defines controller characteristics 
  */
 void m8q_init_state(m8q_trackers_t m8q_device); 
 
 
 /**
- * @brief 
+ * @brief M8Q no fix state 
  * 
  * @details 
  * 
- * @param m8q_device 
+ * @param m8q_device : device tracker that defines controller characteristics 
  */
 void m8q_no_fix_state(m8q_trackers_t m8q_device); 
 
 
 /**
- * @brief 
+ * @brief M8Q fix state 
  * 
  * @details 
  * 
- * @param m8q_device 
+ * @param m8q_device : device tracker that defines controller characteristics 
  */
 void m8q_fix_state(m8q_trackers_t m8q_device); 
 
 
 /**
- * @brief 
+ * @brief M8Q low power state 
  * 
  * @details 
  * 
- * @param m8q_device 
+ * @param m8q_device : device tracker that defines controller characteristics 
  */
 void m8q_low_pwr_state(m8q_trackers_t m8q_device); 
 
 
 /**
- * @brief 
+ * @brief M8Q fault state 
  * 
  * @details 
  * 
- * @param m8q_device 
+ * @param m8q_device : device tracker that defines controller characteristics 
  */
 void m8q_fault_state(m8q_trackers_t m8q_device); 
 
 
 /**
- * @brief 
+ * @brief M8Q reset state 
  * 
  * @details 
  * 
- * @param m8q_device 
+ * @param m8q_device : device tracker that defines controller characteristics 
  */
 void m8q_reset_state(m8q_trackers_t m8q_device); 
 
@@ -164,35 +164,35 @@ void m8q_init_state(m8q_trackers_t m8q_device)
 }
 
 
-// 
+// No fix state 
 void m8q_no_fix_state(m8q_trackers_t m8q_device)
 {
     // 
 }
 
 
-// 
+// Fix state 
 void m8q_fix_state(m8q_trackers_t m8q_device)
 {
     // 
 }
 
 
-// 
+// Low power state 
 void m8q_low_pwr_state(m8q_trackers_t m8q_device)
 {
     // 
 }
 
 
-// 
+// Fault state 
 void m8q_fault_state(m8q_trackers_t m8q_device)
 {
     // 
 }
 
 
-// 
+// Reset state 
 void m8q_reset_state(m8q_trackers_t m8q_device)
 {
     // 

@@ -124,7 +124,7 @@ void m8q_controller(void);
 // Setters 
 
 /**
- * @brief 
+ * @brief M8Q set low power flag 
  * 
  * @details 
  */
@@ -132,7 +132,7 @@ void m8q_set_low_pwr_flag(void);
 
 
 /**
- * @brief 
+ * @brief M8Q clear low power flag 
  * 
  * @details 
  */
@@ -140,7 +140,7 @@ void m8q_clear_low_pwr_flag(void);
 
 
 /**
- * @brief 
+ * @brief M8Q set reset flag 
  * 
  * @details 
  */
@@ -153,7 +153,7 @@ void m8q_set_reset_flag(void);
 // Getters 
 
 /**
- * @brief 
+ * @brief M8Q get controller state 
  * 
  * @details 
  * 
@@ -163,7 +163,7 @@ M8Q_STATE m8q_get_state(void);
 
 
 /**
- * @brief 
+ * @brief M8Q get fault code 
  * 
  * @details 
  * 
