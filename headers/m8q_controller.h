@@ -67,6 +67,7 @@ typedef struct m8q_trackers_s
     // State flags 
     uint8_t low_pwr : 1;                       // Low power state trigger 
     uint8_t reset   : 1;                       // Reset state trigger 
+    uint8_t startup : 1;                       // Ensures the init state is run 
 }
 m8q_trackers_t; 
 
