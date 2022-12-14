@@ -35,6 +35,8 @@
  * @brief M8Q initialization state 
  * 
  * @details 
+ *          The init state shouldn't need to delay to allow the device to set up before reading 
+ *          because the TX ready pin will be checked before sttempting a read. But test this. 
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
@@ -100,6 +102,18 @@ void m8q_fault_state(m8q_trackers_t m8q_device);
  */
 void m8q_reset_state(m8q_trackers_t m8q_device); 
 
+
+/**
+ * @brief Get the navigation status 
+ * 
+ * @details 
+ *          The navstat tracker gets updated and configured here and not in the getter. It 
+ *          is used to know when to eneter and exit the fix/no-fix states. 
+ * 
+ * @param m8q_device 
+ */
+void m8q_check_msgs(m8q_trackers_t m8q_device); 
+
 //=======================================================================================
 
 
@@ -134,6 +148,8 @@ void m8q_controller_init(void)
     m8q_device_trackers.state = M8Q_INIT_STATE; 
 
     m8q_device_trackers.fault_code = CLEAR; 
+
+    m8q_device_trackers.navstat = M8Q_NAVSTAT_NF; 
 
     m8q_device_trackers.fix = CLEAR_BIT; 
 
@@ -284,28 +300,20 @@ void m8q_init_state(m8q_trackers_t m8q_device)
 // No fix state 
 void m8q_no_fix_state(m8q_trackers_t m8q_device)
 {
-    // Check is data is available 
-    if (m8q_get_tx_ready())
-    {
-        // Read the GPS data and check the fix status 
-        m8q_read(); 
-        m8q_get_navstat(); 
-    }
+    m8q_check_msgs(m8q_device); 
 
-    // TODO create lookup table of acceptable fix states 
+    if (m8q_device.navstat != M8Q_NAVSTAT_NF)
+        m8q_device.fix = SET_BIT; 
 }
 
 
 // Fix state 
 void m8q_fix_state(m8q_trackers_t m8q_device)
 {
-    // Check is data is available 
-    if (m8q_get_tx_ready())
-    {
-        // Read the GPS data and check the fix status 
-        m8q_read(); 
-        m8q_get_navstat(); 
-    }
+    m8q_check_msgs(m8q_device); 
+
+    if (m8q_device.navstat == M8Q_NAVSTAT_NF)
+        m8q_device.fix = CLEAR_BIT; 
 }
 
 
@@ -342,6 +350,26 @@ void m8q_reset_state(m8q_trackers_t m8q_device)
     m8q_device.fault_code = CLEAR; 
 
     // Re-initialize the device 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data functions 
+
+// Get the navigation status 
+void m8q_check_msgs(m8q_trackers_t m8q_device)
+{
+    // Check if data is available 
+    if (m8q_get_tx_ready())
+    {
+        // Read the available GPS message data 
+        m8q_read(); 
+
+        // Check the fix status 
+        m8q_device.navstat = (m8q_get_navstat()) % REMAINDER_100; 
+    }
 }
 
 //=======================================================================================
@@ -388,5 +416,15 @@ M8Q_FAULT_CODE m8q_get_fault_code(void)
 {
     return m8q_device_trackers.fault_code; 
 }
+
+
+// Get the navigation status 
+M8Q_NAV_STATE m8q_get_nav_state(void)
+{
+    return m8q_device_trackers.navstat; 
+}
+
+
+// TODO when in the "no fix" state then don't update data requested from the getters? 
 
 //=======================================================================================

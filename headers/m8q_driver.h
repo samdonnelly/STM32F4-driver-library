@@ -420,8 +420,8 @@ uint8_t m8q_get_EW(void);
  *          stands for "No Fix". A list of all available statuses are listed below: <br> 
  *            - NF = No Fix                                    <br> 
  *            - DR = Dead reckoning only solution              <br> 
- *            - G2 = Stand along 2D solution                   <br> 
- *            - G3 = Stand along 3D solution                   <br> 
+ *            - G2 = Stand alone 2D solution                   <br> 
+ *            - G3 = Stand alone 3D solution                   <br> 
  *            - D2 = Differential 2D solution                  <br> 
  *            - D3 = Differential 3D solution                  <br> 
  *            - RK = Combined GPS + dead reckoning solution    <br> 
