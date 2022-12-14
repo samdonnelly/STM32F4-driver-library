@@ -29,7 +29,8 @@
 //=======================================================================================
 // Macros 
 
-#define M8q_NUM_STATES 6   // Number of controller states 
+#define M8Q_NUM_STATES 7             // Number of controller states 
+#define M8Q_LOW_PWR_EXIT_DELAY 150   // (ms) time to wait when exiting low power mode 
 
 //=======================================================================================
 
@@ -41,12 +42,13 @@
  * @brief M8Q controller states 
  */
 typedef enum {
-    M8Q_INIT_STATE,        // Initialization state 
-    M8Q_NO_FIX_STATE,      // No fix state 
-    M8Q_FIX_STATE,         // Fix state 
-    M8Q_LOW_PWR_STATE,     // Low power state 
-    M8Q_FAULT_STATE,       // Fault state 
-    M8Q_RESET_STATE        // Reset state 
+    M8Q_INIT_STATE,           // Initialization state 
+    M8Q_NO_FIX_STATE,         // No fix state 
+    M8Q_FIX_STATE,            // Fix state 
+    M8Q_LOW_PWR_STATE,        // Low power state 
+    M8Q_LOW_PWR_EXIT_STATE,   // Low power mode exit state 
+    M8Q_FAULT_STATE,          // Fault state 
+    M8Q_RESET_STATE           // Reset state 
 } m8q_states_t; 
 
 //=======================================================================================
@@ -65,9 +67,11 @@ typedef struct m8q_trackers_s
     uint8_t fault_code;                        // Fault code for the device/controller 
 
     // State flags 
-    uint8_t low_pwr : 1;                       // Low power state trigger 
-    uint8_t reset   : 1;                       // Reset state trigger 
-    uint8_t startup : 1;                       // Ensures the init state is run 
+    uint8_t fix          : 1;                  // Position fix status - fix state trigger 
+    uint8_t low_pwr      : 1;                  // Low power state trigger 
+    uint8_t low_pwr_exit : 1;                  // Low power exit state trigger 
+    uint8_t reset        : 1;                  // Reset state trigger 
+    uint8_t startup      : 1;                  // Ensures the init state is run 
 }
 m8q_trackers_t; 
 

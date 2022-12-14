@@ -335,10 +335,10 @@ void hd44780u_init_state(
     hd44780u_trackers_t hd44780u_device)
 {
     // Clear reset flag 
-    hd44780u_device_trackers.reset = CLEAR_BIT; 
+    hd44780u_device.reset = CLEAR_BIT; 
 
     // Clear startup flag 
-    hd44780u_device_trackers.startup = CLEAR_BIT; 
+    hd44780u_device.startup = CLEAR_BIT; 
 }
 
 
@@ -368,7 +368,7 @@ void hd44780u_write_state(
     hd44780u_send_line(HD44780U_L4); 
 
     // Clear the write flag 
-    hd44780u_device_trackers.write = CLEAR_BIT; 
+    hd44780u_device.write = CLEAR_BIT; 
 }
 
 
@@ -381,7 +381,7 @@ void hd44780u_read_state(
     // Store read messages 
 
     // Clear the read flag 
-    hd44780u_device_trackers.read = CLEAR_BIT; 
+    hd44780u_device.read = CLEAR_BIT; 
 }
 
 
@@ -390,7 +390,7 @@ void hd44780u_low_pwr_trans_state(
     hd44780u_trackers_t hd44780u_device)
 {
     // Enable or disable low power depending on the low power flag 
-    if (hd44780u_device_trackers.low_power)
+    if (hd44780u_device.low_power)
         hd44780u_send_instruc(HD44780U_SETUP_CMD_0x08);   // Turn the display off 
     else 
         hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);   // Turn the display on rrr
@@ -419,7 +419,7 @@ void hd44780u_reset_state(
     hd44780u_trackers_t hd44780u_device)
 {
     // Clear the fault code 
-    hd44780u_device_trackers.fault_code = CLEAR; 
+    hd44780u_device.fault_code = CLEAR; 
 
     // Call device init function again 
     hd44780u_re_init(); 
