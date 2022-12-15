@@ -34,7 +34,7 @@
 /**
  * @brief M8Q initialization state 
  * 
- * @details 
+ * @details Initializes the controller parameters as needed. 
  *          The init state shouldn't need to delay to allow the device to set up before reading 
  *          because the TX ready pin will be checked before sttempting a read. But test this. 
  * 
@@ -46,7 +46,11 @@ void m8q_init_state(m8q_trackers_t m8q_device);
 /**
  * @brief M8Q no fix state 
  * 
- * @details 
+ * @details State for when the device is in use but does not have a valid position fix. During 
+ *          this state, the data read from getters will not be valid. The fix state is checked 
+ *          repeatedly to see if a position has been found, and if so it will move to the 
+ *          fix state. This state is enetered directly after the init state and can also be 
+ *          entered from the fix and low power exit states. 
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
@@ -56,7 +60,10 @@ void m8q_no_fix_state(m8q_trackers_t m8q_device);
 /**
  * @brief M8Q fix state 
  * 
- * @details 
+ * @details State for when the device is in use and has a valid position fix. During this state, 
+ *          valid data will be available through getters. The fix state is checked repeatedly 
+ *          to see if a position fix has been lost, and if so it will revert to the no fix state. 
+ *          This state can only be entered through the no fix state. 
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
@@ -66,7 +73,11 @@ void m8q_fix_state(m8q_trackers_t m8q_device);
 /**
  * @brief M8Q low power state 
  * 
- * @details 
+ * @details Sets the EXTINT pin low to trigger low power mode in the receiver. This state idles 
+ *          until the low power flag is cleared, a fault flag is set or the reset flag is set 
+ *          at which point the low power mode exit state is entered. When the device is in low 
+ *          power mode, it doesn't retreive or send updated position data in order to save power. 
+ *          In other words, the device is not usable until it exits low power mode. 
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
