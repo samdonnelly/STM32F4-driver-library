@@ -34,9 +34,10 @@
 /**
  * @brief M8Q initialization state 
  * 
- * @details Initializes the controller parameters as needed. 
+ * @details Initializes the controller parameters as needed. This state is run once upon startup 
+ *          and is only entered again after the reset state. 
  *          The init state shouldn't need to delay to allow the device to set up before reading 
- *          because the TX ready pin will be checked before sttempting a read. But test this. 
+ *          because the TX ready pin will be checked before attempting a read. But test this. 
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
@@ -87,7 +88,12 @@ void m8q_low_pwr_state(m8q_trackers_t m8q_device);
 /**
  * @brief M8Q low power exit state 
  * 
- * @details 
+ * @details This state is used to make sure the receiver properly returns to a normal state from 
+ *          a low power state. The receiver requires some specific steps (and time) in order to 
+ *          return to proper functionaility. Once these steps are complete the controller will 
+ *          go directly into it's next state without further trigger needed. This state is only 
+ *          entered from the low power mode state and it can enter either the no fix, fault or 
+ *          reset state. 
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
@@ -97,7 +103,10 @@ void m8q_low_pwr_exit_state(m8q_trackers_t m8q_device);
 /**
  * @brief M8Q fault state 
  * 
- * @details 
+ * @details The controller enters this state when the fault code is set and idles here until the 
+ *          rest flag is set or the fault code gets cleared. There are currently no mechanisms 
+ *          in place to set a fault code so this state is a placeholder for when that 
+ *          functionaility becomes available. 
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
@@ -107,7 +116,10 @@ void m8q_fault_state(m8q_trackers_t m8q_device);
 /**
  * @brief M8Q reset state 
  * 
- * @details 
+ * @details Resets the controller and the device as if the system was to restart. In this state 
+ *          the fault code is cleared and the device init function is called again. This state is 
+ *          triggered by setting the reset flag and will immediately go to the init state once 
+ *          done. A reset can be needed in the event of a fault of any kind. 
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
@@ -117,11 +129,14 @@ void m8q_reset_state(m8q_trackers_t m8q_device);
 /**
  * @brief Get the navigation status 
  * 
- * @details 
+ * @details This function is used to read new message data from the receiver and check the 
+ *          fix status. Messages will only be read if the receiver indicates that messages 
+ *          are ready. The no fix and fix states use this function repeatedly. 
+ *          
  *          The navstat tracker gets updated and configured here and not in the getter. It 
- *          is used to know when to eneter and exit the fix/no-fix states. 
+ *          is used to know when to enter and exit the fix/no-fix states. 
  * 
- * @param m8q_device 
+ * @param m8q_device : device tracker that defines controller characteristics 
  */
 void m8q_check_msgs(m8q_trackers_t m8q_device); 
 
@@ -188,53 +203,74 @@ void m8q_controller(void)
         case M8Q_INIT_STATE: 
             // Startup flag cleared 
             if (!(m8q_device_trackers.startup))
+            {
                 next_state = M8Q_NO_FIX_STATE; 
-            
+            }
+
             break; 
 
         case M8Q_NO_FIX_STATE: 
             // Fault code set 
             if (m8q_device_trackers.fault_code)
+            {
                 next_state = M8Q_FAULT_STATE; 
+            }
             
             // Reset flag set 
             else if (m8q_device_trackers.reset)
+            {
                 next_state = M8Q_RESET_STATE; 
-
+            }
+            
             // Low power flag set 
             else if (m8q_device_trackers.low_pwr)
+            {
                 next_state = M8Q_LOW_PWR_STATE; 
-
+            }
+            
             // Position fix detected 
             else if (m8q_device_trackers.fix)
+            {
                 next_state = M8Q_FIX_STATE; 
+            }
             
             break; 
 
         case M8Q_FIX_STATE: 
             // Fault code set 
             if (m8q_device_trackers.fault_code)
+            {
                 next_state = M8Q_FAULT_STATE; 
+            }
 
             // Reset flag set 
             else if (m8q_device_trackers.reset)
+            {
                 next_state = M8Q_RESET_STATE; 
+            }
 
             // Low power flag set 
             else if (m8q_device_trackers.low_pwr)
+            {
                 next_state = M8Q_LOW_PWR_STATE; 
+            }
 
             // Position fix not detected 
             else if (!(m8q_device_trackers.fix))
+            {
                 next_state = M8Q_NO_FIX_STATE; 
-            
+            }
+
             break; 
 
         case M8Q_LOW_PWR_STATE: 
             // Fault code set, reset flag set, or low power flag cleared 
             if (m8q_device_trackers.fault_code || 
                 m8q_device_trackers.reset || 
-              !(m8q_device_trackers.low_pwr)) next_state = M8Q_LOW_PWR_EXIT_STATE; 
+              !(m8q_device_trackers.low_pwr)) 
+            {
+                next_state = M8Q_LOW_PWR_EXIT_STATE; 
+            }
             
             break; 
 
@@ -244,15 +280,21 @@ void m8q_controller(void)
             {
                 // Fault code set 
                 if (m8q_device_trackers.fault_code)
+                {
                     next_state = M8Q_FAULT_STATE; 
+                }
 
                 // Reset flag set 
                 else if (m8q_device_trackers.reset)
+                {
                     next_state = M8Q_RESET_STATE; 
+                }
 
                 // Default back to the no fix state 
                 else 
+                {
                     next_state = M8Q_NO_FIX_STATE; 
+                }
 
                 m8q_device_trackers.low_pwr_exit = CLEAR_BIT; 
             }
@@ -262,11 +304,15 @@ void m8q_controller(void)
         case M8Q_FAULT_STATE: 
             // Reset flag set 
             if (m8q_device_trackers.reset)
+            {
                 next_state = M8Q_RESET_STATE; 
+            }
 
             // Fault code cleared 
             else if (!(m8q_device_trackers.fault_code))
+            {
                 next_state = M8Q_INIT_STATE; 
+            }
             
             break; 
 
