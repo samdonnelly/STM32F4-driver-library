@@ -321,18 +321,28 @@ void m8q_fix_state(m8q_trackers_t m8q_device)
 void m8q_low_pwr_state(m8q_trackers_t m8q_device)
 {
     // Idle until a flag triggers an exit 
+
+    // Set the EXTINT pin low to enter low power state 
+    m8q_set_low_power(GPIO_LOW); 
 }
 
 
 // Low power exit state 
 void m8q_low_pwr_exit_state(m8q_trackers_t m8q_device)
 {
-    // Set exit flag when ready to leave the state 
+    // Set the EXTINT pin high to exit the low power state 
+    m8q_set_low_power(GPIO_HIGH); 
+
+    // When ready to leave the state: 
+
+    // Set exit flag 
     m8q_device.low_pwr_exit = SET_BIT; 
 
-    // Clear low power flag 
+    // Clear the low power flag 
+    m8q_device.low_pwr = CLEAR_BIT; 
 
     // Clear fix flag 
+    m8q_device.fix = CLEAR_BIT; 
 }
 
 
@@ -423,8 +433,5 @@ M8Q_NAV_STATE m8q_get_nav_state(void)
 {
     return m8q_device_trackers.navstat; 
 }
-
-
-// TODO when in the "no fix" state then don't update data requested from the getters? 
 
 //=======================================================================================
