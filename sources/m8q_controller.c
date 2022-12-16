@@ -169,13 +169,20 @@ static m8q_state_functions_t state_table[M8Q_NUM_STATES] =
 // Control functions 
 
 // Initialization 
-void m8q_controller_init(void)
+void m8q_controller_init(
+    TIM_TypeDef *timer)
 {
+    m8q_device_trackers.timer = timer; 
+
     m8q_device_trackers.state = M8Q_INIT_STATE; 
 
     m8q_device_trackers.fault_code = CLEAR; 
 
     m8q_device_trackers.navstat = M8Q_NAVSTAT_NF; 
+
+    m8q_device_trackers.time_cnt_total = CLEAR; 
+
+    m8q_device_trackers.time_cnt = CLEAR; 
 
     m8q_device_trackers.fix = CLEAR_BIT; 
 
@@ -390,16 +397,24 @@ void m8q_low_pwr_exit_state(m8q_trackers_t m8q_device)
     // Set the EXTINT pin high to exit the low power state 
     m8q_set_low_power(GPIO_HIGH); 
 
-    // When ready to leave the state: 
+    // Wait for a specified period of tie before exiting the state 
+    if (tim_time_compare(m8q_device.timer, 
+                         M8Q_LOW_PWR_EXIT_DELAY, 
+                         &m8q_device.time_cnt_total, 
+                         &m8q_device.time_cnt))
+    {
+        // Set exit flag 
+        m8q_device.low_pwr_exit = SET_BIT; 
 
-    // Set exit flag 
-    m8q_device.low_pwr_exit = SET_BIT; 
+        // Clear the low power flag 
+        m8q_device.low_pwr = CLEAR_BIT; 
 
-    // Clear the low power flag 
-    m8q_device.low_pwr = CLEAR_BIT; 
+        // Clear fix flag 
+        m8q_device.fix = CLEAR_BIT; 
 
-    // Clear fix flag 
-    m8q_device.fix = CLEAR_BIT; 
+        // Clear the timer counter 
+        m8q_device.time_cnt_total = CLEAR; 
+    }
 }
 
 

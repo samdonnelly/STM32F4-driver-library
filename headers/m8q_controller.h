@@ -20,6 +20,7 @@
 
 // Device drivers 
 #include "m8q_driver.h"
+#include "timers.h"
 
 // Libraries 
 
@@ -85,10 +86,15 @@ typedef enum {
  */
 typedef struct m8q_trackers_s 
 {
+    // Peripherals 
+    TIM_TypeDef *timer;                        // Pointer to timer port used in controller 
+    
     // Device and controller information 
     m8q_states_t state;                        // Controller state 
     uint8_t fault_code;                        // Fault code for the device/controller 
     m8q_navstat_state_t navstat;               // Navigation status of device 
+    uint32_t time_cnt_total;                   // Time delay counter total count 
+    uint32_t time_cnt;                         // Time delay counter instance 
 
     // State flags 
     uint8_t fix          : 1;                  // Position fix status - fix state trigger 
@@ -134,8 +140,10 @@ typedef void (*m8q_state_functions_t)(
  * 
  * @details 
  * 
+ * @param timer : 
  */
-void m8q_controller_init(void); 
+void m8q_controller_init(
+    TIM_TypeDef *timer); 
 
 
 /**

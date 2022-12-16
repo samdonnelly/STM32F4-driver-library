@@ -44,6 +44,8 @@
 #define TIM9_10US   10   // 10 us delay 
 #define TIM9_100US  100  // 100 us delay 
 
+#define TIM_APB_CLK_FILTER 0x10000   // Filter to determine APB1 or APB2 frequency 
+
 //================================================================================
 
 
@@ -314,6 +316,24 @@ void tim_delay_us(
 void tim_delay_ms(
     TIM_TypeDef *timer, 
     uint16_t delay_ms); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param time_compare : minum delay time to compare against (in microseconds) 
+ * @param total_count 
+ * @param count_compare 
+ * @return uint8_t 
+ */
+uint8_t tim_time_compare(
+    TIM_TypeDef *timer, 
+    uint32_t time_compare, 
+    uint32_t *count_total, 
+    uint32_t *count_compare); 
 
 //================================================================================
 
