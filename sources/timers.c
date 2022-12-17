@@ -238,8 +238,8 @@ void tim_cce(
 
 // TODO Consider making a data record with linked list for timer parameters 
 
-// Holds the configured clock frquencies for the timers 
-static uint8_t tim_freq[SET_2];   // Two possible timer frequencies: APB1 and APB2 
+// // Holds the configured clock frquencies for the timers 
+// static uint8_t tim_freq[SET_2];   // Two possible timer frequencies: APB1 and APB2 
 
 //=======================================================================================
 
@@ -310,8 +310,8 @@ void tim_2_to_5_output_init(
     // Set the UG bit to initialize all registers 
     tim_ug_set(timer); 
 
-    // Record the timer clock frequency - scaled to change the units to Hz 
-    tim_freq[0] = (HAL_RCC_GetPCLK1Freq() / DIVIDE_1000) / DIVIDE_1000; 
+    // // Record the timer clock frequency - scaled to change the units to Hz 
+    // tim_freq[0] = (HAL_RCC_GetPCLK1Freq() / DIVIDE_1000) / DIVIDE_1000; 
 }
 
 
@@ -343,8 +343,8 @@ void tim_9_to_11_counter_init(
     // Reset the counter 
     tim_cnt_set(timer, RESET_COUNT); 
 
-    // Record the timer clock frequency - scaled to change the units to Hz 
-    tim_freq[1] = (HAL_RCC_GetPCLK2Freq() / DIVIDE_1000) / DIVIDE_1000; 
+    // // Record the timer clock frequency - scaled to change the units to Hz 
+    // tim_freq[1] = (HAL_RCC_GetPCLK2Freq() / DIVIDE_1000) / DIVIDE_1000; 
 }
 
 //=======================================================================================
@@ -409,31 +409,27 @@ uint8_t tim_time_compare(
     // Local variables 
     uint32_t time_elapsed; 
     uint32_t count_tracker; 
+    uint8_t apb_freq;          // APB frequency in MHz 
 
-    //=================================================
-    // Alternate option to using a global array for the APB frequencies 
-
-    // uint8_t apb_freq;  // APB frequency in MHz 
-
-    // if (((uint32_t)timer & TIM_APB_CLK_FILTER) >> SHIFT_4)  // APB2 
-    // {
-    //     apb_freq = (HAL_RCC_GetPCLK2Freq() / DIVIDE_1000) / DIVIDE_1000; 
-    // }
-    // else // APB1 
-    // {
-    //     apb_freq = (HAL_RCC_GetPCLK1Freq() / DIVIDE_1000) / DIVIDE_1000; 
-    // }
-
-    //=================================================
-
-    // If just beginning the delay sequence 
+    // Only update the clock counter if no delay has happened yet 
     if (*count_total == CLEAR)
     {
         *count_compare = tim_cnt_read(timer); 
         return FALSE; 
     }
 
-    // Read ther clock counter 
+    // Get the timer clock frequency 
+    // TODO make custom getter for the frequency as HAL is not included in the library 
+    if (((uint32_t)timer & TIM_APB_CLK_FILTER) >> SHIFT_4)  // APB2 
+    {
+        apb_freq = (HAL_RCC_GetPCLK2Freq() / DIVIDE_1000) / DIVIDE_1000; 
+    }
+    else // APB1 
+    {
+        apb_freq = (HAL_RCC_GetPCLK1Freq() / DIVIDE_1000) / DIVIDE_1000; 
+    }
+
+    // Read the updated clock counter 
     count_tracker = tim_cnt_read(timer); 
 
     // Updated the total count 
@@ -447,7 +443,8 @@ uint8_t tim_time_compare(
     }
 
     // Calculate the total elapsed time (in microseconds) 
-    time_elapsed = *count_total * (timer->PSC + 1) / tim_freq[((uint32_t)timer & TIM_APB_CLK_FILTER) >> SHIFT_4]; 
+    // time_elapsed = *count_total * (timer->PSC + 1) / tim_freq[((uint32_t)timer & TIM_APB_CLK_FILTER) >> SHIFT_4]; 
+    time_elapsed = *count_total * (timer->PSC + 1) / apb_freq; 
 
     // Compare the times 
     if (time_elapsed >= time_compare)

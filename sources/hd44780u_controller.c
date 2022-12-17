@@ -65,7 +65,7 @@ void hd44780u_idle_state(
  *          set or line clear functions. The results of updating the data record won't be 
  *          visible on the screen until the write state occurs. 
  * 
- * @see hd44780_set_write_flag
+ * @see hd44780u_set_write_flag
  * @see hd44780u_line1_set
  * @see hd44780u_line1_clear
  * @see hd44780u_line2_set
@@ -496,7 +496,7 @@ void hd44780u_line4_clear(void)
 
 
 // Set write flag 
-void hd44780_set_write_flag(void)
+void hd44780u_set_write_flag(void)
 {
     hd44780u_device_trackers.write = SET_BIT; 
 }

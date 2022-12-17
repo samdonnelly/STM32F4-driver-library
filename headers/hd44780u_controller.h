@@ -266,7 +266,7 @@ void hd44780u_line4_clear(void);
  *          clear after the write state is complete. The write state will not occur if the 
  *          controller is in fault, reset or low power mode states. 
  */
-void hd44780_set_write_flag(void); 
+void hd44780u_set_write_flag(void); 
 
 
 /**
