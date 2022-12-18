@@ -438,7 +438,7 @@ uint8_t tim_time_compare(
     count_tracker = tim_cnt_read(timer); 
 
     // Updated the total count 
-    if (count_tracker > *count_compare)
+    if (count_tracker >= *count_compare)
     {
         *count_total += (count_tracker - *count_compare); 
     }
