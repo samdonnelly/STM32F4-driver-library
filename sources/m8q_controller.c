@@ -184,6 +184,8 @@ void m8q_controller_init(
 
     m8q_device_trackers.time_cnt = CLEAR; 
 
+    m8q_device_trackers.time_start = SET_BIT; 
+
     m8q_device_trackers.fix = CLEAR_BIT; 
 
     m8q_device_trackers.low_pwr = CLEAR_BIT; 
@@ -401,7 +403,8 @@ void m8q_low_pwr_exit_state(m8q_trackers_t m8q_device)
     if (tim_time_compare(m8q_device.timer, 
                          M8Q_LOW_PWR_EXIT_DELAY, 
                          &m8q_device.time_cnt_total, 
-                         &m8q_device.time_cnt))
+                         &m8q_device.time_cnt, 
+                         &m8q_device.time_start))
     {
         // Set exit flag 
         m8q_device.low_pwr_exit = SET_BIT; 
@@ -412,8 +415,8 @@ void m8q_low_pwr_exit_state(m8q_trackers_t m8q_device)
         // Clear fix flag 
         m8q_device.fix = CLEAR_BIT; 
 
-        // Clear the timer counter 
-        m8q_device.time_cnt_total = CLEAR; 
+        // Reset the start flag 
+        m8q_device.time_start = SET_BIT; 
     }
 }
 

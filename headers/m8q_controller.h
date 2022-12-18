@@ -95,6 +95,7 @@ typedef struct m8q_trackers_s
     m8q_navstat_state_t navstat;               // Navigation status of device 
     uint32_t time_cnt_total;                   // Time delay counter total count 
     uint32_t time_cnt;                         // Time delay counter instance 
+    uint8_t  time_start;                       // Time delay counter start flag 
 
     // State flags 
     uint8_t fix          : 1;                  // Position fix status - fix state trigger 

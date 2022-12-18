@@ -20,6 +20,7 @@
 
 // Tools 
 #include "stm32f411xe.h"
+#include "stm32f411xe_custom.h"
 #include "tools.h"
 
 // Drivers 
@@ -229,13 +230,18 @@ void tim_2_to_5_output_init(
  * 
  * @details Initializes timer 9, 10 or 11 in upcounting mode. Note that if a timer port 
  *          that is not timer 9-11 is passed as an argument then no initialization will happen. 
- *          This function must be called once for each timer that is to be initialized. <br> 
+ *          This function must be called once for each timer that is to be initialized. 
  *          
  *          Timers set up using this function can be used to create precise timing sequences. 
  *          Examples include blocking delays or periodic interrupts. 
+ *          
+ *          This function (and all timer counter init functions) calls get_sys_clk_init() to 
+ *          get the system clock so the non-blocking delay function tim_time_compare can 
+ *          be used. 
  * 
  * @see timer_us_prescalars_t
  * @see tim_up_int_t
+ * @see get_sys_clk_init
  * 
  * @param timer : pointer to timer port (9-11) being initialized 
  * @param prescalar : counter clock prescaler (clock divider) 
@@ -327,13 +333,15 @@ void tim_delay_ms(
  * @param time_compare : minum delay time to compare against (in microseconds) 
  * @param total_count 
  * @param count_compare 
+ * @param count_start : flag that indicates the timer is just starting 
  * @return uint8_t 
  */
 uint8_t tim_time_compare(
     TIM_TypeDef *timer, 
     uint32_t time_compare, 
     uint32_t *count_total, 
-    uint32_t *count_compare); 
+    uint32_t *count_compare, 
+    uint8_t  *count_start); 
 
 //================================================================================
 

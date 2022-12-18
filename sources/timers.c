@@ -309,9 +309,6 @@ void tim_2_to_5_output_init(
 
     // Set the UG bit to initialize all registers 
     tim_ug_set(timer); 
-
-    // // Record the timer clock frequency - scaled to change the units to Hz 
-    // tim_freq[0] = (HAL_RCC_GetPCLK1Freq() / DIVIDE_1000) / DIVIDE_1000; 
 }
 
 
@@ -343,8 +340,8 @@ void tim_9_to_11_counter_init(
     // Reset the counter 
     tim_cnt_set(timer, RESET_COUNT); 
 
-    // // Record the timer clock frequency - scaled to change the units to Hz 
-    // tim_freq[1] = (HAL_RCC_GetPCLK2Freq() / DIVIDE_1000) / DIVIDE_1000; 
+    // Get the system clock so non-blocking delays can be used - only called in counter inits 
+    get_sys_clk_init(); 
 }
 
 //=======================================================================================
@@ -404,29 +401,37 @@ uint8_t tim_time_compare(
     TIM_TypeDef *timer, 
     uint32_t time_compare, 
     uint32_t *count_total, 
-    uint32_t *count_compare)
+    uint32_t *count_compare, 
+    uint8_t  *count_start)
 {
     // Local variables 
     uint32_t time_elapsed; 
     uint32_t count_tracker; 
-    uint8_t apb_freq;          // APB frequency in MHz 
+    // uint8_t apb_freq;          // APB frequency in MHz 
+    uint32_t apb_freq;          // APB frequency in MHz 
+
 
     // Only update the clock counter if no delay has happened yet 
-    if (*count_total == CLEAR)
+    if (*count_start)
     {
         *count_compare = tim_cnt_read(timer); 
+        *count_total = CLEAR; 
+        *count_start = CLEAR; 
         return FALSE; 
     }
 
     // Get the timer clock frequency 
-    // TODO make custom getter for the frequency as HAL is not included in the library 
     if (((uint32_t)timer & TIM_APB_CLK_FILTER) >> SHIFT_4)  // APB2 
     {
-        apb_freq = (HAL_RCC_GetPCLK2Freq() / DIVIDE_1000) / DIVIDE_1000; 
+        // apb_freq = (HAL_RCC_GetPCLK2Freq() / DIVIDE_1000) / DIVIDE_1000; 
+        apb_freq = (rcc_get_pclk2_frq() / DIVIDE_1000) / DIVIDE_1000; 
+        // apb_freq = rcc_get_pclk2_frq(); 
     }
     else // APB1 
     {
-        apb_freq = (HAL_RCC_GetPCLK1Freq() / DIVIDE_1000) / DIVIDE_1000; 
+        // apb_freq = (HAL_RCC_GetPCLK1Freq() / DIVIDE_1000) / DIVIDE_1000; 
+        apb_freq = (rcc_get_pclk1_frq() / DIVIDE_1000) / DIVIDE_1000; 
+        // apb_freq = rcc_get_pclk1_frq(); 
     }
 
     // Read the updated clock counter 
