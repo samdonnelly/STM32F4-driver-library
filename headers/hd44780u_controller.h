@@ -99,7 +99,7 @@ typedef hd44780u_states_t HD44780U_STATE;
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
 typedef void (*hd44780u_state_functions_t)(
-    hd44780u_trackers_t hd44780u_device); 
+    hd44780u_trackers_t *hd44780u_device); 
 
 //================================================================================
 
