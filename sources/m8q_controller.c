@@ -41,7 +41,7 @@
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
-void m8q_init_state(m8q_trackers_t m8q_device); 
+void m8q_init_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -55,7 +55,7 @@ void m8q_init_state(m8q_trackers_t m8q_device);
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
-void m8q_no_fix_state(m8q_trackers_t m8q_device); 
+void m8q_no_fix_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -68,7 +68,7 @@ void m8q_no_fix_state(m8q_trackers_t m8q_device);
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
-void m8q_fix_state(m8q_trackers_t m8q_device); 
+void m8q_fix_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -82,7 +82,7 @@ void m8q_fix_state(m8q_trackers_t m8q_device);
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
-void m8q_low_pwr_state(m8q_trackers_t m8q_device); 
+void m8q_low_pwr_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -97,7 +97,7 @@ void m8q_low_pwr_state(m8q_trackers_t m8q_device);
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
-void m8q_low_pwr_exit_state(m8q_trackers_t m8q_device); 
+void m8q_low_pwr_exit_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -110,7 +110,7 @@ void m8q_low_pwr_exit_state(m8q_trackers_t m8q_device);
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
-void m8q_fault_state(m8q_trackers_t m8q_device); 
+void m8q_fault_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -123,7 +123,7 @@ void m8q_fault_state(m8q_trackers_t m8q_device);
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
-void m8q_reset_state(m8q_trackers_t m8q_device); 
+void m8q_reset_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -138,7 +138,7 @@ void m8q_reset_state(m8q_trackers_t m8q_device);
  * 
  * @param m8q_device : device tracker that defines controller characteristics 
  */
-void m8q_check_msgs(m8q_trackers_t m8q_device); 
+void m8q_check_msgs(m8q_trackers_t *m8q_device); 
 
 //=======================================================================================
 
@@ -337,7 +337,7 @@ void m8q_controller(void)
     //==================================================
 
     // Go to state function 
-    (state_table[next_state])(m8q_device_trackers); 
+    (state_table[next_state])(&m8q_device_trackers); 
 
     // Record the state 
     m8q_device_trackers.state = next_state; 
@@ -350,41 +350,48 @@ void m8q_controller(void)
 // State functions 
 
 // Initialization state 
-void m8q_init_state(m8q_trackers_t m8q_device)
+void m8q_init_state(m8q_trackers_t *m8q_device)
 {
     // Clear the fix flag 
-    m8q_device.fix = CLEAR_BIT; 
+    m8q_device->fix = CLEAR_BIT; 
 
     // Clear the reset flag 
-    m8q_device.reset = CLEAR_BIT; 
+    m8q_device->reset = CLEAR_BIT; 
 
     // Clear the startup bit 
-    m8q_device.startup = CLEAR_BIT; 
+    m8q_device->startup = CLEAR_BIT; 
+
+    // Indicate state presence 
+    uart_sendstring(USART2, "init state\r\n"); 
 }
 
 
 // No fix state 
-void m8q_no_fix_state(m8q_trackers_t m8q_device)
+void m8q_no_fix_state(m8q_trackers_t *m8q_device)
 {
     m8q_check_msgs(m8q_device); 
 
-    if (m8q_device.navstat != M8Q_NAVSTAT_NF)
-        m8q_device.fix = SET_BIT; 
+    if (m8q_device->navstat != M8Q_NAVSTAT_NF)
+    {
+        m8q_device->fix = SET_BIT; 
+    }
 }
 
 
 // Fix state 
-void m8q_fix_state(m8q_trackers_t m8q_device)
+void m8q_fix_state(m8q_trackers_t *m8q_device)
 {
     m8q_check_msgs(m8q_device); 
 
-    if (m8q_device.navstat == M8Q_NAVSTAT_NF)
-        m8q_device.fix = CLEAR_BIT; 
+    if (m8q_device->navstat == M8Q_NAVSTAT_NF)
+    {
+        m8q_device->fix = CLEAR_BIT; 
+    }
 }
 
 
 // Low power state 
-void m8q_low_pwr_state(m8q_trackers_t m8q_device)
+void m8q_low_pwr_state(m8q_trackers_t *m8q_device)
 {
     // Idle until a flag triggers an exit 
 
@@ -394,45 +401,45 @@ void m8q_low_pwr_state(m8q_trackers_t m8q_device)
 
 
 // Low power exit state 
-void m8q_low_pwr_exit_state(m8q_trackers_t m8q_device)
+void m8q_low_pwr_exit_state(m8q_trackers_t *m8q_device)
 {
     // Set the EXTINT pin high to exit the low power state 
     m8q_set_low_power(GPIO_HIGH); 
 
-    // Wait for a specified period of tie before exiting the state 
-    if (tim_time_compare(m8q_device.timer, 
+    // Wait for a specified period of time before exiting the state 
+    if (tim_time_compare(m8q_device->timer, 
                          M8Q_LOW_PWR_EXIT_DELAY, 
-                         &m8q_device.time_cnt_total, 
-                         &m8q_device.time_cnt, 
-                         &m8q_device.time_start))
+                         &m8q_device->time_cnt_total, 
+                         &m8q_device->time_cnt, 
+                         &m8q_device->time_start))
     {
         // Set exit flag 
-        m8q_device.low_pwr_exit = SET_BIT; 
+        m8q_device->low_pwr_exit = SET_BIT; 
 
         // Clear the low power flag 
-        m8q_device.low_pwr = CLEAR_BIT; 
+        m8q_device->low_pwr = CLEAR_BIT; 
 
         // Clear fix flag 
-        m8q_device.fix = CLEAR_BIT; 
+        m8q_device->fix = CLEAR_BIT; 
 
         // Reset the start flag 
-        m8q_device.time_start = SET_BIT; 
+        m8q_device->time_start = SET_BIT; 
     }
 }
 
 
 // Fault state 
-void m8q_fault_state(m8q_trackers_t m8q_device)
+void m8q_fault_state(m8q_trackers_t *m8q_device)
 {
     // Wait for the reset flag to be set or for the fault code to be cleared 
 }
 
 
 // Reset state 
-void m8q_reset_state(m8q_trackers_t m8q_device)
+void m8q_reset_state(m8q_trackers_t *m8q_device)
 {
     // Clear the fault codes 
-    m8q_device.fault_code = CLEAR; 
+    m8q_device->fault_code = CLEAR; 
 
     // Re-initialize the device 
 }
@@ -444,7 +451,7 @@ void m8q_reset_state(m8q_trackers_t m8q_device)
 // Data functions 
 
 // Get the navigation status 
-void m8q_check_msgs(m8q_trackers_t m8q_device)
+void m8q_check_msgs(m8q_trackers_t *m8q_device)
 {
     // Check if data is available 
     if (m8q_get_tx_ready())
@@ -453,7 +460,7 @@ void m8q_check_msgs(m8q_trackers_t m8q_device)
         m8q_read(); 
 
         // Check the fix status 
-        m8q_device.navstat = (m8q_get_navstat()) % REMAINDER_100; 
+        m8q_device->navstat = (m8q_get_navstat()) % REMAINDER_100; 
     }
 }
 

@@ -21,6 +21,7 @@
 // Device drivers 
 #include "m8q_driver.h"
 #include "timers.h"
+#include "uart_comm.h"
 
 // Libraries 
 
@@ -30,8 +31,8 @@
 //=======================================================================================
 // Macros 
 
-#define M8Q_NUM_STATES 7             // Number of controller states 
-#define M8Q_LOW_PWR_EXIT_DELAY 150   // (ms) time to wait when exiting low power mode 
+#define M8Q_NUM_STATES 7                // Number of controller states 
+#define M8Q_LOW_PWR_EXIT_DELAY 150000   // (us) time to wait when exiting low power mode 
 
 //=======================================================================================
 
@@ -128,7 +129,7 @@ typedef m8q_navstat_state_t M8Q_NAV_STATE;
  * @param m8q_device : 
  */
 typedef void (*m8q_state_functions_t)(
-    m8q_trackers_t m8q_device); 
+    m8q_trackers_t *m8q_device); 
 
 //=======================================================================================
 
