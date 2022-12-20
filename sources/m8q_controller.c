@@ -360,9 +360,6 @@ void m8q_init_state(m8q_trackers_t *m8q_device)
 
     // Clear the startup bit 
     m8q_device->startup = CLEAR_BIT; 
-
-    // Indicate state presence 
-    uart_sendstring(USART2, "init state\r\n"); 
 }
 
 
@@ -424,6 +421,9 @@ void m8q_low_pwr_exit_state(m8q_trackers_t *m8q_device)
 
         // Reset the start flag 
         m8q_device->time_start = SET_BIT; 
+
+        // Wait for a response from the receiver 
+        while (!(m8q_read())); 
     }
 }
 

@@ -251,7 +251,7 @@ typedef m8q_ubx_error_code_t M8Q_UBX_ERROR_CODE;
  * 
  * @param i2c : pointer to I2C port used for receiver communication 
  * @param gpio : pointer to GPIO port used for receiver peripherals 
- * @param pwr_save_pin : pin used low power mode trigger (peripheral) 
+ * @param pwr_save_pin : pin used for low power mode trigger (peripheral) 
  * @param tx_ready_pin : pin used for tx_ready indication (peripheral) 
  * @param msg_num : number of configuration messages to send 
  * @param msg_max_size : maximum config message size (see config file) 
