@@ -214,7 +214,9 @@ void hd44780u_clear(void)
 
     // Send a blank string to each display character to clear the display
     for(uint8_t i = 0; i < HD44780U_NUM_CHAR; i++)
+    {
         hd44780u_send_data(' ');
+    }
 }
 
 
@@ -241,7 +243,9 @@ void hd44780u_send_line(
 
     // Send a line of data 
     for(uint8_t i = 0; i < HD44780U_LINE_LEN; i++)
+    {
         hd44780u_send_data((uint8_t)(*line_data++));
+    }
 }
 
 
@@ -314,7 +318,9 @@ void hd44780u_line_set(
 
     // Copy the new line data to the data record 
     while ((offset++ < HD44780U_LINE_LEN) && (*data != NULL_CHAR))
+    {
         *line_data++ = *data++; 
+    }
 }
 
 
@@ -327,7 +333,9 @@ void hd44780u_line_clear(
     line_data += (line*HD44780U_LINE_LEN); 
 
     for(uint8_t i = 0; i < HD44780U_LINE_LEN; i++) 
+    {
         *line_data++ = ' '; 
+    }
 }
 
 //===============================================================================

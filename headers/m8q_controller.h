@@ -21,7 +21,6 @@
 // Device drivers 
 #include "m8q_driver.h"
 #include "timers.h"
-#include "uart_comm.h"
 
 // Libraries 
 
@@ -126,7 +125,7 @@ typedef m8q_navstat_state_t M8Q_NAV_STATE;
 /**
  * @brief M8Q state machine function pointer 
  * 
- * @param m8q_device : 
+ * @param m8q_device : device tracker that defines controller characteristics 
  */
 typedef void (*m8q_state_functions_t)(
     m8q_trackers_t *m8q_device); 
@@ -140,9 +139,14 @@ typedef void (*m8q_state_functions_t)(
 /**
  * @brief M8Q controller initialization 
  * 
- * @details 
+ * @details Initializes device trackers characteristics. Note that the timer passed to 
+ *          this function should be a counter timer that can handle any needed 
+ *          non-blocking delays of the controller. 
+ *          
+ * // TODO when multiple device functionaility is added use this function to create a 
+ *         data record/instance of the device tracker. 
  * 
- * @param timer : 
+ * @param timer : timer used by the controller for non-blocking state delays 
  */
 void m8q_controller_init(
     TIM_TypeDef *timer); 
@@ -151,8 +155,8 @@ void m8q_controller_init(
 /**
  * @brief M8Q controller 
  * 
- * @details 
- * 
+ * @details Main control function. This function contains the controllers state machine 
+ *          that dictates the flow of the controller. 
  */
 void m8q_controller(void); 
 
@@ -165,7 +169,11 @@ void m8q_controller(void);
 /**
  * @brief M8Q set low power flag 
  * 
- * @details 
+ * @details This flag will set the interrupt pin on the receiver low to enable low power 
+ *          mode. In this mode the receiver does not send data and consumes very little 
+ *          power. This flag will cause the state machine to enter the low power state. 
+ *          Note that in order for this flag to work correctly, the proper pin needs to 
+ *          be configires through the device initialization. 
  */
 void m8q_set_low_pwr_flag(void); 
 
@@ -173,7 +181,11 @@ void m8q_set_low_pwr_flag(void);
 /**
  * @brief M8Q clear low power flag 
  * 
- * @details 
+ * @details This flag is used to set the interrupt pin on the receiver high to bring the 
+ *          receiver back to normal mode. When this flag is set the state machine will 
+ *          enter the low power exit state then proceed to the no-fix state once done. 
+ *          Note that in order for this flag to work correctly, the proper pin needs to 
+ *          be configires through the device initialization. 
  */
 void m8q_clear_low_pwr_flag(void); 
 
@@ -181,7 +193,10 @@ void m8q_clear_low_pwr_flag(void);
 /**
  * @brief M8Q set reset flag 
  * 
- * @details 
+ * @details Triggers the reset state for the controller which will re-initialize the 
+ *          device and controller as needed. This flag will cause a reset regardless of 
+ *          the controller state. This flag can be used whenever a reset is needed such 
+ *          as in the event of a fault that cannot be cleared on its own. 
  */
 void m8q_set_reset_flag(void); 
 
@@ -194,9 +209,12 @@ void m8q_set_reset_flag(void);
 /**
  * @brief M8Q get controller state 
  * 
- * @details 
+ * @details Returns the state of the M8Q controller in the form of an integer defined by 
+ *          the m8q_states_t enum. 
  * 
- * @return M8Q_STATE 
+ * @see m8q_states_t
+ * 
+ * @return M8Q_STATE : controller state 
  */
 M8Q_STATE m8q_get_state(void); 
 
@@ -204,9 +222,11 @@ M8Q_STATE m8q_get_state(void);
 /**
  * @brief M8Q get fault code 
  * 
- * @details 
+ * @details Returns of the fault code of the device/controller. Note that there are 
+ *          currently no mechanisms in place to set fault codes. This is here as a 
+ *          placeholder for future development. 
  * 
- * @return M8Q_FAULT_CODE 
+ * @return M8Q_FAULT_CODE : device/controller fault code 
  */
 M8Q_FAULT_CODE m8q_get_fault_code(void); 
 
@@ -214,15 +234,16 @@ M8Q_FAULT_CODE m8q_get_fault_code(void);
 /**
  * @brief Get the navigation status 
  * 
- * @details 
- *          Returns the navigation status of the device based on m8q_navstat_state_t. The 
+ * @details Returns the navigation status of the device based on m8q_navstat_state_t. The 
  *          status is updated and configured through the m8q_check_msgs function. This 
  *          return value is left for interpretation by the application code - different 
- *          applications will have different standards for an acceptable fix. 
+ *          applications will have different standards for an acceptable fix. This 
+ *          controller will be in the no-fix state if navstats reads as no fix and will 
+ *          otherwise reside in the fix state. 
  * 
  * @see m8q_navstat_state_t
  * 
- * @return M8Q_NAV_STATE 
+ * @return M8Q_NAV_STATE : device navigation (fix) statis 
  */
 M8Q_NAV_STATE m8q_get_nav_state(void); 
 

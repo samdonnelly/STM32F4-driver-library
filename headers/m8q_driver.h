@@ -107,7 +107,6 @@
  *          returns the result indicating the type of message read, if any. 
  * 
  * @see m8q_read
- * 
  */
 typedef enum {
     M8Q_READ_INVALID, 
@@ -122,7 +121,6 @@ typedef enum {
  * @details Indicates whether a UBX message string was successfully converted into a format 
  *          readable by the receiver. Message strings come from the receiver config file or 
  *          user input during user config mode. 
- * 
  */
 typedef enum {
     M8Q_UBX_MSG_CONV_FAIL, 
