@@ -317,6 +317,152 @@ void hd44780u_controller(void)
 
     //==================================================
 
+    //==================================================
+    // Revised State machine 
+
+    // switch (next_state)
+    // {
+    //     case HD44780U_INIT_STATE: 
+    //         if (!(hd44780u_device_trackers.startup))
+    //         {
+    //             next_state = HD44780U_IDLE_STATE; 
+    //         }
+
+    //         break; 
+
+    //     case HD44780U_IDLE_STATE: 
+    //         // Fault code set 
+    //         if (hd44780u_device_trackers.fault_code)
+    //         {
+    //             next_state = HD44780U_FAULT_STATE; 
+    //         }
+
+    //         // Reset flag set 
+    //         else if (hd44780u_device_trackers.reset)
+    //         {
+    //             next_state = HD44780U_RESET_STATE; 
+    //         }
+
+    //         // Low power flag set 
+    //         else if (hd44780u_device_trackers.low_power)
+    //         {
+    //             next_state = HD44780U_LOW_PWR_STATE;
+    //         } 
+
+    //         // Write flag set 
+    //         else if (hd44780u_device_trackers.write)
+    //         {
+    //             next_state = HD44780U_WRITE_STATE; 
+    //         }
+            
+    //         // Read flag set 
+    //         else if (hd44780u_device_trackers.read)
+    //         {
+    //             next_state = HD44780U_READ_STATE; 
+    //         }
+            
+    //         break; 
+
+    //     case HD44780U_WRITE_STATE: 
+    //         // Fault code set 
+    //         if (hd44780u_device_trackers.fault_code)
+    //         {
+    //             next_state = HD44780U_FAULT_STATE; 
+    //         }
+
+    //         // Reset flag set 
+    //         else if (hd44780u_device_trackers.reset)
+    //         {
+    //             next_state = HD44780U_RESET_STATE; 
+    //         }
+
+    //         // Write flag cleared 
+    //         else if (!(hd44780u_device_trackers.write))
+    //         {
+    //             next_state = HD44780U_IDLE_STATE; 
+    //         }
+
+    //         break; 
+
+    //     case HD44780U_READ_STATE: 
+    //         // Fault code set 
+    //         if (hd44780u_device_trackers.fault_code)
+    //         {
+    //             next_state = HD44780U_FAULT_STATE; 
+    //         }
+
+    //         // Reset flag set 
+    //         else if (hd44780u_device_trackers.reset)
+    //         {
+    //             next_state = HD44780U_RESET_STATE; 
+    //         }
+
+    //         // Read flag cleared 
+    //         else if (!(hd44780u_device_trackers.read))
+    //         {
+    //             next_state = HD44780U_IDLE_STATE; 
+    //         }
+
+    //         break; 
+
+    //     case HD44780U_LOW_PWR_TRANS_STATE: 
+    //         // Fault code set 
+    //         if (hd44780u_device_trackers.fault_code)
+    //         {
+    //             next_state = HD44780U_FAULT_STATE; 
+    //         }
+
+    //         // Reset flag set 
+    //         else if (hd44780u_device_trackers.reset)
+    //         {
+    //             next_state = HD44780U_RESET_STATE; 
+    //         }
+
+    //         // Default back to the idle state 
+    //         else 
+    //         {
+    //             next_state = HD44780U_IDLE_STATE; 
+    //         }
+
+    //         break; 
+
+    //     case HD44780U_LOW_PWR_STATE: 
+    //         // Fault code set, reset flag set, or low power flag cleared 
+    //         if (hd44780u_device_trackers.fault_code || 
+    //             hd44780u_device_trackers.reset || 
+    //           !(hd44780u_device_trackers.low_power))
+    //         {
+    //             next_state = HD44780U_LOW_PWR_TRANS_STATE; 
+    //         }
+
+    //         break; 
+
+    //     case HD44780U_FAULT_STATE: 
+    //         // Reset flag set 
+    //         if (hd44780u_device_trackers.reset)
+    //         {
+    //             next_state = HD44780U_RESET_STATE; 
+    //         }
+
+    //         // Fault code cleared 
+    //         else if (!(hd44780u_device_trackers.fault_code))
+    //         {
+    //             next_state = HD44780U_INIT_STATE; 
+    //         }
+
+    //         break; 
+
+    //     case HD44780U_RESET_STATE: 
+    //         next_state = HD44780U_INIT_STATE; 
+    //         break; 
+
+    //     default: 
+    //         next_state = HD44780U_INIT_STATE; 
+    //         break; 
+    // }
+
+    //==================================================
+
     // Go to state function 
     (state_table[next_state])(&hd44780u_device_trackers); 
 
@@ -393,7 +539,15 @@ void hd44780u_low_pwr_trans_state(
     if (hd44780u_device->low_power)
         hd44780u_send_instruc(HD44780U_SETUP_CMD_0x08);   // Turn the display off 
     else 
-        hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);   // Turn the display on rrr
+        hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);   // Turn the display on 
+
+    // TODO change this to the low power mode exit state 
+
+    // // Turn the display on 
+    // hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C); 
+
+    // // Clear the low power flag 
+    // hd44780u_device->low_power = CLEAR_BIT; 
 }
 
 
@@ -403,6 +557,9 @@ void hd44780u_low_pwr_state(
 {
     // Idle state where the controller can do nothing but wait for the low power mode 
     // flag to clear 
+
+    // // Turn the display off 
+    // hd44780u_send_instruc(HD44780U_SETUP_CMD_0x08); 
 }
 
 
@@ -410,7 +567,7 @@ void hd44780u_low_pwr_state(
 void hd44780u_fault_state(
     hd44780u_trackers_t *hd44780u_device)
 {
-    // Waits for the reset state to be called 
+    // Waits for the reset state to be called or for the fault code to be cleared 
 }
 
 

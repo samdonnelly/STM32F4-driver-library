@@ -121,6 +121,12 @@ void hd44780u_init(
 
     // Initialize the screen 
 
+    // TODO 
+    // - the busy flag must be zero before writing the next instruction - add this 
+    // - The screen has it's own initialization when it turns on. The busy flag is set 
+    //   during this time and it last for ~10ms after Vcc rises to 4.5V. Wait for the 
+    //   busy flag to clear before beginning. 
+
     // Wait for more than 40 ms after Vcc rises to 2.7V 
     tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_100MS);
 
@@ -325,6 +331,7 @@ void hd44780u_line_set(
 
 
 // Clear the contents of a line 
+// TODO there is a built in LCD function to do this - replace this function 
 void hd44780u_line_clear(
     hd44780u_lines_t line)
 {
