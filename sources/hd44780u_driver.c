@@ -20,6 +20,10 @@
 //===============================================================================
 
 
+// TODO given all the standard screen messages I may be able to define bitfield
+//      like CAN messages 
+
+
 //===============================================================================
 // Function Prototypes 
 
@@ -105,24 +109,30 @@ void hd44780u_init(
     hd44780u_line_clear(HD44780U_L3);                             // Clear line 3 data 
     hd44780u_line_clear(HD44780U_L4);                             // Clear line 4 data 
 
-    // Initialize the screen 
+    // Initialize the screen - from the HD44780U datasheet 
 
     // TODO 
-    // - the busy flag must be zero before writing the next instruction - add this 
-    // - The screen has it's own initialization when it turns on. The busy flag is set 
-    //   during this time and it last for ~10ms after Vcc rises to 4.5V. Wait for the 
-    //   busy flag to clear before beginning. 
+    // - The manual says that the busy flag cannot be checked until after initialization 
+    //   is done. However try checking before starting the following sequence and in
+    //   between each command. 
 
     // Wait for more than 40 ms after Vcc rises to 2.7V 
     tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_100MS);
+
+    // Pull both RS and R/W low to begin commands - this may be handled in the send funcs 
+     // Reset expander and turn backlight off? 
+     // Delay for 1 second 
+
+    // Put the LCD into 4-bit mode 
+    // This requires sending "function set" 4 times with the last time specifying 4-bits 
 
     // Function set. Wait for more than 4.1 ms. 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
     tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_005MS); 
 
-    // Function set. Wait for more than 100 us. 
+    // Function set. Wait for more than 100 us. Using 5ms instead to be safe. 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
+    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_005MS); 
 
     // Function set. No specified wait time. 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
@@ -139,6 +149,8 @@ void hd44780u_init(
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X28);
     tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
 
+    // Arduino sample code turns the display on here, not off 
+
     // Display off 
     // D = 0 -> Display off 
     // C = 0 -> Cursor not displayed 
@@ -146,7 +158,7 @@ void hd44780u_init(
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0x08);
     tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
 
-    // Display clear 
+    // Display clear - may need longer delay after 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X01);
     tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
 
@@ -155,6 +167,8 @@ void hd44780u_init(
     // S   = 0 -> No display shifting 
     hd44780u_send_instruc(HD44780U_SETUP_CMD_0X06);
     tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
+
+    // This step is not included in the Arduino sample code 
 
     // Display on 
     // D = 1 -> Display on
@@ -243,9 +257,13 @@ void hd44780u_send_line(
 
 
 // HD44780U send a single byte of instruction information 
-// TODO the predefined config cmds here need to be configurable because they control 
-//      the backlight and read/write option 
-// TODO change the argument to a predefined value for easy sending 
+// TODO 
+// - Add separate command/instruction functions for each control and make this a 
+//   function not accessible by the user. 
+// - The predefined config cmds here need to be configurable because they control 
+//   the backlight and read/write option 
+// - Change the argument to a predefined value for easy sending 
+// - Try reversing the DB4-DB7 and congif commands chunks 
 void hd44780u_send_instruc(
     uint8_t hd44780u_cmd)
 {
