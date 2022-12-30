@@ -269,6 +269,7 @@ void i2c_start(I2C_TypeDef *i2c)
 {
     i2c_set_ack(i2c);                           // Enable acknowledgement bit 
     i2c->CR1 |= (SET_BIT << SHIFT_8);           // Set start generation bit 
+    // TODO add a timeout here with a status return for fail or success 
     while(!(i2c->SR1 & (SET_BIT << SHIFT_0)));  // Wait for start bit to set 
 }
 
@@ -287,6 +288,7 @@ void i2c_clear_addr(I2C_TypeDef *i2c)
 // I2C1 wait for ADDR bit to set
 void i2c_addr_wait(I2C_TypeDef *i2c)
 {
+    // TODO add a timeout here with a status return for fail or success 
     while(!(i2c->SR1 & (SET_BIT << SHIFT_1)));
 }
 
@@ -311,6 +313,7 @@ void i2c_rxne_wait(I2C_TypeDef *i2c)
 // I2C1 wait for TxE bit to set 
 void i2c_txe_wait(I2C_TypeDef *i2c)
 {
+    // TODO add a timeout here with a status return for fail or success 
     while(!(i2c->SR1 & (SET_BIT << SHIFT_7)));
 }
 

@@ -21,20 +21,6 @@
 
 
 //===============================================================================
-// Notes 
-// - Sometimes the screen will display garbage data on startup/restart and it is suspected 
-//   that this is from poor timing during initialization. It is unclear why the timing may 
-//   be poor and in what exact steps of the initialization that this occurs. Most of the 
-//   time it seems to be ok and a manual reset tends to "fix" the problem. The exact 
-//   problem and fix is unknown. 
-// - The screen is really sensitive to timing. Adding delays between write operations 
-//   seems to be more reliable. 
-// - To send numbers to the screen, scanf can be used to integrate a number into a 
-//   character string and the character string can be sent to the screen. 
-//===============================================================================
-
-
-//===============================================================================
 // Function Prototypes 
 
 /**
@@ -213,6 +199,7 @@ void hd44780u_send_string(
 
 
 // HD44780U clear screen 
+// TODO there is a built in LCD function to do this - replace this function 
 void hd44780u_clear(void)
 {
     // Set the write address to the first place on the screen 
@@ -256,6 +243,9 @@ void hd44780u_send_line(
 
 
 // HD44780U send a single byte of instruction information 
+// TODO the predefined config cmds here need to be configurable because they control 
+//      the backlight and read/write option 
+// TODO change the argument to a predefined value for easy sending 
 void hd44780u_send_instruc(
     uint8_t hd44780u_cmd)
 {
@@ -292,6 +282,8 @@ void hd44780u_send(
     I2C_TypeDef *i2c, 
     uint8_t *data)
 {
+    // TODO once added, check for timeout fault return statuses 
+
     // Create start condition to initiate master mode 
     i2c_start(i2c); 
 
@@ -331,7 +323,6 @@ void hd44780u_line_set(
 
 
 // Clear the contents of a line 
-// TODO there is a built in LCD function to do this - replace this function 
 void hd44780u_line_clear(
     hd44780u_lines_t line)
 {

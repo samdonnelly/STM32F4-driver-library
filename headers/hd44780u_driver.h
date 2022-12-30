@@ -54,16 +54,16 @@
  *          addresses are defined in the deviced user manual. All of the possible read 
  *          addresses are simply each of the below write addresses +1. This means that 
  *          only one of the below addresses needs to be associated with a device and 
- *          the write and read address can be selected by the driver as needed. <br> 
+ *          the write and read address can be selected by the driver as needed. 
  *          
- *          LLL : write address = 0x40, read address = 0x41 <br> 
- *          LLH : write address = 0x42, read address = 0x43 <br> 
- *          LHL : write address = 0x44, read address = 0x45 <br> 
- *          LHH : write address = 0x46, read address = 0x47 <br> 
- *          HLL : write address = 0x48, read address = 0x49 <br> 
- *          HLH : write address = 0x4A, read address = 0x4B <br> 
- *          HHL : write address = 0x4C, read address = 0x4D <br> 
- *          HHH : write address = 0x4E, read address = 0x4F <br> 
+ *          LLL : write address = 0x40, read address = 0x41 
+ *          LLH : write address = 0x42, read address = 0x43 
+ *          LHL : write address = 0x44, read address = 0x45 
+ *          LHH : write address = 0x46, read address = 0x47 
+ *          HLL : write address = 0x48, read address = 0x49 
+ *          HLH : write address = 0x4A, read address = 0x4B 
+ *          HHL : write address = 0x4C, read address = 0x4D 
+ *          HHH : write address = 0x4E, read address = 0x4F 
  */
 typedef enum {
     PCF8574_ADDR_LLL = 0x40,
@@ -126,18 +126,20 @@ typedef enum {
  *          of these commands to make a byte. <br><br>
  *          
  *          bit 3: backlight ---> 0 = off,     1 = on     <br>
- *          bit 2: Enable ------> 0 = start,   1 = stop   <br>
- *          bit 1: R/W ---------> 0 = read,    1 = write  <br>
+ *          bit 2: Enable ------> 0 = stop,    1 = start  <br>
+ *          bit 1: R/W ---------> 0 = write,   1 = read   <br>
  *          bit 0: RS register -> 0 = instruc, 1 = data   <br>
+ * 
+ * // TODO there needs to be more commands to allow for backlight and read/write control 
  * 
  * @see hd44780u_send_instruc
  * @see hd44780u_send_data
  */
 typedef enum {
-    HD44780U_CONFIG_CMD_0X08 = 0x08,
-    HD44780U_CONFIG_CMD_0X09 = 0x09,
-    HD44780U_CONFIG_CMD_0X0C = 0x0C,
-    HD44780U_CONFIG_CMD_0X0D = 0x0D
+    HD44780U_CONFIG_CMD_0X08 = 0x08,      // (00001000)b 
+    HD44780U_CONFIG_CMD_0X09 = 0x09,      // (00001001)b 
+    HD44780U_CONFIG_CMD_0X0C = 0x0C,      // (00001100)b 
+    HD44780U_CONFIG_CMD_0X0D = 0x0D       // (00001101)b 
 } hd44780u_config_cmds_t;
 
 
