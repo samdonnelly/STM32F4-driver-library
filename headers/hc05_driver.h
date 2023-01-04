@@ -29,6 +29,10 @@
 // Other drivers 
 #include "timers.h"
 
+// Libraries 
+#include <string.h>
+#include <stdio.h>
+
 //=======================================================================================
 
 
@@ -75,6 +79,8 @@ typedef enum {
  *          to indicate whether this functionality will be used or not. If so then a GPIO will 
  *          be configured for it. 
  * 
+ * // TODO delete once init function is changed 
+ * 
  * @see hc05_init
  * 
  */
@@ -91,6 +97,8 @@ typedef enum {
  *          This enum is passed as an argument to hc05_init to indicate whether this 
  *          functionality will be used or not. If so then a GPIO will be configured for it. 
  * 
+ * // TODO delete once init function is changed 
+ * 
  * @see hc05_init
  * 
  */
@@ -106,6 +114,8 @@ typedef enum {
  * @details The STATE pin provides feedback as to whether the module is connected to a device 
  *          or not. This enum is passed as an argument to hc05_init to indicate whether this 
  *          feedback will be used or not. If so then a GPIO pin will be configured for it. 
+ * 
+ * // TODO delete once init function is changed 
  * 
  * @see hc05_init
  * 
@@ -185,37 +195,6 @@ typedef enum {
 
 
 //=======================================================================================
-// Structures 
-
-/**
- * @brief HC-05 module info 
- * 
- * @details Data record of the module that stores device specific information such as the 
- *          GPIO pins used for control and feedback as well as which UART port the module 
- *          is on. 
- * 
- */
-typedef struct hc05_mod_info_s
-{
-    // UART used by the module 
-    USART_TypeDef *hc05_uart; 
-
-    // Pin for AT Command mode enable 
-    gpio_pin_num_t at_pin; 
-
-    // Pin for power enable 
-    gpio_pin_num_t en_pin; 
-
-    // Pin for connection status feedback 
-    gpio_pin_num_t state_pin; 
-
-} hc05_mod_info_t;
-
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Initialization functions 
 
 /**
@@ -246,7 +225,7 @@ void hc05_init(
 
 
 //=======================================================================================
-// Power functions 
+// User functions 
 
 /**
  * @brief HC-05 power on 
@@ -258,7 +237,7 @@ void hc05_init(
  * @see hc05_init
  * 
  */
-void hc05_pwr_on(void); 
+void hc05_on(void); 
 
 
 /**
@@ -271,13 +250,35 @@ void hc05_pwr_on(void);
  * @see hc05_init 
  * 
  */
-void hc05_pwr_off(void); 
+void hc05_off(void);
+
+
+/**
+ * @brief HC-05 Data mode send 
+ * 
+ * @details Sends a string of data to the module which in turn gets sent out over 
+ *          Bluetooth to a connected device. 
+ * 
+ * @param send_data : pointer to the data string to send 
+ */
+void hc05_send(char *send_data); 
+
+
+/**
+ * @brief HC-05 Data mode receive 
+ * 
+ * @details Reads a string of data from the module that was obtained over Bluetooth from 
+ *          a connected device. 
+ * 
+ * @param receive_data : pointer to the buffer that stores the received data string 
+ */
+void hc05_read(char *receive_data); 
 
 //=======================================================================================
 
 
 //=======================================================================================
-// Transition functions 
+// AT Command Mode functions 
 
 /**
  * @brief HC-05 change operating mode 
@@ -296,7 +297,7 @@ void hc05_pwr_off(void);
  *          <br><br> 
  * 
  * @see hc05_at_command
- * @see hc05_data_mode_send
+ * @see hc05_send
  * 
  * @param mode : Moudle mode - either Data mode (default) or AT Command mode 
  * @param baud_rate : Baud rate of the selected mode 
@@ -307,33 +308,6 @@ void hc05_change_mode(
     uart_baud_rate_t baud_rate, 
     uart_clock_speed_t clock_speed); 
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Mode functions 
-
-/**
- * @brief HC-05 Data mode send 
- * 
- * @details Sends a string of data to the module which in turn gets sent out over 
- *          Bluetooth to a connected device. 
- * 
- * @param send_data : pointer to the data string to send 
- */
-void hc05_data_mode_send(char *send_data); 
-
-
-/**
- * @brief HC-05 Data mode receive 
- * 
- * @details Reads a string of data from the module that was obtained over Bluetooth from 
- *          a connected device. 
- * 
- * @param receive_data : pointer to the buffer that stores the received data string 
- */
-void hc05_data_mode_receive(char *receive_data); 
-
 
 /**
  * @brief HC-05 AT Command mode 
@@ -343,7 +317,6 @@ void hc05_data_mode_receive(char *receive_data);
  *          neither), and the command parameter (if their is one) desired and use that info 
  *          to generate a command string that gets sent to the module. The modules response 
  *          is recorded in the 'response' buffer. 
- *          
  * 
  * @param command : number indicating the AT command 
  * @param operation : indicated whether to set or check a parameter 

@@ -246,8 +246,14 @@ void uart_baud_select(
 uint8_t uart_data_ready(
     USART_TypeDef *uart)
 {
-    if (uart->SR & (SET_BIT << SHIFT_5)) return TRUE; 
-    else return FALSE; 
+    if (uart->SR & (SET_BIT << SHIFT_5)) 
+    {
+        return TRUE; 
+    }
+    else 
+    {
+        return FALSE; 
+    } 
 }
 
 //=======================================================================================
@@ -373,6 +379,7 @@ void uart_getstr(
     uint8_t input = 0;
 
     // Run until the end of string character is seen 
+    // TODO a timeout is needed here to the code doesn't get stuck 
     do
     {
         // Wait for data to be available then read and store it 
