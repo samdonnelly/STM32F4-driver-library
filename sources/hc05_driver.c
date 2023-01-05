@@ -26,11 +26,33 @@
 // - Change the init function to pass pins as arguments 
 // - Should have the ability to also send digits if desired 
 // - Make a proper and dedicated at command mode UI file 
+// - Why do we turn the en pin off then on during init? 
 //=======================================================================================
 
 
 //=======================================================================================
 // Function prototypes 
+
+/**
+ * @brief HC05 Mmode selection 
+ * 
+ * @details Sets the mode of the device. The mode options are data mode, used for sending and 
+ *          reading data with external devices, and AT command mode, used for reading and 
+ *          configuring the device settings. 
+ *          
+ *          AT command mode is not used with the hc05 controller. 
+ *          
+ *          This function needs to remains available even when AT command mode functions 
+ *          are not (HC05_AT_EN) because it is used to intitalize the device in data mode 
+ *          which is the driver default. 
+ * 
+ * @see hc05_mode_t 
+ * 
+ * @param mode : device mode 
+ */
+void hc05_mode(
+    hc05_mode_t mode); 
+
 //=======================================================================================
 
 
@@ -95,16 +117,41 @@ void hc05_init(
     // TODO pass the pin as an argument and use: (SET_BIT << (pin number)) 
     hc05_data_record.at_pin = GPIOX_PIN_8; 
     hc05_data_record.en_pin = GPIOX_PIN_12; 
-    hc05_data_record.state_pin = GPIOX_PIN_11;
+    hc05_data_record.state_pin = GPIOX_PIN_11; 
+
+    // hc05_data_record.gpio_at_pin = gpio_at; 
+    // hc05_data_record.at_pin = SET_BIT << at; 
+
+    // hc05_data_record.gpio_en_pin = gpio_en; 
+    // hc05_data_record.en_pin = SET_BIT << en; 
+
+    // hc05_data_record.gpio_state_pin = gpio_state; 
+    // hc05_data_record.state_pin = SET_BIT << state; 
 
     // AT Command mode enable 
+    // gpio_pin_init(hc05_data_record.gpio_at_pin, 
+    //               at, 
+    //               MODER_GPO, 
+    //               OTYPER_PP, 
+    //               OSPEEDR_HIGH, 
+    //               PUPDR_NO); 
+    // hc05_mode(HC05_DATA_MODE); 
     if (pin34_status) 
     {
-        gpio_pin_init(GPIOA, PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+        gpio_pin_init(GPIOA, PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
         gpio_write(GPIOA, hc05_data_record.at_pin, GPIO_LOW); 
     }
     
-    // Module power enable 
+    // Module power enable - why do we turn off then on? 
+    // gpio_pin_init(hc05_data_record.gpio_en_pin, 
+    //               en, 
+    //               MODER_GPO, 
+    //               OTYPER_PP, 
+    //               OSPEEDR_HIGH, 
+    //               PUPDR_NO); 
+    // hc05_off(); 
+    // tim_delay_ms(TIM9, HC05_INIT_DELAY); 
+    // hc05_on(); 
     if (en_status) 
     {
         gpio_pin_init(GPIOA, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
@@ -114,6 +161,12 @@ void hc05_init(
     }
     
     // State feedback enable 
+    // gpio_pin_init(hc05_data_record.gpio_state_pin, 
+    //               state, 
+    //               MODER_INPUT, 
+    //               OTYPER_PP, 
+    //               OSPEEDR_HIGH, 
+    //               PUPDR_NO); 
     if (state_status) 
     {
         gpio_pin_init(GPIOA, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
@@ -154,7 +207,11 @@ void hc05_read(char *receive_data)
 }
 
 
-// TODO add a state pin read function 
+// Read the connection status (state pin) 
+HC05_STATUS hc05_status(void)
+{
+    return gpio_read(hc05_data_record.gpio_state_pin, hc05_data_record.state_pin); 
+}
 
 //=======================================================================================
 
@@ -162,7 +219,12 @@ void hc05_read(char *receive_data)
 //=======================================================================================
 // AT Command Mode functions 
 
-// TODO add a pin34 set function - needs to be outside HC05_AT_EN condition 
+// Set the device mode 
+void hc05_mode(
+    hc05_mode_t mode)
+{
+    gpio_write(hc05_data_record.gpio_at_pin, hc05_data_record.at_pin, mode); 
+}
 
 
 #if HC05_AT_EN
@@ -178,6 +240,7 @@ void hc05_change_mode(
 
     // Set pin 34 on the module depending on the requested mode 
     gpio_write(GPIOA, hc05_data_record.at_pin, mode); 
+    // hc05_mode(mode); 
 
     // Short delay to ensure power off 
     tim_delay_ms(TIM9, HC05_INIT_DELAY); 
@@ -480,6 +543,7 @@ void hc05_at_command(
     // Wait for data to be sent back until timeout 
     do 
     {
+        // TODO change this to use the built in UART data check function 
         if (hc05_data_record.hc05_uart->SR & (SET_BIT << SHIFT_5)) 
         {
             // Read the module response 

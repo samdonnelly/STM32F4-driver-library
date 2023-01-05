@@ -127,6 +127,15 @@ typedef enum {
 
 
 /**
+ * @brief Device connection status 
+ */
+typedef enum {
+    HC05_NOT_CONNECTED,       // Not connected to an external device 
+    HC05_CONNECTED            // Connected to an external device 
+} hc05_connect_status_t; 
+
+
+/**
  * @brief HC-05 AT Commands 
  * 
  * @details This enum contains all the AT Command mode commands used to configure the module. 
@@ -190,6 +199,14 @@ typedef enum {
     HC05_SET,
     HC05_CHECK
 } hc05_at_operation_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data types 
+
+typedef hc05_connect_status_t HC05_STATUS; 
 
 //=======================================================================================
 
@@ -273,6 +290,18 @@ void hc05_send(char *send_data);
  * @param receive_data : pointer to the buffer that stores the received data string 
  */
 void hc05_read(char *receive_data); 
+
+
+/**
+ * @brief HC05 connection status 
+ * 
+ * @details Reads and returns the connection status of the device. The connection status 
+ *          is provided by the state pin feedback. This can be used to check for a 
+ *          connection before attempting to send or read data. 
+ * 
+ * @return HC05_STATUS : connection status of the device 
+ */
+HC05_STATUS hc05_status(void); 
 
 //=======================================================================================
 
