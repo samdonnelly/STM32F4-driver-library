@@ -30,6 +30,8 @@
 // - Make sure data transfer is complete before turning off the module 
 // - Verify the state pin shows connected before any data transfer 
 // - When about to send data (to Android) look for a prompt message to start 
+// - Have a state that is called at the end of AT command mode state where the baud 
+//   rate is read and used to set the baud rate for data mode 
 //=======================================================================================
 
 

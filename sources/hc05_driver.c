@@ -25,6 +25,12 @@
 // - Make the code able to support multiple devices (linked list) 
 // - Change the init function to pass pins as arguments 
 // - Should have the ability to also send digits if desired 
+// - Make a proper and dedicated at command mode UI file 
+//=======================================================================================
+
+
+//=======================================================================================
+// Function prototypes 
 //=======================================================================================
 
 
@@ -155,6 +161,9 @@ void hc05_read(char *receive_data)
 
 //=======================================================================================
 // AT Command Mode functions 
+
+// TODO add a pin34 set function - needs to be outside HC05_AT_EN condition 
+
 
 #if HC05_AT_EN
 
@@ -489,6 +498,6 @@ void hc05_at_command(
     if (!at_timeout) strcpy(response, "Timeout\r\n");  // No response seen 
 }
 
-#endif  // HC05_AT_CMD_MODE
+#endif   // HC05_AT_CMD_MODE
 
 //=======================================================================================
