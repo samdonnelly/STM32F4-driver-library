@@ -22,6 +22,7 @@
 #include "hc05_driver.h" 
 
 // Libraries 
+#include <stdio.h> 
 
 //================================================================================
 
@@ -29,7 +30,8 @@
 //================================================================================
 // Macros 
 
-#define HC05_NUM_STATES 9     // 
+#define HC05_NUM_STATES 9        // Number of controller states 
+#define HC05_BUFF_SIZE 15        // Read buffer size in bytes 
 
 //================================================================================
 
@@ -63,13 +65,18 @@ typedef enum {
 typedef struct hc05_device_trackers_s 
 {
     // Device and controller information 
-    hc05_states_t state;                    // Controller state 
-    uint8_t fault_code;                     // Controller fault code 
+    hc05_states_t state;                      // Controller state 
+    uint8_t fault_code;                       // Controller fault code 
+    uint8_t send_data[HC05_BUFF_SIZE];        // Send data buffer 
+    uint8_t read_data[HC05_BUFF_SIZE];        // Read data buffer 
 
     // State flags 
-    uint8_t connect : 1;                    // Device connection status 
-    uint8_t low_pwr : 1;                    // Low power state flag 
-    uint8_t reset   : 1;                    // Reset state flag 
+    uint8_t connect     : 1;                  // Device connection status 
+    uint8_t send        : 1;                  // Send state flag 
+    uint8_t read        : 1;                  // Read state flag 
+    uint8_t read_status : 1;                  // Read data status 
+    uint8_t low_pwr     : 1;                  // Low power state flag 
+    uint8_t reset       : 1;                  // Reset state flag 
 }
 hc05_device_trackers_t; 
 
@@ -81,6 +88,7 @@ hc05_device_trackers_t;
 
 typedef hc05_states_t HC05_STATE; 
 typedef uint8_t HC05_FAULT_CODE; 
+typedef uint8_t HC05_READ_STATUS; 
 
 //================================================================================
 
@@ -123,11 +131,102 @@ void hc05_controller(void);
 
 //================================================================================
 // Setters 
+
+/**
+ * @brief 
+ * 
+ * @details When this setter is used, the controller will send the data passed to it. 
+ * 
+ * @param data 
+ * @param data_size 
+ */
+void hc05_set_send(
+    uint8_t *data, 
+    uint8_t data_size); 
+
+
+/**
+ * @brief Set the read flag 
+ * 
+ * @details 
+ * 
+ */
+void hc05_set_read(void); 
+
+
+/**
+ * @brief Clear the read flag 
+ * 
+ * @details 
+ * 
+ */
+void hc05_clear_read(void); 
+
+
+/**
+ * @brief Set low power flag 
+ * 
+ * @details 
+ * 
+ */
+void hc05_set_low_power(void); 
+
+
+/**
+ * @brief Clear low power flag 
+ * 
+ * @details 
+ * 
+ */
+void hc05_clear_low_power(void); 
+
+
+/**
+ * @brief Set reset flag 
+ * 
+ * @details 
+ * 
+ */
+void hc05_set_reset(void); 
+
 //================================================================================
 
 
 //================================================================================
 // Getters 
+
+/**
+ * @brief Read state 
+ * 
+ * @details 
+ * 
+ * @return HC05_STATE 
+ */
+HC05_STATE hc05_get_state(void); 
+
+
+/**
+ * @brief Get fault code 
+ * 
+ * @details 
+ * 
+ * @return HC05_FAULT_CODE 
+ */
+HC05_FAULT_CODE hc05_get_fault_code(void); 
+
+
+/**
+ * @brief Get the read data 
+ * 
+ * @details 
+ * 
+ * @param buffer 
+ * @param buff_size 
+ */
+void hc05_get_read_data(
+    uint8_t *buffer, 
+    uint8_t buff_size); 
+
 //================================================================================
 
 #endif   // _HC05_CONTROLLER_H_ 

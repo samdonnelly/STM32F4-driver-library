@@ -298,10 +298,35 @@ void hc05_reset_state(hc05_device_trackers_t *hc05_device)
 //=======================================================================================
 // Setters 
 
-// Send 
+// Set the send data 
+void hc05_set_send(
+    uint8_t *data, 
+    uint8_t data_size)
+{
+    // Check that the buffers are suitable for memcpy 
+    if ((!data) || (HC05_BUFF_SIZE < data_size)) 
+    {
+        return; 
+    }
+
+    memcpy(hc05_device_trackers.send_data, data, data_size); 
+
+    hc05_device_trackers.send = SET_BIT; 
+}
 
 
-// Read 
+// Set the read flag 
+void hc05_set_read(void)
+{
+    hc05_device_trackers.read = SET_BIT; 
+}
+
+
+// Clear the read flag 
+void hc05_clear_read(void)
+{
+    hc05_device_trackers.read = CLEAR_BIT; 
+}
 
 
 // Set low power flag 
@@ -344,6 +369,27 @@ HC05_FAULT_CODE hc05_get_fault_code(void)
 }
 
 
-// Read data 
+// Get the read status 
+HC05_READ_STATUS hc05_get_read_status(void)
+{
+    return hc05_device_trackers.read_status; 
+}
+
+
+// Get the read data 
+void hc05_get_read_data(
+    uint8_t *buffer, 
+    uint8_t buff_size)
+{
+    // Check that the buffer is suitable for memcpy 
+    if ((!buffer) || (buff_size < HC05_BUFF_SIZE)) 
+    {
+        return; 
+    }
+
+    memcpy(buffer, hc05_device_trackers.read_data, HC05_BUFF_SIZE); 
+
+    hc05_device_trackers.read_status = CLEAR_BIT; 
+}
 
 //=======================================================================================
