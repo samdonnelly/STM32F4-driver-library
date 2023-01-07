@@ -217,6 +217,18 @@ HC05_STATUS hc05_status(void)
 
 
 //=======================================================================================
+// Data functions 
+
+// Clear the UART data register 
+void hc05_clear(void)
+{
+    uart_clear_dr(hc05_data_record.hc05_uart); 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
 // AT Command Mode functions 
 
 // Set the device mode 
@@ -536,6 +548,7 @@ void hc05_at_command(
 
     // Clear the data register before looking for actual data 
     uart_clear_dr(hc05_data_record.hc05_uart); 
+    // hc05_clear(); 
 
     // Send the AT command to the module 
     uart_sendstring(hc05_data_record.hc05_uart, cmd_str); 

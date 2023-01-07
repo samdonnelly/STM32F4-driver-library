@@ -77,6 +77,7 @@ typedef struct hc05_device_trackers_s
     uint8_t read_status : 1;                  // Read data status 
     uint8_t low_pwr     : 1;                  // Low power state flag 
     uint8_t reset       : 1;                  // Reset state flag 
+    uint8_t startup     : 1;                  // Ensures the init state is run 
 }
 hc05_device_trackers_t; 
 
@@ -213,6 +214,16 @@ HC05_STATE hc05_get_state(void);
  * @return HC05_FAULT_CODE 
  */
 HC05_FAULT_CODE hc05_get_fault_code(void); 
+
+
+/**
+ * @brief Get the read status 
+ * 
+ * @details 
+ * 
+ * @return HC05_READ_STATUS 
+ */
+HC05_READ_STATUS hc05_get_read_status(void); 
 
 
 /**
