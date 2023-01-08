@@ -41,7 +41,8 @@
 /**
  * @brief HC05 initialization state 
  * 
- * @details 
+ * @details initializes device tracker parameters. This state is run once on startup and 
+ *          is only ever run again after the reset state. 
  * 
  * @param hc05_device : pointer to device tracker 
  */
