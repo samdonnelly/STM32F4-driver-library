@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HC-05 Bluetooth driver 
+ * @brief HC05 Bluetooth driver 
  * 
  * @version 0.1
  * @date 2022-07-25
@@ -59,7 +59,7 @@ void hc05_mode(
 //=======================================================================================
 // Variables 
 
-// HC-05 data record 
+// HC05 data record 
 typedef struct hc05_data_record_s
 {
     // Peripherals 
@@ -97,7 +97,7 @@ hc05_data_record_t hc05_data_record;
 //     GPIO_TypeDef *gpio_state, 
 //     pin_selector_t state) 
 
-// HC-05 initialization 
+// HC05 initialization 
 void hc05_init(
     USART_TypeDef *uart, 
     hc05_pin34_status_t pin34_status,
@@ -105,7 +105,7 @@ void hc05_init(
     hc05_state_status_t state_status)
 {
     //==============================================================
-    // Pin information for HC-05 GPIOs 
+    // Pin information for HC05 GPIOs 
     // - PA8:  pin 34 (AT cmd mode trigger)
     // - PA11: STATE 
     // - PA12: EN (enable) 
@@ -171,6 +171,9 @@ void hc05_init(
     {
         gpio_pin_init(GPIOA, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     } 
+
+    // Clear the UART data register 
+    uart_clear_dr(hc05_data_record.hc05_uart); 
 }
 
 //=======================================================================================
@@ -195,7 +198,7 @@ void hc05_off(void)
 }
 
 
-// HC-05 data mode - send data 
+// HC05 data mode - send data 
 void hc05_send(char *send_data)
 {
     uart_sendstring(hc05_data_record.hc05_uart, send_data); 
@@ -209,7 +212,7 @@ HC05_DATA_STATUS hc05_data_status(void)
 }
 
 
-// HC-05 data mode - read data 
+// HC05 data mode - read data 
 void hc05_read(char *receive_data)
 {
     // TODO make sure term char in uart_getstr is universal or configurable 
@@ -275,7 +278,7 @@ void hc05_change_mode(
 }
 
 
-// HC-05 AT Command mode - send AT commands and record responses 
+// HC05 AT Command mode - send AT commands and record responses 
 void hc05_at_command(
     hc05_at_commnds_t command, 
     hc05_at_operation_t operation, 
@@ -585,6 +588,6 @@ void hc05_at_command(
     if (!at_timeout) strcpy(response, "Timeout\r\n");  // No response seen 
 }
 
-#endif   // HC05_AT_CMD_MODE
+#endif   // HC05_AT_EN
 
 //=======================================================================================

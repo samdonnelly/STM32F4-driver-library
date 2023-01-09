@@ -107,13 +107,13 @@ uint8_t gpio_read(
     GPIO_TypeDef *gpio, 
     gpio_pin_num_t pin_num)
 {
-    // Local variables 
-    uint8_t gpio_state = 0; 
-
     // Read the GPIO pin 
-    if ((gpio->IDR) & pin_num) gpio_state = 1; 
-
-    return gpio_state; 
+    if ((gpio->IDR) & pin_num) 
+    {
+        return TRUE; 
+    }
+    
+    return FALSE; 
 }
 
 //=======================================================================================

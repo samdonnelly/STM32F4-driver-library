@@ -346,7 +346,7 @@ void hc05_clear(void);
  *          rate gets set during AT Command mode. The default Data mode baud rate is 9600 bps.
  *          <br><br> 
  *          
- *          NOTE: this function is not available when HC05_AT_CMD_MODE is set to 0. If this 
+ *          NOTE: this function is not available when HC05_AT_EN is set to 0. If this 
  *          is set to 0 then this indicates in the code that only data mode will be used. 
  *          <br><br> 
  * 
