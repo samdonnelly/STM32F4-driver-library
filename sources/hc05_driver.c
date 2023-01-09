@@ -183,6 +183,7 @@ void hc05_init(
 void hc05_on(void)
 {
     gpio_write(GPIOA, hc05_data_record.en_pin, GPIO_HIGH); 
+    // gpio_write(hc05_data_record.gpio_en_pin, hc05_data_record.en_pin, GPIO_HIGH); 
 }
 
 
@@ -190,6 +191,7 @@ void hc05_on(void)
 void hc05_off(void)
 {
     gpio_write(GPIOA, hc05_data_record.en_pin, GPIO_LOW); 
+    // gpio_write(hc05_data_record.gpio_en_pin, hc05_data_record.en_pin, GPIO_LOW); 
 }
 
 
@@ -200,15 +202,23 @@ void hc05_send(char *send_data)
 }
 
 
+// Check for available data 
+HC05_DATA_STATUS hc05_data_status(void)
+{
+    return uart_data_ready(hc05_data_record.hc05_uart); 
+}
+
+
 // HC-05 data mode - read data 
 void hc05_read(char *receive_data)
 {
+    // TODO make sure term char in uart_getstr is universal or configurable 
     uart_getstr(hc05_data_record.hc05_uart, receive_data, UART_STR_TERM_NL); 
 }
 
 
 // Read the connection status (state pin) 
-HC05_STATUS hc05_status(void)
+HC05_CONNECT_STATUS hc05_status(void)
 {
     return gpio_read(hc05_data_record.gpio_state_pin, hc05_data_record.state_pin); 
 }

@@ -18,7 +18,7 @@
 //=======================================================================================
 // Includes 
 
-// Device drivers 
+// Drivers 
 #include "m8q_driver.h"
 #include "timers.h"
 

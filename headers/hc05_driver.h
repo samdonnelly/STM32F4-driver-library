@@ -206,7 +206,8 @@ typedef enum {
 //=======================================================================================
 // Data types 
 
-typedef hc05_connect_status_t HC05_STATUS; 
+typedef hc05_connect_status_t HC05_CONNECT_STATUS; 
+typedef uint8_t HC05_DATA_STATUS; 
 
 //=======================================================================================
 
@@ -282,6 +283,16 @@ void hc05_send(char *send_data);
 
 
 /**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @return HC05_DATA_STATUS 
+ */
+HC05_DATA_STATUS hc05_data_status(void); 
+
+
+/**
  * @brief HC-05 Data mode receive 
  * 
  * @details Reads a string of data from the module that was obtained over Bluetooth from 
@@ -299,9 +310,9 @@ void hc05_read(char *receive_data);
  *          is provided by the state pin feedback. This can be used to check for a 
  *          connection before attempting to send or read data. 
  * 
- * @return HC05_STATUS : connection status of the device 
+ * @return HC05_CONNECT_STATUS : connection status of the device 
  */
-HC05_STATUS hc05_status(void); 
+HC05_CONNECT_STATUS hc05_status(void); 
 
 //=======================================================================================
 

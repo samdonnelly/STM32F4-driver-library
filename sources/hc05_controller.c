@@ -83,6 +83,9 @@ void hc05_send_state(hc05_device_trackers_t *hc05_device);
  * @brief HC05 read state 
  * 
  * @details 
+ *          
+ * // TODO make sure device can read from a user device or another module (i.e. do 
+ *         the term chars on the received data match?) 
  * 
  * @param hc05_device : pointer to device tracker 
  */
@@ -159,8 +162,11 @@ static hc05_state_functions_t state_table[HC05_NUM_STATES] =
 // Control Functions 
 
 // HC05 controller initialization 
-void hc05_controller_init(void)
+void hc05_controller_init(
+    TIM_TypeDef *timer)
 {
+    hc05_device_trackers.timer = timer; 
+
     hc05_device_trackers.state = HC05_INIT_STATE; 
 
     hc05_device_trackers.fault_code = CLEAR; 
@@ -361,7 +367,12 @@ void hc05_connected_state(hc05_device_trackers_t *hc05_device)
 // Send state 
 void hc05_send_state(hc05_device_trackers_t *hc05_device) 
 {
-    // Update fault code if send fails? 
+    // Send data record 
+    hc05_send((char *)hc05_device->send_data); 
+
+    // Update fault code if send fails 
+
+    hc05_device->send = CLEAR_BIT; 
 }
 
 
@@ -369,10 +380,15 @@ void hc05_send_state(hc05_device_trackers_t *hc05_device)
 void hc05_read_state(hc05_device_trackers_t *hc05_device) 
 {
     // Pole for data at the UART port 
-    // Set the read status flag 
-    hc05_device_trackers.read_status = SET_BIT; 
+    if (hc05_data_status())
+    {
+        hc05_read((char *)hc05_device->read_data); 
+        hc05_device_trackers.read_status = SET_BIT; 
+    }
+
+    // Update fault code if read fails 
+
     // If we lose connection and the read flag is set we can set a fault 
-    // Update fault code if read fails? 
 }
 
 
@@ -409,7 +425,10 @@ void hc05_reset_state(hc05_device_trackers_t *hc05_device)
 {
     hc05_device->fault_code = CLEAR; 
 
-    // Should we power cycle the device? 
+    // Power cycle the device to ensure data mode 
+    hc05_off(); 
+    tim_delay_ms(hc05_device->timer, HC05_RESET_DELAY); 
+    hc05_on(); 
 }
 
 //=======================================================================================
@@ -424,12 +443,13 @@ void hc05_set_send(
     uint8_t data_size)
 {
     // Check that the buffers are suitable for memcpy 
-    if ((!data) || (HC05_BUFF_SIZE < data_size)) 
+    if ((!data) || (HC05_BUFF_SIZE <= data_size)) 
     {
         return; 
     }
 
     memcpy(hc05_device_trackers.send_data, data, data_size); 
+    hc05_device_trackers.send_data[data_size] = NULL_CHAR;  // necessary? 
 
     hc05_device_trackers.send = SET_BIT; 
 }

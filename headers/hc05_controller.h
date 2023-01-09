@@ -18,8 +18,9 @@
 //================================================================================
 // Includes 
 
-// Device drivers 
+// Drivers 
 #include "hc05_driver.h" 
+#include "timers.h" 
 
 // Libraries 
 #include <stdio.h> 
@@ -32,6 +33,7 @@
 
 #define HC05_NUM_STATES 9        // Number of controller states 
 #define HC05_BUFF_SIZE 15        // Read buffer size in bytes 
+#define HC05_RESET_DELAY 100     // Reset state delay (ms) 
 
 //================================================================================
 
@@ -64,6 +66,9 @@ typedef enum {
  */
 typedef struct hc05_device_trackers_s 
 {
+    // Peripherals 
+    TIM_TypeDef *timer;                       // Timer port used in the controller 
+
     // Device and controller information 
     hc05_states_t state;                      // Controller state 
     uint8_t fault_code;                       // Controller fault code 
@@ -116,7 +121,8 @@ typedef void (*hc05_state_functions_t)(
  * @details 
  * 
  */
-void hc05_controller_init(void); 
+void hc05_controller_init(
+    TIM_TypeDef *timer); 
 
 
 /**
@@ -137,6 +143,9 @@ void hc05_controller(void);
  * @brief 
  * 
  * @details When this setter is used, the controller will send the data passed to it. 
+ *          
+ *          data_size must be less than HC05_BUFF_SIZE or else the data will not be 
+ *          sent. 
  * 
  * @param data 
  * @param data_size 
