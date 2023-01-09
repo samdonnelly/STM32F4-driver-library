@@ -339,9 +339,11 @@ void hc05_not_connected_state(hc05_device_trackers_t *hc05_device)
     // Check for a connection 
     hc05_device->connect = hc05_status(); 
 
-    // Clear send and read flag triggers 
+    // Ensure the send and read states are not triggered immediately once the 
+    // connected state is reached 
     hc05_device->send = CLEAR_BIT; 
     hc05_device->read = CLEAR_BIT; 
+    hc05_device->read_status = CLEAR_BIT; 
 }
 
 
@@ -359,7 +361,7 @@ void hc05_connected_state(hc05_device_trackers_t *hc05_device)
 // Send state 
 void hc05_send_state(hc05_device_trackers_t *hc05_device) 
 {
-    // 
+    // Update fault code if send fails? 
 }
 
 
@@ -368,7 +370,9 @@ void hc05_read_state(hc05_device_trackers_t *hc05_device)
 {
     // Pole for data at the UART port 
     // Set the read status flag 
+    hc05_device_trackers.read_status = SET_BIT; 
     // If we lose connection and the read flag is set we can set a fault 
+    // Update fault code if read fails? 
 }
 
 
