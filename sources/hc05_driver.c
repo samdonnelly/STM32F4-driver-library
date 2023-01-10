@@ -164,7 +164,7 @@ void hc05_off(void)
 }
 
 
-// HC05 data mode - send data 
+// HC05 send data 
 void hc05_send(char *send_data)
 {
     uart_sendstring(hc05_data_record.hc05_uart, send_data); 
@@ -178,7 +178,7 @@ HC05_DATA_STATUS hc05_data_status(void)
 }
 
 
-// HC05 data mode - read data 
+// HC05 read data 
 void hc05_read(char *receive_data)
 {
     // TODO make sure term char in uart_getstr is universal or configurable 

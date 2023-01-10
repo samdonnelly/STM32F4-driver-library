@@ -32,7 +32,7 @@
 // Macros 
 
 #define HC05_NUM_STATES 9        // Number of controller states 
-#define HC05_BUFF_SIZE 15        // Read buffer size in bytes 
+#define HC05_BUFF_SIZE 30        // Read buffer size in bytes 
 #define HC05_RESET_DELAY 100     // Reset state delay (ms) 
 
 //================================================================================
