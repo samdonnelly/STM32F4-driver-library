@@ -23,10 +23,8 @@
 //=======================================================================================
 // TODO Device driver todo's: 
 // - Make the code able to support multiple devices (linked list) 
-// - Change the init function to pass pins as arguments 
 // - Should have the ability to also send digits if desired 
 // - Make a proper and dedicated at command mode UI file 
-// - Why do we turn the en pin off then on during init? 
 //=======================================================================================
 
 
@@ -63,18 +61,15 @@ void hc05_mode(
 typedef struct hc05_data_record_s
 {
     // Peripherals 
-    USART_TypeDef *hc05_uart;     // UART used for communication 
+    USART_TypeDef *hc05_uart;        // UART used for communication 
 
     // Pins 
     GPIO_TypeDef *gpio_at_pin;       // GPIO port for AT Command Mode pin 
     gpio_pin_num_t at_pin;           // Pin for AT Command Mode enable 
-    // pin_selector_t at_pin;           // Pin for AT Command Mode enable 
     GPIO_TypeDef *gpio_en_pin;       // GPIO port for the enable pin 
     gpio_pin_num_t en_pin;           // Pin for power enable 
-    // pin_selector_t en_pin;           // Pin for power enable 
     GPIO_TypeDef *gpio_state_pin;    // GPIO for the status feedback pin 
     gpio_pin_num_t state_pin;        // Pin for connection status feedback 
-    // pin_selector_t state_pin;        // Pin for connection status feedback 
 } 
 hc05_data_record_t;
 
@@ -88,21 +83,15 @@ hc05_data_record_t hc05_data_record;
 //=======================================================================================
 // Initialization 
 
-// void hc05_init(
-//     USART_TypeDef *uart, 
-//     GPIO_TypeDef *gpio_at, 
-//     pin_selector_t at, 
-//     GPIO_TypeDef *gpio_en, 
-//     pin_selector_t en, 
-//     GPIO_TypeDef *gpio_state, 
-//     pin_selector_t state) 
-
 // HC05 initialization 
 void hc05_init(
     USART_TypeDef *uart, 
-    hc05_pin34_status_t pin34_status,
-    hc05_en_status_t    en_status, 
-    hc05_state_status_t state_status)
+    GPIO_TypeDef *gpio_at, 
+    pin_selector_t at, 
+    GPIO_TypeDef *gpio_en, 
+    pin_selector_t en, 
+    GPIO_TypeDef *gpio_state, 
+    pin_selector_t state) 
 {
     //==============================================================
     // Pin information for HC05 GPIOs 
@@ -114,63 +103,42 @@ void hc05_init(
     // Initialize module info
     hc05_data_record.hc05_uart = uart; 
 
-    // TODO pass the pin as an argument and use: (SET_BIT << (pin number)) 
-    hc05_data_record.at_pin = GPIOX_PIN_8; 
-    hc05_data_record.en_pin = GPIOX_PIN_12; 
-    hc05_data_record.state_pin = GPIOX_PIN_11; 
+    hc05_data_record.gpio_at_pin = gpio_at; 
+    hc05_data_record.at_pin = SET_BIT << at; 
 
-    // hc05_data_record.gpio_at_pin = gpio_at; 
-    // hc05_data_record.at_pin = SET_BIT << at; 
+    hc05_data_record.gpio_en_pin = gpio_en; 
+    hc05_data_record.en_pin = SET_BIT << en; 
 
-    // hc05_data_record.gpio_en_pin = gpio_en; 
-    // hc05_data_record.en_pin = SET_BIT << en; 
-
-    // hc05_data_record.gpio_state_pin = gpio_state; 
-    // hc05_data_record.state_pin = SET_BIT << state; 
+    hc05_data_record.gpio_state_pin = gpio_state; 
+    hc05_data_record.state_pin = SET_BIT << state; 
 
     // AT Command mode enable 
-    // gpio_pin_init(hc05_data_record.gpio_at_pin, 
-    //               at, 
-    //               MODER_GPO, 
-    //               OTYPER_PP, 
-    //               OSPEEDR_HIGH, 
-    //               PUPDR_NO); 
-    // hc05_mode(HC05_DATA_MODE); 
-    if (pin34_status) 
-    {
-        gpio_pin_init(GPIOA, PIN_8, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-        gpio_write(GPIOA, hc05_data_record.at_pin, GPIO_LOW); 
-    }
+    gpio_pin_init(hc05_data_record.gpio_at_pin, 
+                  at, 
+                  MODER_GPO, 
+                  OTYPER_PP, 
+                  OSPEEDR_HIGH, 
+                  PUPDR_NO); 
+    hc05_mode(HC05_DATA_MODE); 
     
-    // Module power enable - why do we turn off then on? 
-    // gpio_pin_init(hc05_data_record.gpio_en_pin, 
-    //               en, 
-    //               MODER_GPO, 
-    //               OTYPER_PP, 
-    //               OSPEEDR_HIGH, 
-    //               PUPDR_NO); 
-    // hc05_off(); 
-    // tim_delay_ms(TIM9, HC05_INIT_DELAY); 
-    // hc05_on(); 
-    if (en_status) 
-    {
-        gpio_pin_init(GPIOA, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-        hc05_off(); 
-        tim_delay_ms(TIM9, HC05_INIT_DELAY); 
-        hc05_on(); 
-    }
+    // Module power enable 
+    gpio_pin_init(hc05_data_record.gpio_en_pin, 
+                  en, 
+                  MODER_GPO, 
+                  OTYPER_PP, 
+                  OSPEEDR_HIGH, 
+                  PUPDR_NO); 
+    hc05_off(); 
+    tim_delay_ms(TIM9, HC05_INIT_DELAY); 
+    hc05_on(); 
     
     // State feedback enable 
-    // gpio_pin_init(hc05_data_record.gpio_state_pin, 
-    //               state, 
-    //               MODER_INPUT, 
-    //               OTYPER_PP, 
-    //               OSPEEDR_HIGH, 
-    //               PUPDR_NO); 
-    if (state_status) 
-    {
-        gpio_pin_init(GPIOA, PIN_11, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-    } 
+    gpio_pin_init(hc05_data_record.gpio_state_pin, 
+                  state, 
+                  MODER_INPUT, 
+                  OTYPER_PP, 
+                  OSPEEDR_HIGH, 
+                  PUPDR_NO); 
 
     // Clear the UART data register 
     uart_clear_dr(hc05_data_record.hc05_uart); 
@@ -185,16 +153,14 @@ void hc05_init(
 // Set EN pin to high to turn on the module 
 void hc05_on(void)
 {
-    gpio_write(GPIOA, hc05_data_record.en_pin, GPIO_HIGH); 
-    // gpio_write(hc05_data_record.gpio_en_pin, hc05_data_record.en_pin, GPIO_HIGH); 
+    gpio_write(hc05_data_record.gpio_en_pin, hc05_data_record.en_pin, GPIO_HIGH); 
 }
 
 
 // Set EN pin to low to turn off the module 
 void hc05_off(void)
 {
-    gpio_write(GPIOA, hc05_data_record.en_pin, GPIO_LOW); 
-    // gpio_write(hc05_data_record.gpio_en_pin, hc05_data_record.en_pin, GPIO_LOW); 
+    gpio_write(hc05_data_record.gpio_en_pin, hc05_data_record.en_pin, GPIO_LOW); 
 }
 
 
@@ -264,8 +230,7 @@ void hc05_change_mode(
     hc05_off(); 
 
     // Set pin 34 on the module depending on the requested mode 
-    gpio_write(GPIOA, hc05_data_record.at_pin, mode); 
-    // hc05_mode(mode); 
+    hc05_mode(mode); 
 
     // Short delay to ensure power off 
     tim_delay_ms(TIM9, HC05_INIT_DELAY); 
@@ -560,8 +525,7 @@ void hc05_at_command(
     }
 
     // Clear the data register before looking for actual data 
-    uart_clear_dr(hc05_data_record.hc05_uart); 
-    // hc05_clear(); 
+    hc05_clear(); 
 
     // Send the AT command to the module 
     uart_sendstring(hc05_data_record.hc05_uart, cmd_str); 

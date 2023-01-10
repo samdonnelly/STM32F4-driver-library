@@ -235,9 +235,12 @@ typedef uint8_t HC05_DATA_STATUS;
  */
 void hc05_init(
     USART_TypeDef *uart, 
-    hc05_pin34_status_t pin34_status,
-    hc05_en_status_t    en_status, 
-    hc05_state_status_t state_status); 
+    GPIO_TypeDef *gpio_at, 
+    pin_selector_t at, 
+    GPIO_TypeDef *gpio_en, 
+    pin_selector_t en, 
+    GPIO_TypeDef *gpio_state, 
+    pin_selector_t state) ; 
 
 //=======================================================================================
 
