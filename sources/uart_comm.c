@@ -378,6 +378,7 @@ void uart_getstr(
 
     // Run until the end of string character is seen 
     // TODO a timeout is needed here to the code doesn't get stuck 
+    // TODO buffer length checking needs to be done to prevent overrun 
     do
     {
         // Wait for data to be available then read and store it 

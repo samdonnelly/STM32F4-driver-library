@@ -443,13 +443,12 @@ void hc05_set_send(
     uint8_t data_size)
 {
     // Check that the buffers are suitable for memcpy 
-    if ((!data) || (HC05_BUFF_SIZE <= data_size)) 
+    if ((!data) || (HC05_BUFF_SIZE < data_size)) 
     {
         return; 
     }
 
     memcpy(hc05_device_trackers.send_data, data, data_size); 
-    hc05_device_trackers.send_data[data_size] = NULL_CHAR;  // necessary? 
 
     hc05_device_trackers.send = SET_BIT; 
 }
