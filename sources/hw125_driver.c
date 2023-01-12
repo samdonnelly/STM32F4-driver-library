@@ -355,7 +355,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     hw125_power_on(sd_card.ss_pin);
 
     // Select the sd card 
-    spi2_slave_select(sd_card.ss_pin);
+    spi_slave_select(GPIOB, sd_card.ss_pin);
 
     // TODO test to see if this is not needed anymore 
     // // Send CMD0 with no arg and a valid CRC value 
@@ -371,7 +371,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
         if (do_resp == HW125_IDLE_STATE)
         {
             // No command wrror - Read the trailing 32-bit R7 response 
-            spi2_write_read(HW125_DATA_HIGH, v_range, HW125_TRAILING_BYTES);
+            spi_write_read(SPI2, HW125_DATA_HIGH, v_range, HW125_TRAILING_BYTES);
 
             // Check lower 12-bits of R7 response (big endian format) 
             if ((uint16_t)((v_range[BYTE_2] << SHIFT_8) | (v_range[BYTE_3])) 
@@ -389,7 +389,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
                     if (do_resp == HW125_READY_STATE)
                     {
                         // Successful CMD58 - proceed to read the OCR register 
-                        spi2_write_read(HW125_DATA_HIGH, ocr, HW125_TRAILING_BYTES);
+                        spi_write_read(SPI2, HW125_DATA_HIGH, ocr, HW125_TRAILING_BYTES);
 
                         // Check CCS bit (bit 30) in OCR response (big endian format) 
                         if (ocr[BYTE_0] & HW125_CCS_FILTER)
@@ -470,10 +470,10 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     }
 
     // Deselect slave 
-    spi2_slave_deselect(sd_card.ss_pin);
+    spi_slave_deselect(GPIOB, sd_card.ss_pin);
     
     // TODO Perform a write_read after deselecting the slave --> Why? 
-    spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE); 
+    spi_write_read(SPI2, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE); 
 
     // Status check 
     if (sd_card.card_type == HW125_CT_UNKNOWN)
@@ -510,16 +510,16 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     tim_delay_ms(TIM9, HW125_PWR_ON_COUNTER);
 
     // Deselect the sd card slave
-    spi2_slave_deselect(hw125_slave_pin);
+    spi_slave_deselect(GPIOB, hw125_slave_pin);
 
     // Set the DI/MOSI command high (0xFF) 
     di_cmd = HW125_DATA_HIGH;
 
     // Send DI/MOSI high 10x to wait for more than 74 clock pulses 
-    for (uint8_t i = 0; i < HW125_PWR_ON_COUNTER; i++) spi2_write(&di_cmd, SPI_1_BYTE);
+    for (uint8_t i = 0; i < HW125_PWR_ON_COUNTER; i++) spi_write(SPI2, &di_cmd, SPI_1_BYTE);
 
     // Slave select 
-    spi2_slave_select(hw125_slave_pin); 
+    spi_slave_select(GPIOB, hw125_slave_pin); 
 
     // Generate a command frame 
     for (uint8_t i = 0; i < SPI_6_BYTES; i++)
@@ -539,12 +539,12 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     }
 
     // Transmit command 
-    spi2_write(cmd_frame, SPI_6_BYTES);
+    spi_write(SPI2, cmd_frame, SPI_6_BYTES);
 
     // Read R1 response until it is valid or until it times out 
     do 
     {
-        spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+        spi_write_read(SPI2, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
     }
     while((do_resp != 0x01) && --num_read);
 
@@ -552,10 +552,10 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     // if (num_read == 0); 
 
     // Slave select 
-    spi2_slave_deselect(hw125_slave_pin); 
+    spi_slave_deselect(GPIOB, hw125_slave_pin); 
 
     // TODO send a data high byte? 
-    spi2_write(&di_cmd, SPI_1_BYTE);
+    spi_write(SPI2, &di_cmd, SPI_1_BYTE);
 
     // Set the Power Flag status to on 
     sd_card.pwr_flag = HW125_PWR_ON; 
@@ -630,7 +630,7 @@ void hw125_ready_rec(void)
     // Read DO/MISO continuously until it is ready to receive commands 
     do 
     {
-        spi2_write_read(HW125_DATA_HIGH, &resp, SPI_1_BYTE);
+        spi_write_read(SPI2, HW125_DATA_HIGH, &resp, SPI_1_BYTE);
     }
     while(resp != HW125_DATA_HIGH);
 }
@@ -683,15 +683,15 @@ void hw125_send_cmd(
     }
 
     // Transmit command 
-    spi2_write(cmd_frame, SPI_6_BYTES);
+    spi_write(SPI2, cmd_frame, SPI_6_BYTES);
 
     // Skip the stuff byte sent following CMD12 (stop transmission) 
-    if (cmd == HW125_CMD12) spi2_write_read(HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
+    if (cmd == HW125_CMD12) spi_write_read(SPI2, HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
 
     // Read R1 response until it is valid or until it times out 
     do 
     {
-        spi2_write_read(HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
+        spi_write_read(SPI2, HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
     }
     while((*resp & HW125_R1_FILTER) && --num_read);
 }
@@ -729,7 +729,7 @@ DISK_RESULT hw125_read(
     if (sd_card.card_type & HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
 
     // Select the slave device 
-    spi2_slave_select(sd_card.ss_pin);
+    spi_slave_select(GPIOB, sd_card.ss_pin);
 
     // Determine the read operation 
     if (count == HW125_SINGLE_BYTE)   // Read one data packet if count == 1
@@ -782,10 +782,10 @@ DISK_RESULT hw125_read(
     }
 
     // Deselect the slave device 
-    spi2_slave_deselect(sd_card.ss_pin);
+    spi_slave_deselect(GPIOB, sd_card.ss_pin);
 
     // TODO dummy read? 
-    spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE); 
+    spi_write_read(SPI2, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE); 
 
     // Return the result 
     return read_resp;
@@ -807,7 +807,7 @@ DISK_RESULT hw125_read_data_packet(
     // Read the data token 
     do 
     {
-        spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+        spi_write_read(SPI2, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
     }
     // while((do_resp != HW125_DT_TWO) && --num_read);
     while((do_resp != HW125_DT_TWO));
@@ -816,11 +816,11 @@ DISK_RESULT hw125_read_data_packet(
     if (do_resp == HW125_DT_TWO)
     {
         // Valid data token is detected - read the data packet 
-        spi2_write_read(HW125_DATA_HIGH, buff, sector_size);
+        spi_write_read(SPI2, HW125_DATA_HIGH, buff, sector_size);
 
         // Discard the two CRC bytes 
-        spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
-        spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+        spi_write_read(SPI2, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+        spi_write_read(SPI2, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
 
         // Operation success 
         read_resp = HW125_RES_OK;
@@ -870,7 +870,7 @@ DISK_RESULT hw125_write(
     if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
 
     // Select the slave device 
-    spi2_slave_select(sd_card.ss_pin);
+    spi_slave_select(GPIOB, sd_card.ss_pin);
 
     // Wait until the card is no longer busy before sending a CMD 
     hw125_ready_rec();
@@ -921,7 +921,7 @@ DISK_RESULT hw125_write(
             hw125_ready_rec();
 
             // Send stop token 
-            spi2_write(&stop_trans, HW125_SINGLE_BYTE);
+            spi_write(SPI2, &stop_trans, HW125_SINGLE_BYTE);
         }
         else
         {
@@ -934,7 +934,7 @@ DISK_RESULT hw125_write(
     hw125_ready_rec();
 
     // Deselect the slave device
-    spi2_slave_deselect(sd_card.ss_pin); 
+    spi_slave_deselect(GPIOB, sd_card.ss_pin); 
 
     // Return the write opration status 
     return write_resp; 
@@ -956,18 +956,18 @@ DISK_RESULT hw125_write_data_packet(
     hw125_ready_rec();
 
     // Send data token 
-    spi2_write(&data_token, HW125_SINGLE_BYTE);
+    spi_write(SPI2, &data_token, HW125_SINGLE_BYTE);
 
     // Send data block 
     // TODO make sure this cast away from const doesn't cause issues 
-    spi2_write((uint8_t *)buff, sector_size); 
+    spi_write(SPI2, (uint8_t *)buff, sector_size); 
 
     // Send CRC 
-    spi2_write(&crc, HW125_SINGLE_BYTE);
-    spi2_write(&crc, HW125_SINGLE_BYTE);
+    spi_write(SPI2, &crc, HW125_SINGLE_BYTE);
+    spi_write(SPI2, &crc, HW125_SINGLE_BYTE);
 
     // Read data response 
-    spi2_write_read(HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+    spi_write_read(SPI2, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
 
     // Check the data response 
     if ((do_resp & HW125_DR_FILTER) == HW125_DR_ZERO)
@@ -1010,7 +1010,7 @@ DISK_RESULT hw125_ioctl(
         return HW125_RES_NOTRDY;
 
     // Select the slave card 
-    spi2_slave_select(sd_card.ss_pin); 
+    spi_slave_select(GPIOB, sd_card.ss_pin); 
 
     // Choose the misc function 
     switch(cmd)
@@ -1090,7 +1090,7 @@ DISK_RESULT hw125_ioctl(
     }
 
     // Deselect the slave card 
-    spi2_slave_deselect(sd_card.ss_pin); 
+    spi_slave_deselect(GPIOB, sd_card.ss_pin); 
 
     // TODO read a byte? 
 
@@ -1293,7 +1293,7 @@ DISK_RESULT hw125_ioctl_get_ocr(void *buff)
     if (do_resp == HW125_READY_STATE)
     {
         // Successful CMD58 - proceed to read the OCR register 
-        spi2_write_read(HW125_DATA_HIGH, ocr, HW125_TRAILING_BYTES);
+        spi_write_read(SPI2, HW125_DATA_HIGH, ocr, HW125_TRAILING_BYTES);
         result = HW125_RES_OK; 
     }
     else

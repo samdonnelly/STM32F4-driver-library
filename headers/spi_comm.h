@@ -16,8 +16,12 @@
 //=======================================================================================
 // Includes 
 
+// Tools 
 #include "stm32f411xe.h"
 #include "tools.h"
+
+// Drivers 
+#include "gpio_driver.h" 
 
 //=======================================================================================
 
@@ -125,10 +129,10 @@ typedef enum {
 // Initialization functions 
 
 /**
- * @brief SPI2 initialization 
+ * @brief SPI initialization 
  * 
  * @details 
- *          SPI2 is currently supported for up to 2 slave devices (2 GPIOs).
+ *          SPI is currently supported for up to 2 slave devices (2 GPIOs).
  * 
  * @see spi_baud_rate_ctrl_t
  * 
@@ -138,7 +142,9 @@ typedef enum {
  * @param data_frame_format 
  * @return uint8_t 
  */
-uint8_t spi2_init(
+uint8_t spi_init(
+    SPI_TypeDef *spi, 
+    GPIO_TypeDef *gpio, 
     uint8_t num_slaves,
     uint8_t baud_rate_ctrl,
     uint8_t clock_mode);
@@ -147,75 +153,84 @@ uint8_t spi2_init(
 
 
 //=======================================================================================
-// SPI2 register functions 
+// SPI register functions 
 
 /**
- * @brief SPI2 enable 
+ * @brief SPI enable 
  * 
  * @details 
  * 
  */
-void spi2_enable(void);
+void spi_enable(
+    SPI_TypeDef *spi);
 
 
 /**
- * @brief SPI2 disable 
+ * @brief SPI disable 
  * 
  * @details 
  * 
  */
-void spi2_disable(void);
+void spi_disable(
+    SPI_TypeDef *spi);
 
 
 /**
- * @brief SPI2 TXE wait 
+ * @brief SPI TXE wait 
  * 
  * @details 
  * 
  */
-void spi2_txe_wait(void);
+void spi_txe_wait(
+    SPI_TypeDef *spi);
 
 
 /**
- * @brief SPI2 RXNE wait 
+ * @brief SPI RXNE wait 
  * 
  * @details 
  * 
  */
-void spi2_rxne_wait(void);
+void spi_rxne_wait(
+    SPI_TypeDef *spi);
 
 
 /**
- * @brief SPI2 BSY wait 
+ * @brief SPI BSY wait 
  * 
  * @details 
  * 
  */
-void spi2_bsy_wait(void);
+void spi_bsy_wait(
+    SPI_TypeDef *spi);
 
 
 /**
- * @brief SPI2 slave select 
+ * @brief SPI slave select 
  * 
  * @details 
  * 
- * @see spi2_slave_select_pin_t
+ * @see spi_slave_select_pin_t
  * 
  * @param slave_num 
  */
-void spi2_slave_select(uint16_t slave_num);
+void spi_slave_select(
+    GPIO_TypeDef *gpio, 
+    uint16_t slave_num);
 
 
 /**
- * @brief SPI2 slave deselect 
+ * @brief SPI slave deselect 
  * 
  * @details 
  * 
- * @see spi2_slave_select_pin_t
+ * @see spi_slave_select_pin_t
  * 
  * @param slave_num 
  */
-void spi2_slave_deselect(uint16_t slave_num);
+void spi_slave_deselect(
+    GPIO_TypeDef *gpio, 
+    uint16_t slave_num);
 
 //=======================================================================================
 
@@ -224,30 +239,34 @@ void spi2_slave_deselect(uint16_t slave_num);
 // Read and write functions 
 
 /**
- * @brief SPI2 write
+ * @brief SPI write
  * 
  * @details 
  * 
+ * @param spi 
  * @param write_data 
  * @param data_len 
  */
-void spi2_write(
+void spi_write(
+    SPI_TypeDef *spi, 
     uint8_t *write_data, 
     uint32_t data_len);
 
 
 /**
- * @brief SPI2 write then read 
+ * @brief SPI write then read 
  * 
  * @details 
  *          This can be used to request information from a slave device (write) then 
  *          receive the needed information immediately afterwards (read). 
  * 
+ * @param spi 
  * @param write_data 
  * @param read_data 
  * @param data_len 
  */
-void spi2_write_read(
+void spi_write_read(
+    SPI_TypeDef *spi, 
     uint8_t  write_data, 
     uint8_t *read_data, 
     uint32_t data_len);

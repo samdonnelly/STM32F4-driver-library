@@ -17,7 +17,6 @@
 // Includes 
 
 #include "spi_comm.h"
-#include "gpio_driver.h"
 
 //=======================================================================================
 
@@ -27,10 +26,10 @@
 
 //==============================================================
 // SPI Master Mode Setup Steps 
-//  1. Enable the SPI2 clock 
+//  1. Enable the SPI clock 
 //  2. Enable the GPIOB clock
 //  3. Configure the pins for alternative functions
-//      a) Specify SPI2 pins as using alternative functions
+//      a) Specify SPI pins as using alternative functions
 //      b) Select high speed for the pins 
 //      c) Configure the SPI alternate function in the AFR register 
 //  4. Reset and disable the SPI before manking any changes
@@ -48,14 +47,17 @@
 //==============================================================
 
 
-// SPI2 initialization
-uint8_t spi2_init(
+// SPI initialization
+// GPIOB and SPI2 was used for all existing spi stuff 
+uint8_t spi_init(
+    SPI_TypeDef *spi, 
+    GPIO_TypeDef *gpio, 
     uint8_t num_slaves,
     uint8_t baud_rate_ctrl,
     uint8_t clock_mode)
 {
     //==============================================================
-    // Pin information for SPI2
+    // Pin information for SPI
     //  PB9:  NSS --> GPIO slave select 1
     //  PB10: SCK
     //  PB12: NSS --> GPIO slave select 2
@@ -63,7 +65,7 @@ uint8_t spi2_init(
     //  PB15: MOSI
     //==============================================================
 
-    // 1. Enable the SPI2 clock 
+    // 1. Enable the SPI clock 
     RCC->APB1ENR |= (SET_BIT << SHIFT_14);
 
     // 2. Enable the GPIOB clock
@@ -71,65 +73,65 @@ uint8_t spi2_init(
 
     // 3. Configure the pins for alternative functions
 
-    // a) Specify SPI2 pins as using alternative functions
-    GPIOB->MODER |= (SET_2 << SHIFT_20);  // PB10 
-    GPIOB->MODER |= (SET_2 << SHIFT_28);  // PB14 
-    GPIOB->MODER |= (SET_2 << SHIFT_30);  // PB15 
+    // a) Specify SPI pins as using alternative functions
+    gpio->MODER |= (SET_2 << SHIFT_20);  // PB10 
+    gpio->MODER |= (SET_2 << SHIFT_28);  // PB14 
+    gpio->MODER |= (SET_2 << SHIFT_30);  // PB15 
 
     // b) Select high speed for the pins 
-    GPIOB->OSPEEDR |= (SET_3 << SHIFT_20);  // PB10 
-    GPIOB->OSPEEDR |= (SET_3 << SHIFT_28);  // PB14 
-    GPIOB->OSPEEDR |= (SET_3 << SHIFT_30);  // PB15 
+    gpio->OSPEEDR |= (SET_3 << SHIFT_20);  // PB10 
+    gpio->OSPEEDR |= (SET_3 << SHIFT_28);  // PB14 
+    gpio->OSPEEDR |= (SET_3 << SHIFT_30);  // PB15 
 
     // c) Configure the SPI alternate function in the AFR register 
-    GPIOB->AFR[1] |= (SET_5 << SHIFT_8);   // PB10 
-    GPIOB->AFR[1] |= (SET_5 << SHIFT_24);  // PB14 
-    GPIOB->AFR[1] |= (SET_5 << SHIFT_28);  // PB15 
+    gpio->AFR[1] |= (SET_5 << SHIFT_8);   // PB10 
+    gpio->AFR[1] |= (SET_5 << SHIFT_24);  // PB14 
+    gpio->AFR[1] |= (SET_5 << SHIFT_28);  // PB15 
 
     // 4. Reset and disable the SPI before manking any changes
-    SPI2->CR1 = CLEAR;
+    spi->CR1 = CLEAR;
 
     // 5. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
     // TODO create pre-defined rates based on clock speed and SPI speed 
-    SPI2->CR1 |= (baud_rate_ctrl << SHIFT_3);
+    spi->CR1 |= (baud_rate_ctrl << SHIFT_3);
 
     // 6. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
-    SPI2->CR1 |= (clock_mode << SHIFT_0);
+    spi->CR1 |= (clock_mode << SHIFT_0);
 
     // 7. Set the DFF bit to define an 8-bit data frame format. 
-    SPI2->CR1 &= ~(SET_BIT << SHIFT_11);
+    spi->CR1 &= ~(SET_BIT << SHIFT_11);
 
     // 8. Enable software slave management
-    SPI2->CR1 |= (SET_BIT << SHIFT_9);
-    SPI2->CR1 |= (SET_BIT << SHIFT_8);
+    spi->CR1 |= (SET_BIT << SHIFT_9);
+    spi->CR1 |= (SET_BIT << SHIFT_8);
 
     // 9. Set full-duplex mode 
-    SPI2->CR1 &= ~(SET_BIT << SHIFT_10);
+    spi->CR1 &= ~(SET_BIT << SHIFT_10);
 
     // 10. Configure the LSBFIRST bit in the SPI_CR1 register to define the frame format. 
-    SPI2->CR1 &= ~(SET_BIT << SHIFT_7);  // MSB first 
+    spi->CR1 &= ~(SET_BIT << SHIFT_7);  // MSB first 
 
     // 11. Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
-    SPI2->CR2 &= ~(SET_BIT << SHIFT_4);  // No TI protocol 
+    spi->CR2 &= ~(SET_BIT << SHIFT_4);  // No TI protocol 
 
     // 12. Set the MSTR bit to enable master mode 
-    SPI2->CR1 |= (SET_BIT << SHIFT_2);
+    spi->CR1 |= (SET_BIT << SHIFT_2);
 
     // 13. Set the SPE bit to enable SPI 
-    spi2_enable();
+    spi_enable(spi);
 
     // 14. Configure the slave select pins as GPIO 
     switch (num_slaves)
     {
         case SPI2_2_SLAVE:  // Initialize PB12 as GPIO
-            gpio_pin_init(GPIOB, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
-            spi2_slave_deselect(SPI2_SS_2);  // Deselect slave 
+            gpio_pin_init(gpio, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+            spi_slave_deselect(gpio, SPI2_SS_2);  // Deselect slave 
             // Case has no break so PB9 will also be initialized
             // TODO check if no break statement works 
 
         case SPI2_1_SLAVE:  // Initialize PB9 as GPIO 
-            gpio_pin_init(GPIOB, PIN_9, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
-            spi2_slave_deselect(SPI2_SS_1);  // Deselect slave 
+            gpio_pin_init(gpio, PIN_9, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+            spi_slave_deselect(gpio, SPI2_SS_1);  // Deselect slave 
             break;
 
         default:  // Invalid number of slaves specified
@@ -144,53 +146,62 @@ uint8_t spi2_init(
 
 
 //=======================================================================================
-// SPI2 register functions 
+// SPI register functions 
 
-// Set the SPE bit to enable SPI2
-void spi2_enable(void)
+// Set the SPE bit to enable SPI 
+void spi_enable(
+    SPI_TypeDef *spi)
 {
-    SPI2->CR1 |= (SET_BIT << SHIFT_6);
+    spi->CR1 |= (SET_BIT << SHIFT_6);
 }
 
 
-// Clear the SPE bit to disable SPI2 
-void spi2_disable(void)
+// Clear the SPE bit to disable SPI 
+void spi_disable(
+    SPI_TypeDef *spi)
 {
-    SPI2->CR1 &= ~(SET_BIT << SHIFT_6);
+    spi->CR1 &= ~(SET_BIT << SHIFT_6);
 }
 
 
 // Wait for TXE bit to set 
-void spi2_txe_wait(void)
+void spi_txe_wait(
+    SPI_TypeDef *spi)
 {
-    while(!(SPI2->SR & (SET_BIT << SHIFT_1)));
+    while(!(spi->SR & (SET_BIT << SHIFT_1)));
 }
 
 
 // Wait for RXNE bit to set 
-void spi2_rxne_wait(void)
+void spi_rxne_wait(
+    SPI_TypeDef *spi)
 {
-    while(!(SPI2->SR & (SET_BIT << SHIFT_0)));
+    while(!(spi->SR & (SET_BIT << SHIFT_0)));
 }
 
 
 // Wait for BSY bit to clear
-void spi2_bsy_wait(void)
+void spi_bsy_wait(
+    SPI_TypeDef *spi)
 {
-    while(SPI2->SR & (SET_BIT << SHIFT_7));
+    while(spi->SR & (SET_BIT << SHIFT_7));
 }
 
-// Select an SPI2 slave 
-void spi2_slave_select(uint16_t slave_num)
+// Select an SPI slave 
+void spi_slave_select(
+    GPIO_TypeDef *gpio, 
+    uint16_t slave_num)
 {
-    gpio_write(GPIOB, slave_num, GPIO_LOW);
+    gpio_write(gpio, slave_num, GPIO_LOW);
 }
 
 
-// Deselect an SPI2 slave 
-void spi2_slave_deselect(uint16_t slave_num)
+// Deselect an SPI slave 
+void spi_slave_deselect(
+    GPIO_TypeDef *gpio, 
+    uint16_t slave_num)
 {
-    gpio_write(GPIOB, slave_num, GPIO_HIGH);
+    gpio_write(gpio, slave_num, GPIO_HIGH);
 }
 
 //=======================================================================================
@@ -214,28 +225,29 @@ void spi2_slave_deselect(uint16_t slave_num)
 //      Note: this is not done here. spi is disabled only in an error state. 
 //==============================================================
 
-// SPI2 write 
-void spi2_write(
+// SPI write 
+void spi_write(
+    SPI_TypeDef *spi, 
     uint8_t *write_data, 
     uint32_t data_len)
 {
     // Iterate through all data to be sent 
     for (uint32_t i = 0; i < data_len; i++)
     {
-        spi2_txe_wait();          // Wait for TXE bit to set 
-        SPI2->DR = *write_data;   // Write data to the data register 
-        write_data++;             // Increment to next piece of data 
+        spi_txe_wait(spi);          // Wait for TXE bit to set 
+        spi->DR = *write_data;      // Write data to the data register 
+        write_data++; 
     }
 
     // Wait for TXE bit to set 
-    spi2_txe_wait();
+    spi_txe_wait(spi);
 
     // Wait for BSY to clear 
-    spi2_bsy_wait();
+    spi_bsy_wait(spi);
 
     // Read the data and status registers to clear the RX buffer and overrun error bit
-    dummy_read(SPI2->DR); 
-    dummy_read(SPI2->SR); 
+    dummy_read(spi->DR); 
+    dummy_read(spi->SR); 
 }
 
 
@@ -255,38 +267,39 @@ void spi2_write(
 //      Note: disabling is not done here. spi is disabled only in an error state. 
 //==============================================================
 
-// SPI2 write then read 
-void spi2_write_read(
+// SPI write then read 
+void spi_write_read(
+    SPI_TypeDef *spi, 
     uint8_t  write_data, 
     uint8_t *read_data, 
     uint32_t data_len)
 {
     // Write the first piece of data 
-    spi2_txe_wait();
-    SPI2->DR = write_data; 
+    spi_txe_wait(spi);
+    spi->DR = write_data; 
 
     // Iterate through all data to be sent and received
     for (uint16_t i = 0; i < data_len-1; i++)
     {
-        spi2_txe_wait();          // Wait for TXE bit to set 
-        SPI2->DR = write_data;    // Write data to the data register 
+        spi_txe_wait(spi);          // Wait for TXE bit to set 
+        spi->DR = write_data;       // Write data to the data register 
 
-        spi2_rxne_wait();         // Wait for the RXNE bit to set
-        *read_data = SPI2->DR;    // Read data from the data register 
-        read_data++;              // Increment to next space in memeory to store data
+        spi_rxne_wait(spi);         // Wait for the RXNE bit to set
+        *read_data = spi->DR;       // Read data from the data register 
+        read_data++; 
     }
 
     // Read the last piece of data
     // TODO add a timer here in case data doesn't get sent back 
     // TODO test to see if there is an overrun error that needs clearing
-    spi2_rxne_wait();
-    *read_data = SPI2->DR;
+    spi_rxne_wait(spi);
+    *read_data = spi->DR;
 
     // Wait for TXE bit to set 
-    spi2_txe_wait();
+    spi_txe_wait(spi);
 
     // Wait for BSY to clear 
-    spi2_bsy_wait();
+    spi_bsy_wait(spi);
 }
 
 //=======================================================================================
