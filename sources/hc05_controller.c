@@ -21,14 +21,7 @@
 
 
 //=======================================================================================
-// Notes 
-//=======================================================================================
-
-
-//=======================================================================================
 // TODO 
-// - Make sure data transfer is complete before turning off the module 
-// - Verify the state pin shows connected before any data transfer 
 // - When about to send data (to Android) look for a prompt message to start 
 // - Have a state that is called at the end of AT command mode state where the baud 
 //   rate is read and used to set the baud rate for data mode 
@@ -41,8 +34,9 @@
 /**
  * @brief HC05 initialization state 
  * 
- * @details initializes device tracker parameters. This state is run once on startup and 
- *          is only ever run again after the reset state. 
+ * @details Initializes device tracker parameters. This state is run once on startup and 
+ *          is only run again after the reset state. After running it goes to the not 
+ *          connected state. 
  * 
  * @param hc05_device : pointer to device tracker 
  */
@@ -52,7 +46,11 @@ void hc05_init_state(hc05_device_trackers_t *hc05_device);
 /**
  * @brief HC05 not connected state 
  * 
- * @details 
+ * @details In this state the controller idles until a connection is detected at which 
+ *          point it goes to the connected state. It is entered from the init state, the 
+ *          connected state when a connection is lost, the fault state if the faulr code 
+ *          clears and from the low power exit state when returning from low power mode. 
+ *          Requests to read and write while in this state will be ignored. 
  * 
  * @param hc05_device : pointer to device tracker 
  */
@@ -62,7 +60,10 @@ void hc05_not_connected_state(hc05_device_trackers_t *hc05_device);
 /**
  * @brief HC05 connected state 
  * 
- * @details 
+ * @details This state is entered from the not connected state when a Bluetooth 
+ *          connection to an external device is detected. From here the controller can 
+ *          enter send and read states when requested. It will revert back to the not 
+ *          connected state when the connection is lost. 
  * 
  * @param hc05_device : pointer to device tracker 
  */

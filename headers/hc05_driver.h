@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HC-05 bluetooth driver 
+ * @brief HC05 bluetooth driver 
  * 
  * @version 0.1
  * @date 2022-07-25
@@ -30,7 +30,6 @@
 #include "timers.h"
 
 // Libraries 
-#include <string.h>
 #include <stdio.h>
 
 //=======================================================================================
@@ -39,7 +38,7 @@
 //=======================================================================================
 // Macros 
 
-// HC-05 paramters 
+// HC05 paramters 
 #define HC05_INIT_DELAY   100  // ms delay to ensure full power cycle 
 
 // AT Command Mode 
@@ -56,9 +55,9 @@
 // Enums 
 
 /**
- * @brief HC-05 mode 
+ * @brief HC05 mode 
  * 
- * @details The HC-05 module has two modes: Data mode (default) and AT Command mode. This 
+ * @details The HC05 module has two modes: Data mode (default) and AT Command mode. This 
  *          enum is passed as an argument to hc05_change_mode to indicate which mode to 
  *          put the module into. 
  * 
@@ -72,7 +71,7 @@ typedef enum {
 
 
 /**
- * @brief HC-05 pin 34 status 
+ * @brief HC05 pin 34 status 
  * 
  * @details Pin 34 on the module is used to trigger AT command mode without needing to press
  *          the pushbutton in the module. This enum is passed as an argument to hc05_init 
@@ -91,7 +90,7 @@ typedef enum {
 
 
 /**
- * @brief HC-05 EN pin status 
+ * @brief HC05 EN pin status 
  * 
  * @details The EN pin is used to enable power to the module so it can be turned on and off. 
  *          This enum is passed as an argument to hc05_init to indicate whether this 
@@ -109,7 +108,7 @@ typedef enum {
 
 
 /**
- * @brief HC-05 STATE pin status 
+ * @brief HC05 STATE pin status 
  * 
  * @details The STATE pin provides feedback as to whether the module is connected to a device 
  *          or not. This enum is passed as an argument to hc05_init to indicate whether this 
@@ -136,11 +135,11 @@ typedef enum {
 
 
 /**
- * @brief HC-05 AT Commands 
+ * @brief HC05 AT Commands 
  * 
  * @details This enum contains all the AT Command mode commands used to configure the module. 
  *          These values are used in the hc05_at_command function to match the users requested 
- *          command and generate a command string that gets sent to the module. See the HC-05 
+ *          command and generate a command string that gets sent to the module. See the HC05 
  *          documentation for more information on AT commands. 
  * 
  * @see hc05_at_command
@@ -185,7 +184,7 @@ typedef enum {
 
 
 /**
- * @brief HC-05 AT command operation 
+ * @brief HC05 AT command operation 
  * 
  * @details This enum is an argument passed to the hc05_at_command function to indicate whether 
  *          the user wants to set a parameter, check a parameter, or do nothing (in cases where
@@ -216,7 +215,7 @@ typedef uint8_t HC05_DATA_STATUS;
 // Initialization functions 
 
 /**
- * @brief HC-05 initialization 
+ * @brief HC05 initialization 
  * 
  * @details Enables GPIO pins for use with the module and assigns module information to 
  *          an instance of the hc05_mod_info_t structure that gets referenced throughout 
@@ -249,7 +248,7 @@ void hc05_init(
 // User functions 
 
 /**
- * @brief HC-05 power on 
+ * @brief HC05 power on 
  * 
  * @details Turns the module on by using the EN pin GPIO output. <br> 
  *          NOTE: The EN pin must be enabled for on/off control. If is not enabled then the 
@@ -262,7 +261,7 @@ void hc05_on(void);
 
 
 /**
- * @brief HC-05 power off 
+ * @brief HC05 power off 
  * 
  * @details Turns the module off by using the EN pin GPIO output. <br> 
  *          NOTE: The EN pin must be enabled for on/off control. If is not enabled then the 
@@ -275,7 +274,7 @@ void hc05_off(void);
 
 
 /**
- * @brief HC-05 Data mode send 
+ * @brief HC05 Data mode send 
  * 
  * @details Sends a string of data to the module which in turn gets sent out over 
  *          Bluetooth to a connected device. 
@@ -296,7 +295,7 @@ HC05_DATA_STATUS hc05_data_status(void);
 
 
 /**
- * @brief HC-05 Data mode receive 
+ * @brief HC05 Data mode receive 
  * 
  * @details Reads a string of data from the module that was obtained over Bluetooth from 
  *          a connected device. 
@@ -338,7 +337,7 @@ void hc05_clear(void);
 // AT Command Mode functions 
 
 /**
- * @brief HC-05 change operating mode 
+ * @brief HC05 change operating mode 
  * 
  * @details This functions allows for changing between the two operating modes of the module 
  *          through software. The two modes are Data mode (default) which is used to send and 
@@ -367,7 +366,7 @@ void hc05_change_mode(
 
 
 /**
- * @brief HC-05 AT Command mode 
+ * @brief HC05 AT Command mode 
  * 
  * @details This function is used to send AT commands and read the response from the module. 
  *          The arguments specify the command (see documentation), operation (check, set, or 

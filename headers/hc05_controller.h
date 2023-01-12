@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief 
+ * @brief HC05 controller 
  * 
  * @version 0.1
  * @date 2023-01-03
@@ -44,15 +44,15 @@
  * @brief HC05 controller states 
  */
 typedef enum {
-    HC05_INIT_STATE, 
-    HC05_NOT_CONNECTED_STATE, 
-    HC05_CONNECTED_STATE, 
-    HC05_SEND_STATE, 
-    HC05_READ_STATE, 
-    HC05_LOW_POWER_STATE, 
-    HC05_LOW_POWER_EXIT_STATE, 
-    HC05_FAULT_STATE, 
-    HC05_RESET_STATE 
+    HC05_INIT_STATE,                   // Initialization state 
+    HC05_NOT_CONNECTED_STATE,          // No Bluetooth connection state 
+    HC05_CONNECTED_STATE,              // Bluetooth connected state 
+    HC05_SEND_STATE,                   // Send data state 
+    HC05_READ_STATE,                   // Read data state 
+    HC05_LOW_POWER_STATE,              // Low power mode state 
+    HC05_LOW_POWER_EXIT_STATE,         // Low power mode exit state 
+    HC05_FAULT_STATE,                  // Fault state 
+    HC05_RESET_STATE                   // Reset state 
 } hc05_states_t; 
 
 //================================================================================
@@ -103,8 +103,7 @@ typedef uint8_t HC05_READ_STATUS;
 // Function pointers 
 
 /**
- * @brief 
- * 
+ * @brief HC05 state function pointer 
  */
 typedef void (*hc05_state_functions_t)(
     hc05_device_trackers_t *hc05_device); 
@@ -116,20 +115,27 @@ typedef void (*hc05_state_functions_t)(
 // Control functions 
 
 /**
- * @brief 
+ * @brief HC05 controller initialization 
  * 
- * @details 
+ * @details Configures device trackers used in the controller. This function must be 
+ *          called during setup in order for the controller to work properly. The 
+ *          timer passed as an argument is used for creating short delays in the 
+ *          controller. The timer used should be equiped as a general purpose timer 
+ *          that can be used in the timer driver delay functions. The delays are 
+ *          used in states of the controller that are not time sensitive. 
  * 
+ * @param timer : timer port used for the driver 
  */
 void hc05_controller_init(
     TIM_TypeDef *timer); 
 
 
 /**
- * @brief 
+ * @brief HC05 controller 
  * 
- * @details 
- * 
+ * @details Main control scheme for the device. This function contains the state 
+ *          machine used to dictate flow/control of the code/device. State 
+ *          functions are called from here. 
  */
 void hc05_controller(void); 
 
@@ -140,15 +146,21 @@ void hc05_controller(void);
 // Setters 
 
 /**
- * @brief 
+ * @brief HC05 send data setter 
  * 
- * @details When this setter is used, the controller will send the data passed to it. 
+ * @details Used to specify the data to be sent by the device over Bluetooth. After 
+ *          this setter is called the send state will be triggered but only if the 
+ *          controller is in the connected state. If this setter is called while not 
+ *          in the connected state then it will have to be called again to trigger 
+ *          the send state. 
  *          
- *          data_size must be less than HC05_BUFF_SIZE or else the data will not be 
- *          sent. 
+ *          NOTE: data_size must be less than HC05_BUFF_SIZE or else the data will not be 
+ *                sent. This condition prevents overrun errors. 
+ *          
+ *          NOTE: The data passed to this setter must be NUL terminated. 
  * 
- * @param data 
- * @param data_size 
+ * @param data : buffer holding the data to be sent 
+ * @param data_size : size of data in the data buffer 
  */
 void hc05_set_send(
     uint8_t *data, 
@@ -158,8 +170,9 @@ void hc05_set_send(
 /**
  * @brief Set the read flag 
  * 
- * @details 
- * 
+ * @details This setter is used to trigger the read state. The read state can only 
+ *          be entered from the connected state. If this setter is called while not 
+ *          in the read or connected state then it will have to be called again. 
  */
 void hc05_set_read(void); 
 
@@ -167,8 +180,8 @@ void hc05_set_read(void);
 /**
  * @brief Clear the read flag 
  * 
- * @details 
- * 
+ * @details This setter is used to exit the read state. This setter is only useful 
+ *          when the controller is already in the read state. 
  */
 void hc05_clear_read(void); 
 
@@ -176,8 +189,7 @@ void hc05_clear_read(void);
 /**
  * @brief Set low power flag 
  * 
- * @details 
- * 
+ * @details Used to trigger the low power state. This is used for power saving modes. 
  */
 void hc05_set_low_power(void); 
 
@@ -185,8 +197,7 @@ void hc05_set_low_power(void);
 /**
  * @brief Clear low power flag 
  * 
- * @details 
- * 
+ * @details Used to trigger the exit of the low power state. 
  */
 void hc05_clear_low_power(void); 
 
@@ -194,8 +205,9 @@ void hc05_clear_low_power(void);
 /**
  * @brief Set reset flag 
  * 
- * @details 
- * 
+ * @details Triggers a controller reset. During a reset the device will be restarted 
+ *          and device tracking information will be reset. This is useful in the event 
+ *          of a system fault. 
  */
 void hc05_set_reset(void); 
 
@@ -206,11 +218,13 @@ void hc05_set_reset(void);
 // Getters 
 
 /**
- * @brief Read state 
+ * @brief Get controller state 
  * 
- * @details 
+ * @details Retrieves and returns the current state of the controller. 
  * 
- * @return HC05_STATE 
+ * @see hc05_states_t 
+ * 
+ * @return HC05_STATE : controller state 
  */
 HC05_STATE hc05_get_state(void); 
 
@@ -218,9 +232,9 @@ HC05_STATE hc05_get_state(void);
 /**
  * @brief Get fault code 
  * 
- * @details 
+ * @details Returns the fault code of the controller. 
  * 
- * @return HC05_FAULT_CODE 
+ * @return HC05_FAULT_CODE : controller fault code 
  */
 HC05_FAULT_CODE hc05_get_fault_code(void); 
 
@@ -228,9 +242,13 @@ HC05_FAULT_CODE hc05_get_fault_code(void);
 /**
  * @brief Get the read status 
  * 
- * @details 
+ * @details Indicates if data is available in the controller for reading. This flag 
+ *          will only be set if the controller is in the read state and data has been 
+ *          read from an external source. 
  * 
- * @return HC05_READ_STATUS 
+ * @see hc05_get_read_data 
+ * 
+ * @return HC05_READ_STATUS : available read data status 
  */
 HC05_READ_STATUS hc05_get_read_status(void); 
 
@@ -238,10 +256,16 @@ HC05_READ_STATUS hc05_get_read_status(void);
 /**
  * @brief Get the read data 
  * 
- * @details 
+ * @details Copies the most recent read data into the buffer passed to the function. 
+ *          When new data is available, the read status flag will be set which can 
+ *          be used to know when to call this getter. If this getter is called 
+ *          without checking the read status flag, there is no guarentee the returned 
+ *          data is different or updated from the previous read. 
  * 
- * @param buffer 
- * @param buff_size 
+ * @see hc05_get_read_status 
+ * 
+ * @param buffer : buffer to store read data 
+ * @param buff_size : size of storage buffer passed to the getter 
  */
 void hc05_get_read_data(
     uint8_t *buffer, 
