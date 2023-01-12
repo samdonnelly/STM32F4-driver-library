@@ -152,7 +152,9 @@ void hc05_controller(void);
  *          this setter is called the send state will be triggered but only if the 
  *          controller is in the connected state. If this setter is called while not 
  *          in the connected state then it will have to be called again to trigger 
- *          the send state. 
+ *          the send state. After sending the data the controller will return from 
+ *          from the send state. This change of state can be used to know when you 
+ *          can call this setter again with updated data to send. 
  *          
  *          NOTE: data_size must be less than HC05_BUFF_SIZE or else the data will not be 
  *                sent. This condition prevents overrun errors. 
