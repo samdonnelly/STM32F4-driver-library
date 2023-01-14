@@ -99,6 +99,33 @@
 
 //======================================================
 
+
+//==================================================
+// Application interface 
+
+// f_mount opt argument 
+#define HW125_MOUNT_LATER 0         // To be mounted on the first access to the volume 
+#define HW125_MOUNT_NOW 1           // Force mount to check if it's ready to work 
+
+// f_open mode flags (some are FatFs mode flags) 
+#define HW125_MODE_R        (FA_READ)                                  // "r" 
+#define HW125_MODE_RR       (FA_READ | FA_WRITE)                       // "r+" 
+#define HW125_MODE_W        (FA_CREATE_ALWAYS | FA_WRITE)              // "w" 
+#define HW125_MODE_WW       (FA_CREATE_ALWAYS | FA_WRITE | FA_READ)    // "w+" 
+#define HW125_MODE_A        (FA_OPEN_APPEND | FA_WRITE)                // "a" 
+#define HW125_MODE_AA       (FA_OPEN_APPEND | FA_WRITE | FA_READ)      // "a+" 
+#define HW125_MODE_WX       (FA_CREATE_NEW | FA_WRITE)                 // "wx" 
+#define HW125_MODE_WWX      (FA_CREATE_NEW | FA_WRITE | FA_READ)       // "w+x" 
+#define HW125_MODE_OAW      (FA_OPEN_ALWAYS | FA_WRITE) 
+#define HW125_MODE_OAWR     (FA_OPEN_ALWAYS | FA_WRITE | FA_READ) 
+#define HW125_MODE_OEW      (FA_OPEN_EXISTING | FA_WRITE) 
+#define HW125_MODE_OEWR     (FA_OPEN_EXISTING | FA_WRITE | FA_READ) 
+
+// Functions 
+#define f_unmount(path) f_mount(NULL, path, HW125_MOUNT_NOW)     // Unmount card 
+
+//==================================================
+
 //=======================================================================================
 
 
@@ -320,9 +347,14 @@ typedef hw125_disk_results_t DISK_RESULT;
  *          
  *          This function should be called during initialization in the application code. 
  * 
+ * @param gpio : 
+ * @param spi : 
  * @param hw125_slave_pin : slave pin (GPIO pin) used to select the slave device 
  */
-void hw125_user_init(uint16_t hw125_slave_pin);
+void hw125_user_init(
+    GPIO_TypeDef *gpio,  
+    SPI_TypeDef *spi,  
+    uint16_t hw125_slave_pin); 
 
 
 /**

@@ -306,12 +306,21 @@ DISK_RESULT hw125_ioctl_get_ocr(void *buff);
  * @see hw125_pwr_status_t
  * 
  */
-typedef struct {
-    uint8_t  disk_status;
-    uint8_t  card_type;
-    uint8_t  pwr_flag;
-    uint16_t ss_pin;
-} hw125_disk_info_t;
+typedef struct 
+{
+    // Peripherals 
+    GPIO_TypeDef *gpio;           // GPIO port used for slave selection 
+    SPI_TypeDef *spi;             // SPI port used for SD card communication 
+
+    // Tracking information 
+    uint8_t  disk_status;         // Disk status - used as a check for before read/write 
+    uint8_t  card_type;           // Type of storage device 
+    uint8_t  pwr_flag;            // Status flag for the FatFs layer 
+
+    // Pins 
+    uint16_t ss_pin;              // Slave select pin for the card (spi) 
+} 
+hw125_disk_info_t;
 
 //=======================================================================================
 
@@ -329,12 +338,21 @@ static hw125_disk_info_t sd_card;
 // Initialization functions 
 
 // HW125 user initialization 
-void hw125_user_init(uint16_t hw125_slave_pin)
+void hw125_user_init(
+    GPIO_TypeDef *gpio, 
+    SPI_TypeDef *spi, 
+    uint16_t hw125_slave_pin)
 {
-    // Define SD card information 
+    sd_card.gpio = gpio; 
+
+    sd_card.spi = spi; 
+
     sd_card.disk_status = HW125_STATUS_NOINIT;
+    
     sd_card.card_type = HW125_CT_UNKNOWN;
+    
     sd_card.pwr_flag = HW125_PWR_OFF;
+    
     sd_card.ss_pin = hw125_slave_pin;
 }
 
