@@ -537,7 +537,7 @@ void hc05_set_reset(void)
 //=======================================================================================
 // Getters 
 
-// Read state 
+// Get state 
 HC05_STATE hc05_get_state(void)
 {
     return hc05_device_trackers.state; 

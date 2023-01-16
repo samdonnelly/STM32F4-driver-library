@@ -17,13 +17,24 @@
 
 //=======================================================================================
 // Includes 
+
+// Tools 
+#include "stm32f411xe.h"
+#include "tools.h"
+
+// Drivers 
+#include "hw125_driver.h" 
+
+// STM drivers 
+#include "fatfs.h"
+
 //=======================================================================================
 
 
 //=======================================================================================
 // Macros 
 
-#define HW125_NUM_STATES 7           // Number of possible states for the controller 
+#define HW125_NUM_STATES 6           // Number of possible states for the controller 
 
 #define HW125_BUFF_SIZE 100          // Read and write buffer size 
 #define HW125_INFO_SIZE 30           // Device infor buffer size 
@@ -40,9 +51,8 @@
 typedef enum {
     HW125_INIT_STATE, 
     HW125_STANDBY_STATE, 
-    HW125_OPEN_STATE, 
-    HW125_CLOSE_STATE, 
     HW125_ACCESS_STATE, 
+    HW125_NO_DISK_STATE, 
     HW125_FAULT_STATE, 
     HW125_RESET_STATE 
 } hw125_states_t; 
@@ -63,7 +73,7 @@ typedef struct hw125_trackers_s
     // File system information 
     TCHAR path;                                  // Path to desired directory 
     FATFS *file_sys;                             // 
-    FIL file;                                    // 
+    FIL file;                                    // File object 
     FRESULT result;                              // 
     UINT br;                                     // Read counter 
     UINT bw;                                     // Write counter 
@@ -87,6 +97,12 @@ hw125_trackers_t;
 
 //=======================================================================================
 // Datatypes 
+
+typedef hw125_states_t HW125_STATE; 
+typedef uint8_t HW125_FAULT_CODE; 
+typedef uint8_t HW125_FILE_STATUS; 
+typedef uint16_t HW125_EOF; 
+
 //=======================================================================================
 
 
@@ -130,11 +146,148 @@ void hw125_controller(void);
 
 //=======================================================================================
 // Setters 
+
+/**
+ * @brief Make a new directory in project directory 
+ * 
+ * @param dir 
+ * @return FRESULT 
+ */
+FRESULT hw125_mkdir(
+    const TCHAR *dir); 
+
+
+/**
+ * @brief Open file 
+ * 
+ * @param file_name 
+ * @param mode 
+ * @return FRESULT 
+ */
+FRESULT hw125_open(
+    const TCHAR *file_name, 
+    uint8_t mode); 
+
+
+/**
+ * @brief Close the open file 
+ * 
+ * @return FRESULT 
+ */
+FRESULT hw125_close(void); 
+
+
+/**
+ * @brief Write to the open file 
+ * 
+ * @param buff 
+ * @param btw 
+ * @return FRESULT 
+ */
+FRESULT hw125_f_write(
+    const void *buff, 
+    UINT btw); 
+
+
+/**
+ * @brief Navigate within the open file 
+ * 
+ * @param offset 
+ * @return FRESULT 
+ */
+FRESULT hw125_lseek(
+    FSIZE_t offset); 
+
+
+/**
+ * @brief Write a character to the open file 
+ * 
+ * @param character 
+ * @return int8_t 
+ */
+int8_t hw125_putc(
+    TCHAR character); 
+
+
+/**
+ * @brief Write a string to the open file 
+ * 
+ * @param str 
+ * @return int16_t 
+ */
+int16_t hw125_puts(
+    const TCHAR *str); 
+
+
+/**
+ * @brief Write a formatted string to the open file 
+ * 
+ * @param fmt_str 
+ * @return int16_t 
+ */
+int16_t hw125_printf(
+    const TCHAR *fmt_str); 
+
 //=======================================================================================
 
 
 //=======================================================================================
 // Getters 
+
+/**
+ * @brief Get state 
+ * 
+ * @return HW125_STATE 
+ */
+HW125_STATE hw125_get_state(void); 
+
+
+/**
+ * @brief Get fault code 
+ * 
+ * @return HW125_FAULT_CODE 
+ */
+HW125_FAULT_CODE hw125_get_fault_code(void); 
+
+
+/**
+ * @brief Get open file flag 
+ * 
+ * @return HW125_FILE_STATUS 
+ */
+HW125_FILE_STATUS hw125_get_file_status(void); 
+
+
+/**
+ * @brief Read data from open file 
+ * 
+ * @param buff 
+ * @param btr 
+ * @return FRESULT 
+ */
+FRESULT hw125_f_read(
+    void *buff, 
+    UINT btr); 
+
+
+/**
+ * @brief Reads a string from open file 
+ * 
+ * @param buff 
+ * @param len 
+ */
+void hw125_gets(
+    TCHAR *buff, 
+    uint16_t len); 
+
+
+/**
+ * @brief Test for end of file on open file 
+ * 
+ * @return HW125_EOF 
+ */
+HW125_EOF hw125_eof(void); 
+
 //=======================================================================================
 
 #endif   // _HW125_CONTROLLER_H_

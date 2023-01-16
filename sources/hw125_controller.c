@@ -35,35 +35,13 @@ void hw125_init_state(
 
 
 /**
- * @brief HW125 idle state 
+ * @brief HW125 standby state 
  * 
  * @details 
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
 void hw125_standby_state(
-    hw125_trackers_t *hw125_device); 
-
-
-/**
- * @brief HW125 open file 
- * 
- * @details 
- * 
- * @param hw125_device : device tracker that defines control characteristics 
- */
-void hw125_open_state(
-    hw125_trackers_t *hw125_device); 
-
-
-/**
- * @brief HW125 close file state 
- * 
- * @details 
- * 
- * @param hw125_device : device tracker that defines control characteristics 
- */
-void hw125_close_state(
     hw125_trackers_t *hw125_device); 
 
 
@@ -75,6 +53,17 @@ void hw125_close_state(
  * @param hw125_device : device tracker that defines control characteristics 
  */
 void hw125_access_state(
+    hw125_trackers_t *hw125_device); 
+
+
+/**
+ * @brief HW125 no disk file 
+ * 
+ * @details 
+ * 
+ * @param hw125_device : device tracker that defines control characteristics 
+ */
+void hw125_no_disk_state(
     hw125_trackers_t *hw125_device); 
 
 
@@ -113,9 +102,8 @@ static hw125_state_functions_t state_table[HW125_NUM_STATES] =
 {
     &hw125_init_state, 
     &hw125_standby_state, 
-    &hw125_open_state, 
-    &hw125_close_state, 
     &hw125_access_state, 
+    &hw125_no_disk_state, 
     &hw125_fault_state, 
     &hw125_reset_state 
 }; 
@@ -150,13 +138,10 @@ void hw125_controller(void)
         case HW125_STANDBY_STATE: 
             break; 
 
-        case HW125_OPEN_STATE: 
-            break; 
-
-        case HW125_CLOSE_STATE: 
-            break; 
-
         case HW125_ACCESS_STATE: 
+            break; 
+
+        case HW125_NO_DISK_STATE: 
             break; 
 
         case HW125_FAULT_STATE: 
@@ -207,22 +192,7 @@ void hw125_standby_state(
     hw125_trackers_t *hw125_device) 
 {
     // Do nothing and wait for a file to be opened 
-}
-
-
-// HW125 open file state - state may not be needed 
-void hw125_open_state(
-    hw125_trackers_t *hw125_device) 
-{
-    // 
-}
-
-
-// HW125 close file state - state may not be needed 
-void hw125_close_state(
-    hw125_trackers_t *hw125_device) 
-{
-    // 
+    // Check that media has not been removed - if so then no disk state 
 }
 
 
@@ -230,7 +200,16 @@ void hw125_close_state(
 void hw125_access_state(
     hw125_trackers_t *hw125_device) 
 {
-    // 
+    // Check that media has not been removed - if so then fault state 
+}
+
+
+// HW125 no disk state 
+void hw125_no_disk_state(
+    hw125_trackers_t *hw125_device)
+{
+    // Check for disk to be inserted (FR_INVALID_OBJECT ?) 
+    // Wait for disk then go to init state when available 
 }
 
 
@@ -257,17 +236,124 @@ void hw125_reset_state(
 //=======================================================================================
 // Setters 
 
-// hw125_mkdir 
-// - Create a new folder within the project directory 
+// Make a new directory in project directory 
+FRESULT hw125_mkdir(
+    const TCHAR *dir) 
+{
+    // Create a new folder within the project directory 
+    // How to we add the specified directory onto the path? 
+    // Do we store this new directory in memory or are we already in the new folder? 
+}
 
-// hw125_open 
-// - Check that a file is not already open 
-// - Checks for the existance of the specified file 
-// - If the file doesn't exist and write mode is requested then create the file 
+
+// Open file 
+FRESULT hw125_open(
+    const TCHAR *file_name, 
+    uint8_t mode) 
+{
+    // - Check that a file is not already open 
+    // - Checks for the existance of the specified file 
+    // - If the file doesn't exist and write mode is requested then create the file 
+}
+
+
+// Close the open file 
+FRESULT hw125_close(void) 
+{
+    // Close the already open file 
+    // Update the remaining volume free space? 
+}
+
+
+// Write to the open file 
+FRESULT hw125_f_write(
+    const void *buff, 
+    UINT btw) 
+{
+    // 
+}
+
+
+// Navigate within the open file 
+FRESULT hw125_lseek(
+    FSIZE_t offset) 
+{
+    // 
+}
+
+
+// Write a character to the open file 
+int8_t hw125_putc(
+    TCHAR character) 
+{
+    // 
+}
+
+
+// Write a string to the open file 
+int16_t hw125_puts(
+    const TCHAR *str) 
+{
+    // 
+}
+
+
+// Write a formatted string to the open file 
+int16_t hw125_printf(
+    const TCHAR *fmt_str) 
+{
+    // 
+}
 
 //=======================================================================================
 
 
 //=======================================================================================
 // Getters 
+
+// Get state 
+HW125_STATE hw125_get_state(void) 
+{
+    return hw125_device_trackers.state; 
+}
+
+
+// Get fault code 
+HW125_FAULT_CODE hw125_get_fault_code(void) 
+{
+    return hw125_device_trackers.fault_code; 
+}
+
+
+// Get open file flag 
+HW125_FILE_STATUS hw125_get_file_status(void)
+{
+    return hw125_device_trackers.open_file; 
+}
+
+
+// Read data from open file 
+FRESULT hw125_f_read(
+    void *buff, 
+    UINT btr) 
+{
+    // 
+}
+
+
+// Reads a string from open file 
+void hw125_gets(
+    TCHAR *buff, 
+    uint16_t len)
+{
+    // 
+}
+
+
+// Test for end of file on open file 
+HW125_EOF hw125_eof(void) 
+{
+    // 
+}
+
 //=======================================================================================
