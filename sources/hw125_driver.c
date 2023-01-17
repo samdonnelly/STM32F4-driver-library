@@ -351,17 +351,24 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
     if (pdrv) return HW125_STATUS_NOINIT; 
 
-    // Power on sequence 
+    //===================================================
+    // Power ON or card insertion and software reset 
+
     hw125_power_on(sd_card.ss_pin);
 
+    //===================================================
+
+    //===================================================
+    // Initialization 
+    
     // Select the sd card 
     spi_slave_select(sd_card.gpio, sd_card.ss_pin);
 
-    // TODO test to see if this is not needed anymore 
-    // // Send CMD0 with no arg and a valid CRC value 
-    // hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
+    // TODO integrate this with the power_on function 
+    // Send CMD0 with no arg and a valid CRC value 
+    hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
 
-    // Check the R1 response from CMD0 sent in hw125_power_on
+    // Check the R1 response from CMD0 sent in hw125_power_on - do_resp is local so not true 
     if (do_resp == HW125_IDLE_STATE)
     {
         // In idle state - Send CMD8 with arg = 0x000001AA and a valid CRC
@@ -469,6 +476,8 @@ DISK_STATUS hw125_init(uint8_t pdrv)
         // TODO add timer in spi read function that will return an error if it times out
     }
 
+    //===================================================
+
     // Deselect slave 
     spi_slave_deselect(sd_card.gpio, sd_card.ss_pin);
     
@@ -490,7 +499,6 @@ DISK_STATUS hw125_init(uint8_t pdrv)
         sd_card.disk_status = (HW125_STATUS_NOINIT & HW125_INIT_SUCCESS); 
     }
 
-    // Return the card type 
     return sd_card.disk_status;
 }
 
@@ -506,6 +514,9 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     // TODO test the length of this counter 
     uint16_t num_read = HW125_PWR_ON_RES_CNT; 
 
+    //===================================================
+    // Power ON or card insertion 
+
     // Wait for >1ms - delay for after the supply voltage reaches above 2.2V
     tim_delay_ms(TIM9, HW125_PWR_ON_COUNTER);
 
@@ -516,7 +527,17 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     di_cmd = HW125_DATA_HIGH;
 
     // Send DI/MOSI high 10x to wait for more than 74 clock pulses 
-    for (uint8_t i = 0; i < HW125_PWR_ON_COUNTER; i++) spi_write(sd_card.spi, &di_cmd, SPI_1_BYTE);
+    for (uint8_t i = 0; i < HW125_PWR_ON_COUNTER; i++) 
+    {
+        spi_write(sd_card.spi, &di_cmd, SPI_1_BYTE);
+    }
+
+    //===================================================
+    
+    //===================================================
+    // Software reset 
+
+    // TODO integrate this into the send command function 
 
     // Slave select 
     spi_slave_select(sd_card.gpio, hw125_slave_pin); 
@@ -546,9 +567,11 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     {
         spi_write_read(sd_card.spi, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
     }
-    while((do_resp != 0x01) && --num_read);
+    while((do_resp != HW125_IDLE_STATE) && --num_read);
 
-    // TODO Sometimes this fails 
+    //===================================================
+    
+    // TODO Use this as an indication to not perform initialization 
     // if (num_read == 0); 
 
     // Slave select 
@@ -622,7 +645,7 @@ DISK_STATUS hw125_status(uint8_t pdrv)
 // HW125 ready to receive commands 
 void hw125_ready_rec(void)
 {
-    // TODO create a timeout - what will happen if it times out? 
+    // TODO create a timeout and a return status 
 
     // Local variables 
     uint8_t resp;

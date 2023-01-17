@@ -168,6 +168,7 @@ void spi_disable(
 void spi_txe_wait(
     SPI_TypeDef *spi)
 {
+    // TODO add timeout & status return 
     while(!(spi->SR & (SET_BIT << SHIFT_1)));
 }
 
@@ -176,6 +177,7 @@ void spi_txe_wait(
 void spi_rxne_wait(
     SPI_TypeDef *spi)
 {
+    // TODO add timeout & status return 
     while(!(spi->SR & (SET_BIT << SHIFT_0)));
 }
 
@@ -184,6 +186,7 @@ void spi_rxne_wait(
 void spi_bsy_wait(
     SPI_TypeDef *spi)
 {
+    // TODO add timeout & status return 
     while(spi->SR & (SET_BIT << SHIFT_7));
 }
 
@@ -235,6 +238,7 @@ void spi_write(
     for (uint32_t i = 0; i < data_len; i++)
     {
         spi_txe_wait(spi);          // Wait for TXE bit to set 
+        // TODO abort if TXE bit not set and there's a timeout 
         spi->DR = *write_data;      // Write data to the data register 
         write_data++; 
     }
@@ -282,9 +286,11 @@ void spi_write_read(
     for (uint16_t i = 0; i < data_len-1; i++)
     {
         spi_txe_wait(spi);          // Wait for TXE bit to set 
+        // TODO abort if TXE bit not set and there's a timeout 
         spi->DR = write_data;       // Write data to the data register 
 
         spi_rxne_wait(spi);         // Wait for the RXNE bit to set
+        // TODO abort if RXNE bit not set and there's a timeout 
         *read_data = spi->DR;       // Read data from the data register 
         read_data++; 
     }

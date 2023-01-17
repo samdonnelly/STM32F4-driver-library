@@ -268,6 +268,9 @@ void hw125_init_state(
     hw125_device->startup = CLEAR_BIT; 
 
     // Clear reset bit 
+    hw125_device->reset = CLEAR_BIT; 
+
+    // Clear the open file flag 
 
     // Mount the drive 
 
@@ -283,18 +286,22 @@ void hw125_init_state(
 void hw125_not_ready_state(
     hw125_trackers_t *hw125_device)
 {
-    // Check for disk to be inserted (FR_INVALID_OBJECT or FR_NOT_READY?) 
-    // Wait for disk then go to init state when available 
-    // Set the not ready state until the delay has passed 
+    // Check for disk to be inserted using hw125_power_on 
+    // --> If it is not inserted there should be a failed SPI communication (no volume 
+    //     feedback) 
+    // --> Once inserted (and assuming the drive works properly) the hw125_power_on 
+    //     function will indicate the drive is in IDLE state and we can go back to the 
+    //     init function to mount the drive. 
 }
 
 
-// HW125 idle state 
+// HW125 standby state 
 void hw125_standby_state(
     hw125_trackers_t *hw125_device) 
 {
-    // Do nothing and wait for a file to be opened 
-    // Clear the open file flag 
+    // Check the existance of the card using hw125_ready_rec 
+    // If the function indicates a timeout (card removed) --> go to not ready state 
+    // If function indicates neither ready or timeout then go to fault 
 }
 
 
@@ -302,8 +309,9 @@ void hw125_standby_state(
 void hw125_access_state(
     hw125_trackers_t *hw125_device) 
 {
-    // Check that media has not been removed - if so then fault state 
-    // Set the open file flag 
+    // Check the existance of the card using hw125_ready_rec 
+    // If the function indicates a timeout (card removed) or not ready (comms fault) --> 
+    // close the file and go to fault state 
 }
 
 
@@ -311,7 +319,7 @@ void hw125_access_state(
 void hw125_fault_state(
     hw125_trackers_t *hw125_device) 
 {
-    // 
+    // Idle until the reset flag is set 
 }
 
 
@@ -319,7 +327,9 @@ void hw125_fault_state(
 void hw125_reset_state(
     hw125_trackers_t *hw125_device) 
 {
-    // Close the file if it's open 
+    // If open_file set 
+    // --> Close the file 
+    // --> Clear the open_file flag 
     
     // Unmount the drive 
 
@@ -347,9 +357,10 @@ FRESULT hw125_open(
     const TCHAR *file_name, 
     uint8_t mode) 
 {
-    // - Check that a file is not already open 
-    // - Checks for the existance of the specified file 
-    // - If the file doesn't exist and write mode is requested then create the file 
+    // Check that a file is not already open 
+    // Checks for the existance of the specified file 
+    // If the file doesn't exist and write mode is requested then create the file 
+    // Set the open file flag 
 }
 
 
@@ -358,6 +369,7 @@ FRESULT hw125_close(void)
 {
     // Close the already open file 
     // Update the remaining volume free space? 
+    // Clear the open file flag 
 }
 
 
