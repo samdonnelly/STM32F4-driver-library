@@ -37,6 +37,7 @@
 #define HW125_NUM_STATES 6           // Number of possible states for the controller 
 
 #define HW125_BUFF_SIZE 100          // Read and write buffer size 
+#define HW125_PATH_SIZE 50           // Volume path max length 
 #define HW125_INFO_SIZE 30           // Device infor buffer size 
 
 //=======================================================================================
@@ -50,9 +51,9 @@
  */
 typedef enum {
     HW125_INIT_STATE, 
+    HW125_NOT_READY_STATE, 
     HW125_STANDBY_STATE, 
     HW125_ACCESS_STATE, 
-    HW125_NO_DISK_STATE, 
     HW125_FAULT_STATE, 
     HW125_RESET_STATE 
 } hw125_states_t; 
@@ -71,8 +72,8 @@ typedef struct hw125_trackers_s
     uint8_t fault_code;                          // Fault code of the device/controller 
 
     // File system information 
-    TCHAR path;                                  // Path to desired directory 
-    FATFS *file_sys;                             // 
+    TCHAR path[HW125_PATH_SIZE];                 // Path to desired directory 
+    FATFS file_sys;                              // 
     FIL file;                                    // File object 
     FRESULT result;                              // 
     UINT br;                                     // Read counter 
@@ -86,6 +87,8 @@ typedef struct hw125_trackers_s
     DWORD serial_num;                            // Volume serial number 
 
     // State trackers 
+    uint8_t mount     : 1;                       // Volume mount flag 
+    uint8_t not_ready : 1;                       // Not ready flag 
     uint8_t open_file : 1;                       // Open file flag 
     uint8_t reset     : 1;                       // Reset state trigger 
     uint8_t startup   : 1;                       // Ensures the init state is run 
@@ -129,8 +132,10 @@ typedef void (*hw125_state_functions_t)(
  * 
  * @details 
  * 
+ * @param path : path to directory to use on the volume 
  */
-void hw125_controller_init(void); 
+void hw125_controller_init(
+    char *path); 
 
 
 /**

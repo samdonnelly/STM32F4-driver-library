@@ -63,7 +63,7 @@ void hw125_access_state(
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
-void hw125_no_disk_state(
+void hw125_not_ready_state(
     hw125_trackers_t *hw125_device); 
 
 
@@ -101,9 +101,9 @@ static hw125_trackers_t hw125_device_trackers;
 static hw125_state_functions_t state_table[HW125_NUM_STATES] = 
 {
     &hw125_init_state, 
+    &hw125_not_ready_state, 
     &hw125_standby_state, 
     &hw125_access_state, 
-    &hw125_no_disk_state, 
     &hw125_fault_state, 
     &hw125_reset_state 
 }; 
@@ -115,9 +115,28 @@ static hw125_state_functions_t state_table[HW125_NUM_STATES] =
 // Control functions 
 
 // HW125 controller initialization 
-void hw125_controller_init(void)
+void hw125_controller_init(
+    char *path)
 {
-    // 
+    hw125_device_trackers.state = HW125_INIT_STATE; 
+
+    hw125_device_trackers.fault_code = CLEAR; 
+
+    strcpy(hw125_device_trackers.path, path); 
+
+    memset((void *)hw125_device_trackers.data_buff, CLEAR, HW125_BUFF_SIZE); 
+
+    memset((void *)hw125_device_trackers.vol_label, CLEAR, HW125_INFO_SIZE); 
+
+    hw125_device_trackers.mount = CLEAR_BIT; 
+
+    hw125_device_trackers.not_ready = CLEAR_BIT; 
+
+    hw125_device_trackers.open_file = CLEAR_BIT; 
+    
+    hw125_device_trackers.reset = CLEAR_BIT; 
+
+    hw125_device_trackers.startup = SET_BIT; 
 }
 
 
@@ -133,24 +152,96 @@ void hw125_controller(void)
     switch (next_state)
     {
         case HW125_INIT_STATE: 
+            // Make sure the init state runs at least once 
+            if (!hw125_device_trackers.startup)
+            {
+                // Fault during mounting 
+                if (hw125_device_trackers.fault_code) 
+                {
+                    next_state = HW125_FAULT_STATE; 
+                }
+
+                // Device not mounted but no fault 
+                else if (!hw125_device_trackers.mount) 
+                {
+                    next_state = HW125_NOT_READY_STATE; 
+                }
+
+                // Device successfully mounted 
+                else 
+                {
+                    next_state = HW125_STANDBY_STATE; 
+                }
+            }
+
+            break; 
+
+        case HW125_NOT_READY_STATE: 
+            // Waiting period over 
+            if (!hw125_device_trackers.not_ready) 
+            {
+                next_state = HW125_INIT_STATE; 
+            }
             break; 
 
         case HW125_STANDBY_STATE: 
+            // File access fault 
+            if (hw125_device_trackers.fault_code) 
+            {
+                next_state = HW125_FAULT_STATE; 
+            }
+
+            // Reset flag set 
+            else if (hw125_device_trackers.reset) 
+            {
+                next_state = HW125_RESET_STATE; 
+            }
+
+            // File opened 
+            else if (hw125_device_trackers.open_file) 
+            {
+                next_state = HW125_ACCESS_STATE; 
+            }
+
             break; 
 
         case HW125_ACCESS_STATE: 
-            break; 
+            // File operation fault 
+            if (hw125_device_trackers.fault_code) 
+            {
+                next_state = HW125_FAULT_STATE; 
+            }
 
-        case HW125_NO_DISK_STATE: 
+            // Reset flag set 
+            if (hw125_device_trackers.reset) 
+            {
+                next_state = HW125_RESET_STATE; 
+            }
+
+            // File closed 
+            if (!hw125_device_trackers.open_file) 
+            {
+                next_state = HW125_STANDBY_STATE; 
+            }
+
             break; 
 
         case HW125_FAULT_STATE: 
+            // Wait for reset flag to set 
+            if (hw125_device_trackers.reset) 
+            {
+                next_state = HW125_RESET_STATE; 
+            }
+
             break; 
 
         case HW125_RESET_STATE: 
+            next_state = HW125_INIT_STATE; 
             break; 
 
         default: 
+            // Default back to the init state 
+            next_state = HW125_INIT_STATE; 
             break; 
     }
 
@@ -174,6 +265,7 @@ void hw125_init_state(
     hw125_trackers_t *hw125_device) 
 {
     // Clear startup bit 
+    hw125_device->startup = CLEAR_BIT; 
 
     // Clear reset bit 
 
@@ -187,12 +279,22 @@ void hw125_init_state(
 }
 
 
+// HW125 not ready state 
+void hw125_not_ready_state(
+    hw125_trackers_t *hw125_device)
+{
+    // Check for disk to be inserted (FR_INVALID_OBJECT or FR_NOT_READY?) 
+    // Wait for disk then go to init state when available 
+    // Set the not ready state until the delay has passed 
+}
+
+
 // HW125 idle state 
 void hw125_standby_state(
     hw125_trackers_t *hw125_device) 
 {
     // Do nothing and wait for a file to be opened 
-    // Check that media has not been removed - if so then no disk state 
+    // Clear the open file flag 
 }
 
 
@@ -201,15 +303,7 @@ void hw125_access_state(
     hw125_trackers_t *hw125_device) 
 {
     // Check that media has not been removed - if so then fault state 
-}
-
-
-// HW125 no disk state 
-void hw125_no_disk_state(
-    hw125_trackers_t *hw125_device)
-{
-    // Check for disk to be inserted (FR_INVALID_OBJECT ?) 
-    // Wait for disk then go to init state when available 
+    // Set the open file flag 
 }
 
 
@@ -225,6 +319,8 @@ void hw125_fault_state(
 void hw125_reset_state(
     hw125_trackers_t *hw125_device) 
 {
+    // Close the file if it's open 
+    
     // Unmount the drive 
 
     // Clear the fault code 
