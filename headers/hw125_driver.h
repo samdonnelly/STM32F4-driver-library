@@ -108,18 +108,18 @@
 #define HW125_MOUNT_NOW 1           // Force mount to check if it's ready to work 
 
 // f_open mode flags (some are FatFs mode flags) 
-#define HW125_MODE_R        (FA_READ)                                  // "r" 
-#define HW125_MODE_RR       (FA_READ | FA_WRITE)                       // "r+" 
-#define HW125_MODE_W        (FA_CREATE_ALWAYS | FA_WRITE)              // "w" 
-#define HW125_MODE_WW       (FA_CREATE_ALWAYS | FA_WRITE | FA_READ)    // "w+" 
-#define HW125_MODE_A        (FA_OPEN_APPEND | FA_WRITE)                // "a" 
-#define HW125_MODE_AA       (FA_OPEN_APPEND | FA_WRITE | FA_READ)      // "a+" 
-#define HW125_MODE_WX       (FA_CREATE_NEW | FA_WRITE)                 // "wx" 
-#define HW125_MODE_WWX      (FA_CREATE_NEW | FA_WRITE | FA_READ)       // "w+x" 
-#define HW125_MODE_OAW      (FA_OPEN_ALWAYS | FA_WRITE) 
-#define HW125_MODE_OAWR     (FA_OPEN_ALWAYS | FA_WRITE | FA_READ) 
-#define HW125_MODE_OEW      (FA_OPEN_EXISTING | FA_WRITE) 
-#define HW125_MODE_OEWR     (FA_OPEN_EXISTING | FA_WRITE | FA_READ) 
+#define HW125_MODE_R        (FA_READ)                                  // 0x01 - "r" 
+#define HW125_MODE_RR       (FA_READ | FA_WRITE)                       // 0x03 - "r+" 
+#define HW125_MODE_W        (FA_CREATE_ALWAYS | FA_WRITE)              // 0x0A - "w" 
+#define HW125_MODE_WW       (FA_CREATE_ALWAYS | FA_WRITE | FA_READ)    // 0x0B - "w+" 
+#define HW125_MODE_A        (FA_OPEN_APPEND | FA_WRITE)                // 0x32 - "a" 
+#define HW125_MODE_AA       (FA_OPEN_APPEND | FA_WRITE | FA_READ)      // 0x33 - "a+" 
+#define HW125_MODE_WX       (FA_CREATE_NEW | FA_WRITE)                 // 0x06 - "wx" 
+#define HW125_MODE_WWX      (FA_CREATE_NEW | FA_WRITE | FA_READ)       // 0x07 - "w+x" 
+#define HW125_MODE_OAW      (FA_OPEN_ALWAYS | FA_WRITE)                // 0x12 
+#define HW125_MODE_OAWR     (FA_OPEN_ALWAYS | FA_WRITE | FA_READ)      // 0x13 
+#define HW125_MODE_OEW      (FA_OPEN_EXISTING | FA_WRITE)              // 0x02 
+#define HW125_MODE_OEWR     (FA_OPEN_EXISTING | FA_WRITE | FA_READ)    // 0x03 
 
 // Functions 
 #define f_unmount(path) f_mount(NULL, path, HW125_MOUNT_NOW)     // Unmount card 
