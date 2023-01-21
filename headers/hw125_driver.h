@@ -327,8 +327,8 @@ typedef enum {
 // Data types 
 
 typedef uint8_t DISK_STATUS;
-
 typedef hw125_disk_results_t DISK_RESULT; 
+typedef hw125_card_type_t CARD_TYPE; 
 
 //=======================================================================================
 
@@ -397,6 +397,16 @@ DISK_STATUS hw125_init(uint8_t pdrv);
  * @return DISK_STATUS : status of the disk drive 
  */
 DISK_STATUS hw125_status(uint8_t pdrv);
+
+
+/**
+ * @brief HW125 get card type 
+ * 
+ * @details Getter for use by application code. 
+ * 
+ * @return CARD_TYPE : card type of volume 
+ */
+CARD_TYPE hw125_get_card_type(void); 
 
 //=======================================================================================
 

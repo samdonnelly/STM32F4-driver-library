@@ -302,7 +302,7 @@ typedef struct
     // Tracking information 
     hw125_disk_status_t disk_status;    // Disk status - used as a check before read/write 
     hw125_card_type_t card_type;        // Type of storage device 
-    hw125_pwr_status_t  pwr_flag;       // Status flag for the FatFs layer 
+    hw125_pwr_status_t pwr_flag;        // Status flag for the FatFs layer 
 
     // Pins 
     uint16_t ss_pin;                    // Slave select pin for the card (GPIO pin for SPI) 
@@ -663,6 +663,13 @@ void hw125_ready_rec(void)
 uint8_t hw125_power_status(void)
 {
     return sd_card.pwr_flag; 
+}
+
+
+// Get the card type 
+CARD_TYPE hw125_get_card_type(void) 
+{
+    return sd_card.card_type; 
 }
 
 //=======================================================================================
