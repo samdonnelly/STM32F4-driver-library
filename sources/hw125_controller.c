@@ -128,11 +128,11 @@ void hw125_controller_init(
 
     memset((void *)hw125_device_trackers.vol_label, CLEAR, HW125_INFO_SIZE); 
 
+    hw125_device_trackers.serial_num = CLEAR; 
+
     hw125_device_trackers.mount = CLEAR_BIT; 
 
     hw125_device_trackers.not_ready = CLEAR_BIT; 
-
-    hw125_device_trackers.open_file = CLEAR_BIT; 
     
     hw125_device_trackers.reset = CLEAR_BIT; 
 
@@ -271,6 +271,7 @@ void hw125_init_state(
     hw125_device->reset = CLEAR_BIT; 
 
     // Clear the open file flag 
+    hw125_device_trackers.open_file = CLEAR_BIT; 
 
     // Mount the drive 
 

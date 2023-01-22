@@ -72,19 +72,22 @@ typedef struct hw125_trackers_s
     uint8_t fault_code;                          // Fault code of the device/controller 
 
     // File system information 
-    TCHAR path[HW125_PATH_SIZE];                 // Path to desired directory 
-    FATFS file_sys;                              // 
+    FATFS file_sys;                              // File system object 
     FIL file;                                    // File object 
-    FRESULT result;                              // 
-    UINT br;                                     // Read counter 
-    UINT bw;                                     // Write counter 
-    char data_buff[HW125_BUFF_SIZE];             // Buffer to store read and write data 
-    FATFS *pfs;                                  // 
-    DWORD fre_clust;                             // 
-    uint32_t total;                              // Volume total space 
-    uint32_t free_space;                         // Volume free space 
+    FRESULT result;                              // Store result of FatFs operation 
+    UINT br, bw;                                 // Read and write counters 
+    TCHAR path[HW125_PATH_SIZE];                 // Path to desired directory 
+
+    // Card capacity 
+    FATFS *pfs;                                  // Pointer to file system object 
+    DWORD fre_clust, total, free_space;          // Free clusters, total and free space 
+    
+    // Volume tracking 
     TCHAR vol_label[HW125_INFO_SIZE];            // Volume label 
     DWORD serial_num;                            // Volume serial number 
+
+    // Data buffers 
+    TCHAR data_buff[HW125_BUFF_SIZE];            // Buffer to store read and write data 
 
     // State trackers 
     uint8_t mount     : 1;                       // Volume mount flag 
