@@ -396,8 +396,14 @@ void hw125_access_state(
 {
     // Check for the existance of the drive uisng hw125_ready_rec 
     // - If not present then set the not ready flag 
+    hw125_ready_rec(); 
+
     // Check the fault code check 
     // - If true then set the fault code 
+    if (hw125_device->fault_code_check) 
+    {
+        hw125_device->fault_code = hw125_device->fault_code_check; 
+    }
 }
 
 

@@ -169,7 +169,18 @@ void spi_txe_wait(
     SPI_TypeDef *spi)
 {
     // TODO add timeout & status return 
-    while(!(spi->SR & (SET_BIT << SHIFT_1)));
+    while(!(spi->SR & (SET_BIT << SHIFT_1))); 
+}
+
+
+// Wait for TXE bit to set - draft 
+SPI_COM_STATUS spi_txe_wait_draft(
+    SPI_TypeDef *spi) 
+{
+    uint16_t timer = SPI_COM_TIMEOUT; 
+    while(!(spi->SR & (SET_BIT << SHIFT_1)) && timer--); 
+    if (!timer) return SPI_ERROR; 
+    return SPI_OK; 
 }
 
 
@@ -182,6 +193,17 @@ void spi_rxne_wait(
 }
 
 
+// Wait for RXNE bit to set - draft 
+SPI_COM_STATUS spi_rxne_wait_draft(
+    SPI_TypeDef *spi)
+{
+    uint16_t timer = SPI_COM_TIMEOUT; 
+    while(!(spi->SR & (SET_BIT << SHIFT_0)) && timer--); 
+    if (!timer) return SPI_ERROR; 
+    return SPI_OK; 
+}
+
+
 // Wait for BSY bit to clear
 void spi_bsy_wait(
     SPI_TypeDef *spi)
@@ -189,6 +211,18 @@ void spi_bsy_wait(
     // TODO add timeout & status return 
     while(spi->SR & (SET_BIT << SHIFT_7));
 }
+
+
+// Wait for BSY bit to clear - draft 
+SPI_COM_STATUS spi_bsy_wait_draft(
+    SPI_TypeDef *spi)
+{
+    uint16_t timer = SPI_COM_TIMEOUT; 
+    while((spi->SR & (SET_BIT << SHIFT_7)) && timer--); 
+    if (!timer) return SPI_ERROR; 
+    return SPI_OK; 
+}
+
 
 // Select an SPI slave 
 void spi_slave_select(
@@ -238,6 +272,7 @@ void spi_write(
     for (uint32_t i = 0; i < data_len; i++)
     {
         spi_txe_wait(spi);          // Wait for TXE bit to set 
+        // if (spi_txe_wait_draft(spi)); 
         // TODO abort if TXE bit not set and there's a timeout 
         spi->DR = *write_data;      // Write data to the data register 
         write_data++; 
