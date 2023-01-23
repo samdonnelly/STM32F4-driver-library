@@ -35,6 +35,17 @@ void hw125_init_state(
 
 
 /**
+ * @brief HW125 no disk file 
+ * 
+ * @details 
+ * 
+ * @param hw125_device : device tracker that defines control characteristics 
+ */
+void hw125_not_ready_state(
+    hw125_trackers_t *hw125_device); 
+
+
+/**
  * @brief HW125 standby state 
  * 
  * @details 
@@ -57,13 +68,13 @@ void hw125_access_state(
 
 
 /**
- * @brief HW125 no disk file 
+ * @brief HW125 e-stop state 
  * 
  * @details 
  * 
- * @param hw125_device : device tracker that defines control characteristics 
+ * @param hw125_device 
  */
-void hw125_not_ready_state(
+void hw125_estop_state(
     hw125_trackers_t *hw125_device); 
 
 
@@ -104,6 +115,7 @@ static hw125_state_functions_t state_table[HW125_NUM_STATES] =
     &hw125_not_ready_state, 
     &hw125_standby_state, 
     &hw125_access_state, 
+    &hw125_estop_state, 
     &hw125_fault_state, 
     &hw125_reset_state 
 }; 
@@ -118,24 +130,26 @@ static hw125_state_functions_t state_table[HW125_NUM_STATES] =
 void hw125_controller_init(
     char *path)
 {
+    // Controller information 
     hw125_device_trackers.state = HW125_INIT_STATE; 
-
     hw125_device_trackers.fault_code = CLEAR; 
+    hw125_device_trackers.fault_code_check = CLEAR; 
 
+    // File system information 
     strcpy(hw125_device_trackers.path, path); 
 
-    memset((void *)hw125_device_trackers.data_buff, CLEAR, HW125_BUFF_SIZE); 
-
+    // Volume tracking - is this needed? 
     memset((void *)hw125_device_trackers.vol_label, CLEAR, HW125_INFO_SIZE); 
-
     hw125_device_trackers.serial_num = CLEAR; 
 
+    // Data buffers 
+    memset((void *)hw125_device_trackers.data_buff, CLEAR, HW125_BUFF_SIZE); 
+
+    // State trackers 
     hw125_device_trackers.mount = CLEAR_BIT; 
-
     hw125_device_trackers.not_ready = CLEAR_BIT; 
-    
-    hw125_device_trackers.reset = CLEAR_BIT; 
-
+    hw125_device_trackers.eject = CLEAR_BIT; 
+    hw125_device_trackers.open_file = CLEAR_BIT; 
     hw125_device_trackers.startup = SET_BIT; 
 }
 
@@ -155,30 +169,30 @@ void hw125_controller(void)
             // Make sure the init state runs at least once 
             if (!hw125_device_trackers.startup)
             {
-                // Fault during mounting 
+                // Fault during drive access 
                 if (hw125_device_trackers.fault_code) 
                 {
                     next_state = HW125_FAULT_STATE; 
                 }
 
-                // Device not mounted but no fault 
-                else if (!hw125_device_trackers.mount) 
-                {
-                    next_state = HW125_NOT_READY_STATE; 
-                }
-
                 // Device successfully mounted 
-                else 
+                else if (hw125_device_trackers.mount) 
                 {
                     next_state = HW125_STANDBY_STATE; 
+                }
+
+                // Default to the not ready state if not mounted 
+                else 
+                {
+                    next_state = HW125_NOT_READY_STATE; 
                 }
             }
 
             break; 
 
         case HW125_NOT_READY_STATE: 
-            // Waiting period over 
-            if (!hw125_device_trackers.not_ready) 
+            // Drive accessible and app code clears eject 
+            if (!hw125_device_trackers.not_ready && !hw125_device_trackers.eject) 
             {
                 next_state = HW125_INIT_STATE; 
             }
@@ -197,6 +211,12 @@ void hw125_controller(void)
                 next_state = HW125_RESET_STATE; 
             }
 
+            // Volume not seen or eject flag set 
+            else if (hw125_device_trackers.not_ready || hw125_device_trackers.eject)
+            {
+                next_state = HW125_NOT_READY_STATE; 
+            }
+
             // File opened 
             else if (hw125_device_trackers.open_file) 
             {
@@ -206,6 +226,23 @@ void hw125_controller(void)
             break; 
 
         case HW125_ACCESS_STATE: 
+            // File operation fault, reset flag set or eject flag set 
+            if (hw125_device_trackers.fault_code || 
+                hw125_device_trackers.reset || 
+                hw125_device_trackers.eject) 
+            {
+                next_state = HW125_ESTOP_STATE; 
+            }
+
+            // File closed 
+            if (!hw125_device_trackers.open_file) 
+            {
+                next_state = HW125_STANDBY_STATE; 
+            }
+
+            break; 
+
+        case HW125_ESTOP_STATE: 
             // File operation fault 
             if (hw125_device_trackers.fault_code) 
             {
@@ -218,10 +255,10 @@ void hw125_controller(void)
                 next_state = HW125_RESET_STATE; 
             }
 
-            // File closed 
-            if (!hw125_device_trackers.open_file) 
+            // Volume eject request 
+            if (!hw125_device_trackers.eject) 
             {
-                next_state = HW125_STANDBY_STATE; 
+                next_state = HW125_NOT_READY_STATE; 
             }
 
             break; 
@@ -264,22 +301,53 @@ void hw125_controller(void)
 void hw125_init_state(
     hw125_trackers_t *hw125_device) 
 {
-    // Clear startup bit 
+    // Clear startup flag 
     hw125_device->startup = CLEAR_BIT; 
 
-    // Clear reset bit 
+    // Clear reset flag  
     hw125_device->reset = CLEAR_BIT; 
 
-    // Clear the open file flag 
-    hw125_device_trackers.open_file = CLEAR_BIT; 
+    // Clear the fault code check 
+    hw125_device->fault_code_check = CLEAR; 
 
     // Mount the drive 
+    // - If this fails then set the not ready flag and skip the next steps 
+    hw125_device->fresult = f_mount(&hw125_device->file_sys, "", HW125_MOUNT_NOW); 
 
-    // Check for free space - set fault code if insuficient 
+    if (hw125_device->fresult == FR_OK) 
+    {        
+        // Check free space 
+        hw125_device->fresult = f_getfree("", &hw125_device->fre_clust, &hw125_device->pfs); 
 
-    // Get and record the volume label 
+        if (hw125_device->fresult == FR_OK) 
+        {
+            // Read the volume label and serial number 
 
-    // Check for the specified directory - if it does not exist then create it 
+            // Calculate the total space - may be unnecessary to calculate this 
+            hw125_device->total = (uint32_t)((hw125_device->pfs->n_fatent - 2) * 
+                                              hw125_device->pfs->csize * 0.5);
+            
+            // Calculate the free space 
+            hw125_device->free_space = (uint32_t)(hw125_device->fre_clust * 
+                                                  hw125_device->pfs->csize * 0.5); 
+
+            // Check the free space against a threshold - need to add a threshold 
+            // If free space is less than threshold then set fault code 
+
+            // Navigate to directory specified by 'path' and create folder for the day 
+            // - Where do we get the new folder name from? 
+            // - If the specified path doesn't exist then create it 
+            // - If this fails then set the fault code 
+        }
+        else 
+        {
+            // Set the fault code 
+        }
+    }
+    else 
+    {
+        hw125_device->not_ready = SET_BIT; 
+    }
 }
 
 
@@ -293,6 +361,13 @@ void hw125_not_ready_state(
     // --> Once inserted (and assuming the drive works properly) the hw125_power_on 
     //     function will indicate the drive is in IDLE state and we can go back to the 
     //     init function to mount the drive. 
+    // TODO need to add a return value and SPI timeout 
+    hw125_power_on(); 
+
+    // If inserted then clear not ready flag 
+
+    // Clear the fault code check 
+    hw125_device->fault_code_check = CLEAR; 
 }
 
 
@@ -301,8 +376,17 @@ void hw125_standby_state(
     hw125_trackers_t *hw125_device) 
 {
     // Check the existance of the card using hw125_ready_rec 
-    // If the function indicates a timeout (card removed) --> go to not ready state 
-    // If function indicates neither ready or timeout then go to fault 
+    // - If the function indicates a timeout (card removed) then set the not 
+    //   ready flag 
+    // - If function indicates neither ready or timeout then go to fault 
+    // TODO need to add a return value to this function 
+    hw125_ready_rec(); 
+    
+    // Check fault code check against an f_open and f_mkdir mask 
+    if (hw125_device->fault_code_check & (HW125_FAULT_OPEN | HW125_FAULT_MKDIR)) 
+    {
+        hw125_device->fault_code = (HW125_FAULT_OPEN | HW125_FAULT_MKDIR); 
+    }
 }
 
 
@@ -310,9 +394,19 @@ void hw125_standby_state(
 void hw125_access_state(
     hw125_trackers_t *hw125_device) 
 {
-    // Check the existance of the card using hw125_ready_rec 
-    // If the function indicates a timeout (card removed) or not ready (comms fault) --> 
-    // close the file and go to fault state 
+    // Check for the existance of the drive uisng hw125_ready_rec 
+    // - If not present then set the not ready flag 
+    // Check the fault code check 
+    // - If true then set the fault code 
+}
+
+
+// HW125 e-stop state 
+void hw125_estop_state(
+    hw125_trackers_t *hw125_device)
+{
+    // Attempt to close the open file 
+    // Clear the open file flag 
 }
 
 
@@ -328,13 +422,19 @@ void hw125_fault_state(
 void hw125_reset_state(
     hw125_trackers_t *hw125_device) 
 {
-    // If open_file set 
-    // --> Close the file 
-    // --> Clear the open_file flag 
-    
-    // Unmount the drive 
-
     // Clear the fault code 
+    hw125_device->fault_code = CLEAR; 
+    
+    // If open file flag set then attempt to close the file 
+    
+    // Clear the open file flag 
+    hw125_device->open_file = CLEAR_BIT; 
+
+    // Attempt to unmount the drive 
+
+    // Clear the mount flag 
+
+    // memset the data buffer 
 }
 
 //=======================================================================================
@@ -362,6 +462,9 @@ FRESULT hw125_open(
     // Checks for the existance of the specified file 
     // If the file doesn't exist and write mode is requested then create the file 
     // Set the open file flag 
+
+    // Attempt f_open 
+    // - If successful then set open file flag 
 }
 
 
@@ -371,6 +474,9 @@ FRESULT hw125_close(void)
     // Close the already open file 
     // Update the remaining volume free space? 
     // Clear the open file flag 
+
+    // Attempt f_close 
+    // - If successful then clear open file flag 
 }
 
 

@@ -34,7 +34,7 @@
 //=======================================================================================
 // Macros 
 
-#define HW125_NUM_STATES 6           // Number of possible states for the controller 
+#define HW125_NUM_STATES 7           // Number of possible states for the controller 
 
 #define HW125_BUFF_SIZE 100          // Read and write buffer size 
 #define HW125_PATH_SIZE 50           // Volume path max length 
@@ -54,9 +54,24 @@ typedef enum {
     HW125_NOT_READY_STATE, 
     HW125_STANDBY_STATE, 
     HW125_ACCESS_STATE, 
+    HW125_ESTOP_STATE, 
     HW125_FAULT_STATE, 
     HW125_RESET_STATE 
 } hw125_states_t; 
+
+
+
+typedef enum {
+    HW125_FAULT_MKDIR   = 0x0001,            // Make directory 
+    HW125_FAULT_MOUNT   = 0x0002,            // Mount 
+    HW125_FAULT_UNMOUNT = 0x0004,            // Unmount 
+    HW125_FAULT_OPEN    = 0x0008,            // Open 
+    HW125_FAULT_CLOSE   = 0x0010,            // Close 
+    HW125_FAULT_WRITE   = 0x0020,            // Write 
+    HW125_FAULT_READ    = 0x0040,            // Read 
+    HW125_FAULT_SEEK    = 0x0080,            // Seek 
+    HW125_FAULT_COMMS   = 0x0100             // Comms 
+} hw125_fault_codes_t; 
 
 //=======================================================================================
 
@@ -69,12 +84,13 @@ typedef struct hw125_trackers_s
 {
     // Controller information 
     hw125_states_t state;                        // State of the controller 
-    uint8_t fault_code;                          // Fault code of the device/controller 
+    WORD fault_code;                             // Fault code of the device/controller 
+    WORD fault_code_check;                       // Fault code checker 
 
     // File system information 
     FATFS file_sys;                              // File system object 
     FIL file;                                    // File object 
-    FRESULT result;                              // Store result of FatFs operation 
+    FRESULT fresult;                             // Store result of FatFs operation 
     UINT br, bw;                                 // Read and write counters 
     TCHAR path[HW125_PATH_SIZE];                 // Path to desired directory 
 
@@ -90,11 +106,12 @@ typedef struct hw125_trackers_s
     TCHAR data_buff[HW125_BUFF_SIZE];            // Buffer to store read and write data 
 
     // State trackers 
-    uint8_t mount     : 1;                       // Volume mount flag 
-    uint8_t not_ready : 1;                       // Not ready flag 
-    uint8_t open_file : 1;                       // Open file flag 
-    uint8_t reset     : 1;                       // Reset state trigger 
-    uint8_t startup   : 1;                       // Ensures the init state is run 
+    uint8_t mount      : 1;                      // Volume mount flag 
+    uint8_t not_ready  : 1;                      // Not ready flag 
+    uint8_t eject      : 1;                      // Eject flag - set by setters 
+    uint8_t open_file  : 1;                      // Open file flag 
+    uint8_t reset      : 1;                      // Reset state trigger 
+    uint8_t startup    : 1;                      // Ensures the init state is run 
 }
 hw125_trackers_t; 
 
