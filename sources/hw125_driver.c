@@ -76,8 +76,8 @@ uint8_t hw125_initiate_init(
  * 
  * @param hw125_slave_pin : SS pin that the SD card is connected to 
  */
-void hw125_power_on(uint16_t hw125_slave_pin); 
-// uint8_t hw125_power_on(uint16_t hw125_slave_pin); 
+// void hw125_power_on(uint16_t hw125_slave_pin); 
+DISK_RESULT hw125_power_on(uint16_t hw125_slave_pin); 
 
 
 /**
@@ -315,16 +315,16 @@ void hw125_user_init(
     SPI_TypeDef *spi, 
     uint16_t hw125_slave_pin)
 {
+    // Peripherals 
     sd_card.gpio = gpio; 
-
     sd_card.spi = spi; 
 
+    // Tracking information 
     sd_card.disk_status = HW125_STATUS_NOINIT;
-    
     sd_card.card_type = HW125_CT_UNKNOWN;
-    
-    sd_card.pwr_flag = HW125_PWR_OFF;
-    
+    sd_card.pwr_flag = HW125_PWR_OFF; 
+
+    // Pins 
     sd_card.ss_pin = hw125_slave_pin;
 }
 
@@ -344,13 +344,13 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     //===================================================
     // Power ON or card insertion and software reset 
 
-    hw125_power_on(sd_card.ss_pin); 
-    // if (hw125_power_on(sd_card.ss_pin)) 
-    // {
-    //     sd_card.card_type = HW125_CT_UNKNOWN; 
-    //     sd_card.disk_status = HW125_STATUS_NOINIT; 
-    //     return sd_card.disk_status; 
-    // }
+    // hw125_power_on(sd_card.ss_pin); 
+    if (hw125_power_on(sd_card.ss_pin)) 
+    {
+        sd_card.card_type = HW125_CT_UNKNOWN; 
+        sd_card.disk_status = HW125_STATUS_NOINIT; 
+        return sd_card.disk_status; 
+    }
 
     //===================================================
 
@@ -468,8 +468,6 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     {
         // Not in idle state
         sd_card.card_type = HW125_CT_UNKNOWN;
-
-        // TODO add timer in spi read function that will return an error if it times out
     }
 
     //===================================================
@@ -500,15 +498,16 @@ DISK_STATUS hw125_init(uint8_t pdrv)
 
 
 // HW125 power on sequence and software reset 
-void hw125_power_on(uint16_t hw125_slave_pin)
-// uint8_t hw125_power_on(uint16_t hw125_slave_pin)
+// void hw125_power_on(uint16_t hw125_slave_pin)
+DISK_RESULT hw125_power_on(
+    uint16_t hw125_slave_pin)
 {
     // Local variables 
     uint8_t di_cmd; 
     uint8_t do_resp; 
     uint8_t cmd_frame[SPI_6_BYTES];
 
-    // TODO test the length of this counter 
+    // TODO test the size of this counter 
     uint16_t num_read = HW125_PWR_ON_RES_CNT; 
 
     //===================================================
@@ -534,8 +533,6 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     //===================================================
     // Software reset 
 
-    // TODO integrate this into the send command function 
-
     // Slave select 
     spi_slave_select(sd_card.gpio, hw125_slave_pin); 
 
@@ -557,26 +554,22 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     }
 
     // Transmit command 
-    spi_write(sd_card.spi, cmd_frame, SPI_6_BYTES);
+    spi_write(sd_card.spi, cmd_frame, SPI_6_BYTES); 
 
     // Read R1 response until it is valid or until it times out 
     do 
     {
-        spi_write_read(sd_card.spi, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+        spi_write_read(sd_card.spi, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE); 
     }
-    while((do_resp != HW125_IDLE_STATE) && --num_read);
+    while((do_resp != HW125_IDLE_STATE) && --num_read); 
+
+    // Slave deselect 
+    spi_slave_deselect(sd_card.gpio, hw125_slave_pin); 
+    
+    // Response timeout 
+    if (!num_read) return HW125_RES_ERROR; 
 
     //===================================================
-    
-    // TODO Use this as an indication to not perform initialization 
-    // if (!num_read)
-    // {
-    //     spi_slave_deselect(sd_card.gpio, hw125_slave_pin); 
-    //     return HW125_RES_ERROR; 
-    // }
-
-    // Slave select 
-    spi_slave_deselect(sd_card.gpio, hw125_slave_pin); 
 
     // TODO send a data high byte? 
     spi_write(sd_card.spi, &di_cmd, SPI_1_BYTE);
@@ -584,7 +577,7 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     // Set the Power Flag status to on 
     sd_card.pwr_flag = HW125_PWR_ON; 
 
-    // return HW125_RES_OK; 
+    return HW125_RES_OK; 
 }
 
 
@@ -621,7 +614,7 @@ uint8_t hw125_initiate_init(
         // Delay 1ms --> HW125_INIT_DELAY * HW125_INIT_TIMER = 1000ms (recommended delay) 
         tim_delay_ms(TIM9, HW125_INIT_DELAY);
     }
-    while((*resp == HW125_IDLE_STATE) && --init_timer);
+    while ((*resp == HW125_IDLE_STATE) && --init_timer);
 
     // Return the timer status 
     if (init_timer) return TRUE;  // Timer is not zero - no timeout 
@@ -648,19 +641,16 @@ DISK_STATUS hw125_status(uint8_t pdrv)
 // HW125 ready to receive commands 
 void hw125_ready_rec(void)
 {
-    // TODO create a timeout and a return status 
-
     // Local variables 
     uint8_t resp; 
-    // uint16_t timer = HW125_PWR_ON_RES_CNT; 
+    uint16_t timer = HW125_PWR_ON_RES_CNT;   // TODO verify/test timer/counter size 
 
     // Read DO/MISO continuously until it is ready to receive commands 
     do 
     {
-        spi_write_read(sd_card.spi, HW125_DATA_HIGH, &resp, SPI_1_BYTE);
+        spi_write_read(sd_card.spi, HW125_DATA_HIGH, &resp, SPI_1_BYTE); 
     }
-    while(resp != HW125_DATA_HIGH);
-    // while(resp != HW125_DATA_HIGH && timer--);
+    while (resp != HW125_DATA_HIGH && --timer); 
 }
 
 
@@ -735,7 +725,7 @@ void hw125_send_cmd(
     {
         spi_write_read(sd_card.spi, HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
     }
-    while((*resp & HW125_R1_FILTER) && --num_read);
+    while ((*resp & HW125_R1_FILTER) && --num_read);
 }
 
 //=======================================================================================
@@ -841,18 +831,15 @@ DISK_RESULT hw125_read_data_packet(
 {
     // Local variables 
     DISK_RESULT read_resp;
-    uint8_t do_resp = 200;
-
-    // TODO create and use a real-time timer here 
-    // uint8_t num_read = HW125_DT_RESP_COUNT;
+    uint8_t do_resp = 200; 
+    uint16_t num_read = HW125_DT_RESP_COUNT;   // TODO verify timer/counter size 
 
     // Read the data token 
     do 
     {
-        spi_write_read(sd_card.spi, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE);
+        spi_write_read(sd_card.spi, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE); 
     }
-    // while((do_resp != HW125_DT_TWO) && --num_read);
-    while((do_resp != HW125_DT_TWO));
+    while ((do_resp != HW125_DT_TWO) && --num_read); 
 
     // Check the R1 response 
     if (do_resp == HW125_DT_TWO)
@@ -957,7 +944,7 @@ DISK_RESULT hw125_write(
                 write_resp = hw125_write_data_packet(buff, HW125_SEC_SIZE, HW125_DT_ZERO);
                 buff += HW125_SEC_SIZE; 
             }
-            while(--count && (write_resp != HW125_RES_ERROR)); 
+            while (--count && (write_resp != HW125_RES_ERROR)); 
 
             // Wait on busy flag to clear 
             hw125_ready_rec();

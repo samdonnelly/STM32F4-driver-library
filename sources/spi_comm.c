@@ -258,11 +258,11 @@ void spi_txe_wait(
 }
 
 
-// Wait for TXE bit to set - draft 
+// Wait for TXE bit to set before writing - draft 
 SPI_COM_STATUS spi_txe_wait_draft(
     SPI_TypeDef *spi) 
 {
-    uint16_t timer = SPI_COM_TIMEOUT; 
+    uint16_t timer = SPI_COM_TIMEOUT;   // TODO test/verify timer/counter size 
     while(!(spi->SR & (SET_BIT << SHIFT_1)) && timer--); 
     if (!timer) return SPI_ERROR; 
     return SPI_OK; 
@@ -278,7 +278,7 @@ void spi_rxne_wait(
 }
 
 
-// Wait for RXNE bit to set - draft 
+// Wait for RXNE bit to set before reading - draft 
 SPI_COM_STATUS spi_rxne_wait_draft(
     SPI_TypeDef *spi)
 {
@@ -433,6 +433,10 @@ void spi_write_read(
     uint8_t *read_data, 
     uint32_t data_len)
 {
+    if (spi == NULL) return;          // Null pointer 
+    if (read_data == NULL) return;    // Null pointer 
+    if (!data_len) return;            // Zero data length 
+
     // Write the first piece of data 
     spi_txe_wait(spi);
     spi->DR = write_data; 
@@ -471,37 +475,37 @@ SPI_COM_STATUS spi_read_draft(
     uint8_t *read_data, 
     uint32_t data_len)
 {
-    SPI_COM_STATUS status; 
+    // Argument check 
+    if (spi == NULL) return;          // Null pointer 
+    if (read_data == NULL) return;    // Null pointer 
+    if (!data_len) return;            // Zero data length 
 
     // Write the first piece of data 
-    status = spi_txe_wait_draft(spi);    // Wait for TXE bit to set 
-    if (status) return status; 
-    spi->DR = write_data;       // Write data to the data register 
+    if (spi_txe_wait_draft(spi)) return SPI_ERROR; 
+    spi->DR = write_data; 
 
     // Iterate through all data to be sent and received
     for (uint32_t i = 0; i < data_len-1; i++)
     {
-        // Wait for TXE bit to set 
-        status = spi_txe_wait_draft(spi); 
-        if (status) return status; 
+        // Write to slave to provide a bus clock 
+        if (spi_txe_wait_draft(spi)) return SPI_ERROR; 
         spi->DR = write_data; 
 
-        // Wait for the RXNE bit to set 
-        status = spi_rxne_wait_draft(spi); 
-        if (status) return status; 
+        // Read the slave response 
+        if (spi_rxne_wait_draft(spi)) return SPI_ERROR; 
         *read_data++ = spi->DR; 
     }
 
-    // Read the last piece of data
-    status = spi_rxne_wait_draft(spi); 
-    if (status) return status; 
-    *read_data = spi->DR; 
+    // Read the last piece of data 
+    if (spi_rxne_wait_draft(spi)) return SPI_ERROR; 
+    *read_data++ = spi->DR; 
 
     // Wait for TXE bit to set and the BSY bit to clear 
     spi_txe_wait_draft(spi);
     spi_bsy_wait_draft(spi); 
 
-    return status; 
+    // return status; 
+    return SPI_OK; 
 }
 
 //=======================================================================================

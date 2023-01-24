@@ -40,7 +40,7 @@
 #define HW125_PWR_ON_COUNTER     10      // General counter for the hw125_power_on function 
 #define HW125_PWR_ON_RES_CNT     0x1FFF  // R1 response counter during power on sequence 
 #define HW125_R1_RESP_COUNT      10      // Max num of times to read R1 until appropriate response
-#define HW125_DT_RESP_COUNT      10      // Max number of times to check the data token 
+#define HW125_DT_RESP_COUNT      1000    // Max number of times to check the data token 
 
 // Data information 
 #define HW125_DATA_HIGH          0xFF    // DI/MOSI setpoint and DO/MISO response value 
@@ -123,7 +123,6 @@
 
 // Functions 
 #define f_unmount(path) f_mount(NULL, path, HW125_MOUNT_NOW)     // Unmount card 
-// #define f_unmount f_mount(0, "", 0) 
 
 //==================================================
 
@@ -255,7 +254,6 @@ typedef enum {
  *          in the driver is DISK_RESULT which is a typedef of this enum. If the operation is 
  *          successful then HW125_RES_OK will be returned. If not then the problem will be 
  *          reflected in the result. 
- * 
  */
 typedef enum {
     HW125_RES_OK,       // the function succeeded

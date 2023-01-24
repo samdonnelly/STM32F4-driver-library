@@ -29,7 +29,7 @@
 //=======================================================================================
 // Macros 
 
-#define SPI_COM_TIMEOUT 0x7FFF     // Timer for SPI communication sequence timeouts  
+#define SPI_COM_TIMEOUT 0x03FF     // Timer for SPI communication sequence timeouts  
 
 //=======================================================================================
 
