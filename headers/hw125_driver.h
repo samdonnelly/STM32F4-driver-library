@@ -123,6 +123,7 @@
 
 // Functions 
 #define f_unmount(path) f_mount(NULL, path, HW125_MOUNT_NOW)     // Unmount card 
+// #define f_unmount f_mount(0, "", 0) 
 
 //==================================================
 
@@ -375,7 +376,7 @@ void hw125_user_init(
  * @param pdrv : physical drive number to distinguish between target devices (starts at 0) 
  * @return DISK_STATUS : status of the disk drive 
  */
-DISK_STATUS hw125_init(uint8_t pdrv);
+DISK_STATUS hw125_init(uint8_t pdrv); 
 
 //=======================================================================================
 
@@ -407,6 +408,27 @@ DISK_STATUS hw125_status(uint8_t pdrv);
  * @return CARD_TYPE : card type of volume 
  */
 CARD_TYPE hw125_get_card_type(void); 
+
+
+/**
+ * @brief HW125 ready to receive commands 
+ * 
+ * @details Waits for the SD card DO/MISO line to go high (0xFF) which indicates that the 
+ *          card is ready to receive further instructions. The function is called before 
+ *          sending a command and before writing new data packets to the card. 
+ * 
+ */
+void hw125_ready_rec(void); 
+
+
+/**
+ * @brief Get card presence status 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t hw125_get_existance(void); 
 
 //=======================================================================================
 

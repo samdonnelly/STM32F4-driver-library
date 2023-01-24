@@ -29,7 +29,7 @@
 //=======================================================================================
 // Macros 
 
-#define SPI_COM_TIMEOUT 0xFFFF     // Timer for SPI communication sequence timeouts  
+#define SPI_COM_TIMEOUT 0x7FFF     // Timer for SPI communication sequence timeouts  
 
 //=======================================================================================
 
@@ -181,56 +181,6 @@ uint8_t spi_init(
 // SPI register functions 
 
 /**
- * @brief SPI enable 
- * 
- * @details 
- * 
- */
-void spi_enable(
-    SPI_TypeDef *spi);
-
-
-/**
- * @brief SPI disable 
- * 
- * @details 
- * 
- */
-void spi_disable(
-    SPI_TypeDef *spi);
-
-
-/**
- * @brief SPI TXE wait 
- * 
- * @details 
- * 
- */
-void spi_txe_wait(
-    SPI_TypeDef *spi);
-
-
-/**
- * @brief SPI RXNE wait 
- * 
- * @details 
- * 
- */
-void spi_rxne_wait(
-    SPI_TypeDef *spi);
-
-
-/**
- * @brief SPI BSY wait 
- * 
- * @details 
- * 
- */
-void spi_bsy_wait(
-    SPI_TypeDef *spi);
-
-
-/**
  * @brief SPI slave select 
  * 
  * @details 
@@ -279,6 +229,21 @@ void spi_write(
 
 
 /**
+ * @brief SPI write
+ * 
+ * @details 
+ * 
+ * @param spi 
+ * @param write_data 
+ * @param data_len 
+ */
+SPI_COM_STATUS spi_write_draft(
+    SPI_TypeDef *spi, 
+    uint8_t *write_data, 
+    uint32_t data_len);
+
+
+/**
  * @brief SPI write then read 
  * 
  * @details 
@@ -291,6 +256,25 @@ void spi_write(
  * @param data_len 
  */
 void spi_write_read(
+    SPI_TypeDef *spi, 
+    uint8_t  write_data, 
+    uint8_t *read_data, 
+    uint32_t data_len);
+
+
+/**
+ * @brief SPI write then read 
+ * 
+ * @details 
+ *          This can be used to request information from a slave device (write) then 
+ *          receive the needed information immediately afterwards (read). 
+ * 
+ * @param spi 
+ * @param write_data 
+ * @param read_data 
+ * @param data_len 
+ */
+SPI_COM_STATUS spi_read_draft(
     SPI_TypeDef *spi, 
     uint8_t  write_data, 
     uint8_t *read_data, 

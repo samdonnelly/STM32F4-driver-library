@@ -362,7 +362,8 @@ void hw125_not_ready_state(
     //     function will indicate the drive is in IDLE state and we can go back to the 
     //     init function to mount the drive. 
     // TODO need to add a return value and SPI timeout 
-    hw125_power_on(); 
+    // hw125_power_on(); 
+    hw125_get_existance(); 
 
     // If inserted then clear not ready flag 
 

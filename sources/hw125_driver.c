@@ -76,7 +76,8 @@ uint8_t hw125_initiate_init(
  * 
  * @param hw125_slave_pin : SS pin that the SD card is connected to 
  */
-void hw125_power_on(uint16_t hw125_slave_pin);
+void hw125_power_on(uint16_t hw125_slave_pin); 
+// uint8_t hw125_power_on(uint16_t hw125_slave_pin); 
 
 
 /**
@@ -131,17 +132,6 @@ void hw125_send_cmd(
  * @return uint8_t : pwr_flag 
  */
 uint8_t hw125_power_status(void);
-
-
-/**
- * @brief HW125 ready to receive commands 
- * 
- * @details Waits for the SD card DO/MISO line to go high (0xFF) which indicates that the 
- *          card is ready to receive further instructions. The function is called before 
- *          sending a command and before writing new data packets to the card. 
- * 
- */
-void hw125_ready_rec(void);
 
 //==============================================
 
@@ -354,7 +344,13 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     //===================================================
     // Power ON or card insertion and software reset 
 
-    hw125_power_on(sd_card.ss_pin);
+    hw125_power_on(sd_card.ss_pin); 
+    // if (hw125_power_on(sd_card.ss_pin)) 
+    // {
+    //     sd_card.card_type = HW125_CT_UNKNOWN; 
+    //     sd_card.disk_status = HW125_STATUS_NOINIT; 
+    //     return sd_card.disk_status; 
+    // }
 
     //===================================================
 
@@ -505,6 +501,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
 
 // HW125 power on sequence and software reset 
 void hw125_power_on(uint16_t hw125_slave_pin)
+// uint8_t hw125_power_on(uint16_t hw125_slave_pin)
 {
     // Local variables 
     uint8_t di_cmd; 
@@ -572,7 +569,11 @@ void hw125_power_on(uint16_t hw125_slave_pin)
     //===================================================
     
     // TODO Use this as an indication to not perform initialization 
-    // if (num_read == 0); 
+    // if (!num_read)
+    // {
+    //     spi_slave_deselect(sd_card.gpio, hw125_slave_pin); 
+    //     return HW125_RES_ERROR; 
+    // }
 
     // Slave select 
     spi_slave_deselect(sd_card.gpio, hw125_slave_pin); 
@@ -582,6 +583,8 @@ void hw125_power_on(uint16_t hw125_slave_pin)
 
     // Set the Power Flag status to on 
     sd_card.pwr_flag = HW125_PWR_ON; 
+
+    // return HW125_RES_OK; 
 }
 
 
@@ -648,7 +651,8 @@ void hw125_ready_rec(void)
     // TODO create a timeout and a return status 
 
     // Local variables 
-    uint8_t resp;
+    uint8_t resp; 
+    // uint16_t timer = HW125_PWR_ON_RES_CNT; 
 
     // Read DO/MISO continuously until it is ready to receive commands 
     do 
@@ -656,6 +660,7 @@ void hw125_ready_rec(void)
         spi_write_read(sd_card.spi, HW125_DATA_HIGH, &resp, SPI_1_BYTE);
     }
     while(resp != HW125_DATA_HIGH);
+    // while(resp != HW125_DATA_HIGH && timer--);
 }
 
 
@@ -670,6 +675,13 @@ uint8_t hw125_power_status(void)
 CARD_TYPE hw125_get_card_type(void) 
 {
     return sd_card.card_type; 
+}
+
+
+// Get card presence status 
+uint8_t hw125_get_existance(void)
+{
+    // Call the power on function with the right slave pin 
 }
 
 //=======================================================================================

@@ -21,6 +21,91 @@
 //=======================================================================================
 
 
+//===============================================================================
+// Function prototypes 
+
+/**
+ * @brief SPI enable 
+ * 
+ * @details 
+ * 
+ */
+void spi_enable(
+    SPI_TypeDef *spi);
+
+
+/**
+ * @brief SPI disable 
+ * 
+ * @details 
+ * 
+ */
+void spi_disable(
+    SPI_TypeDef *spi);
+
+
+/**
+ * @brief SPI TXE wait 
+ * 
+ * @details 
+ * 
+ */
+void spi_txe_wait(
+    SPI_TypeDef *spi);
+
+
+/**
+ * @brief Wait for TXE bit to set - draft 
+ * 
+ * @param spi 
+ * @return SPI_COM_STATUS 
+ */
+SPI_COM_STATUS spi_txe_wait_draft(
+    SPI_TypeDef *spi); 
+
+
+/**
+ * @brief SPI RXNE wait 
+ * 
+ * @details 
+ * 
+ */
+void spi_rxne_wait(
+    SPI_TypeDef *spi);
+
+
+/**
+ * @brief Wait for RXNE bit to set - draft 
+ * 
+ * @param spi 
+ * @return SPI_COM_STATUS 
+ */
+SPI_COM_STATUS spi_rxne_wait_draft(
+    SPI_TypeDef *spi); 
+
+
+/**
+ * @brief SPI BSY wait 
+ * 
+ * @details 
+ * 
+ */
+void spi_bsy_wait(
+    SPI_TypeDef *spi);
+
+
+/**
+ * @brief Wait for BSY bit to clear - draft 
+ * 
+ * @param spi 
+ * @return SPI_COM_STATUS 
+ */
+SPI_COM_STATUS spi_bsy_wait_draft(
+    SPI_TypeDef *spi); 
+
+//===============================================================================
+
+
 //=======================================================================================
 // Inititalization 
 
@@ -272,7 +357,6 @@ void spi_write(
     for (uint32_t i = 0; i < data_len; i++)
     {
         spi_txe_wait(spi);          // Wait for TXE bit to set 
-        // if (spi_txe_wait_draft(spi)); 
         // TODO abort if TXE bit not set and there's a timeout 
         spi->DR = *write_data;      // Write data to the data register 
         write_data++; 
@@ -287,6 +371,42 @@ void spi_write(
     // Read the data and status registers to clear the RX buffer and overrun error bit
     dummy_read(spi->DR); 
     dummy_read(spi->SR); 
+}
+
+
+// SPI write - draft 
+SPI_COM_STATUS spi_write_draft(
+    SPI_TypeDef *spi, 
+    uint8_t *write_data, 
+    uint32_t data_len)
+{
+    SPI_COM_STATUS status = SPI_OK; 
+
+    // Transmit all the data 
+    for (uint32_t i = 0; i < data_len; i++)
+    {
+        status = spi_txe_wait_draft(spi); 
+
+        if (status)  // SPI transmission fault 
+        {
+            // Clear registers 
+            dummy_read(spi->DR); 
+            dummy_read(spi->SR); 
+            return status; 
+        }
+
+        spi->DR = *write_data++; 
+    }
+
+    // Wait for TXE bit to set and BSY bit to clear 
+    spi_txe_wait_draft(spi); 
+    spi_bsy_wait_draft(spi); 
+
+    // Read the data and status registers to clear the RX buffer and overrun error bit
+    dummy_read(spi->DR); 
+    dummy_read(spi->SR); 
+
+    return status; 
 }
 
 
@@ -341,6 +461,47 @@ void spi_write_read(
 
     // Wait for BSY to clear 
     spi_bsy_wait(spi);
+}
+
+
+// SPI read - draft 
+SPI_COM_STATUS spi_read_draft(
+    SPI_TypeDef *spi, 
+    uint8_t  write_data, 
+    uint8_t *read_data, 
+    uint32_t data_len)
+{
+    SPI_COM_STATUS status; 
+
+    // Write the first piece of data 
+    status = spi_txe_wait_draft(spi);    // Wait for TXE bit to set 
+    if (status) return status; 
+    spi->DR = write_data;       // Write data to the data register 
+
+    // Iterate through all data to be sent and received
+    for (uint32_t i = 0; i < data_len-1; i++)
+    {
+        // Wait for TXE bit to set 
+        status = spi_txe_wait_draft(spi); 
+        if (status) return status; 
+        spi->DR = write_data; 
+
+        // Wait for the RXNE bit to set 
+        status = spi_rxne_wait_draft(spi); 
+        if (status) return status; 
+        *read_data++ = spi->DR; 
+    }
+
+    // Read the last piece of data
+    status = spi_rxne_wait_draft(spi); 
+    if (status) return status; 
+    *read_data = spi->DR; 
+
+    // Wait for TXE bit to set and the BSY bit to clear 
+    spi_txe_wait_draft(spi);
+    spi_bsy_wait_draft(spi); 
+
+    return status; 
 }
 
 //=======================================================================================
