@@ -447,7 +447,17 @@ void hw125_reset_state(
 
     // memset the data buffer 
     memset((void *)hw125_device->data_buff, CLEAR, HW125_BUFF_SIZE); 
+
+    // Reset path? 
 }
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Control functions 
+
+// Get free space 
 
 //=======================================================================================
 
@@ -459,9 +469,15 @@ void hw125_reset_state(
 FRESULT hw125_mkdir(
     const TCHAR *dir) 
 {
-    // Create a new folder within the project directory 
-    // How to we add the specified directory onto the path? 
-    // Do we store this new directory in memory or are we already in the new folder? 
+    // TODO Combine the path string and dir string to create a new directory and 
+    // pass that as the f_mkdir argument 
+
+    // Whenever this function is called, the new dir gets added to the path defined 
+    // in the init function meaning all folders made from here will be in parallel and 
+    // not sub folders of one another. 
+    // We will have to store the default path as well as 1 created directory 
+
+    hw125_device_trackers.fresult = f_mkdir(dir); 
 
     return hw125_device_trackers.fresult; 
 }
@@ -472,30 +488,75 @@ FRESULT hw125_open(
     const TCHAR *file_name, 
     uint8_t mode) 
 {
-    // Check that a file is not already open 
-    // Checks for the existance of the specified file 
-    // If the file doesn't exist and write mode is requested then create the file 
-    // Set the open file flag 
+    // TODO Must add the file name onto the end of the path stored in the tracker 
+    // record and pass that as the f_open argument 
 
-    // Attempt f_open 
-    // - If successful then set open file flag 
+    // Attempt to open file if a file is not already open 
+    if (!hw125_device_trackers.open_file) 
+    {
+        // Check for file existance and how it's affected with the access mode? 
 
-    return hw125_device_trackers.fresult; 
+        hw125_device_trackers.fresult = f_open(&hw125_device_trackers.file, 
+                                               file_name, 
+                                               mode); 
+
+        if (hw125_device_trackers.fresult == FR_OK) 
+        {
+            hw125_device_trackers.open_file = SET_BIT; 
+        }
+        else 
+        {
+            // Filter out non-critical errors 
+            hw125_device_trackers.fault_code_check |= 
+                                (SET_BIT << hw125_device_trackers.fresult); 
+            hw125_device_trackers.fault_code_check &= HW125_ERROR_MASK; 
+            
+            // Set the fault code only if it is critical to the controller 
+            if (hw125_device_trackers.fault_code_check) 
+            {
+                hw125_device_trackers.fault_code |= HW125_FAULT_OPEN; 
+            }
+        }
+
+        return hw125_device_trackers.fresult; 
+    }
+
+    return FR_TOO_MANY_OPEN_FILES; 
 }
 
 
 // Close the open file 
 FRESULT hw125_close(void) 
 {
-    // Close the already open file 
-    // Update the remaining volume free space? 
-    // Clear the open file flag 
-    hw125_device_trackers.open_file = CLEAR_BIT; 
+    // Attempt to close a file if it's open 
+    if (hw125_device_trackers.open_file) 
+    {
+        hw125_device_trackers.fresult = f_close(&hw125_device_trackers.file); 
 
-    // Attempt f_close 
-    // - If successful then clear open file flag 
+        if (hw125_device_trackers.fresult) 
+        {
+            // Filter out non-critical errors 
+            hw125_device_trackers.fault_code_check |= 
+                                (SET_BIT << hw125_device_trackers.fresult); 
+            hw125_device_trackers.fault_code_check &= HW125_ERROR_MASK; 
+            
+            // Set the fault code only if it is critical to the controller 
+            if (hw125_device_trackers.fault_code_check) 
+            {
+                hw125_device_trackers.fault_code |= HW125_FAULT_CLOSE; 
+            }
+        }
 
-    return hw125_device_trackers.fresult; 
+        // Clear the open file flag 
+        hw125_device_trackers.open_file = CLEAR_BIT; 
+
+        // Update the free space 
+        // hw125_free_space(); 
+
+        return hw125_device_trackers.fresult; 
+    }
+
+    return FR_OK; 
 }
 
 

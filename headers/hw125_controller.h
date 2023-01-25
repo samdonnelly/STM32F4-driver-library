@@ -34,11 +34,15 @@
 //=======================================================================================
 // Macros 
 
-#define HW125_NUM_STATES 7           // Number of possible states for the controller 
+#define HW125_NUM_STATES 7             // Number of possible states for the controller 
 
-#define HW125_BUFF_SIZE 100          // Read and write buffer size 
-#define HW125_PATH_SIZE 50           // Volume path max length 
-#define HW125_INFO_SIZE 30           // Device infor buffer size 
+#define HW125_BUFF_SIZE 100            // Read and write buffer size 
+#define HW125_PATH_SIZE 50             // Volume path max length 
+#define HW125_INFO_SIZE 30             // Device infor buffer size 
+
+#define HW125_ERROR_MASK 0x00000001    // 
+// Use a bit shift with the predefined FatFs FRESULT values then use this mask to 
+// filter out the ones that don't matter 
 
 //=======================================================================================
 
@@ -60,7 +64,9 @@ typedef enum {
 } hw125_states_t; 
 
 
-
+/**
+ * @brief 
+ */
 typedef enum {
     HW125_FAULT_MKDIR = 0x01,            // Make directory 
     HW125_FAULT_OPEN  = 0x02,            // Open 
@@ -84,7 +90,7 @@ typedef struct hw125_trackers_s
     // Controller information 
     hw125_states_t state;                        // State of the controller 
     BYTE fault_code;                             // Fault code of the device/controller 
-    BYTE fault_code_check;                       // Fault code checker 
+    DWORD fault_code_check;                      // Fault code checker 
 
     // File system information 
     FATFS file_sys;                              // File system object 
