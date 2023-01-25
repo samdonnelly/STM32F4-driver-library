@@ -62,15 +62,14 @@ typedef enum {
 
 
 typedef enum {
-    HW125_FAULT_MKDIR   = 0x0001,            // Make directory 
-    HW125_FAULT_MOUNT   = 0x0002,            // Mount 
-    HW125_FAULT_UNMOUNT = 0x0004,            // Unmount 
-    HW125_FAULT_OPEN    = 0x0008,            // Open 
-    HW125_FAULT_CLOSE   = 0x0010,            // Close 
-    HW125_FAULT_WRITE   = 0x0020,            // Write 
-    HW125_FAULT_READ    = 0x0040,            // Read 
-    HW125_FAULT_SEEK    = 0x0080,            // Seek 
-    HW125_FAULT_COMMS   = 0x0100             // Comms 
+    HW125_FAULT_MKDIR = 0x01,            // Make directory 
+    HW125_FAULT_OPEN  = 0x02,            // Open 
+    HW125_FAULT_CLOSE = 0x04,            // Close 
+    HW125_FAULT_WRITE = 0x08,            // Write 
+    HW125_FAULT_READ  = 0x10,            // Read 
+    HW125_FAULT_SEEK  = 0x20,            // Seek 
+    HW125_FAULT_FREE  = 0x40,            // Free space 
+    HW125_FAULT_COMMS = 0x80             // Comms 
 } hw125_fault_codes_t; 
 
 //=======================================================================================
@@ -84,8 +83,8 @@ typedef struct hw125_trackers_s
 {
     // Controller information 
     hw125_states_t state;                        // State of the controller 
-    WORD fault_code;                             // Fault code of the device/controller 
-    WORD fault_code_check;                       // Fault code checker 
+    BYTE fault_code;                             // Fault code of the device/controller 
+    BYTE fault_code_check;                       // Fault code checker 
 
     // File system information 
     FATFS file_sys;                              // File system object 
@@ -124,7 +123,7 @@ hw125_trackers_t;
 typedef hw125_states_t HW125_STATE; 
 typedef uint8_t HW125_FAULT_CODE; 
 typedef uint8_t HW125_FILE_STATUS; 
-typedef uint16_t HW125_EOF; 
+typedef int8_t HW125_EOF; 
 
 //=======================================================================================
 
@@ -215,16 +214,6 @@ FRESULT hw125_f_write(
 
 
 /**
- * @brief Navigate within the open file 
- * 
- * @param offset 
- * @return FRESULT 
- */
-FRESULT hw125_lseek(
-    FSIZE_t offset); 
-
-
-/**
  * @brief Write a character to the open file 
  * 
  * @param character 
@@ -240,18 +229,30 @@ int8_t hw125_putc(
  * @param str 
  * @return int16_t 
  */
-int16_t hw125_puts(
+int8_t hw125_puts(
     const TCHAR *str); 
 
 
 /**
  * @brief Write a formatted string to the open file 
  * 
- * @param fmt_str 
- * @return int16_t 
+ * @param fmt_str : 
+ * @param fmt_value : 
+ * @return int8_t 
  */
-int16_t hw125_printf(
-    const TCHAR *fmt_str); 
+int8_t hw125_printf(
+    const TCHAR *fmt_str, 
+    uint16_t fmt_value); 
+
+
+/**
+ * @brief Navigate within the open file 
+ * 
+ * @param offset 
+ * @return FRESULT 
+ */
+FRESULT hw125_lseek(
+    FSIZE_t offset); 
 
 //=======================================================================================
 
@@ -298,10 +299,11 @@ FRESULT hw125_f_read(
 /**
  * @brief Reads a string from open file 
  * 
- * @param buff 
- * @param len 
+ * @param buff : 
+ * @param len : 
+ * @return TCHAR : 
  */
-void hw125_gets(
+TCHAR* hw125_gets(
     TCHAR *buff, 
     uint16_t len); 
 

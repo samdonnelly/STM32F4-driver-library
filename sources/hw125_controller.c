@@ -105,6 +105,9 @@ void hw125_reset_state(
 //=======================================================================================
 // Variables 
 
+// FatFs volume tracker - included to ensure re-mounting is possible 
+extern Disk_drvTypeDef disk; 
+
 // Device tracker record instance 
 static hw125_trackers_t hw125_device_trackers; 
 
@@ -311,11 +314,12 @@ void hw125_init_state(
     hw125_device->fault_code_check = CLEAR; 
 
     // Mount the drive 
-    // - If this fails then set the not ready flag and skip the next steps 
     hw125_device->fresult = f_mount(&hw125_device->file_sys, "", HW125_MOUNT_NOW); 
 
     if (hw125_device->fresult == FR_OK) 
-    {        
+    {
+        hw125_device->mount = SET_BIT; 
+
         // Check free space 
         hw125_device->fresult = f_getfree("", &hw125_device->fre_clust, &hw125_device->pfs); 
 
@@ -347,6 +351,10 @@ void hw125_init_state(
     else 
     {
         hw125_device->not_ready = SET_BIT; 
+
+        // Unmount the volume 
+        f_unmount(""); 
+        disk.is_initialized[0] = CLEAR;   // Clear the init status so it can be re-mounted 
     }
 }
 
@@ -400,7 +408,6 @@ void hw125_access_state(
     hw125_ready_rec(); 
 
     // Check the fault code check 
-    // - If true then set the fault code 
     if (hw125_device->fault_code_check) 
     {
         hw125_device->fault_code = hw125_device->fault_code_check; 
@@ -413,7 +420,8 @@ void hw125_estop_state(
     hw125_trackers_t *hw125_device)
 {
     // Attempt to close the open file 
-    // Clear the open file flag 
+    hw125_device->fresult = hw125_close(); 
+    if (hw125_device->fresult) hw125_device->fault_code |= HW125_FAULT_CLOSE; 
 }
 
 
@@ -431,17 +439,14 @@ void hw125_reset_state(
 {
     // Clear the fault code 
     hw125_device->fault_code = CLEAR; 
-    
-    // If open file flag set then attempt to close the file 
-    
-    // Clear the open file flag 
-    hw125_device->open_file = CLEAR_BIT; 
 
-    // Attempt to unmount the drive 
-
-    // Clear the mount flag 
+    // Unmount the volume 
+    f_unmount(""); 
+    disk.is_initialized[0] = CLEAR;   // Clear the init status so it can be re-mounted 
+    hw125_device->mount = CLEAR_BIT; 
 
     // memset the data buffer 
+    memset((void *)hw125_device->data_buff, CLEAR, HW125_BUFF_SIZE); 
 }
 
 //=======================================================================================
@@ -457,6 +462,8 @@ FRESULT hw125_mkdir(
     // Create a new folder within the project directory 
     // How to we add the specified directory onto the path? 
     // Do we store this new directory in memory or are we already in the new folder? 
+
+    return hw125_device_trackers.fresult; 
 }
 
 
@@ -472,6 +479,8 @@ FRESULT hw125_open(
 
     // Attempt f_open 
     // - If successful then set open file flag 
+
+    return hw125_device_trackers.fresult; 
 }
 
 
@@ -481,9 +490,12 @@ FRESULT hw125_close(void)
     // Close the already open file 
     // Update the remaining volume free space? 
     // Clear the open file flag 
+    hw125_device_trackers.open_file = CLEAR_BIT; 
 
     // Attempt f_close 
     // - If successful then clear open file flag 
+
+    return hw125_device_trackers.fresult; 
 }
 
 
@@ -492,15 +504,19 @@ FRESULT hw125_f_write(
     const void *buff, 
     UINT btw) 
 {
-    // 
-}
+    // Write to the file 
+    hw125_device_trackers.fresult = f_write(&hw125_device_trackers.file, 
+                                            buff, 
+                                            btw, 
+                                            &hw125_device_trackers.bw); 
 
+    // Set fault code if there is an access error and a file is open 
+    if (hw125_device_trackers.fresult && hw125_device_trackers.open_file) 
+    {
+        hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
+    }
 
-// Navigate within the open file 
-FRESULT hw125_lseek(
-    FSIZE_t offset) 
-{
-    // 
+    return hw125_device_trackers.fresult; 
 }
 
 
@@ -508,23 +524,70 @@ FRESULT hw125_lseek(
 int8_t hw125_putc(
     TCHAR character) 
 {
-    // 
+    // Put a character to the file 
+    int8_t putc_return = f_putc(character, &hw125_device_trackers.file); 
+
+    // Set fault code if there is a function error and a file is open 
+    if ((putc_return < 0) && hw125_device_trackers.open_file) 
+    {
+        hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
+    }
+
+    return putc_return; 
 }
 
 
 // Write a string to the open file 
-int16_t hw125_puts(
+int8_t hw125_puts(
     const TCHAR *str) 
 {
-    // 
+    // Writes a string to the file 
+    int8_t puts_return = f_puts(str, &hw125_device_trackers.file); 
+
+    // Set fault code if there is a function error and a file is open 
+    if ((puts_return < 0) && hw125_device_trackers.open_file) 
+    {
+        hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
+    }
+
+    return puts_return; 
 }
 
 
 // Write a formatted string to the open file 
-int16_t hw125_printf(
-    const TCHAR *fmt_str) 
+int8_t hw125_printf(
+    const TCHAR *fmt_str, 
+    uint16_t fmt_value) 
 {
-    // 
+    // Writes formatted string to the file 
+    int8_t printf_return = f_printf(&hw125_device_trackers.file, 
+                                    fmt_str, 
+                                    fmt_value); 
+
+    // Set fault code if there is a function error and a file is open 
+    if ((printf_return < 0) && hw125_device_trackers.open_file) 
+    {
+        hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
+    }
+
+    return printf_return; 
+}
+
+
+// Navigate within the open file 
+FRESULT hw125_lseek(
+    FSIZE_t offset) 
+{
+    // Move to the specified position in the file 
+    hw125_device_trackers.fresult = f_lseek(&hw125_device_trackers.file, offset); 
+
+    // Set fault code if there is an access error and a file is open 
+    if (hw125_device_trackers.fresult && hw125_device_trackers.open_file) 
+    {
+        hw125_device_trackers.fault_code |= HW125_FAULT_SEEK; 
+    }
+
+    return hw125_device_trackers.fresult; 
 }
 
 //=======================================================================================
@@ -559,23 +622,47 @@ FRESULT hw125_f_read(
     void *buff, 
     UINT btr) 
 {
-    // 
+    // Read from the file 
+    hw125_device_trackers.fresult = f_read(&hw125_device_trackers.file, 
+                                           buff, 
+                                           btr, 
+                                           &hw125_device_trackers.br); 
+    
+    // Set fault code if there is an access error and a file is open 
+    if (hw125_device_trackers.fresult && hw125_device_trackers.open_file) 
+    {
+        hw125_device_trackers.fault_code |= HW125_FAULT_READ; 
+    }
+
+    return hw125_device_trackers.fresult; 
 }
 
 
 // Reads a string from open file 
-void hw125_gets(
+TCHAR* hw125_gets(
     TCHAR *buff, 
     uint16_t len)
 {
-    // 
+    // Read a string from the file 
+    TCHAR *gets_return = f_gets(buff, len, &hw125_device_trackers.file); 
+
+    // Set fault code if there was a read operation error and a file is open 
+    if ((gets_return == NULL) && hw125_device_trackers.open_file) 
+    {
+        hw125_device_trackers.fault_code |= HW125_FAULT_READ; 
+    }
+
+    return gets_return; 
 }
 
 
 // Test for end of file on open file 
 HW125_EOF hw125_eof(void) 
 {
-    // 
+    // Look for end of file on an open file 
+    HW125_EOF eof_return = f_eof(&hw125_device_trackers.file); 
+
+    return eof_return; 
 }
 
 //=======================================================================================

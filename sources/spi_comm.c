@@ -475,10 +475,8 @@ SPI_COM_STATUS spi_read_draft(
     uint8_t *read_data, 
     uint32_t data_len)
 {
-    // Argument check 
-    if (spi == NULL) return;          // Null pointer 
-    if (read_data == NULL) return;    // Null pointer 
-    if (!data_len) return;            // Zero data length 
+    // Argument check - NULL pointers and zero length 
+    if (spi == NULL || read_data == NULL || !data_len) return SPI_ERROR; 
 
     // Write the first piece of data 
     if (spi_txe_wait_draft(spi)) return SPI_ERROR; 
