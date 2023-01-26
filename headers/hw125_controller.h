@@ -36,13 +36,8 @@
 
 #define HW125_NUM_STATES 7             // Number of possible states for the controller 
 
-#define HW125_BUFF_SIZE 100            // Read and write buffer size 
 #define HW125_PATH_SIZE 50             // Volume path max length 
 #define HW125_INFO_SIZE 30             // Device infor buffer size 
-
-#define HW125_ERROR_MASK 0x00000001    // 
-// Use a bit shift with the predefined FatFs FRESULT values then use this mask to 
-// filter out the ones that don't matter 
 
 //=======================================================================================
 
@@ -89,15 +84,16 @@ typedef struct hw125_trackers_s
 {
     // Controller information 
     hw125_states_t state;                        // State of the controller 
-    BYTE fault_code;                             // Fault code of the device/controller 
-    DWORD fault_code_check;                      // Fault code checker 
+    hw125_fault_codes_t fault_code;              // Fault code 
+    DWORD fault_mode;                            // Fault mode - based on FRESULT 
 
     // File system information 
     FATFS file_sys;                              // File system object 
     FIL file;                                    // File object 
     FRESULT fresult;                             // Store result of FatFs operation 
     UINT br, bw;                                 // Read and write counters 
-    TCHAR path[HW125_PATH_SIZE];                 // Path to desired directory 
+    TCHAR path[HW125_PATH_SIZE];                 // Path to project directory 
+    TCHAR dir[HW125_PATH_SIZE];                  // Sub-directory in project directory 
 
     // Card capacity 
     FATFS *pfs;                                  // Pointer to file system object 
@@ -106,9 +102,6 @@ typedef struct hw125_trackers_s
     // Volume tracking 
     TCHAR vol_label[HW125_INFO_SIZE];            // Volume label 
     DWORD serial_num;                            // Volume serial number 
-
-    // Data buffers 
-    TCHAR data_buff[HW125_BUFF_SIZE];            // Buffer to store read and write data 
 
     // State trackers 
     uint8_t mount      : 1;                      // Volume mount flag 
@@ -127,7 +120,8 @@ hw125_trackers_t;
 // Datatypes 
 
 typedef hw125_states_t HW125_STATE; 
-typedef uint8_t HW125_FAULT_CODE; 
+typedef hw125_fault_codes_t HW125_FAULT_CODE; 
+typedef DWORD HW125_FAULT_MODE; 
 typedef uint8_t HW125_FILE_STATUS; 
 typedef int8_t HW125_EOF; 
 
@@ -180,6 +174,12 @@ void hw125_controller(void);
 /**
  * @brief Make a new directory in project directory 
  * 
+ * @details 
+ *          Whenever this function is called, the dir gets added to the project directory path 
+ *          defined in the init function meaning all folders made from here will be in parallel 
+ *          and not sub folders of one another. Whenever this function is called it overwrites 
+ *          the previous dir. 
+ * 
  * @param dir 
  * @return FRESULT 
  */
@@ -221,6 +221,12 @@ FRESULT hw125_f_write(
 
 /**
  * @brief Write a character to the open file 
+ * 
+ * @details 
+ *          If there is a fault the fault mode will always read FR_DISK_ERR. f_putc is a 
+ *          wrapper of f_write and if there is an error of any kind in f_write then the 
+ *          return of f_putc is negative. There is no distinguishing (that is know) of 
+ *          fault/error types. 
  * 
  * @param character 
  * @return int8_t 
@@ -280,6 +286,14 @@ HW125_STATE hw125_get_state(void);
  * @return HW125_FAULT_CODE 
  */
 HW125_FAULT_CODE hw125_get_fault_code(void); 
+
+
+/**
+ * @brief Get fault mode 
+ * 
+ * @return HW125_FAULT_MODE 
+ */
+HW125_FAULT_MODE hw125_get_fault_mode(void); 
 
 
 /**

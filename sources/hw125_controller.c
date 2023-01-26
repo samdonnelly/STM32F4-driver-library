@@ -99,6 +99,33 @@ void hw125_fault_state(
 void hw125_reset_state(
     hw125_trackers_t *hw125_device); 
 
+
+/**
+ * @brief Mount 
+ * 
+ * @return FRESULT 
+ */
+FRESULT hw125_mount(
+    hw125_trackers_t *hw125_device); 
+
+
+/**
+ * @brief Unmount 
+ * 
+ * @return FRESULT 
+ */
+FRESULT hw125_unmount(
+    hw125_trackers_t *hw125_device); 
+
+
+/**
+ * @brief Get free space 
+ * 
+ * @return FRESULT 
+ */
+FRESULT hw125_getfree(
+    hw125_trackers_t *hw125_device); 
+
 //=======================================================================================
 
 
@@ -136,17 +163,15 @@ void hw125_controller_init(
     // Controller information 
     hw125_device_trackers.state = HW125_INIT_STATE; 
     hw125_device_trackers.fault_code = CLEAR; 
-    hw125_device_trackers.fault_code_check = CLEAR; 
+    hw125_device_trackers.fault_mode = CLEAR; 
 
     // File system information 
     strcpy(hw125_device_trackers.path, path); 
+    strcat(hw125_device_trackers.path, "/"); 
 
     // Volume tracking - is this needed? 
     memset((void *)hw125_device_trackers.vol_label, CLEAR, HW125_INFO_SIZE); 
     hw125_device_trackers.serial_num = CLEAR; 
-
-    // Data buffers 
-    memset((void *)hw125_device_trackers.data_buff, CLEAR, HW125_BUFF_SIZE); 
 
     // State trackers 
     hw125_device_trackers.mount = CLEAR_BIT; 
@@ -310,9 +335,6 @@ void hw125_init_state(
     // Clear reset flag  
     hw125_device->reset = CLEAR_BIT; 
 
-    // Clear the fault code check 
-    hw125_device->fault_code_check = CLEAR; 
-
     // Mount the drive 
     hw125_device->fresult = f_mount(&hw125_device->file_sys, "", HW125_MOUNT_NOW); 
 
@@ -374,9 +396,6 @@ void hw125_not_ready_state(
     hw125_get_existance(); 
 
     // If inserted then clear not ready flag 
-
-    // Clear the fault code check 
-    hw125_device->fault_code_check = CLEAR; 
 }
 
 
@@ -390,12 +409,6 @@ void hw125_standby_state(
     // - If function indicates neither ready or timeout then go to fault 
     // TODO need to add a return value to this function 
     hw125_ready_rec(); 
-    
-    // Check fault code check against an f_open and f_mkdir mask 
-    if (hw125_device->fault_code_check & (HW125_FAULT_OPEN | HW125_FAULT_MKDIR)) 
-    {
-        hw125_device->fault_code = (HW125_FAULT_OPEN | HW125_FAULT_MKDIR); 
-    }
 }
 
 
@@ -406,12 +419,6 @@ void hw125_access_state(
     // Check for the existance of the drive uisng hw125_ready_rec 
     // - If not present then set the not ready flag 
     hw125_ready_rec(); 
-
-    // Check the fault code check 
-    if (hw125_device->fault_code_check) 
-    {
-        hw125_device->fault_code = hw125_device->fault_code_check; 
-    }
 }
 
 
@@ -437,16 +444,14 @@ void hw125_fault_state(
 void hw125_reset_state(
     hw125_trackers_t *hw125_device) 
 {
-    // Clear the fault code 
+    // Clear the fault codes 
     hw125_device->fault_code = CLEAR; 
+    hw125_device->fault_mode = CLEAR; 
 
     // Unmount the volume 
     f_unmount(""); 
     disk.is_initialized[0] = CLEAR;   // Clear the init status so it can be re-mounted 
     hw125_device->mount = CLEAR_BIT; 
-
-    // memset the data buffer 
-    memset((void *)hw125_device->data_buff, CLEAR, HW125_BUFF_SIZE); 
 
     // Reset path? 
 }
@@ -457,7 +462,43 @@ void hw125_reset_state(
 //=======================================================================================
 // Control functions 
 
+// Mount 
+FRESULT hw125_mount(
+    hw125_trackers_t *hw125_device) 
+{
+    hw125_device->fresult = f_mount(&hw125_device->file_sys, "", HW125_MOUNT_NOW); 
+
+    if (hw125_device->fresult == FR_OK) 
+    {
+        // Mount success 
+        hw125_device->mount = SET_BIT; 
+    }
+    else 
+    {
+        // Open fault - record the fault types 
+        hw125_device->fault_mode |= (SET_BIT << hw125_device->fresult); 
+        hw125_device->fault_code |= HW125_FAULT_OPEN; 
+    }
+
+    return hw125_device_trackers.fresult; 
+}
+
+// Unmount 
+FRESULT hw125_unmount(
+    hw125_trackers_t *hw125_device) 
+{
+    f_unmount(""); 
+    disk.is_initialized[0] = CLEAR;   // Clear the init status so it can be re-mounted 
+    hw125_device->mount = CLEAR_BIT; 
+}
+
+
 // Get free space 
+FRESULT hw125_getfree(
+    hw125_trackers_t *hw125_device) 
+{
+    hw125_device->fresult = f_getfree("", &hw125_device->fre_clust, &hw125_device->pfs); 
+}
 
 //=======================================================================================
 
@@ -465,19 +506,29 @@ void hw125_reset_state(
 //=======================================================================================
 // Setters 
 
-// Make a new directory in project directory 
+// Make a new directory in the project directory 
 FRESULT hw125_mkdir(
     const TCHAR *dir) 
 {
-    // TODO Combine the path string and dir string to create a new directory and 
-    // pass that as the f_mkdir argument 
+    // Local variables 
+    TCHAR sub_dir[HW125_PATH_SIZE*2]; 
 
-    // Whenever this function is called, the new dir gets added to the path defined 
-    // in the init function meaning all folders made from here will be in parallel and 
-    // not sub folders of one another. 
-    // We will have to store the default path as well as 1 created directory 
+    // Record the sub directory for creating new files 
+    strcpy(hw125_device_trackers.dir, dir); 
+    strcat(hw125_device_trackers.dir, "/");   // Make sure paths are divided by separators 
+    
+    // Concatenate paths to create the sub directory 
+    strcpy(sub_dir, hw125_device_trackers.path); 
+    strcat(sub_dir, hw125_device_trackers.dir); 
 
-    hw125_device_trackers.fresult = f_mkdir(dir); 
+    hw125_device_trackers.fresult = f_mkdir(sub_dir); 
+
+    // Set fault code if there is an access error 
+    if (hw125_device_trackers.fresult) 
+    {
+        hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
+        hw125_device_trackers.fault_code |= HW125_FAULT_MKDIR; 
+    }
 
     return hw125_device_trackers.fresult; 
 }
@@ -488,8 +539,13 @@ FRESULT hw125_open(
     const TCHAR *file_name, 
     uint8_t mode) 
 {
-    // TODO Must add the file name onto the end of the path stored in the tracker 
-    // record and pass that as the f_open argument 
+    // Local variables 
+    TCHAR file_dir[HW125_PATH_SIZE*3]; 
+
+    // Concatenate the sub directory and the file name 
+    strcpy(file_dir, hw125_device_trackers.path); 
+    strcat(file_dir, hw125_device_trackers.dir); 
+    strcat(file_dir, file_name); 
 
     // Attempt to open file if a file is not already open 
     if (!hw125_device_trackers.open_file) 
@@ -497,25 +553,19 @@ FRESULT hw125_open(
         // Check for file existance and how it's affected with the access mode? 
 
         hw125_device_trackers.fresult = f_open(&hw125_device_trackers.file, 
-                                               file_name, 
+                                               file_dir, 
                                                mode); 
 
         if (hw125_device_trackers.fresult == FR_OK) 
         {
+            // Open success 
             hw125_device_trackers.open_file = SET_BIT; 
         }
         else 
         {
-            // Filter out non-critical errors 
-            hw125_device_trackers.fault_code_check |= 
-                                (SET_BIT << hw125_device_trackers.fresult); 
-            hw125_device_trackers.fault_code_check &= HW125_ERROR_MASK; 
-            
-            // Set the fault code only if it is critical to the controller 
-            if (hw125_device_trackers.fault_code_check) 
-            {
-                hw125_device_trackers.fault_code |= HW125_FAULT_OPEN; 
-            }
+            // Open fault - record the fault types 
+            hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
+            hw125_device_trackers.fault_code |= HW125_FAULT_OPEN; 
         }
 
         return hw125_device_trackers.fresult; 
@@ -535,19 +585,12 @@ FRESULT hw125_close(void)
 
         if (hw125_device_trackers.fresult) 
         {
-            // Filter out non-critical errors 
-            hw125_device_trackers.fault_code_check |= 
-                                (SET_BIT << hw125_device_trackers.fresult); 
-            hw125_device_trackers.fault_code_check &= HW125_ERROR_MASK; 
-            
-            // Set the fault code only if it is critical to the controller 
-            if (hw125_device_trackers.fault_code_check) 
-            {
-                hw125_device_trackers.fault_code |= HW125_FAULT_CLOSE; 
-            }
+            // Close fault - record the fault types 
+            hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
+            hw125_device_trackers.fault_code |= HW125_FAULT_CLOSE; 
         }
 
-        // Clear the open file flag 
+        // Clear the open file flag regardless of the fault code 
         hw125_device_trackers.open_file = CLEAR_BIT; 
 
         // Update the free space 
@@ -574,6 +617,7 @@ FRESULT hw125_f_write(
     // Set fault code if there is an access error and a file is open 
     if (hw125_device_trackers.fresult && hw125_device_trackers.open_file) 
     {
+        hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
         hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
     }
 
@@ -591,6 +635,7 @@ int8_t hw125_putc(
     // Set fault code if there is a function error and a file is open 
     if ((putc_return < 0) && hw125_device_trackers.open_file) 
     {
+        hw125_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
         hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
     }
 
@@ -608,6 +653,7 @@ int8_t hw125_puts(
     // Set fault code if there is a function error and a file is open 
     if ((puts_return < 0) && hw125_device_trackers.open_file) 
     {
+        hw125_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
         hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
     }
 
@@ -628,6 +674,7 @@ int8_t hw125_printf(
     // Set fault code if there is a function error and a file is open 
     if ((printf_return < 0) && hw125_device_trackers.open_file) 
     {
+        hw125_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
         hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
     }
 
@@ -645,6 +692,7 @@ FRESULT hw125_lseek(
     // Set fault code if there is an access error and a file is open 
     if (hw125_device_trackers.fresult && hw125_device_trackers.open_file) 
     {
+        hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
         hw125_device_trackers.fault_code |= HW125_FAULT_SEEK; 
     }
 
@@ -671,6 +719,13 @@ HW125_FAULT_CODE hw125_get_fault_code(void)
 }
 
 
+// Get fault mode 
+HW125_FAULT_MODE hw125_get_fault_mode(void)
+{
+    return hw125_device_trackers.fault_mode; 
+}
+
+
 // Get open file flag 
 HW125_FILE_STATUS hw125_get_file_status(void)
 {
@@ -692,6 +747,7 @@ FRESULT hw125_f_read(
     // Set fault code if there is an access error and a file is open 
     if (hw125_device_trackers.fresult && hw125_device_trackers.open_file) 
     {
+        hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
         hw125_device_trackers.fault_code |= HW125_FAULT_READ; 
     }
 
@@ -710,6 +766,7 @@ TCHAR* hw125_gets(
     // Set fault code if there was a read operation error and a file is open 
     if ((gets_return == NULL) && hw125_device_trackers.open_file) 
     {
+        hw125_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
         hw125_device_trackers.fault_code |= HW125_FAULT_READ; 
     }
 
