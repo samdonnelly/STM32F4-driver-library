@@ -34,10 +34,12 @@
 //=======================================================================================
 // Macros 
 
-#define HW125_NUM_STATES 7             // Number of possible states for the controller 
+#define HW125_NUM_STATES 6             // Number of possible states for the controller 
 
 #define HW125_PATH_SIZE 50             // Volume path max length 
 #define HW125_INFO_SIZE 30             // Device infor buffer size 
+
+#define HW125_FREE_THRESH 0x0000C350   // Free space threshold before disk full fault (KB) 
 
 //=======================================================================================
 
@@ -51,9 +53,8 @@
 typedef enum {
     HW125_INIT_STATE, 
     HW125_NOT_READY_STATE, 
-    HW125_STANDBY_STATE, 
     HW125_ACCESS_STATE, 
-    HW125_ESTOP_STATE, 
+    HW125_EJECT_STATE, 
     HW125_FAULT_STATE, 
     HW125_RESET_STATE 
 } hw125_states_t; 
@@ -97,7 +98,8 @@ typedef struct hw125_trackers_s
 
     // Card capacity 
     FATFS *pfs;                                  // Pointer to file system object 
-    DWORD fre_clust, total, free_space;          // Free clusters, total and free space 
+    DWORD fre_clust;                             // Free clusters 
+    DWORD total, free_space;                     // Volume total and free space 
     
     // Volume tracking 
     TCHAR vol_label[HW125_INFO_SIZE];            // Volume label 
@@ -150,6 +152,7 @@ typedef void (*hw125_state_functions_t)(
  * @brief HW125 controller initialization 
  * 
  * @details 
+ *          The path length must be less than HW125_PATH_SIZE to prevent overrun. 
  * 
  * @param path : path to directory to use on the volume 
  */
@@ -170,6 +173,27 @@ void hw125_controller(void);
 
 //=======================================================================================
 // Setters 
+
+/**
+ * @brief Set the eject flag 
+ * 
+ */
+void hw125_set_eject_flag(void); 
+
+
+/**
+ * @brief Clear the eject flag 
+ * 
+ */
+void hw125_clear_eject_flag(void); 
+
+
+/**
+ * @brief Set reset flag 
+ * 
+ */
+void hw125_set_reset_flag(void); 
+
 
 /**
  * @brief Make a new directory in project directory 
