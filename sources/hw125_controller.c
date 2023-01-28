@@ -339,9 +339,6 @@ void hw125_not_ready_state(
     // If exists then clear the not ready flag 
     hw125_device->not_ready = CLEAR_BIT; 
 
-    // Clear the mount flag 
-    hw125_device->mount - CLEAR_BIT; 
-
     // Clear fault codes? 
 
     // If inserted then clear not ready flag 
@@ -376,9 +373,6 @@ void hw125_eject_state(
 
     // Unmount the volume 
     hw125_unmount(hw125_device); 
-
-    // 
-    hw125_device->not_ready = SET_BIT; 
 }
 
 
