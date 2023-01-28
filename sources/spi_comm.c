@@ -350,7 +350,7 @@ void spi_slave_deselect(
 // SPI write 
 void spi_write(
     SPI_TypeDef *spi, 
-    uint8_t *write_data, 
+    const uint8_t *write_data, 
     uint32_t data_len)
 {
     // Iterate through all data to be sent 
@@ -438,7 +438,8 @@ void spi_write_read(
     if (!data_len) return;            // Zero data length 
 
     // Write the first piece of data 
-    spi_txe_wait(spi);
+    // spi_txe_wait(spi); 
+    // spi_bsy_wait(spi); 
     spi->DR = write_data; 
 
     // Iterate through all data to be sent and received

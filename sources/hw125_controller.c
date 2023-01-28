@@ -312,7 +312,7 @@ void hw125_init_state(
         // Check free space 
         hw125_getfree(hw125_device); 
     }
-    else 
+    else   // Issue mounting the volume 
     {
         // Go to the not ready state 
         hw125_device->not_ready = SET_BIT; 
@@ -327,21 +327,12 @@ void hw125_init_state(
 void hw125_not_ready_state(
     hw125_trackers_t *hw125_device)
 {
-    // Check for disk to be inserted using hw125_power_on 
-    // --> If it is not inserted there should be a failed SPI communication (no volume 
-    //     feedback) 
-    // --> Once inserted (and assuming the drive works properly) the hw125_power_on 
-    //     function will indicate the drive is in IDLE state and we can go back to the 
-    //     init function to mount the drive. 
-    // TODO need to add a return value and SPI timeout 
-    // hw125_power_on(); 
-    hw125_get_existance(); 
-    // If exists then clear the not ready flag 
-    hw125_device->not_ready = CLEAR_BIT; 
-
-    // Clear fault codes? 
-
-    // If inserted then clear not ready flag 
+    // Check id the volume is present 
+    if (hw125_get_existance() == HW125_RES_OK) 
+    {
+        // If exists then clear the not ready flag 
+        hw125_device->not_ready = CLEAR_BIT; 
+    }
 }
 
 
@@ -349,18 +340,12 @@ void hw125_not_ready_state(
 void hw125_access_state(
     hw125_trackers_t *hw125_device) 
 {
-    // Check the existance of the card using hw125_ready_rec 
-    // - If the function indicates a timeout (card removed) then set the not 
-    //   ready flag 
-    // - If function indicates neither ready or timeout then go to fault 
-    // TODO need to add a return value to this function 
-    hw125_ready_rec(); 
-    // If not seen then set the not_ready flag 
-    hw125_device->not_ready = SET_BIT; 
-
-    // Check for the existance of the drive uisng hw125_ready_rec 
-    // - If not present then set the not ready flag 
-    hw125_ready_rec(); 
+    // Check for the presence of the volume 
+    if (hw125_ready_rec()) 
+    {
+        // If not seen then set the not_ready flag 
+        hw125_device->not_ready = SET_BIT; 
+    }
 }
 
 
@@ -397,14 +382,10 @@ void hw125_reset_state(
     // Unmount the volume 
     hw125_unmount(hw125_device); 
 
-    // Clear the fault codes 
+    // Clear device trackers 
     hw125_device->fault_code = CLEAR; 
     hw125_device->fault_mode = CLEAR; 
-
-    // Reset the not ready flag 
     hw125_device->not_ready = CLEAR_BIT; 
-
-    // Reset the eject flag 
     hw125_device->eject = CLEAR_BIT; 
 }
 
@@ -513,7 +494,7 @@ void hw125_clear_eject_flag(void)
 // Set reset flag 
 void hw125_set_reset_flag(void) 
 {
-    hw125_device_trackers.reset - SET_BIT; 
+    hw125_device_trackers.reset = SET_BIT; 
 }
 
 

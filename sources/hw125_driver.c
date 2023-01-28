@@ -561,7 +561,7 @@ DISK_RESULT hw125_power_on(
     {
         spi_write_read(sd_card.spi, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE); 
     }
-    while((do_resp != HW125_IDLE_STATE) && --num_read); 
+    while ((do_resp != HW125_IDLE_STATE) && --num_read); 
 
     // Slave deselect 
     spi_slave_deselect(sd_card.gpio, hw125_slave_pin); 
@@ -597,7 +597,7 @@ uint8_t hw125_initiate_init(
     // Local variables 
     uint16_t init_timer = HW125_INIT_TIMER;
 
-    // Send CMD1 or ACMD41 (dependingon the card type) to initiate initialization 
+    // Send CMD1 or ACMD41 (depending on the card type) to initiate initialization 
     do
     {
         if (cmd == HW125_CMD1)
@@ -610,16 +610,17 @@ uint8_t hw125_initiate_init(
             hw125_send_cmd(HW125_CMD41, arg, HW125_CRC_CMDX, resp);
         }
 
-        // TODO change init_timer to a real-time timer to remove this delay 
         // Delay 1ms --> HW125_INIT_DELAY * HW125_INIT_TIMER = 1000ms (recommended delay) 
         tim_delay_ms(TIM9, HW125_INIT_DELAY);
     }
-    while ((*resp == HW125_IDLE_STATE) && --init_timer);
+    while ((*resp == HW125_IDLE_STATE) && --init_timer); 
 
-    // Return the timer status 
-    if (init_timer) return TRUE;  // Timer is not zero - no timeout 
-    else return FALSE;            // Timer is zero - timeout
- }
+    // Initialization can begin 
+    if (init_timer) return TRUE; 
+    
+    // Timeout 
+    return FALSE; 
+}
 
 //=======================================================================================
 
@@ -639,7 +640,8 @@ DISK_STATUS hw125_status(uint8_t pdrv)
 
 
 // HW125 ready to receive commands 
-void hw125_ready_rec(void)
+// TODO Add a status return to account for timeouts 
+DISK_RESULT hw125_ready_rec(void)
 {
     // Local variables 
     uint8_t resp; 
@@ -651,6 +653,10 @@ void hw125_ready_rec(void)
         spi_write_read(sd_card.spi, HW125_DATA_HIGH, &resp, SPI_1_BYTE); 
     }
     while (resp != HW125_DATA_HIGH && --timer); 
+
+    if (timer) return HW125_RES_OK; 
+
+    return HW125_RES_ERROR; 
 }
 
 
@@ -669,9 +675,10 @@ CARD_TYPE hw125_get_card_type(void)
 
 
 // Get card presence status 
-uint8_t hw125_get_existance(void)
+DISK_RESULT hw125_get_existance(void)
 {
     // Call the power on function with the right slave pin 
+    return hw125_power_on(sd_card.ss_pin); 
 }
 
 //=======================================================================================
@@ -684,6 +691,7 @@ uint8_t hw125_get_existance(void)
 // Otherwise SPI will be enabled at all times 
 
 // HW125 send command messages and return response values 
+// TODO Add a status return to account for timeouts 
 void hw125_send_cmd(
     uint8_t  cmd,
     uint32_t arg,
@@ -988,8 +996,7 @@ DISK_RESULT hw125_write_data_packet(
     spi_write(sd_card.spi, &data_token, HW125_SINGLE_BYTE);
 
     // Send data block 
-    // TODO make sure this cast away from const doesn't cause issues 
-    spi_write(sd_card.spi, (uint8_t *)buff, sector_size); 
+    spi_write(sd_card.spi, buff, sector_size); 
 
     // Send CRC 
     spi_write(sd_card.spi, &crc, HW125_SINGLE_BYTE);

@@ -416,7 +416,7 @@ CARD_TYPE hw125_get_card_type(void);
  *          sending a command and before writing new data packets to the card. 
  * 
  */
-void hw125_ready_rec(void); 
+DISK_RESULT hw125_ready_rec(void); 
 
 
 /**
@@ -424,9 +424,9 @@ void hw125_ready_rec(void);
  * 
  * @details 
  * 
- * @return uint8_t 
+ * @return DISK_RESULT :  
  */
-uint8_t hw125_get_existance(void); 
+DISK_RESULT hw125_get_existance(void); 
 
 //=======================================================================================
 

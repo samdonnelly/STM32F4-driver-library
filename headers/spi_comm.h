@@ -224,7 +224,7 @@ void spi_slave_deselect(
  */
 void spi_write(
     SPI_TypeDef *spi, 
-    uint8_t *write_data, 
+    const uint8_t *write_data, 
     uint32_t data_len);
 
 
