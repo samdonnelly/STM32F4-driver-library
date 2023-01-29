@@ -297,6 +297,8 @@ void hw125_controller(void)
 void hw125_init_state(
     hw125_trackers_t *hw125_device) 
 {
+    uart_sendstring(USART2, "init state"); 
+
     // Clear startup flag 
     hw125_device->startup = CLEAR_BIT; 
 
@@ -327,6 +329,8 @@ void hw125_init_state(
 void hw125_not_ready_state(
     hw125_trackers_t *hw125_device)
 {
+    // uart_sendstring(USART2, "not ready state"); 
+
     // Check id the volume is present 
     if (hw125_get_existance() == HW125_RES_OK) 
     {
@@ -340,6 +344,8 @@ void hw125_not_ready_state(
 void hw125_access_state(
     hw125_trackers_t *hw125_device) 
 {
+    // uart_sendstring(USART2, "access state"); 
+
     // Check for the presence of the volume 
     if (hw125_ready_rec()) 
     {
@@ -353,6 +359,8 @@ void hw125_access_state(
 void hw125_eject_state(
     hw125_trackers_t *hw125_device)
 {
+    uart_sendstring(USART2, "eject state"); 
+
     // Attempt to close the open file 
     hw125_close(); 
 
@@ -365,6 +373,8 @@ void hw125_eject_state(
 void hw125_fault_state(
     hw125_trackers_t *hw125_device) 
 {
+    // uart_sendstring(USART2, "fault state"); 
+
     // Idle until the reset flag is set 
 }
 
@@ -373,6 +383,8 @@ void hw125_fault_state(
 void hw125_reset_state(
     hw125_trackers_t *hw125_device) 
 {
+    uart_sendstring(USART2, "reset state"); 
+
     // Attempt to close a file 
     hw125_close(); 
 
@@ -542,9 +554,6 @@ FRESULT hw125_open(
     // Attempt to open file if a file is not already open 
     if (!hw125_device_trackers.open_file) 
     {
-        // Check for file existance and how it's affected with the access mode? 
-        // Use a file access code/mode mask to determine if you should check with f_stat 
-
         hw125_device_trackers.fresult = f_open(&hw125_device_trackers.file, 
                                                file_dir, 
                                                mode); 
@@ -615,24 +624,6 @@ FRESULT hw125_f_write(
     }
 
     return hw125_device_trackers.fresult; 
-}
-
-
-// Write a character to the open file 
-int8_t hw125_putc(
-    TCHAR character) 
-{
-    // Put a character to the file 
-    int8_t putc_return = f_putc(character, &hw125_device_trackers.file); 
-
-    // Set fault code if there is a function error and a file is open 
-    if ((putc_return < 0) && hw125_device_trackers.open_file) 
-    {
-        hw125_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
-        hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
-    }
-
-    return putc_return; 
 }
 
 

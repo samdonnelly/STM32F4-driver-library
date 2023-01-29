@@ -520,7 +520,7 @@ DISK_RESULT hw125_power_on(
     spi_slave_deselect(sd_card.gpio, hw125_slave_pin);
 
     // Set the DI/MOSI command high (0xFF) 
-    di_cmd = HW125_DATA_HIGH;
+    di_cmd = HW125_DATA_HIGH; 
 
     // Send DI/MOSI high 10x to wait for more than 74 clock pulses 
     for (uint8_t i = 0; i < HW125_PWR_ON_COUNTER; i++) 

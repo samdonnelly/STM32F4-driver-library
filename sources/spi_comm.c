@@ -348,18 +348,20 @@ void spi_slave_deselect(
 //==============================================================
 
 // SPI write 
+// TODO add timeouts 
 void spi_write(
     SPI_TypeDef *spi, 
     const uint8_t *write_data, 
     uint32_t data_len)
 {
+    // Argument check - NULL pointers and zero length 
+    if (spi == NULL || write_data == NULL || !data_len) return; 
+
     // Iterate through all data to be sent 
     for (uint32_t i = 0; i < data_len; i++)
     {
         spi_txe_wait(spi);          // Wait for TXE bit to set 
-        // TODO abort if TXE bit not set and there's a timeout 
-        spi->DR = *write_data;      // Write data to the data register 
-        write_data++; 
+        spi->DR = *write_data++;    // Write data to the data register 
     }
 
     // Wait for TXE bit to set 
@@ -427,37 +429,31 @@ SPI_COM_STATUS spi_write_draft(
 //==============================================================
 
 // SPI write then read 
+// TODO add timeouts 
 void spi_write_read(
     SPI_TypeDef *spi, 
     uint8_t  write_data, 
     uint8_t *read_data, 
     uint32_t data_len)
 {
-    if (spi == NULL) return;          // Null pointer 
-    if (read_data == NULL) return;    // Null pointer 
-    if (!data_len) return;            // Zero data length 
+    // Argument check - NULL pointers and zero length 
+    if (spi == NULL || read_data == NULL || !data_len) return; 
 
     // Write the first piece of data 
-    // spi_txe_wait(spi); 
-    // spi_bsy_wait(spi); 
+    spi_txe_wait(spi); 
     spi->DR = write_data; 
 
-    // Iterate through all data to be sent and received
+    // Iterate through all data to be sent and received 
     for (uint16_t i = 0; i < data_len-1; i++)
     {
         spi_txe_wait(spi);          // Wait for TXE bit to set 
-        // TODO abort if TXE bit not set and there's a timeout 
         spi->DR = write_data;       // Write data to the data register 
 
-        spi_rxne_wait(spi);         // Wait for the RXNE bit to set
-        // TODO abort if RXNE bit not set and there's a timeout 
-        *read_data = spi->DR;       // Read data from the data register 
-        read_data++; 
+        spi_rxne_wait(spi);         // Wait for the RXNE bit to set 
+        *read_data++ = spi->DR;     // Read data from the data register 
     }
 
     // Read the last piece of data
-    // TODO add a timer here in case data doesn't get sent back 
-    // TODO test to see if there is an overrun error that needs clearing
     spi_rxne_wait(spi);
     *read_data = spi->DR;
 

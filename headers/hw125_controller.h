@@ -25,6 +25,8 @@
 // Drivers 
 #include "hw125_driver.h" 
 
+#include "uart_comm.h"
+
 // STM drivers 
 #include "fatfs.h"
 
@@ -244,23 +246,13 @@ FRESULT hw125_f_write(
 
 
 /**
- * @brief Write a character to the open file 
+ * @brief Write a string to the open file 
  * 
  * @details 
- *          If there is a fault the fault mode will always read FR_DISK_ERR. f_putc is a 
+ *          If there is a fault the fault mode will always read FR_DISK_ERR. f_puts is a 
  *          wrapper of f_write and if there is an error of any kind in f_write then the 
- *          return of f_putc is negative. There is no distinguishing (that is know) of 
+ *          return of f_puts is negative. There is no distinguishing (that is know) of 
  *          fault/error types. 
- * 
- * @param character 
- * @return int8_t 
- */
-int8_t hw125_putc(
-    TCHAR character); 
-
-
-/**
- * @brief Write a string to the open file 
  * 
  * @param str 
  * @return int16_t 
