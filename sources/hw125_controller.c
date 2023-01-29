@@ -297,7 +297,7 @@ void hw125_controller(void)
 void hw125_init_state(
     hw125_trackers_t *hw125_device) 
 {
-    uart_sendstring(USART2, "init state"); 
+    uart_sendstring(USART2, "\ninit state\r\n"); 
 
     // Clear startup flag 
     hw125_device->startup = CLEAR_BIT; 
@@ -359,7 +359,7 @@ void hw125_access_state(
 void hw125_eject_state(
     hw125_trackers_t *hw125_device)
 {
-    uart_sendstring(USART2, "eject state"); 
+    uart_sendstring(USART2, "\neject state\r\n"); 
 
     // Attempt to close the open file 
     hw125_close(); 
@@ -383,7 +383,7 @@ void hw125_fault_state(
 void hw125_reset_state(
     hw125_trackers_t *hw125_device) 
 {
-    uart_sendstring(USART2, "reset state"); 
+    uart_sendstring(USART2, "\nreset state\r\n"); 
 
     // Attempt to close a file 
     hw125_close(); 
