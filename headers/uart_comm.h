@@ -27,7 +27,7 @@
 //=======================================================================================
 // Macros 
 
-#define UART_DR_CLEAR_TIMER 10   // Timer used while clearing the data register during init 
+#define UART_DR_CLEAR_TIMER 10    // Timer used while clearing the data register during init 
 
 #define UART_GETSTR_TIMEOUT 10000 // uart_getstr timeout 
 

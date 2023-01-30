@@ -170,7 +170,7 @@ void hw125_controller_init(
     strcpy(hw125_device_trackers.path, path); 
     strcat(hw125_device_trackers.path, "/"); 
     memset((void *)hw125_device_trackers.dir, CLEAR, HW125_PATH_SIZE); 
-
+    
     // State trackers 
     hw125_device_trackers.mount = CLEAR_BIT; 
     hw125_device_trackers.not_ready = CLEAR_BIT; 
@@ -300,8 +300,8 @@ void hw125_controller(void)
 void hw125_init_state(
     hw125_trackers_t *hw125_device) 
 {
-    // uart_sendstring(USART2, "\r\ninit state\r\n"); 
-    // action = SET; 
+    uart_sendstring(USART2, "\r\ninit state\r\n"); 
+    action = SET; 
 
     // Clear startup flag 
     hw125_device->startup = CLEAR_BIT; 
@@ -333,8 +333,6 @@ void hw125_init_state(
 void hw125_not_ready_state(
     hw125_trackers_t *hw125_device)
 {
-    // uart_sendstring(USART2, "not ready state"); 
-
     // Check if the volume is present 
     if (hw125_get_existance() == HW125_RES_OK) 
     {
@@ -348,8 +346,6 @@ void hw125_not_ready_state(
 void hw125_access_state(
     hw125_trackers_t *hw125_device) 
 {
-    // uart_sendstring(USART2, "access state"); 
-
     // Check for the presence of the volume 
     if (hw125_ready_rec()) 
     {
@@ -363,8 +359,8 @@ void hw125_access_state(
 void hw125_eject_state(
     hw125_trackers_t *hw125_device)
 {
-    // uart_sendstring(USART2, "\r\neject state\r\n"); 
-    // action = SET; 
+    uart_sendstring(USART2, "\r\neject state\r\n"); 
+    action = SET; 
 
     // Attempt to close the open file 
     hw125_close(); 
@@ -378,8 +374,6 @@ void hw125_eject_state(
 void hw125_fault_state(
     hw125_trackers_t *hw125_device) 
 {
-    // uart_sendstring(USART2, "fault state"); 
-
     // Idle until the reset flag is set 
 }
 
@@ -388,8 +382,8 @@ void hw125_fault_state(
 void hw125_reset_state(
     hw125_trackers_t *hw125_device) 
 {
-    // uart_sendstring(USART2, "\r\nreset state\r\n"); 
-    // action = SET; 
+    uart_sendstring(USART2, "\r\nreset state\r\n"); 
+    action = SET; 
 
     // Attempt to close a file 
     hw125_close(); 
