@@ -677,8 +677,21 @@ CARD_TYPE hw125_get_card_type(void)
 // Get card presence status 
 DISK_RESULT hw125_get_existance(void)
 {
-    // Call the power on function with the right slave pin 
-    return hw125_power_on(sd_card.ss_pin); 
+    // // Call the power on function with the right slave pin 
+    // return hw125_power_on(sd_card.ss_pin); 
+
+    DISK_RESULT exist; 
+
+    // Select the slave device 
+    spi_slave_select(sd_card.gpio, sd_card.ss_pin);
+
+    // Wait until the card is no longer busy before sending a CMD 
+    exist = hw125_ready_rec();
+
+    // Deselect the slave device 
+    spi_slave_deselect(sd_card.gpio, sd_card.ss_pin);
+
+    return exist; 
 }
 
 //=======================================================================================

@@ -374,22 +374,22 @@ void uart_getstr(
     uart_string_termination_t end_of_string)
 {
     // Store the character input from uart_getchar()
-    uint8_t input = 0;
+    uint8_t input = 0; 
+    volatile uint16_t timer = UART_GETSTR_TIMEOUT; 
 
     // Run until the end of string character is seen 
-    // TODO a timeout is needed here to the code doesn't get stuck 
     // TODO buffer length checking needs to be done to prevent overrun 
     do
     {
         // Wait for data to be available then read and store it 
-        if (uart->SR & (SET_BIT << SHIFT_5))
+        if (uart_data_ready(uart))
         {
             input = uart_getchar(uart);
-            *string_to_fill = input;
-            string_to_fill++;
+            *string_to_fill++ = input;
+            timer = UART_GETSTR_TIMEOUT; 
         }
     } 
-    while(input != end_of_string);
+    while((input != end_of_string) && timer--);
 
     // Add a null character to the end of the string 
     *string_to_fill = UART_STR_TERM_NULL;

@@ -20,6 +20,9 @@
 //=======================================================================================
 
 
+extern uint8_t action; 
+
+
 //=======================================================================================
 // Function prototypes 
 
@@ -297,7 +300,8 @@ void hw125_controller(void)
 void hw125_init_state(
     hw125_trackers_t *hw125_device) 
 {
-    uart_sendstring(USART2, "\ninit state\r\n"); 
+    // uart_sendstring(USART2, "\r\ninit state\r\n"); 
+    // action = SET; 
 
     // Clear startup flag 
     hw125_device->startup = CLEAR_BIT; 
@@ -331,7 +335,7 @@ void hw125_not_ready_state(
 {
     // uart_sendstring(USART2, "not ready state"); 
 
-    // Check id the volume is present 
+    // Check if the volume is present 
     if (hw125_get_existance() == HW125_RES_OK) 
     {
         // If exists then clear the not ready flag 
@@ -359,7 +363,8 @@ void hw125_access_state(
 void hw125_eject_state(
     hw125_trackers_t *hw125_device)
 {
-    uart_sendstring(USART2, "\neject state\r\n"); 
+    // uart_sendstring(USART2, "\r\neject state\r\n"); 
+    // action = SET; 
 
     // Attempt to close the open file 
     hw125_close(); 
@@ -383,7 +388,8 @@ void hw125_fault_state(
 void hw125_reset_state(
     hw125_trackers_t *hw125_device) 
 {
-    uart_sendstring(USART2, "\nreset state\r\n"); 
+    // uart_sendstring(USART2, "\r\nreset state\r\n"); 
+    // action = SET; 
 
     // Attempt to close a file 
     hw125_close(); 
