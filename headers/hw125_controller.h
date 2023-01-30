@@ -1,7 +1,7 @@
 /**
  * @file hw125_controller.h
  * 
- * @author Sam Donnelly (sdonnelly@eneon-es.com)
+ * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
  * @brief HW125 controller 
  * 
