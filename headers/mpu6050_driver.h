@@ -41,12 +41,15 @@
 // Accelerometer info 
 #define MPU6050_NUM_ACCEL_AXIS 3       // Number of acclerometer axes 
 #define MPU6050_AFS_SEL_MASK 24        // 0x18 - Mask for reading accel full scale range
+#define MPU6050_AFS_SEL_MAX 16384      // Max accelerometer calculation scalar 
 #define MPU6050_ACCEL_FT_MAX_ERROR 14  // Max % change from factory trim acceptable
 
 // Gyro info 
 #define MPU6050_NUM_GYRO_AXIS 3        // Number of gyroscope axes 
-#define MPU6050_GYRO_SCALAR_SCALAR 10  // Unscales scaled mpu6050_gyro_scalars_t values 
 #define MPU6050_FS_SEL_MASK 24         // 0x18 - Mask for reading gyro full scale range 
+#define MPU6050_FS_SEL_MAX 1310        // Max gyroscopic calculation scalar 
+#define MPU6050_FS_CORRECTION 0x02     // Gyroscope calculation correction mask 
+#define MPU6050_GYRO_SCALAR 10         // Unscales scaled mpu6050_gyro_scalars_t values 
 #define MPU6050_GYRO_FT_MAX_ERROR 14   // Max % change from factory trim acceptable
 
 //=======================================================================================
@@ -333,30 +336,41 @@ typedef enum {
  * @details Selects the full scale range used by the gyroscope. This is passed as an 
  *          argument to mpu6050_init to configure the device. Higher ranges cover 
  *          a wider range of angular accelerations but have less precision. 
+ *          
+ *          Each of the gyroscope ranges has a scalar used to convert it's raw 
+ *          value into a human readable form. These scalars are listed below and are used 
+ *          to divide the raw 16-bit value read from the gyroscope measurement register 
+ *          to get the angular acceleration in deg/s. These values are scaled by a factor 
+ *          of 10 to eliminate the decimal place. When calculating the actual value the 
+ *          values are unscaled. 
+ *          - GYRO_SCALE_FS_SEL_2000 = 164, ---> 16.4 * 10 
+ *          - GYRO_SCALE_FS_SEL_1000 = 328, ---> 32.8 * 10 
+ *          - GYRO_SCALE_FS_SEL_500  = 655, ---> 65.5 * 10 
+ *          - GYRO_SCALE_FS_SEL_250  = 1310 ---> 131.0 * 10 
  * 
  */
 typedef enum {
-    FS_SEL_250,   // +/- 250  deg/s
-    FS_SEL_500,   // +/- 500  deg/s
-    FS_SEL_1000,  // +/- 1000 deg/s
-    FS_SEL_2000   // +/- 2000 deg/s
+    FS_SEL_250,   // +/- 250  deg/s ---> Scalar = 1310 
+    FS_SEL_500,   // +/- 500  deg/s ---> Scalar = 655 
+    FS_SEL_1000,  // +/- 1000 deg/s ---> Scalar = 328 
+    FS_SEL_2000   // +/- 2000 deg/s ---> Scalar = 164 
 } mpu6050_fs_sel_set_t;
 
-/**
- * @brief MPU6050 gyroscope value scalar 
- * 
- * @details These values are used to divide the raw 16-bit value read from the gyroscope 
- *          measurement register to get the angular acceleration in deg/s. These values 
- *          are scaled by a factor of 10 to eliminate the decimal place. When calculating  
- *          the actual value the values are unscaled. 
- * 
- */
-typedef enum {
-    GYRO_SCALE_FS_SEL_2000 = 164,  // 16.4  * 10
-    GYRO_SCALE_FS_SEL_1000 = 328,  // 32.8  * 10
-    GYRO_SCALE_FS_SEL_500  = 655,  // 65.5  * 10
-    GYRO_SCALE_FS_SEL_250  = 1310  // 131.0 * 10
-} mpu6050_gyro_scalars_t;
+// /**
+//  * @brief MPU6050 gyroscope value scalar 
+//  * 
+//  * @details These values are used to divide the raw 16-bit value read from the gyroscope 
+//  *          measurement register to get the angular acceleration in deg/s. These values 
+//  *          are scaled by a factor of 10 to eliminate the decimal place. When calculating  
+//  *          the actual value the values are unscaled. 
+//  * 
+//  */
+// typedef enum {
+//     GYRO_SCALE_FS_SEL_2000 = 164,  // 16.4  * 10
+//     GYRO_SCALE_FS_SEL_1000 = 328,  // 32.8  * 10
+//     GYRO_SCALE_FS_SEL_500  = 655,  // 65.5  * 10
+//     GYRO_SCALE_FS_SEL_250  = 1310  // 131.0 * 10
+// } mpu6050_gyro_scalars_t;
 
 /**
  * @brief MPU6050 - ACCEL_CONFIG : XA_ST, YA_SET and ZA_ST setpoint
@@ -380,28 +394,37 @@ typedef enum {
  *          Selects the full scale range used by the gyroscope. This is passed as an 
  *          argument to mpu6050_init to configure the device. Higher ranges cover 
  *          a wider range of angular accelerations but have less precision. 
+ *          
+ *          Each of the accelerometer ranges has a scalar used to convert it's raw 
+ *          value into a human readable form. These scalars are listed below and are used 
+ *          to divide the raw 16-bit value read from the accelerometer measurement register 
+ *          to get the linear acceleration in g's: 
+ *          - ACCEL_SCALE_AFS_SEL_16 = 2048,
+ *          - ACCEL_SCALE_AFS_SEL_8  = 4096,
+ *          - ACCEL_SCALE_AFS_SEL_4  = 8192,
+ *          - ACCEL_SCALE_AFS_SEL_2  = 16384
  * 
  */
 typedef enum {
-    AFS_SEL_2,   // +/- 2g
-    AFS_SEL_4,   // +/- 4g
-    AFS_SEL_8,   // +/- 8g
-    AFS_SEL_16   // +/- 16g
+    AFS_SEL_2,   // +/- 2g ---> Scalar = 16384 
+    AFS_SEL_4,   // +/- 4g ---> Scalar = 8192 
+    AFS_SEL_8,   // +/- 8g ---> Scalar = 4096 
+    AFS_SEL_16   // +/- 16g --> Scalar = 2048 
 } mpu6050_afs_sel_set_t;
 
-/**
- * @brief Accelerometer value scalar 
- * 
- * @details These values are used to divide the raw 16-bit value read from the  
- *          accelerometer measurement register to get the linear acceleration in g's. 
- * 
- */
-typedef enum {
-    ACCEL_SCALE_AFS_SEL_16 = 2048,
-    ACCEL_SCALE_AFS_SEL_8  = 4096,
-    ACCEL_SCALE_AFS_SEL_4  = 8192,
-    ACCEL_SCALE_AFS_SEL_2  = 16384
-} mpu6050_accel_scalars_t;
+// /**
+//  * @brief Accelerometer value scalar 
+//  * 
+//  * @details These values are used to divide the raw 16-bit value read from the  
+//  *          accelerometer measurement register to get the linear acceleration in g's. 
+//  * 
+//  */
+// typedef enum {
+//     ACCEL_SCALE_AFS_SEL_16 = 2048,
+//     ACCEL_SCALE_AFS_SEL_8  = 4096,
+//     ACCEL_SCALE_AFS_SEL_4  = 8192,
+//     ACCEL_SCALE_AFS_SEL_2  = 16384
+// } mpu6050_accel_scalars_t;
 
 /**
  * @brief MPU6050 - PWR_MGMT_1 : DEVICE_RESET
@@ -696,31 +719,6 @@ void mpu6050_accel_read(
 
 
 /**
- * @brief MPU6050 Temperature Measurements registers read
- * 
- * @details Reads from the TEMP_OUT registers (Registers 65-66 - 2 bytes). These 
- *          registers store the most recent (unformatted) temperature sensor 
- *          measurements. The measurements are updated to these registers at the 
- *          Sample Rate. <br><br>
- *          
- *          When the serial interface (i2c interface) is active, the values in the 
- *          registers are held constant so that you can read all values (burst read)
- *          at one instance in time. When the serial interface is idle then these 
- *          registers will go back to being written to at the Sample Rate. <br><br>
- *          
- *          Register read information: <br>
- *          - TEMP_OUT: 16-bit signed value. 
- * 
- * @see mpu6050_temp_calc
- * 
- * @param mpu6050_address : I2C address of MPU6050 
- * @return int16_t : unformatted signed temperature value 
- */
-int16_t mpu6050_temp_read(
-    mpu6050_i2c_addresses_t mpu6050_address);
-
-
-/**
  * @brief MPU6050 Gyroscope Measurements registers read
  * 
  * @details Read from the GYRO_OUT registers (Registers 67-72 - 6 bytes). These 
@@ -750,6 +748,31 @@ int16_t mpu6050_temp_read(
 void mpu6050_gyro_read(
     mpu6050_i2c_addresses_t mpu6050_address,
     int16_t *gyro_data);
+
+
+/**
+ * @brief MPU6050 Temperature Measurements registers read
+ * 
+ * @details Reads from the TEMP_OUT registers (Registers 65-66 - 2 bytes). These 
+ *          registers store the most recent (unformatted) temperature sensor 
+ *          measurements. The measurements are updated to these registers at the 
+ *          Sample Rate. <br><br>
+ *          
+ *          When the serial interface (i2c interface) is active, the values in the 
+ *          registers are held constant so that you can read all values (burst read)
+ *          at one instance in time. When the serial interface is idle then these 
+ *          registers will go back to being written to at the Sample Rate. <br><br>
+ *          
+ *          Register read information: <br>
+ *          - TEMP_OUT: 16-bit signed value. 
+ * 
+ * @see mpu6050_temp_calc
+ * 
+ * @param mpu6050_address : I2C address of MPU6050 
+ * @return int16_t : unformatted signed temperature value 
+ */
+int16_t mpu6050_temp_read(
+    mpu6050_i2c_addresses_t mpu6050_address);
 
 //=======================================================================================
 
