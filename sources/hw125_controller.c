@@ -168,7 +168,6 @@ void hw125_controller_init(
 
     // File system information 
     strcpy(hw125_device_trackers.path, path); 
-    strcat(hw125_device_trackers.path, "/"); 
     memset((void *)hw125_device_trackers.dir, CLEAR, HW125_PATH_SIZE); 
     
     // State trackers 
@@ -317,6 +316,10 @@ void hw125_init_state(
 
         // Check free space 
         hw125_getfree(hw125_device); 
+
+        // Make the directory specified by "path" if it does not exist 
+        // hw125_mkdir(hw125_device->path); 
+        hw125_mkdir(""); 
     }
     else   // Issue mounting the volume 
     {
@@ -514,24 +517,37 @@ void hw125_set_reset_flag(void)
 FRESULT hw125_mkdir(
     const TCHAR *dir) 
 {
+    // Check for NULL pointer 
+    if (dir == NULL) return FR_INVALID_OBJECT; 
+    
     // Local variables 
     TCHAR sub_dir[HW125_PATH_SIZE*2]; 
 
-    // Record the sub directory for creating new files 
+    // Record the specified directory and establish path as the base of the sub directory 
     strcpy(hw125_device_trackers.dir, dir); 
-    strcat(hw125_device_trackers.dir, "/");   // Make sure paths are divided by separators 
-    
-    // Concatenate paths to create the sub directory 
     strcpy(sub_dir, hw125_device_trackers.path); 
+
+    // Only add directory to path if directory is valid 
+    if (*hw125_device_trackers.dir != NULL_CHAR)
+    {
+        strcat(sub_dir, "/"); 
+    }
     strcat(sub_dir, hw125_device_trackers.dir); 
 
-    hw125_device_trackers.fresult = f_mkdir(sub_dir); 
+    // Check for the existance of the directory 
+    hw125_device_trackers.fresult = f_stat(sub_dir, (FILINFO *)NULL); 
 
-    // Set fault code if there is an access error 
-    if (hw125_device_trackers.fresult) 
+    // Only proceed to make the directory if it does not exist 
+    if (hw125_device_trackers.fresult)
     {
-        hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-        hw125_device_trackers.fault_code |= HW125_FAULT_MKDIR; 
+        hw125_device_trackers.fresult = f_mkdir(sub_dir); 
+
+        // Set fault code if there is an access error 
+        if (hw125_device_trackers.fresult) 
+        {
+            hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
+            hw125_device_trackers.fault_code |= HW125_FAULT_MKDIR; 
+        }
     }
 
     return hw125_device_trackers.fresult; 
