@@ -31,7 +31,7 @@
 //=======================================================================================
 // Macros 
 
-#define MPU6050_NUM_STATES 1           // Number of controller states 
+#define MPU6050_NUM_STATES 6           // Number of controller states 
 
 //=======================================================================================
 
@@ -44,7 +44,12 @@
  * 
  */
 typedef enum {
-    MPU6050_INIT_STATE 
+    MPU6050_INIT_STATE, 
+    MPU6050_RUN_STATE, 
+    MPU6050_LOW_POWER_STATE, 
+    MPU6050_LOW_POWER_TRANS_STATE, 
+    MPU6050_FAULT_STATE, 
+    MPU6050_RESET_STATE 
 } mpu6050_states_t; 
 
 //=======================================================================================
@@ -58,10 +63,12 @@ typedef struct mpu6050_trackers_s
 {
     // Controller information 
     mpu6050_states_t state;               // State of the controller 
+    uint8_t fault_code;                   // Controller fault code 
 
     // State trackers 
-    uint8_t reset   : 1;                  // Reset state trigger 
-    uint8_t startup : 1;                  // Ensures the init state is run 
+    uint8_t low_power : 1;                // Low power flag 
+    uint8_t reset     : 1;                // Reset state trigger 
+    uint8_t startup   : 1;                // Ensures the init state is run 
 }
 mpu6050_trackers_t; 
 
@@ -72,6 +79,7 @@ mpu6050_trackers_t;
 // Datatypes 
 
 typedef mpu6050_states_t MPU6050_STATE; 
+typedef uint8_t MPU6050_FAULT_CODE; 
 
 //=======================================================================================
 

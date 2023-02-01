@@ -25,6 +25,14 @@
 // - Create a data record to store one-time calculation data and possible read data 
 //   - Ex. the full scale range that gets requested during self test and calculation 
 // - Combine mpu6050_self_test_accel_result and mpu6050_self_test_gyro_result
+// - Add a gpio output to the data record and init setup for using multiple devices 
+// - Test if the interrupt signal for data ready is worth adding 
+//  - Register 55: 
+//    - INT_LEVEL: 0 
+//    - INT_OPEN
+// - Add a low power mode setter function to toggle the SLEEP bit (pwr mngt 1) 
+//   - SLEEP = 1 --> low power mode 
+// - Possibly add a register reset function - used by controller in reset? 
 //=======================================================================================
 
 
