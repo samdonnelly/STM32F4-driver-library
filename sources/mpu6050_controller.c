@@ -115,15 +115,19 @@ static mpu6050_state_functions_t state_table[MPU6050_NUM_STATES] =
 // Control functions 
 
 // MPU6050 controller initialization 
-void mpu6050_controller_init(void)
+void mpu6050_controller_init(
+    MPU6050_FAULT_CODE driver_fault)
 {
     // Controller information 
     mpu6050_device_trackers.state = MPU6050_INIT_STATE; 
+    mpu6050_device_trackers.fault_code = CLEAR; 
 
     // State trackers 
     mpu6050_device_trackers.startup = SET_BIT; 
+    mpu6050_device_trackers.low_power = CLEAR_BIT; 
 
-    // Pass the driver init status as an argument here and use it to set the fault code 
+    // Check for driver faults 
+    mpu6050_device_trackers.fault_code |= driver_fault; 
 }
 
 
@@ -247,10 +251,8 @@ void mpu6050_controller(void)
 void mpu6050_init_state(
     mpu6050_trackers_t *mpu6050_device)
 {
-    // Clear the startup bit 
+    // Clear device trackers 
     mpu6050_device->startup = CLEAR_BIT; 
-
-    // Clear the reset bit 
     mpu6050_device->reset = CLEAR_BIT; 
 
     // Run self-test, run calibration (and save results), set fault codes as needed 

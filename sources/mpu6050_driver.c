@@ -37,6 +37,60 @@
 
 
 //=======================================================================================
+// Messages 
+
+// Accelerometer data 
+typedef struct mpu6050_accel_s
+{
+    int16_t accel_x;                // Acceleration in the x-axis 
+    int16_t accel_y;                // Acceleration in the y-axis 
+    int16_t accel_z;                // Acceleration in the z-axis 
+}
+mpu6050_accel_t;
+
+
+// Gyroscope data 
+typedef struct mpu6050_gyro_s
+{
+    int16_t gyro_x;                 // Angular velocity about the x-axis 
+    int16_t gyro_y;                 // Angular velocity about the y-axis 
+    int16_t gyro_z;                 // Angular velocity about the z-axis 
+}
+mpu6050_gyro_t; 
+
+
+// Other device data 
+typedef struct mpu6050_other_s
+{
+    int16_t temp;                   // Temperature 
+}
+mpu6050_other_t; 
+
+
+// 
+typedef struct mpu6050_com_data_s 
+{
+    // Messages 
+    mpu6050_accel_t accel_data; 
+    mpu6050_gyro_t gyro_data; 
+    mpu6050_other_t other_data; 
+
+    // Peripherals 
+    I2C_TypeDef *i2c; 
+    GPIO_TypeDef *gpio; 
+
+    // Pins 
+}
+mpu6050_com_data_t; 
+
+
+// MPU6050 device com data record instance 
+static mpu6050_com_data_t mpu6050_com_data; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Function Prototypes 
 
 /**
@@ -701,23 +755,31 @@ void mpu6050_accel_read(
     int16_t *accel_data)
 {
     // Temporary data storage 
-    uint8_t accel_data_reg_val[MPU6050_REG_6_BYTE];
+    uint8_t accel_data_reg[MPU6050_REG_6_BYTE];
 
     // Read the accelerometer data 
     mpu6050_read(
         mpu6050_address,
         MPU6050_ACCEL_XOUT_H,
         MPU6050_REG_6_BYTE,
-        accel_data_reg_val);
+        accel_data_reg);
     
     // Combine the return values into signed integers - values are unformatted
     for (uint8_t i = 0; i < MPU6050_NUM_ACCEL_AXIS; i++)
     {
         // Read consecutive bytes 3 times to form 16-bit values for each axis
-        *accel_data++ = (int16_t)((accel_data_reg_val[2*i]   << SHIFT_8) |
-                                  (accel_data_reg_val[2*i+1] << SHIFT_0));
+        *accel_data++ = (int16_t)((accel_data_reg[2*i]   << SHIFT_8) |
+                                  (accel_data_reg[2*i+1] << SHIFT_0));
         // accel_data++;
     } 
+
+    // 
+    mpu6050_com_data.accel_data.accel_x = (int16_t)((accel_data_reg[0] << SHIFT_8) |
+                                                    (accel_data_reg[1] << SHIFT_0));
+    mpu6050_com_data.accel_data.accel_y = (int16_t)((accel_data_reg[2] << SHIFT_8) |
+                                                    (accel_data_reg[3] << SHIFT_0));
+    mpu6050_com_data.accel_data.accel_z = (int16_t)((accel_data_reg[4] << SHIFT_8) |
+                                                    (accel_data_reg[5] << SHIFT_0));
 }
 
 
@@ -727,23 +789,31 @@ void mpu6050_gyro_read(
     int16_t *gyro_data)
 {
     // Temporary data storage 
-    uint8_t gyro_data_reg_val[MPU6050_REG_6_BYTE];
+    uint8_t gyro_data_reg[MPU6050_REG_6_BYTE];
 
     // Read the gyroscope data 
     mpu6050_read(
         mpu6050_address,
         MPU6050_GYRO_XOUT_H,
         MPU6050_REG_6_BYTE,
-        gyro_data_reg_val);
+        gyro_data_reg);
     
     // Combine the return values into signed integers - values are unformatted
     for (uint8_t i = 0; i < MPU6050_NUM_GYRO_AXIS; i++)
     {
         // Read consecutive bytes 3 times to form 16-bit values for each axis
-        *gyro_data++ = (int16_t)((gyro_data_reg_val[2*i]   << SHIFT_8) |
-                                 (gyro_data_reg_val[2*i+1] << SHIFT_0));
+        *gyro_data++ = (int16_t)((gyro_data_reg[2*i]   << SHIFT_8) |
+                                 (gyro_data_reg[2*i+1] << SHIFT_0));
         // gyro_data++;
     } 
+
+    // 
+    mpu6050_com_data.gyro_data.gyro_x = (int16_t)((gyro_data_reg[0] << SHIFT_8) |
+                                                  (gyro_data_reg[1] << SHIFT_0));
+    mpu6050_com_data.gyro_data.gyro_y = (int16_t)((gyro_data_reg[2] << SHIFT_8) |
+                                                  (gyro_data_reg[3] << SHIFT_0));
+    mpu6050_com_data.gyro_data.gyro_z = (int16_t)((gyro_data_reg[4] << SHIFT_8) |
+                                                  (gyro_data_reg[5] << SHIFT_0));
 }
 
 
@@ -753,25 +823,25 @@ int16_t mpu6050_temp_read(
 {
     // Store the temperature data 
     // int16_t mpu6050_temp_sensor_val;
-    uint8_t mpu6050_temp_sensor_reg_val[MPU6050_REG_2_BYTE];
+    uint8_t mpu6050_temp_sensor_reg[MPU6050_REG_2_BYTE];
 
     // Read the temperature data 
     mpu6050_read(
         mpu6050_address,
         MPU6050_TEMP_OUT_H,
         MPU6050_REG_2_BYTE,
-        mpu6050_temp_sensor_reg_val);
+        mpu6050_temp_sensor_reg);
     
     // // Combine the return values into a signed integer - value is unformatted 
-    // mpu6050_temp_sensor_val = (int16_t)((mpu6050_temp_sensor_reg_val[0] << SHIFT_8)  |
-    //                                     (mpu6050_temp_sensor_reg_val[1] << SHIFT_0));
+    // mpu6050_temp_sensor_val = (int16_t)((mpu6050_temp_sensor_reg[0] << SHIFT_8)  |
+    //                                     (mpu6050_temp_sensor_reg[1] << SHIFT_0));
 
     // // Return unformatted temperature 
     // return mpu6050_temp_sensor_val;
 
     // Generate an unformatted signed integer from the combine the return values 
-    return (int16_t)((mpu6050_temp_sensor_reg_val[0] << SHIFT_8)  |
-                     (mpu6050_temp_sensor_reg_val[1] << SHIFT_0));
+    return (int16_t)((mpu6050_temp_sensor_reg[0] << SHIFT_8)  |
+                     (mpu6050_temp_sensor_reg[1] << SHIFT_0));
 }
 
 

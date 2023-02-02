@@ -103,7 +103,8 @@ typedef void (*mpu6050_state_functions_t)(
  * @brief 
  * 
  */
-void mpu6050_controller_init(void); 
+void mpu6050_controller_init(
+    MPU6050_FAULT_CODE driver_fault); 
 
 
 /**
