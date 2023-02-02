@@ -25,8 +25,6 @@
 // Drivers 
 #include "hw125_driver.h" 
 
-#include "uart_comm.h"
-
 // STM drivers 
 #include "fatfs.h"
 

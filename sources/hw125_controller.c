@@ -20,9 +20,6 @@
 //=======================================================================================
 
 
-extern uint8_t action; 
-
-
 //=======================================================================================
 // Function prototypes 
 
@@ -299,9 +296,6 @@ void hw125_controller(void)
 void hw125_init_state(
     hw125_trackers_t *hw125_device) 
 {
-    uart_sendstring(USART2, "\r\ninit state\r\n"); 
-    action = SET; 
-
     // Clear startup flag 
     hw125_device->startup = CLEAR_BIT; 
 
@@ -318,7 +312,6 @@ void hw125_init_state(
         hw125_getfree(hw125_device); 
 
         // Make the directory specified by "path" if it does not exist 
-        // hw125_mkdir(hw125_device->path); 
         hw125_mkdir(""); 
     }
     else   // Issue mounting the volume 
@@ -362,9 +355,6 @@ void hw125_access_state(
 void hw125_eject_state(
     hw125_trackers_t *hw125_device)
 {
-    uart_sendstring(USART2, "\r\neject state\r\n"); 
-    action = SET; 
-
     // Attempt to close the open file 
     hw125_close(); 
 
@@ -385,9 +375,6 @@ void hw125_fault_state(
 void hw125_reset_state(
     hw125_trackers_t *hw125_device) 
 {
-    uart_sendstring(USART2, "\r\nreset state\r\n"); 
-    action = SET; 
-
     // Attempt to close a file 
     hw125_close(); 
 
@@ -523,15 +510,17 @@ FRESULT hw125_mkdir(
     // Local variables 
     TCHAR sub_dir[HW125_PATH_SIZE*2]; 
 
-    // Record the specified directory and establish path as the base of the sub directory 
+    // Record 'dir' for future use and establish 'path' as the base of the sub directory 
     strcpy(hw125_device_trackers.dir, dir); 
     strcpy(sub_dir, hw125_device_trackers.path); 
 
-    // Only add directory to path if directory is valid 
+    // If 'dir' is not a null character then prepare the sub-directory to be concatenated 
     if (*hw125_device_trackers.dir != NULL_CHAR)
     {
         strcat(sub_dir, "/"); 
     }
+
+    // Concatenate 'dir' to complete the sub directory string 
     strcat(sub_dir, hw125_device_trackers.dir); 
 
     // Check for the existance of the directory 
@@ -559,29 +548,38 @@ FRESULT hw125_open(
     const TCHAR *file_name, 
     uint8_t mode) 
 {
+    // Check for NULL pointers and strings 
+    if (file_name == NULL || *file_name == NULL_CHAR) return FR_INVALID_OBJECT; 
+
     // Local variables 
     TCHAR file_dir[HW125_PATH_SIZE*3]; 
-
-    // Concatenate the sub directory and the file name 
-    strcpy(file_dir, hw125_device_trackers.path); 
-    strcat(file_dir, hw125_device_trackers.dir); 
-    strcat(file_dir, file_name); 
 
     // Attempt to open file if a file is not already open 
     if (!hw125_device_trackers.open_file) 
     {
+        // Establish 'path' as the base of the file directory 
+        strcpy(file_dir, hw125_device_trackers.path); 
+
+        // If 'dir' is not a null character then concatenate it to the file directory 
+        if (*hw125_device_trackers.dir != NULL_CHAR)
+        {
+            strcat(file_dir, "/"); 
+            strcat(file_dir, hw125_device_trackers.dir); 
+        }
+
+        strcat(file_dir, "/"); 
+        strcat(file_dir, file_name); 
+        
         hw125_device_trackers.fresult = f_open(&hw125_device_trackers.file, 
-                                               file_dir, 
-                                               mode); 
+                                            file_dir, 
+                                            mode); 
 
         if (hw125_device_trackers.fresult == FR_OK) 
         {
-            // Open success 
             hw125_device_trackers.open_file = SET_BIT; 
         }
-        else 
+        else   // Open fault - record the fault types 
         {
-            // Open fault - record the fault types 
             hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
             hw125_device_trackers.fault_code |= HW125_FAULT_OPEN; 
         }
@@ -764,7 +762,7 @@ TCHAR* hw125_gets(
     TCHAR *gets_return = f_gets(buff, len, &hw125_device_trackers.file); 
 
     // Set fault code if there was a read operation error and a file is open 
-    if ((gets_return == NULL) && hw125_device_trackers.open_file) 
+    if ((gets_return == NULL) && (!hw125_eof()) && hw125_device_trackers.open_file) 
     {
         hw125_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
         hw125_device_trackers.fault_code |= HW125_FAULT_READ; 
@@ -777,7 +775,6 @@ TCHAR* hw125_gets(
 // Test for end of file on open file 
 HW125_EOF hw125_eof(void) 
 {
-    // Look for end of file on an open file 
     HW125_EOF eof_return = f_eof(&hw125_device_trackers.file); 
 
     return eof_return; 
