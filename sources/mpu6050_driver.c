@@ -37,60 +37,6 @@
 
 
 //=======================================================================================
-// Messages 
-
-// Accelerometer data 
-typedef struct mpu6050_accel_s
-{
-    int16_t accel_x;                // Acceleration in the x-axis 
-    int16_t accel_y;                // Acceleration in the y-axis 
-    int16_t accel_z;                // Acceleration in the z-axis 
-}
-mpu6050_accel_t;
-
-
-// Gyroscope data 
-typedef struct mpu6050_gyro_s
-{
-    int16_t gyro_x;                 // Angular velocity about the x-axis 
-    int16_t gyro_y;                 // Angular velocity about the y-axis 
-    int16_t gyro_z;                 // Angular velocity about the z-axis 
-}
-mpu6050_gyro_t; 
-
-
-// Other device data 
-typedef struct mpu6050_other_s
-{
-    int16_t temp;                   // Temperature 
-}
-mpu6050_other_t; 
-
-
-// 
-typedef struct mpu6050_com_data_s 
-{
-    // Messages 
-    mpu6050_accel_t accel_data; 
-    mpu6050_gyro_t gyro_data; 
-    mpu6050_other_t other_data; 
-
-    // Peripherals 
-    I2C_TypeDef *i2c; 
-    GPIO_TypeDef *gpio; 
-
-    // Pins 
-}
-mpu6050_com_data_t; 
-
-
-// MPU6050 device com data record instance 
-static mpu6050_com_data_t mpu6050_com_data; 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Function Prototypes 
 
 /**
@@ -111,7 +57,7 @@ static mpu6050_com_data_t mpu6050_com_data;
  * @param mpu6050_reg_value : pointer to data to write to specified register 
  */
 void mpu6050_write(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     mpu6050_register_addresses_t mpu6050_register,
     mpu6050_reg_byte_size_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value);
@@ -135,7 +81,7 @@ void mpu6050_write(
  * @param mpu6050_reg_value : pointer to where register data can be stored 
  */
 void mpu6050_read(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     mpu6050_register_addresses_t mpu6050_register, 
     mpu6050_reg_byte_size_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value);
@@ -166,7 +112,7 @@ void mpu6050_read(
  * @param smprt_div : sample rate divider address
  */
 void mpu6050_smprt_div_write(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_smplrt_div_t smprt_div);
 
 
@@ -191,7 +137,7 @@ void mpu6050_smprt_div_write(
  * @param dlpf_cfg : digital low pass filter setpoint for all axes
  */
 void mpu6050_config_write(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_ext_sync_set_t ext_sync_set,
     mpu6050_dlpf_cfg_t dlpf_cfg);
 
@@ -220,7 +166,7 @@ void mpu6050_config_write(
  * @param afs_sel : accelerometer full scale range setpoint for all axes
  */
 void mpu6050_accel_config_write(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_accel_self_test_set_t accel_self_test,
     mpu6050_afs_sel_set_t afs_sel);
 
@@ -245,7 +191,7 @@ void mpu6050_accel_config_write(
  * @return uint8_t : returns the unparsed self-test and full scale range setpoints 
  */
 uint8_t mpu6050_accel_config_read(
-    mpu6050_i2c_addresses_t mpu6050_address);
+    mpu6050_i2c_addr_t mpu6050_address);
 
 
 /**
@@ -272,7 +218,7 @@ uint8_t mpu6050_accel_config_read(
  * @param fs_sel : gyroscope full scale range setpoint for all axes 
  */
 void mpu6050_gyro_config_write(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_gyro_self_test_set_t gyro_self_test,
     mpu6050_fs_sel_set_t fs_sel);
 
@@ -297,7 +243,7 @@ void mpu6050_gyro_config_write(
  * @return uint8_t : returns the unparsed self-test and full scale range setpoints 
  */
 uint8_t mpu6050_gyro_config_read(
-    mpu6050_i2c_addresses_t mpu6050_address);
+    mpu6050_i2c_addr_t mpu6050_address);
 
 
 /**
@@ -329,7 +275,7 @@ uint8_t mpu6050_gyro_config_read(
  * @param clksel : specifies clock source of the device
  */
 void mpu6050_pwr_mgmt_1_write(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_device_reset_t device_reset,
     mpu6050_sleep_mode_t sleep,
     mpu6050_cycle_t cycle,
@@ -372,7 +318,7 @@ void mpu6050_pwr_mgmt_1_write(
  * @param stby_zg : put gyroscope z-axis in standby when set to 1
  */
 void mpu6050_pwr_mgmt_2_write(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_lp_wake_ctrl_t lp_wake_ctrl,
     mpu6050_stby_xa_t stby_xa,
     mpu6050_stby_ya_t stby_ya,
@@ -396,7 +342,7 @@ void mpu6050_pwr_mgmt_2_write(
  * @return uint8_t : Returns 0x68 if AD0 == 0 and 0x69 is AD0 == 1
  */
 uint8_t mpu6050_who_am_i_read(
-    mpu6050_i2c_addresses_t mpu6050_address);
+    mpu6050_i2c_addr_t mpu6050_address);
 
 
 /**
@@ -414,7 +360,7 @@ uint8_t mpu6050_who_am_i_read(
  * @param gyro_self_test_data : pointer where self-test gyro register data gets stored 
  */
 void mpu6050_self_test_read(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     uint8_t *accel_self_test_data,
     uint8_t *gyro_self_test_data);
 
@@ -560,7 +506,7 @@ void mpu6050_gyro_ft(
  * @return float : returns the scalar used to convert raw acceleromeeter data to g's
  */
 float mpu6050_accel_scalar(
-    mpu6050_i2c_addresses_t mpu6050_address);
+    mpu6050_i2c_addr_t mpu6050_address);
 
 
 /**
@@ -588,7 +534,64 @@ float mpu6050_accel_scalar(
  * @return float : returns the scalar used to convert raw gyroscope data to deg/s
  */
 float mpu6050_gyro_scalar(
-    mpu6050_i2c_addresses_t mpu6050_address);
+    mpu6050_i2c_addr_t mpu6050_address);
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Messages 
+
+// Accelerometer data 
+typedef struct mpu6050_accel_s
+{
+    int16_t accel_x;                // Acceleration in the x-axis 
+    int16_t accel_y;                // Acceleration in the y-axis 
+    int16_t accel_z;                // Acceleration in the z-axis 
+}
+mpu6050_accel_t;
+
+
+// Gyroscope data 
+typedef struct mpu6050_gyro_s
+{
+    int16_t gyro_x;                 // Angular velocity about the x-axis 
+    int16_t gyro_y;                 // Angular velocity about the y-axis 
+    int16_t gyro_z;                 // Angular velocity about the z-axis 
+}
+mpu6050_gyro_t; 
+
+
+// Other device data 
+typedef struct mpu6050_other_s
+{
+    int16_t temp;                   // Temperature 
+}
+mpu6050_other_t; 
+
+
+// 
+typedef struct mpu6050_com_data_s 
+{
+    // Messages 
+    mpu6050_accel_t accel_data;      // Accelerometer data 
+    mpu6050_gyro_t gyro_data;        // Gyroscope data 
+    mpu6050_other_t other_data;      // Other device data 
+
+    // Peripherals 
+    I2C_TypeDef *i2c;                // I2C port connected to the device 
+    GPIO_TypeDef *gpio; 
+
+    // Pins 
+
+    // Device information 
+    mpu6050_i2c_addr_t addr;         // Device I2C address 
+}
+mpu6050_com_data_t; 
+
+
+// MPU6050 device com data record instance 
+static mpu6050_com_data_t mpu6050_com_data; 
 
 //=======================================================================================
 
@@ -609,7 +612,8 @@ float mpu6050_gyro_scalar(
 
 // MPU6050 Initialization 
 uint8_t mpu6050_init(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_dlpf_cfg_t dlpf_cfg,
     mpu6050_smplrt_div_t smplrt_div,
     mpu6050_afs_sel_set_t afs_sel,
@@ -620,6 +624,10 @@ uint8_t mpu6050_init(
     {
         return FALSE;
     }
+
+    // Assign device information 
+    mpu6050_com_data.i2c = i2c; 
+    mpu6050_com_data.addr = mpu6050_address; 
 
     // Choose which sensors to use and frquency of CYCLE mode
     mpu6050_pwr_mgmt_2_write(
@@ -671,7 +679,7 @@ uint8_t mpu6050_init(
 
 // MPU6050 reference point set 
 void mpu6050_calibrate(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t *mpu6050_accel_offset,
     int16_t *mpu6050_gyro_offset)
 {
@@ -690,57 +698,57 @@ void mpu6050_calibrate(
 
 // MPU6050 write to register 
 void mpu6050_write(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     mpu6050_register_addresses_t mpu6050_register,
     mpu6050_reg_byte_size_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value)
 {
     // Create start condition to initiate master mode 
-    i2c_start(I2C1); 
+    i2c_start(mpu6050_com_data.i2c); 
 
     // Send the MPU6050 address with a write offset
-    i2c_write_address(I2C1, mpu6050_address + MPU6050_W_OFFSET);
-    i2c_clear_addr(I2C1);
+    i2c_write_address(mpu6050_com_data.i2c, mpu6050_address + MPU6050_W_OFFSET);
+    i2c_clear_addr(mpu6050_com_data.i2c);
 
     // Send the register address that is going to be written to 
-    i2c_write_master_mode(I2C1, &mpu6050_register, MPU6050_REG_1_BYTE);
+    i2c_write_master_mode(mpu6050_com_data.i2c, &mpu6050_register, MPU6050_REG_1_BYTE);
 
     // Write the data to the MPU6050 
-    i2c_write_master_mode(I2C1, mpu6050_reg_value, mpu6050_reg_size);
+    i2c_write_master_mode(mpu6050_com_data.i2c, mpu6050_reg_value, mpu6050_reg_size);
 
     // Create a stop condition
-    i2c_stop(I2C1); 
+    i2c_stop(mpu6050_com_data.i2c); 
 }
 
 
 // MPU6050 read from register 
 void mpu6050_read(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     mpu6050_register_addresses_t mpu6050_register, 
     mpu6050_reg_byte_size_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value)
 {
     // Create start condition to initiate master mode 
-    i2c_start(I2C1); 
+    i2c_start(mpu6050_com_data.i2c); 
 
     // Send the MPU6050 address with a write offset 
-    i2c_write_address(I2C1, mpu6050_address + MPU6050_W_OFFSET);
-    i2c_clear_addr(I2C1);
+    i2c_write_address(mpu6050_com_data.i2c, mpu6050_address + MPU6050_W_OFFSET);
+    i2c_clear_addr(mpu6050_com_data.i2c);
 
     // Send the register address that is going to be read 
-    i2c_write_master_mode(I2C1, &mpu6050_register, MPU6050_REG_1_BYTE);
+    i2c_write_master_mode(mpu6050_com_data.i2c, &mpu6050_register, MPU6050_REG_1_BYTE);
 
     // Create another start signal 
-    i2c_start(I2C1); 
+    i2c_start(mpu6050_com_data.i2c); 
 
     // Send the MPU6050 address with a read offset 
-    i2c_write_address(I2C1, mpu6050_address + MPU6050_R_OFFSET);
+    i2c_write_address(mpu6050_com_data.i2c, mpu6050_address + MPU6050_R_OFFSET);
 
     // Read the data sent by the MPU6050 
-    i2c_read_master_mode(I2C1, mpu6050_reg_value, mpu6050_reg_size);
+    i2c_read_master_mode(mpu6050_com_data.i2c, mpu6050_reg_value, mpu6050_reg_size);
 
     // Create a stop condition
-    i2c_stop(I2C1); 
+    i2c_stop(mpu6050_com_data.i2c); 
 }
 
 //=======================================================================================
@@ -751,7 +759,7 @@ void mpu6050_read(
 
 // MPU6050 Accelerometer Measurements registers read
 void mpu6050_accel_read(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     int16_t *accel_data)
 {
     // Temporary data storage 
@@ -785,7 +793,7 @@ void mpu6050_accel_read(
 
 // MPU6050 Gyroscope Measurements registers read
 void mpu6050_gyro_read(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     int16_t *gyro_data)
 {
     // Temporary data storage 
@@ -819,7 +827,7 @@ void mpu6050_gyro_read(
 
 // MPU6050 Temperature Measurements registers read
 int16_t mpu6050_temp_read(
-    mpu6050_i2c_addresses_t mpu6050_address)
+    mpu6050_i2c_addr_t mpu6050_address)
 {
     // Store the temperature data 
     // int16_t mpu6050_temp_sensor_val;
@@ -847,7 +855,7 @@ int16_t mpu6050_temp_read(
 
 // MPU6050 Sample Rate Divider register write 
 void mpu6050_smprt_div_write(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_smplrt_div_t smprt_div)
 {
     // Write to the Sample Rate Divider register
@@ -861,7 +869,7 @@ void mpu6050_smprt_div_write(
 
 // MPU6050 Configuration register write
 void mpu6050_config_write(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     mpu6050_ext_sync_set_t ext_sync_set,
     mpu6050_dlpf_cfg_t dlpf_cfg)
 {
@@ -879,7 +887,7 @@ void mpu6050_config_write(
 
 // MPU6050 Gyroscope Configuration register write
 void mpu6050_gyro_config_write(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_gyro_self_test_set_t gyro_self_test,
     mpu6050_fs_sel_set_t fs_sel)
 {
@@ -897,7 +905,7 @@ void mpu6050_gyro_config_write(
 
 // MPU6050 Gyroscope Configuration register read
 uint8_t mpu6050_gyro_config_read(
-    mpu6050_i2c_addresses_t mpu6050_address)
+    mpu6050_i2c_addr_t mpu6050_address)
 {
     // Place to store the value of GYRO_CONFIG
     uint8_t mpu6050_gyro_config;
@@ -916,7 +924,7 @@ uint8_t mpu6050_gyro_config_read(
 
 // MPU6050 Accelerometer Configuration register write
 void mpu6050_accel_config_write(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_accel_self_test_set_t accel_self_test,
     mpu6050_afs_sel_set_t afs_sel)
 {
@@ -934,7 +942,7 @@ void mpu6050_accel_config_write(
 
 // MPU6050 Accelerometer Configuration register read 
 uint8_t mpu6050_accel_config_read(
-    mpu6050_i2c_addresses_t mpu6050_address)
+    mpu6050_i2c_addr_t mpu6050_address)
 {
     // Place to store the value of ACCEL_CONFIG
     uint8_t mpu6050_accel_config;
@@ -953,7 +961,7 @@ uint8_t mpu6050_accel_config_read(
 
 // MPU6050 Power Manangement 1 register write
 void mpu6050_pwr_mgmt_1_write(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_device_reset_t device_reset,
     mpu6050_sleep_mode_t sleep,
     mpu6050_cycle_t cycle,
@@ -978,7 +986,7 @@ void mpu6050_pwr_mgmt_1_write(
 
 // MPU6050 Power Manangement 2 register write
 void mpu6050_pwr_mgmt_2_write(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_lp_wake_ctrl_t lp_wake_ctrl,
     mpu6050_stby_xa_t stby_xa,
     mpu6050_stby_ya_t stby_ya,
@@ -1007,7 +1015,7 @@ void mpu6050_pwr_mgmt_2_write(
 
 // MPU6050 Who Am I register read
 uint8_t mpu6050_who_am_i_read(
-    mpu6050_i2c_addresses_t mpu6050_address)
+    mpu6050_i2c_addr_t mpu6050_address)
 {
     // Place to store the value WHO_AM_I
     uint8_t mpu6050_who_am_i;
@@ -1045,7 +1053,7 @@ uint8_t mpu6050_who_am_i_read(
 
 // MPU6050 self-test
 uint8_t mpu6050_self_test(
-    mpu6050_i2c_addresses_t mpu6050_address)
+    mpu6050_i2c_addr_t mpu6050_address)
 {
     //===================================================
     // Local variables 
@@ -1167,7 +1175,7 @@ uint8_t mpu6050_self_test(
 
 // MPU6050 self-test read 
 void mpu6050_self_test_read(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     uint8_t *accel_st_data,
     uint8_t *gyro_st_data)
 {
@@ -1343,7 +1351,7 @@ uint8_t mpu6050_self_test_gyro_result(
 
 // MPU6050 accelerometer x-axis calculation 
 float mpu6050_accel_x_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t accel_x_axis_raw)
 {
     // Get the raw value scalar and calculate the true x-axis acceleration 
@@ -1358,7 +1366,7 @@ float mpu6050_accel_x_calc(
 
 // MPU6050 accelerometer y-axis calculation 
 float mpu6050_accel_y_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t accel_y_axis_raw)
 {
     // Get the raw value scalar and calculate the true y-axis acceleration
@@ -1373,7 +1381,7 @@ float mpu6050_accel_y_calc(
 
 // MPU6050 accelerometer z-axis calculation 
 float mpu6050_accel_z_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t accel_z_axis_raw)
 {
     // Get the raw value scalar and calculate the true z-axis acceleration 
@@ -1388,7 +1396,7 @@ float mpu6050_accel_z_calc(
 
 // MPU6050 accelerometer scalar
 float mpu6050_accel_scalar(
-    mpu6050_i2c_addresses_t mpu6050_address)
+    mpu6050_i2c_addr_t mpu6050_address)
 {
     // Get AFS_SEL 
     mpu6050_afs_sel_set_t afs_sel = ((mpu6050_accel_config_read(mpu6050_address) & 
@@ -1432,7 +1440,7 @@ float mpu6050_accel_scalar(
 
 // MPU6050 gyroscopic (angular acceleration) calculation around x-axis 
 float mpu6050_gyro_x_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t gyro_x_axis_raw,
     int16_t gyro_x_axis_offset)
 {
@@ -1448,7 +1456,7 @@ float mpu6050_gyro_x_calc(
 
 // MPU6050 gyroscopic value calculation around y-axis 
 float mpu6050_gyro_y_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t gyro_y_axis_raw,
     int16_t gyro_y_axis_offset)
 {
@@ -1465,7 +1473,7 @@ float mpu6050_gyro_y_calc(
 
 // MPU6050 gyroscopic value calculation around z-axis 
 float mpu6050_gyro_z_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t gyro_z_axis_raw,
     int16_t gyro_z_axis_offset)
 {
@@ -1482,7 +1490,7 @@ float mpu6050_gyro_z_calc(
 
 // MPU6050 gyroscope scalar
 float mpu6050_gyro_scalar(
-    mpu6050_i2c_addresses_t mpu6050_address)
+    mpu6050_i2c_addr_t mpu6050_address)
 {
     // Get FS_SEL 
     mpu6050_fs_sel_set_t fs_sel = ((mpu6050_gyro_config_read(mpu6050_address) & 

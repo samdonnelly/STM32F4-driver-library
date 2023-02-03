@@ -82,7 +82,7 @@
 typedef enum {
     MPU6050_1_ADDRESS = 0xD0,
     MPU6050_2_ADDRESS = 0xD2
-} mpu6050_i2c_addresses_t;
+} mpu6050_i2c_addr_t;
 
 /**
  * @brief MPU6050 read and write offset 
@@ -91,7 +91,7 @@ typedef enum {
  *          or write to from it. Simply add this value to the end of the address when 
  *          reading or writing.  
  * 
- * @see mpu6050_i2c_addresses_t
+ * @see mpu6050_i2c_addr_t
  * 
  */
 typedef enum {
@@ -647,6 +647,7 @@ typedef enum {
  *          communication with the device the function will return false. The return 
  *          value is used to trigger fault conditions. 
  * 
+ * @param i2c : I2C port used by device 
  * @param mpu6050_address : I2C address of MPU6050 
  * @param dlpf_cfg : digital low pass filter selection 
  * @param smplrt_div : sample rate divider selection 
@@ -655,7 +656,8 @@ typedef enum {
  * @return uint8_t : returns true (1) if successfull, false (0) if unsuccessfull
  */
 uint8_t mpu6050_init(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t mpu6050_address,
     mpu6050_dlpf_cfg_t dlpf_cfg,
     mpu6050_smplrt_div_t smplrt_div,
     mpu6050_afs_sel_set_t afs_sel,
@@ -676,7 +678,7 @@ uint8_t mpu6050_init(
  * @param mpu6050_gyro_offset : pointer that stores an instance of gyroscope data
  */
 void mpu6050_calibrate(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t *mpu6050_accel_offset,
     int16_t *mpu6050_gyro_offset);
 
@@ -714,7 +716,7 @@ void mpu6050_calibrate(
  * @param accel_data : pointer to array where accelerometer data is stored 
  */
 void mpu6050_accel_read(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     int16_t *accel_data);
 
 
@@ -746,7 +748,7 @@ void mpu6050_accel_read(
  * @param gyro_data : pointer to array where gyroscope data is stored 
  */
 void mpu6050_gyro_read(
-    mpu6050_i2c_addresses_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_address,
     int16_t *gyro_data);
 
 
@@ -772,7 +774,7 @@ void mpu6050_gyro_read(
  * @return int16_t : unformatted signed temperature value 
  */
 int16_t mpu6050_temp_read(
-    mpu6050_i2c_addresses_t mpu6050_address);
+    mpu6050_i2c_addr_t mpu6050_address);
 
 //=======================================================================================
 
@@ -807,7 +809,7 @@ int16_t mpu6050_temp_read(
  * @return uint8_t : self-test results for each sensor axis 
  */
 uint8_t mpu6050_self_test(
-    mpu6050_i2c_addresses_t mpu6050_address);
+    mpu6050_i2c_addr_t mpu6050_address);
 
 //=======================================================================================
 
@@ -831,7 +833,7 @@ uint8_t mpu6050_self_test(
  * @return float : x-axis acceleration in g's
  */
 float mpu6050_accel_x_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t accel_x_axis_raw);
 
 /**
@@ -850,7 +852,7 @@ float mpu6050_accel_x_calc(
  * @return float : y-axis acceleration in g's
  */
 float mpu6050_accel_y_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t accel_y_axis_raw);
 
 /**
@@ -869,7 +871,7 @@ float mpu6050_accel_y_calc(
  * @return float : z-axis acceleration in g's
  */
 float mpu6050_accel_z_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t accel_z_axis_raw);
 
 
@@ -907,7 +909,7 @@ float mpu6050_temp_calc(int16_t temp_raw);
  * @return float : x-axis gyroscopic value in deg/s
  */
 float mpu6050_gyro_x_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t gyro_x_axis_raw,
     int16_t gyro_x_axis_offset);
 
@@ -931,7 +933,7 @@ float mpu6050_gyro_x_calc(
  * @return float : y-axis gyroscopic value in deg/s
  */
 float mpu6050_gyro_y_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t gyro_y_axis_raw,
     int16_t gyro_y_axis_offset);
 
@@ -955,7 +957,7 @@ float mpu6050_gyro_y_calc(
  * @return float : z-axis gyroscopic value in deg/s
  */
 float mpu6050_gyro_z_calc(
-    mpu6050_i2c_addresses_t mpu6050_address, 
+    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t gyro_z_axis_raw,
     int16_t gyro_z_axis_offset);
 
