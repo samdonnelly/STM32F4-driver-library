@@ -84,6 +84,7 @@ typedef enum {
     MPU6050_2_ADDRESS = 0xD2
 } mpu6050_i2c_addr_t;
 
+
 /**
  * @brief MPU6050 read and write offset 
  * 
@@ -133,6 +134,7 @@ typedef enum {
     MPU6050_REG_5_BYTE = 5,
     MPU6050_REG_6_BYTE = 6
 } mpu6050_reg_byte_size_t;
+
 
 /**
  * @brief MPU6050 register map
@@ -251,6 +253,7 @@ typedef enum {
     SMPLRT_DIV_7 = 7   // 1 kHz when DLPF = 1 - 6
 } mpu6050_smplrt_div_t;
 
+
 /**
  * @brief MPU6050 EXT_SYNC_SET setpoint
  * 
@@ -279,6 +282,7 @@ typedef enum {
     EXT_SYNC_SET_6,  // ACCEL_YOUT_L[0]
     EXT_SYNC_SET_7   // ACCEL_ZOUT_L[0]
 } mpu6050_ext_sync_set_t;
+
 
 /**
  * @brief MPU6050 DLPF_CFG setpoint
@@ -315,6 +319,7 @@ typedef enum {
     DLPF_CFG_7   // RESERVED
 } mpu6050_dlpf_cfg_t;
 
+
 /**
  * @brief MPU6050 - GYRO_CONFIG : XG_ST, YG_ST and ZG_ST setpoint 
  * 
@@ -329,6 +334,7 @@ typedef enum {
     GYRO_SELF_TEST_DISABLE,
     GYRO_SELF_TEST_ENABLE
 } mpu6050_gyro_self_test_set_t;
+
 
 /**
  * @brief MPU6050 - GYRO_CONFIG : FS_SEL setpoint 
@@ -356,21 +362,6 @@ typedef enum {
     FS_SEL_2000   // +/- 2000 deg/s ---> Scalar = 164 
 } mpu6050_fs_sel_set_t;
 
-// /**
-//  * @brief MPU6050 gyroscope value scalar 
-//  * 
-//  * @details These values are used to divide the raw 16-bit value read from the gyroscope 
-//  *          measurement register to get the angular acceleration in deg/s. These values 
-//  *          are scaled by a factor of 10 to eliminate the decimal place. When calculating  
-//  *          the actual value the values are unscaled. 
-//  * 
-//  */
-// typedef enum {
-//     GYRO_SCALE_FS_SEL_2000 = 164,  // 16.4  * 10
-//     GYRO_SCALE_FS_SEL_1000 = 328,  // 32.8  * 10
-//     GYRO_SCALE_FS_SEL_500  = 655,  // 65.5  * 10
-//     GYRO_SCALE_FS_SEL_250  = 1310  // 131.0 * 10
-// } mpu6050_gyro_scalars_t;
 
 /**
  * @brief MPU6050 - ACCEL_CONFIG : XA_ST, YA_SET and ZA_ST setpoint
@@ -386,6 +377,7 @@ typedef enum {
     ACCEL_SELF_TEST_DISABLE,
     ACCEL_SELF_TEST_ENABLE
 } mpu6050_accel_self_test_set_t;
+
 
 /**
  * @brief MPU6050 - ACCEL_CONFIG : AFS_SEL setpoint
@@ -412,19 +404,6 @@ typedef enum {
     AFS_SEL_16   // +/- 16g --> Scalar = 2048 
 } mpu6050_afs_sel_set_t;
 
-// /**
-//  * @brief Accelerometer value scalar 
-//  * 
-//  * @details These values are used to divide the raw 16-bit value read from the  
-//  *          accelerometer measurement register to get the linear acceleration in g's. 
-//  * 
-//  */
-// typedef enum {
-//     ACCEL_SCALE_AFS_SEL_16 = 2048,
-//     ACCEL_SCALE_AFS_SEL_8  = 4096,
-//     ACCEL_SCALE_AFS_SEL_4  = 8192,
-//     ACCEL_SCALE_AFS_SEL_2  = 16384
-// } mpu6050_accel_scalars_t;
 
 /**
  * @brief MPU6050 - PWR_MGMT_1 : DEVICE_RESET
@@ -437,6 +416,7 @@ typedef enum {
     DEVICE_RESET_DISABLE,
     DEVICE_RESET_ENABLE
 } mpu6050_device_reset_t; 
+
 
 /**
  * @brief MPU6050 - PWR_MGMT_1 : SLEEP
@@ -456,6 +436,7 @@ typedef enum {
     SLEEP_MODE_ENABLE
 } mpu6050_sleep_mode_t;
 
+
 /**
  * @brief MPU6050 - PWR_MGMT_1 : CYCLE 
  * 
@@ -473,6 +454,7 @@ typedef enum {
     CYCLE_SLEEP_ENABLED
 } mpu6050_cycle_t;
 
+
 /**
  * @brief MPU6050 - PWR_MGMT_1 : TEMP_DIS
  * 
@@ -484,6 +466,7 @@ typedef enum {
     TEMP_SENSOR_ENABLE,
     TEMP_SENSOR_DISABLE
 } mpu6050_temp_sensor_t;
+
 
 /**
  * @brief MPU6050 - PWR_MGMT_1 : CLKSEL
@@ -515,6 +498,7 @@ typedef enum {
     CLKSEL_7   // Stops the clock and keeps the timing generator on reset
 } mpu6050_clksel_t;
 
+
 /**
  * @brief MPU6050 - PWR_MGMT_2 : LP_WAKE_CTRL
  * 
@@ -544,6 +528,7 @@ typedef enum {
     LP_WAKE_CTRL_3   // 40 Hz wakeup frequency
 } mpu6050_lp_wake_ctrl_t;
 
+
 /**
  * @brief MPU6050 - PWR_MGMT_2 : STBY_XA
  * 
@@ -555,6 +540,7 @@ typedef enum {
     STBY_XA_DISABLE,
     STBY_XA_ENABLE
 } mpu6050_stby_xa_t;
+
 
 /**
  * @brief MPU6050 - PWR_MGMT_2 : STBY_YA
@@ -568,7 +554,9 @@ typedef enum {
     STBY_YA_ENABLE
 } mpu6050_stby_ya_t;
 
+
 /**
+ * 
  * @brief MPU6050 - PWR_MGMT_2 : STBY_ZA
  * 
  * @details Used to configure power management register 2 in mpu6050_init. Allows for 
@@ -579,6 +567,7 @@ typedef enum {
     STBY_ZA_DISABLE,
     STBY_ZA_ENABLE
 } mpu6050_stby_za_t;
+
 
 /**
  * @brief MPU6050 - PWR_MGMT_2 : STBY_XG
@@ -595,6 +584,7 @@ typedef enum {
     STBY_XG_ENABLE
 } mpu6050_stby_xg_t;
 
+
 /**
  * @brief MPU6050 - PWR_MGMT_2 : STBY_YG
  * 
@@ -609,6 +599,7 @@ typedef enum {
     STBY_YG_DISABLE,
     STBY_YG_ENABLE
 } mpu6050_stby_yg_t;
+
 
 /**
  * @brief MPU6050 - PWR_MGMT_2 : STBY_ZG
@@ -678,7 +669,6 @@ uint8_t mpu6050_init(
  * @param mpu6050_gyro_offset : pointer that stores an instance of gyroscope data
  */
 void mpu6050_calibrate(
-    mpu6050_i2c_addr_t mpu6050_address, 
     int16_t *mpu6050_accel_offset,
     int16_t *mpu6050_gyro_offset);
 
@@ -716,7 +706,6 @@ void mpu6050_calibrate(
  * @param accel_data : pointer to array where accelerometer data is stored 
  */
 void mpu6050_accel_read(
-    mpu6050_i2c_addr_t mpu6050_address,
     int16_t *accel_data);
 
 
@@ -748,7 +737,6 @@ void mpu6050_accel_read(
  * @param gyro_data : pointer to array where gyroscope data is stored 
  */
 void mpu6050_gyro_read(
-    mpu6050_i2c_addr_t mpu6050_address,
     int16_t *gyro_data);
 
 
@@ -773,8 +761,8 @@ void mpu6050_gyro_read(
  * @param mpu6050_address : I2C address of MPU6050 
  * @return int16_t : unformatted signed temperature value 
  */
-int16_t mpu6050_temp_read(
-    mpu6050_i2c_addr_t mpu6050_address);
+// int16_t mpu6050_temp_read(void); 
+void mpu6050_temp_read(void); 
 
 //=======================================================================================
 
@@ -808,14 +796,43 @@ int16_t mpu6050_temp_read(
  * @param mpu6050_address : I2C address of MPU6050 
  * @return uint8_t : self-test results for each sensor axis 
  */
-uint8_t mpu6050_self_test(
-    mpu6050_i2c_addr_t mpu6050_address);
+uint8_t mpu6050_self_test(void);
 
 //=======================================================================================
 
 
 //=======================================================================================
 // Calculation Functions
+
+/**
+ * @brief MPU6050 accelerometer x-axis raw value 
+ * 
+ * @details 
+ * 
+ * @return int16_t 
+ */
+int16_t mpu6050_get_accel_x_raw(void); 
+
+
+/**
+ * @brief MPU6050 accelerometer y-axis raw value 
+ * 
+ * @details 
+ * 
+ * @return int16_t 
+ */
+int16_t mpu6050_get_accel_y_raw(void); 
+
+
+/**
+ * @brief MPU6050 accelerometer z-axis raw value 
+ * 
+ * @details 
+ * 
+ * @return int16_t 
+ */
+int16_t mpu6050_get_accel_z_raw(void); 
+
 
 /**
  * @brief MPU6050 accelerometer x-axis calculation 
@@ -832,9 +849,9 @@ uint8_t mpu6050_self_test(
  * @param accel_x_axis_raw : raw x-axis acceleration output 
  * @return float : x-axis acceleration in g's
  */
-float mpu6050_accel_x_calc(
-    mpu6050_i2c_addr_t mpu6050_address, 
+float mpu6050_get_accel_x(
     int16_t accel_x_axis_raw);
+
 
 /**
  * @brief MPU6050 accelerometer y-axis calculation 
@@ -851,9 +868,9 @@ float mpu6050_accel_x_calc(
  * @param accel_y_axis_raw : raw y-axis acceleration output 
  * @return float : y-axis acceleration in g's
  */
-float mpu6050_accel_y_calc(
-    mpu6050_i2c_addr_t mpu6050_address, 
+float mpu6050_get_accel_y(
     int16_t accel_y_axis_raw);
+
 
 /**
  * @brief MPU6050 accelerometer z-axis calculation 
@@ -870,24 +887,39 @@ float mpu6050_accel_y_calc(
  * @param accel_z_axis_raw : raw z-axis acceleration output 
  * @return float : z-axis acceleration in g's
  */
-float mpu6050_accel_z_calc(
-    mpu6050_i2c_addr_t mpu6050_address, 
+float mpu6050_get_accel_z(
     int16_t accel_z_axis_raw);
 
 
 /**
- * @brief MPU6050 temperature sensor calculation
+ * @brief MPU6050 gyroscope x-axis raw value 
  * 
- * @details Calculates and returns the true temperature reading in degC using the raw 
- *          temperature sensor output from mpu6050_temp_read. This value is calculated
- *          using the following equation: <br><br>
- *          
- *          Temperature (degC) = (16-bit register value) / 340 + 36.53
+ * @details 
  * 
- * @param temp_raw : raw temperature sensor output
- * @return float : true temperature value in degC
+ * @return int16_t 
  */
-float mpu6050_temp_calc(int16_t temp_raw);
+int16_t mpu6050_get_gyro_x_raw(void); 
+
+
+/**
+ * @brief MPU6050 gyroscope y-axis raw value 
+ * 
+ * @details 
+ * 
+ * @return int16_t 
+ */
+int16_t mpu6050_get_gyro_y_raw(void); 
+
+
+/**
+ * @brief MPU6050 gyroscope z-axis raw value 
+ * 
+ * @details 
+ * 
+ * @return int16_t 
+ */
+int16_t mpu6050_get_gyro_z_raw(void); 
+
 
 /**
  * @brief MPU6050 gyroscopic value calculation around x-axis 
@@ -908,10 +940,10 @@ float mpu6050_temp_calc(int16_t temp_raw);
  * @param gyro_x_axis_offset : resting drift/error in gyroscope axis
  * @return float : x-axis gyroscopic value in deg/s
  */
-float mpu6050_gyro_x_calc(
-    mpu6050_i2c_addr_t mpu6050_address, 
+float mpu6050_get_gyro_x(
     int16_t gyro_x_axis_raw,
     int16_t gyro_x_axis_offset);
+
 
 /**
  * @brief MPU6050 gyroscopic value calculation around y-axis 
@@ -932,10 +964,10 @@ float mpu6050_gyro_x_calc(
  * @param gyro_y_axis_offset : resting drift/error in gyroscope axis
  * @return float : y-axis gyroscopic value in deg/s
  */
-float mpu6050_gyro_y_calc(
-    mpu6050_i2c_addr_t mpu6050_address, 
+float mpu6050_get_gyro_y(
     int16_t gyro_y_axis_raw,
     int16_t gyro_y_axis_offset);
+
 
 /**
  * @brief MPU6050 gyroscopic value calculation around z-axis 
@@ -956,10 +988,35 @@ float mpu6050_gyro_y_calc(
  * @param gyro_z_axis_offset : resting drift/error in gyroscope axis
  * @return float : z-axis gyroscopic value in deg/s
  */
-float mpu6050_gyro_z_calc(
-    mpu6050_i2c_addr_t mpu6050_address, 
+float mpu6050_get_gyro_z(
     int16_t gyro_z_axis_raw,
     int16_t gyro_z_axis_offset);
+
+
+/**
+ * @brief MPU6050 temperature sensor raw value 
+ * 
+ * @details 
+ * 
+ * @return int16_t 
+ */
+int16_t mpu6050_get_temp_raw(void); 
+
+
+/**
+ * @brief MPU6050 temperature sensor calculation
+ * 
+ * @details Calculates and returns the true temperature reading in degC using the raw 
+ *          temperature sensor output from mpu6050_temp_read. This value is calculated
+ *          using the following equation: <br><br>
+ *          
+ *          Temperature (degC) = (16-bit register value) / 340 + 36.53
+ * 
+ * @param temp_raw : raw temperature sensor output
+ * @return float : true temperature value in degC
+ */
+float mpu6050_get_temp(
+    int16_t temp_raw);
 
 //=======================================================================================
 
