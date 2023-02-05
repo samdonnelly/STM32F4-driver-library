@@ -572,6 +572,9 @@ typedef struct mpu6050_gyro_s
     int16_t gyro_x;                 // Angular velocity about the x-axis 
     int16_t gyro_y;                 // Angular velocity about the y-axis 
     int16_t gyro_z;                 // Angular velocity about the z-axis 
+    int16_t gyro_x_offset;          // Angular velocity offset about the x-axis 
+    int16_t gyro_y_offset;          // Angular velocity offset about the y-axis 
+    int16_t gyro_z_offset;          // Angular velocity offset about the z-axis 
 }
 mpu6050_gyro_t; 
 
@@ -697,12 +700,17 @@ uint8_t mpu6050_init(
         GYRO_SELF_TEST_DISABLE,
         fs_sel);
 
-    // Store the raw data scalars 
+    // Store the raw data scalars for calculating the actual value 
     mpu6050_com_data.accel_data_scalar = mpu6050_accel_scalar(mpu6050_com_data.i2c, 
                                                               mpu6050_com_data.addr); 
 
     mpu6050_com_data.gyro_data_scalar = mpu6050_gyro_scalar(mpu6050_com_data.i2c, 
                                                             mpu6050_com_data.addr); 
+
+    // Record the reference (error) in the gyroscope to correct the readings 
+    mpu6050_com_data.gyro_data.gyro_x_offset = CLEAR; 
+    mpu6050_com_data.gyro_data.gyro_y_offset = CLEAR; 
+    mpu6050_com_data.gyro_data.gyro_z_offset = CLEAR; 
 
     // Initialization completed successfully 
     return TRUE;
@@ -710,18 +718,40 @@ uint8_t mpu6050_init(
 
 
 // MPU6050 reference point set 
-void mpu6050_calibrate(
-    int16_t *mpu6050_accel_offset,
-    int16_t *mpu6050_gyro_offset)
+void mpu6050_calibrate(void)
 {
-    // Read initial accelerometer values 
-    mpu6050_accel_read(mpu6050_accel_offset);
+    mpu6050_gyro_read(); 
+    mpu6050_com_data.gyro_data.gyro_x_offset = mpu6050_com_data.gyro_data.gyro_x; 
+    mpu6050_com_data.gyro_data.gyro_y_offset = mpu6050_com_data.gyro_data.gyro_y; 
+    mpu6050_com_data.gyro_data.gyro_z_offset = mpu6050_com_data.gyro_data.gyro_z; 
+}
 
-    // Read an instance of gyroscope values 
-    mpu6050_gyro_read(mpu6050_gyro_offset); 
-    *mpu6050_gyro_offset++ = mpu6050_get_gyro_x_raw(); 
-    *mpu6050_gyro_offset++ = mpu6050_get_gyro_y_raw(); 
-    *mpu6050_gyro_offset   = mpu6050_get_gyro_z_raw(); 
+
+// MPU6050 accelerometer scalar
+float mpu6050_accel_scalar(
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t addr)
+{
+    // Get AFS_SEL 
+    mpu6050_afs_sel_set_t afs_sel = ((mpu6050_accel_config_read(i2c, addr) & 
+                                      MPU6050_AFS_SEL_MASK) >> SHIFT_3); 
+    
+    return (float)(MPU6050_AFS_SEL_MAX >> afs_sel); 
+}
+
+
+// MPU6050 gyroscope scalar
+float mpu6050_gyro_scalar(
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t addr)
+{
+    // Get FS_SEL 
+    mpu6050_fs_sel_set_t fs_sel = ((mpu6050_gyro_config_read(i2c, addr) & 
+                                    MPU6050_FS_SEL_MASK) >> SHIFT_3); 
+    
+    // Calculate the gyroscope calculation scalar 
+    return ((MPU6050_FS_SEL_MAX >> fs_sel) + ((fs_sel & MPU6050_FS_CORRECTION) >> SHIFT_1)) / 
+            (float)(MPU6050_GYRO_SCALAR); 
 }
 
 //=======================================================================================
@@ -794,8 +824,7 @@ void mpu6050_read(
 // Register Functions
 
 // MPU6050 Accelerometer Measurements registers read
-void mpu6050_accel_read(
-    int16_t *accel_data)
+void mpu6050_accel_read(void)
 {
     // Temporary data storage 
     uint8_t accel_data_reg[MPU6050_REG_6_BYTE];
@@ -819,8 +848,7 @@ void mpu6050_accel_read(
 
 
 // MPU6050 Gyroscope Measurements registers read
-void mpu6050_gyro_read(
-    int16_t *gyro_data)
+void mpu6050_gyro_read(void)
 {
     // Temporary data storage 
     uint8_t gyro_data_reg[MPU6050_REG_6_BYTE];
@@ -843,8 +871,7 @@ void mpu6050_gyro_read(
 }
 
 
-// MPU6050 Temperature Measurements registers read
-// int16_t mpu6050_temp_read(void)
+// MPU6050 Temperature Measurements registers read 
 void mpu6050_temp_read(void)
 {
     // Store the temperature data 
@@ -859,7 +886,7 @@ void mpu6050_temp_read(void)
         mpu6050_temp_sensor_reg);
 
     // Generate an unformatted signed integer from the combine the return values 
-    mpu6050_com_data.other_data.temp = (int16_t)((mpu6050_temp_sensor_reg[0] << SHIFT_8)  |
+    mpu6050_com_data.other_data.temp = (int16_t)((mpu6050_temp_sensor_reg[0] << SHIFT_8) |
                                                  (mpu6050_temp_sensor_reg[1] << SHIFT_0)); 
 }
 
@@ -1137,9 +1164,15 @@ uint8_t mpu6050_self_test(void)
         GYRO_SELF_TEST_DISABLE,
         FS_SEL_250);
 
-    // Read and store the sensor values during non-self-test
-    mpu6050_accel_read(accel_no_st);
-    mpu6050_gyro_read(gyro_no_st);
+    // Read and store the sensor values during non-self-test 
+    mpu6050_accel_read(); 
+    mpu6050_gyro_read(); 
+    accel_no_st[0] = mpu6050_com_data.accel_data.accel_x; 
+    accel_no_st[1] = mpu6050_com_data.accel_data.accel_y; 
+    accel_no_st[2] = mpu6050_com_data.accel_data.accel_z; 
+    gyro_no_st[0] = mpu6050_com_data.gyro_data.gyro_x; 
+    gyro_no_st[1] = mpu6050_com_data.gyro_data.gyro_y; 
+    gyro_no_st[2] = mpu6050_com_data.gyro_data.gyro_z; 
 
     // Enable self-test 
     mpu6050_accel_config_write(
@@ -1153,9 +1186,15 @@ uint8_t mpu6050_self_test(void)
         GYRO_SELF_TEST_ENABLE,
         FS_SEL_250);
     
-    // Read and store the sensor values during self-test
-    mpu6050_accel_read(accel_st);
-    mpu6050_gyro_read(gyro_st);
+    // Read and store the sensor values during self-test 
+    mpu6050_accel_read(); 
+    mpu6050_gyro_read(); 
+    accel_st[0] = mpu6050_com_data.accel_data.accel_x; 
+    accel_st[1] = mpu6050_com_data.accel_data.accel_y; 
+    accel_st[2] = mpu6050_com_data.accel_data.accel_z; 
+    gyro_st[0] = mpu6050_com_data.gyro_data.gyro_x; 
+    gyro_st[1] = mpu6050_com_data.gyro_data.gyro_y; 
+    gyro_st[2] = mpu6050_com_data.gyro_data.gyro_z; 
     
     // Read the self-test registers
     mpu6050_self_test_read(
@@ -1180,7 +1219,7 @@ uint8_t mpu6050_self_test(void)
         gyro_st,
         MPU6050_NUM_GYRO_AXIS);
     
-    // Calculate the change from factory trim and check against the acceptable range
+    // Calculate the change from factory trim and check against the acceptable range 
     self_test_result = mpu6050_self_test_accel_result(
                                             accel_str,
                                             accel_ft,
@@ -1190,7 +1229,7 @@ uint8_t mpu6050_self_test(void)
                                             gyro_ft,
                                             self_test_result);
     
-    // Disable self-test and set the full scale ranges back to their original values
+    // Disable self-test and set the full scale ranges back to their original values 
     mpu6050_accel_config_write(
         mpu6050_com_data.i2c, 
         mpu6050_com_data.addr, 
@@ -1409,8 +1448,7 @@ int16_t mpu6050_get_accel_z_raw(void)
 
 
 // MPU6050 accelerometer x-axis calculation 
-float mpu6050_get_accel_x(
-    int16_t accel_x_axis_raw)
+float mpu6050_get_accel_x(void)
 {
     // Get the raw value scalar and calculate the true x-axis acceleration 
     return mpu6050_get_accel_x_raw() / mpu6050_com_data.accel_data_scalar; 
@@ -1418,8 +1456,7 @@ float mpu6050_get_accel_x(
 
 
 // MPU6050 accelerometer y-axis calculation 
-float mpu6050_get_accel_y(
-    int16_t accel_y_axis_raw)
+float mpu6050_get_accel_y(void)
 {
     // Get the raw value scalar and calculate the true y-axis acceleration 
     return mpu6050_get_accel_y_raw() / mpu6050_com_data.accel_data_scalar; 
@@ -1427,123 +1464,55 @@ float mpu6050_get_accel_y(
 
 
 // MPU6050 accelerometer z-axis calculation 
-float mpu6050_get_accel_z(
-    int16_t accel_z_axis_raw)
+float mpu6050_get_accel_z(void)
 {
     // Get the raw value scalar and calculate the true z-axis acceleration 
     return mpu6050_get_accel_z_raw() / mpu6050_com_data.accel_data_scalar; 
 }
 
 
-// MPU6050 accelerometer scalar
-float mpu6050_accel_scalar(
-    I2C_TypeDef *i2c, 
-    mpu6050_i2c_addr_t addr)
-{
-    // Get AFS_SEL 
-    mpu6050_afs_sel_set_t afs_sel = ((mpu6050_accel_config_read(i2c, addr) & 
-                                      MPU6050_AFS_SEL_MASK) >> SHIFT_3); 
-    
-    return (float)(MPU6050_AFS_SEL_MAX >> afs_sel); 
-}
-
-
 // MPU6050 gyroscope x-axis raw value 
 int16_t mpu6050_get_gyro_x_raw(void)
 {
-    return mpu6050_com_data.gyro_data.gyro_x; 
+    return (mpu6050_com_data.gyro_data.gyro_x - mpu6050_com_data.gyro_data.gyro_x_offset); 
 }
 
 
 // MPU6050 gyroscope y-axis raw value 
 int16_t mpu6050_get_gyro_y_raw(void)
 {
-    return mpu6050_com_data.gyro_data.gyro_y; 
+    return (mpu6050_com_data.gyro_data.gyro_y - mpu6050_com_data.gyro_data.gyro_y_offset); 
 }
 
 
 // MPU6050 gyroscope z-axis raw value 
 int16_t mpu6050_get_gyro_z_raw(void)
 {
-    return mpu6050_com_data.gyro_data.gyro_z; 
+    return (mpu6050_com_data.gyro_data.gyro_z - mpu6050_com_data.gyro_data.gyro_z_offset); 
 }
 
 
 // MPU6050 gyroscopic (angular acceleration) calculation around x-axis 
-float mpu6050_get_gyro_x(
-    int16_t gyro_x_axis_raw,
-    int16_t gyro_x_axis_offset)
+float mpu6050_get_gyro_x(void)
 {
     // Get the raw value scalar and calculate the true x-axis angular acceleration 
-    return (mpu6050_get_gyro_x_raw() - gyro_x_axis_offset) / mpu6050_com_data.gyro_data_scalar; 
+    return (mpu6050_get_gyro_x_raw() / mpu6050_com_data.gyro_data_scalar); 
 }
 
 
 // MPU6050 gyroscopic value calculation around y-axis 
-float mpu6050_get_gyro_y(
-    int16_t gyro_y_axis_raw,
-    int16_t gyro_y_axis_offset)
+float mpu6050_get_gyro_y(void)
 {
     // Get the raw value scalar and calculate the true x-axis angular acceleration 
-    return (mpu6050_get_gyro_y_raw() - gyro_y_axis_offset) / mpu6050_com_data.gyro_data_scalar; 
+    return (mpu6050_get_gyro_y_raw() / mpu6050_com_data.gyro_data_scalar); 
 }
 
 
 // MPU6050 gyroscopic value calculation around z-axis 
-float mpu6050_get_gyro_z(
-    int16_t gyro_z_axis_raw,
-    int16_t gyro_z_axis_offset)
+float mpu6050_get_gyro_z(void)
 {
     // Get the raw value scalar and calculate the true x-axis angular acceleration 
-    return (mpu6050_get_gyro_z_raw() - gyro_z_axis_offset) / mpu6050_com_data.gyro_data_scalar; 
-}
-
-
-// MPU6050 gyroscope scalar
-float mpu6050_gyro_scalar(
-    I2C_TypeDef *i2c, 
-    mpu6050_i2c_addr_t addr)
-{
-    // Get FS_SEL 
-    mpu6050_fs_sel_set_t fs_sel = ((mpu6050_gyro_config_read(i2c, addr) & 
-                                    MPU6050_FS_SEL_MASK) >> SHIFT_3); 
-    
-    // Calculate the gyroscope calculation scalar 
-    return ((MPU6050_FS_SEL_MAX >> fs_sel) + ((fs_sel & MPU6050_FS_CORRECTION) >> SHIFT_1)) / 
-            (float)(MPU6050_GYRO_SCALAR); 
-
-    // float gyro_scalar;
-
-    // // Get FS_SEL 
-    // uint8_t fs_sel = ((mpu6050_gyro_config_read(mpu6050_address) & 
-    //                    MPU6050_FS_SEL_MASK) >> SHIFT_3);
-    
-    // // Return the scalar 
-    // switch (fs_sel)
-    // {
-    //     case FS_SEL_250:
-    //         gyro_scalar = GYRO_SCALE_FS_SEL_250 / ((float)(MPU6050_GYRO_SCALAR));
-    //         break;
-        
-    //     case FS_SEL_500:
-    //         gyro_scalar = GYRO_SCALE_FS_SEL_500 / ((float)(MPU6050_GYRO_SCALAR));
-    //         break;
-        
-    //     case FS_SEL_1000:
-    //         gyro_scalar = GYRO_SCALE_FS_SEL_1000 / ((float)(MPU6050_GYRO_SCALAR));
-    //         break;
-        
-    //     case FS_SEL_2000:
-    //         gyro_scalar = GYRO_SCALE_FS_SEL_2000 / ((float)(MPU6050_GYRO_SCALAR));
-    //         break;
-        
-    //     default:
-    //         gyro_scalar = 0;
-    //         break;
-    // }
-
-    // // Divide the scalar to restore decimal places
-    // return gyro_scalar; 
+    return (mpu6050_get_gyro_z_raw() / mpu6050_com_data.gyro_data_scalar); 
 }
 
 
@@ -1555,8 +1524,7 @@ int16_t mpu6050_get_temp_raw(void)
 
 
 // MPU6050 temperature sensor calculation 
-float mpu6050_get_temp(
-    int16_t temp_raw)
+float mpu6050_get_temp(void)
 {
     // Get the true temperature in degC
     return mpu6050_get_temp_raw() / ((float)(MPU6050_TEMP_SENSIT)) + 

@@ -77,7 +77,6 @@
  *          used to provide the needed offset when calling the address. 
  * 
  * @see mpu6050_rw_offset_t
- * 
  */
 typedef enum {
     MPU6050_1_ADDRESS = 0xD0,
@@ -93,7 +92,6 @@ typedef enum {
  *          reading or writing.  
  * 
  * @see mpu6050_i2c_addr_t
- * 
  */
 typedef enum {
     MPU6050_W_OFFSET,
@@ -108,7 +106,6 @@ typedef enum {
  *          example all of the self-test register data is held across 4 registers or bytes. 
  *          These provide an easy way to index the register information once it's 
  *          already been read so that you can work with it.
- * 
  */
 typedef enum {
     MPU6050_REG_IDX_0,
@@ -124,7 +121,6 @@ typedef enum {
  * @details This is used to specify the number of registers or bytes to read from the 
  *          MPU6050. Not all register information in contained within a single byte 
  *          so this enum provides notation to specify how many bytes to read or write. 
- * 
  */
 typedef enum {
     MPU6050_REG_1_BYTE = 1,
@@ -144,7 +140,6 @@ typedef enum {
  *          if you read or write more than a single byte, the address will be incremented 
  *          automatically which is why for example only MPU6050_ACCEL_XOUT_H is specified 
  *          and not Y and Z axes registers. 
- * 
  */
 typedef enum {
     MPU6050_SELF_TEST    = 0x0D,   // Register 13 
@@ -167,7 +162,6 @@ typedef enum {
  * @details During self-test, after reading the self-test registers, the following masks 
  *          are used to parse the X, Y and Z accleroemeter and gyroscope data apart from 
  *          one another so that the data is readable/usable. 
- * 
  */
 typedef enum {
     SELF_TEST_MASK_ZA_TEST_LO = 0x03,
@@ -187,7 +181,6 @@ typedef enum {
  *          conflict with the result of another. 
  * 
  * @see mpu6050_self_test
- * 
  */
 typedef enum {
     SELF_TEST_RESULT_SHIFT_ACCEL = 0x01,
@@ -205,7 +198,6 @@ typedef enum {
  *          of the 5-bit result from the self-test register and then approximated using 
  *          a third order polynominal equation. The following values are the constants 
  *          from the approximated accelerometer factory trim equation. 
- * 
  */
 typedef enum {
     SELF_TEST_ACCEL_FT_C1 = 142,
@@ -225,7 +217,6 @@ typedef enum {
  *          of the 5-bit result from the self-test register and then approximated using 
  *          a third order polynominal equation. The following values are the constants 
  *          from the approximated gyroscope factory trim equation. 
- * 
  */
 typedef enum {
     SELF_TEST_GYRO_FT_C1 = 1001,
@@ -246,7 +237,6 @@ typedef enum {
  * 
  * @see mpu6050_init
  * @see mpu6050_dlpf_cfg_t
- * 
  */
 typedef enum {
     SMPLRT_DIV_0 = 0,  // 1 kHz when DLPF = 0 or 7 
@@ -270,7 +260,6 @@ typedef enum {
  *          7 : ACCEL_ZOUT_L[0]  <br><br>
  *          
  *          Currently this input is hardcoded to 0 and isn't an argument to mpu6050_init. 
- * 
  */
 typedef enum {
     EXT_SYNC_SET_0,  // Input disabled 
@@ -306,7 +295,6 @@ typedef enum {
  *          
  *          Refer to the Register Map datasheet for the MPU6050 for more information on 
  *          DLPF settings.
- * 
  */
 typedef enum {
     DLPF_CFG_0,  // accel = 260 Hz, gyro = 256 Hz
@@ -328,7 +316,6 @@ typedef enum {
  *          self-test is temporarily enabled. 
  * 
  * @see mpu6050_self_test
- * 
  */
 typedef enum {
     GYRO_SELF_TEST_DISABLE,
@@ -353,7 +340,6 @@ typedef enum {
  *          - GYRO_SCALE_FS_SEL_1000 = 328, ---> 32.8 * 10 
  *          - GYRO_SCALE_FS_SEL_500  = 655, ---> 65.5 * 10 
  *          - GYRO_SCALE_FS_SEL_250  = 1310 ---> 131.0 * 10 
- * 
  */
 typedef enum {
     FS_SEL_250,   // +/- 250  deg/s ---> Scalar = 1310 
@@ -371,7 +357,6 @@ typedef enum {
  *          self-test is temporarily enabled. 
  * 
  * @see mpu6050_self_test 
- * 
  */
 typedef enum {
     ACCEL_SELF_TEST_DISABLE,
@@ -395,7 +380,6 @@ typedef enum {
  *          - ACCEL_SCALE_AFS_SEL_8  = 4096,
  *          - ACCEL_SCALE_AFS_SEL_4  = 8192,
  *          - ACCEL_SCALE_AFS_SEL_2  = 16384
- * 
  */
 typedef enum {
     AFS_SEL_2,   // +/- 2g ---> Scalar = 16384 
@@ -410,7 +394,6 @@ typedef enum {
  * 
  * @details Used to configure power management register 1 in mpu6050_init. Allows for 
  *          a reset to the devices default settings. 
- * 
  */
 typedef enum {
     DEVICE_RESET_DISABLE,
@@ -429,7 +412,6 @@ typedef enum {
  * 
  * @see mpu6050_cycle_t
  * @see mpu6050_lp_wake_ctrl_t
- * 
  */
 typedef enum {
     SLEEP_MODE_DISABLE,
@@ -447,7 +429,6 @@ typedef enum {
  * 
  * @see mpu6050_sleep_mode_t
  * @see mpu6050_lp_wake_ctrl_t
- * 
  */
 typedef enum {
     CYCLE_SLEEP_DISABLED,
@@ -460,7 +441,6 @@ typedef enum {
  * 
  * @details Used to configure power management register 1 in mpu6050_init. Allows for 
  *          enabling or disabling of the temperature sensor. 
- * 
  */
 typedef enum {
     TEMP_SENSOR_ENABLE,
@@ -485,7 +465,6 @@ typedef enum {
  *           <br> 
  *           It is recommended the internal oscillator is not used as the other options 
  *           are much more stable.  
- * 
  */
 typedef enum {
     CLKSEL_0,  // Internal 8MHz oscillator
@@ -519,7 +498,6 @@ typedef enum {
  *              - Set SLEEP to 0                     <br>
  *              - Set TEMP_DIS to 1                  <br>
  *              - Set STBY_XG, STBY_YG, STBY_ZG to 1 <br>
- * 
  */
 typedef enum {
     LP_WAKE_CTRL_0,  // 1.25 Hz wakeup frequency
@@ -534,7 +512,6 @@ typedef enum {
  * 
  * @details Used to configure power management register 2 in mpu6050_init. Allows for 
  *          putting the x-axis accelerometer into standy mode.
- * 
  */
 typedef enum {
     STBY_XA_DISABLE,
@@ -547,7 +524,6 @@ typedef enum {
  * 
  * @details Used to configure power management register 2 in mpu6050_init. Allows for 
  *          putting the y-axis accelerometer into standy mode.
- * 
  */
 typedef enum {
     STBY_YA_DISABLE,
@@ -561,7 +537,6 @@ typedef enum {
  * 
  * @details Used to configure power management register 2 in mpu6050_init. Allows for 
  *          putting the z-axis accelerometer into standy mode.
- * 
  */
 typedef enum {
     STBY_ZA_DISABLE,
@@ -577,7 +552,6 @@ typedef enum {
  *          used as the clock source for the device and this axis is disabled then 
  *          the clock source will automatically be changed to the internal 8 MHz 
  *          oscillator (not recommended). 
- * 
  */
 typedef enum {
     STBY_XG_DISABLE,
@@ -593,7 +567,6 @@ typedef enum {
  *          used as the clock source for the device and this axis is disabled then 
  *          the clock source will automatically be changed to the internal 8 MHz 
  *          oscillator (not recommended).
- * 
  */
 typedef enum {
     STBY_YG_DISABLE,
@@ -609,7 +582,6 @@ typedef enum {
  *          used as the clock source for the device and this axis is disabled then 
  *          the clock source will automatically be changed to the internal 8 MHz 
  *          oscillator (not recommended).
- * 
  */
 typedef enum {
     STBY_ZG_DISABLE,
@@ -668,9 +640,7 @@ uint8_t mpu6050_init(
  * @param mpu6050_accel_offset : pointer that stores an instance of accelerometer data
  * @param mpu6050_gyro_offset : pointer that stores an instance of gyroscope data
  */
-void mpu6050_calibrate(
-    int16_t *mpu6050_accel_offset,
-    int16_t *mpu6050_gyro_offset);
+void mpu6050_calibrate(void); 
 
 //=======================================================================================
 
@@ -705,8 +675,7 @@ void mpu6050_calibrate(
  * @param mpu6050_address : I2C address of MPU6050 
  * @param accel_data : pointer to array where accelerometer data is stored 
  */
-void mpu6050_accel_read(
-    int16_t *accel_data);
+void mpu6050_accel_read(void);
 
 
 /**
@@ -736,8 +705,7 @@ void mpu6050_accel_read(
  * @param mpu6050_address : I2C address of MPU6050 
  * @param gyro_data : pointer to array where gyroscope data is stored 
  */
-void mpu6050_gyro_read(
-    int16_t *gyro_data);
+void mpu6050_gyro_read(void);
 
 
 /**
@@ -761,7 +729,6 @@ void mpu6050_gyro_read(
  * @param mpu6050_address : I2C address of MPU6050 
  * @return int16_t : unformatted signed temperature value 
  */
-// int16_t mpu6050_temp_read(void); 
 void mpu6050_temp_read(void); 
 
 //=======================================================================================
@@ -802,7 +769,7 @@ uint8_t mpu6050_self_test(void);
 
 
 //=======================================================================================
-// Calculation Functions
+// Getters 
 
 /**
  * @brief MPU6050 accelerometer x-axis raw value 
@@ -849,8 +816,7 @@ int16_t mpu6050_get_accel_z_raw(void);
  * @param accel_x_axis_raw : raw x-axis acceleration output 
  * @return float : x-axis acceleration in g's
  */
-float mpu6050_get_accel_x(
-    int16_t accel_x_axis_raw);
+float mpu6050_get_accel_x(void); 
 
 
 /**
@@ -868,8 +834,7 @@ float mpu6050_get_accel_x(
  * @param accel_y_axis_raw : raw y-axis acceleration output 
  * @return float : y-axis acceleration in g's
  */
-float mpu6050_get_accel_y(
-    int16_t accel_y_axis_raw);
+float mpu6050_get_accel_y(void); 
 
 
 /**
@@ -887,8 +852,7 @@ float mpu6050_get_accel_y(
  * @param accel_z_axis_raw : raw z-axis acceleration output 
  * @return float : z-axis acceleration in g's
  */
-float mpu6050_get_accel_z(
-    int16_t accel_z_axis_raw);
+float mpu6050_get_accel_z(void); 
 
 
 /**
@@ -940,9 +904,7 @@ int16_t mpu6050_get_gyro_z_raw(void);
  * @param gyro_x_axis_offset : resting drift/error in gyroscope axis
  * @return float : x-axis gyroscopic value in deg/s
  */
-float mpu6050_get_gyro_x(
-    int16_t gyro_x_axis_raw,
-    int16_t gyro_x_axis_offset);
+float mpu6050_get_gyro_x(void);
 
 
 /**
@@ -964,9 +926,7 @@ float mpu6050_get_gyro_x(
  * @param gyro_y_axis_offset : resting drift/error in gyroscope axis
  * @return float : y-axis gyroscopic value in deg/s
  */
-float mpu6050_get_gyro_y(
-    int16_t gyro_y_axis_raw,
-    int16_t gyro_y_axis_offset);
+float mpu6050_get_gyro_y(void);
 
 
 /**
@@ -988,9 +948,7 @@ float mpu6050_get_gyro_y(
  * @param gyro_z_axis_offset : resting drift/error in gyroscope axis
  * @return float : z-axis gyroscopic value in deg/s
  */
-float mpu6050_get_gyro_z(
-    int16_t gyro_z_axis_raw,
-    int16_t gyro_z_axis_offset);
+float mpu6050_get_gyro_z(void);
 
 
 /**
@@ -1015,8 +973,7 @@ int16_t mpu6050_get_temp_raw(void);
  * @param temp_raw : raw temperature sensor output
  * @return float : true temperature value in degC
  */
-float mpu6050_get_temp(
-    int16_t temp_raw);
+float mpu6050_get_temp(void);
 
 //=======================================================================================
 
