@@ -22,16 +22,7 @@
 
 //=======================================================================================
 // TODO 
-// - Create a data record to store one-time calculation data and possible read data 
-//   - Ex. the full scale range that gets requested during self test and calculation 
-// - Combine mpu6050_self_test_accel_result and mpu6050_self_test_gyro_result
-// - Add a gpio output to the data record and init setup for using multiple devices 
 // - Test if the interrupt signal for data ready is worth adding 
-//  - Register 55: 
-//    - INT_LEVEL: 0 
-//    - INT_OPEN
-// - Add a low power mode setter function to toggle the SLEEP bit (pwr mngt 1) 
-//   - SLEEP = 1 --> low power mode 
 // - Possibly add a register reset function - used by controller in reset? 
 //=======================================================================================
 
@@ -60,7 +51,7 @@ void mpu6050_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
     mpu6050_register_addresses_t mpu6050_register,
-    mpu6050_reg_byte_size_t mpu6050_reg_size,
+    byte_num_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value);
 
 
@@ -85,7 +76,7 @@ void mpu6050_read(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
     mpu6050_register_addresses_t mpu6050_register, 
-    mpu6050_reg_byte_size_t mpu6050_reg_size,
+    byte_num_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value);
 
 
@@ -201,6 +192,38 @@ uint8_t mpu6050_accel_config_read(
 
 
 /**
+ * @brief Interrupt configuration register write 
+ * 
+ * @details 
+ * 
+ * @param i2c 
+ * @param addr 
+ * @param latch_int_en 
+ * @param int_rd_clear 
+ */
+void mpu6050_int_pin_config_write(
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t addr, 
+    mpu6050_mode_t latch_int_en, 
+    mpu6050_mode_t int_rd_clear); 
+
+
+/**
+ * @brief Interrupt enable register write 
+ * 
+ * @details 
+ * 
+ * @param i2c 
+ * @param addr 
+ * @param data_rdy_en 
+ */
+void mpu6050_int_enable_write(
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t addr, 
+    mpu6050_mode_t data_rdy_en); 
+
+
+/**
  * @brief MPU6050 Gyroscope Configuration register write
  * 
  * @details Writes to the GYRO_CONFIG register (Register 27 - 1 byte). This register 
@@ -302,40 +325,33 @@ void mpu6050_pwr_mgmt_1_write(
  *          
  *          Register write information: <br>
  *          - LP_WAKE_CTRL : 2-bit unsigned value. <br>
- *          - STBY_XA : 1-bit  <br>
- *          - STBY_YA : 1-bit  <br>
- *          - STBY_ZA : 1-bit  <br>
- *          - STBY_XA : 1-bit  <br> 
- *          - STBY_YG : 1-bit  <br>
- *          - STBY_ZG : 1-bit 
+ *          
+ *          The 6 least significant bits of standby_status represent the standby status of each 
+ *          device reading. If the bit is set to 1 it means that reading will be put on standby 
+ *          and therefore not be reported when reading from the register. If you want all the 
+ *          data to be available you can set all the bits to zero. The order of the bits are 
+ *          as follows: 
+ *          - STBY_XA : bit 5 --> Accelerometer x-axis 
+ *          - STBY_YA : bit 4 --> Accelerometer y-axis 
+ *          - STBY_ZA : bit 3 --> Accelerometer z-axis 
+ *          - STBY_XA : bit 2 --> Gyroscope about x-axis 
+ *          - STBY_YG : bit 1 --> Gyroscope about y-axis 
+ *          - STBY_ZG : bit 0 --> Gyroscope about z-axis 
+ *          
+ *          The two most significant bits of the standby_status byte do nothing. 
  * 
  * @see mpu6050_lp_wake_ctrl_t
- * @see mpu6050_stby_xa_t
- * @see mpu6050_stby_ya_t
- * @see mpu6050_stby_za_t
- * @see mpu6050_stby_xg_t
- * @see mpu6050_stby_yg_t
- * @see mpu6050_stby_zg_t
  * 
+ * @param i2c : 
  * @param mpu6050_address : I2C address of MPU6050 
  * @param lp_wake_ctrl : specify wake-up frequency in accelerometer only low power mode
- * @param stby_xa : put accelerometer x-axis in standby when set to 1
- * @param stby_ya : put accelerometer y-axis in standby when set to 1
- * @param stby_za : put accelerometer z-axis in standby when set to 1
- * @param stby_xg : put gyroscope x-axis in standby when set to 1
- * @param stby_yg : put gyroscope y-axis in standby when set to 1
- * @param stby_zg : put gyroscope z-axis in standby when set to 1
+ * @param standby_status : 
  */
 void mpu6050_pwr_mgmt_2_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
     mpu6050_lp_wake_ctrl_t lp_wake_ctrl,
-    mpu6050_stby_xa_t stby_xa,
-    mpu6050_stby_ya_t stby_ya,
-    mpu6050_stby_za_t stby_za,
-    mpu6050_stby_xg_t stby_xg,
-    mpu6050_stby_yg_t stby_yg,
-    mpu6050_stby_zg_t stby_zg);
+    uint8_t standby_status);
 
 
 /**
@@ -399,59 +415,30 @@ void mpu6050_str_calc(
 
 
 /**
- * @brief MPU6050 accelerometer self-test result 
+ * @brief MPU6050 self-test result calculation 
  * 
- * @details Determines the results (pass/fail) of the self-test for the accelerometer 
- *          and stores the result in bits 0-2 of self_test_results. mpu6050_self_test
+ * @details Determines the results (pass/fail) of the device self-test and stores the 
+ *          result in "results". This function is called for both the accelerometer and 
+ *          gyroscope (separately) and stores the result in bits 0-2 of "result" for the 
+ *          accelerometer and bits 3-5 for the gyroscope. mpu6050_self_test
  *          calls this function to calculate the result. See mpu6050_self_test
  *          documentation for a breakdown on reading these results. The result is 
  *          determined for each axis by taking the output of the following equation
  *          and comparing it against the maximum allowable change from factory trim.
- *          <br><br>
  *          
  *          Change from factory trim = ((self-test response) - (factory trim)) / 
  *                                     (factory trim)
  * 
- * @see mpu6050_accel_ft
- * @see mpu6050_self_test
- * 
- * @param accel_self_test_results : pointer to accelerometer self-test responses
- * @param accel_factory_trim : pointer to accelerometer axes factory trim 
- * @param self_test_results : stores the pass/fail results of the self-test
- * @return uint8_t : returns the updated self_test_results
+ * @param self_test_results 
+ * @param factory_trim 
+ * @param results 
+ * @param shift 
  */
-uint8_t mpu6050_self_test_accel_result(
-    int16_t *accel_self_test_results,
-    float   *accel_factory_trim,
-    uint8_t self_test_results);
-
-
-/**
- * @brief MPU6050 gyroscope self-test result
- * 
- * @details Determines the results (pass/fail) of the self-test for the gyroscope 
- *          and stores the result in bits 3-5 of self_test_results. mpu6050_self_test
- *          calls this function to calculate the result. See mpu6050_self_test
- *          documentation for a breakdown on reading these results. The result is 
- *          determined for each axis by taking the output of the following equation
- *          and comparing it against the maximum allowable change from factory trim.
- *          <br><br>
- *          
- *          Change from factory trim = ((self-test response) - (factory trim)) / 
- *                                     (factory trim)
- * 
- * @see mpu6050_gyro_ft
- * @see mpu6050_self_test
- * 
- * @param gyro_self_test_results : pointer to gyroscope self-test responses
- * @param gyro_factory_trim : pointer to gyroscope axes factory trim 
- * @param self_test_results : stores the pass/fail results of the self-test
- * @return uint8_t : returns the updated self_test_results
- */
-uint8_t mpu6050_self_test_gyro_result(
-    int16_t *gyro_self_test_results,
-    float   *gyro_factory_trim,
-    uint8_t self_test_results);
+void mpu6050_self_test_result(
+    int16_t *self_test_results,
+    float *factory_trim,
+    uint8_t *results, 
+    self_test_result_shift_t shift); 
 
 
 /**
@@ -587,14 +574,15 @@ typedef struct mpu6050_other_s
 mpu6050_other_t; 
 
 
-// 
+// MPU6050 data record structure 
 typedef struct mpu6050_com_data_s 
 {
     // Peripherals 
     I2C_TypeDef *i2c;                // I2C port connected to the device 
-    GPIO_TypeDef *gpio;              // 
+    GPIO_TypeDef *gpio;              // GPIO port for the INT pin 
 
     // Pins 
+    pin_selector_t int_pin;          // INT pin number 
 
     // Device information 
     mpu6050_i2c_addr_t addr;         // Device I2C address 
@@ -634,7 +622,8 @@ static mpu6050_com_data_t mpu6050_com_data;
 // MPU6050 Initialization 
 uint8_t mpu6050_init(
     I2C_TypeDef *i2c, 
-    mpu6050_i2c_addr_t mpu6050_address,
+    mpu6050_i2c_addr_t mpu6050_addr,
+    uint8_t standby_status, 
     mpu6050_dlpf_cfg_t dlpf_cfg,
     mpu6050_smplrt_div_t smplrt_div,
     mpu6050_afs_sel_set_t afs_sel,
@@ -642,11 +631,11 @@ uint8_t mpu6050_init(
 {
     // Assign device information 
     mpu6050_com_data.i2c = i2c; 
-    mpu6050_com_data.addr = mpu6050_address; 
+    mpu6050_com_data.addr = mpu6050_addr; 
 
     // Read the WHO_AM_I register to establish that there is communication 
     if (mpu6050_who_am_i_read(mpu6050_com_data.i2c, 
-                              mpu6050_com_data.addr) != MPU6050_7_BIT_ADDRESS)
+                              mpu6050_com_data.addr) != MPU6050_7BIT_ADDR)
     {
         return FALSE;
     }
@@ -656,12 +645,7 @@ uint8_t mpu6050_init(
         mpu6050_com_data.i2c, 
         mpu6050_com_data.addr,
         LP_WAKE_CTRL_0,
-        STBY_XA_DISABLE,
-        STBY_YA_DISABLE,
-        STBY_ZA_DISABLE,
-        STBY_XG_DISABLE,
-        STBY_YG_DISABLE,
-        STBY_ZG_DISABLE);
+        standby_status);
 
     // Wake the sensor up through the power management 1 register 
     mpu6050_pwr_mgmt_1_write(
@@ -717,6 +701,103 @@ uint8_t mpu6050_init(
 }
 
 
+// MPU6050 INT pin initialization 
+void mpu6050_int_pin_init(
+    GPIO_TypeDef *gpio, 
+    pin_selector_t pin)
+{
+    // Update the data record 
+    mpu6050_com_data.gpio = gpio; 
+    mpu6050_com_data.int_pin = pin; 
+
+    // Configure the GPIO input pin 
+    gpio_pin_init(mpu6050_com_data.gpio, 
+                  mpu6050_com_data.int_pin, 
+                  MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_PD); 
+
+    // Interrupt configuration register 
+    mpu6050_int_pin_config_write(
+        mpu6050_com_data.i2c, 
+        mpu6050_com_data.addr, 
+        MPU6050_MODE_ENABLE, 
+        MPU6050_MODE_ENABLE); 
+
+    // Interrupt enable register 
+    mpu6050_int_enable_write(
+        mpu6050_com_data.i2c, 
+        mpu6050_com_data.addr, 
+        MPU6050_MODE_ENABLE); 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and Write Functions 
+
+// MPU6050 write to register 
+void mpu6050_write(
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t addr, 
+    mpu6050_register_addresses_t mpu6050_register,
+    byte_num_t mpu6050_reg_size,
+    uint8_t *mpu6050_reg_value)
+{
+    // Create start condition to initiate master mode 
+    i2c_start(i2c); 
+
+    // Send the MPU6050 address with a write offset
+    i2c_write_address(i2c, addr + MPU6050_W_OFFSET);
+    i2c_clear_addr(i2c);
+
+    // Send the register address that is going to be written to 
+    i2c_write_master_mode(i2c, &mpu6050_register, BYTE_1);
+
+    // Write the data to the MPU6050 
+    i2c_write_master_mode(i2c, mpu6050_reg_value, mpu6050_reg_size);
+
+    // Create a stop condition
+    i2c_stop(i2c); 
+}
+
+
+// MPU6050 read from register 
+void mpu6050_read(
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t addr, 
+    mpu6050_register_addresses_t mpu6050_register, 
+    byte_num_t mpu6050_reg_size,
+    uint8_t *mpu6050_reg_value)
+{
+    // Create start condition to initiate master mode 
+    i2c_start(i2c); 
+
+    // Send the MPU6050 address with a write offset 
+    i2c_write_address(i2c, addr + MPU6050_W_OFFSET);
+    i2c_clear_addr(i2c);
+
+    // Send the register address that is going to be read 
+    i2c_write_master_mode(i2c, &mpu6050_register, BYTE_1);
+
+    // Create another start signal 
+    i2c_start(i2c); 
+
+    // Send the MPU6050 address with a read offset 
+    i2c_write_address(i2c, addr + MPU6050_R_OFFSET);
+
+    // Read the data sent by the MPU6050 
+    i2c_read_master_mode(i2c, mpu6050_reg_value, mpu6050_reg_size);
+
+    // Create a stop condition
+    i2c_stop(i2c); 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Configuration functions 
+
 // MPU6050 reference point set 
 void mpu6050_calibrate(void)
 {
@@ -724,6 +805,21 @@ void mpu6050_calibrate(void)
     mpu6050_com_data.gyro_data.gyro_x_offset = mpu6050_com_data.gyro_data.gyro_x; 
     mpu6050_com_data.gyro_data.gyro_y_offset = mpu6050_com_data.gyro_data.gyro_y; 
     mpu6050_com_data.gyro_data.gyro_z_offset = mpu6050_com_data.gyro_data.gyro_z; 
+}
+
+
+// MPU6050 low power mode config 
+void mpu6050_low_pwr_config(
+    mpu6050_sleep_mode_t sleep)
+{
+    mpu6050_pwr_mgmt_1_write(
+        mpu6050_com_data.i2c, 
+        mpu6050_com_data.addr,
+        DEVICE_RESET_DISABLE,
+        sleep,
+        CYCLE_SLEEP_DISABLED,
+        TEMP_SENSOR_ENABLE,
+        CLKSEL_5);
 }
 
 
@@ -758,83 +854,20 @@ float mpu6050_gyro_scalar(
 
 
 //=======================================================================================
-// Read and Write Functions 
-
-// MPU6050 write to register 
-void mpu6050_write(
-    I2C_TypeDef *i2c, 
-    mpu6050_i2c_addr_t addr, 
-    mpu6050_register_addresses_t mpu6050_register,
-    mpu6050_reg_byte_size_t mpu6050_reg_size,
-    uint8_t *mpu6050_reg_value)
-{
-    // Create start condition to initiate master mode 
-    i2c_start(i2c); 
-
-    // Send the MPU6050 address with a write offset
-    i2c_write_address(i2c, addr + MPU6050_W_OFFSET);
-    i2c_clear_addr(i2c);
-
-    // Send the register address that is going to be written to 
-    i2c_write_master_mode(i2c, &mpu6050_register, MPU6050_REG_1_BYTE);
-
-    // Write the data to the MPU6050 
-    i2c_write_master_mode(i2c, mpu6050_reg_value, mpu6050_reg_size);
-
-    // Create a stop condition
-    i2c_stop(i2c); 
-}
-
-
-// MPU6050 read from register 
-void mpu6050_read(
-    I2C_TypeDef *i2c, 
-    mpu6050_i2c_addr_t addr, 
-    mpu6050_register_addresses_t mpu6050_register, 
-    mpu6050_reg_byte_size_t mpu6050_reg_size,
-    uint8_t *mpu6050_reg_value)
-{
-    // Create start condition to initiate master mode 
-    i2c_start(i2c); 
-
-    // Send the MPU6050 address with a write offset 
-    i2c_write_address(i2c, addr + MPU6050_W_OFFSET);
-    i2c_clear_addr(i2c);
-
-    // Send the register address that is going to be read 
-    i2c_write_master_mode(i2c, &mpu6050_register, MPU6050_REG_1_BYTE);
-
-    // Create another start signal 
-    i2c_start(i2c); 
-
-    // Send the MPU6050 address with a read offset 
-    i2c_write_address(i2c, addr + MPU6050_R_OFFSET);
-
-    // Read the data sent by the MPU6050 
-    i2c_read_master_mode(i2c, mpu6050_reg_value, mpu6050_reg_size);
-
-    // Create a stop condition
-    i2c_stop(i2c); 
-}
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Register Functions
 
 // MPU6050 Accelerometer Measurements registers read
 void mpu6050_accel_read(void)
 {
     // Temporary data storage 
-    uint8_t accel_data_reg[MPU6050_REG_6_BYTE];
+    uint8_t accel_data_reg[BYTE_6];
 
     // Read the accelerometer data 
     mpu6050_read(
         mpu6050_com_data.i2c, 
         mpu6050_com_data.addr, 
         MPU6050_ACCEL_XOUT_H,
-        MPU6050_REG_6_BYTE,
+        BYTE_6,
         accel_data_reg);
 
     // Combine the return values into signed integers - values are unformatted
@@ -851,14 +884,14 @@ void mpu6050_accel_read(void)
 void mpu6050_gyro_read(void)
 {
     // Temporary data storage 
-    uint8_t gyro_data_reg[MPU6050_REG_6_BYTE];
+    uint8_t gyro_data_reg[BYTE_6];
 
     // Read the gyroscope data 
     mpu6050_read(
         mpu6050_com_data.i2c, 
         mpu6050_com_data.addr, 
         MPU6050_GYRO_XOUT_H,
-        MPU6050_REG_6_BYTE,
+        BYTE_6,
         gyro_data_reg);
 
     // Combine the return values into signed integers - values are unformatted
@@ -875,14 +908,14 @@ void mpu6050_gyro_read(void)
 void mpu6050_temp_read(void)
 {
     // Store the temperature data 
-    uint8_t mpu6050_temp_sensor_reg[MPU6050_REG_2_BYTE]; 
+    uint8_t mpu6050_temp_sensor_reg[BYTE_2]; 
 
     // Read the temperature data 
     mpu6050_read(
         mpu6050_com_data.i2c, 
         mpu6050_com_data.addr, 
         MPU6050_TEMP_OUT_H,
-        MPU6050_REG_2_BYTE,
+        BYTE_2,
         mpu6050_temp_sensor_reg);
 
     // Generate an unformatted signed integer from the combine the return values 
@@ -902,7 +935,7 @@ void mpu6050_smprt_div_write(
         i2c, 
         addr, 
         MPU6050_SMPRT_DIV,
-        MPU6050_REG_1_BYTE,
+        BYTE_1,
         &smprt_div);
 }
 
@@ -922,7 +955,7 @@ void mpu6050_config_write(
         i2c, 
         addr, 
         MPU6050_CONFIG,
-        MPU6050_REG_1_BYTE,
+        BYTE_1,
         &mpu6050_config);
 }
 
@@ -942,7 +975,7 @@ void mpu6050_gyro_config_write(
         i2c, 
         addr, 
         MPU6050_GYRO_CONFIG,
-        MPU6050_REG_1_BYTE,
+        BYTE_1,
         &mpu6050_gyro_config);
 }
 
@@ -960,7 +993,7 @@ uint8_t mpu6050_gyro_config_read(
         i2c, 
         addr, 
         MPU6050_GYRO_CONFIG, 
-        MPU6050_REG_1_BYTE,
+        BYTE_1,
         &mpu6050_gyro_config);
 
     // Return the value of GYRO_CONFIG 
@@ -983,7 +1016,7 @@ void mpu6050_accel_config_write(
         i2c, 
         addr, 
         MPU6050_ACCEL_CONFIG,
-        MPU6050_REG_1_BYTE,
+        BYTE_1,
         &mpu6050_accel_config);
 }
 
@@ -1001,11 +1034,51 @@ uint8_t mpu6050_accel_config_read(
         i2c, 
         addr, 
         MPU6050_ACCEL_CONFIG, 
-        MPU6050_REG_1_BYTE,
+        BYTE_1,
         &mpu6050_accel_config);
 
     // Return the value of ACCEL_CONFIG 
     return mpu6050_accel_config;
+}
+
+
+// Interrupt configuration register write 
+void mpu6050_int_pin_config_write(
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t addr, 
+    mpu6050_mode_t latch_int_en, 
+    mpu6050_mode_t int_rd_clear)
+{
+    // Configure the data
+    uint8_t mpu6050_int_config = (latch_int_en << SHIFT_5) | 
+                                 (int_rd_clear << SHIFT_4); 
+    
+    // Write to the INT pin configuration register (register 55) 
+    mpu6050_write(
+        i2c, 
+        addr, 
+        MPU6050_INT_CONFIG,
+        BYTE_1,
+        &mpu6050_int_config);
+}
+
+
+// Interrupt enable register write 
+void mpu6050_int_enable_write(
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t addr, 
+    mpu6050_mode_t data_rdy_en)
+{
+    // Configure the data
+    uint8_t mpu6050_int_enable = (data_rdy_en << SHIFT_0); 
+    
+    // Write to the Interrupt Enable register (register 56) 
+    mpu6050_write(
+        i2c, 
+        addr, 
+        MPU6050_INT_ENABLE,
+        BYTE_1,
+        &mpu6050_int_enable);
 }
 
 
@@ -1031,7 +1104,7 @@ void mpu6050_pwr_mgmt_1_write(
         i2c, 
         addr, 
         MPU6050_PWR_MGMT_1,
-        MPU6050_REG_1_BYTE,
+        BYTE_1,
         &mpu6050_pwr_mgmt_1);
 }
 
@@ -1041,28 +1114,18 @@ void mpu6050_pwr_mgmt_2_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
     mpu6050_lp_wake_ctrl_t lp_wake_ctrl,
-    mpu6050_stby_xa_t stby_xa,
-    mpu6050_stby_ya_t stby_ya,
-    mpu6050_stby_za_t stby_za,
-    mpu6050_stby_xg_t stby_xg,
-    mpu6050_stby_yg_t stby_yg,
-    mpu6050_stby_zg_t stby_zg)
+    uint8_t standby_status)
 {
     // Configure the data 
-    uint8_t mpu6050_pwr_mgmt_2 = (lp_wake_ctrl << SHIFT_6) |
-                                 (stby_xa      << SHIFT_5) |
-                                 (stby_ya      << SHIFT_4) |
-                                 (stby_za      << SHIFT_3) |
-                                 (stby_xg      << SHIFT_2) |
-                                 (stby_yg      << SHIFT_1) |
-                                 (stby_zg      << SHIFT_0);
+    uint8_t mpu6050_pwr_mgmt_2 = (lp_wake_ctrl << SHIFT_6) | 
+                                 (standby_status & MPU6050_STBY_STATUS_MASK); 
     
     // Write to the Power Management 2 register 
     mpu6050_write(
         i2c, 
         addr, 
         MPU6050_PWR_MGMT_2,
-        MPU6050_REG_1_BYTE,
+        BYTE_1,
         &mpu6050_pwr_mgmt_2);
 }
 
@@ -1080,7 +1143,7 @@ uint8_t mpu6050_who_am_i_read(
         i2c, 
         addr, 
         MPU6050_WHO_AM_I, 
-        MPU6050_REG_1_BYTE,
+        BYTE_1,
         &mpu6050_who_am_i);
 
     // Return the value of who_am_i 
@@ -1091,7 +1154,7 @@ uint8_t mpu6050_who_am_i_read(
 
 
 //=======================================================================================
-// Self-test functions 
+// Self-test 
 
 //==============================================================
 // Steps for self-test 
@@ -1110,41 +1173,32 @@ uint8_t mpu6050_who_am_i_read(
 // MPU6050 self-test
 uint8_t mpu6050_self_test(void)
 {
-    //===================================================
-    // Local variables 
-    
     // Used to record the existing full scale range 
     uint8_t accel_fsr;
     uint8_t gyro_fsr;
 
     // Sensor readings with no self-test 
-    int16_t accel_no_st[MPU6050_NUM_ACCEL_AXIS];
-    int16_t gyro_no_st[MPU6050_NUM_GYRO_AXIS];
+    int16_t accel_no_st[MPU6050_NUM_AXIS];
+    int16_t gyro_no_st[MPU6050_NUM_AXIS];
 
     // Sensor readings with self-test 
-    int16_t accel_st[MPU6050_NUM_ACCEL_AXIS];
-    int16_t gyro_st[MPU6050_NUM_GYRO_AXIS];
+    int16_t accel_st[MPU6050_NUM_AXIS];
+    int16_t gyro_st[MPU6050_NUM_AXIS];
 
     // Self-test result 
-    int16_t accel_str[MPU6050_NUM_ACCEL_AXIS];
-    int16_t gyro_str[MPU6050_NUM_GYRO_AXIS];
+    int16_t accel_str[MPU6050_NUM_AXIS];
+    int16_t gyro_str[MPU6050_NUM_AXIS];
 
     // Self-test register readings 
-    uint8_t accel_test[MPU6050_NUM_ACCEL_AXIS];
-    uint8_t gyro_test[MPU6050_NUM_GYRO_AXIS];
+    uint8_t accel_test[MPU6050_NUM_AXIS];
+    uint8_t gyro_test[MPU6050_NUM_AXIS];
 
     // Factory trim calculation 
-    float accel_ft[MPU6050_NUM_ACCEL_AXIS];
-    float gyro_ft[MPU6050_NUM_GYRO_AXIS];
+    float accel_ft[MPU6050_NUM_AXIS];
+    float gyro_ft[MPU6050_NUM_AXIS];
 
     // Status of the self-test 
     uint8_t self_test_result = 0;
-
-    //===================================================
-
-
-    //===================================================
-    // Self-test procedure 
 
     // Record the full scale range set in the init function 
     accel_fsr = ((mpu6050_accel_config_read(mpu6050_com_data.i2c, mpu6050_com_data.addr) & 
@@ -1212,22 +1266,24 @@ uint8_t mpu6050_self_test(void)
         accel_str,
         accel_no_st,
         accel_st,
-        MPU6050_NUM_ACCEL_AXIS);
+        MPU6050_NUM_AXIS);
     mpu6050_str_calc(
         gyro_str,
         gyro_no_st,
         gyro_st,
-        MPU6050_NUM_GYRO_AXIS);
+        MPU6050_NUM_AXIS);
     
     // Calculate the change from factory trim and check against the acceptable range 
-    self_test_result = mpu6050_self_test_accel_result(
-                                            accel_str,
-                                            accel_ft,
-                                            self_test_result);
-    self_test_result = mpu6050_self_test_gyro_result(
-                                            gyro_str,
-                                            gyro_ft,
-                                            self_test_result);
+    mpu6050_self_test_result(
+        accel_str,
+        accel_ft,
+        &self_test_result, 
+        SELF_TEST_RESULT_SHIFT_ACCEL); 
+    mpu6050_self_test_result(
+        gyro_str,
+        gyro_ft,
+        &self_test_result, 
+        SELF_TEST_RESULT_SHIFT_GYRO); 
     
     // Disable self-test and set the full scale ranges back to their original values 
     mpu6050_accel_config_write(
@@ -1241,8 +1297,6 @@ uint8_t mpu6050_self_test(void)
         GYRO_SELF_TEST_DISABLE,
         gyro_fsr);
     
-    //===================================================
-    
     return self_test_result;
 }
 
@@ -1255,32 +1309,32 @@ void mpu6050_self_test_read(
     uint8_t *gyro_st_data)
 {
     // Store unformatted data 
-    uint8_t st_data[MPU6050_REG_4_BYTE];
+    uint8_t st_data[BYTE_4];
 
     // Read the value of SELF_TEST registers 
     mpu6050_read(
         i2c, 
         addr, 
         MPU6050_SELF_TEST, 
-        MPU6050_REG_4_BYTE,
+        BYTE_4,
         st_data);
     
     // Parse the acceleration data in X, Y and Z respectively 
-    *accel_st_data++ = ((st_data[MPU6050_REG_IDX_0] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
-                       ((st_data[MPU6050_REG_IDX_3] & SELF_TEST_MASK_XA_TEST_LO) >> SHIFT_4);
+    *accel_st_data++ = ((st_data[BYTE_0] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
+                       ((st_data[BYTE_3] & SELF_TEST_MASK_XA_TEST_LO) >> SHIFT_4);
     
-    *accel_st_data++ = ((st_data[MPU6050_REG_IDX_1] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
-                       ((st_data[MPU6050_REG_IDX_3] & SELF_TEST_MASK_YA_TEST_LO) >> SHIFT_2);
+    *accel_st_data++ = ((st_data[BYTE_1] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
+                       ((st_data[BYTE_3] & SELF_TEST_MASK_YA_TEST_LO) >> SHIFT_2);
     
-    *accel_st_data = ((st_data[MPU6050_REG_IDX_2] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
-                     ((st_data[MPU6050_REG_IDX_3] & SELF_TEST_MASK_ZA_TEST_LO) >> SHIFT_0);
+    *accel_st_data = ((st_data[BYTE_2] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
+                     ((st_data[BYTE_3] & SELF_TEST_MASK_ZA_TEST_LO) >> SHIFT_0);
 
     // Parse the gyro data in X, Y and Z respectively 
-    *gyro_st_data++ = st_data[MPU6050_REG_IDX_0] & SELF_TEST_MASK_X_TEST;
+    *gyro_st_data++ = st_data[BYTE_0] & SELF_TEST_MASK_X_TEST;
     
-    *gyro_st_data++ = st_data[MPU6050_REG_IDX_1] & SELF_TEST_MASK_X_TEST;
+    *gyro_st_data++ = st_data[BYTE_1] & SELF_TEST_MASK_X_TEST;
     
-    *gyro_st_data = st_data[MPU6050_REG_IDX_2] & SELF_TEST_MASK_X_TEST;
+    *gyro_st_data = st_data[BYTE_2] & SELF_TEST_MASK_X_TEST;
 }
 
 
@@ -1296,7 +1350,7 @@ void mpu6050_accel_ft(
     float c4 = SELF_TEST_ACCEL_FT_C4 / ((float)(DIVIDE_10));
 
     // Determine the factory trim 
-    for (uint8_t i = 0; i < MPU6050_NUM_ACCEL_AXIS; i++)
+    for (uint8_t i = 0; i < MPU6050_NUM_AXIS; i++)
     {
         if (*a_test == 0)
         {
@@ -1325,7 +1379,7 @@ void mpu6050_gyro_ft(
     float c4 = SELF_TEST_GYRO_FT_C4 / ((float)(DIVIDE_10));
 
     // Determine the factory trim 
-    for (uint8_t i = 0; i < MPU6050_NUM_GYRO_AXIS; i++)
+    for (uint8_t i = 0; i < MPU6050_NUM_AXIS; i++)
     {
         if (*g_test == 0)
         {
@@ -1361,63 +1415,31 @@ void mpu6050_str_calc(
 }
 
 
-// MPU6050 accelerometer self-test result 
-uint8_t mpu6050_self_test_accel_result(
-    int16_t *accel_self_test_results,
-    float  *accel_factory_trim,
-    uint8_t self_test_results)
+// MPU6050 self-test result calculation 
+void mpu6050_self_test_result(
+    int16_t *self_test_results,
+    float *factory_trim,
+    uint8_t *results, 
+    self_test_result_shift_t shift)
 {
     // Place to store the % change 
     float ft_change;
 
-    // Determine the result of the self-test
-    for (uint8_t i = 0; i < MPU6050_NUM_ACCEL_AXIS; i++)
+    // Determine the result of the self-test 
+    for (uint8_t i = 0; i < MPU6050_NUM_AXIS; i++)
     {
         // Check % change from factory trim 
-        ft_change = (*accel_self_test_results - *accel_factory_trim) / *accel_factory_trim;
+        ft_change = (*self_test_results - *factory_trim) / *factory_trim;
         
-        // Check change against maximum allowed value
-        if ((ft_change > MPU6050_ACCEL_FT_MAX_ERROR) ||
-            (ft_change < -(MPU6050_ACCEL_FT_MAX_ERROR)))
+        // Check change against maximum allowed value 
+        if ((ft_change > MPU6050_FT_MAX_ERROR) || (ft_change < -(MPU6050_FT_MAX_ERROR)))
         {
-            self_test_results |= (SELF_TEST_RESULT_SHIFT_ACCEL << SHIFT_1*i);
+            *results |= (shift << SHIFT_1*i); 
         }
 
-        accel_self_test_results++;
-        accel_factory_trim++;
+        self_test_results++;
+        factory_trim++;
     }
-
-    return self_test_results;
-}
-
-
-// MPU6050 gyroscope self-test result 
-uint8_t mpu6050_self_test_gyro_result(
-    int16_t *gyro_self_test_results,
-    float *gyro_factory_trim,
-    uint8_t self_test_results)
-{
-    // Place to store the % change 
-    float ft_change;
-
-    // Determine the result of the self-test
-    for (uint8_t i = 0; i < MPU6050_NUM_GYRO_AXIS; i++)
-    {
-        // Check % change from factory trim 
-        ft_change = (*gyro_self_test_results - *gyro_factory_trim) / *gyro_factory_trim;
-        
-        // Check change against maximum allowed value
-        if ((ft_change > MPU6050_GYRO_FT_MAX_ERROR) ||
-            (ft_change < -(MPU6050_GYRO_FT_MAX_ERROR)))
-        {
-            self_test_results |= (SELF_TEST_RESULT_SHIFT_GYRO << SHIFT_1*i);
-        }
-
-        gyro_self_test_results++;
-        gyro_factory_trim++;
-    }
-
-    return self_test_results;
 }
 
 //=======================================================================================
@@ -1425,6 +1447,13 @@ uint8_t mpu6050_self_test_gyro_result(
 
 //=======================================================================================
 // Getters 
+
+// MPU6050 INT pin status 
+MPU6050_INT_STATUS mpu6050_int_status(void)
+{
+    return gpio_read(mpu6050_com_data.gpio, (SET_BIT << mpu6050_com_data.int_pin)); 
+}
+
 
 // MPU6050 accelerometer x-axis raw value 
 int16_t mpu6050_get_accel_x_raw(void)
