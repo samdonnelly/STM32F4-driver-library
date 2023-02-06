@@ -595,6 +595,7 @@ typedef struct mpu6050_com_data_s
     // Data 
     float accel_data_scalar;         // Scales accelerometer raw data into readable values 
     float gyro_data_scalar;          // Scales gyroscope raw data into readable values 
+    MPU6050_FAULT_FLAG fault_flag;   // Driver fault flag 
 }
 mpu6050_com_data_t; 
 
@@ -620,7 +621,7 @@ static mpu6050_com_data_t mpu6050_com_data;
 //==============================================================
 
 // MPU6050 Initialization 
-uint8_t mpu6050_init(
+MPU6050_INIT_STATUS mpu6050_init(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t mpu6050_addr,
     uint8_t standby_status, 
@@ -629,75 +630,80 @@ uint8_t mpu6050_init(
     mpu6050_afs_sel_set_t afs_sel,
     mpu6050_fs_sel_set_t fs_sel)
 {
+    // Local variables 
+    MPU6050_INIT_STATUS init_result = CLEAR; 
+
     // Assign device information 
     mpu6050_com_data.i2c = i2c; 
     mpu6050_com_data.addr = mpu6050_addr; 
+    mpu6050_com_data.fault_flag = CLEAR; 
 
     // Read the WHO_AM_I register to establish that there is communication 
     if (mpu6050_who_am_i_read(mpu6050_com_data.i2c, 
                               mpu6050_com_data.addr) != MPU6050_7BIT_ADDR)
     {
-        return FALSE;
+        mpu6050_com_data.fault_flag |= SET_BIT; 
+    }
+    else 
+    {
+        // Choose which sensors to use and frquency of CYCLE mode
+        mpu6050_pwr_mgmt_2_write(
+            mpu6050_com_data.i2c, 
+            mpu6050_com_data.addr,
+            LP_WAKE_CTRL_0,
+            standby_status);
+
+        // Wake the sensor up through the power management 1 register 
+        mpu6050_pwr_mgmt_1_write(
+            mpu6050_com_data.i2c, 
+            mpu6050_com_data.addr,
+            DEVICE_RESET_DISABLE,
+            SLEEP_MODE_DISABLE,
+            CYCLE_SLEEP_DISABLED,
+            TEMP_SENSOR_ENABLE,
+            CLKSEL_5);
+
+        // Set the output rate of the gyro and accelerometer 
+        mpu6050_config_write(
+            mpu6050_com_data.i2c, 
+            mpu6050_com_data.addr,
+            EXT_SYNC_SET_0,
+            dlpf_cfg);
+        
+        // Set the Sample Rate (data rate)
+        mpu6050_smprt_div_write(
+            mpu6050_com_data.i2c, 
+            mpu6050_com_data.addr, 
+            smplrt_div);
+        
+        // Configure the accelerometer register 
+        mpu6050_accel_config_write(
+            mpu6050_com_data.i2c, 
+            mpu6050_com_data.addr,
+            ACCEL_SELF_TEST_DISABLE,
+            afs_sel);
+        
+        // Configure the gyroscope register
+        mpu6050_gyro_config_write(
+            mpu6050_com_data.i2c, 
+            mpu6050_com_data.addr,
+            GYRO_SELF_TEST_DISABLE,
+            fs_sel);
+
+        // Store the raw data scalars for calculating the actual value 
+        mpu6050_com_data.accel_data_scalar = mpu6050_accel_scalar(mpu6050_com_data.i2c, 
+                                                                mpu6050_com_data.addr); 
+
+        mpu6050_com_data.gyro_data_scalar = mpu6050_gyro_scalar(mpu6050_com_data.i2c, 
+                                                                mpu6050_com_data.addr); 
+
+        // Record the reference (error) in the gyroscope to correct the readings 
+        mpu6050_com_data.gyro_data.gyro_x_offset = CLEAR; 
+        mpu6050_com_data.gyro_data.gyro_y_offset = CLEAR; 
+        mpu6050_com_data.gyro_data.gyro_z_offset = CLEAR; 
     }
 
-    // Choose which sensors to use and frquency of CYCLE mode
-    mpu6050_pwr_mgmt_2_write(
-        mpu6050_com_data.i2c, 
-        mpu6050_com_data.addr,
-        LP_WAKE_CTRL_0,
-        standby_status);
-
-    // Wake the sensor up through the power management 1 register 
-    mpu6050_pwr_mgmt_1_write(
-        mpu6050_com_data.i2c, 
-        mpu6050_com_data.addr,
-        DEVICE_RESET_DISABLE,
-        SLEEP_MODE_DISABLE,
-        CYCLE_SLEEP_DISABLED,
-        TEMP_SENSOR_ENABLE,
-        CLKSEL_5);
-
-    // Set the output rate of the gyro and accelerometer 
-    mpu6050_config_write(
-        mpu6050_com_data.i2c, 
-        mpu6050_com_data.addr,
-        EXT_SYNC_SET_0,
-        dlpf_cfg);
-    
-    // Set the Sample Rate (data rate)
-    mpu6050_smprt_div_write(
-        mpu6050_com_data.i2c, 
-        mpu6050_com_data.addr, 
-        smplrt_div);
-    
-    // Configure the accelerometer register 
-    mpu6050_accel_config_write(
-        mpu6050_com_data.i2c, 
-        mpu6050_com_data.addr,
-        ACCEL_SELF_TEST_DISABLE,
-        afs_sel);
-    
-    // Configure the gyroscope register
-    mpu6050_gyro_config_write(
-        mpu6050_com_data.i2c, 
-        mpu6050_com_data.addr,
-        GYRO_SELF_TEST_DISABLE,
-        fs_sel);
-
-    // Store the raw data scalars for calculating the actual value 
-    mpu6050_com_data.accel_data_scalar = mpu6050_accel_scalar(mpu6050_com_data.i2c, 
-                                                              mpu6050_com_data.addr); 
-
-    mpu6050_com_data.gyro_data_scalar = mpu6050_gyro_scalar(mpu6050_com_data.i2c, 
-                                                            mpu6050_com_data.addr); 
-
-    // Record the reference (error) in the gyroscope to correct the readings 
-    mpu6050_com_data.gyro_data.gyro_x_offset = CLEAR; 
-    mpu6050_com_data.gyro_data.gyro_y_offset = CLEAR; 
-    mpu6050_com_data.gyro_data.gyro_z_offset = CLEAR; 
-
-    // Initialization completed successfully 
-    return TRUE;
+    return mpu6050_com_data.fault_flag; 
 }
 
 
@@ -1446,7 +1452,26 @@ void mpu6050_self_test_result(
 
 
 //=======================================================================================
+// Setters 
+
+// Clear driver fault flag 
+void mpu6050_clear_fault_flag(void)
+{
+    mpu6050_com_data.fault_flag = CLEAR; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Getters 
+
+// Get driver fault flag 
+MPU6050_FAULT_FLAG mpu6050_get_fault_flag(void)
+{
+    return mpu6050_com_data.fault_flag; 
+}
+
 
 // MPU6050 INT pin status 
 MPU6050_INT_STATUS mpu6050_int_status(void)

@@ -495,6 +495,8 @@ typedef enum {
 // Data types 
 
 typedef uint8_t MPU6050_INT_STATUS; 
+typedef uint8_t MPU6050_INIT_STATUS; 
+typedef uint8_t MPU6050_FAULT_FLAG; 
 
 //=======================================================================================
 
@@ -512,13 +514,14 @@ typedef uint8_t MPU6050_INT_STATUS;
  * 
  * @param i2c : I2C port used by device 
  * @param mpu6050_address : I2C address of MPU6050 
+ * @param standby_status : 
  * @param dlpf_cfg : digital low pass filter selection 
  * @param smplrt_div : sample rate divider selection 
  * @param afs_sel : full scale range of accelerometer 
  * @param fs_sel : full scale range of gyroscope 
- * @return uint8_t : returns true (1) if successfull, false (0) if unsuccessfull
+ * @return MPU6050_INIT_STATUS : returns the fault code of the init - 0 is no faults 
  */
-uint8_t mpu6050_init(
+MPU6050_INIT_STATUS mpu6050_init(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t mpu6050_address,
     uint8_t standby_status, 
@@ -700,7 +703,26 @@ uint8_t mpu6050_self_test(void);
 
 
 //=======================================================================================
+// Setters 
+
+/**
+ * @brief Clear driver fault flag 
+ */
+void mpu6050_clear_fault_flag(void); 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Getters 
+
+/**
+ * @brief Get driver fault flag 
+ * 
+ * @return MPU6050_FAULT_FLAG 
+ */
+MPU6050_FAULT_FLAG mpu6050_get_fault_flag(void); 
+
 
 /**
  * @brief MPU6050 INT pin status 

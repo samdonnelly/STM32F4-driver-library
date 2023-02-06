@@ -21,6 +21,13 @@
 
 
 //=======================================================================================
+// TODO 
+// - Do we need to re-call the mpu6050 driver init function on controller reset so we 
+//   can collect the fault code and/or reset registers? 
+//=======================================================================================
+
+
+//=======================================================================================
 // Function prototypes 
 
 /**
@@ -115,8 +122,7 @@ static mpu6050_state_functions_t state_table[MPU6050_NUM_STATES] =
 // Control functions 
 
 // MPU6050 controller initialization 
-void mpu6050_controller_init(
-    MPU6050_FAULT_CODE driver_fault)
+void mpu6050_controller_init(void)
 {
     // Controller information 
     mpu6050_device_trackers.state = MPU6050_INIT_STATE; 
@@ -127,7 +133,7 @@ void mpu6050_controller_init(
     mpu6050_device_trackers.low_power = CLEAR_BIT; 
 
     // Check for driver faults 
-    mpu6050_device_trackers.fault_code |= driver_fault; 
+    mpu6050_device_trackers.fault_code |= mpu6050_get_fault_flag(); 
 }
 
 
@@ -251,11 +257,19 @@ void mpu6050_controller(void)
 void mpu6050_init_state(
     mpu6050_trackers_t *mpu6050_device)
 {
+    // Local variables 
+    MPU6050_FAULT_CODE self_test_result; 
+
     // Clear device trackers 
     mpu6050_device->startup = CLEAR_BIT; 
     mpu6050_device->reset = CLEAR_BIT; 
 
-    // Run self-test, run calibration (and save results), set fault codes as needed 
+    // Run self-test and record any faults (failed tests) 
+    self_test_result = (uint16_t)mpu6050_self_test();
+    mpu6050_device->fault_code |= (self_test_result << SHIFT_2); 
+    
+    // run calibration to zero the gyroscope values 
+    mpu6050_calibrate(); 
 }
 
 
@@ -263,11 +277,13 @@ void mpu6050_init_state(
 void mpu6050_run_state(
     mpu6050_trackers_t *mpu6050_device)
 {
-    // Checks for data (?) and reads from the device. 
-
-    // mpu6050_temp_read(); 
-    // mpu6050_accel_read(); 
-    // mpu6050_gyro_read(); 
+    // If data is available then record the new data 
+    if (mpu6050_int_status())
+    {
+        mpu6050_temp_read(); 
+        mpu6050_accel_read(); 
+        mpu6050_gyro_read(); 
+    } 
 }
 
 
@@ -283,11 +299,8 @@ void mpu6050_low_power_state(
 void mpu6050_low_power_trans_state(
     mpu6050_trackers_t *mpu6050_device)
 {
-    // Flag set when a low power set or clear setter is called which triggers this state. 
-    // This state calls the power management register(s) to write the state of the 
-    // low power flag. 
-
-    // Pass the low power flag as an argument to the low power function in the driver 
+    // Write the low power flag status to the power management register 
+    mpu6050_low_pwr_config(mpu6050_device->low_power); 
 }
 
 
@@ -295,7 +308,7 @@ void mpu6050_low_power_trans_state(
 void mpu6050_fault_state(
     mpu6050_trackers_t *mpu6050_device)
 {
-    // Triggered by failed driver init, failed self-test, or failed I2C comms. Idles until 
+    // Triggered by failed driver init, failed self-test or failed I2C comms. Idles until 
     // reset is called. 
 }
 
@@ -305,6 +318,9 @@ void mpu6050_reset_state(
     mpu6050_trackers_t *mpu6050_device)
 {
     // Reset registers and re-call driver init? 
+
+    // Reset the fault code 
+    mpu6050_device->fault_code = CLEAR; 
 }
 
 //=======================================================================================
@@ -323,14 +339,14 @@ void mpu6050_set_reset_flag(void)
 // Set low power flag 
 void mpu6050_set_low_power(void)
 {
-    mpu6050_device_trackers.low_power = SET_BIT; 
+    mpu6050_device_trackers.low_power = SLEEP_MODE_ENABLE; 
 }
 
 
 // Clear low power flag 
 void mpu6050_clear_low_power(void)
 {
-    mpu6050_device_trackers.low_power = CLEAR_BIT; 
+    mpu6050_device_trackers.low_power = SLEEP_MODE_DISABLE; 
 }
 
 //=======================================================================================
