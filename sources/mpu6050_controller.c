@@ -24,6 +24,8 @@
 // TODO 
 // - Do we need to re-call the mpu6050 driver init function on controller reset so we 
 //   can collect the fault code and/or reset registers? 
+// - Does calibrate need to be a separate state? Calibration requires the device to be 
+//   sitting still. 
 //=======================================================================================
 
 
@@ -133,7 +135,7 @@ void mpu6050_controller_init(void)
     mpu6050_device_trackers.low_power = CLEAR_BIT; 
 
     // Check for driver faults 
-    mpu6050_device_trackers.fault_code |= mpu6050_get_fault_flag(); 
+    mpu6050_device_trackers.fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
 }
 
 
@@ -149,21 +151,18 @@ void mpu6050_controller(void)
     switch (next_state)
     {
         case MPU6050_INIT_STATE: 
-            // Run the init state at least once 
-            if (!mpu6050_device_trackers.startup)
+            // Fault code set 
+            if (mpu6050_device_trackers.fault_code)
             {
-                // Fault code set 
-                if (mpu6050_device_trackers.fault_code)
-                {
-                    next_state = MPU6050_FAULT_STATE; 
-                }
-                
-                // Default to the run state if no faults 
-                else 
-                {
-                    next_state = MPU6050_RUN_STATE; 
-                }
+                next_state = MPU6050_FAULT_STATE; 
             }
+            
+            // Default to the run state if no faults 
+            else if (!mpu6050_device_trackers.startup)
+            {
+                next_state = MPU6050_RUN_STATE; 
+            }
+
             break;
 
         case MPU6050_RUN_STATE: 
@@ -184,6 +183,7 @@ void mpu6050_controller(void)
             {
                 next_state = MPU6050_LOW_POWER_TRANS_STATE; 
             }
+
             break;
 
         case MPU6050_LOW_POWER_STATE: 
@@ -194,6 +194,7 @@ void mpu6050_controller(void)
             {
                 next_state = MPU6050_LOW_POWER_TRANS_STATE; 
             }
+
             break;
 
         case MPU6050_LOW_POWER_TRANS_STATE: 
@@ -220,6 +221,7 @@ void mpu6050_controller(void)
             {
                 next_state = MPU6050_RUN_STATE; 
             }
+
             break;
 
         case MPU6050_FAULT_STATE: 
@@ -227,6 +229,7 @@ void mpu6050_controller(void)
             {
                 next_state = MPU6050_RESET_STATE; 
             }
+
             break;
 
         case MPU6050_RESET_STATE: 
@@ -257,16 +260,13 @@ void mpu6050_controller(void)
 void mpu6050_init_state(
     mpu6050_trackers_t *mpu6050_device)
 {
-    // Local variables 
-    MPU6050_FAULT_CODE self_test_result; 
-
     // Clear device trackers 
     mpu6050_device->startup = CLEAR_BIT; 
     mpu6050_device->reset = CLEAR_BIT; 
 
     // Run self-test and record any faults (failed tests) 
-    self_test_result = (uint16_t)mpu6050_self_test();
-    mpu6050_device->fault_code |= (self_test_result << SHIFT_2); 
+    mpu6050_self_test();
+    mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
     
     // run calibration to zero the gyroscope values 
     mpu6050_calibrate(); 
@@ -283,6 +283,14 @@ void mpu6050_run_state(
         mpu6050_temp_read(); 
         mpu6050_accel_read(); 
         mpu6050_gyro_read(); 
+
+        // Check for faults 
+        mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
+
+        if (mpu6050_get_temp_raw() > MPU6050_MAX_TEMP)
+        {
+            mpu6050_device->fault_code |= (SET_BIT << SHIFT_8); 
+        }
     } 
 }
 
@@ -321,6 +329,7 @@ void mpu6050_reset_state(
 
     // Reset the fault code 
     mpu6050_device->fault_code = CLEAR; 
+    mpu6050_clear_fault_flag(); 
 }
 
 //=======================================================================================

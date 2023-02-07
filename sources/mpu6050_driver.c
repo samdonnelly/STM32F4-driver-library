@@ -22,7 +22,6 @@
 
 //=======================================================================================
 // TODO 
-// - Test if the interrupt signal for data ready is worth adding 
 // - Possibly add a register reset function - used by controller in reset? 
 //=======================================================================================
 
@@ -630,9 +629,6 @@ MPU6050_INIT_STATUS mpu6050_init(
     mpu6050_afs_sel_set_t afs_sel,
     mpu6050_fs_sel_set_t fs_sel)
 {
-    // Local variables 
-    MPU6050_INIT_STATUS init_result = CLEAR; 
-
     // Assign device information 
     mpu6050_com_data.i2c = i2c; 
     mpu6050_com_data.addr = mpu6050_addr; 
@@ -692,7 +688,7 @@ MPU6050_INIT_STATUS mpu6050_init(
 
         // Store the raw data scalars for calculating the actual value 
         mpu6050_com_data.accel_data_scalar = mpu6050_accel_scalar(mpu6050_com_data.i2c, 
-                                                                mpu6050_com_data.addr); 
+                                                                  mpu6050_com_data.addr); 
 
         mpu6050_com_data.gyro_data_scalar = mpu6050_gyro_scalar(mpu6050_com_data.i2c, 
                                                                 mpu6050_com_data.addr); 
@@ -1302,6 +1298,9 @@ uint8_t mpu6050_self_test(void)
         mpu6050_com_data.addr, 
         GYRO_SELF_TEST_DISABLE,
         gyro_fsr);
+
+    // Update the fault flags 
+    mpu6050_com_data.fault_flag |= (self_test_result << SHIFT_2); 
     
     return self_test_result;
 }

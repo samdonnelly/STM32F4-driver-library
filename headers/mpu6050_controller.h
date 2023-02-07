@@ -31,7 +31,9 @@
 //=======================================================================================
 // Macros 
 
-#define MPU6050_NUM_STATES 6           // Number of controller states 
+#define MPU6050_NUM_STATES 6         // Number of controller states 
+
+#define MPU6050_MAX_TEMP 1180        // Max raw temp reading before fault (~40 degC) 
 
 //=======================================================================================
 
@@ -74,7 +76,7 @@ typedef uint16_t MPU6050_FAULT_CODE;
 // bit 6  : self-test gyroscope y-axis 
 // bit 7  : self-test gyroscope z-axis 
 // bit 8  : high temperature 
-// bit 9  : low temperature 
+// bit 9  : not used 
 // bit 10 : not used 
 // bit 11 : not used 
 // bit 12 : not used 
