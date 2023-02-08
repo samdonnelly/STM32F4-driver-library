@@ -285,11 +285,12 @@ void mpu6050_run_state(
     mpu6050_trackers_t *mpu6050_device)
 {
     // If data is available then record the new data 
-    // if (mpu6050_int_status())
-    // {
-    mpu6050_temp_read(); 
-    mpu6050_accel_read(); 
-    mpu6050_gyro_read(); 
+    if (mpu6050_int_status())
+    {
+    // mpu6050_temp_read(); 
+    // mpu6050_accel_read(); 
+    // mpu6050_gyro_read(); 
+        mpu6050_read_all(); 
 
     // // Check for faults 
     // mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
@@ -298,7 +299,7 @@ void mpu6050_run_state(
     // {
     //     mpu6050_device->fault_code |= (SET_BIT << SHIFT_8); 
     // }
-    // } 
+    } 
 }
 
 

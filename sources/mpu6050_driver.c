@@ -926,6 +926,42 @@ void mpu6050_temp_read(void)
 }
 
 
+// MPU6050 read all 
+void mpu6050_read_all(void)
+{
+    // Temporary data storage 
+    uint8_t data_reg[BYTE_14];
+
+    // Read the accelerometer data 
+    mpu6050_read(
+        mpu6050_com_data.i2c, 
+        mpu6050_com_data.addr, 
+        MPU6050_ACCEL_XOUT_H,
+        BYTE_14,
+        data_reg);
+
+    // Combine the return values into signed integers - values are unformatted
+    mpu6050_com_data.accel_data.accel_x = (int16_t)((data_reg[0] << SHIFT_8) |
+                                                    (data_reg[1] << SHIFT_0));
+    mpu6050_com_data.accel_data.accel_y = (int16_t)((data_reg[2] << SHIFT_8) |
+                                                    (data_reg[3] << SHIFT_0));
+    mpu6050_com_data.accel_data.accel_z = (int16_t)((data_reg[4] << SHIFT_8) |
+                                                    (data_reg[5] << SHIFT_0));
+
+    // Generate an unformatted signed integer from the combine the return values 
+    mpu6050_com_data.other_data.temp = (int16_t)((data_reg[6] << SHIFT_8) |
+                                                 (data_reg[7] << SHIFT_0)); 
+
+    // Combine the return values into signed integers - values are unformatted
+    mpu6050_com_data.gyro_data.gyro_x = (int16_t)((data_reg[8] << SHIFT_8) |
+                                                  (data_reg[9] << SHIFT_0));
+    mpu6050_com_data.gyro_data.gyro_y = (int16_t)((data_reg[10] << SHIFT_8) |
+                                                  (data_reg[11] << SHIFT_0));
+    mpu6050_com_data.gyro_data.gyro_z = (int16_t)((data_reg[12] << SHIFT_8) |
+                                                  (data_reg[13] << SHIFT_0));
+}
+
+
 // MPU6050 Sample Rate Divider register write 
 void mpu6050_smprt_div_write(
     I2C_TypeDef *i2c, 

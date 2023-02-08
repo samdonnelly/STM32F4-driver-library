@@ -665,6 +665,10 @@ void mpu6050_gyro_read(void);
  */
 void mpu6050_temp_read(void); 
 
+
+// MPU6050 read all 
+void mpu6050_read_all(void); 
+
 //=======================================================================================
 
 
