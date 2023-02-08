@@ -29,7 +29,7 @@
 //=======================================================================================
 
 
-extern uint8_t action; 
+// extern uint8_t mpu6050_action; 
 
 
 //=======================================================================================
@@ -214,7 +214,7 @@ void mpu6050_controller(void)
             }
 
             // Low power flag is set 
-            if (mpu6050_device_trackers.low_power)
+            else if (mpu6050_device_trackers.low_power)
             {
                 next_state = MPU6050_LOW_POWER_STATE; 
             }
@@ -264,8 +264,8 @@ void mpu6050_init_state(
     mpu6050_trackers_t *mpu6050_device)
 {
     // Test 
-    uart_sendstring(USART2, "init state"); 
-    action = SET_BIT; 
+    uart_sendstring(USART2, "\r\ninit state\r\n"); 
+    // mpu6050_action = SET_BIT; 
 
     // Clear device trackers 
     mpu6050_device->startup = CLEAR_BIT; 
@@ -285,20 +285,20 @@ void mpu6050_run_state(
     mpu6050_trackers_t *mpu6050_device)
 {
     // If data is available then record the new data 
-    if (mpu6050_int_status())
-    {
-        mpu6050_temp_read(); 
-        mpu6050_accel_read(); 
-        mpu6050_gyro_read(); 
+    // if (mpu6050_int_status())
+    // {
+    mpu6050_temp_read(); 
+    mpu6050_accel_read(); 
+    mpu6050_gyro_read(); 
 
-        // Check for faults 
-        mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
+    // // Check for faults 
+    // mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
 
-        if (mpu6050_get_temp_raw() > MPU6050_MAX_TEMP)
-        {
-            mpu6050_device->fault_code |= (SET_BIT << SHIFT_8); 
-        }
-    } 
+    // if (mpu6050_get_temp_raw() > MPU6050_MAX_TEMP)
+    // {
+    //     mpu6050_device->fault_code |= (SET_BIT << SHIFT_8); 
+    // }
+    // } 
 }
 
 
@@ -315,8 +315,8 @@ void mpu6050_low_power_trans_state(
     mpu6050_trackers_t *mpu6050_device)
 {
     // Test 
-    uart_sendstring(USART2, "LP trans"); 
-    action = SET_BIT; 
+    uart_sendstring(USART2, "\r\nLP trans state\r\n"); 
+    // mpu6050_action = SET_BIT; 
 
     // Write the low power flag status to the power management register 
     mpu6050_low_pwr_config(mpu6050_device->low_power); 
@@ -337,14 +337,17 @@ void mpu6050_reset_state(
     mpu6050_trackers_t *mpu6050_device)
 {
     // Test 
-    uart_sendstring(USART2, "reset state"); 
-    action = SET_BIT; 
+    uart_sendstring(USART2, "\r\nreset state\r\n"); 
+    // mpu6050_action = SET_BIT; 
 
     // Reset registers and re-call driver init? 
 
     // Reset the fault code 
     mpu6050_device->fault_code = CLEAR; 
     mpu6050_clear_fault_flag(); 
+
+    // Reset the low power flag 
+    mpu6050_device->low_power = SLEEP_MODE_DISABLE; 
 }
 
 //=======================================================================================
