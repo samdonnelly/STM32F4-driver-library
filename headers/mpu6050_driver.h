@@ -18,12 +18,14 @@
 //=======================================================================================
 // Includes 
 
+// Toolkit 
 #include "stm32f411xe.h"
 #include "tools.h"
 
 // Drivers 
 #include "i2c_comm.h"
 #include "gpio_driver.h"
+#include "linked_list_driver.h"
 
 //=======================================================================================
 
@@ -512,6 +514,7 @@ typedef uint8_t MPU6050_FAULT_FLAG;
  *          communication with the device the function will return false. The return 
  *          value is used to trigger fault conditions. 
  * 
+ * @param device_num : 
  * @param i2c : I2C port used by device 
  * @param mpu6050_address : I2C address of MPU6050 
  * @param standby_status : 
@@ -522,6 +525,7 @@ typedef uint8_t MPU6050_FAULT_FLAG;
  * @return MPU6050_INIT_STATUS : returns the fault code of the init - 0 is no faults 
  */
 MPU6050_INIT_STATUS mpu6050_init(
+    device_number_t device_num, 
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t mpu6050_address,
     uint8_t standby_status, 

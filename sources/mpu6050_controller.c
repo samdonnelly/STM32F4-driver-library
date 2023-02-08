@@ -287,18 +287,18 @@ void mpu6050_run_state(
     // If data is available then record the new data 
     if (mpu6050_int_status())
     {
-    // mpu6050_temp_read(); 
-    // mpu6050_accel_read(); 
-    // mpu6050_gyro_read(); 
+        // mpu6050_temp_read(); 
+        // mpu6050_accel_read(); 
+        // mpu6050_gyro_read(); 
         mpu6050_read_all(); 
 
-    // // Check for faults 
-    // mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
+        // // Check for faults 
+        // mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
 
-    // if (mpu6050_get_temp_raw() > MPU6050_MAX_TEMP)
-    // {
-    //     mpu6050_device->fault_code |= (SET_BIT << SHIFT_8); 
-    // }
+        // if (mpu6050_get_temp_raw() > MPU6050_MAX_TEMP)
+        // {
+        //     mpu6050_device->fault_code |= (SET_BIT << SHIFT_8); 
+        // }
     } 
 }
 

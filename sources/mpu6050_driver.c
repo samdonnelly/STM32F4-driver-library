@@ -576,24 +576,23 @@ mpu6050_other_t;
 // MPU6050 data record structure 
 typedef struct mpu6050_com_data_s 
 {
+    // Pointer for linked list 
+    struct mpu6050_com_data_s *next_device; 
+
     // Peripherals 
     I2C_TypeDef *i2c;                // I2C port connected to the device 
     GPIO_TypeDef *gpio;              // GPIO port for the INT pin 
-
-    // Pins 
     pin_selector_t int_pin;          // INT pin number 
 
     // Device information 
     mpu6050_i2c_addr_t addr;         // Device I2C address 
-
-    // Messages 
-    mpu6050_accel_t accel_data;      // Accelerometer data 
-    mpu6050_gyro_t gyro_data;        // Gyroscope data 
-    mpu6050_other_t other_data;      // Other device data 
-
-    // Data 
     float accel_data_scalar;         // Scales accelerometer raw data into readable values 
     float gyro_data_scalar;          // Scales gyroscope raw data into readable values 
+
+    // Data 
+    mpu6050_accel_t accel_data;      // Accelerometer data 
+    mpu6050_gyro_t  gyro_data;       // Gyroscope data 
+    mpu6050_other_t other_data;      // Other device data 
     MPU6050_FAULT_FLAG fault_flag;   // Driver fault flag 
 }
 mpu6050_com_data_t; 
@@ -601,6 +600,7 @@ mpu6050_com_data_t;
 
 // MPU6050 device com data record instance 
 static mpu6050_com_data_t mpu6050_com_data; 
+static mpu6050_com_data_t *mpu6050_com_data_ptr = NULL; 
 
 //=======================================================================================
 
@@ -621,6 +621,7 @@ static mpu6050_com_data_t mpu6050_com_data;
 
 // MPU6050 Initialization 
 MPU6050_INIT_STATUS mpu6050_init(
+    device_number_t device_num, 
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t mpu6050_addr,
     uint8_t standby_status, 
@@ -629,6 +630,17 @@ MPU6050_INIT_STATUS mpu6050_init(
     mpu6050_afs_sel_set_t afs_sel,
     mpu6050_fs_sel_set_t fs_sel)
 {
+    // Create a data record if it does not already exist 
+    mpu6050_com_data_t *mpu6050_driver_data = 
+        (mpu6050_com_data_t *)create_linked_list_entry(
+                                        device_num, 
+                                        (void *)mpu6050_com_data_ptr, 
+                                        sizeof(mpu6050_com_data_t)); 
+
+    mpu6050_driver_data->i2c = i2c; 
+    mpu6050_driver_data->addr = mpu6050_addr; 
+    mpu6050_driver_data->fault_flag = CLEAR; 
+
     // Assign device information 
     mpu6050_com_data.i2c = i2c; 
     mpu6050_com_data.addr = mpu6050_addr; 
