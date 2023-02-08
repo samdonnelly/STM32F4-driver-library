@@ -29,6 +29,9 @@
 //=======================================================================================
 
 
+extern uint8_t action; 
+
+
 //=======================================================================================
 // Function prototypes 
 
@@ -260,6 +263,10 @@ void mpu6050_controller(void)
 void mpu6050_init_state(
     mpu6050_trackers_t *mpu6050_device)
 {
+    // Test 
+    uart_sendstring(USART2, "init state"); 
+    action = SET_BIT; 
+
     // Clear device trackers 
     mpu6050_device->startup = CLEAR_BIT; 
     mpu6050_device->reset = CLEAR_BIT; 
@@ -307,6 +314,10 @@ void mpu6050_low_power_state(
 void mpu6050_low_power_trans_state(
     mpu6050_trackers_t *mpu6050_device)
 {
+    // Test 
+    uart_sendstring(USART2, "LP trans"); 
+    action = SET_BIT; 
+
     // Write the low power flag status to the power management register 
     mpu6050_low_pwr_config(mpu6050_device->low_power); 
 }
@@ -325,6 +336,10 @@ void mpu6050_fault_state(
 void mpu6050_reset_state(
     mpu6050_trackers_t *mpu6050_device)
 {
+    // Test 
+    uart_sendstring(USART2, "reset state"); 
+    action = SET_BIT; 
+
     // Reset registers and re-call driver init? 
 
     // Reset the fault code 
