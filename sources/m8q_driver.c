@@ -19,11 +19,6 @@
 // Device drivers 
 #include "m8q_driver.h"
 
-// Communication drivers 
-#if M8Q_USER_CONFIG
-#include "uart_comm.h"
-#endif  // M8Q_USER_CONFIG
-
 //=======================================================================================
 
 

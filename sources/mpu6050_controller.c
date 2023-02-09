@@ -127,11 +127,20 @@ static mpu6050_state_functions_t state_table[MPU6050_NUM_STATES] =
 // Control functions 
 
 // MPU6050 controller initialization 
-void mpu6050_controller_init(void)
+void mpu6050_controller_init(
+    TIM_TypeDef *timer, 
+    uint32_t sample_period)
 {
+    // Peripherals 
+    mpu6050_device_trackers.timer = timer; 
+
     // Controller information 
     mpu6050_device_trackers.state = MPU6050_INIT_STATE; 
     mpu6050_device_trackers.fault_code = CLEAR; 
+    mpu6050_device_trackers.time_cnt_total = CLEAR; 
+    mpu6050_device_trackers.time_cnt = CLEAR; 
+    mpu6050_device_trackers.time_start = SET_BIT; 
+    mpu6050_device_trackers.sample_period = sample_period; 
 
     // State trackers 
     mpu6050_device_trackers.startup = SET_BIT; 
@@ -284,22 +293,30 @@ void mpu6050_init_state(
 void mpu6050_run_state(
     mpu6050_trackers_t *mpu6050_device)
 {
-    // If data is available then record the new data 
-    if (mpu6050_int_status())
+    // Wait for a specified period of time before reading new data 
+    if (tim_time_compare(mpu6050_device->timer, 
+                         mpu6050_device->sample_period, 
+                         &mpu6050_device->time_cnt_total, 
+                         &mpu6050_device->time_cnt, 
+                         &mpu6050_device->time_start))
     {
+        // Reset the start flag 
+        mpu6050_device->time_start = SET_BIT; 
+
+        // Sample the data 
+        mpu6050_read_all(); 
         // mpu6050_temp_read(); 
         // mpu6050_accel_read(); 
         // mpu6050_gyro_read(); 
-        mpu6050_read_all(); 
 
-        // // Check for faults 
+        // Check for faults 
         // mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
 
         // if (mpu6050_get_temp_raw() > MPU6050_MAX_TEMP)
         // {
         //     mpu6050_device->fault_code |= (SET_BIT << SHIFT_8); 
         // }
-    } 
+    }
 }
 
 

@@ -18,10 +18,6 @@
 //=======================================================================================
 // Includes 
 
-// Tools 
-#include "stm32f411xe.h"
-#include "tools.h"
-
 // Drivers 
 #include "hw125_driver.h" 
 

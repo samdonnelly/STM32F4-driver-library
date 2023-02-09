@@ -18,12 +18,9 @@
 //=======================================================================================
 // Includes 
 
-// Tools 
-#include "stm32f411xe.h"
-#include "tools.h"
-
 // Drivers 
 #include "mpu6050_driver.h"
+#include "timers.h"
 
 // Test 
 #include "uart_comm.h"
@@ -94,14 +91,21 @@ typedef uint16_t MPU6050_FAULT_CODE;
 // MPU6050 controller trackers 
 typedef struct mpu6050_trackers_s 
 {
-    // Controller information 
-    mpu6050_states_t state;               // State of the controller 
-    MPU6050_FAULT_CODE fault_code;        // Controller fault code 
+    // Peripherals 
+    TIM_TypeDef *timer;                     // Pointer to timer port used in controller 
+
+    // Device and controller information 
+    mpu6050_states_t state;                 // State of the controller 
+    MPU6050_FAULT_CODE fault_code;          // Controller fault code 
+    uint32_t time_cnt_total;                // Time delay counter total count 
+    uint32_t time_cnt;                      // Time delay counter instance 
+    uint8_t  time_start;                    // Time delay counter start flag 
+    uint32_t sample_period;                 // Time between data samples (us) 
 
     // State trackers 
-    mpu6050_sleep_mode_t low_power : 1;   // Low power flag 
-    uint8_t reset                  : 1;   // Reset state trigger 
-    uint8_t startup                : 1;   // Ensures the init state is run 
+    mpu6050_sleep_mode_t low_power : 1;     // Low power flag 
+    uint8_t reset                  : 1;     // Reset state trigger 
+    uint8_t startup                : 1;     // Ensures the init state is run 
 }
 mpu6050_trackers_t; 
 
@@ -126,8 +130,11 @@ typedef void (*mpu6050_state_functions_t)(
 /**
  * @brief 
  * 
+ * @param timer : 
  */
-void mpu6050_controller_init(void); 
+void mpu6050_controller_init(
+    TIM_TypeDef *timer, 
+    uint32_t sample_period); 
 
 
 /**

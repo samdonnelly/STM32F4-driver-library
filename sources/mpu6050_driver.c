@@ -630,16 +630,16 @@ MPU6050_INIT_STATUS mpu6050_init(
     mpu6050_afs_sel_set_t afs_sel,
     mpu6050_fs_sel_set_t fs_sel)
 {
-    // Create a data record if it does not already exist 
-    mpu6050_com_data_t *mpu6050_driver_data = 
-        (mpu6050_com_data_t *)create_linked_list_entry(
-                                        device_num, 
-                                        (void *)mpu6050_com_data_ptr, 
-                                        sizeof(mpu6050_com_data_t)); 
+    // // Create a data record if it does not already exist 
+    // mpu6050_com_data_t *mpu6050_driver_data = 
+    //     (mpu6050_com_data_t *)create_linked_list_entry(
+    //                                     device_num, 
+    //                                     (void *)mpu6050_com_data_ptr, 
+    //                                     sizeof(mpu6050_com_data_t)); 
 
-    mpu6050_driver_data->i2c = i2c; 
-    mpu6050_driver_data->addr = mpu6050_addr; 
-    mpu6050_driver_data->fault_flag = CLEAR; 
+    // mpu6050_driver_data->i2c = i2c; 
+    // mpu6050_driver_data->addr = mpu6050_addr; 
+    // mpu6050_driver_data->fault_flag = CLEAR; 
 
     // Assign device information 
     mpu6050_com_data.i2c = i2c; 
