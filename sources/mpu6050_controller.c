@@ -284,6 +284,10 @@ void mpu6050_init_state(
     // Run self-test and record any faults (failed tests) 
     mpu6050_self_test();
     mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
+
+    // TODO the delay time changes based on the clock prescaler so this is not robust 
+    // Provide time for the device to update data so self-test data is not used for calibration 
+    tim_delay_ms(mpu6050_device->timer, MPU6050_ST_DELAY); 
     
     // run calibration to zero the gyroscope values 
     mpu6050_calibrate(); 
@@ -302,24 +306,16 @@ void mpu6050_run_state(
                     &mpu6050_device->time_cnt, 
                     &mpu6050_device->time_start))
     {
-        // Reset the start flag 
-        // TODO have the start flag reset within the function so no time is lost 
-        // running through the code before starting again. 
-        // mpu6050_device->time_start = SET_BIT; 
-
         // Sample the data 
         mpu6050_read_all(); 
-        // mpu6050_temp_read(); 
-        // mpu6050_accel_read(); 
-        // mpu6050_gyro_read(); 
 
         // Check for faults 
-        // mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
+        mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
 
-        // if (mpu6050_get_temp_raw() > MPU6050_MAX_TEMP)
-        // {
-        //     mpu6050_device->fault_code |= (SET_BIT << SHIFT_8); 
-        // }
+        if (mpu6050_get_temp_raw() > (MPU6050_RAW_TEMP_MAX-MPU6050_RAW_TEMP_OFST))
+        {
+            mpu6050_device->fault_code |= (SET_BIT << SHIFT_8); 
+        }
     }
 }
 

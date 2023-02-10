@@ -408,7 +408,6 @@ uint8_t tim_compare(
     // Local variables 
     uint32_t time_elapsed; 
     uint32_t count_tracker; 
-    // uint32_t apb_freq;          // APB frequency in MHz 
 
     // Only update the clock counter if no delay has happened yet 
     if (*count_start)
@@ -418,18 +417,6 @@ uint8_t tim_compare(
         *count_start = CLEAR; 
         return FALSE; 
     }
-
-    // // Get the timer clock frequency 
-    // if (((uint32_t)timer & TIM_APB_CLK_FILTER) >> SHIFT_4) 
-    // {
-    //     // APB2 
-    //     apb_freq = (rcc_get_pclk2_frq() / DIVIDE_1000) / DIVIDE_1000; 
-    // }
-    // else 
-    // {
-    //     // APB1 
-    //     apb_freq = (rcc_get_pclk1_frq() / DIVIDE_1000) / DIVIDE_1000; 
-    // }
 
     // Read the updated clock counter 
     count_tracker = tim_cnt_read(timer); 
@@ -445,7 +432,6 @@ uint8_t tim_compare(
     }
 
     // Calculate the total elapsed time (in microseconds) 
-    // time_elapsed = *count_total * (timer->PSC + 1) / apb_freq; 
     time_elapsed = *count_total * (timer->PSC + 1) / clk_freq; 
 
     // Update the counter reference - this is new so test it 
@@ -461,7 +447,6 @@ uint8_t tim_compare(
     else 
     {
         // Elapsed time is less than desired delay time so updated the counter 
-        // *count_compare = count_tracker; 
         return FALSE; 
     }
 }

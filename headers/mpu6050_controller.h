@@ -33,7 +33,10 @@
 
 #define MPU6050_NUM_STATES 6         // Number of controller states 
 
-#define MPU6050_MAX_TEMP 1180        // Max raw temp reading before fault (~40 degC) 
+#define MPU6050_ST_DELAY 10          // Post self-test delay counter 
+
+#define MPU6050_RAW_TEMP_MAX 28900   // Max raw temp reading before fault (~ 40 degC) 
+#define MPU6050_RAW_TEMP_OFST 27720  // Raw temp reading offset 
 
 //=======================================================================================
 

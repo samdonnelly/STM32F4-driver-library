@@ -27,6 +27,8 @@
 #include "gpio_driver.h"
 #include "linked_list_driver.h"
 
+#include "uart_comm.h"
+
 //=======================================================================================
 
 
