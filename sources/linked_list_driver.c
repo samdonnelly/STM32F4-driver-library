@@ -36,6 +36,28 @@ void *create_linked_list_entry(
     void *list_ptr, 
     uint32_t record_size)
 {
+    // Generic list 
+    linked_list_struct_t *data_record = (linked_list_struct_t *)list_ptr; 
+
+    // If pointer is NULL then create entry 
+    if (data_record == NULL)
+    {
+        data_record = malloc(record_size); 
+
+        // Assign a number to the entry 
+        data_record->device_num = device_num; 
+
+        // Assign the next entry pointer (there is none) 
+        data_record->next_ptr = NULL; 
+    }
+    // If the pointer is not NULL then create a new entry 
+    else 
+    {
+        // 
+    }
+
+    // return (void *)data_record; 
+
     // Check if the entry already exists 
     // - We do this by calling get_linked_list_entry and checking the return pointer. 
     // - The return pointer will be NULL if it does not exist. 
@@ -57,7 +79,9 @@ void *create_linked_list_entry(
 // - Look up the entry based on the device number. Check that the entry exists before 
 //   returning anything. 
 void *get_linked_list_entry(
-    device_number_t device_num)
+    device_number_t device_num, 
+    void *list_ptr, 
+    uint32_t record_size)
 {
     // 
 }

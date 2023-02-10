@@ -576,8 +576,9 @@ mpu6050_other_t;
 // MPU6050 data record structure 
 typedef struct mpu6050_com_data_s 
 {
-    // Pointer for linked list 
-    struct mpu6050_com_data_s *next_device; 
+    // Linked list tracking 
+    struct mpu6050_com_data_s *next_ptr; 
+    device_number_t device_num; 
 
     // Peripherals 
     I2C_TypeDef *i2c;                // I2C port connected to the device 

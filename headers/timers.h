@@ -237,7 +237,7 @@ void tim_2_to_5_output_init(
  *          Examples include blocking delays or periodic interrupts. 
  *          
  *          This function (and all timer counter init functions) calls get_sys_clk_init() to 
- *          get the system clock so the non-blocking delay function tim_time_compare can 
+ *          get the system clock so the non-blocking delay function tim_compare can 
  *          be used. 
  * 
  * @see timer_us_prescalars_t
@@ -329,16 +329,29 @@ void tim_delay_ms(
  * @brief 
  * 
  * @details 
+ *          NOTE: The first delay after first calling this function may be shorter than 
+ *                the specified delay due to counter references being initialized. All 
+ *                proceeding delays will be accurate. 
+ *          
+ *          NOTE: It is assumed that total_count and count_compare are initialized to 
+ *                zero before first calling this function. 
+ *          
+ *          NOTE: For continuous delays, the start bit does not have to be reset. For one-
+ *                time delays the start bit will have to be reset only if you plan to use 
+ *                the one-time delays again at some point. This bit ensures the counter 
+ *                is properly initialized before measuring any kind of delay. 
  * 
- * @param timer 
+ * @param timer : 
+ * @param clk_freq : 
  * @param time_compare : minum delay time to compare against (in microseconds) 
- * @param total_count 
- * @param count_compare 
+ * @param total_count : 
+ * @param count_compare : 
  * @param count_start : flag that indicates the timer is just starting 
  * @return uint8_t 
  */
-uint8_t tim_time_compare(
+uint8_t tim_compare(
     TIM_TypeDef *timer, 
+    uint32_t clk_freq, 
     uint32_t time_compare, 
     uint32_t *count_total, 
     uint32_t *count_compare, 
@@ -429,6 +442,23 @@ void tim_ccr(
     TIM_TypeDef *timer, 
     uint32_t ccr, 
     tim_channel_t channel); 
+
+//================================================================================
+
+
+//================================================================================
+// Getters 
+
+/**
+ * @brief Get the timer clock frequency 
+ * 
+ * @details 
+ * 
+ * @param timer : timer port to get clock frquency of 
+ * @return uint32_t 
+ */
+uint32_t tim_get_pclk_freq(
+    TIM_TypeDef *timer); 
 
 //================================================================================
 

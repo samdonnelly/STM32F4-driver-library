@@ -22,6 +22,9 @@
 #include "stm32f411xe.h"
 #include "tools.h" 
 
+// Libraries 
+#include <stdlib.h>
+
 //=======================================================================================
 
 
@@ -51,6 +54,20 @@ typedef enum {
 
 
 //=======================================================================================
+// Structure 
+
+
+typedef struct linked_list_struct_s 
+{
+    struct linked_list_struct_s *next_ptr; 
+    device_number_t device_num; 
+}
+linked_list_struct_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Function prototypes 
 
 /**
@@ -62,6 +79,13 @@ typedef enum {
  * @return void* 
  */
 void *create_linked_list_entry(
+    device_number_t device_num, 
+    void *list_ptr, 
+    uint32_t record_size); 
+
+
+// Get linked list entry 
+void *get_linked_list_entry(
     device_number_t device_num, 
     void *list_ptr, 
     uint32_t record_size); 

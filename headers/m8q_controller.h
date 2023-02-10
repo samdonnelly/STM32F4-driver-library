@@ -93,6 +93,7 @@ typedef struct m8q_trackers_s
     m8q_states_t state;                        // Controller state 
     uint8_t fault_code;                        // Fault code for the device/controller 
     m8q_navstat_state_t navstat;               // Navigation status of device 
+    uint32_t clk_freq;                         // Timer clock frquency 
     uint32_t time_cnt_total;                   // Time delay counter total count 
     uint32_t time_cnt;                         // Time delay counter instance 
     uint8_t  time_start;                       // Time delay counter start flag 

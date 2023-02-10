@@ -397,8 +397,9 @@ void tim_delay_ms(
 
 
 // Elapsed time calculation (non-blocking delay) 
-uint8_t tim_time_compare(
+uint8_t tim_compare(
     TIM_TypeDef *timer, 
+    uint32_t clk_freq, 
     uint32_t time_compare, 
     uint32_t *count_total, 
     uint32_t *count_compare, 
@@ -407,7 +408,7 @@ uint8_t tim_time_compare(
     // Local variables 
     uint32_t time_elapsed; 
     uint32_t count_tracker; 
-    uint32_t apb_freq;          // APB frequency in MHz 
+    // uint32_t apb_freq;          // APB frequency in MHz 
 
     // Only update the clock counter if no delay has happened yet 
     if (*count_start)
@@ -418,17 +419,17 @@ uint8_t tim_time_compare(
         return FALSE; 
     }
 
-    // Get the timer clock frequency 
-    if (((uint32_t)timer & TIM_APB_CLK_FILTER) >> SHIFT_4) 
-    {
-        // APB2 
-        apb_freq = (rcc_get_pclk2_frq() / DIVIDE_1000) / DIVIDE_1000; 
-    }
-    else 
-    {
-        // APB1 
-        apb_freq = (rcc_get_pclk1_frq() / DIVIDE_1000) / DIVIDE_1000; 
-    }
+    // // Get the timer clock frequency 
+    // if (((uint32_t)timer & TIM_APB_CLK_FILTER) >> SHIFT_4) 
+    // {
+    //     // APB2 
+    //     apb_freq = (rcc_get_pclk2_frq() / DIVIDE_1000) / DIVIDE_1000; 
+    // }
+    // else 
+    // {
+    //     // APB1 
+    //     apb_freq = (rcc_get_pclk1_frq() / DIVIDE_1000) / DIVIDE_1000; 
+    // }
 
     // Read the updated clock counter 
     count_tracker = tim_cnt_read(timer); 
@@ -444,16 +445,23 @@ uint8_t tim_time_compare(
     }
 
     // Calculate the total elapsed time (in microseconds) 
-    time_elapsed = *count_total * (timer->PSC + 1) / apb_freq; 
+    // time_elapsed = *count_total * (timer->PSC + 1) / apb_freq; 
+    time_elapsed = *count_total * (timer->PSC + 1) / clk_freq; 
+
+    // Update the counter reference - this is new so test it 
+    *count_compare = count_tracker; 
 
     // Compare the times 
     if (time_elapsed >= time_compare)
     {
+        // Enough time has elapsed so restart the timer 
+        *count_total = CLEAR; 
         return TRUE; 
     }
     else 
     {
-        *count_compare = count_tracker; 
+        // Elapsed time is less than desired delay time so updated the counter 
+        // *count_compare = count_tracker; 
         return FALSE; 
     }
 }
@@ -686,6 +694,28 @@ void tim_ccr(
         
         default:
             break;
+    }
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Getters 
+
+// Get the timer clock frequency 
+uint32_t tim_get_pclk_freq(
+    TIM_TypeDef *timer)
+{
+    if (((uint32_t)timer & TIM_APB_CLK_FILTER) >> SHIFT_4) 
+    {
+        // APB2 
+        return (rcc_get_pclk2_frq() / DIVIDE_1000) / DIVIDE_1000; 
+    }
+    else 
+    {
+        // APB1 
+        return (rcc_get_pclk1_frq() / DIVIDE_1000) / DIVIDE_1000; 
     }
 }
 

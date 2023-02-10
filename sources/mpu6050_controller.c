@@ -137,10 +137,11 @@ void mpu6050_controller_init(
     // Controller information 
     mpu6050_device_trackers.state = MPU6050_INIT_STATE; 
     mpu6050_device_trackers.fault_code = CLEAR; 
+    mpu6050_device_trackers.clk_freq = tim_get_pclk_freq(mpu6050_device_trackers.timer); 
+    mpu6050_device_trackers.sample_period = sample_period; 
     mpu6050_device_trackers.time_cnt_total = CLEAR; 
     mpu6050_device_trackers.time_cnt = CLEAR; 
     mpu6050_device_trackers.time_start = SET_BIT; 
-    mpu6050_device_trackers.sample_period = sample_period; 
 
     // State trackers 
     mpu6050_device_trackers.startup = SET_BIT; 
@@ -294,14 +295,17 @@ void mpu6050_run_state(
     mpu6050_trackers_t *mpu6050_device)
 {
     // Wait for a specified period of time before reading new data 
-    if (tim_time_compare(mpu6050_device->timer, 
-                         mpu6050_device->sample_period, 
-                         &mpu6050_device->time_cnt_total, 
-                         &mpu6050_device->time_cnt, 
-                         &mpu6050_device->time_start))
+    if (tim_compare(mpu6050_device->timer, 
+                    mpu6050_device->clk_freq, 
+                    mpu6050_device->sample_period, 
+                    &mpu6050_device->time_cnt_total, 
+                    &mpu6050_device->time_cnt, 
+                    &mpu6050_device->time_start))
     {
         // Reset the start flag 
-        mpu6050_device->time_start = SET_BIT; 
+        // TODO have the start flag reset within the function so no time is lost 
+        // running through the code before starting again. 
+        // mpu6050_device->time_start = SET_BIT; 
 
         // Sample the data 
         mpu6050_read_all(); 
