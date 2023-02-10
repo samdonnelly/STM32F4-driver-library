@@ -23,6 +23,9 @@
 //=======================================================================================
 // TODO 
 // - Possibly add a register reset function - used by controller in reset? 
+// - Consider using the getters to parse data out of the arrays that store the device 
+//   data after a read instead of copying the data after reading. Could save some time 
+//   on unecessary copying. 
 //=======================================================================================
 
 
@@ -631,12 +634,12 @@ MPU6050_INIT_STATUS mpu6050_init(
     mpu6050_afs_sel_set_t afs_sel,
     mpu6050_fs_sel_set_t fs_sel)
 {
-    // // Create a data record if it does not already exist 
-    // mpu6050_com_data_t *mpu6050_driver_data = 
-    //     (mpu6050_com_data_t *)create_linked_list_entry(
-    //                                     device_num, 
-    //                                     (void *)mpu6050_com_data_ptr, 
-    //                                     sizeof(mpu6050_com_data_t)); 
+    // Create a data record if it does not already exist 
+    mpu6050_com_data_t *mpu6050_driver_data = 
+        (mpu6050_com_data_t *)create_linked_list_entry(
+                                        device_num, 
+                                        (void *)mpu6050_com_data_ptr, 
+                                        sizeof(mpu6050_com_data_t)); 
 
     // mpu6050_driver_data->i2c = i2c; 
     // mpu6050_driver_data->addr = mpu6050_addr; 
