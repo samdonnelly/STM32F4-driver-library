@@ -78,8 +78,8 @@ typedef uint16_t MPU6050_FAULT_CODE;
 // bit 5  : self-test gyroscope x-axis 
 // bit 6  : self-test gyroscope y-axis 
 // bit 7  : self-test gyroscope z-axis 
-// bit 8  : high temperature 
-// bit 9  : not used 
+// bit 8  : invalid data record pointer 
+// bit 9  : high temperature 
 // bit 10 : not used 
 // bit 11 : not used 
 // bit 12 : not used 
@@ -98,6 +98,7 @@ typedef struct mpu6050_trackers_s
     TIM_TypeDef *timer;                     // Pointer to timer port used in controller 
 
     // Device and controller information 
+    device_number_t device_num;             // Device number 
     mpu6050_states_t state;                 // State of the controller 
     MPU6050_FAULT_CODE fault_code;          // Controller fault code 
     uint32_t clk_freq;                      // Timer clock frquency 
@@ -134,9 +135,12 @@ typedef void (*mpu6050_state_functions_t)(
 /**
  * @brief 
  * 
- * @param timer : 
+ * @param device_num 
+ * @param timer 
+ * @param sample_period 
  */
 void mpu6050_controller_init(
+    device_number_t device_num, 
     TIM_TypeDef *timer, 
     uint32_t sample_period); 
 
@@ -145,7 +149,8 @@ void mpu6050_controller_init(
  * @brief 
  * 
  */
-void mpu6050_controller(void); 
+void mpu6050_controller(
+    device_number_t device_num); 
 
 //=======================================================================================
 

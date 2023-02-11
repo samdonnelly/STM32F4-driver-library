@@ -128,6 +128,7 @@ static mpu6050_state_functions_t state_table[MPU6050_NUM_STATES] =
 
 // MPU6050 controller initialization 
 void mpu6050_controller_init(
+    device_number_t device_num, 
     TIM_TypeDef *timer, 
     uint32_t sample_period)
 {
@@ -135,6 +136,7 @@ void mpu6050_controller_init(
     mpu6050_device_trackers.timer = timer; 
 
     // Controller information 
+    mpu6050_device_trackers.device_num = device_num; 
     mpu6050_device_trackers.state = MPU6050_INIT_STATE; 
     mpu6050_device_trackers.fault_code = CLEAR; 
     mpu6050_device_trackers.clk_freq = tim_get_pclk_freq(mpu6050_device_trackers.timer); 
@@ -148,12 +150,14 @@ void mpu6050_controller_init(
     mpu6050_device_trackers.low_power = CLEAR_BIT; 
 
     // Check for driver faults 
-    mpu6050_device_trackers.fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
+    mpu6050_device_trackers.fault_code |= 
+        mpu6050_get_fault_flag(mpu6050_device_trackers.device_num); 
 }
 
 
 // MPU6050 controller 
-void mpu6050_controller(void)
+void mpu6050_controller(
+    device_number_t device_num)
 {
     // Record the controller state 
     MPU6050_STATE next_state = mpu6050_device_trackers.state; 
@@ -282,15 +286,15 @@ void mpu6050_init_state(
     mpu6050_device->reset = CLEAR_BIT; 
 
     // Run self-test and record any faults (failed tests) 
-    mpu6050_self_test();
-    mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
+    mpu6050_self_test(mpu6050_device->device_num);
+    mpu6050_device->fault_code |= mpu6050_get_fault_flag(mpu6050_device->device_num); 
 
     // TODO the delay time changes based on the clock prescaler so this is not robust 
-    // Provide time for the device to update data so self-test data is not used for calibration 
+    // Provide time for data to update so self-test data is not used for calibration 
     tim_delay_ms(mpu6050_device->timer, MPU6050_ST_DELAY); 
     
     // run calibration to zero the gyroscope values 
-    mpu6050_calibrate(); 
+    mpu6050_calibrate(mpu6050_device->device_num); 
 }
 
 
@@ -307,14 +311,15 @@ void mpu6050_run_state(
                     &mpu6050_device->time_start))
     {
         // Sample the data 
-        mpu6050_read_all(); 
+        mpu6050_read_all(mpu6050_device->device_num); 
 
         // Check for faults 
-        mpu6050_device->fault_code |= (uint16_t)mpu6050_get_fault_flag(); 
+        mpu6050_device->fault_code |= mpu6050_get_fault_flag(mpu6050_device->device_num); 
 
-        if (mpu6050_get_temp_raw() > (MPU6050_RAW_TEMP_MAX-MPU6050_RAW_TEMP_OFST))
+        if (mpu6050_get_temp_raw(mpu6050_device->device_num) > 
+            (MPU6050_RAW_TEMP_MAX-MPU6050_RAW_TEMP_OFST))
         {
-            mpu6050_device->fault_code |= (SET_BIT << SHIFT_8); 
+            mpu6050_device->fault_code |= (SET_BIT << SHIFT_9); 
         }
     }
 }
@@ -337,7 +342,9 @@ void mpu6050_low_power_trans_state(
     // mpu6050_action = SET_BIT; 
 
     // Write the low power flag status to the power management register 
-    mpu6050_low_pwr_config(mpu6050_device->low_power); 
+    mpu6050_low_pwr_config(
+        mpu6050_device->device_num, 
+        mpu6050_device->low_power); 
 }
 
 
@@ -362,7 +369,7 @@ void mpu6050_reset_state(
 
     // Reset the fault code 
     mpu6050_device->fault_code = CLEAR; 
-    mpu6050_clear_fault_flag(); 
+    mpu6050_clear_fault_flag(mpu6050_device->device_num); 
 
     // Reset the low power flag 
     mpu6050_device->low_power = SLEEP_MODE_DISABLE; 

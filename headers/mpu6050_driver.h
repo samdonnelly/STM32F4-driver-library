@@ -55,6 +55,8 @@
 #define MPU6050_FS_CORRECTION 0x02       // Gyroscope calculation correction mask 
 #define MPU6050_GYRO_SCALAR 10           // Unscales scaled mpu6050_gyro_scalars_t values 
 
+#define MPU6050_NULL_PTR_RETURN 0        // 
+
 // Registers 
 #define MPU6050_STBY_STATUS_MASK 0x3F    // Pwr mgmt 2 standby status mask 
 
@@ -500,7 +502,7 @@ typedef enum {
 
 typedef uint8_t MPU6050_INT_STATUS; 
 typedef uint8_t MPU6050_INIT_STATUS; 
-typedef uint8_t MPU6050_FAULT_FLAG; 
+typedef uint16_t MPU6050_FAULT_FLAG; 
 
 //=======================================================================================
 
@@ -546,6 +548,7 @@ MPU6050_INIT_STATUS mpu6050_init(
  * @param pin 
  */
 void mpu6050_int_pin_init(
+    device_number_t device_num, 
     GPIO_TypeDef *gpio, 
     pin_selector_t pin); 
 
@@ -569,7 +572,8 @@ void mpu6050_int_pin_init(
  * @param mpu6050_accel_offset : pointer that stores an instance of accelerometer data
  * @param mpu6050_gyro_offset : pointer that stores an instance of gyroscope data
  */
-void mpu6050_calibrate(void); 
+void mpu6050_calibrate(
+    device_number_t device_num); 
 
 
 /**
@@ -580,6 +584,7 @@ void mpu6050_calibrate(void);
  * @param sleep 
  */
 void mpu6050_low_pwr_config(
+    device_number_t device_num, 
     mpu6050_sleep_mode_t sleep); 
 
 //=======================================================================================
@@ -615,7 +620,8 @@ void mpu6050_low_pwr_config(
  * @param mpu6050_address : I2C address of MPU6050 
  * @param accel_data : pointer to array where accelerometer data is stored 
  */
-void mpu6050_accel_read(void);
+void mpu6050_accel_read(
+    device_number_t device_num);
 
 
 /**
@@ -645,7 +651,8 @@ void mpu6050_accel_read(void);
  * @param mpu6050_address : I2C address of MPU6050 
  * @param gyro_data : pointer to array where gyroscope data is stored 
  */
-void mpu6050_gyro_read(void);
+void mpu6050_gyro_read(
+    device_number_t device_num);
 
 
 /**
@@ -669,11 +676,18 @@ void mpu6050_gyro_read(void);
  * @param mpu6050_address : I2C address of MPU6050 
  * @return int16_t : unformatted signed temperature value 
  */
-void mpu6050_temp_read(void); 
+void mpu6050_temp_read(
+    device_number_t device_num); 
 
 
-// MPU6050 read all 
-void mpu6050_read_all(void); 
+/**
+ * @brief MPU6050 read all 
+ * 
+ * @details 
+ * 
+ */
+void mpu6050_read_all(
+    device_number_t device_num); 
 
 //=======================================================================================
 
@@ -704,10 +718,11 @@ void mpu6050_read_all(void);
  *          - Bit 1: accelerometer y-axis 
  *          - Bit 0: accelerometer x-axis 
  * 
- * @param mpu6050_address : I2C address of MPU6050 
+ * @param device_num : device number used to get data record 
  * @return uint8_t : self-test results for each sensor axis 
  */
-uint8_t mpu6050_self_test(void);
+uint8_t mpu6050_self_test(
+    device_number_t device_num);
 
 //=======================================================================================
 
@@ -718,7 +733,8 @@ uint8_t mpu6050_self_test(void);
 /**
  * @brief Clear driver fault flag 
  */
-void mpu6050_clear_fault_flag(void); 
+void mpu6050_clear_fault_flag(
+    device_number_t device_num); 
 
 //=======================================================================================
 
@@ -731,7 +747,8 @@ void mpu6050_clear_fault_flag(void);
  * 
  * @return MPU6050_FAULT_FLAG 
  */
-MPU6050_FAULT_FLAG mpu6050_get_fault_flag(void); 
+MPU6050_FAULT_FLAG mpu6050_get_fault_flag(
+    device_number_t device_num); 
 
 
 /**
@@ -742,7 +759,8 @@ MPU6050_FAULT_FLAG mpu6050_get_fault_flag(void);
  * 
  * @return MPU6050_INT_STATUS 
  */
-MPU6050_INT_STATUS mpu6050_int_status(void); 
+MPU6050_INT_STATUS mpu6050_int_status(
+    device_number_t device_num); 
 
 
 /**
@@ -752,7 +770,8 @@ MPU6050_INT_STATUS mpu6050_int_status(void);
  * 
  * @return int16_t 
  */
-int16_t mpu6050_get_accel_x_raw(void); 
+int16_t mpu6050_get_accel_x_raw(
+    device_number_t device_num); 
 
 
 /**
@@ -762,7 +781,8 @@ int16_t mpu6050_get_accel_x_raw(void);
  * 
  * @return int16_t 
  */
-int16_t mpu6050_get_accel_y_raw(void); 
+int16_t mpu6050_get_accel_y_raw(
+    device_number_t device_num); 
 
 
 /**
@@ -772,7 +792,8 @@ int16_t mpu6050_get_accel_y_raw(void);
  * 
  * @return int16_t 
  */
-int16_t mpu6050_get_accel_z_raw(void); 
+int16_t mpu6050_get_accel_z_raw(
+    device_number_t device_num); 
 
 
 /**
@@ -790,7 +811,8 @@ int16_t mpu6050_get_accel_z_raw(void);
  * @param accel_x_axis_raw : raw x-axis acceleration output 
  * @return float : x-axis acceleration in g's
  */
-float mpu6050_get_accel_x(void); 
+float mpu6050_get_accel_x(
+    device_number_t device_num); 
 
 
 /**
@@ -808,7 +830,8 @@ float mpu6050_get_accel_x(void);
  * @param accel_y_axis_raw : raw y-axis acceleration output 
  * @return float : y-axis acceleration in g's
  */
-float mpu6050_get_accel_y(void); 
+float mpu6050_get_accel_y(
+    device_number_t device_num); 
 
 
 /**
@@ -826,7 +849,8 @@ float mpu6050_get_accel_y(void);
  * @param accel_z_axis_raw : raw z-axis acceleration output 
  * @return float : z-axis acceleration in g's
  */
-float mpu6050_get_accel_z(void); 
+float mpu6050_get_accel_z(
+    device_number_t device_num); 
 
 
 /**
@@ -836,7 +860,8 @@ float mpu6050_get_accel_z(void);
  * 
  * @return int16_t 
  */
-int16_t mpu6050_get_gyro_x_raw(void); 
+int16_t mpu6050_get_gyro_x_raw(
+    device_number_t device_num); 
 
 
 /**
@@ -846,7 +871,8 @@ int16_t mpu6050_get_gyro_x_raw(void);
  * 
  * @return int16_t 
  */
-int16_t mpu6050_get_gyro_y_raw(void); 
+int16_t mpu6050_get_gyro_y_raw(
+    device_number_t device_num); 
 
 
 /**
@@ -856,7 +882,8 @@ int16_t mpu6050_get_gyro_y_raw(void);
  * 
  * @return int16_t 
  */
-int16_t mpu6050_get_gyro_z_raw(void); 
+int16_t mpu6050_get_gyro_z_raw(
+    device_number_t device_num); 
 
 
 /**
@@ -878,7 +905,8 @@ int16_t mpu6050_get_gyro_z_raw(void);
  * @param gyro_x_axis_offset : resting drift/error in gyroscope axis
  * @return float : x-axis gyroscopic value in deg/s
  */
-float mpu6050_get_gyro_x(void);
+float mpu6050_get_gyro_x(
+    device_number_t device_num);
 
 
 /**
@@ -900,7 +928,8 @@ float mpu6050_get_gyro_x(void);
  * @param gyro_y_axis_offset : resting drift/error in gyroscope axis
  * @return float : y-axis gyroscopic value in deg/s
  */
-float mpu6050_get_gyro_y(void);
+float mpu6050_get_gyro_y(
+    device_number_t device_num);
 
 
 /**
@@ -922,7 +951,8 @@ float mpu6050_get_gyro_y(void);
  * @param gyro_z_axis_offset : resting drift/error in gyroscope axis
  * @return float : z-axis gyroscopic value in deg/s
  */
-float mpu6050_get_gyro_z(void);
+float mpu6050_get_gyro_z(
+    device_number_t device_num);
 
 
 /**
@@ -932,7 +962,8 @@ float mpu6050_get_gyro_z(void);
  * 
  * @return int16_t 
  */
-int16_t mpu6050_get_temp_raw(void); 
+int16_t mpu6050_get_temp_raw(
+    device_number_t device_num); 
 
 
 /**
@@ -947,7 +978,8 @@ int16_t mpu6050_get_temp_raw(void);
  * @param temp_raw : raw temperature sensor output
  * @return float : true temperature value in degC
  */
-float mpu6050_get_temp(void);
+float mpu6050_get_temp(
+    device_number_t device_num);
 
 //=======================================================================================
 

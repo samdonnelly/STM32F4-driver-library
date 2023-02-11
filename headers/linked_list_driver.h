@@ -73,6 +73,12 @@ linked_list_struct_t;
 /**
  * @brief Create a linked list entry object 
  * 
+ * @details 
+ *          
+ *          NOTE: A double pointer is needed for list_ptr because we update the value of 
+ *                this pointer within the function. In order to update the value of a 
+ *                pointer we need to use double pointers. 
+ * 
  * @param device_num 
  * @param list_ptr 
  * @param record_size 
@@ -80,15 +86,22 @@ linked_list_struct_t;
  */
 void *create_linked_list_entry(
     device_number_t device_num, 
-    void *list_ptr, 
+    void **list_ptr, 
     uint32_t record_size); 
 
 
-// Get linked list entry 
+/**
+ * @brief Get linked list entry 
+ * 
+ * @details 
+ * 
+ * @param device_num 
+ * @param list_ptr 
+ * @return void* 
+ */
 void *get_linked_list_entry(
     device_number_t device_num, 
-    void *list_ptr, 
-    uint32_t record_size); 
+    void *list_ptr); 
 
 //=======================================================================================
 
