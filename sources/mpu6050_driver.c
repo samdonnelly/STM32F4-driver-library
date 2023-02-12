@@ -603,7 +603,6 @@ mpu6050_driver_data_t;
 
 
 // MPU6050 device com data record instance 
-static mpu6050_driver_data_t mpu6050_driver_data; 
 static mpu6050_driver_data_t *mpu6050_driver_data_ptr = NULL; 
 
 //=======================================================================================

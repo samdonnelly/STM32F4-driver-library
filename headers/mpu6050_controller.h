@@ -22,9 +22,6 @@
 #include "mpu6050_driver.h"
 #include "timers.h"
 
-// Test 
-#include "uart_comm.h"
-
 //=======================================================================================
 
 
@@ -49,12 +46,12 @@
  * 
  */
 typedef enum {
-    MPU6050_INIT_STATE, 
-    MPU6050_RUN_STATE, 
-    MPU6050_LOW_POWER_STATE, 
-    MPU6050_LOW_POWER_TRANS_STATE, 
-    MPU6050_FAULT_STATE, 
-    MPU6050_RESET_STATE 
+    MPU6050_INIT_STATE,              // State 0: init 
+    MPU6050_RUN_STATE,               // State 1: run 
+    MPU6050_LOW_POWER_STATE,         // State 2: low power mode 
+    MPU6050_LOW_POWER_TRANS_STATE,   // State 3: low power mode transition 
+    MPU6050_FAULT_STATE,             // State 4: fault 
+    MPU6050_RESET_STATE              // State 5: reset 
 } mpu6050_states_t; 
 
 //=======================================================================================
@@ -92,7 +89,7 @@ typedef uint16_t MPU6050_FAULT_CODE;
 // Structures 
 
 // MPU6050 controller trackers 
-typedef struct mpu6050_trackers_s 
+typedef struct mpu6050_cntrl_data_s 
 {
     // Peripherals 
     TIM_TypeDef *timer;                     // Pointer to timer port used in controller 
@@ -112,7 +109,7 @@ typedef struct mpu6050_trackers_s
     uint8_t reset                  : 1;     // Reset state trigger 
     uint8_t startup                : 1;     // Ensures the init state is run 
 }
-mpu6050_trackers_t; 
+mpu6050_cntrl_data_t; 
 
 //=======================================================================================
 
@@ -124,7 +121,7 @@ mpu6050_trackers_t;
  * @brief 
  */
 typedef void (*mpu6050_state_functions_t)(
-    mpu6050_trackers_t *mpu6050_device); 
+    mpu6050_cntrl_data_t *mpu6050_device); 
 
 //=======================================================================================
 
@@ -161,19 +158,22 @@ void mpu6050_controller(
 /**
  * @brief MPU6050 set reset flag 
  */
-void mpu6050_set_reset_flag(void); 
+void mpu6050_set_reset_flag(
+    device_number_t device_num); 
 
 
 /**
  * @brief Set low power flag 
  */
-void mpu6050_set_low_power(void); 
+void mpu6050_set_low_power(
+    device_number_t device_num); 
 
 
 /**
  * @brief Clear low power flag 
  */
-void mpu6050_clear_low_power(void); 
+void mpu6050_clear_low_power(
+    device_number_t device_num); 
 
 //=======================================================================================
 
@@ -188,7 +188,8 @@ void mpu6050_clear_low_power(void);
  * 
  * @return MPU6050_STATE 
  */
-MPU6050_STATE mpu6050_get_state(void); 
+MPU6050_STATE mpu6050_get_state(
+    device_number_t device_num); 
 
 
 /**
@@ -196,7 +197,8 @@ MPU6050_STATE mpu6050_get_state(void);
  * 
  * @return MPU6050_FAULT_CODE 
  */
-MPU6050_FAULT_CODE mpu6050_get_fault_code(void); 
+MPU6050_FAULT_CODE mpu6050_get_fault_code(
+    device_number_t device_num); 
 
 //=======================================================================================
 
