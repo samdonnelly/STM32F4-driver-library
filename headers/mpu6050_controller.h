@@ -91,11 +91,14 @@ typedef uint16_t MPU6050_FAULT_CODE;
 // MPU6050 controller trackers 
 typedef struct mpu6050_cntrl_data_s 
 {
+    // Linked list tracking 
+    struct mpu6050_cntrl_data_s *next_ptr; 
+    device_number_t device_num; 
+
     // Peripherals 
     TIM_TypeDef *timer;                     // Pointer to timer port used in controller 
 
     // Device and controller information 
-    device_number_t device_num;             // Device number 
     mpu6050_states_t state;                 // State of the controller 
     MPU6050_FAULT_CODE fault_code;          // Controller fault code 
     uint32_t clk_freq;                      // Timer clock frquency 
