@@ -664,7 +664,7 @@ MPU6050_INIT_STATUS mpu6050_init(
         mpu6050_pwr_mgmt_1_write(
             device_data_ptr->i2c, 
             device_data_ptr->addr,
-            DEVICE_RESET_DISABLE,
+            MPU6050_RESET_DISABLE,
             SLEEP_MODE_DISABLE,
             CYCLE_SLEEP_DISABLED,
             TEMP_SENSOR_ENABLE,
@@ -852,7 +852,7 @@ void mpu6050_low_pwr_config(
     mpu6050_pwr_mgmt_1_write(
         device_data_ptr->i2c, 
         device_data_ptr->addr,
-        DEVICE_RESET_DISABLE,
+        MPU6050_RESET_DISABLE,
         sleep,
         CYCLE_SLEEP_DISABLED,
         TEMP_SENSOR_ENABLE,
@@ -867,7 +867,7 @@ float mpu6050_accel_scalar(
 {
     // Get AFS_SEL 
     mpu6050_afs_sel_set_t afs_sel = ((mpu6050_accel_config_read(i2c, addr) & 
-                                      MPU6050_AFS_SEL_MASK) >> SHIFT_3); 
+                                      MPU6050_FSR_MASK) >> SHIFT_3); 
     
     return (float)(MPU6050_AFS_SEL_MAX >> afs_sel); 
 }
@@ -880,7 +880,7 @@ float mpu6050_gyro_scalar(
 {
     // Get FS_SEL 
     mpu6050_fs_sel_set_t fs_sel = ((mpu6050_gyro_config_read(i2c, addr) & 
-                                    MPU6050_FS_SEL_MASK) >> SHIFT_3); 
+                                    MPU6050_FSR_MASK) >> SHIFT_3); 
     
     // Calculate the gyroscope calculation scalar 
     return ((MPU6050_FS_SEL_MAX >> fs_sel) + ((fs_sel & MPU6050_FS_CORRECTION) >> SHIFT_1)) / 
@@ -1284,7 +1284,7 @@ uint8_t mpu6050_self_test(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     // Used to record the existing full scale range 
     uint8_t accel_fsr;
@@ -1315,9 +1315,9 @@ uint8_t mpu6050_self_test(
 
     // Record the full scale range set in the init function 
     accel_fsr = ((mpu6050_accel_config_read(device_data_ptr->i2c, device_data_ptr->addr) & 
-                  MPU6050_AFS_SEL_MASK) >> SHIFT_3);
+                  MPU6050_FSR_MASK) >> SHIFT_3);
     gyro_fsr  = ((mpu6050_gyro_config_read(device_data_ptr->i2c, device_data_ptr->addr) & 
-                  MPU6050_FS_SEL_MASK) >> SHIFT_3);
+                  MPU6050_FSR_MASK) >> SHIFT_3);
 
     // Set the full scale range of the accel to +/- 8g and gyro to +/- 250 deg/s
     mpu6050_accel_config_write(
@@ -1593,7 +1593,7 @@ MPU6050_FAULT_FLAG mpu6050_get_fault_flag(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return device_data_ptr->fault_flag; 
 }
@@ -1608,7 +1608,7 @@ MPU6050_INT_STATUS mpu6050_int_status(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return gpio_read(device_data_ptr->gpio, (SET_BIT << device_data_ptr->int_pin)); 
 }
@@ -1623,7 +1623,7 @@ int16_t mpu6050_get_accel_x_raw(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return device_data_ptr->accel_data.accel_x; 
 }
@@ -1638,7 +1638,7 @@ int16_t mpu6050_get_accel_y_raw(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return device_data_ptr->accel_data.accel_y; 
 }
@@ -1653,7 +1653,7 @@ int16_t mpu6050_get_accel_z_raw(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return device_data_ptr->accel_data.accel_z; 
 }
@@ -1668,7 +1668,7 @@ float mpu6050_get_accel_x(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     // Get the raw value scalar and calculate the true x-axis acceleration 
     return mpu6050_get_accel_x_raw(device_num) / device_data_ptr->accel_data_scalar; 
@@ -1684,7 +1684,7 @@ float mpu6050_get_accel_y(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     // Get the raw value scalar and calculate the true y-axis acceleration 
     return mpu6050_get_accel_y_raw(device_num) / device_data_ptr->accel_data_scalar; 
@@ -1700,7 +1700,7 @@ float mpu6050_get_accel_z(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     // Get the raw value scalar and calculate the true z-axis acceleration 
     return mpu6050_get_accel_z_raw(device_num) / device_data_ptr->accel_data_scalar; 
@@ -1716,7 +1716,7 @@ int16_t mpu6050_get_gyro_x_raw(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return (device_data_ptr->gyro_data.gyro_x - device_data_ptr->gyro_data.gyro_x_offset); 
 }
@@ -1731,7 +1731,7 @@ int16_t mpu6050_get_gyro_y_raw(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return (device_data_ptr->gyro_data.gyro_y - device_data_ptr->gyro_data.gyro_y_offset); 
 }
@@ -1746,7 +1746,7 @@ int16_t mpu6050_get_gyro_z_raw(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return (device_data_ptr->gyro_data.gyro_z - device_data_ptr->gyro_data.gyro_z_offset); 
 }
@@ -1761,7 +1761,7 @@ float mpu6050_get_gyro_x(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     // Get the raw value scalar and calculate the true x-axis angular acceleration 
     return (mpu6050_get_gyro_x_raw(device_num) / device_data_ptr->gyro_data_scalar); 
@@ -1777,7 +1777,7 @@ float mpu6050_get_gyro_y(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     // Get the raw value scalar and calculate the true x-axis angular acceleration 
     return (mpu6050_get_gyro_y_raw(device_num) / device_data_ptr->gyro_data_scalar); 
@@ -1793,7 +1793,7 @@ float mpu6050_get_gyro_z(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     // Get the raw value scalar and calculate the true x-axis angular acceleration 
     return (mpu6050_get_gyro_z_raw(device_num) / device_data_ptr->gyro_data_scalar); 
@@ -1809,7 +1809,7 @@ int16_t mpu6050_get_temp_raw(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return device_data_ptr->other_data.temp; 
 }
@@ -1824,7 +1824,7 @@ float mpu6050_get_temp(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     // Get the true temperature in degC
     return mpu6050_get_temp_raw(device_num) / ((float)(MPU6050_TEMP_SENSIT)) + 

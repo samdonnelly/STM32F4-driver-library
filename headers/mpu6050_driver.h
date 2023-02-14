@@ -27,8 +27,6 @@
 #include "gpio_driver.h"
 #include "linked_list_driver.h"
 
-#include "uart_comm.h"
-
 //=======================================================================================
 
 
@@ -40,25 +38,22 @@
 #define MPU6050_FT_MAX_ERROR 14          // Max % change from factory trim acceptable
 #define MPU6050_NUM_AXIS 3               // Number of acclerometer axes 
 
+// Registers 
+#define MPU6050_STBY_STATUS_MASK 0x3F    // Pwr mgmt 2 standby status mask 
+#define MPU6050_FSR_MASK 0x18            // Mask for reading gyro and accel full scale range 
+
 // Temperature sensor 
 #define MPU6050_TEMP_SCALAR 100          // User defined temp scalar to eliminate decimals 
 #define MPU6050_TEMP_SENSIT 340          // Sensitivity (LSB/degC) - MPU6050 defined scalar
 #define MPU6050_TEMP_OFFSET 3653         // Temperature offset scaled by MPU6050_TEMP_SCALAR
 
 // Accelerometer 
-#define MPU6050_AFS_SEL_MASK 24          // 0x18 - Mask for reading accel full scale range
 #define MPU6050_AFS_SEL_MAX 16384        // Max accelerometer calculation scalar 
 
 // Gyroscope 
-#define MPU6050_FS_SEL_MASK 24           // 0x18 - Mask for reading gyro full scale range 
 #define MPU6050_FS_SEL_MAX 1310          // Max gyroscopic calculation scalar 
 #define MPU6050_FS_CORRECTION 0x02       // Gyroscope calculation correction mask 
 #define MPU6050_GYRO_SCALAR 10           // Unscales scaled mpu6050_gyro_scalars_t values 
-
-#define MPU6050_NULL_PTR_RETURN 0        // 
-
-// Registers 
-#define MPU6050_STBY_STATUS_MASK 0x3F    // Pwr mgmt 2 standby status mask 
 
 //=======================================================================================
 
@@ -373,8 +368,8 @@ typedef enum {
  *          a reset to the devices default settings. 
  */
 typedef enum {
-    DEVICE_RESET_DISABLE,
-    DEVICE_RESET_ENABLE
+    MPU6050_RESET_DISABLE,
+    MPU6050_RESET_ENABLE
 } mpu6050_device_reset_t; 
 
 
@@ -478,16 +473,14 @@ typedef enum {
  */
 typedef enum {
     LP_WAKE_CTRL_0,  // 1.25 Hz wakeup frequency
-    LP_WAKE_CTRL_1,  // 5  Hz wakeup frequency
+    LP_WAKE_CTRL_1,  // 5 Hz wakeup frequency
     LP_WAKE_CTRL_2,  // 20 Hz wakeup frequency
     LP_WAKE_CTRL_3   // 40 Hz wakeup frequency
 } mpu6050_lp_wake_ctrl_t;
 
 
 /**
- * @brief 
- * 
- * @details 
+ * @brief Generic mode enable or disable flag for mpu6050 registers 
  */
 typedef enum {
     MPU6050_MODE_DISABLE, 

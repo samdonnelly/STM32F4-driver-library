@@ -458,7 +458,7 @@ MPU6050_FAULT_CODE mpu6050_get_fault_code(
         (mpu6050_cntrl_data_t *)get_linked_list_entry(device_num, mpu6050_cntrl_data_ptr); 
     
     // Check that the data record is valid 
-    if (cntrl_data_ptr == NULL) return MPU6050_NULL_PTR_RETURN; 
+    if (cntrl_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return cntrl_data_ptr->fault_code; 
 }
