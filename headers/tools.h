@@ -28,13 +28,6 @@
 //=======================================================================================
 // Macros 
 
-//===================================================
-// Functions 
-
-#define dummy_read(x) ((void)x)  // For clearing registers 
-
-//===================================================
-
 // Different ways to write zero for readability 
 #define CLEAR 0
 #define RESET_ZERO 0
@@ -43,6 +36,11 @@
 // Data type 
 #define INT16_NUM_DIGITS 5
 
+// Scalars 
+#define SCALE_10 10 
+#define SCALE_100 100 
+#define SCALE_1000 1000 
+#define SCALE_10000 10000 
 
 // AND filters 
 #define FILTER_1_LSB 0x01
@@ -60,7 +58,6 @@
 #define FILTER_5_MSB 0xF8
 #define FILTER_6_MSB 0xFC
 #define FILTER_7_MSB 0xFE
-
 
 // String formatting 
 #define NULL_CHAR   0    // '\0' == 0
@@ -82,13 +79,20 @@
 
 
 //=======================================================================================
+// Macro functions 
+
+#define dummy_read(x) ((void)x)  // For clearing registers 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Enums 
 
 // TODO make these into macros if possible 
 
 /**
- * @brief True and False boolean for readability
- * 
+ * @brief True and False boolean 
  */
 typedef enum {
     FALSE,
@@ -98,9 +102,6 @@ typedef enum {
 
 /**
  * @brief General purpose pin selector 
- * 
- * @details 
- * 
  */
 typedef enum {
     PIN_0,
@@ -131,7 +132,6 @@ typedef enum {
  *          using ghost values. 
  * 
  * @see bit_shifter_t
- * 
  */
 typedef enum {
     CLEAR_BIT,
@@ -246,10 +246,7 @@ typedef enum {
 
 
 /**
- * @brief Byte number 
- * 
- * @details General purpose byte counter for specifying the byte within a data structure. 
- * 
+ * @brief General purpose byte counter for specifying the byte within a data structure 
  */
 typedef enum {
     BYTE_0,
