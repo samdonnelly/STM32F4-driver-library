@@ -18,7 +18,6 @@
 //=======================================================================================
 // Includes 
 
-// Drivers 
 #include "mpu6050_driver.h"
 #include "timers.h"
 
@@ -28,10 +27,11 @@
 //=======================================================================================
 // Macros 
 
+// Control information 
 #define MPU6050_NUM_STATES 6         // Number of controller states 
+#define MPU6050_ST_DELAY 10          // Post self-test delay (ms)  
 
-#define MPU6050_ST_DELAY 10          // Post self-test delay counter 
-
+// Data 
 #define MPU6050_RAW_TEMP_MAX 28900   // Max raw temp reading before fault (~ 40 degC) 
 #define MPU6050_RAW_TEMP_OFST 27720  // Raw temp reading offset 
 
@@ -42,8 +42,7 @@
 // Enums 
 
 /**
- * @brief 
- * 
+ * @brief MPU6050 controller states 
  */
 typedef enum {
     MPU6050_INIT_STATE,              // State 0: init 
@@ -64,25 +63,6 @@ typedef mpu6050_states_t MPU6050_STATE;
 typedef uint16_t MPU6050_FAULT_CODE; 
 
 //=======================================================================================
-
-
-// Fault code Definition 
-// bit 0  : driver init status (who am i read) 
-// bit 1  : I2C comms error (timeout) 
-// bit 2  : self-test accelerometer x-axis 
-// bit 3  : self-test accelerometer y-axis 
-// bit 4  : self-test accelerometer z-axis 
-// bit 5  : self-test gyroscope x-axis 
-// bit 6  : self-test gyroscope y-axis 
-// bit 7  : self-test gyroscope z-axis 
-// bit 8  : invalid data record pointer 
-// bit 9  : high temperature 
-// bit 10 : not used 
-// bit 11 : not used 
-// bit 12 : not used 
-// bit 13 : not used 
-// bit 14 : not used 
-// bit 15 : not used 
 
 
 //=======================================================================================
@@ -121,7 +101,9 @@ mpu6050_cntrl_data_t;
 // Function pointers 
 
 /**
- * @brief 
+ * @brief MPU6050 state machine function pointer 
+ * 
+ * @param mpu6050_device : pointer to device data record 
  */
 typedef void (*mpu6050_state_functions_t)(
     mpu6050_cntrl_data_t *mpu6050_device); 
@@ -133,11 +115,20 @@ typedef void (*mpu6050_state_functions_t)(
 // Control functions 
 
 /**
- * @brief 
+ * @brief MPU6050 controller initialization 
  * 
- * @param device_num 
- * @param timer 
- * @param sample_period 
+ * @details Initializes controller parameters. The timer specified in the arguments is used 
+ *          to ensure the data gets sampled at the period (in us) specified by sample_period. 
+ *          
+ *          In this function a data record is created for the device specified by device_num. 
+ *          If this function is called multiple times with the same device number, it will not 
+ *          create a duplicate record but rather overwrite the existing record data. If a 
+ *          valid data record fails to be created then the function will return without having 
+ *          created and intialized a data record. 
+ * 
+ * @param device_num : device number - used for creating the correct data record 
+ * @param timer : pointer to timer port to use for sample period timing 
+ * @param sample_period : time (us) between samples 
  */
 void mpu6050_controller_init(
     device_number_t device_num, 
@@ -146,8 +137,14 @@ void mpu6050_controller_init(
 
 
 /**
- * @brief 
+ * @brief MPU6050 controller 
  * 
+ * @details Contains the state machine that dictates the control of the device. device_num 
+ *          is used to check for the existance of a data record created during the controller 
+ *          initialization function. If this does not exist then the control will not be 
+ *          carried out. This is also true for all the setters and getters. 
+ * 
+ * @param device_num : device number - used for retrieving the correct data record 
  */
 void mpu6050_controller(
     device_number_t device_num); 
@@ -160,6 +157,11 @@ void mpu6050_controller(
 
 /**
  * @brief MPU6050 set reset flag 
+ * 
+ * @details This flag triggers a controller reset. It is used in the event of a fault. The 
+ *          flag clears automatically after being called. 
+ * 
+ * @param device_num : device number - used for retrieving the correct data record 
  */
 void mpu6050_set_reset_flag(
     device_number_t device_num); 
@@ -167,6 +169,13 @@ void mpu6050_set_reset_flag(
 
 /**
  * @brief Set low power flag 
+ * 
+ * @details This flag triggers the low power state which puts the device in sleep mode. 
+ *          Clearing the flag, setting the reset flag or a fault conditon being set will 
+ *          cause exit of the low power state and this setter will need to be called again 
+ *          to get back to low power mode. 
+ * 
+ * @param device_num : device number - used for retrieving the correct data record 
  */
 void mpu6050_set_low_power(
     device_number_t device_num); 
@@ -174,6 +183,11 @@ void mpu6050_set_low_power(
 
 /**
  * @brief Clear low power flag 
+ * 
+ * @details Clears the low power flag to bring the device out of low power mode. Note that 
+ *          triggering a reset will automatically clear this flag. 
+ * 
+ * @param device_num : device number - used for retrieving the correct data record 
  */
 void mpu6050_clear_low_power(
     device_number_t device_num); 
@@ -187,9 +201,12 @@ void mpu6050_clear_low_power(
 /**
  * @brief Get the controller state 
  * 
- * @details 
+ * @details Returns the current state of the controller. 
  * 
- * @return MPU6050_STATE 
+ * @see mpu6050_states_t
+ * 
+ * @param device_num : device number - used for retrieving the correct data record 
+ * @return MPU6050_STATE : state of the controller 
  */
 MPU6050_STATE mpu6050_get_state(
     device_number_t device_num); 
@@ -198,7 +215,27 @@ MPU6050_STATE mpu6050_get_state(
 /**
  * @brief Get the controller fault code 
  * 
- * @return MPU6050_FAULT_CODE 
+ * @details Returns the fault code for the controller. Note that the fault code is a 
+ *          combination of the driver and controller faults. Fault code definition: 
+ *          - bit 0  : driver init status (who_am_i register read) 
+ *          - bit 1  : I2C comms error 
+ *          - bit 2  : self-test result - accelerometer x-axis 
+ *          - bit 3  : self-test result - accelerometer y-axis 
+ *          - bit 4  : self-test result - accelerometer z-axis 
+ *          - bit 5  : self-test result - gyroscope x-axis 
+ *          - bit 6  : self-test result - gyroscope y-axis 
+ *          - bit 7  : self-test result - gyroscope z-axis 
+ *          - bit 8  : invalid data record pointer 
+ *          - bit 9  : over-temperature 
+ *          - bit 10 : not used 
+ *          - bit 11 : not used 
+ *          - bit 12 : not used 
+ *          - bit 13 : not used 
+ *          - bit 14 : not used 
+ *          - bit 15 : not used 
+ * 
+ * @param device_num : device number - used for retrieving the correct data record 
+ * @return MPU6050_FAULT_CODE : controller fault code 
  */
 MPU6050_FAULT_CODE mpu6050_get_fault_code(
     device_number_t device_num); 

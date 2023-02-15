@@ -21,24 +21,17 @@
 
 
 //=======================================================================================
-// TODO 
-// - Do we need to re-call the mpu6050 driver init function on controller reset so we 
-//   can collect the fault code and/or reset registers? 
-// - Does calibrate need to be a separate state? Calibration requires the device to be 
-//   sitting still and often during power/start up the device is not going to be 
-//   perfectly still. 
-//=======================================================================================
-
-
-//=======================================================================================
 // Function prototypes 
 
 /**
  * @brief MPU6050 initialization state 
  * 
- * @details 
+ * @details Resets various controller data record trackers and runs self-test and 
+ *          calibration. This is the first state to be run on power-up and is called by the 
+ *          reset state. After this state the controller goes directly to the run state if 
+ *          it completed successfully or the fault state otherwise. 
  * 
- * @param mpu6050_device 
+ * @param mpu6050_device : pointer to device data record 
  */
 void mpu6050_init_state(
     mpu6050_cntrl_data_t *mpu6050_device); 
@@ -47,9 +40,13 @@ void mpu6050_init_state(
 /**
  * @brief MPU6050 run state 
  * 
- * @details 
+ * @details Reads device data at the rate specified in the controller init function. Checks 
+ *          for faults after getting the new data. This state is called after the init 
+ *          state and when exiting the low power state if no faults have occured. This state 
+ *          will be left if the fault code is set, the reset flag is set or if the low power 
+ *          flag is set. 
  * 
- * @param mpu6050_device 
+ * @param mpu6050_device : pointer to device data record 
  */
 void mpu6050_run_state(
     mpu6050_cntrl_data_t *mpu6050_device); 
@@ -58,9 +55,13 @@ void mpu6050_run_state(
 /**
  * @brief MPU6050 low power state 
  * 
- * @details 
+ * @details Idle state that waits for the low power flag to clear. This state is triggered 
+ *          by setting the low power flag. It is left by clearing the low power flag or when 
+ *          the fault code or reset flag is set. This state is only entered and exited 
+ *          from the low power transition state. The purpose of this state is to have the 
+ *          device set in sleep mode to consume less power. 
  * 
- * @param mpu6050_device 
+ * @param mpu6050_device : pointer to device data record 
  */
 void mpu6050_low_power_state(
     mpu6050_cntrl_data_t *mpu6050_device); 
@@ -69,9 +70,12 @@ void mpu6050_low_power_state(
 /**
  * @brief MPU6050 low power transition state 
  * 
- * @details 
+ * @details Calls the low power configuration register to set the status of the low power 
+ *          flag. This state is used an intermediate step between the low power state and 
+ *          all other states. It is triggered and exited in the same way as the low power 
+ *          state. 
  * 
- * @param mpu6050_device 
+ * @param mpu6050_device : pointer to device data record 
  */
 void mpu6050_low_power_trans_state(
     mpu6050_cntrl_data_t *mpu6050_device); 
@@ -80,9 +84,12 @@ void mpu6050_low_power_trans_state(
 /**
  * @brief MPU6050 fault state 
  * 
- * @details 
+ * @details Idle state that waits for the reset flag to set. This state is triggered when 
+ *          the fault code is set and is meant to inhibit the device from doing anything until 
+ *          the fault has been addressed. This state is exited by setting the reset flag to 
+ *          trigger the reset state. 
  * 
- * @param mpu6050_device 
+ * @param mpu6050_device : pointer to device data record 
  */
 void mpu6050_fault_state(
     mpu6050_cntrl_data_t *mpu6050_device); 
@@ -91,9 +98,11 @@ void mpu6050_fault_state(
 /**
  * @brief MPU6050 reset state 
  * 
- * @details 
+ * @details Resets the controller and driver fault codes and ensures the device exits sleep 
+ *          mode. This state is triggered by setting the reset flag. It exists after running 
+ *          once and goes to the init state. 
  * 
- * @param mpu6050_device 
+ * @param mpu6050_device : pointer to device data record 
  */
 void mpu6050_reset_state(
     mpu6050_cntrl_data_t *mpu6050_device); 
@@ -104,10 +113,10 @@ void mpu6050_reset_state(
 //=======================================================================================
 // Variables 
 
-// Device tracker record instance 
+// Controller data record first pointer 
 static mpu6050_cntrl_data_t *mpu6050_cntrl_data_ptr = NULL; 
 
-// Function pointer to controller states 
+// Function pointers to controller states 
 static mpu6050_state_functions_t state_table[MPU6050_NUM_STATES] = 
 {
     &mpu6050_init_state, 
@@ -136,6 +145,10 @@ void mpu6050_controller_init(
                                         device_num, 
                                         (void *)&mpu6050_cntrl_data_ptr, 
                                         sizeof(mpu6050_cntrl_data_t)); 
+
+    // Check for NULL pointers 
+    if (cntrl_data_ptr == NULL) return;   // Invalid data record pointer 
+    if (timer == NULL) return;            // Invalid timer port 
     
     // Peripherals 
     cntrl_data_ptr->timer = timer; 
@@ -254,6 +267,7 @@ void mpu6050_controller(
             break;
 
         case MPU6050_FAULT_STATE: 
+            // Reset flag set 
             if (cntrl_data_ptr->reset)
             {
                 next_state = MPU6050_RESET_STATE; 
@@ -293,15 +307,14 @@ void mpu6050_init_state(
     mpu6050_device->startup = CLEAR_BIT; 
     mpu6050_device->reset = CLEAR_BIT; 
 
-    // Run self-test and record any faults (failed tests) 
+    // Run self-test and record any faults 
     mpu6050_self_test(mpu6050_device->device_num);
     mpu6050_device->fault_code |= mpu6050_get_fault_flag(mpu6050_device->device_num); 
 
-    // TODO the delay time changes based on the clock prescaler so this is not robust 
-    // Provide time for data to update so self-test data is not used for calibration 
+    // Provide time for device data to update so self-test data is not used for calibration 
     tim_delay_ms(mpu6050_device->timer, MPU6050_ST_DELAY); 
     
-    // run calibration to zero the gyroscope values 
+    // Run calibration to zero the gyroscope values 
     mpu6050_calibrate(mpu6050_device->device_num); 
 }
 
@@ -337,7 +350,7 @@ void mpu6050_run_state(
 void mpu6050_low_power_state(
     mpu6050_cntrl_data_t *mpu6050_device)
 {
-    // Does nothing. Waits for low power flag to be cleared. 
+    // Waits for low power flag to be cleared 
 }
 
 
@@ -356,8 +369,7 @@ void mpu6050_low_power_trans_state(
 void mpu6050_fault_state(
     mpu6050_cntrl_data_t *mpu6050_device)
 {
-    // Triggered by failed driver init, failed self-test or failed I2C comms. Idles until 
-    // reset is called. 
+    // Idle until the reset flag is set 
 }
 
 
@@ -365,9 +377,7 @@ void mpu6050_fault_state(
 void mpu6050_reset_state(
     mpu6050_cntrl_data_t *mpu6050_device)
 {
-    // Reset registers and re-call driver init? 
-
-    // Reset the fault code 
+    // Reset the fault code in both the controller and driver 
     mpu6050_device->fault_code = CLEAR; 
     mpu6050_clear_fault_flag(mpu6050_device->device_num); 
 

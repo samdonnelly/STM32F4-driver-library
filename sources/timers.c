@@ -392,7 +392,9 @@ void tim_delay_ms(
     uint16_t delay_ms)
 {
     for (uint16_t i = 0; i < delay_ms; i++)
+    {
         tim_delay_us(timer, PREFIX_SCALAR); 
+    }
 }
 
 
