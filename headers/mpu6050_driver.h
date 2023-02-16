@@ -199,24 +199,6 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 sample rate divider setpoint 
- * 
- * @details These values are used to divide the gyroscope output rate to get the 
- *          system sample rate. The gyroscope output rate is dependent on the digital 
- *          low pass filter setpoint so this value changes to reflect that value along 
- *          with the desired sample rate you want. The values used as an argument to 
- *          mpu6050_init for setting up the device. The units of this value is kHz. 
- * 
- * @see mpu6050_init
- * @see mpu6050_dlpf_cfg_t
- */
-typedef enum {
-    SMPLRT_DIV_0 = 0,  // 1 kHz when DLPF = 0 or 7 
-    SMPLRT_DIV_7 = 7   // 1 kHz when DLPF = 1 - 6
-} mpu6050_smplrt_div_t;
-
-
-/**
  * @brief MPU6050 EXT_SYNC_SET setpoint
  * 
  * @details These are setpointf for the EXT_SYNC_SET value in the CONFIG register. This 
@@ -281,21 +263,6 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - GYRO_CONFIG : XG_ST, YG_ST and ZG_ST setpoint 
- * 
- * @details This is used to enable and disable self-test on the gyroscope. During 
- *          initialization self-test is disabled, but when mpu6050_self_test is called 
- *          self-test is temporarily enabled. 
- * 
- * @see mpu6050_self_test
- */
-typedef enum {
-    GYRO_SELF_TEST_DISABLE,
-    GYRO_SELF_TEST_ENABLE
-} mpu6050_gyro_self_test_set_t;
-
-
-/**
  * @brief MPU6050 - GYRO_CONFIG : FS_SEL setpoint 
  * 
  * @details Selects the full scale range used by the gyroscope. This is passed as an 
@@ -322,21 +289,6 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - ACCEL_CONFIG : XA_ST, YA_SET and ZA_ST setpoint
- * 
- * @details This is used to enable and disable self-test on the accelerometer. During 
- *          initialization self-test is disabled, but when mpu6050_self_test is called 
- *          self-test is temporarily enabled. 
- * 
- * @see mpu6050_self_test 
- */
-typedef enum {
-    ACCEL_SELF_TEST_DISABLE,
-    ACCEL_SELF_TEST_ENABLE
-} mpu6050_accel_self_test_set_t;
-
-
-/**
  * @brief MPU6050 - ACCEL_CONFIG : AFS_SEL setpoint
  * 
  * @details Selects the full scale range of the acclerometer 
@@ -359,65 +311,6 @@ typedef enum {
     AFS_SEL_8,   // +/- 8g ---> Scalar = 4096 
     AFS_SEL_16   // +/- 16g --> Scalar = 2048 
 } mpu6050_afs_sel_set_t;
-
-
-/**
- * @brief MPU6050 - PWR_MGMT_1 : DEVICE_RESET
- * 
- * @details Used to configure power management register 1 in mpu6050_init. Allows for 
- *          a reset to the devices default settings. 
- */
-typedef enum {
-    MPU6050_RESET_DISABLE,
-    MPU6050_RESET_ENABLE
-} mpu6050_device_reset_t; 
-
-
-/**
- * @brief MPU6050 - PWR_MGMT_1 : SLEEP
- * 
- * @details Used to configure power management register 1 in mpu6050_init. Allows for 
- *          sleep mode to be enabled or disabled. Sleep mode is a low power mode where 
- *          data is not recorded. When mpu6050_cycle_t is set to 1 and sleep mode is 
- *          disabled the device will cycle between sleep mode and waking up to take a 
- *          single sample of data at a frquency dictated by LP_WAKE_CTRL. 
- * 
- * @see mpu6050_cycle_t
- * @see mpu6050_lp_wake_ctrl_t
- */
-typedef enum {
-    SLEEP_MODE_DISABLE,
-    SLEEP_MODE_ENABLE
-} mpu6050_sleep_mode_t;
-
-
-/**
- * @brief MPU6050 - PWR_MGMT_1 : CYCLE 
- * 
- * @details Used to configure power management register 1 in mpu6050_init. If cycle is 
- *          enabled and sleep mode is disabled, the device will wake up from sleep mode 
- *          periodically to take a single sample of data at a frquency dictated by 
- *          LP_WAKE_CTRL. 
- * 
- * @see mpu6050_sleep_mode_t
- * @see mpu6050_lp_wake_ctrl_t
- */
-typedef enum {
-    CYCLE_SLEEP_DISABLED,
-    CYCLE_SLEEP_ENABLED
-} mpu6050_cycle_t;
-
-
-/**
- * @brief MPU6050 - PWR_MGMT_1 : TEMP_DIS
- * 
- * @details Used to configure power management register 1 in mpu6050_init. Allows for 
- *          enabling or disabling of the temperature sensor. 
- */
-typedef enum {
-    TEMP_SENSOR_ENABLE,
-    TEMP_SENSOR_DISABLE
-} mpu6050_temp_sensor_t;
 
 
 /**
@@ -480,6 +373,95 @@ typedef enum {
 
 
 /**
+ * @brief MPU6050 - GYRO_CONFIG : XG_ST, YG_ST and ZG_ST setpoint 
+ * 
+ * @details This is used to enable and disable self-test on the gyroscope. During 
+ *          initialization self-test is disabled, but when mpu6050_self_test is called 
+ *          self-test is temporarily enabled. 
+ * 
+ * @see mpu6050_self_test
+ */
+typedef enum {
+    GYRO_SELF_TEST_DISABLE,
+    GYRO_SELF_TEST_ENABLE
+} mpu6050_gyro_self_test_set_t;
+
+
+/**
+ * @brief MPU6050 - ACCEL_CONFIG : XA_ST, YA_SET and ZA_ST setpoint
+ * 
+ * @details This is used to enable and disable self-test on the accelerometer. During 
+ *          initialization self-test is disabled, but when mpu6050_self_test is called 
+ *          self-test is temporarily enabled. 
+ * 
+ * @see mpu6050_self_test 
+ */
+typedef enum {
+    ACCEL_SELF_TEST_DISABLE,
+    ACCEL_SELF_TEST_ENABLE
+} mpu6050_accel_self_test_set_t;
+
+
+/**
+ * @brief MPU6050 - PWR_MGMT_1 : DEVICE_RESET
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. Allows for 
+ *          a reset to the devices default settings. 
+ */
+typedef enum {
+    MPU6050_RESET_DISABLE,
+    MPU6050_RESET_ENABLE
+} mpu6050_device_reset_t; 
+
+
+/**
+ * @brief MPU6050 - PWR_MGMT_1 : SLEEP
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. Allows for 
+ *          sleep mode to be enabled or disabled. Sleep mode is a low power mode where 
+ *          data is not recorded. When mpu6050_cycle_t is set to 1 and sleep mode is 
+ *          disabled the device will cycle between sleep mode and waking up to take a 
+ *          single sample of data at a frquency dictated by LP_WAKE_CTRL. 
+ * 
+ * @see mpu6050_cycle_t
+ * @see mpu6050_lp_wake_ctrl_t
+ */
+typedef enum {
+    SLEEP_MODE_DISABLE,
+    SLEEP_MODE_ENABLE
+} mpu6050_sleep_mode_t;
+
+
+/**
+ * @brief MPU6050 - PWR_MGMT_1 : CYCLE 
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. If cycle is 
+ *          enabled and sleep mode is disabled, the device will wake up from sleep mode 
+ *          periodically to take a single sample of data at a frquency dictated by 
+ *          LP_WAKE_CTRL. 
+ * 
+ * @see mpu6050_sleep_mode_t
+ * @see mpu6050_lp_wake_ctrl_t
+ */
+typedef enum {
+    CYCLE_SLEEP_DISABLED,
+    CYCLE_SLEEP_ENABLED
+} mpu6050_cycle_t;
+
+
+/**
+ * @brief MPU6050 - PWR_MGMT_1 : TEMP_DIS
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. Allows for 
+ *          enabling or disabling of the temperature sensor. 
+ */
+typedef enum {
+    TEMP_SENSOR_ENABLE,
+    TEMP_SENSOR_DISABLE
+} mpu6050_temp_sensor_t;
+
+
+/**
  * @brief Generic mode enable or disable flag for mpu6050 registers 
  */
 typedef enum {
@@ -496,6 +478,7 @@ typedef enum {
 typedef uint8_t MPU6050_INT_STATUS; 
 typedef uint8_t MPU6050_INIT_STATUS; 
 typedef uint16_t MPU6050_FAULT_FLAG; 
+typedef uint8_t SMPLRT_DIV; 
 
 //=======================================================================================
 
@@ -516,7 +499,7 @@ typedef uint16_t MPU6050_FAULT_FLAG;
  * @param mpu6050_address : I2C address of MPU6050 
  * @param standby_status : 
  * @param dlpf_cfg : digital low pass filter selection 
- * @param smplrt_div : sample rate divider selection 
+ * @param smplrt_div : sample rate divider 
  * @param afs_sel : full scale range of accelerometer 
  * @param fs_sel : full scale range of gyroscope 
  * @return MPU6050_INIT_STATUS : returns the fault code of the init - 0 is no faults 
@@ -527,7 +510,7 @@ MPU6050_INIT_STATUS mpu6050_init(
     mpu6050_i2c_addr_t mpu6050_address,
     uint8_t standby_status, 
     mpu6050_dlpf_cfg_t dlpf_cfg,
-    mpu6050_smplrt_div_t smplrt_div,
+    SMPLRT_DIV smplrt_div,
     mpu6050_afs_sel_set_t afs_sel,
     mpu6050_fs_sel_set_t fs_sel);
 
