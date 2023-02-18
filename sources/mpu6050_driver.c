@@ -114,11 +114,10 @@ void mpu6050_smprt_div_write(
  *          - EXT_SYNC_SET: external frame synchronization - 3-bit unsigned value 
  *          - DLPF_CFG: digital low pass filter - 3-bit unsigned value 
  *          
- *          This register allows 
- *          for configuring the external frame synchronization (FSYNC) pin sampling and 
- *          the digital low pass filter (DLPF) for both accelerometers and gyroscopes.
+ *          The external frame synchronization (FSYNC) feature is not used. The digital low 
+ *          pass filter (DLPF) is used to set the bandwidth of the data let through for the 
+ *          accelerometer and gyroscope. A lower frequency bandwidth takes longer to get. 
  * 
- * @see mpu6050_ext_sync_set_t
  * @see mpu6050_dlpf_cfg_t
  * 
  * @param i2c : I2C port used by device 
@@ -129,7 +128,7 @@ void mpu6050_smprt_div_write(
 void mpu6050_config_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    mpu6050_ext_sync_set_t ext_sync_set,
+    uint8_t ext_sync_set,
     mpu6050_dlpf_cfg_t dlpf_cfg);
 
 
@@ -145,9 +144,12 @@ void mpu6050_config_write(
  *          - ZA_ST: accelerometer z-axis self-test - bit 5 
  *          - AFS_SEL: accelerometer full scale range - 2-bit (bits 3-4) unsigned value 
  *          
- *          This register is 
- *          used to trigger accelerometer self-test and configure the accelerometer full 
- *          scale range. 
+ *          This register is used to trigger accelerometer self-test or each axis and 
+ *          configure the accelerometer full scale range. Self test is used to check 
+ *          the validity of the device readings and this mode is only set when using 
+ *          mpu6050_self_test. The full scale range defines the range of accelerometer 
+ *          readings used (in g's). Setting a range that covers a wider range of g's 
+ *          will decrease the accuracy of each reading. 
  * 
  * @see mpu6050_accel_self_test_set_t
  * @see mpu6050_afs_sel_set_t
@@ -177,10 +179,11 @@ void mpu6050_accel_config_write(
  *          - ZA_ST: accelerometer z-axis self-test - bit 5 
  *          - AFS_SEL: accelerometer full scale range - 2-bit (bits 3-4) unsigned value 
  *          
- *          This function 
- *          is used to read the full scale range setpoint of the accelerometer during 
- *          self-test. 
+ *          See the description for mpu6050_accel_config_write for details. A read option 
+ *          is provided for this register so the full scale range can be recorded before 
+ *          having to set the full scale range specifically for self-test. 
  * 
+ * @see mpu6050_accel_config_write
  * @see mpu6050_self_test
  * 
  * @param i2c : I2C port used by device 
@@ -195,18 +198,31 @@ uint8_t mpu6050_accel_config_read(
 /**
  * @brief Interrupt configuration register write 
  * 
- * @details 
+ * @details Register number: 55 
+ *          Register size: 1 byte 
+ *          
+ *          Register data: 
+ *          - LATCH_INT_EN: interrupt pin latching setting - bit 5 
+ *          - INT_RD_CLEAR: Interrupt status clear method - bit 4 
+ *          
+ *          This register configures the behavior of the interrupt signals at the INT 
+ *          pin. The pin can be configured to latch high until the interrupt is cleared 
+ *          or it can emit 50us pulses. The pin can also be configured to clear on any 
+ *          read operation or only when reading INT_STATUS in register 58. 
+ * 
+ * @see mpu6050_int_latch_t
+ * @see mpu6050_int_clear_t
  * 
  * @param i2c : I2C port used by device 
  * @param addr : device I2C address 
- * @param latch_int_en 
- * @param int_rd_clear 
+ * @param latch_int_en : interrupt pin latch setting 
+ * @param int_rd_clear : interrupt status clear method 
  */
 void mpu6050_int_pin_config_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    mpu6050_mode_t latch_int_en, 
-    mpu6050_mode_t int_rd_clear); 
+    mpu6050_int_latch_t latch_int_en, 
+    mpu6050_int_clear_t int_rd_clear); 
 
 
 /**
@@ -221,7 +237,7 @@ void mpu6050_int_pin_config_write(
 void mpu6050_int_enable_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    mpu6050_mode_t data_rdy_en); 
+    mpu6050_int_data_rdy_t data_rdy_en); 
 
 
 /**
@@ -230,15 +246,15 @@ void mpu6050_int_enable_write(
  * @details Register number: 27 
  *          Register size: 1 byte 
  *          
- *          This register 
- *          is used to trigger gyroscope self-test and configure the gyroscopes full 
- *          scale range. 
- *          
  *          Register data: 
  *          - XG_ST: gyroscope x-axis self-test - bit 7 
  *          - YG_ST: gyroscope y-axis self-test - bit 6 
  *          - ZG_ST: gyroscope z-axis self-test - bit 5 
  *          - FS_SEL: gyroscope full scale range - 2-bit (bits 3-4) unsigned value 
+ *          
+ *          This register 
+ *          is used to trigger gyroscope self-test and configure the gyroscopes full 
+ *          scale range. 
  * 
  * @see mpu6050_gyro_self_test_set_t
  * @see mpu6050_fs_sel_set_t
@@ -692,7 +708,7 @@ MPU6050_INIT_STATUS mpu6050_init(
         mpu6050_config_write(
             device_data_ptr->i2c, 
             device_data_ptr->addr,
-            EXT_SYNC_SET_0,
+            MPU6050_EXT_SYNC_DISABLE,
             dlpf_cfg);
         
         // Set the Sample Rate (data rate)
@@ -758,14 +774,14 @@ void mpu6050_int_pin_init(
     mpu6050_int_pin_config_write(
         device_data_ptr->i2c, 
         device_data_ptr->addr, 
-        MPU6050_MODE_ENABLE, 
-        MPU6050_MODE_ENABLE); 
+        MPU6050_INT_LATCH_HIGH, 
+        MPU6050_INT_CLEAR_RD_ANY); 
 
     // Interrupt enable register 
     mpu6050_int_enable_write(
         device_data_ptr->i2c, 
         device_data_ptr->addr, 
-        MPU6050_MODE_ENABLE); 
+        MPU6050_INT_DATA_RDY_ENABLE); 
 }
 
 //=======================================================================================
@@ -1067,10 +1083,10 @@ void mpu6050_smprt_div_write(
 void mpu6050_config_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    mpu6050_ext_sync_set_t ext_sync_set,
+    uint8_t ext_sync_set,
     mpu6050_dlpf_cfg_t dlpf_cfg)
 {
-    // Configure the data
+    // Configure the data 
     uint8_t mpu6050_config = (ext_sync_set << SHIFT_3) | (dlpf_cfg << SHIFT_0);
 
     // Write to the Configuration register 
@@ -1169,8 +1185,8 @@ uint8_t mpu6050_accel_config_read(
 void mpu6050_int_pin_config_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    mpu6050_mode_t latch_int_en, 
-    mpu6050_mode_t int_rd_clear)
+    mpu6050_int_latch_t latch_int_en, 
+    mpu6050_int_clear_t int_rd_clear)
 {
     // Configure the data
     uint8_t mpu6050_int_config = (latch_int_en << SHIFT_5) | 
@@ -1190,7 +1206,7 @@ void mpu6050_int_pin_config_write(
 void mpu6050_int_enable_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    mpu6050_mode_t data_rdy_en)
+    mpu6050_int_data_rdy_t data_rdy_en)
 {
     // Configure the data
     uint8_t mpu6050_int_enable = (data_rdy_en << SHIFT_0); 

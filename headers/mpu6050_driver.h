@@ -41,6 +41,7 @@
 // Registers 
 #define MPU6050_STBY_STATUS_MASK 0x3F    // Pwr mgmt 2 standby status mask 
 #define MPU6050_FSR_MASK 0x18            // Mask for reading gyro and accel full scale range 
+#define MPU6050_EXT_SYNC_DISABLE 0       // Disables the FSYNC feature 
 
 // Temperature sensor 
 #define MPU6050_TEMP_SCALAR 100          // User defined temp scalar to eliminate decimals 
@@ -196,35 +197,6 @@ typedef enum {
     SELF_TEST_GYRO_FT_C2 = 19244,
     SELF_TEST_GYRO_FT_C4 = 31125
 } self_test_gyro_constants_t;
-
-
-/**
- * @brief MPU6050 EXT_SYNC_SET setpoint
- * 
- * @details These are setpointf for the EXT_SYNC_SET value in the CONFIG register. This 
- *          value can be used to configure sampling of an external signal via the FSYNC
- *          pin. The possible values for EXT_SYNC_SET are detailed as follows: <br><br>
- *          
- *          0 : Input disabled   <br> 
- *          1 : TEMP_OUT_L[0]    <br> 
- *          2 : GYRO_XOUT_L[0]   <br> 
- *          3 : GYRO_YOUT_L[0]   <br> 
- *          5 : ACCEL_XOUT_L[0]  <br> 
- *          6 : ACCEL_YOUT_L[0]  <br> 
- *          7 : ACCEL_ZOUT_L[0]  <br><br>
- *          
- *          Currently this input is hardcoded to 0 and isn't an argument to mpu6050_init. 
- */
-typedef enum {
-    EXT_SYNC_SET_0,  // Input disabled 
-    EXT_SYNC_SET_1,  // TEMP_OUT_L[0]
-    EXT_SYNC_SET_2,  // GYRO_XOUT_L[0]
-    EXT_SYNC_SET_3,  // GYRO_YOUT_L[0]
-    EXT_SYNC_SET_4,  // GYRO_ZOUT_L[0]
-    EXT_SYNC_SET_5,  // ACCEL_XOUT_L[0]
-    EXT_SYNC_SET_6,  // ACCEL_YOUT_L[0]
-    EXT_SYNC_SET_7   // ACCEL_ZOUT_L[0]
-} mpu6050_ext_sync_set_t;
 
 
 /**
@@ -462,12 +434,30 @@ typedef enum {
 
 
 /**
- * @brief Generic mode enable or disable flag for mpu6050 registers 
+ * @brief MPU6050 - INT_PIN_CFG (register 55): LATCH_INT_EN 
  */
 typedef enum {
-    MPU6050_MODE_DISABLE, 
-    MPU6050_MODE_ENABLE 
-} mpu6050_mode_t; 
+    MPU6050_INT_LATCH_PULSE,   // INT pin emits 50us long pulses 
+    MPU6050_INT_LATCH_HIGH     // INT pin held high until interrupt is cleared 
+} mpu6050_int_latch_t; 
+
+
+/**
+ * @brief MPU6050 - INT_PIN_CFG (register 55): INT_RD_CLEAR 
+ */
+typedef enum {
+    MPU6050_INT_CLEAR_RD_STAT,   // INT status is only cleared by reading INT_STATUS 
+    MPU6050_INT_CLEAR_RD_ANY     // INT status is cleared by any read 
+} mpu6050_int_clear_t; 
+
+
+/**
+ * @brief MPU6050 - INT_ENABLE (register 56): DATA_RDY_EN  
+ */
+typedef enum {
+    MPU6050_INT_DATA_RDY_DISABLE,   // Disable the data ready interrupt 
+    MPU6050_INT_DATA_RDY_ENABLE     // Enable the data ready interrupt 
+} mpu6050_int_data_rdy_t; 
 
 //=======================================================================================
 
