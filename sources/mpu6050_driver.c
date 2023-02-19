@@ -133,6 +133,69 @@ void mpu6050_config_write(
 
 
 /**
+ * @brief MPU6050 Gyroscope Configuration (GYRO_CONFIG) register write
+ * 
+ * @details Register number: 27 
+ *          Register size: 1 byte 
+ *          
+ *          Register data: 
+ *          - XG_ST: gyroscope x-axis self-test - bit 7 
+ *          - YG_ST: gyroscope y-axis self-test - bit 6 
+ *          - ZG_ST: gyroscope z-axis self-test - bit 5 
+ *          - FS_SEL: gyroscope full scale range - 2-bit (bits 3-4) unsigned value 
+ *          
+ *          This register is used to trigger gyroscope self-test for each axis and 
+ *          configure the gyroscope full scale range. Self test is used to check 
+ *          the validity of the device readings and this mode is only set when using 
+ *          mpu6050_self_test. The full scale range defines the range of gyroscope 
+ *          readings used (in deg/s). Setting a range that covers a wider range of 
+ *          angular velocities will decrease the accuracy of each reading. 
+ * 
+ * @see mpu6050_gyro_self_test_set_t
+ * @see mpu6050_fs_sel_set_t
+ * @see mpu6050_self_test
+ * 
+ * @param i2c : I2C port used by device 
+ * @param addr : device I2C address 
+ * @param gyro_self_test : enables or disabled self-test mode for all axes
+ * @param fs_sel : gyroscope full scale range setpoint for all axes 
+ */
+void mpu6050_gyro_config_write(
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t addr, 
+    mpu6050_gyro_self_test_set_t gyro_self_test,
+    mpu6050_fs_sel_set_t fs_sel);
+
+
+/**
+ * @brief MPU6050 Gyroscope Configuration (GYRO_CONFIG) register read
+ * 
+ * @details Register number: 27 
+ *          Register size: 1 byte 
+ *          
+ *          Register data: 
+ *          - XG_ST: gyroscope x-axis self-test - bit 7 
+ *          - YG_ST: gyroscope y-axis self-test - bit 6 
+ *          - ZG_ST: gyroscope z-axis self-test - bit 5 
+ *          - FS_SEL: gyroscope full scale range - 2-bit (bits 3-4) unsigned value 
+ *          
+ *          See the description for mpu6050_gyro_config_write for details. A read option 
+ *          is provided for this register so the full scale range can be recorded before 
+ *          having to set the full scale range specifically for self-test. 
+ * 
+ * @see mpu6050_gyro_config_write
+ * @see mpu6050_self_test
+ * 
+ * @param i2c : I2C port used by device 
+ * @param addr : device I2C address 
+ * @return uint8_t : returns the unparsed self-test and full scale range setpoints 
+ */
+uint8_t mpu6050_gyro_config_read(
+    I2C_TypeDef *i2c, 
+    mpu6050_i2c_addr_t addr);
+
+
+/**
  * @brief MPU6050 Accelerometer Configuration (ACCEL_CONFIG) register write
  * 
  * @details Register number: 28 
@@ -144,7 +207,7 @@ void mpu6050_config_write(
  *          - ZA_ST: accelerometer z-axis self-test - bit 5 
  *          - AFS_SEL: accelerometer full scale range - 2-bit (bits 3-4) unsigned value 
  *          
- *          This register is used to trigger accelerometer self-test or each axis and 
+ *          This register is used to trigger accelerometer self-test for each axis and 
  *          configure the accelerometer full scale range. Self test is used to check 
  *          the validity of the device readings and this mode is only set when using 
  *          mpu6050_self_test. The full scale range defines the range of accelerometer 
@@ -228,75 +291,25 @@ void mpu6050_int_pin_config_write(
 /**
  * @brief Interrupt enable register write 
  * 
- * @details 
+ * @details Register number: 56 
+ *          Register size: 1 byte 
+ *          
+ *          Register data: 
+ *          - DATA_RDY_EN: Data Ready interrupt enable - bit 0 
+ *          
+ *          This register allows for enabling interrupts from different sources. The 
+ *          interrupt that can be enabled from this function is the Data Ready interrupt. 
+ *          Data Ready occurs each time a write operation to all sensor registers has 
+ *          been completed. 
  * 
  * @param i2c : I2C port used by device 
  * @param addr : device I2C address 
- * @param data_rdy_en 
+ * @param data_rdy_en : Data Ready interrupt enable setting 
  */
 void mpu6050_int_enable_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
     mpu6050_int_data_rdy_t data_rdy_en); 
-
-
-/**
- * @brief MPU6050 Gyroscope Configuration (GYRO_CONFIG) register write
- * 
- * @details Register number: 27 
- *          Register size: 1 byte 
- *          
- *          Register data: 
- *          - XG_ST: gyroscope x-axis self-test - bit 7 
- *          - YG_ST: gyroscope y-axis self-test - bit 6 
- *          - ZG_ST: gyroscope z-axis self-test - bit 5 
- *          - FS_SEL: gyroscope full scale range - 2-bit (bits 3-4) unsigned value 
- *          
- *          This register 
- *          is used to trigger gyroscope self-test and configure the gyroscopes full 
- *          scale range. 
- * 
- * @see mpu6050_gyro_self_test_set_t
- * @see mpu6050_fs_sel_set_t
- * @see mpu6050_self_test
- * 
- * @param i2c : I2C port used by device 
- * @param addr : device I2C address 
- * @param gyro_self_test : enables or disabled self-test mode for all axes
- * @param fs_sel : gyroscope full scale range setpoint for all axes 
- */
-void mpu6050_gyro_config_write(
-    I2C_TypeDef *i2c, 
-    mpu6050_i2c_addr_t addr, 
-    mpu6050_gyro_self_test_set_t gyro_self_test,
-    mpu6050_fs_sel_set_t fs_sel);
-
-
-/**
- * @brief MPU6050 Gyroscope Configuration (GYRO_CONFIG) register read
- * 
- * @details Register number: 27 
- *          Register size: 1 byte 
- *          
- *          Register data: 
- *          - XG_ST: gyroscope x-axis self-test - bit 7 
- *          - YG_ST: gyroscope y-axis self-test - bit 6 
- *          - ZG_ST: gyroscope z-axis self-test - bit 5 
- *          - FS_SEL: gyroscope full scale range - 2-bit (bits 3-4) unsigned value 
- *          
- *          This function 
- *          is used to read the full scale range setpoint of the gyroscope during 
- *          self-test. 
- *  
- * @see mpu6050_self_test
- * 
- * @param i2c : I2C port used by device 
- * @param addr : device I2C address 
- * @return uint8_t : returns the unparsed self-test and full scale range setpoints 
- */
-uint8_t mpu6050_gyro_config_read(
-    I2C_TypeDef *i2c, 
-    mpu6050_i2c_addr_t addr);
 
 
 /**
@@ -312,11 +325,18 @@ uint8_t mpu6050_gyro_config_read(
  *          - TEMP_DIS: temp sensor disable - bit 3
  *          - CLKSEL : clock source - 3-bit (bits 0-2) unsigned value 
  *          
- *          This register allows
- *          the user to configure the power mode and clock source. It can also reset the 
- *          entire device and disable the temperature sensor if needed. This function 
- *          is typically called in the init function to configure the device. 
+ *          This register allows the user to configure the power mode and clock source. 
+ *          It can also reset the device registers to their default value and disable the 
+ *          temperature sensor if needed. 
+ *          If the SLEEP bit is set then the device will enter into low power mode and data 
+ *          will not be updated for reading. 
+ *          Enabling the CYCLE bit (with SLEEP disabled) allows for low power mode with periodic 
+ *          wakeups to collect data at a frequency determined by LP_WAKE_CTRL in PWR_MGMT_2. 
+ *          PWR_MGMT_2 says that LP_WAKE_CTRL is for accelerometer only low power mode. 
+ *          It is recomemended to use an external clock source for stability and the 
+ *          ability to use low power modes. 
  * 
+ * @see mpu6050_pwr_mgmt_2_write
  * @see mpu6050_device_reset_t
  * @see mpu6050_sleep_mode_t
  * @see mpu6050_cycle_t
@@ -327,7 +347,7 @@ uint8_t mpu6050_gyro_config_read(
  * @param addr : device I2C address 
  * @param device_reset : reset internal registers to default value when set to 1
  * @param sleep : enter sleep mode when set to 1 
- * @param cycle : periodic sleep mode when set to 1 and sleep is set to 0 
+ * @param cycle : periodic sleep mode when set to 1 (and sleep = 0) 
  * @param temp_dis : disables temperature sensor when set to 1 
  * @param clksel : specifies clock source of the device
  */
@@ -348,7 +368,7 @@ void mpu6050_pwr_mgmt_1_write(
  *          Register size: 1 byte 
  *          
  *          Register data: 
- *          - LP_WAKE_CTRL: low power (sleep) mode wake up - 2-bit unsigned value 
+ *          - LP_WAKE_CTRL: low power (sleep) mode wake up - 2-bit (bits 6-7) unsigned value 
  *          - STBY_XA: Accelerometer x-axis standby - bit 5 
  *          - STBY_YA: Accelerometer y-axis standby - bit 4 
  *          - STBY_ZA: Accelerometer z-axis standby - bit 3 
@@ -356,25 +376,19 @@ void mpu6050_pwr_mgmt_1_write(
  *          - STBY_YG: Gyroscope y-axis standby - bit 1 
  *          - STBY_ZG: Gyroscope z-axis standby - bit 0 
  *          
- *          This register allows 
- *          the user to configure the frequency of wake-ups in acclerometer only low power
- *          mode. It can also put individual axes of the accelerometer and gyroscope into 
- *          low power mode. 
- *          
- *          The 6 least significant bits of standby_status represent the standby status of each 
- *          device reading. If the bit is set to 1 it means that reading will be put on standby 
- *          and therefore not be reported when reading from the register. If you want all the 
- *          data to be available you can set all the bits to zero. The order of the bits are 
- *          as follows: 
- *          
- *          The two most significant bits of the standby_status byte do nothing. 
+ *          This register allows the user to configure the frequency of wake-ups in 
+ *          acclerometer only low power mode. It can also put individual axes of the 
+ *          accelerometer and gyroscope into low power mode. Setting a standby bit to 
+ *          1 disables that piece of data. Bits 0-5 of standby_status is used to set the 
+ *          standby bits (respectively) to their desired value. 
  * 
+ * @see mpu6050_pwr_mgmt_1_write
  * @see mpu6050_lp_wake_ctrl_t
  * 
  * @param i2c : I2C port used by device 
  * @param addr : device I2C address 
  * @param lp_wake_ctrl : specify wake-up frequency in accelerometer only low power mode
- * @param standby_status : 
+ * @param standby_status : byte whos bits specify the standby status for each axis data 
  */
 void mpu6050_pwr_mgmt_2_write(
     I2C_TypeDef *i2c, 
@@ -392,13 +406,15 @@ void mpu6050_pwr_mgmt_2_write(
  *          Register data: 
  *          - WHO_AM_I: bits 1-6 
  *          
- *          This register is used 
- *          to verify the identity of the device. The register contains the upper 6-bits 
- *          of the 7-bit I2C address (the LSB bit being the value of AD0). 
+ *          This register is used to verify the identity of the device. The register contains 
+ *          the upper 6-bits of the 7-bit I2C address. The address of the device is changed 
+ *          using the AD0 pin but that doesn't change the value of this register. If identified 
+ *          correctly, the register will return 0x68. This is used as a check during 
+ *          initialization to verify the device can be seen. 
  * 
  * @param i2c : I2C port used by device 
  * @param addr : device I2C address 
- * @return uint8_t : Returns 0x68 if AD0 == 0 and 0x69 is AD0 == 1
+ * @return uint8_t : device i@c address (will return 0x68 if correct) 
  */
 uint8_t mpu6050_who_am_i_read(
     I2C_TypeDef *i2c, 
