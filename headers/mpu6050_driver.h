@@ -169,7 +169,7 @@ typedef enum {
  *          equation however is complex, so to avoid performing this complex calculation
  *          in the code, the equation was plotted in Excel using all possible outcomes 
  *          of the 5-bit result from the self-test register and then approximated using 
- *          a third order polynominal equation. The following values are the constants 
+ *          a third order polynomial equation. The following values are the constants 
  *          from the approximated accelerometer factory trim equation. 
  */
 typedef enum {
@@ -188,7 +188,7 @@ typedef enum {
  *          equation however is complex, so to avoid performing this complex calculation
  *          in the code, the equation was plotted in Excel using all possible outcomes 
  *          of the 5-bit result from the self-test register and then approximated using 
- *          a third order polynominal equation. The following values are the constants 
+ *          a third order polynomial equation. The following values are the constants 
  *          from the approximated gyroscope factory trim equation. 
  */
 typedef enum {

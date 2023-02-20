@@ -424,17 +424,17 @@ uint8_t mpu6050_who_am_i_read(
 /**
  * @brief MPU6050 self-test read 
  * 
- * @details Called within mpu6050_self_test to read the self-test register values. After 
+ * @details Called by mpu6050_self_test to read the self-test register values. After 
  *          reading the registers the accelerometer and gyroscope data is parsed to make 
  *          the data sets distinguishable from one another. The results are stored in the 
- *          pointers passed to the function. 
+ *          buffers passed to the function. 
  * 
  * @see mpu6050_self_test
  * 
  * @param i2c : I2C port used by device 
  * @param addr : device I2C address 
- * @param accel_self_test_data : pointer where self-test accel register data gets stored 
- * @param gyro_self_test_data : pointer where self-test gyro register data gets stored 
+ * @param accel_self_test_data : buffer where self-test accel register data gets stored 
+ * @param gyro_self_test_data : buffer where self-test gyro register data gets stored 
  */
 void mpu6050_self_test_read(
     I2C_TypeDef *i2c, 
@@ -446,8 +446,7 @@ void mpu6050_self_test_read(
 /**
  * @brief MPU6050 self-test response calculation
  * 
- * @details This function calculates the self-test response of each sensor axis. The 
- *          self-test response is defined as: 
+ * @details This function calculates the self-test response of each sensor axis. 
  *          
  *          Self-test response = (sensor output with self-test enabled) - 
  *                               (sensor output with self-test disabled) 
@@ -479,10 +478,12 @@ void mpu6050_str_calc(
  *          Change from factory trim = ((self-test response) - (factory trim)) / 
  *                                     (factory trim)
  * 
- * @param self_test_results 
- * @param factory_trim 
- * @param results 
- * @param shift 
+ * @see self_test_result_shift_t
+ * 
+ * @param self_test_results ; buffer to store the test results 
+ * @param factory_trim : buffer that contains the factory trim of each axes 
+ * @param results : buffer to store the status of the results (pass(0)/fail(1))
+ * @param shift : test result shift value - based on either gyroscope or accelerometer 
  */
 void mpu6050_self_test_result(
     int16_t *self_test_results,
@@ -546,8 +547,8 @@ void mpu6050_gyro_ft(
  * 
  * @details This function reads the ACCEL_CONFIG register to check the chosen full scale
  *          range of the accelerometer. This is used to determine the scalar that  
- *          converts raw sensor output into g's. The mpu6050_accel_x/y/z_calc functions 
- *          call this function. 
+ *          converts raw sensor output into g's. This is called and the result is stored 
+ *          during initialization. 
  * 
  * @see mpu6050_accel_config_read
  * 
@@ -565,8 +566,8 @@ float mpu6050_accel_scalar(
  * 
  * @details This function reads the GYRO_CONFIG register to check the chosen full scale
  *          range of the gyroscope. This is used to determine the scalar that  
- *          converts raw sensor output into deg/s. The mpu6050_gyro_x/y/z_calc functions 
- *          call this function. 
+ *          converts raw sensor output into deg/s. This is called and the result is stored 
+ *          during initialization. 
  *          
  *          To calculate the scalar, the full scale range (250-2000 deg/s) of the gyro 
  *          is read and used to determine which scalar to use. This full scale range is 
@@ -598,9 +599,9 @@ float mpu6050_gyro_scalar(
 // Accelerometer data 
 typedef struct mpu6050_accel_s
 {
-    int16_t accel_x;                // Acceleration in the x-axis 
-    int16_t accel_y;                // Acceleration in the y-axis 
-    int16_t accel_z;                // Acceleration in the z-axis 
+    int16_t accel_x;                // Acceleration along the x-axis 
+    int16_t accel_y;                // Acceleration along the y-axis 
+    int16_t accel_z;                // Acceleration along the z-axis 
 }
 mpu6050_accel_t;
 
@@ -652,7 +653,7 @@ typedef struct mpu6050_driver_data_s
 mpu6050_driver_data_t; 
 
 
-// MPU6050 device com data record instance 
+// Driver data record first pointer 
 static mpu6050_driver_data_t *mpu6050_driver_data_ptr = NULL; 
 
 //=======================================================================================
@@ -880,6 +881,7 @@ void mpu6050_calibrate(
     // Check that the data record is valid 
     if (device_data_ptr == NULL) return; 
 
+    // Read the current gyroscope data and save it as the offset/error 
     mpu6050_gyro_read(device_num); 
     device_data_ptr->gyro_data.gyro_x_offset = device_data_ptr->gyro_data.gyro_x; 
     device_data_ptr->gyro_data.gyro_y_offset = device_data_ptr->gyro_data.gyro_y; 
@@ -923,7 +925,7 @@ float mpu6050_accel_scalar(
 }
 
 
-// MPU6050 gyroscope scalar
+// MPU6050 gyroscope scalar 
 float mpu6050_gyro_scalar(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr)
@@ -1301,7 +1303,6 @@ uint8_t mpu6050_who_am_i_read(
         BYTE_1,
         &mpu6050_who_am_i);
 
-    // Return the value of who_am_i 
     return mpu6050_who_am_i;
 }
 
@@ -1649,7 +1650,7 @@ MPU6050_FAULT_FLAG mpu6050_get_fault_flag(
 }
 
 
-// MPU6050 INT pin status 
+// INT pin status 
 MPU6050_INT_STATUS mpu6050_int_status(
     device_number_t device_num)
 {
@@ -1664,7 +1665,7 @@ MPU6050_INT_STATUS mpu6050_int_status(
 }
 
 
-// MPU6050 accelerometer x-axis raw value 
+// Accelerometer x-axis raw value 
 int16_t mpu6050_get_accel_x_raw(
     device_number_t device_num)
 {
@@ -1679,7 +1680,7 @@ int16_t mpu6050_get_accel_x_raw(
 }
 
 
-// MPU6050 accelerometer y-axis raw value 
+// Accelerometer y-axis raw value 
 int16_t mpu6050_get_accel_y_raw(
     device_number_t device_num)
 {
@@ -1694,7 +1695,7 @@ int16_t mpu6050_get_accel_y_raw(
 }
 
 
-// MPU6050 accelerometer z-axis raw value 
+// Accelerometer z-axis raw value 
 int16_t mpu6050_get_accel_z_raw(
     device_number_t device_num)
 {
@@ -1709,7 +1710,7 @@ int16_t mpu6050_get_accel_z_raw(
 }
 
 
-// MPU6050 accelerometer x-axis calculation 
+// Accelerometer x-axis calculation 
 float mpu6050_get_accel_x(
     device_number_t device_num)
 {
@@ -1725,7 +1726,7 @@ float mpu6050_get_accel_x(
 }
 
 
-// MPU6050 accelerometer y-axis calculation 
+// Accelerometer y-axis calculation 
 float mpu6050_get_accel_y(
     device_number_t device_num)
 {
@@ -1741,7 +1742,7 @@ float mpu6050_get_accel_y(
 }
 
 
-// MPU6050 accelerometer z-axis calculation 
+// Accelerometer z-axis calculation 
 float mpu6050_get_accel_z(
     device_number_t device_num)
 {
@@ -1757,7 +1758,7 @@ float mpu6050_get_accel_z(
 }
 
 
-// MPU6050 gyroscope x-axis raw value 
+// Gyroscope x-axis raw value 
 int16_t mpu6050_get_gyro_x_raw(
     device_number_t device_num)
 {
@@ -1772,7 +1773,7 @@ int16_t mpu6050_get_gyro_x_raw(
 }
 
 
-// MPU6050 gyroscope y-axis raw value 
+// Gyroscope y-axis raw value 
 int16_t mpu6050_get_gyro_y_raw(
     device_number_t device_num)
 {
@@ -1787,7 +1788,7 @@ int16_t mpu6050_get_gyro_y_raw(
 }
 
 
-// MPU6050 gyroscope z-axis raw value 
+// Gyroscope z-axis raw value 
 int16_t mpu6050_get_gyro_z_raw(
     device_number_t device_num)
 {
@@ -1802,7 +1803,7 @@ int16_t mpu6050_get_gyro_z_raw(
 }
 
 
-// MPU6050 gyroscopic (angular acceleration) calculation around x-axis 
+// Gyroscopic (angular acceleration) calculation around x-axis 
 float mpu6050_get_gyro_x(
     device_number_t device_num)
 {
@@ -1818,7 +1819,7 @@ float mpu6050_get_gyro_x(
 }
 
 
-// MPU6050 gyroscopic value calculation around y-axis 
+// Gyroscopic value calculation around y-axis 
 float mpu6050_get_gyro_y(
     device_number_t device_num)
 {
@@ -1834,7 +1835,7 @@ float mpu6050_get_gyro_y(
 }
 
 
-// MPU6050 gyroscopic value calculation around z-axis 
+// Gyroscopic value calculation around z-axis 
 float mpu6050_get_gyro_z(
     device_number_t device_num)
 {
@@ -1850,7 +1851,7 @@ float mpu6050_get_gyro_z(
 }
 
 
-// MPU6050 temperature sensor raw value 
+// Temperature sensor raw value 
 int16_t mpu6050_get_temp_raw(
     device_number_t device_num)
 {
@@ -1865,7 +1866,7 @@ int16_t mpu6050_get_temp_raw(
 }
 
 
-// MPU6050 temperature sensor calculation 
+// Temperature sensor calculation 
 float mpu6050_get_temp(
     device_number_t device_num)
 {
