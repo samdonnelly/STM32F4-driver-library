@@ -50,11 +50,28 @@
 
 // Accelerometer 
 #define MPU6050_AFS_SEL_MAX 16384        // Max accelerometer calculation scalar 
+#define MPU6050_ACCEL_ST_FT_C1 142       // Accelerometer factory trim calc constant 1 
+#define MPU6050_ACCEL_ST_FT_C2 6056      // Accelerometer factory trim calc constant 2 
+#define MPU6050_ACCEL_ST_FT_C4 13452     // Accelerometer factory trim calc constant 3 
+#define MPU6050_ACCEL_ST_FT_C3 45752     // Accelerometer factory trim calc constant 4 
 
 // Gyroscope 
 #define MPU6050_FS_SEL_MAX 1310          // Max gyroscopic calculation scalar 
 #define MPU6050_FS_CORRECTION 0x02       // Gyroscope calculation correction mask 
 #define MPU6050_GYRO_SCALAR 10           // Unscales scaled mpu6050_gyro_scalars_t values 
+#define MPU6050_GYRO_ST_FT_C1 1001       // Gyroscope factory trim calc constant 1 
+#define MPU6050_GYRO_ST_FT_C3 15056      // Gyroscope factory trim calc constant 2 
+#define MPU6050_GYRO_ST_FT_C2 19244      // Gyroscope factory trim calc constant 3 
+#define MPU6050_GYRO_ST_FT_C4 31125      // Gyroscope factory trim calc constant 4 
+
+// Self-Test 
+#define MPU6050_ST_MASK_ZA_TEST_LO 0x03  // Mask to parse self-test y-axis accelerometer data 
+#define MPU6050_ST_MASK_YA_TEST_LO 0x0C  // Mask to parse self-test z-axis accelerometer data 
+#define MPU6050_ST_MASK_X_TEST     0x1F  // Mask to parse self-test gyroscope data 
+#define MPU6050_ST_MASK_XA_TEST_LO 0x30  // Mask to parse self-test x-axis accelerometer data 
+#define MPU6050_ST_MASK_A_TEST_HI  0xE0  // Mask to parse self-test x, y and z axis accel data 
+#define MPU6050_STR_SHIFT_ACCEL    0x01  // Bit shift for accel self-test results 
+#define MPU6050_STR_SHIFT_GYRO     0x08  // Bit shift for gyro self-test results 
 
 //=======================================================================================
 
@@ -130,76 +147,6 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 self-test masks 
- * 
- * @details During self-test, after reading the self-test registers, the following masks 
- *          are used to parse the X, Y and Z accleroemeter and gyroscope data apart from 
- *          one another so that the data is readable/usable. 
- */
-typedef enum {
-    SELF_TEST_MASK_ZA_TEST_LO = 0x03,
-    SELF_TEST_MASK_YA_TEST_LO = 0x0C,
-    SELF_TEST_MASK_X_TEST     = 0x1F,
-    SELF_TEST_MASK_XA_TEST_LO = 0x30,
-    SELF_TEST_MASK_A_TEST_HI  = 0xE0
-} mpu6050_self_test_masks_t;
-
-
-/**
- * @brief MPU6050 self-test results shifter 
- * 
- * @details When self-test is executed the final result is a single byte of data that 
- *          indicated a pass or fail for all 6 (3 accel + 3 gyro) axes. These shifters 
- *          are used to format that final result so that the result of each axes doesn't
- *          conflict with the result of another. 
- * 
- * @see mpu6050_self_test
- */
-typedef enum {
-    SELF_TEST_RESULT_SHIFT_ACCEL = 0x01,
-    SELF_TEST_RESULT_SHIFT_GYRO  = 0x08
-} self_test_result_shift_t;
-
-
-/**
- * @brief MPU6050 accelerometer factory trim equation constants 
- * 
- * @details The Register Map document for the MPU6050 outlines how to calculate the 
- *          factory trim for each axes in order to perform a self-test. The factory trim 
- *          equation however is complex, so to avoid performing this complex calculation
- *          in the code, the equation was plotted in Excel using all possible outcomes 
- *          of the 5-bit result from the self-test register and then approximated using 
- *          a third order polynomial equation. The following values are the constants 
- *          from the approximated accelerometer factory trim equation. 
- */
-typedef enum {
-    SELF_TEST_ACCEL_FT_C1 = 142,
-    SELF_TEST_ACCEL_FT_C2 = 6056,
-    SELF_TEST_ACCEL_FT_C4 = 13452,
-    SELF_TEST_ACCEL_FT_C3 = 45752
-} self_test_accel_constants_t;
-
-
-/**
- * @brief MPU6050 gyroscope factory trim equation constants 
- * 
- * @details The Register Map document for the MPU6050 outlines how to calculate the 
- *          factory trim for each axes in order to perform a self-test. The factory trim 
- *          equation however is complex, so to avoid performing this complex calculation
- *          in the code, the equation was plotted in Excel using all possible outcomes 
- *          of the 5-bit result from the self-test register and then approximated using 
- *          a third order polynomial equation. The following values are the constants 
- *          from the approximated gyroscope factory trim equation. 
- */
-typedef enum {
-    SELF_TEST_GYRO_FT_C1 = 1001,
-    SELF_TEST_GYRO_FT_C3 = 15056,
-    SELF_TEST_GYRO_FT_C2 = 19244,
-    SELF_TEST_GYRO_FT_C4 = 31125
-} self_test_gyro_constants_t;
-
-
-/**
  * @brief MPU6050 DLPF_CFG setpoint
  * 
  * @details A digital low pass filter (DLPF) can be specified in the CONFIG register 
@@ -223,14 +170,14 @@ typedef enum {
  *          DLPF settings.
  */
 typedef enum {
-    DLPF_CFG_0,  // accel = 260 Hz, gyro = 256 Hz
-    DLPF_CFG_1,  // accel = 184 Hz, gyro = 188 Hz
-    DLPF_CFG_2,  // accel = 94  Hz, gyro = 98  Hz
-    DLPF_CFG_3,  // accel = 44  Hz, gyro = 42  Hz
-    DLPF_CFG_4,  // accel = 21  Hz, gyro = 20  Hz
-    DLPF_CFG_5,  // accel = 10  Hz, gyro = 10  Hz
-    DLPF_CFG_6,  // accel = 5   Hz, gyro = 5   Hz
-    DLPF_CFG_7   // RESERVED
+    MPU6050_DLPF_CFG_0,  // accel = 260 Hz, gyro = 256 Hz
+    MPU6050_DLPF_CFG_1,  // accel = 184 Hz, gyro = 188 Hz
+    MPU6050_DLPF_CFG_2,  // accel = 94  Hz, gyro = 98  Hz
+    MPU6050_DLPF_CFG_3,  // accel = 44  Hz, gyro = 42  Hz
+    MPU6050_DLPF_CFG_4,  // accel = 21  Hz, gyro = 20  Hz
+    MPU6050_DLPF_CFG_5,  // accel = 10  Hz, gyro = 10  Hz
+    MPU6050_DLPF_CFG_6,  // accel = 5   Hz, gyro = 5   Hz
+    MPU6050_DLPF_CFG_7   // RESERVED
 } mpu6050_dlpf_cfg_t;
 
 
@@ -253,10 +200,10 @@ typedef enum {
  *          - GYRO_SCALE_FS_SEL_250  = 1310 ---> 131.0 * 10 
  */
 typedef enum {
-    FS_SEL_250,   // +/- 250  deg/s ---> Scalar = 1310 
-    FS_SEL_500,   // +/- 500  deg/s ---> Scalar = 655 
-    FS_SEL_1000,  // +/- 1000 deg/s ---> Scalar = 328 
-    FS_SEL_2000   // +/- 2000 deg/s ---> Scalar = 164 
+    MPU6050_FS_SEL_250,   // +/- 250  deg/s ---> Scalar = 1310 
+    MPU6050_FS_SEL_500,   // +/- 500  deg/s ---> Scalar = 655 
+    MPU6050_FS_SEL_1000,  // +/- 1000 deg/s ---> Scalar = 328 
+    MPU6050_FS_SEL_2000   // +/- 2000 deg/s ---> Scalar = 164 
 } mpu6050_fs_sel_set_t;
 
 
@@ -278,10 +225,10 @@ typedef enum {
  *          - ACCEL_SCALE_AFS_SEL_2  = 16384
  */
 typedef enum {
-    AFS_SEL_2,   // +/- 2g ---> Scalar = 16384 
-    AFS_SEL_4,   // +/- 4g ---> Scalar = 8192 
-    AFS_SEL_8,   // +/- 8g ---> Scalar = 4096 
-    AFS_SEL_16   // +/- 16g --> Scalar = 2048 
+    MPU6050_AFS_SEL_2,   // +/- 2g ---> Scalar = 16384 
+    MPU6050_AFS_SEL_4,   // +/- 4g ---> Scalar = 8192 
+    MPU6050_AFS_SEL_8,   // +/- 8g ---> Scalar = 4096 
+    MPU6050_AFS_SEL_16   // +/- 16g --> Scalar = 2048 
 } mpu6050_afs_sel_set_t;
 
 
@@ -304,14 +251,14 @@ typedef enum {
  *           are much more stable.  
  */
 typedef enum {
-    CLKSEL_0,  // Internal 8MHz oscillator
-    CLKSEL_1,  // PPL with X-axis gyro reference 
-    CLKSEL_2,  // PPL with Y-axis gyro reference 
-    CLKSEL_3,  // PPL with Z-axis gyro reference 
-    CLKSEL_4,  // PPL with external 32.768kHz reference
-    CLKSEL_5,  // PPL with external 19.2MHz reference
-    CLKSEL_6,  // Reserved 
-    CLKSEL_7   // Stops the clock and keeps the timing generator on reset
+    MPU6050_CLKSEL_0,  // Internal 8MHz oscillator
+    MPU6050_CLKSEL_1,  // PPL with X-axis gyro reference 
+    MPU6050_CLKSEL_2,  // PPL with Y-axis gyro reference 
+    MPU6050_CLKSEL_3,  // PPL with Z-axis gyro reference 
+    MPU6050_CLKSEL_4,  // PPL with external 32.768kHz reference
+    MPU6050_CLKSEL_5,  // PPL with external 19.2MHz reference
+    MPU6050_CLKSEL_6,  // Reserved 
+    MPU6050_CLKSEL_7   // Stops the clock and keeps the timing generator on reset
 } mpu6050_clksel_t;
 
 
@@ -337,10 +284,10 @@ typedef enum {
  *              - Set STBY_XG, STBY_YG, STBY_ZG to 1 <br>
  */
 typedef enum {
-    LP_WAKE_CTRL_0,  // 1.25 Hz wakeup frequency
-    LP_WAKE_CTRL_1,  // 5 Hz wakeup frequency
-    LP_WAKE_CTRL_2,  // 20 Hz wakeup frequency
-    LP_WAKE_CTRL_3   // 40 Hz wakeup frequency
+    MPU6050_LP_WAKE_CTRL_0,    // 1.25 Hz wakeup frequency
+    MPU6050_LP_WAKE_CTRL_1,    // 5 Hz wakeup frequency
+    MPU6050_LP_WAKE_CTRL_2,    // 20 Hz wakeup frequency
+    MPU6050_LP_WAKE_CTRL_3     // 40 Hz wakeup frequency
 } mpu6050_lp_wake_ctrl_t;
 
 
@@ -354,8 +301,8 @@ typedef enum {
  * @see mpu6050_self_test
  */
 typedef enum {
-    GYRO_SELF_TEST_DISABLE,
-    GYRO_SELF_TEST_ENABLE
+    MPU6050_GYRO_ST_DISABLE,
+    MPU6050_GYRO_ST_ENABLE
 } mpu6050_gyro_self_test_set_t;
 
 
@@ -369,8 +316,8 @@ typedef enum {
  * @see mpu6050_self_test 
  */
 typedef enum {
-    ACCEL_SELF_TEST_DISABLE,
-    ACCEL_SELF_TEST_ENABLE
+    MPU6050_ACCEL_ST_DISABLE,
+    MPU6050_ACCEL_ST_ENABLE
 } mpu6050_accel_self_test_set_t;
 
 
@@ -399,8 +346,8 @@ typedef enum {
  * @see mpu6050_lp_wake_ctrl_t
  */
 typedef enum {
-    SLEEP_MODE_DISABLE,
-    SLEEP_MODE_ENABLE
+    MPU6050_SLEEP_MODE_DISABLE,
+    MPU6050_SLEEP_MODE_ENABLE
 } mpu6050_sleep_mode_t;
 
 
@@ -416,8 +363,8 @@ typedef enum {
  * @see mpu6050_lp_wake_ctrl_t
  */
 typedef enum {
-    CYCLE_SLEEP_DISABLED,
-    CYCLE_SLEEP_ENABLED
+    MPU6050_CYCLE_SLEEP_DISABLED,
+    MPU6050_CYCLE_SLEEP_ENABLED
 } mpu6050_cycle_t;
 
 
@@ -428,8 +375,8 @@ typedef enum {
  *          enabling or disabling of the temperature sensor. 
  */
 typedef enum {
-    TEMP_SENSOR_ENABLE,
-    TEMP_SENSOR_DISABLE
+    MPU6050_TEMP_SENSOR_ENABLE,
+    MPU6050_TEMP_SENSOR_DISABLE
 } mpu6050_temp_sensor_t;
 
 

@@ -382,7 +382,7 @@ void mpu6050_reset_state(
     mpu6050_clear_fault_flag(mpu6050_device->device_num); 
 
     // Reset the low power flag and make sure to exit sleep mode 
-    mpu6050_device->low_power = SLEEP_MODE_DISABLE; 
+    mpu6050_device->low_power = MPU6050_SLEEP_MODE_DISABLE; 
     mpu6050_low_pwr_config(
         mpu6050_device->device_num, 
         mpu6050_device->low_power); 
@@ -420,7 +420,7 @@ void mpu6050_set_low_power(
     // Check that the data record is valid 
     if (cntrl_data_ptr == NULL) return; 
 
-    cntrl_data_ptr->low_power = SLEEP_MODE_ENABLE; 
+    cntrl_data_ptr->low_power = MPU6050_SLEEP_MODE_ENABLE; 
 }
 
 
@@ -435,7 +435,7 @@ void mpu6050_clear_low_power(
     // Check that the data record is valid 
     if (cntrl_data_ptr == NULL) return; 
 
-    cntrl_data_ptr->low_power = SLEEP_MODE_DISABLE; 
+    cntrl_data_ptr->low_power = MPU6050_SLEEP_MODE_DISABLE; 
 }
 
 //=======================================================================================

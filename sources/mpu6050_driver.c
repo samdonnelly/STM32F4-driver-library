@@ -477,8 +477,9 @@ void mpu6050_str_calc(
  *          
  *          Change from factory trim = ((self-test response) - (factory trim)) / 
  *                                     (factory trim)
- * 
- * @see self_test_result_shift_t
+ *          
+ *          "shidt" is defined by the macros MPU6050_STR_SHIFT_ACCEL and 
+ *          MPU6050_STR_SHIFT_GYRO. 
  * 
  * @param self_test_results ; buffer to store the test results 
  * @param factory_trim : buffer that contains the factory trim of each axes 
@@ -489,7 +490,7 @@ void mpu6050_self_test_result(
     int16_t *self_test_results,
     float *factory_trim,
     uint8_t *results, 
-    self_test_result_shift_t shift); 
+    uint8_t shift); 
 
 
 /**
@@ -708,7 +709,7 @@ MPU6050_INIT_STATUS mpu6050_init(
         mpu6050_pwr_mgmt_2_write(
             device_data_ptr->i2c, 
             device_data_ptr->addr,
-            LP_WAKE_CTRL_0,
+            MPU6050_LP_WAKE_CTRL_0,
             standby_status);
 
         // Wake the sensor up through the power management 1 register 
@@ -716,10 +717,10 @@ MPU6050_INIT_STATUS mpu6050_init(
             device_data_ptr->i2c, 
             device_data_ptr->addr,
             MPU6050_RESET_DISABLE,
-            SLEEP_MODE_DISABLE,
-            CYCLE_SLEEP_DISABLED,
-            TEMP_SENSOR_ENABLE,
-            CLKSEL_5);
+            MPU6050_SLEEP_MODE_DISABLE,
+            MPU6050_CYCLE_SLEEP_DISABLED,
+            MPU6050_TEMP_SENSOR_ENABLE,
+            MPU6050_CLKSEL_5);
 
         // Set the output rate of the gyro and accelerometer 
         mpu6050_config_write(
@@ -738,14 +739,14 @@ MPU6050_INIT_STATUS mpu6050_init(
         mpu6050_accel_config_write(
             device_data_ptr->i2c, 
             device_data_ptr->addr,
-            ACCEL_SELF_TEST_DISABLE,
+            MPU6050_ACCEL_ST_DISABLE,
             afs_sel);
         
         // Configure the gyroscope register
         mpu6050_gyro_config_write(
             device_data_ptr->i2c, 
             device_data_ptr->addr,
-            GYRO_SELF_TEST_DISABLE,
+            MPU6050_GYRO_ST_DISABLE,
             fs_sel);
 
         // Store the raw data scalars for calculating the actual value 
@@ -906,9 +907,9 @@ void mpu6050_low_pwr_config(
         device_data_ptr->addr,
         MPU6050_RESET_DISABLE,
         sleep,
-        CYCLE_SLEEP_DISABLED,
-        TEMP_SENSOR_ENABLE,
-        CLKSEL_5);
+        MPU6050_CYCLE_SLEEP_DISABLED,
+        MPU6050_TEMP_SENSOR_ENABLE,
+        MPU6050_CLKSEL_5);
 }
 
 
@@ -1374,13 +1375,13 @@ uint8_t mpu6050_self_test(
     mpu6050_accel_config_write(
         device_data_ptr->i2c, 
         device_data_ptr->addr, 
-        ACCEL_SELF_TEST_DISABLE,
-        AFS_SEL_8);
+        MPU6050_ACCEL_ST_DISABLE,
+        MPU6050_AFS_SEL_8);
     mpu6050_gyro_config_write(
         device_data_ptr->i2c, 
         device_data_ptr->addr, 
-        GYRO_SELF_TEST_DISABLE,
-        FS_SEL_250);
+        MPU6050_GYRO_ST_DISABLE,
+        MPU6050_FS_SEL_250);
 
     // Read and store the sensor values during non-self-test 
     mpu6050_accel_read(device_num); 
@@ -1396,13 +1397,13 @@ uint8_t mpu6050_self_test(
     mpu6050_accel_config_write(
         device_data_ptr->i2c, 
         device_data_ptr->addr, 
-        ACCEL_SELF_TEST_ENABLE,
-        AFS_SEL_8);
+        MPU6050_ACCEL_ST_ENABLE,
+        MPU6050_AFS_SEL_8);
     mpu6050_gyro_config_write(
         device_data_ptr->i2c, 
         device_data_ptr->addr, 
-        GYRO_SELF_TEST_ENABLE,
-        FS_SEL_250);
+        MPU6050_GYRO_ST_ENABLE,
+        MPU6050_FS_SEL_250);
     
     // Read and store the sensor values during self-test 
     mpu6050_accel_read(device_num); 
@@ -1442,23 +1443,23 @@ uint8_t mpu6050_self_test(
         accel_str,
         accel_ft,
         &self_test_result, 
-        SELF_TEST_RESULT_SHIFT_ACCEL); 
+        MPU6050_STR_SHIFT_ACCEL); 
     mpu6050_self_test_result(
         gyro_str,
         gyro_ft,
         &self_test_result, 
-        SELF_TEST_RESULT_SHIFT_GYRO); 
+        MPU6050_STR_SHIFT_GYRO); 
     
     // Disable self-test and set the full scale ranges back to their original values 
     mpu6050_accel_config_write(
         device_data_ptr->i2c, 
         device_data_ptr->addr, 
-        ACCEL_SELF_TEST_DISABLE,
+        MPU6050_ACCEL_ST_DISABLE,
         accel_fsr);
     mpu6050_gyro_config_write(
         device_data_ptr->i2c, 
         device_data_ptr->addr, 
-        GYRO_SELF_TEST_DISABLE,
+        MPU6050_GYRO_ST_DISABLE,
         gyro_fsr);
 
     // Update the fault flags 
@@ -1487,21 +1488,21 @@ void mpu6050_self_test_read(
         st_data);
     
     // Parse the acceleration data in X, Y and Z respectively 
-    *accel_st_data++ = ((st_data[BYTE_0] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
-                       ((st_data[BYTE_3] & SELF_TEST_MASK_XA_TEST_LO) >> SHIFT_4);
+    *accel_st_data++ = ((st_data[BYTE_0] & MPU6050_ST_MASK_A_TEST_HI)  >> SHIFT_3) |
+                       ((st_data[BYTE_3] & MPU6050_ST_MASK_XA_TEST_LO) >> SHIFT_4);
     
-    *accel_st_data++ = ((st_data[BYTE_1] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
-                       ((st_data[BYTE_3] & SELF_TEST_MASK_YA_TEST_LO) >> SHIFT_2);
+    *accel_st_data++ = ((st_data[BYTE_1] & MPU6050_ST_MASK_A_TEST_HI)  >> SHIFT_3) |
+                       ((st_data[BYTE_3] & MPU6050_ST_MASK_YA_TEST_LO) >> SHIFT_2);
     
-    *accel_st_data = ((st_data[BYTE_2] & SELF_TEST_MASK_A_TEST_HI)  >> SHIFT_3) |
-                     ((st_data[BYTE_3] & SELF_TEST_MASK_ZA_TEST_LO) >> SHIFT_0);
+    *accel_st_data = ((st_data[BYTE_2] & MPU6050_ST_MASK_A_TEST_HI)  >> SHIFT_3) |
+                     ((st_data[BYTE_3] & MPU6050_ST_MASK_ZA_TEST_LO) >> SHIFT_0);
 
     // Parse the gyro data in X, Y and Z respectively 
-    *gyro_st_data++ = st_data[BYTE_0] & SELF_TEST_MASK_X_TEST;
+    *gyro_st_data++ = st_data[BYTE_0] & MPU6050_ST_MASK_X_TEST;
     
-    *gyro_st_data++ = st_data[BYTE_1] & SELF_TEST_MASK_X_TEST;
+    *gyro_st_data++ = st_data[BYTE_1] & MPU6050_ST_MASK_X_TEST;
     
-    *gyro_st_data = st_data[BYTE_2] & SELF_TEST_MASK_X_TEST;
+    *gyro_st_data = st_data[BYTE_2] & MPU6050_ST_MASK_X_TEST;
 }
 
 
@@ -1511,10 +1512,10 @@ void mpu6050_accel_ft(
     float *accel_ft)
 {
     // Constants 
-    float c1 = SELF_TEST_ACCEL_FT_C1 / ((float)(DIVIDE_10000));
-    float c2 = SELF_TEST_ACCEL_FT_C2 / ((float)(DIVIDE_10000));
-    float c3 = SELF_TEST_ACCEL_FT_C3 / ((float)(DIVIDE_1000));
-    float c4 = SELF_TEST_ACCEL_FT_C4 / ((float)(DIVIDE_10));
+    float c1 = MPU6050_ACCEL_ST_FT_C1 / ((float)(DIVIDE_10000));
+    float c2 = MPU6050_ACCEL_ST_FT_C2 / ((float)(DIVIDE_10000));
+    float c3 = MPU6050_ACCEL_ST_FT_C3 / ((float)(DIVIDE_1000));
+    float c4 = MPU6050_ACCEL_ST_FT_C4 / ((float)(DIVIDE_10));
 
     // Determine the factory trim 
     for (uint8_t i = 0; i < MPU6050_NUM_AXIS; i++)
@@ -1540,10 +1541,10 @@ void mpu6050_gyro_ft(
     float *gyro_ft)
 {
     // Constants 
-    float c1 = SELF_TEST_GYRO_FT_C1 / ((float)(DIVIDE_10000));
-    float c2 = SELF_TEST_GYRO_FT_C2 / ((float)(DIVIDE_10000));
-    float c3 = SELF_TEST_GYRO_FT_C3 / ((float)(DIVIDE_100));
-    float c4 = SELF_TEST_GYRO_FT_C4 / ((float)(DIVIDE_10));
+    float c1 = MPU6050_GYRO_ST_FT_C1 / ((float)(DIVIDE_10000));
+    float c2 = MPU6050_GYRO_ST_FT_C2 / ((float)(DIVIDE_10000));
+    float c3 = MPU6050_GYRO_ST_FT_C3 / ((float)(DIVIDE_100));
+    float c4 = MPU6050_GYRO_ST_FT_C4 / ((float)(DIVIDE_10));
 
     // Determine the factory trim 
     for (uint8_t i = 0; i < MPU6050_NUM_AXIS; i++)
@@ -1587,7 +1588,7 @@ void mpu6050_self_test_result(
     int16_t *self_test_results,
     float *factory_trim,
     uint8_t *results, 
-    self_test_result_shift_t shift)
+    uint8_t shift)
 {
     // Place to store the % change 
     float ft_change;
