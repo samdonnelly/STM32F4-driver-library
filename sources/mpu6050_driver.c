@@ -29,9 +29,8 @@
  * @details Writes data to the device over the I2C bus. This function is used by the 
  *          register functions. The register address specifies where to begin writing in 
  *          the devices memory and the register size argument specifies the number of 
- *          bytes in memory to write. Bytes in registers are written successively. 
- * 
- * @see mpu6050_register_addresses_t
+ *          bytes in memory to write. Bytes in registers are written successively. The 
+ *          register addresses are defined in the header file. 
  * 
  * @param i2c : I2C port used by device 
  * @param addr : device I2C address 
@@ -42,7 +41,7 @@
 void mpu6050_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    mpu6050_register_addresses_t mpu6050_register,
+    MPU6050_REG_ADDR mpu6050_register,
     byte_num_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value);
 
@@ -53,9 +52,8 @@ void mpu6050_write(
  * @details Reads data to the device over the I2C bus. This function is used by the 
  *          register functions. The register address specifies where to begin reading in 
  *          the devices memory and the register size argument specifies the number of 
- *          bytes in memory to read. Bytes in registers are read successively. 
- * 
- * @see mpu6050_register_addresses_t
+ *          bytes in memory to read. Bytes in registers are read successively. The 
+ *          register addresses are defined in the header file. 
  * 
  * @param i2c : I2C port used by device 
  * @param addr : device I2C address 
@@ -66,7 +64,7 @@ void mpu6050_write(
 void mpu6050_read(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    mpu6050_register_addresses_t mpu6050_register, 
+    MPU6050_REG_ADDR mpu6050_register, 
     byte_num_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value);
 
@@ -101,7 +99,7 @@ void mpu6050_read(
 void mpu6050_smprt_div_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    SMPLRT_DIV smprt_div);
+    MPU6050_SMPLRT_DIV smprt_div);
 
 
 /**
@@ -681,7 +679,7 @@ MPU6050_INIT_STATUS mpu6050_init(
     mpu6050_i2c_addr_t mpu6050_addr,
     uint8_t standby_status, 
     mpu6050_dlpf_cfg_t dlpf_cfg,
-    SMPLRT_DIV smplrt_div,
+    MPU6050_SMPLRT_DIV smplrt_div,
     mpu6050_afs_sel_set_t afs_sel,
     mpu6050_fs_sel_set_t fs_sel)
 {
@@ -762,7 +760,7 @@ MPU6050_INIT_STATUS mpu6050_init(
         device_data_ptr->gyro_data.gyro_z_offset = CLEAR; 
     }
 
-    return device_data_ptr->fault_flag; 
+    return (MPU6050_INIT_STATUS)device_data_ptr->fault_flag; 
 }
 
 
@@ -812,7 +810,7 @@ void mpu6050_int_pin_init(
 void mpu6050_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    mpu6050_register_addresses_t mpu6050_register,
+    MPU6050_REG_ADDR mpu6050_register,
     byte_num_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value)
 {
@@ -838,7 +836,7 @@ void mpu6050_write(
 void mpu6050_read(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    mpu6050_register_addresses_t mpu6050_register, 
+    MPU6050_REG_ADDR mpu6050_register, 
     byte_num_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value)
 {
@@ -1086,7 +1084,7 @@ void mpu6050_read_all(
 void mpu6050_smprt_div_write(
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t addr, 
-    SMPLRT_DIV smprt_div)
+    MPU6050_SMPLRT_DIV smprt_div)
 {
     // Write to the Sample Rate Divider register
     mpu6050_write(
