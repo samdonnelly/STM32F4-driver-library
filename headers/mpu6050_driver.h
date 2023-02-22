@@ -175,7 +175,7 @@ typedef enum {
  * 
  * @details Selects the full scale range used by the gyroscope. This is passed as an 
  *          argument to mpu6050_init to configure the device. Higher ranges cover 
- *          a wider range of angular accelerations but have less precision. 
+ *          a wider range of angular velocity but have less precision. 
  *          
  *          Each of the gyroscope ranges has a scalar used to convert it's raw 
  *          value into a human readable form. These scalars are listed below and are used 
@@ -199,10 +199,9 @@ typedef enum {
 /**
  * @brief MPU6050 - ACCEL_CONFIG : AFS_SEL setpoint
  * 
- * @details Selects the full scale range of the acclerometer 
- *          Selects the full scale range used by the gyroscope. This is passed as an 
+ * @details Selects the full scale range used by the acclerometer. This is passed as an 
  *          argument to mpu6050_init to configure the device. Higher ranges cover 
- *          a wider range of angular accelerations but have less precision. 
+ *          a wider range of accelerations but have less precision. 
  *          
  *          Each of the accelerometer ranges has a scalar used to convert it's raw 
  *          value into a human readable form. These scalars are listed below and are used 
@@ -502,28 +501,26 @@ void mpu6050_low_pwr_config(
 // Register Function
 
 /**
- * @brief MPU6050 Accelerometer Measurements registers read
+ * @brief MPU6050 Accelerometer Measurements (ACCEL_OUT) registers read
  * 
- * @details Read from the ACCEL_OUT registers (Registers 59-64 - 6 bytes). These 
- *          registers store the most recent (unformatted) accelerometer measurements. 
- *          These values are written to the register at the Sample Rate but are updated 
- *          at a frequency of 1 kHz. The calculation functions mpu6050_accel_x/y/z_calc 
- *          are used to getthe actual acceleration in g's. 
+ * @details Register number: 59-64 
+ *          Register size: 6 bytes 
+ *          
+ *          Register data: 
+ *          - ACCEL_XOUT: x-axis acceleration - 16-bit signed value (reg 59-60) 
+ *          - ACCEL_YOUT: y-axis acceleration - 16-bit signed value (reg 61-62) 
+ *          - ACCEL_ZOUT: z-axis acceleration - 16-bit signed value (reg 63-64) 
+ *          
+ *          These registers store the most recent (unformatted) accelerometer measurements. 
+ *          These values are written to the registers at the Sample Rate but are updated 
+ *          within the device at a frequency of 1 kHz. This function must be called to 
+ *          so the new data gets updated to the device data record. After updating the 
+ *          data, the raw or formatted values can be read from the getters. 
  *          
  *          When the serial interface (i2c interface) is active, the values in the 
  *          registers are held constant so that you can read all values (burst read)
  *          at one instance in time. When the serial interface is idle then these 
  *          registers will go back to being written to at the Sample Rate. 
- *          
- *          Register read information: 
- *          - ACCEL_XOUT: 16-bit signed value. Stored in the pointers first address. 
- *          - ACCEL_YOUT: 16-bit signed value. Stored in the pointers second address. 
- *          - ACCEL_ZOUT: 16-bit signed value. Stored in the pointers third address. 
- * 
- * @see mpu6050_accel_scalars_t
- * @see mpu6050_accel_x_calc
- * @see mpu6050_accel_y_calc
- * @see mpu6050_accel_z_calc
  * 
  * @param device_num : data record address of device 
  */
@@ -532,28 +529,26 @@ void mpu6050_accel_read(
 
 
 /**
- * @brief MPU6050 Gyroscope Measurements registers read
+ * @brief MPU6050 Gyroscope Measurements (GYRO_OUT) registers read
  * 
- * @details Read from the GYRO_OUT registers (Registers 67-72 - 6 bytes). These 
- *          registers store the most recent (unformatted) gyroscope measurements. 
- *          These values are updated at the Sample Rate. The calculation functions 
- *          mpu6050_gyro_x/y/z_calc are used to get the actual gyroscopic values in 
- *          deg/s. 
+ * @details Register number: 67-72 
+ *          Register size: 6 bytes 
+ *          
+ *          Register data: 
+ *          - GYRO_XOUT: x-axis angular velocity - 16-bit signed value (reg 67-68) 
+ *          - GYRO_YOUT: y-axis angular velocity - 16-bit signed value (reg 69-70) 
+ *          - GYRO_ZOUT: z-axis angular velocity - 16-bit signed value (reg 71-72) 
+ *          
+ *          These registers store the most recent (unformatted) gyroscope measurements. 
+ *          These values are written to the registers at the Sample Rate. This function 
+ *          must be called to so the new data gets updated to the device data record. 
+ *          After updating the data, the raw or formatted values can be read from the 
+ *          getters. 
  *          
  *          When the serial interface (i2c interface) is active, the values in the 
  *          registers are held constant so that you can read all values (burst read)
  *          at one instance in time. When the serial interface is idle then these 
  *          registers will go back to being written to at the Sample Rate. 
- *          
- *          Register read information: 
- *          - GYRO_XOUT: 16-bit signed value. Stored in the pointers first address. 
- *          - GYRO_YOUT: 16-bit signed value. Stored in the pointers second address. 
- *          - GYRO_ZOUT: 16-bit signed value. Stored in the pointers third address. 
- * 
- * @see mpu6050_gyro_scalars_t
- * @see mpu6050_gyro_x_calc
- * @see mpu6050_gyro_y_calc
- * @see mpu6050_gyro_z_calc
  * 
  * @param device_num : data record address of device 
  */
@@ -562,22 +557,24 @@ void mpu6050_gyro_read(
 
 
 /**
- * @brief MPU6050 Temperature Measurements registers read
+ * @brief MPU6050 Temperature Measurements (TEMP_OUT) registers read
  * 
- * @details Reads from the TEMP_OUT registers (Registers 65-66 - 2 bytes). These 
- *          registers store the most recent (unformatted) temperature sensor 
- *          measurements. The measurements are updated to these registers at the 
- *          Sample Rate. 
+ * @details Register number: 65-66 
+ *          Register size: 2 bytes 
+ *          
+ *          Register data: 
+ *          - TEMP_OUT: device temperature - 16-bit signed value 
+ *          
+ *          These registers store the most recent (unformatted) temperature sensor 
+ *          measurements. This value is written to the registers at the Sample Rate. 
+ *          This function must be called to so the new data gets updated to the device 
+ *          data record. After updating the data, the raw or formatted values can be read 
+ *          from the getters. 
  *          
  *          When the serial interface (i2c interface) is active, the values in the 
  *          registers are held constant so that you can read all values (burst read)
  *          at one instance in time. When the serial interface is idle then these 
  *          registers will go back to being written to at the Sample Rate. 
- *          
- *          Register read information: 
- *          - TEMP_OUT: 16-bit signed value. 
- * 
- * @see mpu6050_temp_calc
  * 
  * @param device_num : data record address of device 
  */
@@ -588,7 +585,14 @@ void mpu6050_temp_read(
 /**
  * @brief MPU6050 read all 
  * 
- * @details 
+ * @details Performs the same data record update as the accelerometer, gyroscope and temp 
+ *          sensor read functions combined in a burst read. This allows for keeping 
+ *          hold of the I2C bus and ensures all the data read is from the same instance in time. 
+ *          This is useful for when all the data needs to be read. 
+ * 
+ * @see mpu6050_accel_read
+ * @see mpu6050_gyro_read
+ * @see mpu6050_temp_read
  * 
  * @param device_num : data record address of device 
  */
@@ -617,9 +621,9 @@ void mpu6050_read_all(
  *          results of each accelerometer and gyroscope axis where a 0 is a pass and 
  *          a 1 is a fail. The return value breakdown is as follows: 
  *          
- *          - Bit 5: gyroscope z-axis     
- *          - Bit 4: gyroscope y-axis     
- *          - Bit 3: gyroscope x-axis     
+ *          - Bit 5: gyroscope z-axis 
+ *          - Bit 4: gyroscope y-axis 
+ *          - Bit 3: gyroscope x-axis 
  *          - Bit 2: accelerometer z-axis 
  *          - Bit 1: accelerometer y-axis 
  *          - Bit 0: accelerometer x-axis 
@@ -718,7 +722,7 @@ int16_t mpu6050_get_accel_z_raw(
  *          on the full scale range of the accelerometer. 
  * 
  * @see mpu6050_accel_read
- * @see mpu6050_accel_scalars_t
+ * @see mpu6050_afs_sel_set_t
  * 
  * @param device_num : data record address of device 
  * @return float : x-axis acceleration in g's
@@ -736,7 +740,7 @@ float mpu6050_get_accel_x(
  *          on the full scale range of the accelerometer. 
  * 
  * @see mpu6050_accel_read
- * @see mpu6050_accel_scalars_t
+ * @see mpu6050_afs_sel_set_t
  * 
  * @param device_num : data record address of device 
  * @return float : y-axis acceleration in g's
@@ -754,7 +758,7 @@ float mpu6050_get_accel_y(
  *          on the full scale range of the accelerometer. 
  * 
  * @see mpu6050_accel_read
- * @see mpu6050_accel_scalars_t
+ * @see mpu6050_afs_sel_set_t
  * 
  * @param device_num : data record address of device 
  * @return float : z-axis acceleration in g's
@@ -810,7 +814,7 @@ int16_t mpu6050_get_gyro_z_raw(
  *          is passed to offset the error from the calculation. 
  * 
  * @see mpu6050_gyro_read
- * @see mpu6050_gyro_scalars_t
+ * @see mpu6050_fs_sel_set_t
  * @see mpu6050_calibrate
  * 
  * @param device_num : data record address of device 
@@ -831,7 +835,7 @@ float mpu6050_get_gyro_x(
  *          is passed to offset the error from the calculation.
  * 
  * @see mpu6050_gyro_read
- * @see mpu6050_gyro_scalars_t
+ * @see mpu6050_fs_sel_set_t
  * @see mpu6050_calibrate
  * 
  * @param device_num : data record address of device 
@@ -852,7 +856,7 @@ float mpu6050_get_gyro_y(
  *          is passed to offset the error from the calculation.
  * 
  * @see mpu6050_gyro_read
- * @see mpu6050_gyro_scalars_t
+ * @see mpu6050_fs_sel_set_t
  * @see mpu6050_calibrate
  * 
  * @param device_num : data record address of device 
