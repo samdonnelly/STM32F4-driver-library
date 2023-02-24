@@ -661,17 +661,6 @@ static mpu6050_driver_data_t *mpu6050_driver_data_ptr = NULL;
 //=======================================================================================
 // Initialization 
 
-//==============================================================
-// MPU6050 Init
-//  1. Read the WHO_AM_I register to establish that there is communication 
-//  2. Choose which sensors to use and frquency of CYCLE mode (see PWR_MGMT_1)
-//  3. Wake the sensor up through the power management 1 register 
-//  4. Set the output rate of the gyro and accelerometer 
-//  5. Set the Sample Rate (data rate) 
-//  6. Configure the accelerometer register 
-//  7. Configure the gyroscope register
-//==============================================================
-
 // MPU6050 Initialization 
 MPU6050_INIT_STATUS mpu6050_init(
     device_number_t device_num, 
@@ -754,7 +743,7 @@ MPU6050_INIT_STATUS mpu6050_init(
         device_data_ptr->gyro_data_scalar = mpu6050_gyro_scalar(device_data_ptr->i2c, 
                                                                 device_data_ptr->addr); 
 
-        // Record the reference (error) in the gyroscope to correct the readings 
+        // Initialize the gyroscope error correction (offset) to zero 
         device_data_ptr->gyro_data.gyro_x_offset = CLEAR; 
         device_data_ptr->gyro_data.gyro_y_offset = CLEAR; 
         device_data_ptr->gyro_data.gyro_z_offset = CLEAR; 
@@ -1313,20 +1302,6 @@ static uint8_t mpu6050_who_am_i_read(
 
 //=======================================================================================
 // Self-test 
-
-//==============================================================
-// Steps for self-test 
-//  1. Record the full scale range set in the init function 
-//  2. Set the full scale range of the accel to +/- 8g and gyro to +/- 250 deg/s
-//  3. Read and store the sensor values during non-self-test
-//  4. Enable self-test 
-//  5. Read and store the sensor values during self-test
-//  6. Read the self-test registers
-//  7. Calculate the factory trim
-//  8. Calculate self-test response
-//  9. Calculate the change from factory trim and check against the acceptable range
-//  10. Disable self-test and set the full scale ranges back to their original values
-//============================================================== 
 
 // MPU6050 self-test
 MPU6050_ST_RESULT mpu6050_self_test(
