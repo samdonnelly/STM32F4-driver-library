@@ -18,8 +18,10 @@
 //=======================================================================================
 // Includes 
 
+// Tools 
 #include "stm32f411xe.h"
 
+// Libraries 
 #include <string.h>
 
 //=======================================================================================
@@ -178,7 +180,6 @@ typedef enum {
  *          that is needed. 
  * 
  * @see bit_setter_t
- * 
  */
 typedef enum {
     SHIFT_0,
@@ -221,7 +222,6 @@ typedef enum {
  * 
  * @details These are used during mathematical remainders (modulo) expressions to divide
  *          a particular number by multiples of 10 and get the remainder. 
- * 
  */
 typedef enum {
     REMAINDER_10   = 10,
@@ -234,7 +234,6 @@ typedef enum {
  * @brief Divisors 
  * 
  * @details Used to divide values by multiples of 10. 
- * 
  */
 typedef enum {
     DIVIDE_1     = 1,
@@ -278,13 +277,20 @@ typedef enum {
 /**
  * @brief String comparison 
  * 
- * @details 
+ * @details Compares two strings to see if they match. "msg" gets compared to "ref_msg" 
+ *          starting at "msg_start" (index of "msg" to start at) up until the length of 
+ *          "ref_msg". Each string character of interest is checked individually. If along 
+ *          the way there is a mismatch then false is returned. If there are no mismatches 
+ *          then the function returns true. 
  * 
- * @param ref_msg 
- * @param msg 
- * @param msg_lo_lim 
- * @param msg_hi_lim 
- * @return uint8_t 
+ *          NOTE: If the reference message matches the section of the main message being 
+ *                compared, but the main message has mismatching characters before or after 
+ *                the section being compared, the function will still return true. 
+ * 
+ * @param ref_msg : reference message to compare against 
+ * @param msg : message of interest to compare to the reference message 
+ * @param msg_start : index of "msg" from where to start the comparison 
+ * @return uint8_t : result of the comparison - true if there is a match 
  */
 uint8_t str_compare(
     char *ref_msg, 
