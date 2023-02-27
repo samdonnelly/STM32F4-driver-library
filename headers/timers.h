@@ -15,7 +15,7 @@
 #ifndef _TIMERS_H_
 #define _TIMERS_H_
 
-//================================================================================
+//=======================================================================================
 // Includes 
 
 // Tools 
@@ -26,10 +26,10 @@
 // Drivers 
 #include "gpio_driver.h"
 
-//================================================================================
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Macros 
 
 #define RESET_COUNT 0        // Used to reset count registers 
@@ -47,10 +47,10 @@
 
 #define TIM_APB_CLK_FILTER 0x10000   // Filter to determine APB1 or APB2 frequency 
 
-//================================================================================
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Enums 
 
 /**
@@ -159,18 +159,18 @@ typedef enum {
     TIM_CCE_ON      // Output compare signal is output on the corresponding output pin 
 } tim_cce_t; 
 
-//================================================================================
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Datatypes 
 
 typedef uint32_t TIM_COUNTER; 
 
-//================================================================================
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Initialization 
 
 /**
@@ -189,7 +189,7 @@ void tim1_init(
  * 
  * @details Initializes timer 2, 3, 4 or 5 to a desired output mode. Note that if a timer port 
  *          that is not timer 2-5 is passed as an argument then no initialization will happen. 
- *          This function must be called once for each timer that is to be initialized. <br> 
+ *          This function must be called once for each timer that is to be initialized. 
  *          
  *          Timers set up using this function can be used to control a pin output based on 
  *          a timers sequence. An example is PWM output. 
@@ -255,10 +255,10 @@ void tim_9_to_11_counter_init(
     uint16_t arr, 
     tim_up_int_t uie); 
 
-//================================================================================
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Timer enable 
 
 /**
@@ -284,10 +284,10 @@ void tim_enable(
 void tim_disable(
     TIM_TypeDef *timer); 
 
-//================================================================================
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Delay functions 
 
 /**
@@ -357,17 +357,17 @@ uint8_t tim_compare(
     uint32_t *count_compare, 
     uint8_t  *count_start); 
 
-//================================================================================
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Status register 
 
 /**
  * @brief Update interrupt flag clear 
  * 
  * @details Clears the interrupt flag that is set on an update event. This function is required 
- *          in the interrupt handler functions in order to return from the ISR. <br> 
+ *          in the interrupt handler functions in order to return from the ISR. 
  *          
  *          This function is available for all timers. 
  * 
@@ -376,17 +376,17 @@ uint8_t tim_compare(
 void tim_uif_clear(
     TIM_TypeDef *timer); 
 
-//================================================================================
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Event generation register 
 
 /**
  * @brief Update generation 
  * 
  * @details Allows for generating an update event manually through software. After calling this 
- *          function the bit is automatically cleared by hardware. <br> 
+ *          function the bit is automatically cleared by hardware. 
  *          
  *          This function is available for all timers. 
  * 
@@ -395,19 +395,19 @@ void tim_uif_clear(
 void tim_ug_set(
     TIM_TypeDef *timer); 
 
-//================================================================================
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Counter register 
 
 /**
  * @brief Counter read 
  * 
  * @details Reads the counter value of a specified timer. The counter counts are a rate 
- *          define by the prescaler and counts up to the auto-reload register value. <br> 
+ *          define by the prescaler and counts up to the auto-reload register value. 
  *          
- *          This function is available for all timers. <br> 
+ *          This function is available for all timers. 
  *          
  *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
  * 
@@ -417,10 +417,10 @@ void tim_ug_set(
 TIM_COUNTER tim_cnt_read(
     TIM_TypeDef *timer); 
 
-//================================================================================
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Capture/compare register 
 
 /**
@@ -443,23 +443,34 @@ void tim_ccr(
     uint32_t ccr, 
     tim_channel_t channel); 
 
-//================================================================================
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Getters 
 
 /**
  * @brief Get the timer clock frequency 
  * 
- * @details 
+ * @details Returns the frequency of the clock specified by "timer" in MHz. This function 
+ *          allows the code to know the timer clock frequency regardless of how it has been 
+ *          initialized so the user does not have to specify it manually. An example of 
+ *          where this is used is when creating a real time (non blocking) delay. A delay 
+ *          of a certain duration can be achieved regardless of the clock frequency so long 
+ *          as the code can read the frequency itself. 
+ *          
+ *          This function utilizes STM32 code for obtaining the clock frequency and 
+ *          manipulates the result to be a frequency in MHz. STM32 timers are shared between 
+ *          APB1 and APB2 frequencies. Which frequency to use is determined by filtering 
+ *          the register address of the timer and shifting the result to check if a bit is 
+ *          set or not. 
  * 
  * @param timer : timer port to get clock frquency of 
- * @return uint32_t 
+ * @return uint32_t : timer clock frequency (MHz) 
  */
 uint32_t tim_get_pclk_freq(
     TIM_TypeDef *timer); 
 
-//================================================================================
+//=======================================================================================
 
 #endif   // _TIMERS_H_
