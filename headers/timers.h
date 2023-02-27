@@ -32,19 +32,20 @@
 //=======================================================================================
 // Macros 
 
-#define RESET_COUNT 0        // Used to reset count registers 
-#define PREFIX_SCALAR 1000   // Scalar between microseconds and milliseconds 
+// General purpose 
+#define RESET_COUNT 0                // Used to reset count registers 
+#define PREFIX_SCALAR 1000           // Scalar to convert between us and ms 
 
 // Standard delays 
-#define TIM9_1MS    1    // 1 ms delay 
-#define TIM9_10MS   10   // 10 ms delay 
-#define TIM9_100MS  100  // 100 ms delay 
+#define TIM9_1MS    1                // 1 ms delay 
+#define TIM9_10MS   10               // 10 ms delay 
+#define TIM9_100MS  100              // 100 ms delay 
+#define TIM9_1US    1                // 1 us delay 
+#define TIM9_2US    2                // 2 us delay 
+#define TIM9_10US   10               // 10 us delay 
+#define TIM9_100US  100              // 100 us delay 
 
-#define TIM9_1US    1    // 1 us delay 
-#define TIM9_2US    2    // 2 us delay 
-#define TIM9_10US   10   // 10 us delay 
-#define TIM9_100US  100  // 100 us delay 
-
+// Masks 
 #define TIM_APB_CLK_FILTER 0x10000   // Filter to determine APB1 or APB2 frequency 
 
 //=======================================================================================
@@ -176,7 +177,8 @@ typedef uint32_t TIM_COUNTER;
 /**
  * @brief Timer 1 initialization 
  * 
- * @details This function is currently not implemented. 
+ * @details This function is currently not implemented. By calling this function all that 
+ *          will happen is the the TIM1 clock will be enabled. Implementation to come. 
  * 
  * @param prescalar : timer clock prescaler 
  */
@@ -277,7 +279,8 @@ void tim_enable(
 /**
  * @brief Disable a timer 
  * 
- * @details This is used to stop a specified timer. 
+ * @details This is used to stop a specified timer. If you want to continue using the counter 
+ *          it must be enabled again. 
  * 
  * @param timer : pointer to timer port to disable 
  */
@@ -326,9 +329,23 @@ void tim_delay_ms(
 
 
 /**
- * @brief 
+ * @brief Ellapsed time calculation (non-blocking delay)
  * 
- * @details 
+ * @details This function compares the current timer counter to the timer counter seen 
+ *          the last time the function was called. This comparison is used to keep track 
+ *          of the real time elapsed so it can produce a non-blocking delay. Each call to 
+ *          the function will sum the total time elapsed since the delay started and will 
+ *          return true if enough time has passed, otherwise it will return false. The 
+ *          parameters used to keep track of this timing are stored externally and passed 
+ *          to this function. 
+ *          
+ *          It is assumed that when using this function for a non-blocking delay that 
+ *          subsequent calls will occur in less time than it takes for the timer counter 
+ *          to reset. This is because the the function loops to see where the current 
+ *          timer counter is in relation to the previous counter value. If the counter 
+ *          is allowed to loop and surpass it's previously recorded position then it can 
+ *          lead to inaccurate comparisons. 
+ *          
  *          NOTE: The first delay after first calling this function may be shorter than 
  *                the specified delay due to counter references being initialized. All 
  *                proceeding delays will be accurate. 
@@ -341,13 +358,13 @@ void tim_delay_ms(
  *                the one-time delays again at some point. This bit ensures the counter 
  *                is properly initialized before measuring any kind of delay. 
  * 
- * @param timer : 
- * @param clk_freq : 
- * @param time_compare : minum delay time to compare against (in microseconds) 
- * @param total_count : 
- * @param count_compare : 
+ * @param timer : pointer to timer used to produce the delay 
+ * @param clk_freq : frequency of the clock used to keep track of the delay 
+ * @param time_compare : minimum delay time to compare against (in microseconds) 
+ * @param total_count : total timer counts since starting the delay 
+ * @param count_compare : previous timer counter position used to compare against 
  * @param count_start : flag that indicates the timer is just starting 
- * @return uint8_t 
+ * @return uint8_t : indicates if enough time has elapsed (true) or not (false) 
  */
 uint8_t tim_compare(
     TIM_TypeDef *timer, 

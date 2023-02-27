@@ -234,17 +234,6 @@ void tim_cce(
 
 
 //=======================================================================================
-// Structures 
-
-// TODO Consider making a data record with linked list for timer parameters 
-
-// // Holds the configured clock frquencies for the timers 
-// static uint8_t tim_freq[SET_2];   // Two possible timer frequencies: APB1 and APB2 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Initialization 
 
 // Timer 1 setup 
