@@ -331,7 +331,7 @@ void uart_send_integer(
     digit = (uint8_t)((integer / DIVIDE_10) % REMAINDER_10);
     uart_send_digit(uart, digit);
 
-    digit = (uint8_t)((integer / DIVIDE_1) % REMAINDER_10);
+    digit = (uint8_t)(integer % REMAINDER_10);
     uart_send_digit(uart, digit);
 }
 

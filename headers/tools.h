@@ -73,9 +73,21 @@
 #define A_CHAR      65   // 'A'  == 65
 #define F_CHAR      70   // 'F'  == 70 
 
+// ASCII formatters 
 #define HEX_NUM_TO_LET  0x09  // Inflection point for the below offsets 
 #define HEX_TO_NUM_CHAR 0x30  // Offset from a hex number to the equivalent char number 
 #define HEX_TO_LET_CHAR 0x37  // Offset from a hex letter to the equivalent char letter 
+
+// Modulo operator divisors
+#define REMAINDER_10   10
+#define REMAINDER_100  100
+#define REMAINDER_1000 1000
+
+// Divisors 
+#define DIVIDE_10    10
+#define DIVIDE_100   100
+#define DIVIDE_1000  1000
+#define DIVIDE_10000 10000
 
 //=======================================================================================
 
@@ -90,8 +102,6 @@
 
 //=======================================================================================
 // Enums 
-
-// TODO make these into macros if possible 
 
 /**
  * @brief True and False boolean 
@@ -215,33 +225,6 @@ typedef enum {
     SHIFT_30,
     SHIFT_31,
 } bit_shifter_t;
-
-
-/**
- * @brief Modulo operator divisors
- * 
- * @details These are used during mathematical remainders (modulo) expressions to divide
- *          a particular number by multiples of 10 and get the remainder. 
- */
-typedef enum {
-    REMAINDER_10   = 10,
-    REMAINDER_100  = 100,
-    REMAINDER_1000 = 1000
-} remainder_decimal_place_t;
-
-
-/**
- * @brief Divisors 
- * 
- * @details Used to divide values by multiples of 10. 
- */
-typedef enum {
-    DIVIDE_1     = 1,
-    DIVIDE_10    = 10,
-    DIVIDE_100   = 100,
-    DIVIDE_1000  = 1000,
-    DIVIDE_10000 = 10000
-} divide_decimal_place_t;
 
 
 /**
