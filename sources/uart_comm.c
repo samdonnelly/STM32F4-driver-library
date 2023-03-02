@@ -53,44 +53,26 @@ void uart_baud_select(
 //=======================================================================================
 // Initialization 
 
-//===================================================
-// UART Setup Steps 
-//  1. Configure the pins 
-//     a) Enable the UART Clock - RCC_APB1 register
-//     b) Enable GPIOX clock for TX and RX pins - RCC_AHB1 register
-//     c) Configure the UART pins for alternative functions - GPIOX_MODER register 
-//     d) Set output speed of GPIO pins to high speed - GPIOX_OSPEEDR register 
-//     e) Set the alternative function register for USART
-// 
-//  2. Configure the UART 
-//     a) Clear the USART_CR1 register 
-//     b) Write the UE bit in the USART_CR1 register to 1
-//     c) Program the M bit to define the word length
-//     d) Set the baud rate 
-//     e) Enable the TX/RX by setting the TE and RE bits in USART_CR1 register 
-//     f) Clear buffer 
-//===================================================
-
-
-//===================================================
-// Pin information for UART1
-//  PA9:  TX
-//  PA10: RX
-// 
-// Pin information for UART2
-//  PA2: TX
-//  PA3: RX
-// 
-// Pin information for UART6 
-//  PC6 or PA11: TX 
-//  PC7 or PA12: RX 
-//===================================================
-
+// UART initialization 
 void uart_init(
     USART_TypeDef *uart, 
     uart_baud_rate_t baud_rate,
     uart_clock_speed_t clock_speed)
 {
+    //===================================================
+    // Pin information for UART1
+    //  PA9:  TX
+    //  PA10: RX
+    // 
+    // Pin information for UART2
+    //  PA2: TX
+    //  PA3: RX
+    // 
+    // Pin information for UART6 
+    //  PC6 or PA11: TX 
+    //  PC7 or PA12: RX 
+    //===================================================
+
     // UART specific information 
     if (uart == USART1)
     {

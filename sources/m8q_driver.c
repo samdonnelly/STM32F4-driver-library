@@ -22,11 +22,10 @@
 //=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // TODO 
 // - Clean up UBX config function 
-//================================================================================
-
+//=======================================================================================
 
 //=======================================================================================
 // Message processing functions 
@@ -407,7 +406,7 @@ M8Q_READ_STAT m8q_read(void)
             i2c_clear_addr(m8q_comm_data.i2c);  
 
             // Read the rest of the data stream until "\r\n" 
-            i2c_read_to_term(m8q_comm_data.i2c, nmea_data, M8Q_NMEA_END_PAY, I2C_4_BYTE); 
+            i2c_read_to_term(m8q_comm_data.i2c, nmea_data, M8Q_NMEA_END_PAY, BYTE_4); 
 
             // Parse the message data into its data record 
             m8q_nmea_sort(nmea_data); 
@@ -461,7 +460,7 @@ void m8q_check_data_size(
     i2c_clear_addr(m8q_comm_data.i2c); 
 
     // Send the first data size register address to start reading from there 
-    i2c_write_master_mode(m8q_comm_data.i2c, &address, I2C_1_BYTE); 
+    i2c_write_master_mode(m8q_comm_data.i2c, &address, BYTE_1); 
 
     // Generate another start condition 
     i2c_start(m8q_comm_data.i2c); 
@@ -471,7 +470,7 @@ void m8q_check_data_size(
     i2c_clear_addr(m8q_comm_data.i2c); 
 
     // Read the data size registers 
-    i2c_read_master_mode(m8q_comm_data.i2c, num_bytes, I2C_2_BYTE); 
+    i2c_read_master_mode(m8q_comm_data.i2c, num_bytes, BYTE_2); 
 
     // Format the data into the data size 
     *data_size = (uint16_t)((num_bytes[BYTE_0] << SHIFT_8) | num_bytes[BYTE_1]); 
@@ -490,7 +489,7 @@ void m8q_check_data_stream(
     i2c_clear_addr(m8q_comm_data.i2c); 
 
     // Read the first byte of the data stream 
-    i2c_read_master_mode(m8q_comm_data.i2c, data_check, I2C_1_BYTE); 
+    i2c_read_master_mode(m8q_comm_data.i2c, data_check, BYTE_1); 
 }
 
 //=======================================================================================

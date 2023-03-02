@@ -32,7 +32,6 @@
  * 
  * @details Used in conjunction with an I2C module address to indicate a read or write 
  *          operation at bit 0. 
- * 
  */
 typedef enum {
     I2C_W_OFFSET, 
@@ -49,7 +48,6 @@ typedef enum {
  *          an argument. 
  * 
  * @see i2c1_init
- * 
  */
 typedef enum {
     I2C1_SCL_PB6 = 0,
@@ -66,7 +64,6 @@ typedef enum {
  *          an argument.
  * 
  * @see i2c1_init
- * 
  */
 typedef enum {
     I2C1_SDA_PB7 = 0,
@@ -83,7 +80,6 @@ typedef enum {
  *          an argument. 
  * 
  * @see i2c2_init
- * 
  */
 typedef enum {
     I2C2_SCL_PB10
@@ -99,7 +95,6 @@ typedef enum {
  *          an argument.
  * 
  * @see i2c2_init
- * 
  */
 typedef enum {
     I2C2_SDA_PB3,
@@ -116,7 +111,6 @@ typedef enum {
  *          an argument. 
  * 
  * @see i2c3_init
- * 
  */
 typedef enum {
     I2C3_SCL_PA8
@@ -132,7 +126,6 @@ typedef enum {
  *          an argument.
  * 
  * @see i2c3_init
- * 
  */
 typedef enum {
     I2C3_SDA_PB4,
@@ -153,7 +146,6 @@ typedef enum {
  *          cycle can be chosen: <br>
  *           - I2C_MODE_FM_2: duty cycle = t_low/t_high = 2 <br>
  *           - I2C_MODE_FM_169: duty cycle = t_low/t_high = 16/9 
- * 
  */
 typedef enum {
     I2C_MODE_SM,
@@ -167,7 +159,6 @@ typedef enum {
  * 
  * @details The I2C init functions take this as an argument in order to program the 
  *          peripheral input clock based in the frequency of APB1. 
- * 
  */
 typedef enum {
     I2C_APB1_42MHZ = 42,
@@ -192,7 +183,6 @@ typedef enum {
  *          
  *          Note: A calculation must be done to determine the numbers that work together.
  *                See the Reference Manual for more information. 
- * 
  */
 typedef enum {
     I2C_CCR_FM_169_42_400 = 5,
@@ -211,30 +201,13 @@ typedef enum {
  *              X_1: Max rise time (ns)       <br>
  *              X_2: PCLK1 frequency (MHz)    <br><br>
  *          
- *          Note: A calculation must be done to determine the numbers that work together.
+ *          NOTE: A calculation must be done to determine the numbers that work together.
  *                See the Reference Manual for more information. 
- * 
  */
 typedef enum {
     I2C_TRISE_0300_42 = 13,
     I2C_TRISE_1000_42 = 43
 } i2c_trise_setpoint_t;
-
-
-/**
- * @brief I2C data size 
- * 
- * @details This is a general enum used for specifying I2C message sizes when sending or 
- *          receiving data. 
- * 
- */
-typedef enum {
-    I2C_0_BYTE,
-    I2C_1_BYTE,
-    I2C_2_BYTE,
-    I2C_3_BYTE,
-    I2C_4_BYTE
-} i2c_data_size_t;
 
 //=======================================================================================
 
@@ -248,34 +221,15 @@ typedef enum {
  * @details Configures I2C1 using two of the pins specified below. One SCL and one SDA 
  *          must be selected. The enums referenced in the comments below are used to 
  *          define the inputs to the function. Refer to the reference manual for 
- *          detailed information on configuring the pins. <br><br>
- *          
- *          Pin information for I2C1: <br>
- *              PB6: SCL              <br>
- *              PB7: SDA              <br> 
- *              PB8: SCL              <br>
- *              PB9: SDA              <br><br>
- *          
- *          Pin information for I2C2: <br>
- *              PB3:  SDA              <br>
- *              PB9:  SDA              <br> 
- *              PB10: SCL              <br><br>
- *          
- *          Pin information for I2C3: <br>
- *              PA8: SCL              <br>
- *              PB4: SDA              <br> 
- *              PB8: SDA              <br>
- *              PC9: SDA              <br><br>
+ *          detailed information on configuring the pins. 
  * 
  * @param i2c : I2C port to initialize 
  * @param sda_pin : pin used for SDA  
  * @param scl_pin : pin used for SCL 
  * @param run_mode : specifies Sm or Fm mode 
  * @param apb1_freq : configured APB1 clock frquency 
- * @param fm_duty_cycle : Fm mode duty cycle (no affect in Sm mode)
  * @param ccr_reg : calculated clock control register value
  * @param trise_reg : calculated trise time 
- * 
  */
 void i2c1_init(
     I2C_TypeDef *i2c, 
@@ -299,8 +253,10 @@ void i2c1_init(
  *          transmisssion. The controller is in slave mode when idle but becomes 
  *          the master when the start condition is generated. 
  * 
+ * @param i2c : pointer to I2C port 
  */
-void i2c_start(I2C_TypeDef *i2c);
+void i2c_start(
+    I2C_TypeDef *i2c);
 
 
 /**
@@ -310,8 +266,10 @@ void i2c_start(I2C_TypeDef *i2c);
  *          Once the stop condition is sent then the controller releases the bus and 
  *          reverts back to slave mode. 
  * 
+ * @param i2c : pointer to I2C port 
  */
-void i2c_stop(I2C_TypeDef *i2c);
+void i2c_stop(
+    I2C_TypeDef *i2c);
 
 
 /**
@@ -321,8 +279,10 @@ void i2c_stop(I2C_TypeDef *i2c);
  *          function gets called after the slave has acknowledged the address sent by 
  *          the master. 
  * 
+ * @param i2c : pointer to I2C port 
  */
-void i2c_clear_addr(I2C_TypeDef *i2c);
+void i2c_clear_addr(
+    I2C_TypeDef *i2c);
 
 //=======================================================================================
 
@@ -409,14 +369,20 @@ void i2c_read_to_term(
 /**
  * @brief I2C read data of a certain length that is defined within the message 
  * 
- * @details 
- *          ***Note: Reading the length in the message is currently only supported 
- *                   for little endian format. 
+ * @details This function was created for the M8Q driver. The M8Q message protocol contains 
+ *          the message length in one of it's message formats (UBX). There are different 
+ *          messages of different lengths within this format and there is no easy indicator 
+ *          for the end of the data portion of the message. This function reads the portion 
+ *          of the message that specifies the length so the code knows how many bytes to read 
+ *          from the device. 
+ *          
+ *          NOTE: Reading the length in the message is currently only supported 
+ *                for little endian format. 
  * 
  * @param i2c : pointer to the I2C port used 
- * @param address : 
+ * @param address : I2C address of the device 
  * @param data : pointer to buffer that stores the read data  
- * @param len_location : where the message length is located in the message 
+ * @param len_location : where the message length is located in the message (bytes) 
  * @param len_bytes : number of bytes used to define the length within the message 
  * @param add_bytes : additional bytes to read at the end of the message (if needed) 
  */
@@ -429,6 +395,5 @@ void i2c_read_to_len(
     uint8_t add_bytes); 
 
 //=======================================================================================
-
 
 #endif  // _I2C_COMM_H_ 
