@@ -41,10 +41,9 @@
  * @brief UART baud rate 
  * 
  * @details Passed as an argument to uart_baud_select that allows the user to define 
- *          the baud rate of UART2. The baud rates here are defined from 0-X and not 
+ *          the baud rate of UART. The baud rates here are defined from 0-X and not 
  *          the actual value of the baud rate. This method is chosen to prevent the need 
  *          to define large numbers for the baud rate. 
- * 
  */
 typedef enum {
     UART_BAUD_9600,    // 9600 bits/s 
@@ -56,8 +55,14 @@ typedef enum {
 /**
  * @brief UART clock speed 
  * 
- * @details 
+ * @details Specifies the speed of the clock for a given UART port. This is used as an 
+ *          argument in the uart init function. Specifying the clock speed of the UART 
+ *          being initialized helps with correctly setting the baud rate. The clock 
+ *          speeds shown below are speeds that have been implemented already, however 
+ *          others can be added. 
  * 
+ * @see uart_fractional_baud_t
+ * @see uart_mantissa_baud_t
  */
 typedef enum {
     UART_CLOCK_42,   // APBX clock speed = 42 MHz 
@@ -74,14 +79,12 @@ typedef enum {
  *          the integer portion of the value and the second is the fraction which defines 
  *          the decimal places. This enum defines the fraction portion for a given UART 
  *          clock speed and baud rate. Refer to the reference manual for more information.
- *          <br><br>
  *          
- *          enum code: UART_(X_1)_(X_2)_FRAC <br>
- *              X_1: PCLK1 frquency (MHz)    <br>
- *              X_2: Baud rate (bps)         <br>
+ *          enum code: UART_(X_1)_(X_2)_FRAC 
+ *              X_1: PCLK1 frquency (MHz) 
+ *              X_2: baud rate (bps) 
  * 
  * @see uart_mantissa_baud_t 
- * 
  */
 typedef enum {
     UART_42_9600_FRAC = 0x7,
@@ -101,14 +104,12 @@ typedef enum {
  *          the integer portion of the value and the second is the fraction which defines 
  *          the decimal places. This enum defines the mantissa portion for a given UART 
  *          clock speed and baud rate. Refer to the reference manual for more information.
- *          <br><br>
  *          
- *          enum code: UART_(X_1)_(X_2)_MANT <br>
- *              X_1: PCLK1 frquency (MHz)    <br>
- *              X_2: Baud rate (bps)         <br>
+ *          enum code: UART_(X_1)_(X_2)_MANT 
+ *              X_1: PCLK1 frquency (MHz)    
+ *              X_2: Baud rate (bps)         
  * 
  * @see uart_fractional_baud_t
- * 
  */
 typedef enum {
     UART_42_9600_MANT = 0x111,
@@ -119,60 +120,56 @@ typedef enum {
 
 
 /**
- * @brief Number of spaces to send to the serial terminal using UART2
+ * @brief Number of spaces to send over UART 
  * 
- * @details This enum is used when calling uart2_send_spaces to specify the number of 
- *          spaces to print to ther serial terminal. The purpose of the function and 
- *          this enum is primarily for formatting the serial terminal output. 
+ * @details This enum is used when calling uart_send_spaces to specify the number of 
+ *          spaces to send. The purpose of this enum is purly for formatting outputs. 
  * 
- * @see uart2_send_spaces
- * 
+ * @see uart_send_spaces
  */
 typedef enum {
-    UART2_1_SPACE  = 1,
-    UART2_2_SPACES = 2,
-    UART2_3_SPACES = 3
-} uart2_num_spaces_t;
+    UART_SPACE_1 = 1,
+    UART_SPACE_2,
+    UART_SPACE_3
+} uart_num_spaces_t;
 
 
 /**
  * @brief Character offsets to produce numbers on the serial terminal 
  * 
- * @details A byte sent to the serial terminal using UART2 is interpreted as a 
+ * @details A byte sent to the serial terminal using UART is interpreted as a 
  *          character by the terminal and not a number. This means to produce a 
  *          number you must send a byte (integer) that corresponds to a number 
  *          character. The following offset numbers convert the byte (integer) that 
  *          is be sent to the terminal into a number character based on the ASCII 
- *          table. <br>
+ *          table. 
  * 
- * @see uart2_send_digit
- * @see uart2_send_integer
- * @see uart2_send_spaces
- * 
+ * @see uart_send_digit
+ * @see uart_send_integer
+ * @see uart_send_spaces
  */
 typedef enum {
     UART_CHAR_SPACE_OFFSET = 32,
     UART_CHAR_PLUS_OFFSET  = 43,
     UART_CHAR_MINUS_OFFSET = 45,
     UART_CHAR_DIGIT_OFFSET = 48
-} uart2_char_offset_t;
+} uart_char_offset_t;
 
 
 /**
- * @brief String formatters for UART2
+ * @brief String formatters for UART
  * 
- * @details These are used in uart2_getstr for reading and formatting strings received
+ * @details These are used in uart_getstr for reading and formatting strings received
  *          from the serial terminal. Within this function the string has been fully 
  *          read once the code sees a carriage return. A null character is added to the 
  *          end to complete the read string. 
  * 
- * @see uart2_getstr
- * 
+ * @see uart_getstr
  */
 typedef enum {
-    UART_STR_TERM_NULL     = 0,  // '\0' == 0
-    UART_STR_TERM_NL       = 10, // '\n' == 10
-    UART_STR_TERM_CARRIAGE = 13  // '\r' == 13
+    UART_STR_TERM_NULL = 0,        // '\0' == 0
+    UART_STR_TERM_NL = 10,         // '\n' == 10
+    UART_STR_TERM_CARRIAGE = 13    // '\r' == 13
 } uart_string_termination_t;
 
 //=======================================================================================
@@ -182,22 +179,15 @@ typedef enum {
 // UART Initialization 
 
 /**
- * @brief UART1 initialization 
+ * @brief UART initialization 
  * 
- * @details Configures UART2 which is connected to the serial port of the dev board. 
- *          This allows for communication with the serial terminal. Additional
- *          functionality can be added later to equip USART if desired. <br><br>
- *          
- *          Takes the baud_rate as a parameter do define the communication speed of 
- *          UART2. <br><br>
- *          
- *          Pin information for UART2:  <br>
- *              PA2: TX                 <br>
- *              PA3: RX                 <br>
+ * @details Initializes the specified UART port so it can be used to send and receive data. 
+ *          Currently this function is set up to support UART1 and UART2. UART6 is not yet 
+ *          supported. 
  * 
  * @param uart : pointer to the UART port 
- * @param baud_rate : 
- * @param clock_speed : 
+ * @param baud_rate : communication speed of the UART (bps) 
+ * @param clock_speed : clock speed of the uart port being initialized 
  */
 void uart_init(
     USART_TypeDef *uart, 
@@ -208,11 +198,12 @@ void uart_init(
 /**
  * @brief Set the UART baud rate 
  * 
- * @details 
+ * @details Allows for changing the baud rate of the UART port. This is used by the init 
+ *          function but can also be called independently if the rate needs to change. 
  * 
- * @param baud_rate : 
- * @param uart : 
- * @param clock_speed : 
+ * @param uart : pointer to the UART port 
+ * @param baud_rate : communication speed of the UART (bps) 
+ * @param clock_speed : clock speed of the uart port being initialized 
  */
 void uart_set_baud_rate(
     USART_TypeDef *uart, 
@@ -228,10 +219,12 @@ void uart_set_baud_rate(
 /**
  * @brief Check if data is available for reading 
  * 
- * @details 
+ * @details Reads the UART status register to check the status of the read data register. 
+ *          If new data is available then the function will return true and it indicates 
+ *          the data register can be read. 
  * 
- * @param uart : pointer to the UART port used 
- * @return uint8_t : Status of available data 
+ * @param uart : pointer to the UART port 
+ * @return uint8_t : read data register status 
  */
 uint8_t uart_data_ready(
     USART_TypeDef *uart); 
@@ -243,12 +236,13 @@ uint8_t uart_data_ready(
 // Send Functions 
 
 /**
- * @brief 
+ * @brief UART send character 
  * 
- * @details Takes a single character and writes it to the data register of UART2. 
- *          Waits until the Transmission Complete (TC) bit (bit 6) in the status
+ * @details Takes a single character and writes it to the data register of the specified 
+ *          UART. Waits until the Transmission Complete (TC) bit (bit 6) in the status
  *          register (USART_SR) is set before exiting the function.
  * 
+ * @param uart : pointer to the UART port 
  * @param character : character written to data register 
  */
 void uart_sendchar(
@@ -257,12 +251,15 @@ void uart_sendchar(
 
 
 /**
- * @brief 
+ * @brief UART send string 
  * 
- * @details Iterates through each character of a string and sends each character to the 
- *          serial terminal by calling uart2_sendchar.
+ * @details Sends the characters of a data buffer one at a time until a NUL character is 
+ *          seen. Utilizes uart_sendchar to send each character. 
  * 
- * @param string : string to send using UART2 
+ * @see uart_sendchar
+ * 
+ * @param uart : pointer to the UART port 
+ * @param string : pointer to buffer containing string to send 
  */
 void uart_sendstring(
     USART_TypeDef *uart, 
@@ -270,13 +267,15 @@ void uart_sendstring(
 
 
 /**
- * @brief 
+ * @brief UART send digit 
  * 
- * @details Pass a number from 0-9 to print it to the serial terminal. The function 
- *          takes the digit, offsets it to the corresponding character (ex. 9 -> '9')
- *          and sends it to the serial terminal using uart2_sendchar.
+ * @details Pass a number from 0-9 to send via UART. The function takes the digit, offsets 
+ *          it to the corresponding character (ex. 9 -> '9') and sends it using uart_sendchar. 
  * 
- * @param digit : number from 0-9 that gets printed to the serial terminal 
+ * @see uart_sendchar
+ * 
+ * @param uart : pointer to the UART port 
+ * @param digit : single numeric digit to send 
  */
 void uart_send_digit(
     USART_TypeDef *uart, 
@@ -284,13 +283,16 @@ void uart_send_digit(
 
 
 /**
- * @brief 
+ * @brief UART send an integer 
  * 
- * @details Takes a signed 16-bit integer, parses the digits and send them to the serial
- *          terminal one at a time using uart2_send_digit along with the correct sign of 
- *          the number. 
+ * @details Takes a signed 16-bit integer, parses the digits (including the integer sign) 
+ *          and sends each integer digit using send uart_send_digit. Note that this function 
+ *          performs division for each digit so it relatively expensive. 
  * 
- * @param number : signed 16-bit number that gets printed to the serial terminal 
+ * @see uart_send_digit
+ * 
+ * @param uart : pointer to the UART port 
+ * @param number : signed 16-bit integer to send 
  */
 void uart_send_integer(
     USART_TypeDef *uart, 
@@ -298,13 +300,12 @@ void uart_send_integer(
 
 
 /**
- * @brief UART2 send a desired number of spaces to the serial terminal 
+ * @brief UART send spaces 
  * 
- * @details Sends a space character to the serial terminal a number of times defined 
- *          by num_spaces. This is usedful for formatting outputs to the serial 
- *          terminal. 
+ * @details Sends space characters a number of times defined by num_spaces. This is usedful 
+ *          for formatting visual/user outputs. 
  * 
- * @param uart 
+ * @param uart : pointer to the UART port 
  * @param num_spaces : number of blank spaces that get sent to the 
  */
 void uart_send_spaces(
@@ -313,14 +314,15 @@ void uart_send_spaces(
 
 
 /**
- * @brief UART2 go to a the beginning of a new line in the serial terminal 
+ * @brief UART new line 
  * 
- * @details When called the serial terminal output will go to the beginning of a new 
- *          line. Useful for formatting outputs to the serial terminal. 
+ * @details Sends new line and carriage return characters. This is mainly usedful for when 
+ *          the UART is configured for the serial terminal and you want to format the output. 
  * 
- * @param uart 
+ * @param uart : pointer to the UART port 
  */
-void uart_send_new_line(USART_TypeDef *uart);
+void uart_send_new_line(
+    USART_TypeDef *uart);
 
 //=======================================================================================
 
@@ -329,37 +331,38 @@ void uart_send_new_line(USART_TypeDef *uart);
 // Read Functions
 
 /**
- * @brief UART2 get character from serial terminal 
+ * @brief UART read character 
  * 
- * @details Read a byte from the UART2 data register that gets populated by data 
- *          sent from the serial terminal and return the data (single character). 
+ * @details Read the contents of the UART data register. This is a single byte of data. 
+ *          uart_data_ready can be used to check when new data is available to be read. 
+ *          Reading the data register will clear the status returned by uart_data_ready. 
  * 
- * @param uart 
- * @return uint8_t : returns character from data register 
+ * @see uart_data_ready
+ * 
+ * @param uart : pointer to the UART port 
+ * @return uint8_t : contents of the data register 
  */
-uint8_t uart_getchar(USART_TypeDef *uart);
+uint8_t uart_getchar(
+    USART_TypeDef *uart);
 
 
 /**
- * @brief UART2 get string from serial terminal
+ * @brief UART get string 
  * 
- * @details Read a string from the serial terminal one character at a time by repeatedly
- *          calling uart2_getchar. The string data gets stored into string_to_fill which 
- *          is a char pointer passed to the function. Ensure string_to_fill is big enough
- *          to accomidate the size of string you want to read. <br><br>
+ * @details Read a string of data until the specified termination character is seen. 
+ *          uart_getchar is used to read individual characters of the string. Ensure the 
+ *          buffer used to store the string is large enough to accomodate the string. 
  *          
- *          PuTTy was used to test sending and receiving data. When inputing information 
- *          into PuTTy and sending it to the device the final character sent is a
- *          carriage return (\r). This function is only called once there is data
- *          available to be read, but once there is data the function will continually
- *          wait for all the data until the full string is read. Once a carriage return
- *          is seen the function then adds a null termination to the string and returns.
+ *          If reading from PuTTy, PuTTy will add a carriage return character to the end 
+ *          of the string so ensure to set the termination character to "\r". If new data 
+ *          isn't seen soon enough or the termination character isn't seen then the 
+ *          function will time out and return. 
  * 
- * @see uart2_getchar
+ * @see uart_getchar
  * 
- * @param uart 
- * @param string_to_fill : pointer to string used to store the string input 
- * @param end_of_string 
+ * @param uart : pointer to the UART port 
+ * @param string_to_fill : buffer used to store the string input 
+ * @param end_of_string : character, that once seen, will end the read sequence 
  */
 void uart_getstr(
     USART_TypeDef *uart, 
@@ -375,11 +378,13 @@ void uart_getstr(
 /**
  * @brief UART clear data register 
  * 
- * @details 
+ * @details Clears the data register. This can be used to ensure a false read isn't trigger 
+ *          over old data. 
  * 
- * @param uart 
+ * @param uart : pointer to the UART port 
  */
-void uart_clear_dr(USART_TypeDef *uart); 
+void uart_clear_dr(
+    USART_TypeDef *uart); 
 
 //=======================================================================================
 

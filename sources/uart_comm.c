@@ -24,11 +24,6 @@
 //=======================================================================================
 // Finction Prototypes 
 
-//==============================================================
-// Note: These functions are for internal driver use only and 
-//       are therefore not included in the header file. 
-//==============================================================
-
 /**
  * @brief Select the fractional and mantissa portions of the baud rate setup 
  * 
@@ -246,6 +241,7 @@ void uart_baud_select(
 uint8_t uart_data_ready(
     USART_TypeDef *uart)
 {
+    // Check RXNE bit in the status register 
     if (uart->SR & (SET_BIT << SHIFT_5)) 
     {
         return TRUE; 
@@ -260,7 +256,7 @@ uint8_t uart_data_ready(
 //=======================================================================================
 // Send Data 
 
-// UART send character to serial terminal 
+// UART send character  
 void uart_sendchar(
     USART_TypeDef *uart, 
     uint8_t character)
@@ -274,7 +270,7 @@ void uart_sendchar(
 }
 
 
-// UART send string to serial terminal
+// UART send string 
 void uart_sendstring(
     USART_TypeDef *uart, 
     char *string)
@@ -288,7 +284,7 @@ void uart_sendstring(
 }
 
 
-// UART send a numeric digit to the serial terminal 
+// UART send a numeric digit 
 void uart_send_digit(
     USART_TypeDef *uart, 
     uint8_t digit)
@@ -298,7 +294,7 @@ void uart_send_digit(
 }
 
 
-// UART send an integer to the serial terminal 
+// UART send an integer 
 void uart_send_integer(
     USART_TypeDef *uart, 
     int16_t integer)
@@ -360,7 +356,7 @@ void uart_send_new_line(USART_TypeDef *uart)
 //=======================================================================================
 // Read Data 
 
-// UART get character from serial terminal 
+// UART get character 
 uint8_t uart_getchar(USART_TypeDef *uart)
 {
     return (uint8_t)(uart->DR);  // Read and return data from data register 
@@ -375,7 +371,7 @@ void uart_getstr(
 {
     // Store the character input from uart_getchar()
     uint8_t input = 0; 
-    volatile uint16_t timer = UART_GETSTR_TIMEOUT; 
+    uint16_t timer = UART_GETSTR_TIMEOUT; 
 
     // Run until the end of string character is seen 
     // TODO buffer length checking needs to be done to prevent overrun 
