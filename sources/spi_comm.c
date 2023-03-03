@@ -58,9 +58,9 @@ void spi_txe_wait(
  * @brief Wait for TXE bit to set - draft 
  * 
  * @param spi 
- * @return SPI_COM_STATUS 
+ * @return SPI_STATUS 
  */
-SPI_COM_STATUS spi_txe_wait_draft(
+SPI_STATUS spi_txe_wait_draft(
     SPI_TypeDef *spi); 
 
 
@@ -78,9 +78,9 @@ void spi_rxne_wait(
  * @brief Wait for RXNE bit to set - draft 
  * 
  * @param spi 
- * @return SPI_COM_STATUS 
+ * @return SPI_STATUS 
  */
-SPI_COM_STATUS spi_rxne_wait_draft(
+SPI_STATUS spi_rxne_wait_draft(
     SPI_TypeDef *spi); 
 
 
@@ -98,10 +98,48 @@ void spi_bsy_wait(
  * @brief Wait for BSY bit to clear - draft 
  * 
  * @param spi 
- * @return SPI_COM_STATUS 
+ * @return SPI_STATUS 
  */
-SPI_COM_STATUS spi_bsy_wait_draft(
+SPI_STATUS spi_bsy_wait_draft(
     SPI_TypeDef *spi); 
+
+
+#if SPI_DRAFT 
+
+/**
+ * @brief SPI write - draft 
+ * 
+ * @details This 
+ * 
+ * @param spi 
+ * @param write_data 
+ * @param data_len 
+ */
+SPI_STATUS spi_write_draft(
+    SPI_TypeDef *spi, 
+    uint8_t *write_data, 
+    uint32_t data_len);
+
+
+/**
+ * @brief SPI write then read - draft 
+ * 
+ * @details 
+ *          This can be used to request information from a slave device (write) then 
+ *          receive the needed information immediately afterwards (read). 
+ * 
+ * @param spi 
+ * @param write_data 
+ * @param read_data 
+ * @param data_len 
+ */
+SPI_STATUS spi_read_draft(
+    SPI_TypeDef *spi, 
+    uint8_t  write_data, 
+    uint8_t *read_data, 
+    uint32_t data_len);
+
+#endif   // SPI_DRAFT 
 
 //===============================================================================
 
@@ -109,37 +147,14 @@ SPI_COM_STATUS spi_bsy_wait_draft(
 //=======================================================================================
 // Inititalization 
 
-//==============================================================
-// SPI Master Mode Setup Steps 
-//  1. Enable the SPI clock 
-//  2. Enable the GPIOB clock
-//  3. Configure the pins for alternative functions
-//      a) Specify SPI pins as using alternative functions
-//      b) Select high speed for the pins 
-//      c) Configure the SPI alternate function in the AFR register 
-//  4. Reset and disable the SPI before manking any changes
-//  5. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
-//  6. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
-//  7. Set the DFF bit to define 8-bit or 16-bit data frame format. 
-//  8. Enable software slave management
-//  9. Set full-duplex mode 
-//  10. Configure the LSBFIRST bit in the SPI_CR1 register to define the frame format. 
-//  11. Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
-//  12. Set the MSTR bit to enable master mode 
-//  13. Set the SPE bit to enable SPI 
-//       Note: spi will get disabled in an error state, otherwise it'll be enabled 
-//  14. Configure the slave select pins as GPIO 
-//==============================================================
-
-
 // SPI initialization
 // GPIOB and SPI2 was used for all existing spi stuff 
-uint8_t spi_init(
+SPI_STATUS spi_init(
     SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio, 
-    uint8_t num_slaves,
-    uint8_t baud_rate_ctrl,
-    uint8_t clock_mode)
+    spi2_num_slaves_t num_slaves,
+    spi_baud_rate_ctrl_t baud_rate_ctrl,
+    spi_clock_mode_t clock_mode)
 {
     //==============================================================
     // Pin information for SPI
@@ -150,81 +165,80 @@ uint8_t spi_init(
     //  PB15: MOSI
     //==============================================================
 
-    // 1. Enable the SPI clock 
+    // Enable the SPI clock 
     RCC->APB1ENR |= (SET_BIT << SHIFT_14);
 
-    // 2. Enable the GPIOB clock
+    // Enable the GPIOB clock
     RCC->AHB1ENR |= (SET_BIT << SHIFT_1);
 
-    // 3. Configure the pins for alternative functions
-
-    // a) Specify SPI pins as using alternative functions
+    // Configure the pins for alternative functions
+    // Specify SPI pins as using alternative functions
     gpio->MODER |= (SET_2 << SHIFT_20);  // PB10 
     gpio->MODER |= (SET_2 << SHIFT_28);  // PB14 
     gpio->MODER |= (SET_2 << SHIFT_30);  // PB15 
 
-    // b) Select high speed for the pins 
+    // Select high speed for the pins 
     gpio->OSPEEDR |= (SET_3 << SHIFT_20);  // PB10 
     gpio->OSPEEDR |= (SET_3 << SHIFT_28);  // PB14 
     gpio->OSPEEDR |= (SET_3 << SHIFT_30);  // PB15 
 
-    // c) Configure the SPI alternate function in the AFR register 
+    // Configure the SPI alternate function in the AFR register 
     gpio->AFR[1] |= (SET_5 << SHIFT_8);   // PB10 
     gpio->AFR[1] |= (SET_5 << SHIFT_24);  // PB14 
     gpio->AFR[1] |= (SET_5 << SHIFT_28);  // PB15 
 
-    // 4. Reset and disable the SPI before manking any changes
+    // Reset and disable the SPI before making any changes 
     spi->CR1 = CLEAR;
 
-    // 5. Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
+    // Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
     // TODO create pre-defined rates based on clock speed and SPI speed 
     spi->CR1 |= (baud_rate_ctrl << SHIFT_3);
 
-    // 6. Select CPOL and CPHA bits to define data transfer and serial clock relationship.
+    // Select CPOL and CPHA bits to define data transfer and serial clock relationship.
     spi->CR1 |= (clock_mode << SHIFT_0);
 
-    // 7. Set the DFF bit to define an 8-bit data frame format. 
+    // Set the DFF bit to define an 8-bit data frame format. 
     spi->CR1 &= ~(SET_BIT << SHIFT_11);
 
-    // 8. Enable software slave management
+    // Enable software slave management
     spi->CR1 |= (SET_BIT << SHIFT_9);
     spi->CR1 |= (SET_BIT << SHIFT_8);
 
-    // 9. Set full-duplex mode 
+    // Set full-duplex mode 
     spi->CR1 &= ~(SET_BIT << SHIFT_10);
 
-    // 10. Configure the LSBFIRST bit in the SPI_CR1 register to define the frame format. 
+    // Configure the LSBFIRST bit in the SPI_CR1 register to define the frame format. 
     spi->CR1 &= ~(SET_BIT << SHIFT_7);  // MSB first 
 
-    // 11. Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
+    // Set the FRF bit in SPI_CR2 to select the TI protocol for serial comm. 
     spi->CR2 &= ~(SET_BIT << SHIFT_4);  // No TI protocol 
 
-    // 12. Set the MSTR bit to enable master mode 
+    // Set the MSTR bit to enable master mode 
     spi->CR1 |= (SET_BIT << SHIFT_2);
 
-    // 13. Set the SPE bit to enable SPI 
+    // Set the SPE bit to enable SPI 
     spi_enable(spi);
 
-    // 14. Configure the slave select pins as GPIO 
+    // Configure the slave select pins as GPIO 
     switch (num_slaves)
     {
-        case SPI2_2_SLAVE:  // Initialize PB12 as GPIO
+        case SPI_2_SLAVE:  // Initialize PB12 as GPIO
             gpio_pin_init(gpio, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
             spi_slave_deselect(gpio, SPI2_SS_2);  // Deselect slave 
             // Case has no break so PB9 will also be initialized
             // TODO check if no break statement works 
 
-        case SPI2_1_SLAVE:  // Initialize PB9 as GPIO 
+        case SPI_1_SLAVE:  // Initialize PB9 as GPIO 
             gpio_pin_init(gpio, PIN_9, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
             spi_slave_deselect(gpio, SPI2_SS_1);  // Deselect slave 
             break;
 
         default:  // Invalid number of slaves specified
-            return FALSE;
+            return SPI_ERROR;
     }
 
-    // Return true for passing initialization 
-    return TRUE;
+    // Initialization success 
+    return SPI_OK;
 }
 
 //=======================================================================================
@@ -259,7 +273,7 @@ void spi_txe_wait(
 
 
 // Wait for TXE bit to set before writing - draft 
-SPI_COM_STATUS spi_txe_wait_draft(
+SPI_STATUS spi_txe_wait_draft(
     SPI_TypeDef *spi) 
 {
     uint16_t timer = SPI_COM_TIMEOUT;   // TODO test/verify timer/counter size 
@@ -279,7 +293,7 @@ void spi_rxne_wait(
 
 
 // Wait for RXNE bit to set before reading - draft 
-SPI_COM_STATUS spi_rxne_wait_draft(
+SPI_STATUS spi_rxne_wait_draft(
     SPI_TypeDef *spi)
 {
     uint16_t timer = SPI_COM_TIMEOUT; 
@@ -299,7 +313,7 @@ void spi_bsy_wait(
 
 
 // Wait for BSY bit to clear - draft 
-SPI_COM_STATUS spi_bsy_wait_draft(
+SPI_STATUS spi_bsy_wait_draft(
     SPI_TypeDef *spi)
 {
     uint16_t timer = SPI_COM_TIMEOUT; 
@@ -312,7 +326,7 @@ SPI_COM_STATUS spi_bsy_wait_draft(
 // Select an SPI slave 
 void spi_slave_select(
     GPIO_TypeDef *gpio, 
-    uint16_t slave_num)
+    gpio_pin_num_t slave_num)
 {
     gpio_write(gpio, slave_num, GPIO_LOW);
 }
@@ -321,7 +335,7 @@ void spi_slave_select(
 // Deselect an SPI slave 
 void spi_slave_deselect(
     GPIO_TypeDef *gpio, 
-    uint16_t slave_num)
+    gpio_pin_num_t slave_num)
 {
     gpio_write(gpio, slave_num, GPIO_HIGH);
 }
@@ -373,42 +387,6 @@ void spi_write(
     // Read the data and status registers to clear the RX buffer and overrun error bit
     dummy_read(spi->DR); 
     dummy_read(spi->SR); 
-}
-
-
-// SPI write - draft 
-SPI_COM_STATUS spi_write_draft(
-    SPI_TypeDef *spi, 
-    uint8_t *write_data, 
-    uint32_t data_len)
-{
-    SPI_COM_STATUS status = SPI_OK; 
-
-    // Transmit all the data 
-    for (uint32_t i = 0; i < data_len; i++)
-    {
-        status = spi_txe_wait_draft(spi); 
-
-        if (status)  // SPI transmission fault 
-        {
-            // Clear registers 
-            dummy_read(spi->DR); 
-            dummy_read(spi->SR); 
-            return status; 
-        }
-
-        spi->DR = *write_data++; 
-    }
-
-    // Wait for TXE bit to set and BSY bit to clear 
-    spi_txe_wait_draft(spi); 
-    spi_bsy_wait_draft(spi); 
-
-    // Read the data and status registers to clear the RX buffer and overrun error bit
-    dummy_read(spi->DR); 
-    dummy_read(spi->SR); 
-
-    return status; 
 }
 
 
@@ -465,8 +443,46 @@ void spi_write_read(
 }
 
 
+#if SPI_DRAFT 
+
+// SPI write - draft 
+SPI_STATUS spi_write_draft(
+    SPI_TypeDef *spi, 
+    uint8_t *write_data, 
+    uint32_t data_len)
+{
+    SPI_STATUS status = SPI_OK; 
+
+    // Transmit all the data 
+    for (uint32_t i = 0; i < data_len; i++)
+    {
+        status = spi_txe_wait_draft(spi); 
+
+        if (status)  // SPI transmission fault 
+        {
+            // Clear registers 
+            dummy_read(spi->DR); 
+            dummy_read(spi->SR); 
+            return status; 
+        }
+
+        spi->DR = *write_data++; 
+    }
+
+    // Wait for TXE bit to set and BSY bit to clear 
+    spi_txe_wait_draft(spi); 
+    spi_bsy_wait_draft(spi); 
+
+    // Read the data and status registers to clear the RX buffer and overrun error bit
+    dummy_read(spi->DR); 
+    dummy_read(spi->SR); 
+
+    return status; 
+}
+
+
 // SPI read - draft 
-SPI_COM_STATUS spi_read_draft(
+SPI_STATUS spi_read_draft(
     SPI_TypeDef *spi, 
     uint8_t  write_data, 
     uint8_t *read_data, 
@@ -502,5 +518,7 @@ SPI_COM_STATUS spi_read_draft(
     // return status; 
     return SPI_OK; 
 }
+
+#endif   // SPI_DRAFT 
 
 //=======================================================================================

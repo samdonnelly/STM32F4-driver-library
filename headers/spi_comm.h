@@ -12,6 +12,8 @@
  * 
  */
 
+#ifndef _SPI_COMM_H_ 
+#define _SPI_COMM_H_ 
 
 //=======================================================================================
 // Includes 
@@ -29,7 +31,15 @@
 //=======================================================================================
 // Macros 
 
-#define SPI_COM_TIMEOUT 0x03FF     // Timer for SPI communication sequence timeouts  
+// Conditional compilation 
+#define SPI_DRAFT 0                // Draft code that is not ready yet 
+
+// Timers 
+#define SPI_COM_TIMEOUT 0x03FF     // Timer for SPI communication sequence timeouts 
+
+// Slave select pin numbers 
+#define SPI2_SS_1 0x0200           // Pin PB9 
+#define SPI2_SS_2 0x1000           // Pin PB12 
 
 //=======================================================================================
 
@@ -45,25 +55,32 @@
  *          takes this as an argument. 
  * 
  * @see spi2_init
- * 
  */
 typedef enum {
-    BR_FPCLK_2,
-    BR_FPCLK_4,
-    BR_FPCLK_8,
-    BR_FPCLK_16,
-    BR_FPCLK_32,
-    BR_FPCLK_64,
-    BR_FPCLK_128,
-    BR_FPCLK_256
+    SPI_BR_FPCLK_2,         // F_PCLK/2 
+    SPI_BR_FPCLK_4,         // F_PCLK/4 
+    SPI_BR_FPCLK_8,         // F_PCLK/8 
+    SPI_BR_FPCLK_16,        // F_PCLK/16 
+    SPI_BR_FPCLK_32,        // F_PCLK/32 
+    SPI_BR_FPCLK_64,        // F_PCLK/64 
+    SPI_BR_FPCLK_128,       // F_PCLK/128 
+    SPI_BR_FPCLK_256        // F_PCLK/256 
 } spi_baud_rate_ctrl_t;
 
 
 /**
  * @brief SPI Clock Mode 
  * 
- * @details 
- * 
+ * @details Sets the clock polarity and phase of the SPI. The modes are defined as follows: 
+ *          - CPOL : Clock polarity 
+ *             - 0: CK to 0 when idle 
+ *             - 1: CK to 1 when idle 
+ *          
+ *          - CPHA : Clock phase 
+ *             - 0: First clock transition is the first data capture edge 
+ *             - 1: Second clock transition is the first data capture edge 
+ *          
+ *          Note that CK is the clock pin. So CPOL sets the the pin state during idle. 
  */
 typedef enum {
     SPI_CLOCK_MODE_0,  // CPOL = 0, CPHA = 0
@@ -74,61 +91,12 @@ typedef enum {
 
 
 /**
- * @brief SPI Data Frame Format 
- * 
- * @details Used to set the data frame to either 8-bits or 16-bits when sending and 
- *          receiving data. This parameter is passed as an argument to the init 
- *          function. 
- * 
- * @see spi2_init
- * 
+ * @brief Number of slave devices to configure on the SPI bus 
  */
 typedef enum {
-    DFF_8BIT,
-    DFF_16BIT
-} spi_dff_t;
-
-
-/**
- * @brief SPI2 Number of Slaves 
- * 
- * @details 
- * 
- * @see spi2_init
- * 
- */
-typedef enum {
-    SPI2_1_SLAVE,  // Pin PB9 GPIO 
-    SPI2_2_SLAVE   // Pins PB9 and PB12 GPIO 
+    SPI_1_SLAVE,  // Pin PB9 
+    SPI_2_SLAVE   // Pins PB9 and PB12 
 } spi2_num_slaves_t;
-
-
-/**
- * @brief SPI2 slave select pin number 
- * 
- * @details 
- * 
- */
-typedef enum {
-    SPI2_SS_1 = 0x0200,  // PB9 
-    SPI2_SS_2 = 0x1000   // PB12 
-} spi2_slave_select_pin_t;
-
-
-/**
- * @brief SPI data length 
- * 
- * @details 
- * 
- */
-typedef enum {
-    SPI_1_BYTE  = 1,   // 1 byte
-    SPI_2_BYTES = 2,   // 2 bytes
-    SPI_3_BYTES = 3,   // 3 bytes
-    SPI_4_BYTES = 4,   // 4 bytes
-    SPI_5_BYTES = 5,   // 5 bytes
-    SPI_6_BYTES = 6,   // 6 bytes
-} spi_data_length_t;
 
 
 /**
@@ -145,7 +113,7 @@ typedef enum {
 //=======================================================================================
 // Datatypes 
 
-typedef spi_com_status_t SPI_COM_STATUS; 
+typedef spi_com_status_t SPI_STATUS; 
 
 //=======================================================================================
 
@@ -156,23 +124,23 @@ typedef spi_com_status_t SPI_COM_STATUS;
 /**
  * @brief SPI initialization 
  * 
- * @details 
- *          SPI is currently supported for up to 2 slave devices (2 GPIOs).
+ * @details Configures the SPI port and slave select pins. The slave select pins are just 
+ *          GPIO pins configured as outputs so a slave device can be selected. Currently 
+ *          only two slaves can be set up with this function. 
  * 
- * @see spi_baud_rate_ctrl_t
- * 
- * @param num_slaves 
- * @param baud_rate_ctrl 
- * @param clock_mode 
- * @param data_frame_format 
- * @return uint8_t 
+ * @param spi : pointer to SPI port to initialize 
+ * @param gpio : pointer to GPIO port used for the SPI port chosen 
+ * @param num_slaves : number of slave to devices to set up 
+ * @param baud_rate_ctrl : communication speed to use 
+ * @param clock_mode : SPI clock mode - polarity and phase 
+ * @return SPI_STATUS : status of the init process 
  */
-uint8_t spi_init(
+SPI_STATUS spi_init(
     SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio, 
-    uint8_t num_slaves,
-    uint8_t baud_rate_ctrl,
-    uint8_t clock_mode);
+    spi2_num_slaves_t num_slaves,
+    spi_baud_rate_ctrl_t baud_rate_ctrl,
+    spi_clock_mode_t clock_mode);
 
 //=======================================================================================
 
@@ -183,29 +151,29 @@ uint8_t spi_init(
 /**
  * @brief SPI slave select 
  * 
- * @details 
+ * @details Selects a slave device so it can be communicated with over SPI. This is done 
+ *          by setting the GPIO pin configured as a slave select pin to low. 
  * 
- * @see spi_slave_select_pin_t
- * 
- * @param slave_num 
+ * @param gpio : pointer to GPIO port of ss pin 
+ * @param slave_num : bit that selects the pin number of the gpio port 
  */
 void spi_slave_select(
     GPIO_TypeDef *gpio, 
-    uint16_t slave_num);
+    gpio_pin_num_t slave_num);
 
 
 /**
  * @brief SPI slave deselect 
  * 
- * @details 
+ * @details Deselects a slave device so it can ignore communication on the SPI bus. This 
+ *          is done by setting the GPIO pin configured as a slave select pin to high. 
  * 
- * @see spi_slave_select_pin_t
- * 
- * @param slave_num 
+ * @param gpio : pointer to GPIO port of ss pin 
+ * @param slave_num : bit that selects the pin number of the gpio port 
  */
 void spi_slave_deselect(
     GPIO_TypeDef *gpio, 
-    uint16_t slave_num);
+    gpio_pin_num_t slave_num);
 
 //=======================================================================================
 
@@ -216,11 +184,14 @@ void spi_slave_deselect(
 /**
  * @brief SPI write
  * 
- * @details 
+ * @details Writes data up to a certain length to the selected SPI slave device. 
+ *          
+ *          Note that the slave device must be selected before calling this function or else 
+ *          communication may fail. 
  * 
- * @param spi 
- * @param write_data 
- * @param data_len 
+ * @param spi : pointer to SPI port 
+ * @param write_data : buffer that contains the data to write 
+ * @param data_len : length of the data (bytes) in the buffer 
  */
 void spi_write(
     SPI_TypeDef *spi, 
@@ -229,55 +200,29 @@ void spi_write(
 
 
 /**
- * @brief SPI write
- * 
- * @details 
- * 
- * @param spi 
- * @param write_data 
- * @param data_len 
- */
-SPI_COM_STATUS spi_write_draft(
-    SPI_TypeDef *spi, 
-    uint8_t *write_data, 
-    uint32_t data_len);
-
-
-/**
  * @brief SPI write then read 
  * 
- * @details 
- *          This can be used to request information from a slave device (write) then 
- *          receive the needed information immediately afterwards (read). 
+ * @details Reads data of a certain length from the selected slave device. Since the 
+ *          controller is set up in master mode and devices connected to the controller 
+ *          are slaves, the slaves require the controller to control the clock pin in order 
+ *          to send data back to the controller. For this reason, the function must write 
+ *          to the slave (dummy data) in order to provide a clock for the slave to send 
+ *          data back. 
+ *          
+ *          Note that the slave device must be selected before calling this function or else 
+ *          communication may fail. 
  * 
- * @param spi 
- * @param write_data 
- * @param read_data 
- * @param data_len 
+ * @param spi : pointer to SPI port 
+ * @param write_data : dummy data to send to run the SPI clock so data can be read 
+ * @param read_data : buffer to store the read data 
+ * @param data_len : length of the data (bytes) to be read 
  */
 void spi_write_read(
     SPI_TypeDef *spi, 
-    uint8_t  write_data, 
-    uint8_t *read_data, 
-    uint32_t data_len);
-
-
-/**
- * @brief SPI write then read 
- * 
- * @details 
- *          This can be used to request information from a slave device (write) then 
- *          receive the needed information immediately afterwards (read). 
- * 
- * @param spi 
- * @param write_data 
- * @param read_data 
- * @param data_len 
- */
-SPI_COM_STATUS spi_read_draft(
-    SPI_TypeDef *spi, 
-    uint8_t  write_data, 
+    uint8_t write_data, 
     uint8_t *read_data, 
     uint32_t data_len);
 
 //=======================================================================================
+
+#endif   // _SPI_COMM_H_ 

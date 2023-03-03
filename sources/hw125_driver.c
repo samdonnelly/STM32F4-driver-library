@@ -507,7 +507,7 @@ DISK_RESULT hw125_power_on(
     // Local variables 
     uint8_t di_cmd; 
     uint8_t do_resp; 
-    uint8_t cmd_frame[SPI_6_BYTES];
+    uint8_t cmd_frame[BYTE_6];
 
     // TODO test the size of this counter 
     uint16_t num_read = HW125_PWR_ON_RES_CNT; 
@@ -527,7 +527,7 @@ DISK_RESULT hw125_power_on(
     // Send DI/MOSI high 10x to wait for more than 74 clock pulses 
     for (uint8_t i = 0; i < HW125_PWR_ON_COUNTER; i++) 
     {
-        spi_write(sd_card.spi, &di_cmd, SPI_1_BYTE);
+        spi_write(sd_card.spi, &di_cmd, BYTE_1);
     }
 
     //===================================================
@@ -539,7 +539,7 @@ DISK_RESULT hw125_power_on(
     spi_slave_select(sd_card.gpio, hw125_slave_pin); 
 
     // Generate a command frame 
-    for (uint8_t i = 0; i < SPI_6_BYTES; i++)
+    for (uint8_t i = 0; i < BYTE_6; i++)
     {
         switch (i)
         {
@@ -556,7 +556,7 @@ DISK_RESULT hw125_power_on(
     }
 
     // Transmit command 
-    spi_write(sd_card.spi, cmd_frame, SPI_6_BYTES); 
+    spi_write(sd_card.spi, cmd_frame, BYTE_6); 
 
     // Read R1 response until it is valid or until it times out 
     do 
@@ -574,7 +574,7 @@ DISK_RESULT hw125_power_on(
     //===================================================
 
     // TODO send a data high byte? 
-    spi_write(sd_card.spi, &di_cmd, SPI_1_BYTE);
+    spi_write(sd_card.spi, &di_cmd, BYTE_1);
 
     // Set the Power Flag status to on 
     sd_card.pwr_flag = HW125_PWR_ON; 
@@ -652,7 +652,7 @@ DISK_RESULT hw125_ready_rec(void)
     // Read DO/MISO continuously until it is ready to receive commands 
     do 
     {
-        spi_write_read(sd_card.spi, HW125_DATA_HIGH, &resp, SPI_1_BYTE); 
+        spi_write_read(sd_card.spi, HW125_DATA_HIGH, &resp, BYTE_1); 
     }
     while (resp != HW125_DATA_HIGH && --timer); 
 
@@ -714,14 +714,14 @@ void hw125_send_cmd(
     uint8_t *resp)
 {
     // Local variables 
-    uint8_t cmd_frame[SPI_6_BYTES];
+    uint8_t cmd_frame[BYTE_6];
     uint8_t num_read = HW125_R1_RESP_COUNT;
 
     // Wait until the device is ready to accept commands 
     hw125_ready_rec();
 
     // Generate a command frame 
-    for (uint8_t i = 0; i < SPI_6_BYTES; i++)
+    for (uint8_t i = 0; i < BYTE_6; i++)
     {
         switch (i)
         {
@@ -738,7 +738,7 @@ void hw125_send_cmd(
     }
 
     // Transmit command 
-    spi_write(sd_card.spi, cmd_frame, SPI_6_BYTES);
+    spi_write(sd_card.spi, cmd_frame, BYTE_6);
 
     // Skip the stuff byte sent following CMD12 (stop transmission) 
     if (cmd == HW125_CMD12) spi_write_read(sd_card.spi, HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
