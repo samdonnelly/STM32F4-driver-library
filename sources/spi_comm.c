@@ -27,8 +27,9 @@
 /**
  * @brief SPI enable 
  * 
- * @details 
+ * @details Sets the SPE bit to enable the specified SPI 
  * 
+ * @param spi : pointer to spi port 
  */
 void spi_enable(
     SPI_TypeDef *spi);
@@ -37,8 +38,9 @@ void spi_enable(
 /**
  * @brief SPI disable 
  * 
- * @details 
+ * @details Clears the SPE bit to disable the specified SPI 
  * 
+ * @param spi : pointer to spi port 
  */
 void spi_disable(
     SPI_TypeDef *spi);
@@ -47,41 +49,26 @@ void spi_disable(
 /**
  * @brief SPI TXE wait 
  * 
- * @details 
+ * @details Wait for the TXE bit to set before proceeding. The TXE bit is the transmit 
+ *          buffer empty status which indicates when more data can be loaded into the 
+ *          transmit buffer for sending. If data is written to the transmit buffer 
+ *          before it is empty then data will be overwritten. 
  * 
+ * @param spi : pointer to spi port 
  */
 void spi_txe_wait(
     SPI_TypeDef *spi);
 
 
 /**
- * @brief Wait for TXE bit to set - draft 
- * 
- * @param spi 
- * @return SPI_STATUS 
- */
-SPI_STATUS spi_txe_wait_draft(
-    SPI_TypeDef *spi); 
-
-
-/**
  * @brief SPI RXNE wait 
  * 
- * @details 
+ * @details Wait for the RXNE bit to set before proceeding. 
  * 
+ * @param spi : pointer to spi port 
  */
 void spi_rxne_wait(
     SPI_TypeDef *spi);
-
-
-/**
- * @brief Wait for RXNE bit to set - draft 
- * 
- * @param spi 
- * @return SPI_STATUS 
- */
-SPI_STATUS spi_rxne_wait_draft(
-    SPI_TypeDef *spi); 
 
 
 /**
@@ -89,22 +76,43 @@ SPI_STATUS spi_rxne_wait_draft(
  * 
  * @details 
  * 
+ * @param spi : pointer to spi port 
  */
 void spi_bsy_wait(
     SPI_TypeDef *spi);
 
 
+#if SPI_DRAFT 
+
+/**
+ * @brief Wait for TXE bit to set - draft 
+ * 
+ * @param spi : pointer to spi port 
+ * @return SPI_STATUS : status of the SPI operation 
+ */
+SPI_STATUS spi_txe_wait_draft(
+    SPI_TypeDef *spi); 
+
+
+/**
+ * @brief Wait for RXNE bit to set - draft 
+ * 
+ * @param spi : pointer to spi port 
+ * @return SPI_STATUS : status of the SPI operation 
+ */
+SPI_STATUS spi_rxne_wait_draft(
+    SPI_TypeDef *spi); 
+
+
 /**
  * @brief Wait for BSY bit to clear - draft 
  * 
- * @param spi 
- * @return SPI_STATUS 
+ * @param spi : pointer to spi port 
+ * @return SPI_STATUS : status of the SPI operation 
  */
 SPI_STATUS spi_bsy_wait_draft(
     SPI_TypeDef *spi); 
 
-
-#if SPI_DRAFT 
 
 /**
  * @brief SPI write - draft 
@@ -271,18 +279,6 @@ void spi_txe_wait(
     while(!(spi->SR & (SET_BIT << SHIFT_1))); 
 }
 
-
-// Wait for TXE bit to set before writing - draft 
-SPI_STATUS spi_txe_wait_draft(
-    SPI_TypeDef *spi) 
-{
-    uint16_t timer = SPI_COM_TIMEOUT;   // TODO test/verify timer/counter size 
-    while(!(spi->SR & (SET_BIT << SHIFT_1)) && timer--); 
-    if (!timer) return SPI_ERROR; 
-    return SPI_OK; 
-}
-
-
 // Wait for RXNE bit to set 
 void spi_rxne_wait(
     SPI_TypeDef *spi)
@@ -292,34 +288,12 @@ void spi_rxne_wait(
 }
 
 
-// Wait for RXNE bit to set before reading - draft 
-SPI_STATUS spi_rxne_wait_draft(
-    SPI_TypeDef *spi)
-{
-    uint16_t timer = SPI_COM_TIMEOUT; 
-    while(!(spi->SR & (SET_BIT << SHIFT_0)) && timer--); 
-    if (!timer) return SPI_ERROR; 
-    return SPI_OK; 
-}
-
-
 // Wait for BSY bit to clear
 void spi_bsy_wait(
     SPI_TypeDef *spi)
 {
     // TODO add timeout & status return 
     while(spi->SR & (SET_BIT << SHIFT_7));
-}
-
-
-// Wait for BSY bit to clear - draft 
-SPI_STATUS spi_bsy_wait_draft(
-    SPI_TypeDef *spi)
-{
-    uint16_t timer = SPI_COM_TIMEOUT; 
-    while((spi->SR & (SET_BIT << SHIFT_7)) && timer--); 
-    if (!timer) return SPI_ERROR; 
-    return SPI_OK; 
 }
 
 
@@ -339,6 +313,43 @@ void spi_slave_deselect(
 {
     gpio_write(gpio, slave_num, GPIO_HIGH);
 }
+
+
+#if SPI_DRAFT 
+
+// Wait for TXE bit to set before writing - draft 
+SPI_STATUS spi_txe_wait_draft(
+    SPI_TypeDef *spi) 
+{
+    uint16_t timer = SPI_COM_TIMEOUT;   // TODO test/verify timer/counter size 
+    while(!(spi->SR & (SET_BIT << SHIFT_1)) && timer--); 
+    if (!timer) return SPI_ERROR; 
+    return SPI_OK; 
+}
+
+
+// Wait for RXNE bit to set before reading - draft 
+SPI_STATUS spi_rxne_wait_draft(
+    SPI_TypeDef *spi)
+{
+    uint16_t timer = SPI_COM_TIMEOUT; 
+    while(!(spi->SR & (SET_BIT << SHIFT_0)) && timer--); 
+    if (!timer) return SPI_ERROR; 
+    return SPI_OK; 
+}
+
+
+// Wait for BSY bit to clear - draft 
+SPI_STATUS spi_bsy_wait_draft(
+    SPI_TypeDef *spi)
+{
+    uint16_t timer = SPI_COM_TIMEOUT; 
+    while((spi->SR & (SET_BIT << SHIFT_7)) && timer--); 
+    if (!timer) return SPI_ERROR; 
+    return SPI_OK; 
+}
+
+#endif   // SPI_DRAFT 
 
 //=======================================================================================
 
