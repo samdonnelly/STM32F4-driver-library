@@ -12,7 +12,6 @@
  * 
  */
 
-
 //=======================================================================================
 // Includes 
 
@@ -63,7 +62,10 @@ void spi_txe_wait(
 /**
  * @brief SPI RXNE wait 
  * 
- * @details Wait for the RXNE bit to set before proceeding. 
+ * @details Wait for the RXNE bit to set before proceeding. The RXNE bit is the receive 
+ *          buffer not empty status which indicates when new data can be read from the data 
+ *          register during a read operation. If data is read without this bit being set then 
+ *          old data will be read from the receieve buffer. 
  * 
  * @param spi : pointer to spi port 
  */
@@ -74,7 +76,9 @@ void spi_rxne_wait(
 /**
  * @brief SPI BSY wait 
  * 
- * @details 
+ * @details Waits for the busy flag to clear. The busy flag indicates when the SPI is busy 
+ *          or when the TX buffer is not empty. This is typically used at the end of read 
+ *          and write sequences to make sure the operation is done before ending. 
  * 
  * @param spi : pointer to spi port 
  */
@@ -357,21 +361,6 @@ SPI_STATUS spi_bsy_wait_draft(
 //=======================================================================================
 // Read and write 
 
-//==============================================================
-// Write sequence
-//  1. Enable the SPI. 
-//      Note: this is done in the init function. 
-//  2. Loop through the data to be written. 
-//      a) Wait for the TXE bit to set. 
-//      b) Write data to the data register. 
-//      c) Increment to the next piece of data. 
-//  3. Wait for the TXE bit to set. 
-//  4. Wait for the BSY flag to clear. 
-//  5. Read the data and status registers to clear the RX buffer and overrun error bit. 
-//  6. Disable the SPI. 
-//      Note: this is not done here. spi is disabled only in an error state. 
-//==============================================================
-
 // SPI write 
 // TODO add timeouts 
 void spi_write(
@@ -385,8 +374,8 @@ void spi_write(
     // Iterate through all data to be sent 
     for (uint32_t i = 0; i < data_len; i++)
     {
-        spi_txe_wait(spi);          // Wait for TXE bit to set 
-        spi->DR = *write_data++;    // Write data to the data register 
+        spi_txe_wait(spi); 
+        spi->DR = *write_data++; 
     }
 
     // Wait for TXE bit to set 
@@ -400,22 +389,6 @@ void spi_write(
     dummy_read(spi->SR); 
 }
 
-
-//==============================================================
-// Write-Read sequence
-//  1. Enable SPI by setting the SPE bit to 1. 
-//      Note: this is done in the init function. 
-//  2. Write the first data item to be transmitted into the SPI_DR register (clears TXE
-//     flag)
-//  3. Wait until TXE=1 and write the second data item to be transmitted
-//  4. Wait until RXNE=1 and read the SPI_DR regsiter to get the first received data 
-//     item (clears RXNE bit) 
-//  5. Repeat operations 3 and 4 for each data item to be transmitted/received until the 
-//     n-1 received data. 
-//  6. Wait for RXNE=1 and read the last received data 
-//  7. Wait until TXE=1 and then wait until BSY=0 before disabling SPI 
-//      Note: disabling is not done here. spi is disabled only in an error state. 
-//==============================================================
 
 // SPI write then read 
 // TODO add timeouts 
