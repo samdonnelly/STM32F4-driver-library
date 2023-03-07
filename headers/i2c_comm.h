@@ -40,14 +40,14 @@ typedef enum {
 
 
 /**
- * @brief I2C1 available SCL pins 
+ * @brief I2C available SCL pins 
  * 
  * @details These pins are the available I2C1 SCL pins on the chip. The values associated 
- *          with these variables are used in i2c1_init to determine how to configure 
- *          the pins alternate function. These variables get passed to i2c1_init as 
+ *          with these variables are used in i2c_init to determine how to configure 
+ *          the pins alternate function. These variables get passed to i2c_init as 
  *          an argument. 
  * 
- * @see i2c1_init
+ * @see i2c_init
  */
 typedef enum {
     I2C1_SCL_PB6 = 0,
@@ -56,14 +56,14 @@ typedef enum {
 
 
 /**
- * @brief I2C1 available SDA pins 
+ * @brief I2C available SDA pins 
  * 
  * @details These pins are the available I2C1 SDA pins on the chip. The values associated 
- *          with these variables are used in i2c1_init to determine how to configure 
- *          the pins alternate function. These variables get passed to i2c1_init as 
+ *          with these variables are used in i2c_init to determine how to configure 
+ *          the pins alternate function. These variables get passed to i2c_init as 
  *          an argument.
  * 
- * @see i2c1_init
+ * @see i2c_init
  */
 typedef enum {
     I2C1_SDA_PB7 = 0,
@@ -72,79 +72,16 @@ typedef enum {
 
 
 /**
- * @brief I2C2 available SCL pins 
- * 
- * @details These pins are the available I2C2 SCL pins on the chip. The values associated 
- *          with these variables are used in i2c2_init to determine how to configure 
- *          the pins alternate function. These variables get passed to i2c2_init as 
- *          an argument. 
- * 
- * @see i2c2_init
- */
-typedef enum {
-    I2C2_SCL_PB10
-} i2c2_scl_pin_t;
-
-
-/**
- * @brief I2C2 available SDA pins 
- * 
- * @details These pins are the available I2C3 SDA pins on the chip. The values associated 
- *          with these variables are used in i2c2_init to determine how to configure 
- *          the pins alternate function. These variables get passed to i2c2_init as 
- *          an argument.
- * 
- * @see i2c2_init
- */
-typedef enum {
-    I2C2_SDA_PB3,
-    I2C2_SDA_PB9
-} i2c2_sda_pin_t;
-
-
-/**
- * @brief I2C3 available SCL pins 
- * 
- * @details These pins are the available I2C3 SCL pins on the chip. The values associated 
- *          with these variables are used in i2c3_init to determine how to configure 
- *          the pins alternate function. These variables get passed to i2c3_init as 
- *          an argument. 
- * 
- * @see i2c3_init
- */
-typedef enum {
-    I2C3_SCL_PA8
-} i2c3_scl_pin_t;
-
-
-/**
- * @brief I2C3 available SDA pins 
- * 
- * @details These pins are the available I2C3 SDA pins on the chip. The values associated 
- *          with these variables are used in i2c3_init to determine how to configure 
- *          the pins alternate function. These variables get passed to i2c3_init as 
- *          an argument.
- * 
- * @see i2c3_init
- */
-typedef enum {
-    I2C3_SDA_PB4,
-    I2C3_SDA_PB8,
-    I2C3_SDA_PC9
-} i2c3_sda_pin_t;
-
-
-/**
  * @brief I2C run mode selection 
  * 
  * @details I2C can run in standard (SM) or fast (FM) mode. The mode dictates the range 
  *          of SCL clock frequencies that can be run. The I2C init functions uses this 
  *          enum as an input when the function is called so it can set the desired
- *          run mode. <br><br>
+ *          run mode. 
  *          
  *          When I2C is initialized in FM mode for faster clock frequencies the duty 
- *          cycle can be chosen: <br>
- *           - I2C_MODE_FM_2: duty cycle = t_low/t_high = 2 <br>
+ *          cycle can be chosen: 
+ *           - I2C_MODE_FM_2: duty cycle = t_low/t_high = 2 
  *           - I2C_MODE_FM_169: duty cycle = t_low/t_high = 16/9 
  */
 typedef enum {
@@ -170,16 +107,16 @@ typedef enum {
  * @brief I2C CCR setpoint
  * 
  * @details The I2C init functions take this an argument to program the clock control 
- *          register when initializing in Fm/Sm mode. <br><br>
+ *          register when initializing in Fm/Sm mode. 
  *          
- *          enum code: I2C_CCR_FM_(X_1)_(X_2)_(X_3)           <br>
- *              X_1: Duty cycle - ex. 169 -> 16/9 in Fm mode  <br>
- *              X_2: PCLK1 frquency (MHz)                     <br>
- *              X_3: SCL frquency (kHz)                       <br><br>
+ *          enum code: I2C_CCR_FM_(X_1)_(X_2)_(X_3) 
+ *              X_1: Duty cycle - ex. 169 -> 16/9 in Fm mode 
+ *              X_2: PCLK1 frquency (MHz) 
+ *              X_3: SCL frquency (kHz) 
  *          
- *          enum code: I2C_CCR_SM_(X_1)_(X_2)  <br>
- *              X_1: PCLK1 frquency (MHz)      <br>
- *              X_2: SCL frquency (kHz)        <br><br>
+ *          enum code: I2C_CCR_SM_(X_1)_(X_2) 
+ *              X_1: PCLK1 frquency (MHz) 
+ *              X_2: SCL frquency (kHz) 
  *          
  *          Note: A calculation must be done to determine the numbers that work together.
  *                See the Reference Manual for more information. 
@@ -195,11 +132,11 @@ typedef enum {
  * 
  * @details The I2C init functions take this as an argument to program the rise timer 
  *          register based on the clock frequency and max rise time which changes based 
- *          on the run mode. <br><br> 
+ *          on the run mode. 
  *          
- *          enum code: I2C_TRISE_(X_1)_(X_2)  <br>
- *              X_1: Max rise time (ns)       <br>
- *              X_2: PCLK1 frequency (MHz)    <br><br>
+ *          enum code: I2C_TRISE_(X_1)_(X_2) 
+ *              X_1: Max rise time (ns) 
+ *              X_2: PCLK1 frequency (MHz) 
  *          
  *          NOTE: A calculation must be done to determine the numbers that work together.
  *                See the Reference Manual for more information. 
@@ -216,9 +153,9 @@ typedef enum {
 // Initialization 
 
 /**
- * @brief I2C1 Initialization 
+ * @brief I2C Initialization 
  * 
- * @details Configures I2C1 using two of the pins specified below. One SCL and one SDA 
+ * @details Configures I2C using two of the pins specified below. One SCL and one SDA 
  *          must be selected. The enums referenced in the comments below are used to 
  *          define the inputs to the function. Refer to the reference manual for 
  *          detailed information on configuring the pins. 
@@ -231,7 +168,7 @@ typedef enum {
  * @param ccr_reg : calculated clock control register value
  * @param trise_reg : calculated trise time 
  */
-void i2c1_init(
+void i2c_init(
     I2C_TypeDef *i2c, 
     i2c1_sda_pin_t sda_pin,
     i2c1_scl_pin_t scl_pin,
@@ -247,7 +184,7 @@ void i2c1_init(
 // Register functions 
 
 /**
- * @brief I2C1 start condition generation 
+ * @brief I2C start condition generation 
  * 
  * @details This must be called by the master to begin an I2C read or write 
  *          transmisssion. The controller is in slave mode when idle but becomes 
@@ -260,7 +197,7 @@ void i2c_start(
 
 
 /**
- * @brief I2C1 stop condition condition 
+ * @brief I2C stop condition condition 
  * 
  * @details This must be called in order to end an I2C read or write transmission. 
  *          Once the stop condition is sent then the controller releases the bus and 
@@ -273,7 +210,7 @@ void i2c_stop(
 
 
 /**
- * @brief I2C1 clear ADDR bit
+ * @brief I2C clear ADDR bit
  * 
  * @details This bit must be cleared before data can start to be sent on the bus. The 
  *          function gets called after the slave has acknowledged the address sent by 
@@ -291,22 +228,22 @@ void i2c_clear_addr(
 // Write data 
 
 /**
- * @brief I2C1 write address 
+ * @brief I2C write address 
  * 
  * @details Sends the slave address to the bus to initialize communication with a certain 
  *          device. This function is called after the start condition has been generated. 
  *          Only 7-bit addresses are supported. 
  * 
  * @param i2c : pointer to the I2C port 
- * @param i2c1_address : 7-bit address of slave device on the bus 
+ * @param i2c_address : 7-bit address of slave device on the bus 
  */
 void i2c_write_address(
     I2C_TypeDef *i2c, 
-    uint8_t i2c1_address);
+    uint8_t i2c_address);
 
 
 /**
- * @brief I2C1 write data
+ * @brief I2C write data
  * 
  * @details Write data to a slave device. This function is called after the ADDR bit has 
  *          been cleared. The function takes a pointer to the data that will be send over 
@@ -328,7 +265,7 @@ void i2c_write_master_mode(
 // Read data 
 
 /**
- * @brief I2C1 read data
+ * @brief I2C read data
  * 
  * @details Read data from a slave device. This function is called after the ADDR bit has 
  *          been cleared. The function takes a pointer where it will store the recieved 

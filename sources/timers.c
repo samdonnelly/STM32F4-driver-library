@@ -27,7 +27,7 @@
  * @brief Counter enable 
  * 
  * @details Enable the counter for the timer. Enabling the counter enables the timer itself. 
- *          The counter is controlled using the timer enable and disable functions. <br> 
+ *          The counter is controlled using the timer enable and disable functions. 
  *          
  *          This function is available for all timers. 
  * 
@@ -80,7 +80,7 @@ void tim_arpe(
  * @details Configures the update event interrupt. If enabled, an interrupt will be generated 
  *          for the specified timer when an update event occurs. An update event occurs when 
  *          a counter overflow occurs (counter reaches ARR value) or the UG bit is set 
- *          manually. <br> 
+ *          manually. 
  *          
  *          This function is available for all timers. 
  * 
@@ -99,14 +99,14 @@ void tim_uie(
  * 
  * @details Configures the prescaler for the timer selected. The prescaler effectively 
  *          divides the clock used for the timer which determines the rate at which the 
- *          counter for the clock increments. <br> 
+ *          counter for the clock increments. 
  *          
  *          This function is available for all timers. 
  * 
  * @see timer_us_prescalars_t
  * 
  * @param timer : pointer to timer to configure 
- * @param prescalar 
+ * @param prescalar : clock prescalar that determines the counter rate 
  */
 void tim_psc_set(
     TIM_TypeDef *timer, 
@@ -120,9 +120,9 @@ void tim_psc_set(
  *          counter will count to this reload value before resetting back to zero. In 
  *          downcounting mode the counter will reset to the reload value. A counter reset 
  *          is considered a counter overflow. The auto-reload value determines the signal 
- *          frequency in PWM mode. <br> 
+ *          frequency in PWM mode. 
  *          
- *          This function is available for all timers. <br> 
+ *          This function is available for all timers. 
  *          
  *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
  * 
@@ -138,9 +138,9 @@ void tim_arr_set(
  * @brief Counter set 
  * 
  * @details Sets the value of the counter for the timer. Generally this is used for resetting 
- *          the counter. <br> 
+ *          the counter. 
  *          
- *          This function is available for all timers. <br> 
+ *          This function is available for all timers. 
  *          
  *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
  * 

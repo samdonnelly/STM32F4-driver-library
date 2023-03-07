@@ -24,7 +24,7 @@
 // Function Prototypes 
 
 /**
- * @brief I2C1 wait for ADDR bit to set
+ * @brief I2C wait for ADDR bit to set
  * 
  * @details This bit is set once the address has been successfully sent in master mode or
  *          successfully matched in slave mode. This event must occur before proceeding 
@@ -37,7 +37,7 @@ void i2c_addr_wait(
 
 
 /**
- * @brief I2C1 clear acknowledge bit 
+ * @brief I2C clear acknowledge bit 
  * 
  * @details This function is used to clear the acknowledge bit which sends a NACK pulse to 
  *          the slave device. The NACK pulse is sent after the last byte of data has been 
@@ -51,7 +51,7 @@ void i2c_clear_ack(
 
 
 /**
- * @brief I2C1 set acknowledge bit 
+ * @brief I2C set acknowledge bit 
  * 
  * @details Setting the acknowledge bit is used to tell a slave device that data has been 
  *          recieved so the slave can proceed to send the next byte of data. This function 
@@ -65,7 +65,7 @@ void i2c_set_ack(
 
 
 /**
- * @brief I2C1 wait for RxNE bit to set 
+ * @brief I2C wait for RxNE bit to set 
  * 
  * @details The RxNE bit indicates that there is data in the data register to be read from 
  *          the slave. This functions waits for the bit to set before proceeding to read 
@@ -79,7 +79,7 @@ void i2c_rxne_wait(
 
 
 /**
- * @brief I2C1 wait for TxE bit to set 
+ * @brief I2C wait for TxE bit to set 
  * 
  * @details The TxE bit is set when the data register is empty during transmission. It is 
  *          cleared when the data register is written to or when a start or stop condition 
@@ -94,7 +94,7 @@ void i2c_txe_wait(
 
 
 /**
- * @brief I2C1 wait for BTF bit to set
+ * @brief I2C wait for BTF bit to set
  * 
  * @details This function is called at the end of a data transmission to a slave device. 
  *          The BTF bit indicates if the byte transfer is in progress or complete. When 
@@ -114,8 +114,8 @@ void i2c_btf_wait(
 //=======================================================================================
 // Initiate I2C 
 
-// I2C1 Initialization 
-void i2c1_init(
+// I2C Initialization 
+void i2c_init(
     I2C_TypeDef *i2c, 
     i2c1_sda_pin_t sda_pin,
     i2c1_scl_pin_t scl_pin,
@@ -237,10 +237,11 @@ void i2c1_init(
 
 
 //=======================================================================================
-// I2C1 register functions
+// I2C register functions
 
-// I2C1 generate start condition 
-void i2c_start(I2C_TypeDef *i2c)
+// I2C generate start condition 
+void i2c_start(
+    I2C_TypeDef *i2c)
 {
     i2c_set_ack(i2c);                           // Enable acknowledgement bit 
     i2c->CR1 |= (SET_BIT << SHIFT_8);           // Set start generation bit 
@@ -248,52 +249,60 @@ void i2c_start(I2C_TypeDef *i2c)
     while(!(i2c->SR1 & (SET_BIT << SHIFT_0)));  // Wait for start bit to set 
 }
 
-// I2C1 generate a stop condition by setting the stop generation bit 
-void i2c_stop(I2C_TypeDef *i2c)
+// I2C generate a stop condition by setting the stop generation bit 
+void i2c_stop(
+    I2C_TypeDef *i2c)
 {
     i2c->CR1 |= (SET_BIT << SHIFT_9);
 }
 
 // Read the SR1 and SR2 registers to clear ADDR
-void i2c_clear_addr(I2C_TypeDef *i2c)
+void i2c_clear_addr(
+    I2C_TypeDef *i2c)
 {
     dummy_read(((i2c->SR1) | (i2c->SR2))); 
 }
 
-// I2C1 wait for ADDR bit to set
-void i2c_addr_wait(I2C_TypeDef *i2c)
+// I2C wait for ADDR bit to set
+void i2c_addr_wait(
+    I2C_TypeDef *i2c)
 {
     // TODO add a timeout here with a status return for fail or success 
     while(!(i2c->SR1 & (SET_BIT << SHIFT_1)));
 }
 
-// I2C1 clear the ACK bit to send a NACK pulse to slave device 
-void i2c_clear_ack(I2C_TypeDef *i2c)
+// I2C clear the ACK bit to send a NACK pulse to slave device 
+void i2c_clear_ack(
+    I2C_TypeDef *i2c)
 {
     i2c->CR1 &= ~(SET_BIT << SHIFT_10);
 }
 
-// I2C1 set the ACK bit to tell the slave that data has been receieved
-void i2c_set_ack(I2C_TypeDef *i2c)
+// I2C set the ACK bit to tell the slave that data has been receieved
+void i2c_set_ack(
+    I2C_TypeDef *i2c)
 {
     i2c->CR1 |= (SET_BIT << SHIFT_10);
 }
 
-// I2C1 wait for RxNE bit to set indicating data is ready 
-void i2c_rxne_wait(I2C_TypeDef *i2c)
+// I2C wait for RxNE bit to set indicating data is ready 
+void i2c_rxne_wait(
+    I2C_TypeDef *i2c)
 {
     while(!(i2c->SR1 & (SET_BIT << SHIFT_6)));
 }
 
-// I2C1 wait for TxE bit to set 
-void i2c_txe_wait(I2C_TypeDef *i2c)
+// I2C wait for TxE bit to set 
+void i2c_txe_wait(
+    I2C_TypeDef *i2c)
 {
     // TODO add a timeout here with a status return for fail or success 
     while(!(i2c->SR1 & (SET_BIT << SHIFT_7)));
 }
 
-// I2C1 wait for BTF to set
-void i2c_btf_wait(I2C_TypeDef *i2c)
+// I2C wait for BTF to set
+void i2c_btf_wait(
+    I2C_TypeDef *i2c)
 {
     while(!(i2c->SR1 & (SET_BIT << SHIFT_2)));
 }
@@ -302,18 +311,18 @@ void i2c_btf_wait(I2C_TypeDef *i2c)
 
 
 //=======================================================================================
-// Write I2C1 
+// Write I2C 
 
-// I2C1 send address 
+// I2C send address 
 void i2c_write_address(
     I2C_TypeDef *i2c, 
-    uint8_t i2c1_address)
+    uint8_t i2c_address)
 {
-    i2c->DR = i2c1_address;  // Send slave address 
+    i2c->DR = i2c_address;  // Send slave address 
     i2c_addr_wait(i2c);      // Wait for ADDR to set
 }
 
-// I2C1 send data to a device
+// I2C send data to a device
 void i2c_write_master_mode(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
@@ -334,9 +343,9 @@ void i2c_write_master_mode(
 
 
 //=======================================================================================
-// Read I2C1
+// Read I2C 
 
-// I2C1 read data from a device
+// I2C read data from a device
 void i2c_read_master_mode(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
