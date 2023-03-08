@@ -24,7 +24,7 @@
 //=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Macros 
 
 // Alternate functions 
@@ -45,18 +45,17 @@
 #define GPIO_AF14   0xE     // AF14 
 #define GPIO_AF15   0xF     // AF15 
 
-//================================================================================
+//=======================================================================================
 
 
 //=======================================================================================
 // Enums 
 
-// TODO when you get rid of HAL then change this back to GPIO_PIN_X
 /**
  * @brief GPIO pin number 
  * 
- * @details 
- * 
+ * @details This is used as an argument in the GPIO pin write and read functions to specify 
+ *          pin number. The pins numbers are assigned to a register bit. 
  */
 typedef enum {
     GPIOX_PIN_0  = 0x0001,
@@ -80,9 +79,6 @@ typedef enum {
 
 /**
  * @brief GPIO pin state
- * 
- * @details 
- * 
  */
 typedef enum {
     GPIO_LOW,
@@ -91,10 +87,7 @@ typedef enum {
 
 
 /**
- * @brief GPIO port mode register (MODER) register 
- * 
- * @details 
- * 
+ * @brief GPIO mode register (MODER) settings 
  */
 typedef enum {
     MODER_INPUT,   // Input (reset state)
@@ -105,10 +98,7 @@ typedef enum {
 
 
 /**
- * @brief GPIO port output type (OTYPER) register 
- * 
- * @details 
- * 
+ * @brief GPIO output type (OTYPER) register settings 
  */
 typedef enum {
     OTYPER_PP,  // Output push-pull (reset state) 
@@ -117,10 +107,7 @@ typedef enum {
 
 
 /**
- * @brief GPIO port output speed (OSPEEDR) register
- * 
- * @details 
- * 
+ * @brief GPIO output speed (OSPEEDR) register settings 
  */
 typedef enum {
     OSPEEDR_LOW,   // Low speed 
@@ -131,10 +118,7 @@ typedef enum {
 
 
 /**
- * @brief GPIO port pull-up/pull-down (PUPDR) register 
- * 
- * @details 
- * 
+ * @brief GPIO pull-up/pull-down (PUPDR) register settings 
  */
 typedef enum {
     PUPDR_NO,  // No pull-up, pull-down 
@@ -147,15 +131,22 @@ typedef enum {
 
 
 //=======================================================================================
+// GPIO pin state 
+
+typedef gpio_pin_state_t GPIO_STATE; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization functions 
 
 /**
  * @brief GPIO communication initialization 
  * 
  * @details Initializes the GPIO clocks so that all peripheralls can use the different 
- *          GPIO ports (A, B, C...). If this is not done then initialized pins will 
- *          not work. 
- * 
+ *          GPIO ports (A, B, C...). If the GPIO clocks are not enabled then the peripherals 
+ *          will not work. 
  */
 void gpio_port_init(void); 
 
@@ -163,14 +154,17 @@ void gpio_port_init(void);
 /**
  * @brief GPIO pin initialization 
  * 
- * @details 
+ * @see gpio_moder_t
+ * @see gpio_otyper_t
+ * @see gpio_ospeedr_t
+ * @see gpio_pupdr_t
  * 
- * @param gpio 
- * @param pin_num 
- * @param moder 
- * @param otyper 
- * @param ospeedr 
- * @param pupdr 
+ * @param gpio : pointer to GPIO port to initialize 
+ * @param pin_num : pin number for a given GPIO port to initialize 
+ * @param moder : mode register setting 
+ * @param otyper : output type register setting 
+ * @param ospeedr : output speed register setting 
+ * @param pupdr : pull-up and pull-down register settings 
  */
 void gpio_pin_init(
     GPIO_TypeDef  *gpio, 
@@ -187,18 +181,16 @@ void gpio_pin_init(
 // Write functions 
 
 /**
- * @brief GPIOA write
+ * @brief GPIO write
  * 
- * @details This function writes "A" pins congigured as GPIO to either high or low (on or
- *          off). Arguments include the pin number to write to and the state to write the 
- *          pin to. The pin number can be specified using the gpio_pin_num_t enum and the 
- *          pin state can be specified using the gpio_pin_state_t enum. 
+ * @details This function writes the specified pin to the specified state (high or low). 
  * 
- * @see gpio_pin_state_t
  * @see gpio_pin_num_t
+ * @see gpio_pin_state_t
  * 
- * @param pin_num : GPIOA pin to write to (0-15)
- * @param pin_state : on (1) or off (0) state
+ * @param gpio : pointer to GPIO port to write to 
+ * @param pin_num : GPIO pin number to write to 
+ * @param pin_state : pin state to write 
  */
 void gpio_write(
     GPIO_TypeDef *gpio, 
@@ -212,36 +204,38 @@ void gpio_write(
 // Read functions 
 
 /**
- * @brief GPIOA read 
+ * @brief GPIO read 
  * 
- * @details 
+ * @details This function reads the state (high or low) of the specified pin. 
  * 
  * @see gpio_pin_num_t
+ * @see gpio_pin_state_t
  * 
- * @param gpio : which GPIO to access (A, B, C, etc.) 
- * @param pin_num : GPIO pin specified by gpio_pin_num_t
- * @return uint8_t 
+ * @param gpio : pointer to GPIO port to read 
+ * @param pin_num : GPIO pin number to read from 
+ * @return GPIO_STATE : pin state read 
  */
-uint8_t gpio_read(
+GPIO_STATE gpio_read(
     GPIO_TypeDef *gpio, 
     gpio_pin_num_t pin_num); 
 
 //=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
 // Register functions 
-
-// TODO move these prototypes over to the source once they're no longer used in other files 
 
 /**
  * @brief Set the GPIO mode 
  * 
- * @details 
+ * @details Configures the mode of the pin according to gpio_moder_t
  * 
- * @param gpio 
- * @param moder 
- * @param pin 
+ * @see gpio_moder_t
+ * @see pin_selector_t
+ * 
+ * @param gpio : pointer to GPIO port 
+ * @param moder : mode of the pin 
+ * @param pin : pin number 
  */
 void gpio_moder(
     GPIO_TypeDef *gpio, 
@@ -250,64 +244,23 @@ void gpio_moder(
 
 
 /**
- * @brief GPIO output type 
- * 
- * @details 
- * 
- * @param gpio 
- * @param otyper 
- * @param pin 
- */
-void gpio_otyper(
-    GPIO_TypeDef *gpio, 
-    gpio_otyper_t otyper, 
-    pin_selector_t pin); 
-
-
-/**
- * @brief GPIO output speed 
- * 
- * @details 
- * 
- * @param gpio 
- * @param ospeedr 
- * @param pin 
- */
-void gpio_ospeedr(
-    GPIO_TypeDef *gpio, 
-    gpio_ospeedr_t ospeedr, 
-    pin_selector_t pin); 
-
-
-/**
- * @brief GPIO pull-up/pull-down  
- * 
- * @details 
- * 
- * @param gpio 
- * @param pupdr 
- * @param pin 
- */
-void gpio_pupdr(
-    GPIO_TypeDef *gpio, 
-    gpio_pupdr_t pupdr, 
-    pin_selector_t pin); 
-
-
-/**
  * @brief GPIO alternate functions 
  * 
- * @details 
+ * @details Sets the alternate function of the pin. There are macros defined at the top 
+ *          of this file that can be used as arguments. Refer to the reference manual and 
+ *          datasheet of the device for details on what each alternate function does. 
  * 
- * @param gpio 
- * @param af 
- * @param pin 
+ * @see pin_selector_t
+ * 
+ * @param gpio : pointer to GPIO port 
+ * @param af : alternate function number 
+ * @param pin : pin number 
  */
 void gpio_afr(
     GPIO_TypeDef *gpio, 
     uint8_t af, 
     pin_selector_t pin); 
 
-//================================================================================
+//=======================================================================================
 
 #endif  // _GPIO_DRIVER_H_

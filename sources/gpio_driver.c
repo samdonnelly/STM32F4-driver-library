@@ -12,11 +12,60 @@
  * 
  */
 
-
 //=======================================================================================
 // Includes 
 
 #include "gpio_driver.h"
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Function prototypes 
+
+/**
+ * @brief GPIO output type 
+ * 
+ * @details 
+ * 
+ * @param gpio 
+ * @param otyper 
+ * @param pin 
+ */
+void gpio_otyper(
+    GPIO_TypeDef *gpio, 
+    gpio_otyper_t otyper, 
+    pin_selector_t pin); 
+
+
+/**
+ * @brief GPIO output speed 
+ * 
+ * @details 
+ * 
+ * @param gpio 
+ * @param ospeedr 
+ * @param pin 
+ */
+void gpio_ospeedr(
+    GPIO_TypeDef *gpio, 
+    gpio_ospeedr_t ospeedr, 
+    pin_selector_t pin); 
+
+
+/**
+ * @brief GPIO pull-up/pull-down  
+ * 
+ * @details 
+ * 
+ * @param gpio 
+ * @param pupdr 
+ * @param pin 
+ */
+void gpio_pupdr(
+    GPIO_TypeDef *gpio, 
+    gpio_pupdr_t pupdr, 
+    pin_selector_t pin); 
 
 //=======================================================================================
 
@@ -103,17 +152,17 @@ void gpio_write(
 // Read functions 
 
 // GPIO read 
-uint8_t gpio_read(
+GPIO_STATE gpio_read(
     GPIO_TypeDef *gpio, 
     gpio_pin_num_t pin_num)
 {
     // Read the GPIO pin 
     if ((gpio->IDR) & pin_num) 
     {
-        return TRUE; 
+        return GPIO_HIGH; 
     }
     
-    return FALSE; 
+    return GPIO_LOW; 
 }
 
 //=======================================================================================
