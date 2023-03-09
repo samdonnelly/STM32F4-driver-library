@@ -26,11 +26,13 @@
 /**
  * @brief GPIO output type 
  * 
- * @details 
+ * @details Sets the output type of the I/O pin using the OTYPER register. 
  * 
- * @param gpio 
- * @param otyper 
- * @param pin 
+ * @see gpio_otyper_t
+ * 
+ * @param gpio : pointer to GPIO port 
+ * @param otyper : output type setting 
+ * @param pin : pin number 
  */
 void gpio_otyper(
     GPIO_TypeDef *gpio, 
@@ -41,11 +43,14 @@ void gpio_otyper(
 /**
  * @brief GPIO output speed 
  * 
- * @details 
+ * @details Sets the speed of the I/O pin somewhere from low to high using the OSPEEDR 
+ *          register. 
  * 
- * @param gpio 
- * @param ospeedr 
- * @param pin 
+ * @see gpio_ospeedr_t
+ * 
+ * @param gpio : pointer to GPIO port 
+ * @param ospeedr : output speed setting 
+ * @param pin : pin number 
  */
 void gpio_ospeedr(
     GPIO_TypeDef *gpio, 
@@ -56,11 +61,13 @@ void gpio_ospeedr(
 /**
  * @brief GPIO pull-up/pull-down  
  * 
- * @details 
+ * @details Sets the I/O pin as either pull-up or pull-down using the PUPDR register. 
  * 
- * @param gpio 
- * @param pupdr 
- * @param pin 
+ * @see gpio_pupdr_t
+ * 
+ * @param gpio : pointer to GPIO port 
+ * @param pupdr : pull-up and pull-down setting 
+ * @param pin : pin number 
  */
 void gpio_pupdr(
     GPIO_TypeDef *gpio, 
@@ -75,9 +82,7 @@ void gpio_pupdr(
 
 // GPIO communication initialization 
 void gpio_port_init(void)
-{
-    // TODO create a clocks driver to enable these and other clocks (RCC) 
-    
+{    
     // Enable GPIOA clock - RCC_AHB1ENR register, bit 0 
     RCC->AHB1ENR |= (SET_BIT << SHIFT_0);
 
