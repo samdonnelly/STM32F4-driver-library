@@ -209,13 +209,21 @@ void syscfg_config(
     pin_selector_t exti)
 {
     if (exti < PIN_4)
+    {
         SYSCFG->EXTICR[0] |= (port << exti*SHIFT_4); 
+    }
     else if (exti < PIN_8)
+    {
         SYSCFG->EXTICR[1] |= (port << (exti-PIN_4)*SHIFT_4); 
+    }
     else if (exti < PIN_12)
+    {
         SYSCFG->EXTICR[2] |= (port << (exti-PIN_8)*SHIFT_4); 
+    }
     else 
+    {
         SYSCFG->EXTICR[3] |= (port << (exti-PIN_12)*SHIFT_4); 
+    }
 }
 
 //================================================================================
