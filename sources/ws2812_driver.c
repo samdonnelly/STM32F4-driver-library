@@ -27,6 +27,8 @@
 //   second bit for the update function. 
 // - You could set multiple LED colours with one function call by including the LED 
 //   index in the data pointer array passed to the driver. 
+// - During driver testing, LED8 on device one was always lighting up as white until I 
+//   added a second device. 
 //=======================================================================================
 
 
@@ -50,7 +52,8 @@ typedef struct ws2812_driver_data_s
     GPIO_TypeDef *gpio; 
 
     // Pin information 
-    pin_selector_t pin; 
+    pin_selector_t pin_num; 
+    gpio_pin_num_t pin_code; 
 
     // Data 
     uint32_t colour_data[WS2812_LED_NUM]; 
@@ -76,25 +79,25 @@ void ws2812_init(
     pin_selector_t pin)
 {
     // Create data record 
-    ws2812_driver_data_t *device_data_ptr = 
+    ws2812_driver_data_t *driver_data_ptr = 
         (ws2812_driver_data_t *)create_linked_list_entry(
             device_num, 
             (void *)&ws2812_driver_data_ptr, 
             sizeof(ws2812_driver_data_t)); 
 
     // Initialize data record 
-    device_data_ptr->timer = timer; 
-    device_data_ptr->gpio = gpio; 
-    device_data_ptr->pin = pin; 
-    memset((void *)device_data_ptr->colour_data, CLEAR, WS2812_LED_NUM); 
-    memset((void *)device_data_ptr->psudo_pwm, CLEAR, 
-        WS2812_LED_NUM * WS2812_BITS_PER_LED * WS2812_COUNTS_PER_BIT); 
+    driver_data_ptr->timer = timer; 
+    driver_data_ptr->gpio = gpio; 
+    driver_data_ptr->pin_num = pin; 
+    driver_data_ptr->pin_code = SET_BIT << pin; 
+    memset((void *)driver_data_ptr->colour_data, CLEAR, sizeof(driver_data_ptr->colour_data)); 
+    memset((void *)driver_data_ptr->psudo_pwm, CLEAR, sizeof(driver_data_ptr->psudo_pwm)); 
 
     // Initialize GPIO output pin 
-    gpio_pin_init(device_data_ptr->gpio, 
-                  device_data_ptr->pin, 
+    gpio_pin_init(driver_data_ptr->gpio, 
+                  driver_data_ptr->pin_num, 
                   MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
-    gpio_write(device_data_ptr->gpio, device_data_ptr->pin, GPIO_LOW); 
+    gpio_write(driver_data_ptr->gpio, driver_data_ptr->pin_num, GPIO_LOW); 
 }
 
 //=======================================================================================
@@ -143,6 +146,32 @@ void ws2812_send(
 
     // Check for valid data 
     if (driver_data_ptr == NULL) return; 
+
+    // Local variables 
+    uint32_t time_count; 
+    uint32_t count_check; 
+    uint16_t psudo_pwm_index; 
+    uint16_t psudo_pwm_size = sizeof(driver_data_ptr->psudo_pwm); 
+
+    // Get the starting timer count 
+    time_count = tim_cnt_read(driver_data_ptr->timer); 
+    
+    // Send data when there is a timer count 
+    for (psudo_pwm_index = CLEAR; psudo_pwm_index < psudo_pwm_size; psudo_pwm_index++)
+    {
+        // Check for a timer count 
+        count_check = tim_cnt_read(driver_data_ptr->timer); 
+        
+        if (time_count != count_check)
+        {
+            gpio_write(
+                driver_data_ptr->gpio, 
+                driver_data_ptr->pin_code, 
+                driver_data_ptr->psudo_pwm[psudo_pwm_index]); 
+            
+            time_count = count_check; 
+        }
+    }
 }
 
 
@@ -150,7 +179,7 @@ void ws2812_send(
 void ws2812_write(
     device_number_t device_num, 
     TIM_TypeDef *timer, 
-    uint8_t *colour_data, 
+    const uint8_t *colour_data, 
     uint8_t led_num)
 {
     // Get the device data record 
@@ -179,7 +208,7 @@ void ws2812_write(
 // Colour set 
 void ws2812_colour_set(
     device_number_t device_num, 
-    uint8_t *colour_data, 
+    const uint8_t *colour_data, 
     uint8_t led_num)
 {
     // Get the device data record 

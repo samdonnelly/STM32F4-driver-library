@@ -25,6 +25,7 @@
 // Drivers 
 #include "linked_list_driver.h" 
 #include "gpio_driver.h" 
+#include "timers.h" 
 
 //=======================================================================================
 
@@ -105,7 +106,22 @@ void ws2812_send(
 void ws2812_write(
     device_number_t device_num, 
     TIM_TypeDef *timer, 
-    uint8_t *colour_data, 
+    const uint8_t *colour_data, 
+    uint8_t led_num); 
+
+
+/**
+ * @brief Colour set 
+ * 
+ * @details 
+ * 
+ * @param device_num 
+ * @param colour_data 
+ * @param led_num 
+ */
+void ws2812_colour_set(
+    device_number_t device_num, 
+    const uint8_t *colour_data, 
     uint8_t led_num); 
 
 //=======================================================================================
