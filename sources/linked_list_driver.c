@@ -29,7 +29,7 @@ void *create_linked_list_entry(
     void **list_ptr, 
     uint32_t record_size)
 {
-    // Check is the data record already exists 
+    // Check if the data record already exists 
     linked_list_struct_t *data_record = 
         (linked_list_struct_t *)get_linked_list_entry(device_num, *list_ptr); 
 
