@@ -435,6 +435,24 @@ void tim_ug_set(
 TIM_COUNTER tim_cnt_read(
     TIM_TypeDef *timer); 
 
+
+/**
+ * @brief Counter set 
+ * 
+ * @details Sets the value of the counter for the timer. Generally this is used for resetting 
+ *          the counter. 
+ *          
+ *          This function is available for all timers. 
+ *          
+ *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
+ * 
+ * @param timer : pointer to timer to configure 
+ * @param counter : counter register value 
+ */
+void tim_cnt_set(
+    TIM_TypeDef *timer, 
+    uint32_t counter); 
+
 //=======================================================================================
 
 

@@ -357,9 +357,13 @@ void dma_stream_init(
 {
     // Enable the DMA clock
     if (dma == DMA1)
+    {
         RCC->AHB1ENR |= (SET_BIT << SHIFT_21); 
+    }
     else if (dma == DMA2)
+    {
         RCC->AHB1ENR |= (SET_BIT << SHIFT_22); 
+    }
     
     // Disable the stream 
     dma_stream_disable(dma_stream); 

@@ -29,6 +29,8 @@
 //   index in the data pointer array passed to the driver. 
 // - During driver testing, LED8 on device one was always lighting up as white until I 
 //   added a second device. 
+// - A 50us delay is mandatory between write operations (one set of colours, not every 
+//   LED colour). 
 //=======================================================================================
 
 
@@ -151,7 +153,7 @@ void ws2812_send(
     uint32_t time_count; 
     uint32_t count_check; 
     uint16_t psudo_pwm_index; 
-    uint16_t psudo_pwm_size = sizeof(driver_data_ptr->psudo_pwm); 
+    uint16_t psudo_pwm_size = WS2812_LED_NUM * WS2812_BITS_PER_LED * WS2812_COUNTS_PER_BIT; 
 
     // Get the starting timer count 
     time_count = tim_cnt_read(driver_data_ptr->timer); 
@@ -178,7 +180,6 @@ void ws2812_send(
 // Write to device 
 void ws2812_write(
     device_number_t device_num, 
-    TIM_TypeDef *timer, 
     const uint8_t *colour_data, 
     uint8_t led_num)
 {

@@ -135,24 +135,6 @@ void tim_arr_set(
 
 
 /**
- * @brief Counter set 
- * 
- * @details Sets the value of the counter for the timer. Generally this is used for resetting 
- *          the counter. 
- *          
- *          This function is available for all timers. 
- *          
- *          Note that only TIM2 and TIM5 are 32-bit values. All other timers are 16 bits. 
- * 
- * @param timer : pointer to timer to configure 
- * @param counter : counter register value 
- */
-void tim_cnt_set(
-    TIM_TypeDef *timer, 
-    uint32_t counter); 
-
-
-/**
  * @brief Output compare mode selection 
  * 
  * @details Selects the output mode of the chosen timer. The channel for the timer must be 
@@ -345,7 +327,9 @@ void tim_enable(
 {
     tim_cen(timer, TIM_CEN_ENABLE); 
     if (!(timer->DIER & (SET_BIT << SHIFT_0)))
+    {
         while(!(timer->SR & (SET_BIT << SHIFT_0)));
+    }
 }
 
 

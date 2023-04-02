@@ -99,13 +99,11 @@ void ws2812_send(
  * @details Set, update and write data to the device 
  * 
  * @param device_num 
- * @param timer 
  * @param colour_data 
  * @param led_num 
  */
 void ws2812_write(
     device_number_t device_num, 
-    TIM_TypeDef *timer, 
     const uint8_t *colour_data, 
     uint8_t led_num); 
 
