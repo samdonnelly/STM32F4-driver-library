@@ -22,20 +22,15 @@
 
 //=======================================================================================
 // Notes 
-// - You can set all the psudo_pwm data to zero and every 4th bit starting at the first 
-//   bit to one during initialization then only update every 4th bit starting at the 
-//   second bit for the update function. 
 // - You could set multiple LED colours with one function call by including the LED 
 //   index in the data pointer array passed to the driver. 
-// - During driver testing, LED8 on device one was always lighting up as white until I 
-//   added a second device. 
 // - A 50us delay is mandatory between write operations (one set of colours, not every 
 //   LED colour). 
-//=======================================================================================
-
-
-//=======================================================================================
-// Function Prototypes 
+// - The timing seems to be too quick for the method I chose to write the data - i.e. 
+//   checking for a counter increment then writing to the GPIO output. The timing seemed 
+//   to work just as well if not better without even checking for a count which tells me 
+//   the method is unreliable and on the edge of working. I need a faster and more 
+//   reliable method (variable PWM + DMA). 
 //=======================================================================================
 
 
@@ -71,6 +66,22 @@ static ws2812_driver_data_t *ws2812_driver_data_ptr;
 
 
 //=======================================================================================
+// Function Prototypes 
+
+/**
+ * @brief Generate base waveform 
+ * 
+ * @details 
+ * 
+ * @param driver_data_ptr 
+ */
+void ws2812_init_waveform(
+    ws2812_driver_data_t *driver_data_ptr); 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 // WS2812 initialization 
@@ -94,12 +105,34 @@ void ws2812_init(
     driver_data_ptr->pin_code = SET_BIT << pin; 
     memset((void *)driver_data_ptr->colour_data, CLEAR, sizeof(driver_data_ptr->colour_data)); 
     memset((void *)driver_data_ptr->psudo_pwm, CLEAR, sizeof(driver_data_ptr->psudo_pwm)); 
+    ws2812_init_waveform(driver_data_ptr); 
 
     // Initialize GPIO output pin 
     gpio_pin_init(driver_data_ptr->gpio, 
                   driver_data_ptr->pin_num, 
                   MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
     gpio_write(driver_data_ptr->gpio, driver_data_ptr->pin_num, GPIO_LOW); 
+}
+
+
+// Generate base waveform 
+void ws2812_init_waveform(
+    ws2812_driver_data_t *driver_data_ptr)
+{
+    // Local variables 
+    uint8_t led_index; 
+    uint8_t colour_index; 
+    uint16_t psudo_pwm_index = CLEAR; 
+
+    // Update data 
+    for (led_index = CLEAR; led_index < WS2812_LED_NUM; led_index++)
+    {
+        for (colour_index = WS2812_BITS_PER_LED; colour_index > 0; colour_index--)
+        {
+            driver_data_ptr->psudo_pwm[psudo_pwm_index] = SET_BIT; 
+            psudo_pwm_index += WS2812_COUNTS_PER_BIT; 
+        }
+    }
 }
 
 //=======================================================================================
@@ -122,17 +155,16 @@ void ws2812_update(
     // Local variables 
     uint8_t led_index; 
     uint8_t colour_index; 
-    uint16_t psudo_pwm_index = CLEAR; 
+    uint16_t psudo_pwm_index = SET_BIT;   // offset to bit that defines 1 or 0 code 
 
     // Update data 
     for (led_index = CLEAR; led_index < WS2812_LED_NUM; led_index++)
     {
         for (colour_index = WS2812_BITS_PER_LED; colour_index > 0; colour_index--)
         {
-            driver_data_ptr->psudo_pwm[psudo_pwm_index++] = SET_BIT; 
-            driver_data_ptr->psudo_pwm[psudo_pwm_index++] = (uint8_t)
+            driver_data_ptr->psudo_pwm[psudo_pwm_index] = (uint8_t)
                 ((driver_data_ptr->colour_data[led_index] >> (colour_index - 1)) & 0x01); 
-            psudo_pwm_index += 2; 
+            psudo_pwm_index += WS2812_COUNTS_PER_BIT; 
         }
     }
 }
@@ -150,29 +182,30 @@ void ws2812_send(
     if (driver_data_ptr == NULL) return; 
 
     // Local variables 
-    uint32_t time_count; 
-    uint32_t count_check; 
+    // uint32_t time_count; 
+    // uint32_t count_check = CLEAR; 
     uint16_t psudo_pwm_index; 
     uint16_t psudo_pwm_size = WS2812_LED_NUM * WS2812_BITS_PER_LED * WS2812_COUNTS_PER_BIT; 
 
-    // Get the starting timer count 
-    time_count = tim_cnt_read(driver_data_ptr->timer); 
+    // // Get the starting timer count 
+    // time_count = tim_cnt_read(driver_data_ptr->timer); 
     
     // Send data when there is a timer count 
     for (psudo_pwm_index = CLEAR; psudo_pwm_index < psudo_pwm_size; psudo_pwm_index++)
     {
-        // Check for a timer count 
-        count_check = tim_cnt_read(driver_data_ptr->timer); 
+        // // Wait for a count 
+        // while (time_count == count_check)
+        // {
+        //     count_check = tim_cnt_read(driver_data_ptr->timer); 
+        // }
+
+        // Write the data once there is a count 
+        gpio_write(
+            driver_data_ptr->gpio, 
+            driver_data_ptr->pin_code, 
+            driver_data_ptr->psudo_pwm[psudo_pwm_index]); 
         
-        if (time_count != count_check)
-        {
-            gpio_write(
-                driver_data_ptr->gpio, 
-                driver_data_ptr->pin_code, 
-                driver_data_ptr->psudo_pwm[psudo_pwm_index]); 
-            
-            time_count = count_check; 
-        }
+        // time_count = count_check; 
     }
 }
 
@@ -225,8 +258,12 @@ void ws2812_colour_set(
     }
 
     // Set data 
-    driver_data_ptr->colour_data[led_num] = 
-        (*colour_data << SHIFT_16) + (*(colour_data + 1) << SHIFT_8) + *(colour_data + 2); 
+    driver_data_ptr->colour_data[led_num] = (*(colour_data + WS2812_GREEN) << SHIFT_16) + 
+                                            (*(colour_data + WS2812_RED)   << SHIFT_8) + 
+                                             *(colour_data + WS2812_BLUE); 
 }
+
+
+// Clear all 
 
 //=======================================================================================

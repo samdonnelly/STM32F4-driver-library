@@ -77,6 +77,7 @@ typedef enum {
  *          - Timers 2-5 run on APB1 clock frequency. 
  */
 typedef enum {
+    TIM_84MHZ_NO_PSC, 
     TIM_84MHZ_310NS_PSC = 25, 
     TIM_84MHZ_1US_PSC = 83, 
     TIM_84MHZ_50US_PSC = 4199, 
