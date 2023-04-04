@@ -75,6 +75,19 @@ void tim_arpe(
 
 
 /**
+ * @brief Update DMA request 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param ude 
+ */
+void tim_ude(
+    TIM_TypeDef *timer, 
+    tim_up_dma_t ude); 
+
+
+/**
  * @brief Update interrupt 
  * 
  * @details Configures the update event interrupt. If enabled, an interrupt will be generated 
@@ -465,7 +478,17 @@ void tim_arpe(
 
 
 //=======================================================================================
-// Interrupt register 
+// DMA / Interrupt Enable register 
+
+// Update DMA request 
+void tim_ude(
+    TIM_TypeDef *timer, 
+    tim_up_dma_t ude)
+{
+    timer->DIER &= ~(SET_BIT >> SHIFT_8); 
+    timer->DIER |= (ude >> SHIFT_8); 
+}
+
 
 // Update interrupt 
 void tim_uie(

@@ -113,6 +113,15 @@ typedef enum {
 
 
 /**
+ * @brief Update DMA request configuration 
+ */
+typedef enum {
+    TIM_UP_DMA_DISABLE,    // Update DMA request disable 
+    TIM_UP_DMA_ENABLE      // Update DMA request enable 
+} tim_up_dma_t; 
+
+
+/**
  * @brief Update interrupt configuration 
  */
 typedef enum {
