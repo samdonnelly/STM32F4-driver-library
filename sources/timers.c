@@ -251,7 +251,8 @@ void tim_2_to_5_output_init(
     tim_ocm_t ocm, 
     tim_ocpe_t ocpe, 
     tim_arpe_t arpe, 
-    tim_ccp_t ccp)
+    tim_ccp_t ccp, 
+    tim_up_dma_t ude)
 {
     // Get the timer port index 
     uint32_t index = ((uint32_t)timer - (uint32_t)TIM2_BASE) >> SHIFT_10; 
@@ -287,6 +288,9 @@ void tim_2_to_5_output_init(
 
     // Enable the OCx output 
     tim_cce(timer, TIM_CCE_ON, channel); 
+
+    // Configure the update DMA request 
+    tim_ude(timer, ude); 
 
     // Reset the counter 
     tim_cnt_set(timer, RESET_COUNT); 

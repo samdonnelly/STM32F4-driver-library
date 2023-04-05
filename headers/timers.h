@@ -225,6 +225,7 @@ void tim1_init(
  * @param ocpe : output compare preload configuration 
  * @param arpe : auto-reload preload register configuration 
  * @param ccp : output compare polarity configuration 
+ * @param ude : update DMA request configuration 
  */
 void tim_2_to_5_output_init(
     TIM_TypeDef *timer, 
@@ -236,7 +237,8 @@ void tim_2_to_5_output_init(
     tim_ocm_t ocm, 
     tim_ocpe_t ocpe, 
     tim_arpe_t arpe, 
-    tim_ccp_t ccp); 
+    tim_ccp_t ccp, 
+    tim_up_dma_t ude); 
 
 
 /**

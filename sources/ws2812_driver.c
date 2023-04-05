@@ -47,6 +47,7 @@ typedef struct ws2812_driver_data_s
     // Peripherals 
     TIM_TypeDef *timer; 
     GPIO_TypeDef *gpio; 
+    DMA_TypeDef *dma; 
 
     // Pin information 
     pin_selector_t pin_num; 
@@ -54,7 +55,8 @@ typedef struct ws2812_driver_data_s
 
     // Data 
     uint32_t colour_data[WS2812_LED_NUM]; 
-    uint8_t psudo_pwm[WS2812_LED_NUM * WS2812_BITS_PER_LED * WS2812_COUNTS_PER_BIT]; 
+    // uint8_t psudo_pwm[WS2812_LED_NUM * WS2812_BITS_PER_LED * WS2812_COUNTS_PER_BIT]; 
+    uint8_t pwm_duty[WS2812_LED_NUM * WS2812_BITS_PER_LED]; 
 }
 ws2812_driver_data_t; 
 
@@ -68,15 +70,15 @@ static ws2812_driver_data_t *ws2812_driver_data_ptr;
 //=======================================================================================
 // Function Prototypes 
 
-/**
- * @brief Generate base waveform 
- * 
- * @details 
- * 
- * @param driver_data_ptr 
- */
-void ws2812_init_waveform(
-    ws2812_driver_data_t *driver_data_ptr); 
+// /**
+//  * @brief Generate base waveform 
+//  * 
+//  * @details 
+//  * 
+//  * @param driver_data_ptr 
+//  */
+// void ws2812_init_waveform(
+//     ws2812_driver_data_t *driver_data_ptr); 
 
 //=======================================================================================
 
@@ -88,8 +90,12 @@ void ws2812_init_waveform(
 void ws2812_init(
     device_number_t device_num, 
     TIM_TypeDef *timer, 
+    tim_channel_t tim_channel, 
     GPIO_TypeDef *gpio, 
-    pin_selector_t pin)
+    pin_selector_t pin, 
+    DMA_TypeDef *dma, 
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_channel_t dma_channel)
 {
     // Create data record 
     ws2812_driver_data_t *driver_data_ptr = 
@@ -98,42 +104,122 @@ void ws2812_init(
             (void *)&ws2812_driver_data_ptr, 
             sizeof(ws2812_driver_data_t)); 
 
+    // Local variables 
+    uint32_t tim_channel_addr; 
+
+    //===================================================
+    // Initialize the PWM timer 
+
+    tim_2_to_5_output_init(
+        timer, // TIM3 
+        tim_channel, // channel 1 
+        gpio, // GPIOC 
+        pin, // Pin 6 
+        TIM_DIR_UP, 
+        WS2812_84MHZ_PWM_ARR, 
+        TIM_OCM_PWM1, 
+        TIM_OCPE_ENABLE, 
+        TIM_ARPE_ENABLE, 
+        TIM_CCP_AH, 
+        TIM_UP_DMA_ENABLE); 
+
+    tim_enable(timer); 
+
+    //===================================================
+
+    //===================================================
+    // Initialize the DMA 
+
+    dma_stream_init(
+        dma, // DMA1 
+        dma_stream, // Stream 4 
+        dma_channel, // channel 5 
+        DMA_DIR_MP, 
+        DMA_CM_DISABLE,
+        DMA_PRIOR_VHI, 
+        DMA_ADDR_INCREMENT, 
+        DMA_ADDR_FIXED, 
+        DMA_DATA_SIZE_BYTE, 
+        DMA_DATA_SIZE_HALF); 
+
+    // Identify the timer channel 
+    switch (tim_channel)
+    {
+        case TIM_CHANNEL_1:
+            tim_channel_addr = timer->CCR1; 
+            break;
+        
+        case TIM_CHANNEL_2:
+            tim_channel_addr = timer->CCR2; 
+            break;
+
+        case TIM_CHANNEL_3:
+            tim_channel_addr = timer->CCR3; 
+            break;
+
+        case TIM_CHANNEL_4:
+            tim_channel_addr = timer->CCR4; 
+            break;
+        
+        default:
+            break;
+    }
+
+    dma_stream_config(
+        DMA1_Stream4, 
+        (uint32_t)&tim_channel, 
+        (uint32_t)driver_data_ptr->pwm_duty, 
+        WS2812_LED_NUM * WS2812_BITS_PER_LED); 
+    
+    //===================================================
+
+    //===================================================
     // Initialize data record 
+
     driver_data_ptr->timer = timer; 
     driver_data_ptr->gpio = gpio; 
+    driver_data_ptr->dma = dma; 
     driver_data_ptr->pin_num = pin; 
     driver_data_ptr->pin_code = SET_BIT << pin; 
     memset((void *)driver_data_ptr->colour_data, CLEAR, sizeof(driver_data_ptr->colour_data)); 
-    memset((void *)driver_data_ptr->psudo_pwm, CLEAR, sizeof(driver_data_ptr->psudo_pwm)); 
-    ws2812_init_waveform(driver_data_ptr); 
+    memset((void *)driver_data_ptr->pwm_duty, CLEAR, sizeof(driver_data_ptr->pwm_duty)); 
 
-    // Initialize GPIO output pin 
+    // memset((void *)driver_data_ptr->psudo_pwm, CLEAR, sizeof(driver_data_ptr->psudo_pwm)); 
+    // ws2812_init_waveform(driver_data_ptr); 
+
+    //===================================================
+
+    //===================================================
+    // Configure the GPIO output pin 
+
     gpio_pin_init(driver_data_ptr->gpio, 
                   driver_data_ptr->pin_num, 
                   MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
     gpio_write(driver_data_ptr->gpio, driver_data_ptr->pin_num, GPIO_LOW); 
+
+    //===================================================
 }
 
 
-// Generate base waveform 
-void ws2812_init_waveform(
-    ws2812_driver_data_t *driver_data_ptr)
-{
-    // Local variables 
-    uint8_t led_index; 
-    uint8_t colour_index; 
-    uint16_t psudo_pwm_index = CLEAR; 
+// // Generate base waveform 
+// void ws2812_init_waveform(
+//     ws2812_driver_data_t *driver_data_ptr)
+// {
+//     // Local variables 
+//     uint8_t led_index; 
+//     uint8_t colour_index; 
+//     uint16_t psudo_pwm_index = CLEAR; 
 
-    // Update data 
-    for (led_index = CLEAR; led_index < WS2812_LED_NUM; led_index++)
-    {
-        for (colour_index = WS2812_BITS_PER_LED; colour_index > 0; colour_index--)
-        {
-            driver_data_ptr->psudo_pwm[psudo_pwm_index] = SET_BIT; 
-            psudo_pwm_index += WS2812_COUNTS_PER_BIT; 
-        }
-    }
-}
+//     // Update data 
+//     for (led_index = CLEAR; led_index < WS2812_LED_NUM; led_index++)
+//     {
+//         for (colour_index = WS2812_BITS_PER_LED; colour_index > 0; colour_index--)
+//         {
+//             driver_data_ptr->psudo_pwm[psudo_pwm_index] = SET_BIT; 
+//             psudo_pwm_index += WS2812_COUNTS_PER_BIT; 
+//         }
+//     }
+// }
 
 //=======================================================================================
 
@@ -156,15 +242,24 @@ void ws2812_update(
     uint8_t led_index; 
     uint8_t colour_index; 
     uint16_t psudo_pwm_index = SET_BIT;   // offset to bit that defines 1 or 0 code 
+    uint16_t pwm_duty_index = CLEAR; 
 
     // Update data 
     for (led_index = CLEAR; led_index < WS2812_LED_NUM; led_index++)
     {
         for (colour_index = WS2812_BITS_PER_LED; colour_index > 0; colour_index--)
         {
-            driver_data_ptr->psudo_pwm[psudo_pwm_index] = (uint8_t)
-                ((driver_data_ptr->colour_data[led_index] >> (colour_index - 1)) & 0x01); 
-            psudo_pwm_index += WS2812_COUNTS_PER_BIT; 
+            if ((driver_data_ptr->colour_data[led_index] >> (colour_index - 1) & 0x01))
+            {
+                driver_data_ptr->pwm_duty[pwm_duty_index++] = WS2812_1_CODE_DUTY; 
+            }
+            else 
+            {
+                driver_data_ptr->pwm_duty[pwm_duty_index++] = WS2812_0_CODE_DUTY; 
+            }
+            // driver_data_ptr->psudo_pwm[psudo_pwm_index] = (uint8_t)
+            //     ((driver_data_ptr->colour_data[led_index] >> (colour_index - 1)) & 0x01); 
+            // psudo_pwm_index += WS2812_COUNTS_PER_BIT; 
         }
     }
 }
@@ -181,57 +276,62 @@ void ws2812_send(
     // Check for valid data 
     if (driver_data_ptr == NULL) return; 
 
-    // Local variables 
-    // uint32_t time_count; 
-    // uint32_t count_check = CLEAR; 
-    uint16_t psudo_pwm_index; 
-    uint16_t psudo_pwm_size = WS2812_LED_NUM * WS2812_BITS_PER_LED * WS2812_COUNTS_PER_BIT; 
+    // // Local variables 
+    // // uint32_t time_count; 
+    // // uint32_t count_check = CLEAR; 
+    // uint16_t psudo_pwm_index; 
+    // uint16_t psudo_pwm_size = WS2812_LED_NUM * WS2812_BITS_PER_LED * WS2812_COUNTS_PER_BIT; 
 
-    // // Get the starting timer count 
-    // time_count = tim_cnt_read(driver_data_ptr->timer); 
+    // // // Get the starting timer count 
+    // // time_count = tim_cnt_read(driver_data_ptr->timer); 
     
-    // Send data when there is a timer count 
-    for (psudo_pwm_index = CLEAR; psudo_pwm_index < psudo_pwm_size; psudo_pwm_index++)
-    {
-        // // Wait for a count 
-        // while (time_count == count_check)
-        // {
-        //     count_check = tim_cnt_read(driver_data_ptr->timer); 
-        // }
+    // // Send data when there is a timer count 
+    // for (psudo_pwm_index = CLEAR; psudo_pwm_index < psudo_pwm_size; psudo_pwm_index++)
+    // {
+    //     // // Wait for a count 
+    //     // while (time_count == count_check)
+    //     // {
+    //     //     count_check = tim_cnt_read(driver_data_ptr->timer); 
+    //     // }
 
-        // Write the data once there is a count 
-        gpio_write(
-            driver_data_ptr->gpio, 
-            driver_data_ptr->pin_code, 
-            driver_data_ptr->psudo_pwm[psudo_pwm_index]); 
+    //     // Write the data once there is a count 
+    //     gpio_write(
+    //         driver_data_ptr->gpio, 
+    //         driver_data_ptr->pin_code, 
+    //         driver_data_ptr->psudo_pwm[psudo_pwm_index]); 
         
-        // time_count = count_check; 
-    }
+    //     // time_count = count_check; 
+    // }
+
+    // PWM DMA steps 
+    // - Set the EN bit to enable the DMA stream for the data transfer 
+    // - Enable the PWM timer 
+    // - Enable the DMA at the start and disable at the end 
 }
 
 
-// Write to device 
-void ws2812_write(
-    device_number_t device_num, 
-    const uint8_t *colour_data, 
-    uint8_t led_num)
-{
-    // Get the device data record 
-    ws2812_driver_data_t *driver_data_ptr = 
-        (ws2812_driver_data_t *)get_linked_list_entry(device_num, ws2812_driver_data_ptr); 
+// // Write to device 
+// void ws2812_write(
+//     device_number_t device_num, 
+//     const uint8_t *colour_data, 
+//     uint8_t led_num)
+// {
+//     // Get the device data record 
+//     ws2812_driver_data_t *driver_data_ptr = 
+//         (ws2812_driver_data_t *)get_linked_list_entry(device_num, ws2812_driver_data_ptr); 
 
-    // Check for valid data 
-    if (driver_data_ptr == NULL) return; 
+//     // Check for valid data 
+//     if (driver_data_ptr == NULL) return; 
 
-    // Set the colour data 
-    ws2812_colour_set(device_num, colour_data, led_num); 
+//     // Set the colour data 
+//     ws2812_colour_set(device_num, colour_data, led_num); 
 
-    // Update the write data 
-    ws2812_update(device_num); 
+//     // Update the write data 
+//     ws2812_update(device_num); 
 
-    // Send the write data 
-    ws2812_send(device_num); 
-}
+//     // Send the write data 
+//     ws2812_send(device_num); 
+// }
 
 //=======================================================================================
 
@@ -262,8 +362,5 @@ void ws2812_colour_set(
                                             (*(colour_data + WS2812_RED)   << SHIFT_8) + 
                                              *(colour_data + WS2812_BLUE); 
 }
-
-
-// Clear all 
 
 //=======================================================================================

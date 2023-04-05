@@ -408,9 +408,6 @@ void dma_stream_config(
 
     // Set the memory address and subsequently double buffer mode if needed 
     dma_m0ar(dma_stream, mem_addr); 
-
-    // Enable the DMA stream 
-    dma_stream_enable(dma_stream); 
 }
 
 
