@@ -300,6 +300,18 @@ void tim_2_to_5_output_init(
 }
 
 
+// Timer 2-5 DMA setup 
+void tim_2_5_dma_init(
+    TIM_TypeDef *timer, 
+    tim_channel_t tim_channel, 
+    uint8_t burst_len)
+{
+    // Configure the DMA control register 
+    timer->DCR = CLEAR; 
+    timer->DCR = (burst_len << SHIFT_8) | (0x0C + tim_channel); 
+}
+
+
 // Timer 9-11 counter mode setup 
 void tim_9_to_11_counter_init(
     TIM_TypeDef *timer, 

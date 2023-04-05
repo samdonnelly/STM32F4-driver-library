@@ -24,7 +24,6 @@
 
 // Drivers 
 #include "linked_list_driver.h" 
-#include "gpio_driver.h" 
 #include "timers.h" 
 #include "dma_driver.h" 
 
@@ -34,15 +33,16 @@
 //=======================================================================================
 // Macros 
 
-// Data information 
-#define WS2812_BITS_PER_LED 24            // Data bits per LED - 1 byte per colour 
-#define WS2812_COLOUR_PER_LED 3           // Colours in each LED - Green, Red, Blue 
-#define WS2812_LED_NUM 8                  // Max number of LEDs available 
+// Device information 
+#define WS2812_BITS_PER_LED 24         // Data bits per LED - 1 byte per colour 
+#define WS2812_COLOUR_PER_LED 3        // Colours in each LED - Green, Red, Blue 
+#define WS2812_LED_NUM 8               // Max number of LEDs available 
+#define WS2812_MIN_SEND_DELAY 50       // Minimum delay between sends (microseconds) 
 
 // PWM data 
-#define WS2812_84MHZ_PWM_ARR 105          // PWM ARR to hit 1.25us period at 84MHz clock 
-#define WS2812_0_CODE_DUTY 32             // Duty cycle (32/52) for sending a 0 
-#define WS2812_1_CODE_DUTY 64             // Duty cycle (64/105) for sending a 1 
+#define WS2812_84MHZ_PWM_ARR 105       // PWM ARR to hit 1.25us period at 84MHz clock 
+#define WS2812_0_CODE_DUTY 32          // Duty cycle to send 0 - max of WS2812_84MHZ_PWM_ARR 
+#define WS2812_1_CODE_DUTY 64          // Duty cycle to send 1 - max of WS2812_84MHZ_PWM_ARR 
 
 //=======================================================================================
 
@@ -107,17 +107,6 @@ void ws2812_init(
 
 
 /**
- * @brief WS2812 update data 
- * 
- * @details 
- * 
- * @param device_num : 
- */
-void ws2812_update(
-    device_number_t device_num); 
-
-
-/**
  * @brief WS2812 send data to device 
  * 
  * @details 
@@ -126,21 +115,6 @@ void ws2812_update(
  */
 void ws2812_send(
     device_number_t device_num); 
-
-
-// /**
-//  * @brief WS2812 write 
-//  * 
-//  * @details Set, update and write data to the device 
-//  * 
-//  * @param device_num 
-//  * @param colour_data 
-//  * @param led_num 
-//  */
-// void ws2812_write(
-//     device_number_t device_num, 
-//     const uint8_t *colour_data, 
-//     uint8_t led_num); 
 
 
 /**

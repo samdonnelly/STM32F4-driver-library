@@ -242,6 +242,21 @@ void tim_2_to_5_output_init(
 
 
 /**
+ * @brief Timer 2-5 DMA setup 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @param tim_channel 
+ * @param burst_len 
+ */
+void tim_2_5_dma_init(
+    TIM_TypeDef *timer, 
+    tim_channel_t tim_channel, 
+    uint8_t burst_len); 
+
+
+/**
  * @brief Timer 9-11 counter mode setup 
  * 
  * @details Initializes timer 9, 10 or 11 in upcounting mode. Note that if a timer port 
