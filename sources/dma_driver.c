@@ -360,22 +360,22 @@ void dma_stream_init(
     // Select the DMA channel 
     dma_chsel(dma_stream, channel); 
 
-    // Configure the direction 
+    // Configure the data transfer direction 
     dma_dir(dma_stream, dir); 
 
-    // Configure circular 
+    // Configure circular mode 
     dma_cm(dma_stream, cm); 
     
     // Configure the stream priority 
     dma_priority(dma_stream, priority); 
     
     // Configure increment/fixed memory mode 
-    dma_minc(dma_stream, minc); 
-    dma_pinc(dma_stream, pinc); 
+    dma_minc(dma_stream, minc);     // Memory increment mode 
+    dma_pinc(dma_stream, pinc);     // Peripheral increment mode 
     
     // Configure data widths 
-    dma_msize(dma_stream, msize); 
-    dma_psize(dma_stream, psize); 
+    dma_msize(dma_stream, msize);   // Memory data width 
+    dma_psize(dma_stream, psize);   // Peripheral data width 
 } 
 
 
@@ -386,14 +386,14 @@ void dma_stream_config(
     uint32_t mem_addr, 
     uint16_t data_items)
 {
-    // Configure the total number of data items to be transferred 
-    dma_ndt(dma_stream, data_items); 
-
     // Set the peripheral port address 
     dma_par(dma_stream, per_addr); 
 
     // Set the memory address and subsequently double buffer mode if needed 
-    dma_m0ar(dma_stream, mem_addr); 
+    dma_m0ar(dma_stream, mem_addr);
+    
+    // Configure the total number of data items to be transferred 
+    dma_ndt(dma_stream, data_items); 
 }
 
 

@@ -213,11 +213,13 @@ void ws2812_send(
 
     // Wait for the data transfer to be done 
     while (dma_stream_status(driver_data_ptr->dma_stream)); 
+    // TODO Try check the data item counter instead (NDTR) 
 
     // Set the duty cycle to zero? 
 
     // Disable the PWM timer 
     tim_disable(driver_data_ptr->timer); 
+    // Disable the DMA stream? 
 
     // Delay between sends 
     
