@@ -24,20 +24,6 @@
 // Function Prototypes 
 
 /**
- * @brief Stream status 
- * 
- * @details Reads the stream enable flag. This is used by the stream disable function 
- *          to know when a stream is disabled (bit cleared). The enable flag can be cleared 
- *          by hardware on the DMA end of transfer or if an error occurs. 
- * 
- * @param dma_stream : pointer to DMA port stream in question 
- * @return uint8_t : stream status - 0 = disabled, 1 = enabled 
- */
-uint8_t dma_stream_status(
-    DMA_Stream_TypeDef *dma_stream); 
-
-
-/**
  * @brief DMA channel select 
  * 
  * @details Selects the channel for a given DMA stream. Each stream has up to 8 channels 

@@ -501,8 +501,8 @@ void tim_ude(
     TIM_TypeDef *timer, 
     tim_up_dma_t ude)
 {
-    timer->DIER &= ~(SET_BIT >> SHIFT_8); 
-    timer->DIER |= (ude >> SHIFT_8); 
+    timer->DIER &= ~(SET_BIT << SHIFT_8); 
+    timer->DIER |= (ude << SHIFT_8); 
 }
 
 
@@ -511,8 +511,8 @@ void tim_uie(
     TIM_TypeDef *timer, 
     tim_up_int_t uie)
 {
-    timer->DIER &= ~(SET_BIT >> SHIFT_0); 
-    timer->DIER |= (uie >> SHIFT_0); 
+    timer->DIER &= ~(SET_BIT << SHIFT_0); 
+    timer->DIER |= (uie << SHIFT_0); 
 }
 
 //=======================================================================================

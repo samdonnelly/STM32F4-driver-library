@@ -43,7 +43,7 @@ typedef struct ws2812_driver_data_s
 
     // Data 
     uint32_t colour_data[WS2812_LED_NUM]; 
-    uint8_t pwm_duty[WS2812_LED_NUM * WS2812_BITS_PER_LED]; 
+    uint16_t pwm_duty[WS2812_LED_NUM * WS2812_BITS_PER_LED]; 
 }
 ws2812_driver_data_t; 
 
@@ -75,8 +75,8 @@ void ws2812_init(
             (void *)&ws2812_driver_data_ptr, 
             sizeof(ws2812_driver_data_t)); 
 
-    // Local variables 
-    uint32_t *tim_channel_addr; 
+    // // Local variables 
+    volatile uint32_t tim_channel_addr; 
 
     //===================================================
     // Initialize the PWM timer 
@@ -113,26 +113,26 @@ void ws2812_init(
         DMA_PRIOR_VHI, 
         DMA_ADDR_INCREMENT, 
         DMA_ADDR_FIXED, 
-        DMA_DATA_SIZE_BYTE, 
+        DMA_DATA_SIZE_HALF, 
         DMA_DATA_SIZE_HALF); 
 
     // Identify the timer channel 
     switch (tim_channel)
     {
         case TIM_CHANNEL_1:
-            tim_channel_addr = &timer->CCR1; 
+            tim_channel_addr = (uint32_t)(&timer->CCR1); 
             break;
         
         case TIM_CHANNEL_2:
-            tim_channel_addr = &timer->CCR2; 
+            tim_channel_addr = (uint32_t)(&timer->CCR2); 
             break;
 
         case TIM_CHANNEL_3:
-            tim_channel_addr = &timer->CCR3; 
+            tim_channel_addr = (uint32_t)(&timer->CCR3); 
             break;
 
         default: 
-            tim_channel_addr = &timer->CCR4; 
+            tim_channel_addr = (uint32_t)(&timer->CCR4); 
             break;
     }
 
@@ -144,7 +144,7 @@ void ws2812_init(
 
     // dma_stream_config(
     //     dma_stream, 
-    //     (uint32_t)&(timer->DMAR), 
+    //     (uint32_t)(&timer->DMAR), 
     //     (uint32_t)driver_data_ptr->pwm_duty, 
     //     (uint16_t)(WS2812_LED_NUM * WS2812_BITS_PER_LED)); 
     
@@ -219,8 +219,7 @@ void ws2812_send(
     // Disable the PWM timer 
     tim_disable(driver_data_ptr->timer); 
 
-    // Minimum delay between sends 
-    tim_delay_us(driver_data_ptr->timer, WS2812_MIN_SEND_DELAY); 
+    // Delay between sends 
     
     //===================================================
 }
