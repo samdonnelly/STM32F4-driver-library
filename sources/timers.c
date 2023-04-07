@@ -232,11 +232,57 @@ void tim_cce(
 // Initialization 
 
 // Timer 1 setup 
-void tim1_init(
-    timer_us_prescalars_t prescalar)
+void tim1_output_init(
+    tim_channel_t channel, 
+    GPIO_TypeDef *gpio, 
+    pin_selector_t pin, 
+    tim_dir_t dir, 
+    uint16_t arr, 
+    tim_ocm_t ocm, 
+    tim_ocpe_t ocpe, 
+    tim_arpe_t arpe, 
+    tim_ccp_t ccp, 
+    tim_up_dma_t ude)
 {
     // Enable the timer clock 
     RCC->APB2ENR |= (SET_BIT << SHIFT_0);
+
+    // Configure the output pin 
+    gpio_pin_init(gpio, pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    gpio_afr(gpio, SET_BIT, pin); 
+
+    // Set the counter direction 
+    tim_dir(TIM1, dir); 
+
+    // Set the capture/compare mode 
+    tim_ocm(TIM1, ocm, channel); 
+
+    // Set the auto-reload register (ARR) 
+    tim_arr_set(TIM1, arr); 
+
+    // Configure the preload register 
+    tim_ocpe(TIM1, ocpe, channel); 
+
+    // Configure the auto-reload preload register 
+    tim_arpe(TIM1, arpe); 
+
+    // Set the output capture polarity 
+    tim_ccp(TIM1, ccp, channel); 
+
+    // Enable the OCx output 
+    tim_cce(TIM1, TIM_CCE_ON, channel); 
+
+    // 
+    TIM1->BDTR |= (SET_BIT << SHIFT_15); 
+
+    // Configure the update DMA request 
+    tim_ude(TIM1, ude); 
+
+    // Reset the counter 
+    tim_cnt_set(TIM1, RESET_COUNT); 
+
+    // Set the UG bit to initialize all registers 
+    tim_ug_set(TIM1); 
 }
 
 

@@ -632,6 +632,14 @@ void dma_ndt(
     dma_stream->NDTR = data_items; 
 }
 
+
+// 
+uint16_t dma_ndt_read(
+    DMA_Stream_TypeDef *dma_stream)
+{
+    return dma_stream->NDTR; 
+}
+
 //================================================================================
 
 

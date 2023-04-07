@@ -435,4 +435,7 @@ FIFO_STATUS dma_fs(
 
 //================================================================================
 
+uint16_t dma_ndt_read(
+    DMA_Stream_TypeDef *dma_stream); 
+
 #endif   // _DMA_DRIVER_H_

@@ -193,8 +193,17 @@ typedef uint32_t TIM_COUNTER;
  * 
  * @param prescalar : timer clock prescaler 
  */
-void tim1_init(
-    timer_us_prescalars_t prescalar); 
+void tim1_output_init(
+    tim_channel_t channel, 
+    GPIO_TypeDef *gpio, 
+    pin_selector_t pin, 
+    tim_dir_t dir, 
+    uint16_t arr, 
+    tim_ocm_t ocm, 
+    tim_ocpe_t ocpe, 
+    tim_arpe_t arpe, 
+    tim_ccp_t ccp, 
+    tim_up_dma_t ude); 
 
 
 /**

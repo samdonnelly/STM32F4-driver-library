@@ -39,6 +39,7 @@ typedef struct ws2812_driver_data_s
 
     // Peripherals 
     TIM_TypeDef *timer; 
+    tim_channel_t tim_channel; 
     DMA_Stream_TypeDef *dma_stream; 
 
     // Data 
@@ -76,7 +77,7 @@ void ws2812_init(
             sizeof(ws2812_driver_data_t)); 
 
     // // Local variables 
-    volatile uint32_t tim_channel_addr; 
+    // uint32_t tim_channel_addr; 
 
     //===================================================
     // Initialize the PWM timer 
@@ -94,6 +95,8 @@ void ws2812_init(
         TIM_CCP_AH, 
         TIM_UP_DMA_ENABLE); 
 
+    tim_enable(timer); 
+
     // tim_2_5_dma_init(
     //     timer, 
     //     tim_channel, 
@@ -104,43 +107,43 @@ void ws2812_init(
     //===================================================
     // Initialize the DMA 
 
-    dma_stream_init(
-        dma, 
-        dma_stream, 
-        dma_channel, 
-        DMA_DIR_MP, 
-        DMA_CM_DISABLE,
-        DMA_PRIOR_VHI, 
-        DMA_ADDR_INCREMENT, 
-        DMA_ADDR_FIXED, 
-        DMA_DATA_SIZE_HALF, 
-        DMA_DATA_SIZE_HALF); 
+    // dma_stream_init(
+    //     dma, 
+    //     dma_stream, 
+    //     dma_channel, 
+    //     DMA_DIR_MP, 
+    //     DMA_CM_DISABLE,
+    //     DMA_PRIOR_VHI, 
+    //     DMA_ADDR_INCREMENT, 
+    //     DMA_ADDR_FIXED, 
+    //     DMA_DATA_SIZE_HALF, 
+    //     DMA_DATA_SIZE_HALF); 
 
-    // Identify the timer channel 
-    switch (tim_channel)
-    {
-        case TIM_CHANNEL_1:
-            tim_channel_addr = (uint32_t)(&timer->CCR1); 
-            break;
+    // // Identify the timer channel 
+    // switch (tim_channel)
+    // {
+    //     case TIM_CHANNEL_1:
+    //         tim_channel_addr = (uint32_t)(&timer->CCR1); 
+    //         break;
         
-        case TIM_CHANNEL_2:
-            tim_channel_addr = (uint32_t)(&timer->CCR2); 
-            break;
+    //     case TIM_CHANNEL_2:
+    //         tim_channel_addr = (uint32_t)(&timer->CCR2); 
+    //         break;
 
-        case TIM_CHANNEL_3:
-            tim_channel_addr = (uint32_t)(&timer->CCR3); 
-            break;
+    //     case TIM_CHANNEL_3:
+    //         tim_channel_addr = (uint32_t)(&timer->CCR3); 
+    //         break;
 
-        default: 
-            tim_channel_addr = (uint32_t)(&timer->CCR4); 
-            break;
-    }
+    //     default: 
+    //         tim_channel_addr = (uint32_t)(&timer->CCR4); 
+    //         break;
+    // }
 
-    dma_stream_config(
-        dma_stream, 
-        (uint32_t)tim_channel_addr, 
-        (uint32_t)driver_data_ptr->pwm_duty, 
-        (uint16_t)(WS2812_LED_NUM * WS2812_BITS_PER_LED)); 
+    // dma_stream_config(
+    //     dma_stream, 
+    //     (uint32_t)tim_channel_addr, 
+    //     (uint32_t)driver_data_ptr->pwm_duty, 
+    //     (uint16_t)(WS2812_LED_NUM * WS2812_BITS_PER_LED)); 
 
     // dma_stream_config(
     //     dma_stream, 
@@ -154,6 +157,7 @@ void ws2812_init(
     // Initialize data record 
 
     driver_data_ptr->timer = timer; 
+    driver_data_ptr->tim_channel = tim_channel; 
     driver_data_ptr->dma_stream = dma_stream; 
     memset((void *)driver_data_ptr->colour_data, CLEAR, sizeof(driver_data_ptr->colour_data)); 
     memset((void *)driver_data_ptr->pwm_duty, CLEAR, sizeof(driver_data_ptr->pwm_duty)); 
@@ -178,13 +182,14 @@ void ws2812_send(
     // Check for valid data 
     if (driver_data_ptr == NULL) return; 
 
-    //===================================================
-    // Update the write data 
-
     // Local variables 
     uint8_t led_index; 
     uint8_t colour_index; 
     uint16_t pwm_duty_index = CLEAR; 
+    uint16_t pwm_duty_size = WS2812_LED_NUM * WS2812_BITS_PER_LED; 
+
+    //===================================================
+    // Update the write data 
 
     // Update data 
     for (led_index = CLEAR; led_index < WS2812_LED_NUM; led_index++)
@@ -207,21 +212,26 @@ void ws2812_send(
     //===================================================
     // Send the write data 
 
-    // Enable the PWM timer and DMA stream 
-    tim_enable(driver_data_ptr->timer); 
-    dma_stream_enable(driver_data_ptr->dma_stream); 
+    // Send all the LED data 
+    for (pwm_duty_index = CLEAR; pwm_duty_index < pwm_duty_size; pwm_duty_index++)
+    {
+        // Check for update event 
+        while (!(driver_data_ptr->timer->SR & 0x01)); 
 
-    // Wait for the data transfer to be done 
-    while (dma_stream_status(driver_data_ptr->dma_stream)); 
-    // TODO Try check the data item counter instead (NDTR) 
+        // Update the duty cycle 
+        tim_ccr(
+            driver_data_ptr->timer, 
+            driver_data_ptr->pwm_duty[pwm_duty_index], 
+            driver_data_ptr->tim_channel); 
 
-    // Set the duty cycle to zero? 
+        // Clear the update interrupt flag 
+        driver_data_ptr->timer->SR &= ~(SET_BIT << SHIFT_0); 
+    }
 
-    // Disable the PWM timer 
-    tim_disable(driver_data_ptr->timer); 
-    // Disable the DMA stream? 
+    // Set the duty cycle to zero to prevent further changes 
+    tim_ccr(driver_data_ptr->timer, CLEAR, driver_data_ptr->tim_channel); 
 
-    // Delay between sends 
+    // TODO Delay between sends 
     
     //===================================================
 }
