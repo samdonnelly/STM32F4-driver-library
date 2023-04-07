@@ -567,6 +567,14 @@ void tim_uie(
 //=======================================================================================
 // Status register 
 
+// Update interrupt flag read 
+uint8_t tim_uif_read(
+    TIM_TypeDef *timer)
+{
+    return (uint8_t)(timer->SR & (SET_BIT << SHIFT_0)); 
+}
+
+
 // Update interrupt flag clear 
 void tim_uif_clear(
     TIM_TypeDef *timer)

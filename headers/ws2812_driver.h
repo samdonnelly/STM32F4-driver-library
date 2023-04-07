@@ -85,25 +85,21 @@ typedef enum {
  * @brief WS2812 initialization 
  * 
  * @details 
+ *          This driver/function is equipped for TIM2-TIM5. Other timers cannot be used at 
+ *          this time. 
  * 
  * @param device_num 
  * @param timer 
  * @param tim_channel 
  * @param gpio 
  * @param pin 
- * @param dma 
- * @param dma_stream 
- * @param dma_channel 
  */
 void ws2812_init(
     device_number_t device_num, 
     TIM_TypeDef *timer, 
     tim_channel_t tim_channel, 
     GPIO_TypeDef *gpio, 
-    pin_selector_t pin, 
-    DMA_TypeDef *dma, 
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_channel_t dma_channel); 
+    pin_selector_t pin); 
 
 
 /**

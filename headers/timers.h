@@ -418,6 +418,18 @@ uint8_t tim_compare(
 // Status register 
 
 /**
+ * @brief Update interrupt flag read 
+ * 
+ * @details 
+ * 
+ * @param timer 
+ * @return uint8_t 
+ */
+uint8_t tim_uif_read(
+    TIM_TypeDef *timer); 
+
+
+/**
  * @brief Update interrupt flag clear 
  * 
  * @details Clears the interrupt flag that is set on an update event. This function is required 

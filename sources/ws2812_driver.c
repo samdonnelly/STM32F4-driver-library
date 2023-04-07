@@ -37,14 +37,13 @@ typedef struct ws2812_driver_data_s
     struct ws2812_driver_data_s *next_ptr; 
     device_number_t device_num; 
 
-    // Peripherals 
+    // Peripheral information 
     TIM_TypeDef *timer; 
     tim_channel_t tim_channel; 
-    DMA_Stream_TypeDef *dma_stream; 
 
     // Data 
     uint32_t colour_data[WS2812_LED_NUM]; 
-    uint16_t pwm_duty[WS2812_LED_NUM * WS2812_BITS_PER_LED]; 
+    uint8_t pwm_duty[WS2812_LED_NUM * WS2812_BITS_PER_LED]; 
 }
 ws2812_driver_data_t; 
 
@@ -64,24 +63,16 @@ void ws2812_init(
     TIM_TypeDef *timer, 
     tim_channel_t tim_channel, 
     GPIO_TypeDef *gpio, 
-    pin_selector_t pin, 
-    DMA_TypeDef *dma, 
-    DMA_Stream_TypeDef *dma_stream, 
-    dma_channel_t dma_channel)
+    pin_selector_t pin)
 {
-    // Create data record 
+    // Create a data record for the device 
     ws2812_driver_data_t *driver_data_ptr = 
         (ws2812_driver_data_t *)create_linked_list_entry(
             device_num, 
             (void *)&ws2812_driver_data_ptr, 
             sizeof(ws2812_driver_data_t)); 
 
-    // // Local variables 
-    // uint32_t tim_channel_addr; 
-
-    //===================================================
     // Initialize the PWM timer 
-
     tim_2_to_5_output_init(
         timer, 
         tim_channel, 
@@ -93,72 +84,11 @@ void ws2812_init(
         TIM_OCPE_ENABLE, 
         TIM_ARPE_ENABLE, 
         TIM_CCP_AH, 
-        TIM_UP_DMA_ENABLE); 
+        TIM_UP_DMA_DISABLE); 
 
-    tim_enable(timer); 
-
-    // tim_2_5_dma_init(
-    //     timer, 
-    //     tim_channel, 
-    //     0x00); 
-
-    //===================================================
-
-    //===================================================
-    // Initialize the DMA 
-
-    // dma_stream_init(
-    //     dma, 
-    //     dma_stream, 
-    //     dma_channel, 
-    //     DMA_DIR_MP, 
-    //     DMA_CM_DISABLE,
-    //     DMA_PRIOR_VHI, 
-    //     DMA_ADDR_INCREMENT, 
-    //     DMA_ADDR_FIXED, 
-    //     DMA_DATA_SIZE_HALF, 
-    //     DMA_DATA_SIZE_HALF); 
-
-    // // Identify the timer channel 
-    // switch (tim_channel)
-    // {
-    //     case TIM_CHANNEL_1:
-    //         tim_channel_addr = (uint32_t)(&timer->CCR1); 
-    //         break;
-        
-    //     case TIM_CHANNEL_2:
-    //         tim_channel_addr = (uint32_t)(&timer->CCR2); 
-    //         break;
-
-    //     case TIM_CHANNEL_3:
-    //         tim_channel_addr = (uint32_t)(&timer->CCR3); 
-    //         break;
-
-    //     default: 
-    //         tim_channel_addr = (uint32_t)(&timer->CCR4); 
-    //         break;
-    // }
-
-    // dma_stream_config(
-    //     dma_stream, 
-    //     (uint32_t)tim_channel_addr, 
-    //     (uint32_t)driver_data_ptr->pwm_duty, 
-    //     (uint16_t)(WS2812_LED_NUM * WS2812_BITS_PER_LED)); 
-
-    // dma_stream_config(
-    //     dma_stream, 
-    //     (uint32_t)(&timer->DMAR), 
-    //     (uint32_t)driver_data_ptr->pwm_duty, 
-    //     (uint16_t)(WS2812_LED_NUM * WS2812_BITS_PER_LED)); 
-    
-    //===================================================
-
-    //===================================================
     // Initialize data record 
-
     driver_data_ptr->timer = timer; 
     driver_data_ptr->tim_channel = tim_channel; 
-    driver_data_ptr->dma_stream = dma_stream; 
     memset((void *)driver_data_ptr->colour_data, CLEAR, sizeof(driver_data_ptr->colour_data)); 
     memset((void *)driver_data_ptr->pwm_duty, CLEAR, sizeof(driver_data_ptr->pwm_duty)); 
 
@@ -171,7 +101,7 @@ void ws2812_init(
 //=======================================================================================
 // Write 
 
-// Write to device 
+// Write data to the device 
 void ws2812_send(
     device_number_t device_num)
 {
@@ -189,9 +119,8 @@ void ws2812_send(
     uint16_t pwm_duty_size = WS2812_LED_NUM * WS2812_BITS_PER_LED; 
 
     //===================================================
-    // Update the write data 
+    // Update the pwm data using the colour data 
 
-    // Update data 
     for (led_index = CLEAR; led_index < WS2812_LED_NUM; led_index++)
     {
         for (colour_index = WS2812_BITS_PER_LED; colour_index > 0; colour_index--)
@@ -210,28 +139,38 @@ void ws2812_send(
     //===================================================
 
     //===================================================
-    // Send the write data 
+    // Update the duty cycle every counter update event with the pwm data 
+    
+    tim_enable(driver_data_ptr->timer); 
 
-    // Send all the LED data 
     for (pwm_duty_index = CLEAR; pwm_duty_index < pwm_duty_size; pwm_duty_index++)
     {
-        // Check for update event 
-        while (!(driver_data_ptr->timer->SR & 0x01)); 
+        // Wait for a counter update event 
+        while (!tim_uif_read(driver_data_ptr->timer)); 
 
-        // Update the duty cycle 
+        // Update the duty cycle to send the right colour code 
         tim_ccr(
             driver_data_ptr->timer, 
-            driver_data_ptr->pwm_duty[pwm_duty_index], 
+            (uint32_t)driver_data_ptr->pwm_duty[pwm_duty_index], 
             driver_data_ptr->tim_channel); 
 
         // Clear the update interrupt flag 
-        driver_data_ptr->timer->SR &= ~(SET_BIT << SHIFT_0); 
+        tim_uif_clear(driver_data_ptr->timer); 
     }
 
-    // Set the duty cycle to zero to prevent further changes 
+    // Wait for the last data to be sent 
+    while (!tim_uif_read(driver_data_ptr->timer)); 
+
+    // Set the duty cycle to zero to prevent further colour changes 
     tim_ccr(driver_data_ptr->timer, CLEAR, driver_data_ptr->tim_channel); 
 
-    // TODO Delay between sends 
+    tim_uif_clear(driver_data_ptr->timer); 
+    tim_disable(driver_data_ptr->timer); 
+
+    // NOTE: the device requires a 50us delay between write operations to distinguish 
+    //       between data transfers. It is assumed that the time between send calls 
+    //       will accumulate this time. If applications arise where this delay is not being 
+    //       then an internal driver timer/delay will be added to ensure the delay. 
     
     //===================================================
 }
