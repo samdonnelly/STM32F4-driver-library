@@ -502,7 +502,7 @@ void adc_start(ADC_TypeDef *adc);
  *          sequence. This function is called during the initialization sequence only if scan 
  *          mode is being used. A single ADC channel can be assigned to multiple sequence 
  *          positions by calling this function multiples times for the same channel in 
- *          different psoitions. 
+ *          different positions. 
  * 
  * @see adc_channel_t
  * @see adc_seq_num_t

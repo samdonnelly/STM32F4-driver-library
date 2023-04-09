@@ -732,11 +732,17 @@ void adc_seq(
     adc_seq_num_t seq_num)
 {
     if (seq_num > ADC_SEQ_12) 
+    {
         adc->SQR1 |= (channel << (5*(seq_num - ADC_SEQ_13))); 
+    }
     else if (seq_num > ADC_SEQ_6) 
+    {
         adc->SQR2 |= (channel << (5*(seq_num - ADC_SEQ_7))); 
+    }
     else 
+    {
         adc->SQR3 |= (channel << (5*(seq_num - ADC_SEQ_1))); 
+    }
 }
 
 
