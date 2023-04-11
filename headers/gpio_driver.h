@@ -134,6 +134,7 @@ typedef enum {
 // GPIO pin state 
 
 typedef gpio_pin_state_t GPIO_STATE; 
+typedef uint16_t GPIOX_DR; 
 
 //=======================================================================================
 
@@ -218,6 +219,20 @@ void gpio_write(
 GPIO_STATE gpio_read(
     GPIO_TypeDef *gpio, 
     gpio_pin_num_t pin_num); 
+
+
+/**
+ * @brief GPIO port read 
+ * 
+ * @details Reads and returns the contents of the input data register (IDR) of the 
+ *          specified GPIO port. This is useful if multiple port pins need to be 
+ *          read such as for multiple GPIO inputs on the same port. 
+ * 
+ * @param gpio : GPIO port to read 
+ * @return GPIOX_DR : contents of the GPIO port data input register 
+ */
+GPIOX_DR gpio_port_read(
+    GPIO_TypeDef *gpio); 
 
 //=======================================================================================
 
