@@ -78,7 +78,29 @@ void debounce_init(
 void debounce(
     uint8_t button_status)
 {
-    // 
+    // Record the button status 
+    debouncer->state[debouncer->index++] = button_status; 
+
+    // Check the index 
+    if (debouncer->index >= DEBOUNCE_NUM_BUTTONS) 
+    {
+        debouncer->index = CLEAR; 
+    }
+
+    // OR (for pull-up) and AND (for pull-down) all the button states 
+    for (uint8_t i = 0; i < DEBOUNCE_NUM_BUTTONS; i++)
+    {
+        // OR 
+        // AND 
+    }
+
+    // XOR the combined button state (for pull-ups) to identify all the buttons reading 
+    // a debounced low 
+
+    // AND the results to see which pull-up buttons and pull-down buttons are pressed 
+
+    // OR the pull-up and pull-down results to get final button pressed results, 
+    // irrespective of pull-up or pull-down configuration 
 }
 
 //=======================================================================================

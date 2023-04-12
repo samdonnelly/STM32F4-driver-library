@@ -30,6 +30,8 @@
 
 #define DEBOUNCE_NUM_BUTTONS 8 
 
+#define DEBOUNCE_PULLUP_XOR 0xFF 
+
 //=======================================================================================
 
 
