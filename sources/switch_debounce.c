@@ -21,18 +21,14 @@
 
 
 //=======================================================================================
-// Function Prototypes 
-//=======================================================================================
-
-
-//=======================================================================================
 // Global variables 
 
 // Data record to hold the debounce information 
 typedef struct switch_debounce_s 
 {
     // Circular buffer to store multiple button state instances 
-    uint8_t state[DEBOUNCE_NUM_BUTTONS]; 
+    // The data type will determine the number of buttons supported - 1-bit per button 
+    uint8_t state[DEBOUNCE_NUM_SAMPLES]; 
 
     // Circular buffer index 
     uint8_t index; 
@@ -41,6 +37,12 @@ typedef struct switch_debounce_s
     // Pull-down --> 0 
     // Pull-up ----> 1 
     uint8_t pull_mask; 
+
+    // Buttons pressed status - when a bit is 1 it indicates a button is pressed 
+    uint8_t pressed; 
+
+    // Buttons released status - when a bit is 1 it indicates a button is released 
+    uint8_t released; 
 }
 switch_debounce_t; 
 
@@ -66,6 +68,10 @@ void debounce_init(
 
     // Record the pull mask 
     debouncer->pull_mask = pull_mask; 
+
+    // Clear the button statuses 
+    debouncer->pressed = CLEAR; 
+    debouncer->released = CLEAR; 
 }
 
 //=======================================================================================
@@ -78,29 +84,49 @@ void debounce_init(
 void debounce(
     uint8_t button_status)
 {
+    // Local variables 
+    uint8_t press_pull_up = CLEAR; 
+    uint8_t press_pull_down = CLEAR; 
+    uint8_t release_pull_up = CLEAR; 
+    uint8_t release_pull_down = CLEAR; 
+    uint8_t and_results = CLEAR; 
+    uint8_t or_results = CLEAR; 
+
     // Record the button status 
     debouncer->state[debouncer->index++] = button_status; 
 
     // Check the index 
-    if (debouncer->index >= DEBOUNCE_NUM_BUTTONS) 
+    if (debouncer->index >= DEBOUNCE_NUM_SAMPLES) 
     {
         debouncer->index = CLEAR; 
     }
 
-    // OR (for pull-up) and AND (for pull-down) all the button states 
-    for (uint8_t i = 0; i < DEBOUNCE_NUM_BUTTONS; i++)
+    // OR the button states for press pull-up and release pull-down status 
+    // AND the button states for press pull-down and release pull-up status 
+    for (uint8_t i = 0; i < DEBOUNCE_NUM_SAMPLES; i++)
     {
-        // OR 
-        // AND 
+        or_results |= debouncer->state[i]; 
+        and_results &= debouncer->state[i]; 
     }
 
-    // XOR the combined button state (for pull-ups) to identify all the buttons reading 
-    // a debounced low 
+    // To isolate the pressed pull-up buttons we XOR the OR results with logic high (0xFF) 
+    // and AND the XOR results with the pull mask 
+    press_pull_up = (DEBOUNCE_PULLUP_XOR ^ or_results) & debouncer->pull_mask; 
 
-    // AND the results to see which pull-up buttons and pull-down buttons are pressed 
+    // To isolate the pressed pull-down buttons we NOT the pull mask and AND this with 
+    // the AND results 
+    press_pull_down = ~(debouncer->pull_mask) & and_results; 
 
-    // OR the pull-up and pull-down results to get final button pressed results, 
-    // irrespective of pull-up or pull-down configuration 
+    // To isolate the released pull-up buttons we AND the pull mask with the AND results 
+    release_pull_up = debouncer->pull_mask & and_results; 
+
+    // To isolate the released pull-down buttons we NOT the OR results 
+    release_pull_down = ~or_results; 
+
+    // Combine the results the get the status of pressed and released buttons irrespective 
+    // of pull-up or pull-down configuration 
+    debouncer->pressed = press_pull_up | press_pull_down; 
+    debouncer->released = release_pull_up | release_pull_down; 
 }
 
 //=======================================================================================
@@ -113,7 +139,7 @@ void debounce(
 uint8_t debounce_pressed(
     uint8_t button_select)
 {
-    // 
+    return (debouncer->pressed & button_select); 
 }
 
 
@@ -121,7 +147,7 @@ uint8_t debounce_pressed(
 uint8_t debounce_released(
     uint8_t button_select)
 {
-    // 
+    return (debouncer->released & button_select); 
 }
 
 //=======================================================================================
