@@ -30,10 +30,13 @@
 //=======================================================================================
 // Macros 
 
-// Different ways to write zero for readability 
+// Logic low - different ways to write zero for readability 
 #define CLEAR 0
 #define RESET_ZERO 0
 #define NONE 0
+
+// Logic high 
+#define BYTE_HIGH 0xFF 
 
 // Data type 
 #define INT16_NUM_DIGITS 5

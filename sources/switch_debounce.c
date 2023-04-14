@@ -48,7 +48,6 @@ switch_debounce_t;
 
 
 // Data record instance 
-// static switch_debounce_t *debouncer; 
 static switch_debounce_t debouncer; 
 
 //=======================================================================================
@@ -90,7 +89,7 @@ void debounce(
     uint8_t press_pull_down = CLEAR; 
     uint8_t release_pull_up = CLEAR; 
     uint8_t release_pull_down = CLEAR; 
-    uint8_t and_results = 0xFF; 
+    uint8_t and_results = BYTE_HIGH; 
     uint8_t or_results = CLEAR; 
 
     // Record the button status 
@@ -112,7 +111,7 @@ void debounce(
 
     // To isolate the pressed pull-up buttons we XOR the OR results with logic high (0xFF) 
     // and AND the XOR results with the pull mask 
-    press_pull_up = (DEBOUNCE_PULLUP_XOR ^ or_results) & debouncer.pull_mask; 
+    press_pull_up = (BYTE_HIGH ^ or_results) & debouncer.pull_mask; 
 
     // To isolate the pressed pull-down buttons we NOT the pull mask and AND this with 
     // the AND results 
@@ -137,7 +136,7 @@ void debounce(
 //=======================================================================================
 // Getters 
 
-// Switch debounce pressed buttons 
+// Get pressed button status 
 uint8_t debounce_pressed(
     uint8_t button_select)
 {
@@ -145,7 +144,7 @@ uint8_t debounce_pressed(
 }
 
 
-// Switch debounce released buttons 
+// Get released button status 
 uint8_t debounce_released(
     uint8_t button_select)
 {
