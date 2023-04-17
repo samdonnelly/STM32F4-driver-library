@@ -355,6 +355,8 @@ void tim_2_5_dma_init(
     // Configure the DMA control register 
     timer->DCR = CLEAR; 
     timer->DCR = (burst_len << SHIFT_8) | (0x0C + tim_channel); 
+
+    // TODO change 0x0C ghost number 
 }
 
 

@@ -251,13 +251,24 @@ void tim_2_to_5_output_init(
 
 
 /**
- * @brief Timer 2-5 DMA setup 
+ * @brief Timers 2-5 DMA setup 
  * 
- * @details 
+ * @details Configures the DMA control register. This is used when you want to perform a 
+ *          burst write to multiple timer registers. This means that when DMA is triggered 
+ *          (whether it be through an update event or other), you can write data to 
+ *          multiple timer registers with a single request. See the reference manual for 
+ *          more details. 
+ *          
+ *          When this mode is used, the peripheral address specified for the DMA setup is the 
+ *          timers DMAR register. This function is currently set up to begin writing at the 
+ *          CCR1 register since there are no other known uses for a burst write other than 
+ *          writing to the CCRX registers. The only argument that needs to be specified is 
+ *          the burst length and it's recommended to keep the length to less than or equal 
+ *          to four since there are only four CCR registers. 
  * 
- * @param timer 
- * @param tim_channel 
- * @param burst_len 
+ * @param timer : pointer to timer port (2-5) being used 
+ * @param tim_channel : channel of timer (1-4) being used 
+ * @param burst_len : burst length (in bytes) 
  */
 void tim_2_5_dma_init(
     TIM_TypeDef *timer, 
