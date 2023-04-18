@@ -77,10 +77,12 @@ void tim_arpe(
 /**
  * @brief Update DMA request 
  * 
- * @details 
+ * @details Configures the update DMA request bit. This bit, if set, will generate a DMA request 
+ *          on a counter update event. Note that the DMA must also be configured for this to do 
+ *          anything. 
  * 
- * @param timer 
- * @param ude 
+ * @param timer : pointer to timer to configure 
+ * @param ude : update DMA request configuration 
  */
 void tim_ude(
     TIM_TypeDef *timer, 
@@ -354,9 +356,7 @@ void tim_2_5_dma_init(
 {
     // Configure the DMA control register 
     timer->DCR = CLEAR; 
-    timer->DCR = (burst_len << SHIFT_8) | (0x0C + tim_channel); 
-
-    // TODO change 0x0C ghost number 
+    timer->DCR = (burst_len << SHIFT_8) | (TIM_CCR1_INDEX + tim_channel); 
 }
 
 
@@ -403,6 +403,7 @@ void tim_enable(
     TIM_TypeDef *timer)
 {
     tim_cen(timer, TIM_CEN_ENABLE); 
+    
     if (!(timer->DIER & (SET_BIT << SHIFT_0)))
     {
         while(!(timer->SR & (SET_BIT << SHIFT_0)));

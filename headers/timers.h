@@ -48,6 +48,9 @@
 // Masks 
 #define TIM_APB_CLK_FILTER 0x10000   // Filter to determine APB1 or APB2 frequency 
 
+// Indexing 
+#define TIM_CCR1_INDEX 0x0C          // CCR1 register index for the TIM DMA config register 
+
 //=======================================================================================
 
 
@@ -431,10 +434,11 @@ uint8_t tim_compare(
 /**
  * @brief Update interrupt flag read 
  * 
- * @details 
+ * @details Returns the status of the interrupt flag that is set during an update event. This 
+ *          is useful for checking for counter updates manually (without DMA or interrupts). 
  * 
- * @param timer 
- * @return uint8_t 
+ * @param timer : pointer to timer that triggered the update event 
+ * @return uint8_t : update interrupt status 
  */
 uint8_t tim_uif_read(
     TIM_TypeDef *timer); 
