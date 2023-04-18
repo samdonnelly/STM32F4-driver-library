@@ -37,6 +37,11 @@
 
 #define HW125_FREE_THRESH 0x0000C350   // Free space threshold before disk full fault (KB) 
 
+// Volume numbers 
+#define HW125_VOL_NUM_0 0              // Logical drive number 0 (default number) 
+#define HW125_VOL_NUM_1 1              // Logical drive number 1 
+#define HW125_VOL_NUM_2 2              // Logical drive number 2 
+
 //=======================================================================================
 
 
@@ -172,21 +177,18 @@ void hw125_controller(void);
 
 /**
  * @brief Set the eject flag 
- * 
  */
 void hw125_set_eject_flag(void); 
 
 
 /**
  * @brief Clear the eject flag 
- * 
  */
 void hw125_clear_eject_flag(void); 
 
 
 /**
  * @brief Set reset flag 
- * 
  */
 void hw125_set_reset_flag(void); 
 
@@ -201,7 +203,7 @@ void hw125_set_reset_flag(void);
  *          the previous dir. 
  * 
  * @param dir 
- * @return FRESULT 
+ * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_mkdir(
     const TCHAR *dir); 
@@ -212,7 +214,7 @@ FRESULT hw125_mkdir(
  * 
  * @param file_name 
  * @param mode 
- * @return FRESULT 
+ * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_open(
     const TCHAR *file_name, 
@@ -222,7 +224,7 @@ FRESULT hw125_open(
 /**
  * @brief Close the open file 
  * 
- * @return FRESULT 
+ * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_close(void); 
 
@@ -232,7 +234,7 @@ FRESULT hw125_close(void);
  * 
  * @param buff 
  * @param btw 
- * @return FRESULT 
+ * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_f_write(
     const void *buff, 
@@ -271,7 +273,7 @@ int8_t hw125_printf(
  * @brief Navigate within the open file 
  * 
  * @param offset 
- * @return FRESULT 
+ * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_lseek(
     FSIZE_t offset); 
@@ -319,7 +321,7 @@ HW125_FILE_STATUS hw125_get_file_status(void);
  * 
  * @param buff 
  * @param btr 
- * @return FRESULT 
+ * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_f_read(
     void *buff, 

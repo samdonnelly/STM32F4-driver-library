@@ -26,7 +26,13 @@
 /**
  * @brief HW125 initialization state 
  * 
- * @details 
+ * @details Attempts to mount the volume. If successful, the project directory saved in 
+ *          hw125_trackers_t will be made if it does not already exist and the state 
+ *          machine will move to the "access" state. If unsuccessful, the "not ready" state
+ *          will be entered. The init state is called on startup and controller reset as 
+ *          well as from the "not ready" state once a device is seen. If there is a fault 
+ *          during one of the volume read operations, excluding the mounting procedure, 
+ *          then the fault flag will be set and the "fault" state will be entered. 
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
@@ -35,9 +41,23 @@ void hw125_init_state(
 
 
 /**
- * @brief HW125 no disk file 
+ * @brief HW125 not ready state 
  * 
- * @details 
+ * @details Continuously checks for the presence of the volume to see if it shows up. This 
+ *          state indicates that the volume is not seen by the system (not ready flag set) 
+ *          or the user has intentions to remove the volume (eject flag set). This state
+ *          is entered from the "init" state if volume mounting is unsuccessful or from
+ *          the "eject" state. This state is left when both the not ready flag (which 
+ *          indicates a device is present) and the eject flag (which indicates the user is 
+ *          ready to use the volume) are cleared at which point the "init" state is 
+ *          entered. This state can also be left if the reset flag gets set. The fault 
+ *          flag cannot be set here as it assumes the volume is not present so no volume 
+ *          faults can occur. 
+ *          
+ *          Note that being in this state will render the use of the read/write getters/
+ *          setters useless. If you're in this state then either the disk is not present 
+ *          so these reads/writes won't work or the eject flag is set which will unmount 
+ *          the device and therefore make the reads/writes not possible. 
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
@@ -46,9 +66,14 @@ void hw125_not_ready_state(
 
 
 /**
- * @brief HW125 access file state 
+ * @brief HW125 access state 
  * 
- * @details 
+ * @details Continuously checks for the presence of the volume to see if it goes missing. If 
+ *          it is missing the not ready flag will be set. This state indicates that the volume 
+ *          is seen by the system and normal read/write operations can be performed (using the 
+ *          getters and setters). This state is entered from the "init" state when mounting is 
+ *          successful. It is left when the fault or reset flags are set, or if either of the 
+ *          not ready or eject flags are set. 
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
@@ -57,11 +82,19 @@ void hw125_access_state(
 
 
 /**
- * @brief HW125 e-stop state 
+ * @brief HW125 eject state 
  * 
- * @details 
+ * @details If there is an open file it closes it then unmounts the volume. This state is 
+ *          triggered by the eject flag being set which is set by the application through 
+ *          the hw125_set_eject_flag setter. This can be used to safety remove the disk while 
+ *          the system is still powered on. After this state is run it immediately goes to 
+ *          the "not ready" state. The eject flag is cleared through the application code using 
+ *          the hw125_clear_eject_flag setter. 
  * 
- * @param hw125_device 
+ * @see hw125_set_eject_flag 
+ * @see hw125_clear_eject_flag 
+ * 
+ * @param hw125_device : device tracker that defines control characteristics 
  */
 void hw125_eject_state(
     hw125_trackers_t *hw125_device); 
@@ -92,7 +125,7 @@ void hw125_reset_state(
 /**
  * @brief Mount 
  * 
- * @return FRESULT 
+ * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_mount(
     hw125_trackers_t *hw125_device); 
@@ -101,7 +134,7 @@ FRESULT hw125_mount(
 /**
  * @brief Unmount 
  * 
- * @return FRESULT 
+ * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_unmount(
     hw125_trackers_t *hw125_device); 
@@ -111,7 +144,7 @@ FRESULT hw125_unmount(
  * @brief Get the volume label 
  * 
  * @param hw125_device 
- * @return FRESULT 
+ * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_getlabel(
     hw125_trackers_t *hw125_device); 
@@ -120,7 +153,12 @@ FRESULT hw125_getlabel(
 /**
  * @brief Get free space 
  * 
- * @return FRESULT 
+ * @details Checks the free space of the volume. This function is called after successful 
+ *          mounting of the volume in the "init" state. The free space is checked against 
+ *          a threshold to ensure there is sufficient space for the system to record data. 
+ *          If the free space is below the threshold then the fault flag is set. 
+ * 
+ * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_getfree(
     hw125_trackers_t *hw125_device); 
@@ -302,24 +340,21 @@ void hw125_init_state(
     // Clear reset flag  
     hw125_device->reset = CLEAR_BIT; 
 
-    // Attempt to mount the drive 
+    // Attempt to mount the volume 
     if (hw125_mount(hw125_device) == FR_OK) 
     {
-        // Read the volume label and serial number 
+        // Mounting successful 
+        // Read the volume, serial number, free space and make the directory specified by 
+        // "path" if it does not exist 
         hw125_getlabel(hw125_device); 
-
-        // Check free space 
         hw125_getfree(hw125_device); 
-
-        // Make the directory specified by "path" if it does not exist 
         hw125_mkdir(""); 
     }
-    else   // Issue mounting the volume 
+    else 
     {
-        // Go to the not ready state 
+        // Mounting unsuccessful 
+        // Go to the not ready state and unmount the volume 
         hw125_device->not_ready = SET_BIT; 
-
-        // Unmount the volume 
         hw125_unmount(hw125_device); 
     }
 }
@@ -417,7 +452,7 @@ FRESULT hw125_unmount(
 {
     // Unmount, clear the init status so it can be re-mounted, and clear the mount bit 
     f_unmount(""); 
-    disk.is_initialized[0] = CLEAR;  // Logical drive number 0 - default number 
+    disk.is_initialized[HW125_VOL_NUM_0] = CLEAR;  // Logical drive number 0 - default number 
     hw125_device->mount = CLEAR_BIT; 
 
     return FR_OK; 
@@ -571,8 +606,8 @@ FRESULT hw125_open(
         strcat(file_dir, file_name); 
         
         hw125_device_trackers.fresult = f_open(&hw125_device_trackers.file, 
-                                            file_dir, 
-                                            mode); 
+                                               file_dir, 
+                                               mode); 
 
         if (hw125_device_trackers.fresult == FR_OK) 
         {
