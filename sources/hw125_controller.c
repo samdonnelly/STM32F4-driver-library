@@ -84,9 +84,9 @@ void hw125_access_state(
 /**
  * @brief HW125 eject state 
  * 
- * @details If there is an open file it closes it then unmounts the volume. This state is 
- *          triggered by the eject flag being set which is set by the application through 
- *          the hw125_set_eject_flag setter. This can be used to safety remove the disk while 
+ * @details If there is an open file this state closes it then unmounts the volume. This state 
+ *          is triggered by the eject flag being set which is set by the application through 
+ *          the hw125_set_eject_flag setter. This can be used to safely remove the disk while 
  *          the system is still powered on. After this state is run it immediately goes to 
  *          the "not ready" state. The eject flag is cleared through the application code using 
  *          the hw125_clear_eject_flag setter. 
@@ -103,7 +103,14 @@ void hw125_eject_state(
 /**
  * @brief HW125 fault state 
  * 
- * @details 
+ * @details Currently this state does nothing until the reset flag is set. This state can be 
+ *          entered from the "init" or "access" states after the fault flag has been set. The 
+ *          fault flag can be set in the getter/setter functions when a FATFS file operation 
+ *          is performed if one of these operations is not successful. To leave this state, the 
+ *          reset flag has to be set using the hw125_set_reset_flag setter at which point the 
+ *          "reset" state will be entered. 
+ * 
+ * @see hw125_set_reset_flag 
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
@@ -114,7 +121,14 @@ void hw125_fault_state(
 /**
  * @brief HW125 reset state 
  * 
- * @details 
+ * @details Closes any open file, resets the projects subdirectory, unmounts the volumes and 
+ *          resets controller trackers as needed. This state is triggered by setting the reset 
+ *          flag using hw125_set_reset_flag and can be entered from the "not ready", "access" or 
+ *          "fault" states. This state is called typically when there is an issue in the system 
+ *          and it needs to re-initialize itself. After this state is run it will go directly to 
+ *          the "init" state and the reset flag will be automatically cleared. 
+ * 
+ * @see hw125_set_reset_flag 
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
@@ -123,7 +137,11 @@ void hw125_reset_state(
 
 
 /**
- * @brief Mount 
+ * @brief Mount the volume 
+ * 
+ * @details Attempts to mount the volume and returns the file operation status. If the mount 
+ *          is successful then the mount flag will be set. This function is called by the "init" 
+ *          state and is needed before read/write operations can be performed on the volume. 
  * 
  * @return FRESULT : FATFS file function return code 
  */
@@ -132,7 +150,18 @@ FRESULT hw125_mount(
 
 
 /**
- * @brief Unmount 
+ * @brief Unmount the volume 
+ * 
+ * @details This function unmounts the volume. It also clears the init status flag in the FATFS 
+ *          code memory (which is why 'disk' is included as an extern below) which is needed in 
+ *          order to be able to re-mount the volume without a power cycle. The mount flag is 
+ *          also cleared. This function is called buy the "init" state if mounting fails, and 
+ *          also by the "eject" and "reset" states. If power remains on in the system, then 
+ *          unmounting should be done before removing the volume. 
+ *          
+ *          Note that this controller/driver only support a single volume right now so this 
+ *          function is hard coded to unmount logical drive 0 which is the default volume 
+ *          number and number assigned to the volumes used. 
  * 
  * @return FRESULT : FATFS file function return code 
  */
@@ -142,6 +171,11 @@ FRESULT hw125_unmount(
 
 /**
  * @brief Get the volume label 
+ * 
+ * @details Reads the volume label and stores it in the controller tracker data structure if 
+ *          needed. This function is called during the "init" state if mounting was 
+ *          successful and will update the fault code in the process if something goes wrong 
+ *          while reading the label. 
  * 
  * @param hw125_device 
  * @return FRESULT : FATFS file function return code 
@@ -432,7 +466,7 @@ void hw125_reset_state(
 //=======================================================================================
 // Controller volume access functions 
 
-// Mount 
+// Mount the volume 
 FRESULT hw125_mount(
     hw125_trackers_t *hw125_device) 
 {
@@ -446,7 +480,7 @@ FRESULT hw125_mount(
     return hw125_device_trackers.fresult; 
 }
 
-// Unmount 
+// Unmount the volume 
 FRESULT hw125_unmount(
     hw125_trackers_t *hw125_device) 
 {
@@ -483,13 +517,21 @@ FRESULT hw125_getfree(
 
     if (hw125_device->fresult == FR_OK) 
     {
+        // TODO test the following calculation changes 
+
         // Calculate the total space 
-        hw125_device->total = (uint32_t)((hw125_device->pfs->n_fatent - 2) * 
-                                          hw125_device->pfs->csize * 0.5);
+        // (n_fatent - 2) * csize / 2
+        hw125_device->total = (uint32_t)(((hw125_device->pfs->n_fatent - 2) * 
+                                           hw125_device->pfs->csize) >> SHIFT_1);
+        // hw125_device->total = (uint32_t)((hw125_device->pfs->n_fatent - 2) * 
+        //                                   hw125_device->pfs->csize * 0.5);
         
         // Calculate the free space 
-        hw125_device->free_space = (uint32_t)(hw125_device->fre_clust * 
-                                              hw125_device->pfs->csize * 0.5); 
+        // fre_clust * csize / 2 
+        hw125_device->free_space = (uint32_t)((hw125_device->fre_clust * 
+                                               hw125_device->pfs->csize) >> SHIFT_1); 
+        // hw125_device->free_space = (uint32_t)(hw125_device->fre_clust * 
+        //                                       hw125_device->pfs->csize * 0.5); 
 
         // Check if there is sufficient disk space 
         if (hw125_device->free_space < HW125_FREE_THRESH) 

@@ -30,11 +30,12 @@
 //=======================================================================================
 // Macros 
 
+// State machine 
 #define HW125_NUM_STATES 6             // Number of possible states for the controller 
 
+// Controller tracker 
 #define HW125_PATH_SIZE 50             // Volume path max length 
-#define HW125_INFO_SIZE 30             // Device infor buffer size 
-
+#define HW125_INFO_SIZE 30             // Device info buffer size 
 #define HW125_FREE_THRESH 0x0000C350   // Free space threshold before disk full fault (KB) 
 
 // Volume numbers 
@@ -138,7 +139,6 @@ typedef int8_t HW125_EOF;
  * @brief HW125 state machine function pointer 
  * 
  * @param hw125_device : device tracker that defines control characteristics 
- * 
  */
 typedef void (*hw125_state_functions_t)(
     hw125_trackers_t *hw125_device); 
