@@ -230,6 +230,8 @@ static hw125_state_functions_t state_table[HW125_NUM_STATES] =
 void hw125_controller_init(
     char *path)
 {
+    // TODO Check that the path length is not too long 
+
     // Controller information 
     hw125_device_trackers.state = HW125_INIT_STATE; 
     hw125_device_trackers.fault_code = CLEAR; 
@@ -591,7 +593,8 @@ FRESULT hw125_mkdir(
     strcpy(hw125_device_trackers.dir, dir); 
     strcpy(sub_dir, hw125_device_trackers.path); 
 
-    // If 'dir' is not a null character then prepare the sub-directory to be concatenated 
+    // If 'dir' is not a null character then prepare the sub-directory to be concatenated. 
+    // 'dir' will a null character when it's empty such as in the "init" state. 
     if (*hw125_device_trackers.dir != NULL_CHAR)
     {
         strcat(sub_dir, "/"); 

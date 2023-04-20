@@ -152,8 +152,13 @@ typedef void (*hw125_state_functions_t)(
 /**
  * @brief HW125 controller initialization 
  * 
- * @details 
- *          The path length must be less than HW125_PATH_SIZE to prevent overrun. 
+ * @details Initializes the controller tracker information. The 'path' argument specifies 
+ *          the directory where files will be saved on the volume. This directory is the 
+ *          applications root directory and all subsequent folders and files will be saved 
+ *          here. This allows for files from different applications to be easily separated. 
+ *          Note that the path length must be less than HW125_PATH_SIZE to prevent overrun. 
+ *          If the path length is too long then the project/applications directory will not 
+ *          be set. 
  * 
  * @param path : path to directory to use on the volume 
  */
@@ -164,8 +169,8 @@ void hw125_controller_init(
 /**
  * @brief HW125 controller 
  * 
- * @details 
- * 
+ * @details Contains the state machine to control the flow of the controller. Should be 
+ *          called continuously by the application while the device is in use. 
  */
 void hw125_controller(void); 
 
@@ -177,18 +182,28 @@ void hw125_controller(void);
 
 /**
  * @brief Set the eject flag 
+ * 
+ * @details The eject flag is intended to put the controller in the "eject" state which 
+ *          preps the volume for removal. This flag is set by the application if the user 
+ *          wants to remove the volume while the system still has power. 
  */
 void hw125_set_eject_flag(void); 
 
 
 /**
  * @brief Clear the eject flag 
+ * 
+ * @details The eject flag must be cleared in order for the volume to be properly mounted 
+ *          and used. This setter is only needed after hw125_set_eject_flag has been called. 
  */
 void hw125_clear_eject_flag(void); 
 
 
 /**
  * @brief Set reset flag 
+ * 
+ * @details The reset flag triggers a controller reset. This flag will be cleared 
+ *          automatically after being set. 
  */
 void hw125_set_reset_flag(void); 
 
@@ -196,13 +211,25 @@ void hw125_set_reset_flag(void);
 /**
  * @brief Make a new directory in project directory 
  * 
- * @details 
- *          Whenever this function is called, the dir gets added to the project directory path 
- *          defined in the init function meaning all folders made from here will be in parallel 
- *          and not sub folders of one another. Whenever this function is called it overwrites 
- *          the previous dir. 
+ * @details Wrapper function for the FATFS function f_mkdir. 
+ *          
+ *          Concatenates the argument 'dir' onto the project/application 'path' (defined in 
+ *          the controller init function), checks for the existance of the new directory and 
+ *          creates the directory if it does not already exist. If there is an error creating 
+ *          the directory then the fault code will be set accordingly. 
+ *          
+ *          Since 'dir' is added onto the project path with each function call, passing 
+ *          different directories will create new folders in parallel to one another. If 
+ *          further sub-directories are desired then 'dir' must contain an existing directory 
+ *          with the sub-directory added to the end and separated by a "/". 
+ *          
+ *          The length of 'dir' and 'path' together should be less than twice the length of 
+ *          HW125_PATH_SIZE. 
+ *          
+ *          If 'dir' is an invalid pointer then the function will return before attempting to 
+ *          create a directory. 
  * 
- * @param dir 
+ * @param dir : sub directory to creae within the project directory 
  * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_mkdir(
@@ -212,8 +239,26 @@ FRESULT hw125_mkdir(
 /**
  * @brief Open file 
  * 
- * @param file_name 
- * @param mode 
+ * @details Wrapper function for the FATFS function f_open. 
+ *          
+ *          Concatenates the file name ('file_name') onto the project directory and attempts to 
+ *          open the specified file. If there is an error opening the file then the fault code 
+ *          will be updated accordingly. Note that if a subdirectory for the project has been 
+ *          created using hw125_mkdir then the file will be made in that directory. If you 
+ *          want the file in a different directory then use hw125_mkdir to update the 
+ *          subdirectory accordingly (can specify 'dir' as "" in hw125_mkdir to go to the 
+ *          project root directory). 
+ *          
+ *          When the function attempts to open the specified file it will use the method 
+ *          specified by 'mode' to do so. For example, if you specify HW125_MODE_W as the mode 
+ *          then the function will create a file if it does not already exist and open it in 
+ *          write mode. See the HW125 driver header for possible modes. 
+ *           
+ *          If a file is already open then there will be no attempt to open another. The result 
+ *          can be observed in the return value. 
+ * 
+ * @param file_name : name of the file to open 
+ * @param mode : mode to open the file in (read, write, etc.) 
  * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_open(
@@ -224,6 +269,8 @@ FRESULT hw125_open(
 /**
  * @brief Close the open file 
  * 
+ * @details Wrapper function for the FATFS function f_close. 
+ * 
  * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_close(void); 
@@ -231,6 +278,8 @@ FRESULT hw125_close(void);
 
 /**
  * @brief Write to the open file 
+ * 
+ * @details Wrapper function for the FATFS function f_write. 
  * 
  * @param buff 
  * @param btw 
@@ -244,7 +293,8 @@ FRESULT hw125_f_write(
 /**
  * @brief Write a string to the open file 
  * 
- * @details 
+ * @details Wrapper function for the FATFS function f_puts. 
+ *          
  *          If there is a fault the fault mode will always read FR_DISK_ERR. f_puts is a 
  *          wrapper of f_write and if there is an error of any kind in f_write then the 
  *          return of f_puts is negative. There is no distinguishing (that is know) of 
@@ -260,6 +310,8 @@ int8_t hw125_puts(
 /**
  * @brief Write a formatted string to the open file 
  * 
+ * @details Wrapper function for the FATFS function f_printf. 
+ * 
  * @param fmt_str : 
  * @param fmt_value : 
  * @return int8_t 
@@ -271,6 +323,8 @@ int8_t hw125_printf(
 
 /**
  * @brief Navigate within the open file 
+ * 
+ * @details Wrapper function for the FATFS function f_lseek. 
  * 
  * @param offset 
  * @return FRESULT : FATFS file function return code 
@@ -319,6 +373,8 @@ HW125_FILE_STATUS hw125_get_file_status(void);
 /**
  * @brief Read data from open file 
  * 
+ * @details Wrapper function for the FATFS function f_read. 
+ * 
  * @param buff 
  * @param btr 
  * @return FRESULT : FATFS file function return code 
@@ -331,6 +387,8 @@ FRESULT hw125_f_read(
 /**
  * @brief Reads a string from open file 
  * 
+ * @details Wrapper function for the FATFS function f_gets. 
+ * 
  * @param buff : 
  * @param len : 
  * @return TCHAR : 
@@ -342,6 +400,8 @@ TCHAR* hw125_gets(
 
 /**
  * @brief Test for end of file on open file 
+ * 
+ * @details Wrapper function for the FATFS macro function f_eof. 
  * 
  * @return HW125_EOF 
  */
