@@ -270,6 +270,11 @@ FRESULT hw125_open(
  * @brief Close the open file 
  * 
  * @details Wrapper function for the FATFS function f_close. 
+ *          
+ *          If there is an open file then it gets closed, the fault code gets updated if there 
+ *          is an issue closing the file and then the volume free space gets updated in the 
+ *          controller tracker. If there is no file open then the function will bypass the 
+ *          above steps and return FR_OK. 
  * 
  * @return FRESULT : FATFS file function return code 
  */
@@ -280,9 +285,13 @@ FRESULT hw125_close(void);
  * @brief Write to the open file 
  * 
  * @details Wrapper function for the FATFS function f_write. 
+ *          
+ *          Attempts to write the specified data to the open file and updates the fault code 
+ *          if there's a write issue. If no file is open then no data will be written and the 
+ *          fault code won't be updated. 
  * 
- * @param buff 
- * @param btw 
+ * @param buff : void pointer to data to write 
+ * @param btw : number of bytes to write 
  * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_f_write(
@@ -295,13 +304,18 @@ FRESULT hw125_f_write(
  * 
  * @details Wrapper function for the FATFS function f_puts. 
  *          
- *          If there is a fault the fault mode will always read FR_DISK_ERR. f_puts is a 
+ *          Attempts to write a string to the open file and updates the fault code if there's 
+ *          a write issue. If no file is open then no data will be written and the fault code 
+ *          won't be updated. The function returns the number of character encoding units 
+ *          written to the file. If the write fails then a negtive number will be returned. 
+ *          
+ *          If there is a fault, the fault mode will always read FR_DISK_ERR. f_puts is a 
  *          wrapper of f_write and if there is an error of any kind in f_write then the 
- *          return of f_puts is negative. There is no distinguishing (that is know) of 
- *          fault/error types. 
+ *          return of f_puts is negative. There is no (known) way of distinguishing 
+ *          fault/error types using f_puts. 
  * 
- * @param str 
- * @return int16_t 
+ * @param str : pointer to string to write 
+ * @return int8_t : number of character encoding units written to the file 
  */
 int8_t hw125_puts(
     const TCHAR *str); 
@@ -311,10 +325,32 @@ int8_t hw125_puts(
  * @brief Write a formatted string to the open file 
  * 
  * @details Wrapper function for the FATFS function f_printf. 
+ *          
+ *          This function attempts to write a formatted string to the open file and updates 
+ *          the fault code if there's a write issue. If no file is open then no data will be 
+ *          written and the fault code will not be updated. The formatted string and data 
+ *          type (in this case an unsigned 16-bit integer) must match for this function to 
+ *          work as expected. An example of a correctly formatted string to pass to this 
+ *          function is as follows: 
+ *          
+ *          // TODO get an example of a correctly formatted string 
+ *          
+ *          The function returns the number of character encoding units written to the file. 
+ *          If the write fails then a negtive number will be returned. 
+ *          
+ *          f_printf has optional arguments (see the FATFS documentation for details), however 
+ *          this function uses f_printf specifically for writing unsigned integers because 
+ *          the embedded applications used by this driver (as of now) don't need different data 
+ *          types so it simplifies the function. 
+ *          
+ *          If there is a fault, the fault mode will always read FR_DISK_ERR. f_printf is a 
+ *          wrapper of f_write and if there is an error of any kind in f_write then the 
+ *          return of f_printf is negative. There is no (known) way of distinguishing 
+ *          fault/error types using f_puts. 
  * 
- * @param fmt_str : 
- * @param fmt_value : 
- * @return int8_t 
+ * @param fmt_str : pointer to formatted string to write 
+ * @param fmt_value : unsigned integer to write with the formatted string 
+ * @return int8_t : number of character encoding units written to the file 
  */
 int8_t hw125_printf(
     const TCHAR *fmt_str, 
@@ -325,8 +361,23 @@ int8_t hw125_printf(
  * @brief Navigate within the open file 
  * 
  * @details Wrapper function for the FATFS function f_lseek. 
+ *          
+ *          Moves to the specified position within an open file and updates the fault code 
+ *          if there are issues doing so. If no file is open then nothing will happen. This 
+ *          position/offset within the file is indexed from 0 which is the beginning of the 
+ *          file. 
+ *          
+ *          If an offset beyond the open file size is specified and the file is opened in 
+ *          write mode then the file will be expanded to the specified offset. If the file 
+ *          position pointer is not pointer where expected it could be due to being at the 
+ *          end of a file while in read mode, or from the volume being full and therefore 
+ *          the file cannot be expanded. For these reasons the pointer position should be 
+ *          checked after changing it. 
+ *          
+ *          The macro function f_rewind can be used to point the file position pointer back 
+ *          to the beginning of the file (position 0). 
  * 
- * @param offset 
+ * @param offset : byte position in the file to point to 
  * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_lseek(

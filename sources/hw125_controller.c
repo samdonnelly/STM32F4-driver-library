@@ -704,6 +704,9 @@ FRESULT hw125_f_write(
     const void *buff, 
     UINT btw) 
 {
+    // Check for void pointer? 
+    // Check for open file? 
+
     // Write to the file 
     hw125_device_trackers.fresult = f_write(&hw125_device_trackers.file, 
                                             buff, 
@@ -725,6 +728,9 @@ FRESULT hw125_f_write(
 int8_t hw125_puts(
     const TCHAR *str) 
 {
+    // Check for void pointer? 
+    // Check for open file? 
+
     // Writes a string to the file 
     int8_t puts_return = f_puts(str, &hw125_device_trackers.file); 
 
@@ -744,7 +750,10 @@ int8_t hw125_printf(
     const TCHAR *fmt_str, 
     uint16_t fmt_value) 
 {
-    // Writes formatted string to the file 
+    // Check for void pointer? 
+    // Check for open file? 
+
+    // Writes a formatted string to the file 
     int8_t printf_return = f_printf(&hw125_device_trackers.file, 
                                     fmt_str, 
                                     fmt_value); 
