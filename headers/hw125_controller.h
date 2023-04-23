@@ -63,7 +63,7 @@ typedef enum {
 
 
 /**
- * @brief 
+ * @brief HW125 fault codes 
  */
 typedef enum {
     HW125_FAULT_MKDIR = 0x01,            // Make directory 
@@ -209,7 +209,7 @@ void hw125_set_reset_flag(void);
 
 
 /**
- * @brief Make a new directory in project directory 
+ * @brief Make a new directory in the project directory 
  * 
  * @details Wrapper function for the FATFS function f_mkdir. 
  *          
@@ -237,7 +237,7 @@ FRESULT hw125_mkdir(
 
 
 /**
- * @brief Open file 
+ * @brief Open a file 
  * 
  * @details Wrapper function for the FATFS function f_open. 
  *          
@@ -267,7 +267,7 @@ FRESULT hw125_open(
 
 
 /**
- * @brief Close the open file 
+ * @brief Close an open file 
  * 
  * @details Wrapper function for the FATFS function f_close. 
  *          
@@ -282,7 +282,7 @@ FRESULT hw125_close(void);
 
 
 /**
- * @brief Write to the open file 
+ * @brief Write data to the open file 
  * 
  * @details Wrapper function for the FATFS function f_write. 
  *          
@@ -358,7 +358,7 @@ int8_t hw125_printf(
 
 
 /**
- * @brief Navigate within the open file 
+ * @brief Select read/write pointer within an open file 
  * 
  * @details Wrapper function for the FATFS function f_lseek. 
  *          
@@ -390,9 +390,11 @@ FRESULT hw125_lseek(
 // Getters 
 
 /**
- * @brief Get state 
+ * @brief Get controller state 
  * 
- * @return HW125_STATE 
+ * @details Returns the current state of the controllers state machine. 
+ * 
+ * @return HW125_STATE : state machine state 
  */
 HW125_STATE hw125_get_state(void); 
 
@@ -400,7 +402,16 @@ HW125_STATE hw125_get_state(void);
 /**
  * @brief Get fault code 
  * 
- * @return HW125_FAULT_CODE 
+ * @details Returns the controllers fault code. The fault code indicates the FATFS file 
+ *          system function that caused a fault. Each bit of the code corresponds to a file 
+ *          operation which is defined by hw125_fault_codes_t. When one of these operations 
+ *          is unsuccessful on a valid file then the fault code will be set. The fault code 
+ *          is used by the state machine to determine whether to enter the fault state. 
+ *          The fault code is cleared on a controller reset. 
+ * 
+ * @see hw125_fault_codes_t 
+ * 
+ * @return HW125_FAULT_CODE : controller fault code 
  */
 HW125_FAULT_CODE hw125_get_fault_code(void); 
 
@@ -408,7 +419,14 @@ HW125_FAULT_CODE hw125_get_fault_code(void);
 /**
  * @brief Get fault mode 
  * 
- * @return HW125_FAULT_MODE 
+ * @details Returns the controllers fault mode. The fault mode provides the FATFS file 
+ *          system function return value defined by the FRESULT enum (FATFS code). The 
+ *          return code in the FRESULT enum corresponds to the bit of the fault mode so 
+ *          value of the the fault mode can be identified. When there is a fault in the 
+ *          controller, this flag will be set and can be used to identify the cause of 
+ *          the problem along with the fault code. 
+ * 
+ * @return HW125_FAULT_MODE : controller fault mode 
  */
 HW125_FAULT_MODE hw125_get_fault_mode(void); 
 
@@ -416,13 +434,15 @@ HW125_FAULT_MODE hw125_get_fault_mode(void);
 /**
  * @brief Get open file flag 
  * 
- * @return HW125_FILE_STATUS 
+ * @details Returns the open file flag state. 
+ * 
+ * @return HW125_FILE_STATUS : open file flag state 
  */
 HW125_FILE_STATUS hw125_get_file_status(void); 
 
 
 /**
- * @brief Read data from open file 
+ * @brief Read data from an open file 
  * 
  * @details Wrapper function for the FATFS function f_read. 
  * 
@@ -436,7 +456,7 @@ FRESULT hw125_f_read(
 
 
 /**
- * @brief Reads a string from open file 
+ * @brief Reads a string from an open file 
  * 
  * @details Wrapper function for the FATFS function f_gets. 
  * 
@@ -450,7 +470,7 @@ TCHAR* hw125_gets(
 
 
 /**
- * @brief Test for end of file on open file 
+ * @brief Check for end of file on an open file 
  * 
  * @details Wrapper function for the FATFS macro function f_eof. 
  * 
