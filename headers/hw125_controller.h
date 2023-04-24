@@ -445,9 +445,17 @@ HW125_FILE_STATUS hw125_get_file_status(void);
  * @brief Read data from an open file 
  * 
  * @details Wrapper function for the FATFS function f_read. 
+ *          
+ *          Attempts to read data from an open file and updates the fault code if there 
+ *          is an error during the read process. If there is no file open then nothing 
+ *          will happen. Note that the read will start at the read/write pointer which 
+ *          can be changed using hw125_lseek. There is no data type during the read 
+ *          process so a void pointer type buffer is used. 
  * 
- * @param buff 
- * @param btr 
+ * @see hw125_lseek 
+ * 
+ * @param buff : void pointer to buffer to store read data 
+ * @param btr : number of bytes to read 
  * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_f_read(
