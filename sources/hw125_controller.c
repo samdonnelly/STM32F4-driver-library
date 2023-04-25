@@ -864,9 +864,7 @@ TCHAR* hw125_gets(
 // Test for end of file on open file 
 HW125_EOF hw125_eof(void) 
 {
-    HW125_EOF eof_return = f_eof(&hw125_device_trackers.file); 
-
-    return eof_return; 
+    return (HW125_EOF)f_eof(&hw125_device_trackers.file); 
 }
 
 //=======================================================================================

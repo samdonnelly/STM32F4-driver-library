@@ -488,8 +488,13 @@ TCHAR* hw125_gets(
  * @brief Check for end of file on an open file 
  * 
  * @details Wrapper function for the FATFS macro function f_eof. 
+ *          
+ *          f_eof is a macro function that checks the file read/write pointer against the 
+ *          file object size to determine if the read/write pointer is at the end of the 
+ *          open file. If at the end of the file then this function will return a non-zero 
+ *          value and zero otherwise. 
  * 
- * @return HW125_EOF 
+ * @return HW125_EOF : end of file status 
  */
 HW125_EOF hw125_eof(void); 
 
