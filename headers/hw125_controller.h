@@ -467,10 +467,17 @@ FRESULT hw125_f_read(
  * @brief Reads a string from an open file 
  * 
  * @details Wrapper function for the FATFS function f_gets. 
+ *          
+ *          Attempts to read a string from an open file then updates the fault code if 
+ *          it's unsuccessful. If no file is open then nothing will happen. A string 
+ *          will be read until an end of line character is seen ('\n'), the end of the 
+ *          file is reached or the string length has been reached. The read string is 
+ *          terminated with '\0'. If the read is unsuccessful then a NULL pointer is 
+ *          returned. 
  * 
- * @param buff : 
- * @param len : 
- * @return TCHAR : 
+ * @param buff : pointer to character buffer to store the read string 
+ * @param len : lengh of string to read (bytes) 
+ * @return TCHAR : pointer to buff (if read successful) 
  */
 TCHAR* hw125_gets(
     TCHAR *buff, 
