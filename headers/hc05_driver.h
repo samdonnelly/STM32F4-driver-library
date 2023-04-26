@@ -62,7 +62,6 @@
  *          put the module into. 
  * 
  * @see hc05_change_mode
- * 
  */
 typedef enum {
     HC05_DATA_MODE, 
@@ -81,7 +80,6 @@ typedef enum {
  * // TODO delete once init function is changed 
  * 
  * @see hc05_init
- * 
  */
 typedef enum {
     HC05_PIN34_DISABLE, 
@@ -99,7 +97,6 @@ typedef enum {
  * // TODO delete once init function is changed 
  * 
  * @see hc05_init
- * 
  */
 typedef enum {
     HC05_EN_DISABLE, 
@@ -117,7 +114,6 @@ typedef enum {
  * // TODO delete once init function is changed 
  * 
  * @see hc05_init
- * 
  */
 typedef enum {
     HC05_STATE_DISABLE, 
@@ -143,7 +139,6 @@ typedef enum {
  *          documentation for more information on AT commands. 
  * 
  * @see hc05_at_command
- * 
  */
 typedef enum {
     HC05_AT_TEST = 1,     // 1. Test command 
@@ -191,7 +186,6 @@ typedef enum {
  *          there is only the ability to check). 
  * 
  * @see hc05_at_command
- * 
  */
 typedef enum {
     HC05_NONE,
@@ -255,7 +249,6 @@ void hc05_init(
  *                module will remain on whenever there is power supplied to the Vcc pin. 
  * 
  * @see hc05_init
- * 
  */
 void hc05_on(void); 
 
@@ -268,7 +261,6 @@ void hc05_on(void);
  *                module will remain on whenever there is power supplied to the Vcc pin.
  * 
  * @see hc05_init 
- * 
  */
 void hc05_off(void);
 
@@ -285,9 +277,10 @@ void hc05_send(char *send_data);
 
 
 /**
- * @brief 
+ * @brief HC05 data status availability 
  * 
- * @details 
+ * @details Reads the HC05 UART data register status and returns the result. If data ready 
+ *          to be read then logical TRUE will be returned, FALSE otherwise. 
  * 
  * @return HC05_DATA_STATUS 
  */
@@ -325,8 +318,8 @@ HC05_CONNECT_STATUS hc05_status(void);
 /**
  * @brief Clear the UART data register 
  * 
- * @details 
- * 
+ * @details This is often used to make sure old data is not read when going to read the 
+ *          UART data rgeister. 
  */
 void hc05_clear(void); 
 

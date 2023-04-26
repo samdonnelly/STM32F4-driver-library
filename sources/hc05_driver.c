@@ -25,6 +25,7 @@
 // - Make the code able to support multiple devices (linked list) 
 // - Should have the ability to also send digits if desired 
 // - Make a proper and dedicated at command mode UI file 
+// - Make the TIMER used an init option 
 //=======================================================================================
 
 
@@ -46,7 +47,7 @@
  * 
  * @see hc05_mode_t 
  * 
- * @param mode : device mode 
+ * @param mode : device mode - AT command mode or normal mode 
  */
 void hc05_mode(
     hc05_mode_t mode); 
@@ -535,6 +536,7 @@ void hc05_at_command(
     {
         // TODO change this to use the built in UART data check function 
         if (hc05_data_record.hc05_uart->SR & (SET_BIT << SHIFT_5)) 
+        // if (hc05_data_status()) 
         {
             // Read the module response 
             uart_getstr(hc05_data_record.hc05_uart, response, UART_STR_TERM_NL); 
