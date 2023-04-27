@@ -642,7 +642,6 @@ DISK_STATUS hw125_status(uint8_t pdrv)
 
 
 // HW125 ready to receive commands 
-// TODO Add a status return to account for timeouts 
 DISK_RESULT hw125_ready_rec(void)
 {
     // Local variables 
@@ -679,9 +678,7 @@ CARD_TYPE hw125_get_card_type(void)
 // Get card presence status 
 DISK_RESULT hw125_get_existance(void)
 {
-    // // Call the power on function with the right slave pin 
-    // return hw125_power_on(sd_card.ss_pin); 
-
+    // Local variables 
     DISK_RESULT exist; 
 
     // Select the slave device 

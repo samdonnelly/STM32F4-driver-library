@@ -39,7 +39,7 @@
 // Macros 
 
 // HC05 paramters 
-#define HC05_INIT_DELAY   100  // ms delay to ensure full power cycle 
+#define HC05_INIT_DELAY   100      // ms delay to ensure full power cycle 
 
 // AT Command Mode 
 #define HC05_AT_EN          1      // Controls the inclusion of AT command mode code 

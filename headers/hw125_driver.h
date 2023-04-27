@@ -138,7 +138,6 @@
  * @details Index that determines what command is being requested. Each index is offset 
  *          by HW125_INDEX_OFFSET because every command frame sends this value every time 
  *          a command is sent. 
- * 
  */
 typedef enum {
     HW125_CMD0  = HW125_INDEX_OFFSET + 0x00,    // GO_IDLE_STATE
@@ -165,7 +164,6 @@ typedef enum {
  * @details Each command needs a certain argument to be sent with it in the command frame. 
  *          For the commands used in reading and writing to a drive, these are all the 
  *          needed arguments. 
- * 
  */
 typedef enum {
     HW125_ARG_NONE  = 0x00000000,  // Zero argument 
@@ -181,7 +179,6 @@ typedef enum {
  * @details Each command needs a certain CRC to be sent with it at the end of the command 
  *          frame. For the commands used in reading and writing to a drive, these are all the 
  *          needed CRC values. 
- * 
  */
 typedef enum {
     HW125_CRC_CMDX = 0x01,  // For all other commands 
@@ -199,7 +196,6 @@ typedef enum {
  *          initialization process. 
  * 
  * @see hw125_init 
- * 
  */
 typedef enum {
     HW125_CT_UNKNOWN     = 0x00,   // Unknown card type - failed to read 
@@ -220,7 +216,6 @@ typedef enum {
  *          status is cleared from being HW125_STATUS_NOINIT and will work as normal. 
  * 
  * @see hw125_init 
- * 
  */
 typedef enum {
     HW125_STATUS_NOINIT  = 0x01,  // Device has not been initialized and not ready to work 
@@ -238,7 +233,6 @@ typedef enum {
  *          HW125_PWR_CHECK is used to identify that the FATFS layer wants to know the state 
  *          of the power flag. If the power on sequence during initialization is successful 
  *          then the pwoer flag gets set to on.
- * 
  */
 typedef enum {
     HW125_PWR_OFF,
@@ -272,13 +266,12 @@ typedef enum {
  *          followed by a data block and a CRC. If reading data from a drive then the code 
  *          looks for the appropriate data token before reading data. If writing data to a 
  *          drive the appropriate data token is sent before the data. When writing multiple 
- *          data packets then a stop token is needed to terminate the transaction. <br><br> 
+ *          data packets then a stop token is needed to terminate the transaction.  
  *          
- *          CMD17: Read a single data packet    <br> 
- *          CMD18: Read multiple data packets   <br> 
- *          CMD24: Write a single data packet   <br> 
+ *          CMD17: Read a single data packet 
+ *          CMD18: Read multiple data packets 
+ *          CMD24: Write a single data packet 
  *          CMD25: Write multiple data packets 
- * 
  */
 typedef enum {
     HW125_DT_ZERO = 0xFC,    // Data token for CMD25 
@@ -293,7 +286,6 @@ typedef enum {
  * @details When writing to a drive a data response byte will be received immediately after 
  *          the data packet has finished sending. This data response will indicate if the 
  *          transaction was successful or if there were errors. 
- * 
  */
 typedef enum {
     HW125_DR_ZERO = 0x05,   // Data accepted 
@@ -311,7 +303,6 @@ typedef enum {
  *          the hw125_ioctl function so the drives sector count can be calculated correctly. 
  * 
  * @see hw125_ioctl
- * 
  */
 typedef enum {
     HW125_CSD_V1,   // Version 1.0 
@@ -414,17 +405,22 @@ CARD_TYPE hw125_get_card_type(void);
  * @details Waits for the SD card DO/MISO line to go high (0xFF) which indicates that the 
  *          card is ready to receive further instructions. The function is called before 
  *          sending a command and before writing new data packets to the card. 
- * 
  */
 DISK_RESULT hw125_ready_rec(void); 
 
 
 /**
- * @brief Get card presence status 
+ * @brief HW125 get volume presence 
  * 
- * @details 
+ * @details Checks that there is a volume present by checking if the volume is ready to 
+ *          receive commands. If present the function will return HW125_RES_OK and if not 
+ *          then it will return HW125_RES_ERROR. Returning HW125_RES_ERROR means the 
+ *          volume did not respond in enough time. This function is used by the HW125 
+ *          controller in the "not ready" state where reading/writing is not being 
+ *          performed which means a timeout indicates the volume is not busy but rather 
+ *          non-existant. 
  * 
- * @return DISK_RESULT :  
+ * @return DISK_RESULT : result of the volume check 
  */
 DISK_RESULT hw125_get_existance(void); 
 
