@@ -69,8 +69,16 @@ uint32_t rcc_get_sys_clk_frq(void);
 // Global variables 
 
 static uint32_t sys_clk_frq; 
-static const uint8_t ahb_psc_table[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
-static const uint8_t apb_psc_table[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
+
+static const uint8_t ahb_psc_table[AHB_PSC_TABLE_SIZE] = 
+{
+    0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9
+};
+
+static const uint8_t apb_psc_table[APB_PSC_TABLE_SIZE] = 
+{
+    0, 0, 0, 0, 1, 2, 3, 4
+};
 
 //=======================================================================================
 
@@ -94,7 +102,9 @@ static const uint8_t apb_psc_table[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
 // Stores the system clock frequency for use later 
 void get_sys_clk_init(void)
 {
-    sys_clk_frq = (rcc_get_sys_clk_frq() >> ahb_psc_table[(RCC->CFGR & RCC_CFGR_HPRE) >> RCC_CFGR_HPRE_Pos]); 
+    sys_clk_frq = (rcc_get_sys_clk_frq() >> 
+                   ahb_psc_table[(RCC->CFGR & RCC_CFGR_HPRE) >> 
+                   RCC_CFGR_HPRE_Pos]); 
 }
 
 

@@ -39,7 +39,7 @@
  *        This value is used by the RCC HAL module to compute the system frequency
  *        (when HSE is used as system clock source, directly or through the PLL).
  */
-#define HSE_HZ    8000000U /*!< Value of the External oscillator in Hz */
+#define HSE_HZ 8000000U /*!< Value of the External oscillator in Hz */
 
 
 /**
@@ -47,23 +47,24 @@
  *        This value is used by the RCC HAL module to compute the system frequency
  *        (when HSI is used as system clock source, directly or through the PLL).
  */
-#define HSI_HZ    ((uint32_t)16000000U) /*!< Value of the Internal oscillator in Hz*/
+#define HSI_HZ ((uint32_t)16000000U) /*!< Value of the Internal oscillator in Hz*/
 
 
-
-/** @brief  Macro to get the oscillator used as PLL clock source.
-  * @retval The oscillator used as PLL clock source. The returned value can be one
-  *         of the following:
-  *              - RCC_PLLSOURCE_HSI: HSI oscillator is used as PLL clock source.
-  *              - RCC_PLLSOURCE_HSE: HSE oscillator is used as PLL clock source.
-  */
+/**
+ * @brief Macro to get the oscillator used as PLL clock source. 
+ * 
+ * @retval The oscillator used as PLL clock source. The returned value can be one
+  *        of the following:
+  *             - RCC_PLLSOURCE_HSI: HSI oscillator is used as PLL clock source.
+  *             - RCC_PLLSOURCE_HSE: HSE oscillator is used as PLL clock source.
+*/
 #define RCC_GET_PLL_OSCSOURCE() ((uint32_t)(RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC))
 
-//=======================================================================================
 
+// PSC tables 
+#define AHB_PSC_TABLE_SIZE 16       // AHB prescaler table size 
+#define APB_PSC_TABLE_SIZE 8        // APB prescaler table size 
 
-//=======================================================================================
-// Enums 
 //=======================================================================================
 
 
@@ -73,7 +74,20 @@
 /**
  * @brief Stores the system clock frequency for use later 
  * 
- * @details 
+ * @details Reads and stores the system clock frequency locally in the source file. This is 
+ *          the clock set by the user that runs all the systems on the microcontroller. This 
+ *          clock frequency is used to determine the PLCK1 and PLCK2 clock frequencies. 
+ *          
+ *          This function is called by the timer counter init functions. The purpose of 
+ *          calling this function is so the non-blocking delay functions can be used. The 
+ *          non-blocking delays need to know the time it takes to increment their counter 
+ *          which can be determined by the timers clock frequency. 
+ *          
+ *          This is the only function in this driver that is custom and not from the STM 
+ *          generated code. 
+ * 
+ * @see rcc_get_pclk1_frq 
+ * @see rcc_get_pclk2_frq 
  */
 void get_sys_clk_init(void); 
 
@@ -81,15 +95,15 @@ void get_sys_clk_init(void);
 /**
  * @brief Returns the HCLK frequency
  * 
- * @note   Each time HCLK changes, this function must be called to update the
- *         right HCLK value. Otherwise, any configuration based on this function will be incorrect.
+ * @note Each time HCLK changes, this function must be called to update the
+ *       right HCLK value. Otherwise, any configuration based on this function will be incorrect.
  *
- * @note   The sys_core_clk CMSIS variable is used to store System Clock Frequency
- *         and updated within this function
+ * @note The sys_core_clk CMSIS variable is used to store System Clock Frequency
+ *       and updated within this function
  * 
  * @retval HCLK frequency
  * 
- * @return uint32_t 
+ * @return uint32_t : HCLK frequency 
  */
 uint32_t rcc_get_hclk_frq(void);
 
@@ -102,7 +116,7 @@ uint32_t rcc_get_hclk_frq(void);
  * 
  * @retval PCLK1 frequency
  * 
- * @return uint32_t 
+ * @return uint32_t : PLCK1 frequency 
  */
 uint32_t rcc_get_pclk1_frq(void);
 
@@ -115,7 +129,7 @@ uint32_t rcc_get_pclk1_frq(void);
  * 
  * @retval PCLK2 frequency
  * 
- * @return uint32_t 
+ * @return uint32_t : PLCK2 frequency 
  */
 uint32_t rcc_get_pclk2_frq(void);
 
