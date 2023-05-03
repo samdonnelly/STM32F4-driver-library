@@ -12,15 +12,15 @@
  * 
  */
 
-//===============================================================================
+//=======================================================================================
 // Includes 
 
 #include "hd44780u_driver.h"
 
-//===============================================================================
+//=======================================================================================
 
 
-//===============================================================================
+//=======================================================================================
 // Function Prototypes 
 
 /**
@@ -54,10 +54,10 @@ void hd44780u_send(
     I2C_TypeDef *i2c, 
     uint8_t *data);
 
-//===============================================================================
+//=======================================================================================
 
 
-//===============================================================================
+//=======================================================================================
 // Variables 
 
 // HD44780U data record 
@@ -76,6 +76,9 @@ typedef struct hd44780u_data_record_s
     char line2[HD44780U_LINE_LEN];   // LCD line 2 data output 
     char line3[HD44780U_LINE_LEN];   // LCD line 3 data output 
     char line4[HD44780U_LINE_LEN];   // LCD line 4 data output 
+
+    // User settings 
+    uint8_t backlight;               // Backlight state 
 }
 hd44780u_data_record_t; 
 
@@ -83,10 +86,10 @@ hd44780u_data_record_t;
 // HD44780U data record instance 
 static hd44780u_data_record_t hd44780u_data_record; 
 
-//===============================================================================
+//=======================================================================================
 
 
-//===============================================================================
+//=======================================================================================
 // Initialization 
 
 // HD44780U screen init 
@@ -100,84 +103,78 @@ void hd44780u_init(
     hd44780u_data_record.tim = timer;                             // Timer port 
     hd44780u_data_record.write_addr = addr;                       // I2C write address 
     hd44780u_data_record.read_addr = addr + HD44780U_ADDR_INC;    // I2C read address 
+    hd44780u_backlight_on(); 
     hd44780u_line_clear(HD44780U_L1);                             // Clear line 1 data 
     hd44780u_line_clear(HD44780U_L2);                             // Clear line 2 data 
     hd44780u_line_clear(HD44780U_L3);                             // Clear line 3 data 
     hd44780u_line_clear(HD44780U_L4);                             // Clear line 4 data 
 
     // Initialize the screen 
-
-    // TODO 
-    // - The manual says that the busy flag cannot be checked until after initialization 
-    //   is done. However try checking before starting the following sequence and in
-    //   between each command. 
-    // - The manual also says that the busy flag is kept in the busy state until 
-    //   initialization ends (BF=1). 
+    // The following steps were taken from the HD44780U datsheet 
 
     // Wait for more than 40 ms after Vcc rises to 2.7V 
     tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_100MS);
 
-    // Pull both RS and R/W low to begin commands - this may be handled in the send funcs 
+    // Clear the RS and R/W bits to begin commands - this may be handled in the send funcs 
      // Reset expander and turn backlight off? 
      // Delay for 1 second 
 
     // Put the LCD into 4-bit mode 
-    // This requires sending "function set" 4 times with the last time specifying 4-bits 
+    // This requires sending "function set" 4 times where the first 3 times are sent with 8-bit 
+    // mode specified and the fourth time specifying 4-bit mode 
 
-    // Function set. Wait for more than 4.1 ms. 
-    hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_005MS); 
+    // Send 1: Function set - Wait for more than 4.1 ms afterwards 
+    hd44780u_send_instruc(HD44780U_FUNCTION_SET | HD44780U_8BIT_MODE); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_5MS); 
 
-    // Function set. Wait for more than 100 us. Using 5ms instead to be safe. 
-    hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_005MS); 
+    // Send 2: Function set - Wait for more than 100 us afterwards, using 5ms instead 
+    hd44780u_send_instruc(HD44780U_FUNCTION_SET | HD44780U_8BIT_MODE); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_5MS); 
 
-    // Function set. No specified wait time. 
-    hd44780u_send_instruc(HD44780U_SETUP_CMD_0X30);
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_010MS); 
+    // Send 3: Function set - No specified wait time 
+    hd44780u_send_instruc(HD44780U_FUNCTION_SET | HD44780U_8BIT_MODE); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS);  // Delay not specified in the datasheet 
 
-    // Function set - Choose 4-bit mode
+    // Send 4: Function set - Choose 4-bit mode 
     // DL = 0 -> 4-bit data length 
-    hd44780u_send_instruc(HD44780U_SETUP_CMD_0X20);
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_010MS); 
+    hd44780u_send_instruc(HD44780U_FUNCTION_SET); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS);  // Delay not specified in the datasheet 
+
 
     // Function set - Specify the number of display lines and character font
-    // N = 1  -> Sets the number of dsiplay lines to 2 
-    // F = 0  -> Sets character font to 5x8 dots
-    hd44780u_send_instruc(HD44780U_SETUP_CMD_0X28);
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
+    // N = 1  -> Sets the number of display lines to 2 
+    // F = 0  -> Sets character font to 5x8 dots 
+    hd44780u_send_instruc(HD44780U_FUNCTION_SET | HD44780U_2_LINE); 
 
     // Arduino sample code turns the display on here, not off 
 
-    // Display off 
-    // D = 0 -> Display off 
+    // Display on 
+    // D = 1 -> Display on 
     // C = 0 -> Cursor not displayed 
     // B = 0 -> No blinking 
-    hd44780u_send_instruc(HD44780U_SETUP_CMD_0x08);
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
+    hd44780u_send_instruc(HD44780U_DISPLAY_CONTROL | HD44780U_DISPLAY_ON);
 
-    // Display clear - may need longer delay after 
-    hd44780u_send_instruc(HD44780U_SETUP_CMD_0X01);
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
+    // Display clear 
+    hd44780u_send_instruc(HD44780U_CLEAR_DISPLAY);
 
     // Entry mode set 
     // I/D = 1 -> Increment 
     // S   = 0 -> No display shifting 
-    hd44780u_send_instruc(HD44780U_SETUP_CMD_0X06);
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
+    hd44780u_send_instruc(HD44780U_ENTRY_SET | HD44780U_CURSOR_DIR); 
 
-    // This step is not included in the Arduino sample code 
+    // Place the cursor in the screen start position 
 
-    // Display on 
-    // D = 1 -> Display on
-    // C = 0 -> Cursor not displayed 
-    // B = 0 -> No blinking 
-    hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_001MS); 
+    // // This step is not included in the Arduino sample code 
 
-    // Clear the display and pause briefly - the pause helps the screen to stabilize before use 
-    hd44780u_clear();
-    tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_500MS); 
+    // // Display on 
+    // // D = 1 -> Display on
+    // // C = 0 -> Cursor not displayed 
+    // // B = 0 -> No blinking 
+    // hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);
+
+    // // Clear the display and pause briefly - the pause helps the screen to stabilize before use 
+    // hd44780u_clear();
+    // tim_delay_ms(hd44780u_data_record.tim, DELAY_500MS); 
 }
 
 
@@ -190,10 +187,20 @@ void hd44780u_re_init(void)
         hd44780u_data_record.write_addr); 
 }
 
-//===============================================================================
+//=======================================================================================
 
 
-//===============================================================================
+//=======================================================================================
+// User commands 
+//=======================================================================================
+
+
+//=======================================================================================
+// Send 
+//=======================================================================================
+
+
+//=======================================================================================
 // Send functions 
 
 // HD44780U send a string of data 
@@ -265,12 +272,19 @@ void hd44780u_send_line(
 void hd44780u_send_instruc(
     uint8_t hd44780u_cmd)
 {
-    // Organize send data into a sendable format
+    // Local variables 
     uint8_t lcd_instruction[HD44780U_MSG_PER_CMD];
-    lcd_instruction[0] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
-    lcd_instruction[1] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X08;
-    lcd_instruction[2] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
-    lcd_instruction[3] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X08;
+    uint8_t mask = hd44780u_data_record.backlight; 
+
+    // Organize send data into a sendable format
+    lcd_instruction[0] = (hd44780u_cmd & HD44780U_4BIT_MASK) | mask | HD44780U_EN;
+    lcd_instruction[1] = (hd44780u_cmd & HD44780U_4BIT_MASK) | mask;
+    lcd_instruction[2] = ((hd44780u_cmd << SHIFT_4) & HD44780U_4BIT_MASK) | mask | HD44780U_EN;
+    lcd_instruction[3] = ((hd44780u_cmd << SHIFT_4) & HD44780U_4BIT_MASK) | mask;
+    // lcd_instruction[0] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
+    // lcd_instruction[1] = (hd44780u_cmd & 0xF0) | HD44780U_CONFIG_CMD_0X08;
+    // lcd_instruction[2] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0C;
+    // lcd_instruction[3] = ((hd44780u_cmd << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X08;
 
     // Send the data to the screen 
     hd44780u_send(hd44780u_data_record.i2c, lcd_instruction); 
@@ -281,12 +295,19 @@ void hd44780u_send_instruc(
 void hd44780u_send_data(
     uint8_t hd44780u_data)
 {
-    // Organize send data into a sendable format
+    // Local variables 
     uint8_t lcd_display_data[HD44780U_MSG_PER_CMD];
-    lcd_display_data[0] = (hd44780u_data & 0xF0) | HD44780U_CONFIG_CMD_0X0D;
-    lcd_display_data[1] = (hd44780u_data & 0xF0) | HD44780U_CONFIG_CMD_0X09;
-    lcd_display_data[2] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0D;
-    lcd_display_data[3] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X09;
+    uint8_t mask = hd44780u_data_record.backlight | HD44780U_RS; 
+
+    // Organize send data into a sendable format 
+    lcd_display_data[0] = (hd44780u_data & HD44780U_4BIT_MASK) | mask | HD44780U_EN;
+    lcd_display_data[1] = (hd44780u_data & HD44780U_4BIT_MASK) | mask;
+    lcd_display_data[2] = ((hd44780u_data << SHIFT_4) & HD44780U_4BIT_MASK) | mask | HD44780U_EN;
+    lcd_display_data[3] = ((hd44780u_data << SHIFT_4) & HD44780U_4BIT_MASK) | mask;
+    // lcd_display_data[0] = (hd44780u_data & 0xF0) | HD44780U_CONFIG_CMD_0X0D;
+    // lcd_display_data[1] = (hd44780u_data & 0xF0) | HD44780U_CONFIG_CMD_0X09;
+    // lcd_display_data[2] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X0D;
+    // lcd_display_data[3] = ((hd44780u_data << SHIFT_4) & 0xF0) | HD44780U_CONFIG_CMD_0X09;
 
     // Send the data to the screen 
     hd44780u_send(hd44780u_data_record.i2c, lcd_display_data); 
@@ -314,11 +335,11 @@ void hd44780u_send(
     i2c_stop(i2c); 
 }
 
-//===============================================================================
+//=======================================================================================
 
 
-//===============================================================================
-// Setters 
+//=======================================================================================
+// Setters / user commands 
 
 // Set the content of a line on the screen 
 void hd44780u_line_set(
@@ -352,4 +373,18 @@ void hd44780u_line_clear(
     }
 }
 
-//===============================================================================
+
+// Turn backlight on 
+void hd44780u_backlight_on()
+{
+    hd44780u_data_record.backlight = HD44780U_BACKLIGHT; 
+}
+
+
+// Turn backlight off 
+void hd44780u_backlight_off()
+{
+    hd44780u_data_record.backlight = HD44780U_NO_BACKLIGHT; 
+}
+
+//=======================================================================================

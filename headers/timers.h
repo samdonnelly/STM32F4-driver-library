@@ -36,7 +36,8 @@
 #define RESET_COUNT 0                // Used to reset count registers 
 #define PREFIX_SCALAR 1000           // Scalar to convert between us and ms 
 
-// Standard delays 
+// TIM9 delays 
+// TODO delete these when they've been replaced 
 #define TIM9_1MS    1                // 1 ms delay 
 #define TIM9_10MS   10               // 10 ms delay 
 #define TIM9_100MS  100              // 100 ms delay 
@@ -44,6 +45,22 @@
 #define TIM9_2US    2                // 2 us delay 
 #define TIM9_10US   10               // 10 us delay 
 #define TIM9_100US  100              // 100 us delay 
+
+// Standard millisecond delays 
+#define DELAY_1MS   1 
+#define DELAY_5MS   5 
+#define DELAY_10MS  10 
+#define DELAY_50MS  50 
+#define DELAY_100MS 100 
+#define DELAY_500MS 500 
+
+// Standard microsecond delays 
+#define DELAY_1US   1 
+#define DELAY_5US   5 
+#define DELAY_10US  10 
+#define DELAY_50US  50 
+#define DELAY_100US 100 
+#define DELAY_500US 500 
 
 // Masks 
 #define TIM_APB_CLK_FILTER 0x10000   // Filter to determine APB1 or APB2 frequency 
