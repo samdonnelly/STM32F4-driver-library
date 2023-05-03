@@ -20,10 +20,6 @@
 //===============================================================================
 
 
-// TODO given all the standard screen messages I may be able to define bitfield
-//      like CAN messages 
-
-
 //===============================================================================
 // Function Prototypes 
 
@@ -34,7 +30,7 @@
  *          The function can be called directly for printing a single character or 
  *          hd44780u_send_string can be used to repeatedly call the function and print a 
  *          string. hd44780u_clear uses this function to send blank characters to the 
- *          screen. The i2c driver is used to send data. Before sending the data, the 
+ *          screen. The I2C driver is used to send data. Before sending the data, the 
  *          data is formatted using hd44780u_config_cmds_t commands. 
  * 
  * @see hd44780u_send_string
@@ -109,12 +105,14 @@ void hd44780u_init(
     hd44780u_line_clear(HD44780U_L3);                             // Clear line 3 data 
     hd44780u_line_clear(HD44780U_L4);                             // Clear line 4 data 
 
-    // Initialize the screen - from the HD44780U datasheet 
+    // Initialize the screen 
 
     // TODO 
     // - The manual says that the busy flag cannot be checked until after initialization 
     //   is done. However try checking before starting the following sequence and in
     //   between each command. 
+    // - The manual also says that the busy flag is kept in the busy state until 
+    //   initialization ends (BF=1). 
 
     // Wait for more than 40 ms after Vcc rises to 2.7V 
     tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_100MS);
