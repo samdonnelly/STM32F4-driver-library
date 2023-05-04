@@ -110,14 +110,12 @@ void hd44780u_init(
     hd44780u_line_clear(HD44780U_L4);                             // Clear line 4 data 
 
     // Initialize the screen 
-    // The following steps were taken from the HD44780U datsheet 
+    // The following steps were taken from the HD44780U datsheet. 
+    // Note that a number of the delays included here are not specified in the initialization 
+    // instructions in the manual but are included to ensure messages aren't sent too quick. 
 
     // Wait for more than 40 ms after Vcc rises to 2.7V 
     tim_delay_ms(hd44780u_data_record.tim, HD44780U_DELAY_100MS);
-
-    // Clear the RS and R/W bits to begin commands - this may be handled in the send funcs 
-     // Reset expander and turn backlight off? 
-     // Delay for 1 second 
 
     // Put the LCD into 4-bit mode 
     // This requires sending "function set" 4 times where the first 3 times are sent with 8-bit 
@@ -133,48 +131,46 @@ void hd44780u_init(
 
     // Send 3: Function set - No specified wait time 
     hd44780u_send_instruc(HD44780U_FUNCTION_SET | HD44780U_8BIT_MODE); 
-    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS);  // Delay not specified in the datasheet 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_10MS); 
 
     // Send 4: Function set - Choose 4-bit mode 
     // DL = 0 -> 4-bit data length 
     hd44780u_send_instruc(HD44780U_FUNCTION_SET); 
-    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS);  // Delay not specified in the datasheet 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_10MS); 
 
 
+    // Set the display parameters 
+    
     // Function set - Specify the number of display lines and character font
     // N = 1  -> Sets the number of display lines to 2 
     // F = 0  -> Sets character font to 5x8 dots 
     hd44780u_send_instruc(HD44780U_FUNCTION_SET | HD44780U_2_LINE); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS); 
 
-    // Arduino sample code turns the display on here, not off 
-
-    // Display on 
-    // D = 1 -> Display on 
+    // Display off 
+    // D = 0 -> Display off 
     // C = 0 -> Cursor not displayed 
     // B = 0 -> No blinking 
-    hd44780u_send_instruc(HD44780U_DISPLAY_CONTROL | HD44780U_DISPLAY_ON);
+    hd44780u_send_instruc(HD44780U_DISPLAY_CONTROL); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS); 
 
     // Display clear 
-    hd44780u_send_instruc(HD44780U_CLEAR_DISPLAY);
+    hd44780u_send_instruc(HD44780U_CLEAR_DISPLAY); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS); 
 
     // Entry mode set 
     // I/D = 1 -> Increment 
     // S   = 0 -> No display shifting 
     hd44780u_send_instruc(HD44780U_ENTRY_SET | HD44780U_CURSOR_DIR); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS); 
+
+    // Display on 
+    // D = 1 -> Display on 
+    // C = 0 -> Cursor not displayed 
+    // B = 0 -> No blinking 
+    hd44780u_send_instruc(HD44780U_DISPLAY_CONTROL | HD44780U_DISPLAY_ON); 
 
     // Place the cursor in the screen start position 
-
-    // // This step is not included in the Arduino sample code 
-
-    // // Display on 
-    // // D = 1 -> Display on
-    // // C = 0 -> Cursor not displayed 
-    // // B = 0 -> No blinking 
-    // hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);
-
-    // // Clear the display and pause briefly - the pause helps the screen to stabilize before use 
-    // hd44780u_clear();
-    // tim_delay_ms(hd44780u_data_record.tim, DELAY_500MS); 
 }
 
 
@@ -187,16 +183,6 @@ void hd44780u_re_init(void)
         hd44780u_data_record.write_addr); 
 }
 
-//=======================================================================================
-
-
-//=======================================================================================
-// User commands 
-//=======================================================================================
-
-
-//=======================================================================================
-// Send 
 //=======================================================================================
 
 

@@ -72,13 +72,13 @@
 #define HD44780U_5x8 0x00              // F - 5x8 dot display 
 
 // Additional bits 
-#define HD44780U_EN 0x04   // Enable bit - 1 --> enable, 0 --> disable 
-#define HD44780U_RW 0x02   // Read/write bit - 1 --> read, 0 --> write 
-#define HD44780U_RS 0x01   // Register select bit - 1 --> data reg, 0 --> instruction reg 
+#define HD44780U_EN 0x04               // Enable bit - 1 --> enable, 0 --> disable 
+#define HD44780U_RW 0x02               // Read/write bit - 1 --> read, 0 --> write 
+#define HD44780U_RS 0x01               // Register select bit - 1: data reg, 0: instruction reg 
 
 // Backlight control 
 #define HD44780U_BACKLIGHT 0x08        // Backlight on 
-#define HD44780U_NO_BACKLIGHT 0x00      // Backlight off 
+#define HD44780U_NO_BACKLIGHT 0x00     // Backlight off 
 
 //==================================================
 
