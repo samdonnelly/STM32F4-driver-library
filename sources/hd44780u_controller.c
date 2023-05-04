@@ -537,14 +537,18 @@ void hd44780u_low_pwr_trans_state(
 {
     // Enable or disable low power depending on the low power flag 
     if (hd44780u_device->low_power)
-        hd44780u_send_instruc(HD44780U_SETUP_CMD_0x08);   // Turn the display off 
+    {
+        hd44780u_display_off();   // Turn the display off 
+    }
     else 
-        hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C);   // Turn the display on 
+    {
+        hd44780u_display_on();   // Turn the display on 
+    }
 
     // TODO change this to the low power mode exit state 
 
     // // Turn the display on 
-    // hd44780u_send_instruc(HD44780U_SETUP_CMD_0X0C); 
+    // hd44780u_display_on(); 
 
     // // Clear the low power flag 
     // hd44780u_device->low_power = CLEAR_BIT; 
@@ -559,7 +563,7 @@ void hd44780u_low_pwr_state(
     // flag to clear 
 
     // // Turn the display off 
-    // hd44780u_send_instruc(HD44780U_SETUP_CMD_0x08); 
+    // hd44780u_display_off(); 
 }
 
 

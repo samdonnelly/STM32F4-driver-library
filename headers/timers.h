@@ -48,6 +48,7 @@
 
 // Standard millisecond delays 
 #define DELAY_1MS   1 
+#define DELAY_2MS   2 
 #define DELAY_5MS   5 
 #define DELAY_10MS  10 
 #define DELAY_50MS  50 

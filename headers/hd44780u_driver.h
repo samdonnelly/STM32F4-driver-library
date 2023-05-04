@@ -32,14 +32,18 @@
 //=======================================================================================
 // Macros
 
+//===================================================
 // Device information 
+
 #define HD44780U_NUM_LINES 4    // Number of lines on the screen 
 #define HD44780U_MSG_PER_CMD 4  // Number of I2C bytes sent per one screen command
 #define HD44780U_NUM_CHAR 80    // Number of character spaces on the screen 
 #define HD44780U_LINE_LEN 20    // Number of characters per line on the screen 
-#define HD44780U_ADDR_INC 1     // I2C address increment 
+#define HD44780U_ADDR_READ 1    // I2C address increment 
 
-//==================================================
+//===================================================
+
+//===================================================
 // Message information 
 
 // General 
@@ -55,12 +59,9 @@
 
 // Display control 
 #define HD44780U_DISPLAY_CONTROL 0x08  // Standard display control bit 
-#define HD44780U_DISPLAY_ON 0x04       // D - Display on 
-#define HD44780U_DISPLAY_OFF 0x00      // D - Display off 
+#define HD44780U_DISPLAY_ON 0x04       // D - Display on/off 
 #define HD44780U_CURSOR_ON 0x02        // C - Cursor on/off 
 #define HD44780U_BLINK_ON 0x01         // B - Cursor blink on/off 
-
-// Cursor or display shift 
 
 // Function set 
 #define HD44780U_FUNCTION_SET 0x20     // Standard function set bit 
@@ -72,15 +73,15 @@
 #define HD44780U_5x8 0x00              // F - 5x8 dot display 
 
 // Additional bits 
-#define HD44780U_EN 0x04               // Enable bit - 1 --> enable, 0 --> disable 
-#define HD44780U_RW 0x02               // Read/write bit - 1 --> read, 0 --> write 
+#define HD44780U_EN 0x04               // Enable bit - 1: enable, 0: disable 
+#define HD44780U_RW 0x02               // Read/write bit - 1: read, 0: write 
 #define HD44780U_RS 0x01               // Register select bit - 1: data reg, 0: instruction reg 
 
 // Backlight control 
 #define HD44780U_BACKLIGHT 0x08        // Backlight on 
 #define HD44780U_NO_BACKLIGHT 0x00     // Backlight off 
 
-//==================================================
+//===================================================
 
 //=======================================================================================
 
@@ -119,72 +120,6 @@ typedef enum {
     PCF8574_ADDR_HHL = 0x4C,
     PCF8574_ADDR_HHH = 0x4E
 } pcf8574_addr_t;
-
-
-/**
- * @brief HD44780U delays 
- * 
- * @details The screen requires certain delays between each initialization instruction 
- *          which are defined in the screens user manaul. The following values are the
- *          various delays needed throughout the initialization sequence. 
- * 
- * @see hd44780u_init
- */
-typedef enum {
-    HD44780U_DELAY_001MS = 1,
-    HD44780U_DELAY_005MS = 5,
-    HD44780U_DELAY_010MS = 10,
-    HD44780U_DELAY_050MS = 50,
-    HD44780U_DELAY_100MS = 100,
-    HD44780U_DELAY_500MS = 500
-} hd44780u_delays_t;
-
-
-/**
- * @brief HD44780U setup commands
- * 
- * @details The screen requires certain initialization instructions which are defined in 
- *          user manual. The following values are the needed initialization instructions. 
- * 
- * @see hd44780u_init
- */
-typedef enum {
-    HD44780U_SETUP_CMD_0X01 = 0x01,       // (00000001)b 
-    HD44780U_SETUP_CMD_0X06 = 0x06,       // (00000110)b 
-    HD44780U_SETUP_CMD_0x08 = 0x08,       // (00001000)b 
-    HD44780U_SETUP_CMD_0X0C = 0x0C,       // (00001100)b 
-    HD44780U_SETUP_CMD_0X20 = 0x20,       // (00100000)b 
-    HD44780U_SETUP_CMD_0X28 = 0x28,       // (00101000)b 
-    HD44780U_SETUP_CMD_0X30 = 0x30        // (00110000)b 
-} hd44780u_setup_cmds_t;
-
-
-/**
- * @brief HD44780U configuration commands
- * 
- * @details These commands provide values for the screen backlight, enable or start
- *          transmission signal, read/write command and register choice. These 
- *          commands are predefined because they don't need to be changed and are 
- *          sent along with instruction/data information to the screen. Screen data 
- *          transmission works by sending 4-bits of instruction/data along with 4-bits 
- *          of these commands to make a byte. 
- *          
- *          bit 3: backlight ---> 0 = off,     1 = on     
- *          bit 2: Enable ------> 0 = stop,    1 = start  
- *          bit 1: R/W ---------> 0 = write,   1 = read   
- *          bit 0: RS register -> 0 = instruc, 1 = data   
- * 
- * // TODO there needs to be more commands to allow for backlight and read/write control 
- * 
- * @see hd44780u_send_instruc
- * @see hd44780u_send_data
- */
-typedef enum {
-    HD44780U_CONFIG_CMD_0X08 = 0x08,      // (00001000)b 
-    HD44780U_CONFIG_CMD_0X09 = 0x09,      // (00001001)b 
-    HD44780U_CONFIG_CMD_0X0C = 0x0C,      // (00001100)b 
-    HD44780U_CONFIG_CMD_0X0D = 0x0D       // (00001101)b 
-} hd44780u_config_cmds_t;
 
 
 /**
@@ -261,8 +196,6 @@ typedef enum {
  *          initialized as a blocking timer. This init function relies of delays 
  *          between commands sent to the device in order to succeed. 
  * 
- * // TODO add a device instance argument when multiple devices becomes supported 
- * 
  * @see hd44780u_send_instruc
  * @see hd44780u_setup_cmds_t
  * @see pcf8574_addr_t
@@ -288,84 +221,7 @@ void hd44780u_re_init(void);
 
 
 //=======================================================================================
-// Send functions 
-
-/**
- * @brief HD44780U send command
- * 
- * @details This function is used for configuring settings on the screen. The 
- *          hd44780u_init functions uses this function to send configuration commands. 
- *          The function can also be used to set the cursor position by setting the 
- *          DDRAM address value. The i2c driver is used to send the instructions. 
- *          Before sending instructions, the instruction data is formatted using the 
- *          hd44780u_config_cmds_t commands. 
- * 
- * @see hd44780u_init
- * @see hd44780u_config_cmds_t
- * 
- * @param hd44780u_cmd : instruction to configure the screen 
- */
-void hd44780u_send_instruc(uint8_t hd44780u_cmd);
-
-
-/**
- * @brief HD44780U send string
- * 
- * @details This function is used to print a string onto the screen which is defined 
- *          by the user and application. The function takes a pointer to a string and 
- *          repeatedly calls hd44780u_send_data to print the entire string. 
- * 
- * @see hd44780u_send_data
- * 
- * @param print_string : string of data that gets printed to the screen
- */
-void hd44780u_send_string(char *print_string);
-
-
-/**
- * @brief HD44780U clear display 
- * 
- * @details Blank characters are send to all character spaces on the screen to erase 
- *          any existing text. The DDRAM address also gets updated so that the cursor sits 
- *          at the beginning of line 1. The function repeatedly calls hd44780u_send_data
- *          to send the blank characters. 
- * 
- * @see hd44780u_send_data
- */
-void hd44780u_clear(void);
-
-
-/**
- * @brief HD44780U set cursor position 
- * 
- * @details Sets the cursor position on the screen. The cursor position will dictate where 
- *          text begins to appear on the screen when the screen is written to. This function 
- *          is used by the controller to set specific line content. It can also be used 
- *          without the controller to configure the screen as needed. 
- * 
- * @param line_start : line on the screen of where the cursor should go 
- * @param offset : character offset on the specified line to determine final location of cursor 
- */
-void hd44780u_cursor_pos(
-    hd44780u_line_start_position_t line_start, 
-    uint8_t offset); 
-
-
-/**
- * @brief HD44780U send line 
- * 
- * @details Sends the contents of a line in the data record to the screen for viewing. 
- * 
- * @param line : line of the data record to write to the screen 
- */
-void hd44780u_send_line(
-    hd44780u_lines_t line); 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Setters / user commands 
+// Data record / controller functions 
 
 /**
  * @brief HD44780U set the contents of a line 
@@ -395,6 +251,17 @@ void hd44780u_line_set(
 
 
 /**
+ * @brief HD44780U send line 
+ * 
+ * @details Sends the contents of a line in the data record to the screen for viewing. 
+ * 
+ * @param line : line of the data record to write to the screen 
+ */
+void hd44780u_send_line(
+    hd44780u_lines_t line); 
+
+
+/**
  * @brief HD44780U clear a line 
  * 
  * @details Clears all the contents of a specific line in the data record. <br> 
@@ -408,11 +275,141 @@ void hd44780u_line_set(
 void hd44780u_line_clear(
     hd44780u_lines_t line); 
 
+//=======================================================================================
+
+
+//=======================================================================================
+// User data functions 
+
+/**
+ * @brief HD44780U send string
+ * 
+ * @details This function is used to print a string onto the screen which is defined 
+ *          by the user and application. The function takes a pointer to a string and 
+ *          repeatedly calls hd44780u_send_data to print the entire string. 
+ * 
+ * @see hd44780u_send_data
+ * 
+ * @param print_string : string of data that gets printed to the screen
+ */
+void hd44780u_send_string(char *print_string); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// User commands 
+
+/**
+ * @brief HD44780U clear display 
+ * 
+ * @details Uses the screens built in clear display command to wipe the contents of the screen. 
+ *          The cursor position also gets updated to the beginning of line 1. 
+ */
+void hd44780u_clear(void);
+
+
+/**
+ * @brief HD44780U set cursor position 
+ * 
+ * @details Sets the cursor position on the screen. The cursor position will dictate where 
+ *          text begins to appear on the screen when the screen is written to. This function 
+ *          is used by the controller to set specific line content. It can also be used 
+ *          without the controller to configure the screen as needed. 
+ * 
+ * @param line_start : line on the screen of where the cursor should go 
+ * @param offset : character offset on the specified line to determine final location of cursor 
+ */
+void hd44780u_cursor_pos(
+    hd44780u_line_start_position_t line_start, 
+    uint8_t offset); 
+
+
+/**
+ * @brief Set cursor move direction to the right 
+ * 
+ * @details 
+ */
+void hd44780u_cursor_right(void); 
+
+
+/**
+ * @brief Set cursor move direction to the left 
+ * 
+ * @details 
+ */
+void hd44780u_cursor_left(void); 
+
+
+/**
+ * @brief Enable display shifting --> will shift in the same direction as cursor move direction 
+ * 
+ * @details 
+ */
+void hd44780u_shift_on(void); 
+
+
+/**
+ * @brief Disable display shifting 
+ * 
+ * @details 
+ */
+void hd44780u_shift_off(void); 
+
+
+/**
+ * @brief Turn the display on 
+ * 
+ * @details 
+ */
+void hd44780u_display_on(void); 
+
+
+/**
+ * @brief Turn the display off 
+ * 
+ * @details 
+ */
+void hd44780u_display_off(void); 
+
+
+/**
+ * @brief Turn the cursor on 
+ * 
+ * @details 
+ */
+void hd44780u_cursor_on(void); 
+
+
+/**
+ * @brief Turn the cursor off 
+ * 
+ * @details 
+ */
+void hd44780u_cursor_off(void); 
+
+
+/**
+ * @brief Turn the cursor blink on 
+ * 
+ * @details 
+  */
+void hd44780u_blink_on(void); 
+
+
+/**
+ * @brief Turn the cursor blink off 
+ * 
+ * @details 
+ */
+void hd44780u_blink_off(void); 
+
 
 /**
  * @brief Turn backlight on 
  */
 void hd44780u_backlight_on(void); 
+
 
 /**
  * @brief Turn backlight off 
