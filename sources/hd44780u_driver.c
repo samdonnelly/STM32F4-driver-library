@@ -220,7 +220,7 @@ void hd44780u_init(
     hd44780u_send_instruc(hd44780u_data_record.display_control); 
 
     // Place the cursor in the screen start position 
-    hd44780u_send_instruc(HD44780U_START_L1); 
+    hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_HOME); 
 }
 
 
@@ -411,7 +411,7 @@ void hd44780u_clear(void)
     // at the start of the screen 
     hd44780u_send_instruc(HD44780U_CLEAR_DISPLAY); 
     tim_delay_ms(hd44780u_data_record.tim, DELAY_2MS); 
-    hd44780u_send_instruc(HD44780U_START_L1); 
+    hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_HOME); 
 }
 
 

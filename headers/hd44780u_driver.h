@@ -32,7 +32,6 @@
 //=======================================================================================
 // Macros
 
-//===================================================
 // Device information 
 
 #define HD44780U_NUM_LINES 4    // Number of lines on the screen 
@@ -41,9 +40,7 @@
 #define HD44780U_LINE_LEN 20    // Number of characters per line on the screen 
 #define HD44780U_ADDR_READ 1    // I2C address increment 
 
-//===================================================
 
-//===================================================
 // Message information 
 
 // General 
@@ -81,7 +78,8 @@
 #define HD44780U_BACKLIGHT 0x08        // Backlight on 
 #define HD44780U_NO_BACKLIGHT 0x00     // Backlight off 
 
-//===================================================
+// Other 
+#define HD44780U_CURSOR_HOME 0         // Start of a line 
 
 //=======================================================================================
 
@@ -134,10 +132,10 @@ typedef enum {
  *          code where screen messages are more specific. 
  */
 typedef enum {
-    HD44780U_START_L1 = 0x80,
-    HD44780U_START_L3 = 0x94,
-    HD44780U_START_L2 = 0xC0,
-    HD44780U_START_L4 = 0xD4
+    HD44780U_START_L1 = 0x80,   // 128 
+    HD44780U_START_L3 = 0x94,   // 148 
+    HD44780U_START_L2 = 0xC0,   // 192
+    HD44780U_START_L4 = 0xD4    // 212 
 } hd44780u_line_start_position_t;
 
 
@@ -150,33 +148,6 @@ typedef enum {
     HD44780U_L3,
     HD44780U_L4
 } hd44780u_lines_t;
-
-
-/**
- * @brief HD44780U cursor offset 
- */
-typedef enum {
-    HD44780U_CURSOR_OFFSET_0,
-    HD44780U_CURSOR_OFFSET_1,
-    HD44780U_CURSOR_OFFSET_2,
-    HD44780U_CURSOR_OFFSET_3, 
-    HD44780U_CURSOR_OFFSET_4, 
-    HD44780U_CURSOR_OFFSET_5, 
-    HD44780U_CURSOR_OFFSET_6, 
-    HD44780U_CURSOR_OFFSET_7, 
-    HD44780U_CURSOR_OFFSET_8, 
-    HD44780U_CURSOR_OFFSET_9, 
-    HD44780U_CURSOR_OFFSET_10, 
-    HD44780U_CURSOR_OFFSET_11, 
-    HD44780U_CURSOR_OFFSET_12, 
-    HD44780U_CURSOR_OFFSET_13, 
-    HD44780U_CURSOR_OFFSET_14, 
-    HD44780U_CURSOR_OFFSET_15, 
-    HD44780U_CURSOR_OFFSET_16, 
-    HD44780U_CURSOR_OFFSET_17, 
-    HD44780U_CURSOR_OFFSET_18, 
-    HD44780U_CURSOR_OFFSET_19 
-} hd44780u_cursor_offset_t;
 
 //=======================================================================================
 
@@ -292,7 +263,8 @@ void hd44780u_line_clear(
  * 
  * @param print_string : string of data that gets printed to the screen
  */
-void hd44780u_send_string(char *print_string); 
+void hd44780u_send_string(
+    char *print_string); 
 
 //=======================================================================================
 

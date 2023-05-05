@@ -40,7 +40,7 @@ void hd44780u_init_state(
 
 
 /**
- * @brief HD44780U idle state 
+ * @brief HD44780U run state 
  * 
  * @details Resting state of the device during normal operation. When the screen is not 
  *          performing a task then the controller defaults to the idle state where no action 
@@ -49,7 +49,7 @@ void hd44780u_init_state(
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_idle_state(
+void hd44780u_run_state(
     hd44780u_trackers_t *hd44780u_device); 
 
 
@@ -66,14 +66,6 @@ void hd44780u_idle_state(
  *          visible on the screen until the write state occurs. 
  * 
  * @see hd44780u_set_write_flag
- * @see hd44780u_line1_set
- * @see hd44780u_line1_clear
- * @see hd44780u_line2_set
- * @see hd44780u_line2_clear
- * @see hd44780u_line3_set
- * @see hd44780u_line3_clear
- * @see hd44780u_line4_set
- * @see hd44780u_line4_clear
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
@@ -82,33 +74,7 @@ void hd44780u_write_state(
 
 
 /**
- * @brief HD44780U read state 
- * 
- * @details Currently this state does nothing, it is only a placeholder for a working read 
- *          state. This state is called when the read flag is set via the setter function. 
- *          Once this state is called the read flag is instantly cleared and the controller 
- *          returns to the idle state if no other flags are set. <br> 
- *          
- *          Ideally this state could read status information from the screen such as fault 
- *          codes. However, reading from the screen is not yet supported and it is unknown 
- *          what information can be read. Once read functionaility is implemented, the read 
- *          flag setter function should be changed to take a message specifier as an argument. 
- *          <br> 
- *          
- *          To get the contents of a device read (once functionality is added), the read 
- *          message getter can be called to obtain the return message. 
- * 
- * @see hd44780_set_read_flag
- * @see hd44780u_get_read_msg
- * 
- * @param hd44780u_device : device tracker that defines control characteristics 
- */
-void hd44780u_read_state(
-    hd44780u_trackers_t *hd44780u_device); 
-
-
-/**
- * @brief HD44780U low power mode transition state 
+ * @brief HD44780U low power mode enter state 
  * 
  * @details Allows for transitioning into the controllers low power mode state. When the low 
  *          power mode flag is set, the controller will call this state which in turn shuts 
@@ -122,7 +88,7 @@ void hd44780u_read_state(
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_low_pwr_trans_state(
+void hd44780u_low_pwr_enter_state(
     hd44780u_trackers_t *hd44780u_device); 
 
 
@@ -136,13 +102,24 @@ void hd44780u_low_pwr_trans_state(
  *          read from. This state is used to consume less power at times the screen is not 
  *          needed. 
  * 
- * @see hd44780u_low_pwr_trans_state
+ * @see hd44780u_low_pwr_enter_state
  * @see hd44780u_set_low_pwr_flag
  * @see hd44780u_clear_low_pwr_flag
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
 void hd44780u_low_pwr_state(
+    hd44780u_trackers_t *hd44780u_device); 
+
+
+/**
+ * @brief HD44780U low power mode exit state 
+ * 
+ * @details 
+ * 
+ * @param hd44780u_device : device tracker that defines control characteristics 
+ */
+void hd44780u_low_pwr_exit_state(
     hd44780u_trackers_t *hd44780u_device); 
 
 
@@ -194,11 +171,11 @@ static hd44780u_trackers_t hd44780u_device_trackers;
 static hd44780u_state_functions_t state_table[HD44780U_NUM_STATES] = 
 {
     &hd44780u_init_state, 
-    &hd44780u_idle_state, 
+    &hd44780u_run_state, 
     &hd44780u_write_state, 
-    &hd44780u_read_state, 
-    &hd44780u_low_pwr_trans_state, 
+    &hd44780u_low_pwr_enter_state, 
     &hd44780u_low_pwr_state, 
+    &hd44780u_low_pwr_exit_state, 
     &hd44780u_fault_state, 
     &hd44780u_reset_state 
 }; 
@@ -212,18 +189,14 @@ static hd44780u_state_functions_t state_table[HD44780U_NUM_STATES] =
 // Initialization 
 void hd44780u_controller_init(void)
 {
+    // Device and controller information 
     hd44780u_device_trackers.state = HD44780U_INIT_STATE; 
-
     hd44780u_device_trackers.fault_code = CLEAR; 
-
+    
+    // State flags 
     hd44780u_device_trackers.write = CLEAR_BIT; 
-
-    hd44780u_device_trackers.read = CLEAR_BIT; 
-
     hd44780u_device_trackers.low_power = CLEAR_BIT; 
-
     hd44780u_device_trackers.reset = CLEAR_BIT; 
-
     hd44780u_device_trackers.startup = SET_BIT; 
 }
 
@@ -235,231 +208,126 @@ void hd44780u_controller(void)
     hd44780u_states_t next_state = hd44780u_device_trackers.state; 
 
     //==================================================
-    // State machine 
-
-    // Fault state 
-    if (hd44780u_device_trackers.fault_code)
-    {
-        if (next_state == HD44780U_FAULT_STATE)
-        {
-            if (hd44780u_device_trackers.reset)
-                next_state = HD44780U_RESET_STATE; 
-        }
-        else 
-            next_state = HD44780U_FAULT_STATE; 
-    }
-
-    // Reset state 
-    else if (hd44780u_device_trackers.reset)
-    {
-        if (next_state == HD44780U_RESET_STATE)
-            next_state = HD44780U_INIT_STATE; 
-        else 
-            next_state = HD44780U_RESET_STATE; 
-    }
-
-    // Other states 
-    else 
-    {
-        switch (next_state)
-        {
-            case HD44780U_INIT_STATE: 
-                if (!(hd44780u_device_trackers.startup))
-                    next_state = HD44780U_IDLE_STATE; 
-                break; 
-
-            case HD44780U_IDLE_STATE: 
-                if (hd44780u_device_trackers.write)
-                    next_state = HD44780U_WRITE_STATE; 
-                
-                else if (hd44780u_device_trackers.read)
-                    next_state = HD44780U_READ_STATE; 
-
-                else if (hd44780u_device_trackers.low_power)
-                    next_state = HD44780U_LOW_PWR_TRANS_STATE; 
-                
-                break; 
-
-            case HD44780U_WRITE_STATE: 
-                if (hd44780u_device_trackers.read)
-                    next_state = HD44780U_READ_STATE; 
-
-                else if (!(hd44780u_device_trackers.write))
-                    next_state = HD44780U_IDLE_STATE; 
-                
-                break; 
-
-            case HD44780U_READ_STATE: 
-                if (hd44780u_device_trackers.write)
-                    next_state = HD44780U_WRITE_STATE; 
-
-                else if (!(hd44780u_device_trackers.read))
-                    next_state = HD44780U_IDLE_STATE; 
-                
-                break; 
-
-            case HD44780U_LOW_PWR_TRANS_STATE: 
-                if (hd44780u_device_trackers.low_power)
-                    next_state = HD44780U_LOW_PWR_STATE; 
-                else 
-                    next_state = HD44780U_IDLE_STATE; 
-                break; 
-
-            case HD44780U_LOW_PWR_STATE: 
-                if (!(hd44780u_device_trackers.low_power))
-                    next_state = HD44780U_LOW_PWR_TRANS_STATE; 
-                break; 
-
-            default: 
-                break; 
-        }
-    }
-
-    //==================================================
-
-    //==================================================
     // Revised State machine 
 
-    // switch (next_state)
-    // {
-    //     case HD44780U_INIT_STATE: 
-    //         if (!(hd44780u_device_trackers.startup))
-    //         {
-    //             next_state = HD44780U_IDLE_STATE; 
-    //         }
+    switch (next_state)
+    {
+        case HD44780U_INIT_STATE: 
+            if (!(hd44780u_device_trackers.startup))
+            {
+                next_state = HD44780U_RUN_STATE; 
+            }
 
-    //         break; 
+            break; 
 
-    //     case HD44780U_IDLE_STATE: 
-    //         // Fault code set 
-    //         if (hd44780u_device_trackers.fault_code)
-    //         {
-    //             next_state = HD44780U_FAULT_STATE; 
-    //         }
+        case HD44780U_RUN_STATE: 
+            // Fault code set 
+            if (hd44780u_device_trackers.fault_code)
+            {
+                next_state = HD44780U_FAULT_STATE; 
+            }
 
-    //         // Reset flag set 
-    //         else if (hd44780u_device_trackers.reset)
-    //         {
-    //             next_state = HD44780U_RESET_STATE; 
-    //         }
+            // Reset flag set 
+            else if (hd44780u_device_trackers.reset)
+            {
+                next_state = HD44780U_RESET_STATE; 
+            }
 
-    //         // Low power flag set 
-    //         else if (hd44780u_device_trackers.low_power)
-    //         {
-    //             next_state = HD44780U_LOW_PWR_STATE;
-    //         } 
+            // Low power flag set 
+            else if (hd44780u_device_trackers.low_power)
+            {
+                next_state = HD44780U_LOW_PWR_ENTER_STATE;
+            } 
 
-    //         // Write flag set 
-    //         else if (hd44780u_device_trackers.write)
-    //         {
-    //             next_state = HD44780U_WRITE_STATE; 
-    //         }
+            // Write flag set 
+            else if (hd44780u_device_trackers.write)
+            {
+                next_state = HD44780U_WRITE_STATE; 
+            }
             
-    //         // Read flag set 
-    //         else if (hd44780u_device_trackers.read)
-    //         {
-    //             next_state = HD44780U_READ_STATE; 
-    //         }
-            
-    //         break; 
+            break; 
 
-    //     case HD44780U_WRITE_STATE: 
-    //         // Fault code set 
-    //         if (hd44780u_device_trackers.fault_code)
-    //         {
-    //             next_state = HD44780U_FAULT_STATE; 
-    //         }
+        case HD44780U_WRITE_STATE: 
+            // Fault code set 
+            if (hd44780u_device_trackers.fault_code)
+            {
+                next_state = HD44780U_FAULT_STATE; 
+            }
 
-    //         // Reset flag set 
-    //         else if (hd44780u_device_trackers.reset)
-    //         {
-    //             next_state = HD44780U_RESET_STATE; 
-    //         }
+            // Reset flag set 
+            else if (hd44780u_device_trackers.reset)
+            {
+                next_state = HD44780U_RESET_STATE; 
+            }
 
-    //         // Write flag cleared 
-    //         else if (!(hd44780u_device_trackers.write))
-    //         {
-    //             next_state = HD44780U_IDLE_STATE; 
-    //         }
+            // Write flag cleared 
+            else
+            {
+                next_state = HD44780U_RUN_STATE; 
+            }
 
-    //         break; 
+            break; 
 
-    //     case HD44780U_READ_STATE: 
-    //         // Fault code set 
-    //         if (hd44780u_device_trackers.fault_code)
-    //         {
-    //             next_state = HD44780U_FAULT_STATE; 
-    //         }
+        case HD44780U_LOW_PWR_ENTER_STATE: 
+            next_state = HD44780U_LOW_PWR_STATE; 
+            break; 
 
-    //         // Reset flag set 
-    //         else if (hd44780u_device_trackers.reset)
-    //         {
-    //             next_state = HD44780U_RESET_STATE; 
-    //         }
+        case HD44780U_LOW_PWR_STATE: 
+            // Fault code set, reset flag set, or low power flag cleared 
+            if (hd44780u_device_trackers.fault_code || 
+                hd44780u_device_trackers.reset || 
+              !(hd44780u_device_trackers.low_power))
+            {
+                next_state = HD44780U_LOW_PWR_EXIT_STATE; 
+            }
 
-    //         // Read flag cleared 
-    //         else if (!(hd44780u_device_trackers.read))
-    //         {
-    //             next_state = HD44780U_IDLE_STATE; 
-    //         }
+            break; 
 
-    //         break; 
+        case HD44780U_LOW_PWR_EXIT_STATE: 
+            // Fault code set 
+            if (hd44780u_device_trackers.fault_code)
+            {
+                next_state = HD44780U_FAULT_STATE; 
+            }
 
-    //     case HD44780U_LOW_PWR_TRANS_STATE: 
-    //         // Fault code set 
-    //         if (hd44780u_device_trackers.fault_code)
-    //         {
-    //             next_state = HD44780U_FAULT_STATE; 
-    //         }
+            // Reset flag set 
+            else if (hd44780u_device_trackers.reset)
+            {
+                next_state = HD44780U_RESET_STATE; 
+            }
 
-    //         // Reset flag set 
-    //         else if (hd44780u_device_trackers.reset)
-    //         {
-    //             next_state = HD44780U_RESET_STATE; 
-    //         }
+            // Low power flag cleared - default back to the run state 
+            else 
+            {
+                next_state = HD44780U_RUN_STATE; 
+            }
 
-    //         // Default back to the idle state 
-    //         else 
-    //         {
-    //             next_state = HD44780U_IDLE_STATE; 
-    //         }
+            break; 
 
-    //         break; 
+        case HD44780U_FAULT_STATE: 
+            // Reset flag set 
+            if (hd44780u_device_trackers.reset)
+            {
+                next_state = HD44780U_RESET_STATE; 
+            }
 
-    //     case HD44780U_LOW_PWR_STATE: 
-    //         // Fault code set, reset flag set, or low power flag cleared 
-    //         if (hd44780u_device_trackers.fault_code || 
-    //             hd44780u_device_trackers.reset || 
-    //           !(hd44780u_device_trackers.low_power))
-    //         {
-    //             next_state = HD44780U_LOW_PWR_TRANS_STATE; 
-    //         }
+            // Fault code cleared 
+            else if (!(hd44780u_device_trackers.fault_code))
+            {
+                // next_state = HD44780U_INIT_STATE; 
+                next_state = HD44780U_RUN_STATE; 
+            }
 
-    //         break; 
+            break; 
 
-    //     case HD44780U_FAULT_STATE: 
-    //         // Reset flag set 
-    //         if (hd44780u_device_trackers.reset)
-    //         {
-    //             next_state = HD44780U_RESET_STATE; 
-    //         }
+        case HD44780U_RESET_STATE: 
+            next_state = HD44780U_INIT_STATE; 
+            break; 
 
-    //         // Fault code cleared 
-    //         else if (!(hd44780u_device_trackers.fault_code))
-    //         {
-    //             next_state = HD44780U_INIT_STATE; 
-    //         }
-
-    //         break; 
-
-    //     case HD44780U_RESET_STATE: 
-    //         next_state = HD44780U_INIT_STATE; 
-    //         break; 
-
-    //     default: 
-    //         next_state = HD44780U_INIT_STATE; 
-    //         break; 
-    // }
+        default: 
+            next_state = HD44780U_INIT_STATE; 
+            break; 
+    }
 
     //==================================================
 
@@ -489,7 +357,7 @@ void hd44780u_init_state(
 
 
 // Idle state 
-void hd44780u_idle_state(
+void hd44780u_run_state(
     hd44780u_trackers_t *hd44780u_device)
 {
     // Do nothing when not needed 
@@ -501,16 +369,16 @@ void hd44780u_write_state(
     hd44780u_trackers_t *hd44780u_device)
 {
     // Write all line contents 
-    hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_OFFSET_0);
+    hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_HOME);
     hd44780u_send_line(HD44780U_L1); 
 
-    hd44780u_cursor_pos(HD44780U_START_L2, HD44780U_CURSOR_OFFSET_0);
+    hd44780u_cursor_pos(HD44780U_START_L2, HD44780U_CURSOR_HOME);
     hd44780u_send_line(HD44780U_L2); 
     
-    hd44780u_cursor_pos(HD44780U_START_L3, HD44780U_CURSOR_OFFSET_0);
+    hd44780u_cursor_pos(HD44780U_START_L3, HD44780U_CURSOR_HOME);
     hd44780u_send_line(HD44780U_L3); 
     
-    hd44780u_cursor_pos(HD44780U_START_L4, HD44780U_CURSOR_OFFSET_0);
+    hd44780u_cursor_pos(HD44780U_START_L4, HD44780U_CURSOR_HOME);
     hd44780u_send_line(HD44780U_L4); 
 
     // Clear the write flag 
@@ -518,40 +386,14 @@ void hd44780u_write_state(
 }
 
 
-// Read state 
-void hd44780u_read_state(
+// Enter low power mode 
+void hd44780u_low_pwr_enter_state(
     hd44780u_trackers_t *hd44780u_device)
 {
-    // Check read message for faults and set fault code if needed 
-
-    // Store read messages 
-
-    // Clear the read flag 
-    hd44780u_device->read = CLEAR_BIT; 
-}
-
-
-// Low power mode transition state 
-void hd44780u_low_pwr_trans_state(
-    hd44780u_trackers_t *hd44780u_device)
-{
-    // Enable or disable low power depending on the low power flag 
-    if (hd44780u_device->low_power)
-    {
-        hd44780u_display_off();   // Turn the display off 
-    }
-    else 
-    {
-        hd44780u_display_on();   // Turn the display on 
-    }
-
-    // TODO change this to the low power mode exit state 
-
-    // // Turn the display on 
-    // hd44780u_display_on(); 
-
-    // // Clear the low power flag 
-    // hd44780u_device->low_power = CLEAR_BIT; 
+    // Clear the display, turn the backlight off and turn the display off 
+    hd44780u_clear(); 
+    hd44780u_backlight_off(); 
+    hd44780u_display_off(); 
 }
 
 
@@ -559,11 +401,20 @@ void hd44780u_low_pwr_trans_state(
 void hd44780u_low_pwr_state(
     hd44780u_trackers_t *hd44780u_device)
 {
-    // Idle state where the controller can do nothing but wait for the low power mode 
-    // flag to clear 
+    // Do nothing until the state is left 
+}
 
-    // // Turn the display off 
-    // hd44780u_display_off(); 
+
+// Exit low power mode 
+void hd44780u_low_pwr_exit_state(
+    hd44780u_trackers_t *hd44780u_device)
+{
+    // Turn the display on, turn the backlight on, set the cursor to home and 
+    // clear the low power flag in the event of a fault or reset 
+    hd44780u_display_on(); 
+    hd44780u_backlight_on(); 
+    hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_HOME); 
+    hd44780u_clear_low_pwr_flag(); 
 }
 
 
@@ -592,81 +443,10 @@ void hd44780u_reset_state(
 //================================================================================
 // Setters 
 
-// Set screen line 1 content 
-void hd44780u_line1_set(
-    char *display_data, 
-    hd44780u_cursor_offset_t line_offset)
-{
-    hd44780u_line_set(HD44780U_L1, display_data, line_offset); 
-}
-
-
-// Clear screen line 1 
-void hd44780u_line1_clear(void)
-{
-    hd44780u_line_clear(HD44780U_L1); 
-}
-
-
-// Set screen line 2 content 
-void hd44780u_line2_set(
-    char *display_data, 
-    hd44780u_cursor_offset_t line_offset)
-{
-    hd44780u_line_set(HD44780U_L2, display_data, line_offset); 
-}
-
-
-// Clear screen line 2 
-void hd44780u_line2_clear(void)
-{
-    hd44780u_line_clear(HD44780U_L2); 
-}
-
-
-// Set screen line 3 content 
-void hd44780u_line3_set(
-    char *display_data, 
-    hd44780u_cursor_offset_t line_offset)
-{
-    hd44780u_line_set(HD44780U_L3, display_data, line_offset); 
-}
-
-
-// Clear screen line 3 
-void hd44780u_line3_clear(void)
-{
-    hd44780u_line_clear(HD44780U_L3); 
-}
-
-
-// Set screen line 4 content 
-void hd44780u_line4_set(
-    char *display_data, 
-    hd44780u_cursor_offset_t line_offset)
-{
-    hd44780u_line_set(HD44780U_L4, display_data, line_offset); 
-}
-
-
-// Clear screen line 4 
-void hd44780u_line4_clear(void)
-{
-    hd44780u_line_clear(HD44780U_L4); 
-}
-
-
 // Set write flag 
 void hd44780u_set_write_flag(void)
 {
     hd44780u_device_trackers.write = SET_BIT; 
-}
-
-
-// Set read flag 
-void hd44780u_set_read_flag(void)
-{    
-    hd44780u_device_trackers.read = SET_BIT; 
 }
 
 
@@ -707,13 +487,6 @@ HD44780U_STATE hd44780u_get_state(void)
 HD44780U_FAULT_CODE hd44780u_get_fault_code(void)
 {
     return hd44780u_device_trackers.fault_code; 
-}
-
-
-// Get read message 
-void hd44780u_get_read_msg(char *read_msg)
-{
-    strcpy(read_msg, (char *)hd44780u_device_trackers.read_msg); 
 }
 
 //================================================================================
