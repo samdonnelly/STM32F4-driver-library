@@ -412,15 +412,6 @@ void hd44780u_clear(void)
     hd44780u_send_instruc(HD44780U_CLEAR_DISPLAY); 
     tim_delay_ms(hd44780u_data_record.tim, DELAY_2MS); 
     hd44780u_send_instruc(HD44780U_START_L1); 
-
-    // // Set the write address to the first place on the screen 
-    // hd44780u_send_instruc(HD44780U_START_L1);
-
-    // // Send a blank string to each display character to clear the display
-    // for(uint8_t i = 0; i < HD44780U_NUM_CHAR; i++)
-    // {
-    //     hd44780u_send_data(' ');
-    // }
 }
 
 
