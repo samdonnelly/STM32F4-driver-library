@@ -38,7 +38,7 @@
 #define HD44780U_MSG_PER_CMD 4  // Number of I2C bytes sent per one screen command
 #define HD44780U_NUM_CHAR 80    // Number of character spaces on the screen 
 #define HD44780U_LINE_LEN 20    // Number of characters per line on the screen 
-#define HD44780U_ADDR_READ 1    // I2C address increment 
+#define HD44780U_READ_OFFSET 1  // I2C address increment 
 
 
 // Message information 
@@ -78,6 +78,9 @@
 #define HD44780U_BACKLIGHT 0x08        // Backlight on 
 #define HD44780U_NO_BACKLIGHT 0x00     // Backlight off 
 
+// Busy flag (BF) and address counter (AC) 
+#define HD44780U_BF_MASK 0x80          // BF bit mask 
+
 // Other 
 #define HD44780U_CURSOR_HOME 0         // Start of a line 
 
@@ -94,7 +97,7 @@
  *          to the screen. The module has contacts on its surface that can be grounded to 
  *          manually set the i2c address. By default none of the contacts are grounded.
  *          The following are all the possible write addresses the module can have. The 
- *          addresses are defined in the deviced user manual. All of the possible read 
+ *          addresses are defined in the device user manual. All of the possible read 
  *          addresses are simply each of the below write addresses +1. This means that 
  *          only one of the below addresses needs to be associated with a device and 
  *          the write and read address can be selected by the driver as needed. 
@@ -153,6 +156,14 @@ typedef enum {
 
 
 //=======================================================================================
+// Datatypes 
+
+typedef uint8_t HD44780U_BF;           // Busy flag 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 /**
@@ -192,7 +203,7 @@ void hd44780u_re_init(void);
 
 
 //=======================================================================================
-// Data record / controller functions 
+// Data functions 
 
 /**
  * @brief HD44780U set the contents of a line 
@@ -222,17 +233,6 @@ void hd44780u_line_set(
 
 
 /**
- * @brief HD44780U send line 
- * 
- * @details Sends the contents of a line in the data record to the screen for viewing. 
- * 
- * @param line : line of the data record to write to the screen 
- */
-void hd44780u_send_line(
-    hd44780u_lines_t line); 
-
-
-/**
  * @brief HD44780U clear a line 
  * 
  * @details Clears all the contents of a specific line in the data record. <br> 
@@ -246,11 +246,17 @@ void hd44780u_send_line(
 void hd44780u_line_clear(
     hd44780u_lines_t line); 
 
-//=======================================================================================
 
+/**
+ * @brief HD44780U send line 
+ * 
+ * @details Sends the contents of a line in the data record to the screen for viewing. 
+ * 
+ * @param line : line of the data record to write to the screen 
+ */
+void hd44780u_send_line(
+    hd44780u_lines_t line); 
 
-//=======================================================================================
-// User data functions 
 
 /**
  * @brief HD44780U send string
@@ -387,6 +393,14 @@ void hd44780u_backlight_on(void);
  * @brief Turn backlight off 
  */
 void hd44780u_backlight_off(void); 
+
+
+/**
+ * @brief Read busy flag 
+ * 
+ * @return HD44780U_BF 
+ */
+HD44780U_BF hd44780u_read_bf(void); 
 
 //=======================================================================================
 

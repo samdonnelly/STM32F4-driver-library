@@ -319,7 +319,7 @@ void i2c_write_address(
     uint8_t i2c_address)
 {
     i2c->DR = i2c_address;  // Send slave address 
-    i2c_addr_wait(i2c);      // Wait for ADDR to set
+    i2c_addr_wait(i2c);     // Wait for ADDR to set
 }
 
 // I2C send data to a device
