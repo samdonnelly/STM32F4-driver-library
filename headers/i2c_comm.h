@@ -25,6 +25,19 @@
 
 
 //=======================================================================================
+// Macros 
+
+// Timeout counters 
+#define I2C_START_TIMEOUT 100               // Start bit set timeout counter 
+#define I2C_ADDR_TIMEOUT 1000               // ADDR bit set timeout counter 
+#define I2C_RXNE_TIMEOUT 1000               // RXNE bit set timeout counter 
+#define I2C_TXE_TIMEOUT 1000                // TXE bit set timeout counter 
+#define I2C_BTF_TIMEOUT 100                 // TXE bit set timeout counter 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Enums 
 
 /**
@@ -37,6 +50,15 @@ typedef enum {
     I2C_W_OFFSET, 
     I2C_R_OFFSET
 } i2c_rw_offset_t; 
+
+
+/**
+ * @brief I2C operation status 
+ */
+typedef enum {
+    I2C_OK, 
+    I2C_TIMEOUT 
+} i2c_status_t; 
 
 
 /**
@@ -150,6 +172,14 @@ typedef enum {
 
 
 //=======================================================================================
+// Datatypes 
+
+typedef i2c_status_t I2C_STATUS; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 /**
@@ -190,9 +220,12 @@ void i2c_init(
  *          transmisssion. The controller is in slave mode when idle but becomes 
  *          the master when the start condition is generated. 
  * 
+ * @see i2c_status_t
+ * 
  * @param i2c : pointer to I2C port 
+ * @return I2C_STATUS : I2C operation status 
  */
-void i2c_start(
+I2C_STATUS i2c_start(
     I2C_TypeDef *i2c);
 
 
@@ -234,10 +267,13 @@ void i2c_clear_addr(
  *          device. This function is called after the start condition has been generated. 
  *          Only 7-bit addresses are supported. 
  * 
+ * @see i2c_status_t
+ * 
  * @param i2c : pointer to the I2C port 
  * @param i2c_address : 7-bit address of slave device on the bus 
+ * @return I2C_STATUS : I2C operation status 
  */
-void i2c_write_address(
+I2C_STATUS i2c_write_address(
     I2C_TypeDef *i2c, 
     uint8_t i2c_address);
 
@@ -249,11 +285,14 @@ void i2c_write_address(
  *          been cleared. The function takes a pointer to the data that will be send over 
  *          the bus and the size of the data so it knows how many bytes to send. 
  * 
+ * @see i2c_status_t
+ * 
  * @param i2c : pointer to the I2C port 
  * @param data : pointer to data to be sent over the bus 
  * @param data_size : integer indicating the number of bytes to be sent 
+ * @return I2C_STATUS : I2C operation status 
  */
-void i2c_write_master_mode(
+I2C_STATUS i2c_write_master_mode(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint8_t data_size);
@@ -270,12 +309,15 @@ void i2c_write_master_mode(
  * @details Read data from a slave device. This function is called after the ADDR bit has 
  *          been cleared. The function takes a pointer where it will store the recieved 
  *          data and the size of the data so it knows how many bytes to read. 
+ * 
+ * @see i2c_status_t
  *          
  * @param i2c : pointer to the I2C port 
  * @param data : pointer that data is placed into 
- * @param data_size : integer indicating the number of bytes to be receieved
+ * @param data_size : integer indicating the number of bytes to be receieved 
+ * @return I2C_STATUS : I2C operation status 
  */
-void i2c_read_master_mode(
+I2C_STATUS i2c_read_master_mode(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint16_t data_size);
@@ -291,12 +333,15 @@ void i2c_read_master_mode(
  *          be stopped based on how many bytes remain to be read. There must be at least one 
  *          byte left to read. 
  * 
+ * @see i2c_status_t
+ * 
  * @param i2c : pointer to the I2C port used 
  * @param data : pointer to the buffer that stores read data 
  * @param term_char : termination character to indicate when to stop reading 
  * @param bytes_remain : number of bytes left to read after the termination character 
+ * @return I2C_STATUS : I2C operation status 
  */
-void i2c_read_to_term(
+I2C_STATUS i2c_read_to_term(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint8_t term_char, 
@@ -316,14 +361,17 @@ void i2c_read_to_term(
  *          NOTE: Reading the length in the message is currently only supported 
  *                for little endian format. 
  * 
+ * @see i2c_status_t
+ * 
  * @param i2c : pointer to the I2C port used 
  * @param address : I2C address of the device 
  * @param data : pointer to buffer that stores the read data  
  * @param len_location : where the message length is located in the message (bytes) 
  * @param len_bytes : number of bytes used to define the length within the message 
  * @param add_bytes : additional bytes to read at the end of the message (if needed) 
+ * @return I2C_STATUS : I2C operation status 
  */
-void i2c_read_to_len(
+I2C_STATUS i2c_read_to_len(
     I2C_TypeDef *i2c, 
     uint8_t address, 
     uint8_t *data, 
