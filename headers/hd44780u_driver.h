@@ -38,7 +38,6 @@
 #define HD44780U_MSG_PER_CMD 4  // Number of I2C bytes sent per one screen command
 #define HD44780U_NUM_CHAR 80    // Number of character spaces on the screen 
 #define HD44780U_LINE_LEN 20    // Number of characters per line on the screen 
-#define HD44780U_READ_OFFSET 1  // I2C address increment 
 
 
 // Message information 
@@ -77,9 +76,6 @@
 // Backlight control 
 #define HD44780U_BACKLIGHT 0x08        // Backlight on 
 #define HD44780U_NO_BACKLIGHT 0x00     // Backlight off 
-
-// Busy flag (BF) and address counter (AC) 
-#define HD44780U_BF_MASK 0x80          // BF bit mask 
 
 // Other 
 #define HD44780U_CURSOR_HOME 0         // Start of a line 
@@ -151,14 +147,6 @@ typedef enum {
     HD44780U_L3,
     HD44780U_L4
 } hd44780u_lines_t;
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Datatypes 
-
-typedef uint8_t HD44780U_BF;           // Busy flag 
 
 //=======================================================================================
 
@@ -393,14 +381,6 @@ void hd44780u_backlight_on(void);
  * @brief Turn backlight off 
  */
 void hd44780u_backlight_off(void); 
-
-
-/**
- * @brief Read busy flag 
- * 
- * @return HD44780U_BF 
- */
-HD44780U_BF hd44780u_read_bf(void); 
 
 //=======================================================================================
 

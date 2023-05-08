@@ -392,7 +392,6 @@ void hd44780u_low_pwr_enter_state(
 {
     // Clear the display, turn the backlight off and turn the display off 
     hd44780u_clear(); 
-    hd44780u_read_bf(); 
     hd44780u_backlight_off(); 
     hd44780u_display_off(); 
 }

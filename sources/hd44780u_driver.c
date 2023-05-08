@@ -21,7 +21,7 @@
 
 
 //=======================================================================================
-// Write and read functions 
+// Send functions 
 
 /**
  * @brief HD44780U send command
@@ -61,32 +61,6 @@ void hd44780u_send_data(
 
 
 /**
- * @brief Read the busy flag (BF) and address counter 
- * 
- * @details 
- * 
- * @param hd44780u_cmd 
- */
-void hd44780u_read_instruc(
-    uint8_t hd44780u_cmd); 
-
-
-/**
- * @brief Format the message to send to the screen 
- * 
- * @details 
- * 
- * @param msg 
- * @param msg_buff 
- * @param mask 
- */
-void hd44780u_format_msg(
-    uint8_t msg, 
-    uint8_t *msg_buff, 
-    uint8_t mask); 
-
-
-/**
  * @brief Send data to screen 
  * 
  * @details Takes instruction and data information from the user send functions and 
@@ -99,20 +73,6 @@ void hd44780u_send(
     I2C_TypeDef *i2c, 
     uint8_t *data); 
 
-
-/**
- * @brief Read data from the screen 
- * 
- * @details 
- * 
- * @param i2c 
- * @param buff 
- */
-void hd44780u_read(
-    I2C_TypeDef *i2c, 
-    uint8_t *data, 
-    uint8_t *buff); 
-
 //=======================================================================================
 
 
@@ -123,12 +83,11 @@ void hd44780u_read(
 typedef struct hd44780u_data_record_s 
 {
     // Peripheral ports used by the device 
-    I2C_TypeDef *i2c;                // I2C port 
-    TIM_TypeDef *tim;                // Timer 
+    I2C_TypeDef *i2c; 
+    TIM_TypeDef *tim; 
 
-    // Device I2C addresses 
-    uint8_t write_addr;              // Write address 
-    uint8_t read_addr;               // Read address 
+    // I2C write address 
+    uint8_t write_addr; 
 
     // Display data 
     char line1[HD44780U_LINE_LEN];   // LCD line 1 data output 
@@ -136,13 +95,13 @@ typedef struct hd44780u_data_record_s
     char line3[HD44780U_LINE_LEN];   // LCD line 3 data output 
     char line4[HD44780U_LINE_LEN];   // LCD line 4 data output 
 
-    // Read data 
-    uint8_t bf_ac;                   // Busy flag (BF) and address counter (AC) 
-
     // User settings 
     uint8_t backlight;               // Backlight state 
     uint8_t entry_mode;              // Entry mode set parameters 
     uint8_t display_control;         // Display control parameters 
+
+    // Status info 
+    uint8_t status;                  // Operation status 
 }
 hd44780u_data_record_t; 
 
@@ -168,7 +127,6 @@ void hd44780u_init(
     hd44780u_data_record.i2c = i2c; 
     hd44780u_data_record.tim = timer; 
     hd44780u_data_record.write_addr = addr; 
-    hd44780u_data_record.read_addr = addr + HD44780U_READ_OFFSET; 
 
     // Line content 
     hd44780u_line_clear(HD44780U_L1); 
@@ -264,7 +222,7 @@ void hd44780u_re_init(void)
 
 
 //=======================================================================================
-// Write and read functions 
+// Send functions 
 
 // Message bit layout - 4-bit mode 
 // Bit 7: data bit 7 (first data send) and 3 (second data send) 
@@ -285,11 +243,10 @@ void hd44780u_send_instruc(
     uint8_t mask = hd44780u_data_record.backlight; 
 
     // Organize send data into a sendable format
-    // lcd_instruction[0] = (hd44780u_cmd & HD44780U_4BIT_MASK) | mask | HD44780U_EN; 
-    // lcd_instruction[1] = (hd44780u_cmd & HD44780U_4BIT_MASK) | mask; 
-    // lcd_instruction[2] = ((hd44780u_cmd << SHIFT_4) & HD44780U_4BIT_MASK) | mask | HD44780U_EN; 
-    // lcd_instruction[3] = ((hd44780u_cmd << SHIFT_4) & HD44780U_4BIT_MASK) | mask; 
-    hd44780u_format_msg(hd44780u_cmd, lcd_instruction, mask); 
+    lcd_instruction[0] = (hd44780u_cmd & HD44780U_4BIT_MASK) | mask | HD44780U_EN; 
+    lcd_instruction[1] = (hd44780u_cmd & HD44780U_4BIT_MASK) | mask; 
+    lcd_instruction[2] = ((hd44780u_cmd << SHIFT_4) & HD44780U_4BIT_MASK) | mask | HD44780U_EN; 
+    lcd_instruction[3] = ((hd44780u_cmd << SHIFT_4) & HD44780U_4BIT_MASK) | mask; 
 
     // Send the command to the screen 
     hd44780u_send(hd44780u_data_record.i2c, lcd_instruction); 
@@ -305,49 +262,13 @@ void hd44780u_send_data(
     uint8_t mask = hd44780u_data_record.backlight | HD44780U_RS; 
 
     // Organize send data into a sendable format 
-    // lcd_display_data[0] = (hd44780u_data & HD44780U_4BIT_MASK) | mask | HD44780U_EN; 
-    // lcd_display_data[1] = (hd44780u_data & HD44780U_4BIT_MASK) | mask; 
-    // lcd_display_data[2] = ((hd44780u_data << SHIFT_4) & HD44780U_4BIT_MASK) | mask | HD44780U_EN; 
-    // lcd_display_data[3] = ((hd44780u_data << SHIFT_4) & HD44780U_4BIT_MASK) | mask; 
-    hd44780u_format_msg(hd44780u_data, lcd_display_data, mask); 
+    lcd_display_data[0] = (hd44780u_data & HD44780U_4BIT_MASK) | mask | HD44780U_EN; 
+    lcd_display_data[1] = (hd44780u_data & HD44780U_4BIT_MASK) | mask; 
+    lcd_display_data[2] = ((hd44780u_data << SHIFT_4) & HD44780U_4BIT_MASK) | mask | HD44780U_EN; 
+    lcd_display_data[3] = ((hd44780u_data << SHIFT_4) & HD44780U_4BIT_MASK) | mask; 
 
     // Send the data to the screen 
     hd44780u_send(hd44780u_data_record.i2c, lcd_display_data); 
-}
-
-
-// Read the busy flag (BF) and address counter 
-void hd44780u_read_instruc(
-    uint8_t hd44780u_cmd)
-{
-    // Local variables 
-    uint8_t lcd_instruction[HD44780U_MSG_PER_CMD]; 
-    uint8_t lcd_info[HD44780U_MSG_PER_CMD]; 
-    uint8_t mask = hd44780u_data_record.backlight | HD44780U_RW; 
-
-    // Organize send data into a sendable format 
-    hd44780u_format_msg(hd44780u_cmd, lcd_instruction, mask); 
-
-    // Read the command response 
-    hd44780u_read(hd44780u_data_record.i2c, lcd_instruction, lcd_info); 
-
-    // Parse the return message 
-    hd44780u_data_record.bf_ac = (lcd_info[0] & HD44780U_4BIT_MASK) | 
-                                 ((lcd_info[2] & HD44780U_4BIT_MASK) >> SHIFT_4); 
-}
-
-
-// Format the message to send to the screen 
-void hd44780u_format_msg(
-    uint8_t msg, 
-    uint8_t *msg_buff, 
-    uint8_t mask)
-{
-    // Organize send message into a sendable format 
-    *msg_buff++ = (msg & HD44780U_4BIT_MASK) | mask | HD44780U_EN; 
-    *msg_buff++ = (msg & HD44780U_4BIT_MASK) | mask; 
-    *msg_buff++ = ((msg << SHIFT_4) & HD44780U_4BIT_MASK) | mask | HD44780U_EN; 
-    *msg_buff   = ((msg << SHIFT_4) & HD44780U_4BIT_MASK) | mask; 
 }
 
 
@@ -356,50 +277,24 @@ void hd44780u_send(
     I2C_TypeDef *i2c, 
     uint8_t *data)
 {
-    // TODO once added, check for timeout fault return statuses 
+    // Local variables 
+    I2C_STATUS i2c_status = I2C_OK; 
 
     // Create start condition to initiate master mode 
-    i2c_start(i2c); 
+    i2c_status |= i2c_start(i2c); 
 
     // Send the PCF8574 address with a write offset
-    i2c_write_address(i2c, hd44780u_data_record.write_addr);
+    i2c_status |= i2c_write_address(i2c, hd44780u_data_record.write_addr);
     i2c_clear_addr(i2c);
 
     // Send data over I2C
-    i2c_write_master_mode(i2c, data, HD44780U_MSG_PER_CMD); 
+    i2c_status |= i2c_write_master_mode(i2c, data, HD44780U_MSG_PER_CMD); 
 
     // Create a stop condition
     i2c_stop(i2c); 
-}
 
-
-// Read data from the screen 
-void hd44780u_read(
-    I2C_TypeDef *i2c, 
-    uint8_t *data, 
-    uint8_t *buff)
-{
-    // Create start condition to initiate master mode 
-    i2c_start(i2c); 
-
-    // Send the PCF8574 write address 
-    i2c_write_address(i2c, hd44780u_data_record.write_addr);
-    i2c_clear_addr(i2c); 
-
-    // Request the data to read 
-    i2c_write_master_mode(i2c, data, HD44780U_MSG_PER_CMD); 
-
-    // Create another start condition 
-    i2c_start(i2c); 
-
-    // Send the PCF8574 read address 
-    i2c_write_address(i2c, hd44780u_data_record.read_addr);
-
-    // Read the data sent from the screen 
-    i2c_read_master_mode(i2c, buff, HD44780U_MSG_PER_CMD); 
-
-    // Create a stop condition
-    i2c_stop(i2c); 
+    // Update the driver status 
+    hd44780u_data_record.status |= (uint8_t)i2c_status; 
 }
 
 //=======================================================================================
@@ -482,7 +377,7 @@ void hd44780u_clear(void)
     // Send a clear display command, wait for the command to complete then place the cursor 
     // at the start of the screen 
     hd44780u_send_instruc(HD44780U_CLEAR_DISPLAY); 
-    // tim_delay_ms(hd44780u_data_record.tim, DELAY_2MS); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_2MS); 
     hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_HOME); 
 }
 
@@ -593,15 +488,6 @@ void hd44780u_backlight_off(void)
 {
     hd44780u_data_record.backlight = HD44780U_NO_BACKLIGHT; 
     hd44780u_send_instruc(hd44780u_data_record.display_control); 
-}
-
-
-// Read busy flag 
-HD44780U_BF hd44780u_read_bf(void)
-{
-    // Read the busy flag and address counter data then return the BF status 
-    hd44780u_read_instruc(0xFF); 
-    return ((hd44780u_data_record.bf_ac & HD44780U_BF_MASK) >> SHIFT_7); 
 }
 
 //=======================================================================================
