@@ -34,10 +34,10 @@
 
 // Device information 
 
-#define HD44780U_NUM_LINES 4    // Number of lines on the screen 
-#define HD44780U_MSG_PER_CMD 4  // Number of I2C bytes sent per one screen command
-#define HD44780U_NUM_CHAR 80    // Number of character spaces on the screen 
-#define HD44780U_LINE_LEN 20    // Number of characters per line on the screen 
+#define HD44780U_NUM_LINES 4           // Number of lines on the screen 
+#define HD44780U_MSG_PER_CMD 4         // Number of I2C bytes sent per one screen command
+#define HD44780U_NUM_CHAR 80           // Number of character spaces on the screen 
+#define HD44780U_LINE_LEN 20           // Number of characters per line on the screen 
 
 
 // Message information 
@@ -183,7 +183,8 @@ void hd44780u_init(
 /**
  * @brief HD44780U screen re-initialization 
  * 
- * @details Used in the HD44780U controller for resetting the device 
+ * @details Used in the HD44780U controller for resetting the device. This function will 
+ *          call hd44780u_init again to go through the device setup steps. 
  */
 void hd44780u_re_init(void); 
 
@@ -191,13 +192,13 @@ void hd44780u_re_init(void);
 
 
 //=======================================================================================
-// Data functions 
+// Setters and getters 
 
 /**
  * @brief HD44780U set the contents of a line 
  * 
  * @details Updates the contents of a specific line to specified text in the device data 
- *          record. <br> 
+ *          record. 
  *          
  *          A pointer to a character string of what to write to the line is passed as an 
  *          argument along with the position offset. The position offset determines the 
@@ -223,7 +224,7 @@ void hd44780u_line_set(
 /**
  * @brief HD44780U clear a line 
  * 
- * @details Clears all the contents of a specific line in the data record. <br> 
+ * @details Clears all the contents of a specific line in the data record. 
  *          
  *          This function will overwrite the existing contents and replace it with blanks. 
  *          This function will update the devices data record and won't be seen on the screen 
@@ -234,6 +235,40 @@ void hd44780u_line_set(
 void hd44780u_line_clear(
     hd44780u_lines_t line); 
 
+
+/**
+ * @brief Get status flag 
+ * 
+ * @details Returns the drivers status flag. The status flag indicates faults that have 
+ *          occured. The status flag breakdown is as follows: 
+ *          - 0: No faults, everything OK 
+ *          - 1: I2C timeout 
+ *          
+ *          When the status flag is set it can only be cleared using the clear status 
+ *          function. 
+ * 
+ * @see hd44780u_clear_status
+ * 
+ * @return uint8_t : driver status return 
+ */
+uint8_t hd44780u_get_status(void); 
+
+
+/**
+ * @brief Clear status flag 
+ * 
+ * @details Allows for clearing of the driver status flag. See the description for the status 
+ *          getter function for details on the status flag. 
+ * 
+ * @see hd44780u_get_status
+ */
+void hd44780u_clear_status(void); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data functions 
 
 /**
  * @brief HD44780U send line 
@@ -294,7 +329,11 @@ void hd44780u_cursor_pos(
 /**
  * @brief Set cursor move direction to the right 
  * 
- * @details 
+ * @details Part of the entry mode instruction represented by the I/D bit. 
+ *          I/D = Increment (I/D = 1) and Decrement (I/D = 0). 
+ *          This changes the DDRAM address by 1 when a character code is written or read from 
+ *          DDRAM. This can be visualized by enabling the cursor and/or blink. 
+ *          This function sets I/D = 1 to increment DDRAM. 
  */
 void hd44780u_cursor_right(void); 
 
@@ -302,7 +341,11 @@ void hd44780u_cursor_right(void);
 /**
  * @brief Set cursor move direction to the left 
  * 
- * @details 
+ * @details Part of the entry mode instruction represented by the I/D bit. 
+ *          I/D = Increment (I/D = 1) and Decrement (I/D = 0). 
+ *          This changes the DDRAM address by 1 when a character code is written or read from 
+ *          DDRAM. This can be visualized by enabling the cursor and/or blink. 
+ *          This function sets I/D = 0 to decrement DDRAM. 
  */
 void hd44780u_cursor_left(void); 
 
@@ -310,7 +353,11 @@ void hd44780u_cursor_left(void);
 /**
  * @brief Enable display shifting --> will shift in the same direction as cursor move direction 
  * 
- * @details 
+ * @details Part of the entry mode instruction represented by the S bit. 
+ *          When S = 1 then the entire display will be shifted either to the right (I/D = 0) or 
+ *          to the left (I/D = 1). If S = 0 then no shift will occur. 
+ *          The display will no shift when reading DDRAM or when writing or reading CGRAM. 
+ *          This function sets S = 1. 
  */
 void hd44780u_shift_on(void); 
 
@@ -318,7 +365,11 @@ void hd44780u_shift_on(void);
 /**
  * @brief Disable display shifting 
  * 
- * @details 
+ * @details Part of the entry mode instruction represented by the S bit. 
+ *          When S = 1 then the entire display will be shifted either to the right (I/D = 0) or 
+ *          to the left (I/D = 1). If S = 0 then no shift will occur. 
+ *          The display will no shift when reading DDRAM or when writing or reading CGRAM. 
+ *          This function sets S = 0. 
  */
 void hd44780u_shift_off(void); 
 
@@ -326,7 +377,10 @@ void hd44780u_shift_off(void);
 /**
  * @brief Turn the display on 
  * 
- * @details 
+ * @details Part of the display control instruction represented by the D bit. 
+ *          The contents DDRAM (display data) will be shown when D = 1 and not shown when 
+ *          D = 0. When D = 0 the DDRAM contents are not affected. 
+ *          This function sets D = 1. 
  */
 void hd44780u_display_on(void); 
 
@@ -334,7 +388,10 @@ void hd44780u_display_on(void);
 /**
  * @brief Turn the display off 
  * 
- * @details 
+ * @details Part of the display control instruction represented by the D bit. 
+ *          The contents DDRAM (display data) will be shown when D = 1 and not shown when 
+ *          D = 0. When D = 0 the DDRAM contents are not affected. 
+ *          This function sets D = 0. 
  */
 void hd44780u_display_off(void); 
 
@@ -342,7 +399,11 @@ void hd44780u_display_off(void);
 /**
  * @brief Turn the cursor on 
  * 
- * @details 
+ * @details Part of the display control instruction represented by the C bit. 
+ *          C changes the visibility of the cursor but has no affect on the cursors 
+ *          position or movement. When C = 1 the cursor is visible and when C = 0 it is 
+ *          not visible. 
+ *          This function sets C = 1. 
  */
 void hd44780u_cursor_on(void); 
 
@@ -350,7 +411,11 @@ void hd44780u_cursor_on(void);
 /**
  * @brief Turn the cursor off 
  * 
- * @details 
+ * @details Part of the display control instruction represented by the C bit. 
+ *          C changes the visibility of the cursor but has no affect on the cursors 
+ *          position or movement. When C = 1 the cursor is visible and when C = 0 it is 
+ *          not visible. 
+ *          This function sets C = 0. 
  */
 void hd44780u_cursor_off(void); 
 
@@ -358,27 +423,43 @@ void hd44780u_cursor_off(void);
 /**
  * @brief Turn the cursor blink on 
  * 
- * @details 
-  */
+ * @details Part of the display control instruction represented by the B bit. 
+ *          B changes the visibility of the cursor blink. When B = 1 the cursor blinks 
+ *          and when B = 0 there is no blink. 
+ *          This function sets B = 1. 
+*/
 void hd44780u_blink_on(void); 
 
 
 /**
  * @brief Turn the cursor blink off 
  * 
- * @details 
+ * @details Part of the display control instruction represented by the B bit. 
+ *          B changes the visibility of the cursor blink. When B = 1 the cursor blinks 
+ *          and when B = 0 there is no blink. 
+ *          This function sets B = 0. 
  */
 void hd44780u_blink_off(void); 
 
 
 /**
  * @brief Turn backlight on 
+ * 
+ * @details The backlight bit is sent along with the nibble that contains the register 
+ *          selection, read/write bit and enable bit. When this bit is set the backlight 
+ *          will turn on and when the bit is cleared the backlight will turn off. 
+ *          This function turns the backlight in. 
  */
 void hd44780u_backlight_on(void); 
 
 
 /**
  * @brief Turn backlight off 
+ * 
+ * @details The backlight bit is sent along with the nibble that contains the register 
+ *          selection, read/write bit and enable bit. When this bit is set the backlight 
+ *          will turn on and when the bit is cleared the backlight will turn off. 
+ *          This function turns the backlight off. 
  */
 void hd44780u_backlight_off(void); 
 

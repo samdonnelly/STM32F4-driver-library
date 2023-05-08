@@ -27,12 +27,7 @@
 //=======================================================================================
 // Macros 
 
-// Timeout counters 
-#define I2C_START_TIMEOUT 100               // Start bit set timeout counter 
-#define I2C_ADDR_TIMEOUT 1000               // ADDR bit set timeout counter 
-#define I2C_RXNE_TIMEOUT 1000               // RXNE bit set timeout counter 
-#define I2C_TXE_TIMEOUT 1000                // TXE bit set timeout counter 
-#define I2C_BTF_TIMEOUT 100                 // TXE bit set timeout counter 
+#define I2C_TIMEOUT_COUNT 10000       // I2C operation timeout counter 
 
 //=======================================================================================
 
@@ -273,7 +268,7 @@ void i2c_clear_addr(
  * @param i2c_address : 7-bit address of slave device on the bus 
  * @return I2C_STATUS : I2C operation status 
  */
-I2C_STATUS i2c_write_address(
+I2C_STATUS i2c_write_addr(
     I2C_TypeDef *i2c, 
     uint8_t i2c_address);
 
@@ -292,7 +287,7 @@ I2C_STATUS i2c_write_address(
  * @param data_size : integer indicating the number of bytes to be sent 
  * @return I2C_STATUS : I2C operation status 
  */
-I2C_STATUS i2c_write_master_mode(
+I2C_STATUS i2c_write(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint8_t data_size);
@@ -317,7 +312,7 @@ I2C_STATUS i2c_write_master_mode(
  * @param data_size : integer indicating the number of bytes to be receieved 
  * @return I2C_STATUS : I2C operation status 
  */
-I2C_STATUS i2c_read_master_mode(
+I2C_STATUS i2c_read(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint16_t data_size);
@@ -327,7 +322,7 @@ I2C_STATUS i2c_read_master_mode(
  * @brief I2C read data until a termination character is seen 
  * 
  * @details This function is for reading data of unknown or varying length. It reads 
- *          data in the same way as i2c_read_master_mode but takes a termination character
+ *          data in the same way as i2c_read but takes a termination character
  *          and the number of bytes left to read after the termination character as 
  *          arguments. Once the termination character is seen then the transaction will 
  *          be stopped based on how many bytes remain to be read. There must be at least one 

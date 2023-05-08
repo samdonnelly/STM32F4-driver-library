@@ -101,7 +101,8 @@ typedef struct hd44780u_data_record_s
     uint8_t display_control;         // Display control parameters 
 
     // Status info 
-    uint8_t status;                  // Operation status 
+    // 'status' --> bits 0-8: i2c status (see i2c_status_t) 
+    uint8_t status; 
 }
 hd44780u_data_record_t; 
 
@@ -126,7 +127,7 @@ void hd44780u_init(
     // Communication 
     hd44780u_data_record.i2c = i2c; 
     hd44780u_data_record.tim = timer; 
-    hd44780u_data_record.write_addr = addr; 
+    hd44780u_data_record.write_addr = (uint8_t)addr; 
 
     // Line content 
     hd44780u_line_clear(HD44780U_L1); 
@@ -139,6 +140,9 @@ void hd44780u_init(
     hd44780u_data_record.entry_mode = HD44780U_ENTRY_SET; 
     hd44780u_data_record.display_control = HD44780U_DISPLAY_CONTROL; 
 
+    // Status info 
+    hd44780u_data_record.status = CLEAR; 
+
 
     // Initialize the screen 
     // The following steps were taken from the HD44780U datsheet. 
@@ -146,7 +150,7 @@ void hd44780u_init(
     // instructions in the manual but are included to ensure messages aren't sent too quick. 
 
     // Wait for more than 40 ms after Vcc rises to 2.7V 
-    tim_delay_ms(hd44780u_data_record.tim, DELAY_100MS); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_50MS); 
 
 
     // Put the LCD into 4-bit mode 
@@ -159,7 +163,7 @@ void hd44780u_init(
 
     // Send 2: Function set - Wait for more than 100 us afterwards, using 5ms instead 
     hd44780u_send_instruc(HD44780U_FUNCTION_SET | HD44780U_8BIT_MODE); 
-    tim_delay_ms(hd44780u_data_record.tim, DELAY_5MS); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS); 
 
     // Send 3: Function set - No specified wait time 
     hd44780u_send_instruc(HD44780U_FUNCTION_SET | HD44780U_8BIT_MODE); 
@@ -188,7 +192,7 @@ void hd44780u_init(
 
     // Display clear 
     hd44780u_send_instruc(HD44780U_CLEAR_DISPLAY); 
-    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_2MS); 
 
     // Entry mode set 
     // I/D = 1 -> Increment 
@@ -204,8 +208,9 @@ void hd44780u_init(
     hd44780u_data_record.display_control |= HD44780U_DISPLAY_ON; 
     hd44780u_send_instruc(hd44780u_data_record.display_control); 
 
-    // Place the cursor in the screen start position 
+    // Place the cursor in the home position and delay once more to settle the device 
     hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_HOME); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS); 
 }
 
 
@@ -284,11 +289,11 @@ void hd44780u_send(
     i2c_status |= i2c_start(i2c); 
 
     // Send the PCF8574 address with a write offset
-    i2c_status |= i2c_write_address(i2c, hd44780u_data_record.write_addr);
+    i2c_status |= i2c_write_addr(i2c, hd44780u_data_record.write_addr);
     i2c_clear_addr(i2c);
 
     // Send data over I2C
-    i2c_status |= i2c_write_master_mode(i2c, data, HD44780U_MSG_PER_CMD); 
+    i2c_status |= i2c_write(i2c, data, HD44780U_MSG_PER_CMD); 
 
     // Create a stop condition
     i2c_stop(i2c); 
@@ -301,7 +306,7 @@ void hd44780u_send(
 
 
 //=======================================================================================
-// Data functions 
+// Setters and getters 
 
 // Set the content of a line in the data record 
 void hd44780u_line_set(
@@ -335,6 +340,25 @@ void hd44780u_line_clear(
     }
 }
 
+
+// Get status flag 
+uint8_t hd44780u_get_status(void)
+{
+    return hd44780u_data_record.status; 
+}
+
+
+// Clear status flag 
+void hd44780u_clear_status(void)
+{
+    hd44780u_data_record.status = CLEAR; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data functions 
 
 // Send the contents a line from the data record 
 void hd44780u_send_line(

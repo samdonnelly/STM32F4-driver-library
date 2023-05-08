@@ -256,14 +256,14 @@ I2C_STATUS i2c_start(
     I2C_TypeDef *i2c)
 {
     // Local variables 
-    uint16_t timeout = I2C_START_TIMEOUT; 
+    uint16_t timeout = I2C_TIMEOUT_COUNT; 
 
     // Enable the acknowledgement bit and set the start generation bit 
     i2c_set_ack(i2c); 
     i2c->CR1 |= (SET_BIT << SHIFT_8); 
 
     // Wait for the start bit to set - abort if operation times out 
-    while(!(i2c->SR1 & (SET_BIT << SHIFT_0)) && timeout--); 
+    while(!(i2c->SR1 & (SET_BIT << SHIFT_0)) && --timeout); 
 
     if (timeout) 
     {
@@ -295,10 +295,10 @@ I2C_STATUS i2c_addr_wait(
     I2C_TypeDef *i2c)
 {
     // Local variables 
-    uint16_t timeout = I2C_ADDR_TIMEOUT; 
+    uint16_t timeout = I2C_TIMEOUT_COUNT; 
 
     // Wait for the ADDR bit to set - abort if operation times out 
-    while(!(i2c->SR1 & (SET_BIT << SHIFT_1)) && timeout--); 
+    while(!(i2c->SR1 & (SET_BIT << SHIFT_1)) && --timeout); 
 
     if (timeout)
     {
@@ -330,10 +330,10 @@ I2C_STATUS i2c_rxne_wait(
     I2C_TypeDef *i2c)
 {
     // Local variables 
-    uint16_t timeout = I2C_RXNE_TIMEOUT; 
+    uint16_t timeout = I2C_TIMEOUT_COUNT; 
 
     // Wait for the RXNE bit to set - abort if operation times out 
-    while(!(i2c->SR1 & (SET_BIT << SHIFT_6)) && timeout--); 
+    while(!(i2c->SR1 & (SET_BIT << SHIFT_6)) && --timeout); 
 
     if (timeout)
     {
@@ -349,10 +349,10 @@ I2C_STATUS i2c_txe_wait(
     I2C_TypeDef *i2c)
 {
     // Local variables 
-    uint16_t timeout = I2C_TXE_TIMEOUT; 
+    uint16_t timeout = I2C_TIMEOUT_COUNT; 
 
     // Wait for the TXE bit to set - abort if operation times out 
-    while(!(i2c->SR1 & (SET_BIT << SHIFT_7)) && timeout--); 
+    while(!(i2c->SR1 & (SET_BIT << SHIFT_7)) && --timeout); 
 
     if (timeout)
     {
@@ -368,10 +368,10 @@ I2C_STATUS i2c_btf_wait(
     I2C_TypeDef *i2c)
 {
     // Local variables 
-    uint16_t timeout = I2C_BTF_TIMEOUT; 
+    uint16_t timeout = I2C_TIMEOUT_COUNT; 
 
     // Wait for the BTF bit to set - abort if operation times out 
-    while(!(i2c->SR1 & (SET_BIT << SHIFT_2)) && timeout--); 
+    while(!(i2c->SR1 & (SET_BIT << SHIFT_2)) && --timeout); 
 
     if (timeout)
     {
@@ -388,7 +388,7 @@ I2C_STATUS i2c_btf_wait(
 // Write I2C 
 
 // I2C send address 
-I2C_STATUS i2c_write_address(
+I2C_STATUS i2c_write_addr(
     I2C_TypeDef *i2c, 
     uint8_t i2c_address)
 {
@@ -403,7 +403,7 @@ I2C_STATUS i2c_write_address(
 
 
 // I2C send data to a device 
-I2C_STATUS i2c_write_master_mode(
+I2C_STATUS i2c_write(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint8_t data_size)
@@ -414,7 +414,7 @@ I2C_STATUS i2c_write_master_mode(
     for (uint8_t i = 0; i < data_size; i++)
     {
         i2c_status |= i2c_txe_wait(i2c);    // Wait for TxE bit to set 
-        i2c->DR = *data++;              // Send data 
+        i2c->DR = *data++;                  // Send data 
     }
 
     // Wait for BTF to set
@@ -430,7 +430,7 @@ I2C_STATUS i2c_write_master_mode(
 // Read I2C 
 
 // I2C read data from a device
-I2C_STATUS i2c_read_master_mode(
+I2C_STATUS i2c_read(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint16_t data_size)
@@ -470,8 +470,8 @@ I2C_STATUS i2c_read_master_mode(
             for (uint8_t i = 0; i < (data_size - BYTE_2); i++)
             {
                 i2c_status |= i2c_rxne_wait(i2c);  // Indicates when data is ready 
-                *data++ = i2c->DR;             // Read data
-                i2c_set_ack(i2c);              // Set the ACK bit 
+                *data++ = i2c->DR;                 // Read data
+                i2c_set_ack(i2c);                  // Set the ACK bit 
             }
 
             // Read the second last data byte 
@@ -516,7 +516,7 @@ I2C_STATUS i2c_read_to_term(
     while (*data++ != term_char); 
 
     // Read the remaining bytes and terminate the data 
-    i2c_status |= i2c_read_master_mode(i2c, data, bytes_remain); 
+    i2c_status |= i2c_read(i2c, data, bytes_remain); 
     data += bytes_remain; 
     *data = 0; 
 
@@ -538,7 +538,7 @@ I2C_STATUS i2c_read_to_len(
     uint16_t msg_length = 0; 
 
     // Read up to and including the part of the message that specifies the length 
-    i2c_status |= i2c_read_master_mode(i2c, data, len_location + len_bytes); 
+    i2c_status |= i2c_read(i2c, data, len_location + len_bytes); 
 
     // Extract the length and correct it using the 'add_bytes' argument 
     data += len_location; 
@@ -556,12 +556,9 @@ I2C_STATUS i2c_read_to_len(
     
     // Read the rest of the message 
     i2c_start(i2c); 
-    i2c_status |= i2c_write_address(i2c, address); 
+    i2c_status |= i2c_write_addr(i2c, address); 
     i2c_clear_addr(i2c); 
-    i2c_status |= i2c_read_master_mode(i2c, data, msg_length); 
-
-    // TODO Add a termination/NULL character? You will need to offset the 'data' address for 
-    // when you return from the I2C read function. 
+    i2c_status |= i2c_read(i2c, data, msg_length); 
 
     return i2c_status; 
 }

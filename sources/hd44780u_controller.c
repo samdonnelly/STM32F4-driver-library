@@ -76,15 +76,12 @@ void hd44780u_write_state(
 /**
  * @brief HD44780U low power mode enter state 
  * 
- * @details Allows for transitioning into the controllers low power mode state. When the low 
- *          power mode flag is set, the controller will call this state which in turn shuts 
- *          the screen off and then proceeds immediately into the low power mode state. When 
- *          the low power mode flag is cleared, the controller will move from the low power 
- *          mode state into this state where the screen gets turned back on before returning 
- *          to idle. 
+ * @details Allows for entering into the controllers low power mode state. When the low 
+ *          power mode flag is set, the controller will call this state which clears the display, 
+ *          turns the display off and turns the backlight off. After this state is run the 
+ *          controller moves to the low power mode state. 
  * 
  * @see hd44780u_set_low_pwr_flag
- * @see hd44780u_clear_low_pwr_flag
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
@@ -95,14 +92,15 @@ void hd44780u_low_pwr_enter_state(
 /**
  * @brief HD44780U low power mode state 
  * 
- * @details This state is entered when the low power mode flag is set. The controller first 
- *          passes through the low power mode transition state where the screen is turned off. 
- *          After the transition state the controller enters this state where it idles until 
- *          the low power flag is cleared. In this state the sceen cannot be written to or 
- *          read from. This state is used to consume less power at times the screen is not 
- *          needed. 
+ * @details This state is entered from the low power mode enter state. In this state the 
+ *          controller does nothing while the screen is in low power mode so it consumes minimal 
+ *          power. This state can only be left when either the fault code is set, the reset flag 
+ *          is set or the low power flag is cleared. If one of these happens then the controller 
+ *          enters the low power mode exit state where the screen is brought out of low power 
+ *          mode. While in low power mode, the screen cannot be used. 
  * 
  * @see hd44780u_low_pwr_enter_state
+ * @see hd44780u_low_pwr_exit_state
  * @see hd44780u_set_low_pwr_flag
  * @see hd44780u_clear_low_pwr_flag
  * 
@@ -115,7 +113,13 @@ void hd44780u_low_pwr_state(
 /**
  * @brief HD44780U low power mode exit state 
  * 
- * @details 
+ * @details This state is entered from the low power mode state when the fault flag is set, 
+ *          the reset flag is set or the low power flag is cleared. In this state the screen 
+ *          is brought out of low power mode by turning the display on, turning the backlight 
+ *          on and setting the cursor to the home position. After this state is executed the 
+ *          controller goes to the run state where it can once again be used by the system. 
+ * 
+ * @see hd44780u_clear_low_pwr_flag
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
@@ -167,6 +171,7 @@ void hd44780u_reset_state(
 // Instance of the device tracker record 
 static hd44780u_trackers_t hd44780u_device_trackers; 
 
+
 // Function pointers to controller states 
 static hd44780u_state_functions_t state_table[HD44780U_NUM_STATES] = 
 {
@@ -206,6 +211,9 @@ void hd44780u_controller(void)
 {
     // Local variables 
     hd44780u_states_t next_state = hd44780u_device_trackers.state; 
+
+    // Check the driver status 
+    hd44780u_device_trackers.fault_code |= hd44780u_get_status(); 
 
     //==================================================
     // Revised State machine 
@@ -430,8 +438,9 @@ void hd44780u_fault_state(
 void hd44780u_reset_state(
     hd44780u_trackers_t *hd44780u_device)
 {
-    // Clear the fault code 
+    // Clear the fault and status codes 
     hd44780u_device->fault_code = CLEAR; 
+    hd44780u_clear_status(); 
 
     // Call device init function again 
     hd44780u_re_init(); 
