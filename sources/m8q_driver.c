@@ -402,7 +402,7 @@ M8Q_READ_STAT m8q_read(void)
             i2c_start(m8q_comm_data.i2c); 
 
             // Send the device address with a read offset 
-            i2c_write_address(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
+            i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
             i2c_clear_addr(m8q_comm_data.i2c);  
 
             // Read the rest of the data stream until "\r\n" 
@@ -422,7 +422,7 @@ M8Q_READ_STAT m8q_read(void)
             i2c_start(m8q_comm_data.i2c); 
 
             // Send the device address with a read offset 
-            i2c_write_address(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
+            i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
             i2c_clear_addr(m8q_comm_data.i2c); 
 
             // Read the rest of the UBX message 
@@ -456,21 +456,21 @@ void m8q_check_data_size(
     i2c_start(m8q_comm_data.i2c); 
 
     // Write the slave address with write access 
-    i2c_write_address(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
+    i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
     i2c_clear_addr(m8q_comm_data.i2c); 
 
     // Send the first data size register address to start reading from there 
-    i2c_write_master_mode(m8q_comm_data.i2c, &address, BYTE_1); 
+    i2c_write(m8q_comm_data.i2c, &address, BYTE_1); 
 
     // Generate another start condition 
     i2c_start(m8q_comm_data.i2c); 
 
     // Send the device address again with a read offset 
-    i2c_write_address(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET);  
+    i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET);  
     i2c_clear_addr(m8q_comm_data.i2c); 
 
     // Read the data size registers 
-    i2c_read_master_mode(m8q_comm_data.i2c, num_bytes, BYTE_2); 
+    i2c_read(m8q_comm_data.i2c, num_bytes, BYTE_2); 
 
     // Format the data into the data size 
     *data_size = (uint16_t)((num_bytes[BYTE_0] << SHIFT_8) | num_bytes[BYTE_1]); 
@@ -485,11 +485,11 @@ void m8q_check_data_stream(
     i2c_start(m8q_comm_data.i2c); 
 
     // Send the device address with a read offset 
-    i2c_write_address(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
+    i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
     i2c_clear_addr(m8q_comm_data.i2c); 
 
     // Read the first byte of the data stream 
-    i2c_read_master_mode(m8q_comm_data.i2c, data_check, BYTE_1); 
+    i2c_read(m8q_comm_data.i2c, data_check, BYTE_1); 
 }
 
 //=======================================================================================
@@ -507,11 +507,11 @@ void m8q_write(
     i2c_start(m8q_comm_data.i2c); 
 
     // Send the device address with a write offset 
-    i2c_write_address(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
+    i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
     i2c_clear_addr(m8q_comm_data.i2c); 
 
     // Send data (at least 2 bytes) 
-    i2c_write_master_mode(m8q_comm_data.i2c, data, data_size); 
+    i2c_write(m8q_comm_data.i2c, data, data_size); 
 
     // Generate a stop condition 
     i2c_stop(m8q_comm_data.i2c); 
