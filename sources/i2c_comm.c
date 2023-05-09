@@ -126,11 +126,12 @@ I2C_STATUS i2c_btf_wait(
 //=======================================================================================
 // Initiate I2C 
 
-// I2C Initialization 
 void i2c_init(
     I2C_TypeDef *i2c, 
-    i2c1_sda_pin_t sda_pin,
-    i2c1_scl_pin_t scl_pin,
+    pin_selector_t sda_pin, 
+    GPIO_TypeDef *sda_gpio, 
+    pin_selector_t scl_pin, 
+    GPIO_TypeDef *scl_gpio, 
     i2c_run_mode_t run_mode,
     i2c_apb1_freq_t apb1_freq,
     i2c_ccr_setpoint_t ccr_reg,
@@ -155,66 +156,57 @@ void i2c_init(
     //  PC9: SDA
     //==============================================================
 
-    // Enable I2C1 clock - RCC_APB1ENR register, bit 21
-    RCC->APB1ENR |= (SET_BIT << SHIFT_21);
+    // Local variables 
+    uint8_t af_reg_index; 
+    uint8_t af_pin_index; 
 
-    // Enable GPIOB clock - RCC_AHB1ENR register, bit 1
-    RCC->AHB1ENR |= (SET_BIT << SHIFT_1);
+    // Enable the I2C clock 
+    RCC->APB1ENR |= (SET_BIT << (SHIFT_21 + (uint8_t)((uint32_t)(i2c - I2C1) >> SHIFT_10))); 
 
-    // Configure the I2C pins for alternative functions.
-    // Select alternate function in MODER register. 
-    GPIOB->MODER |= (SET_2 << (SHIFT_12 + 2*scl_pin));
-    GPIOB->MODER |= (SET_2 << (SHIFT_14 + 2*sda_pin));
+    //==================================================
+    // Configure pins for alternate functions 
 
-    // Select Open Drain Output - used for lines with multiple devices
-    GPIOB->OTYPER |= (SET_BIT << (SHIFT_6 + scl_pin));
-    GPIOB->OTYPER |= (SET_BIT << (SHIFT_7 + sda_pin));
+    // Select alternate function in MODER register 
+    scl_gpio->MODER |= (SET_2 << (2*scl_pin)); 
+    sda_gpio->MODER |= (SET_2 << (2*sda_pin)); 
+
+    // Select Open Drain Output - used for lines with multiple devices 
+    scl_gpio->OTYPER |= (SET_BIT << scl_pin); 
+    sda_gpio->OTYPER |= (SET_BIT << sda_pin); 
 
     // Select High SPEED for the pins 
-    GPIOB->OSPEEDR |= (SET_3 << (SHIFT_12 + 2*scl_pin));
-    GPIOB->OSPEEDR |= (SET_3 << (SHIFT_14 + 2*sda_pin));
+    scl_gpio->OSPEEDR |= (SET_3 << (2*scl_pin)); 
+    sda_gpio->OSPEEDR |= (SET_3 << (2*sda_pin)); 
 
     // Select pull-up for both the pins 
-    GPIOB->PUPDR |= (SET_BIT << (SHIFT_12 + 2*scl_pin));
-    GPIOB->PUPDR |= (SET_BIT << (SHIFT_14 + 2*sda_pin));
+    scl_gpio->PUPDR |= (SET_BIT << (2*scl_pin)); 
+    sda_gpio->PUPDR |= (SET_BIT << (2*sda_pin)); 
 
-    // Configure the Alternate Function in AFR Register. 
-    switch(scl_pin)
-    {
-        case I2C1_SCL_PB6:
-            GPIOB->AFR[0] |= (SET_4 << SHIFT_24);
-            break;
-        case I2C1_SCL_PB8:
-            GPIOB->AFR[1] |= (SET_4 << SHIFT_0);
-            break;
-        default:
-            break;
-    }
+    // Configure the SCL and SDA Alternate Functions in AFR 
+    af_reg_index = ((uint8_t)scl_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
+    af_pin_index = 4*((uint8_t)scl_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
+    scl_gpio->AFR[af_reg_index] |= (SET_4 << af_pin_index); 
 
-    switch(sda_pin)
-    {
-        case I2C1_SDA_PB7:
-            GPIOB->AFR[0] |= (SET_4 << SHIFT_28);
-            break;
-        case I2C1_SDA_PB9:
-            GPIOB->AFR[1] |= (SET_4 << SHIFT_4);
-            break;
-        default:
-            break;
-    }
+    af_reg_index = ((uint8_t)sda_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
+    af_pin_index = 4*((uint8_t)sda_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
+    sda_gpio->AFR[af_reg_index] |= (SET_4 << af_pin_index); 
 
-    // Reset the I2C - enable then disable reset bit 
+    //==================================================
+
+    //==================================================
+    // Configure the I2C 
+
+    // Software reset the I2C - enable then disable SWRST bit 
     i2c->CR1 |=  (SET_BIT << SHIFT_15);
     i2c->CR1 &= ~(SET_BIT << SHIFT_15);
 
-    // Ensure PE is disabled before setting up the I2C
+    // Ensure PE is disabled (PE = 0) before setting up the I2C
     i2c->CR1 |= (CLEAR_BIT << SHIFT_0);
 
-    // Program the peripheral input clock in I2C_CR2 register
+    // Set the peripheral input clock frequency 
     i2c->CR2 |= (apb1_freq << SHIFT_0);
 
-    // Configure the clock control register 
-    // Choose Sm or Fm mode 
+    // Choose Sm (standard) or Fm (fast) mode 
     switch(run_mode)
     {
         case I2C_MODE_SM:
@@ -228,7 +220,7 @@ void i2c_init(
 
         case I2C_MODE_FM_169: 
             i2c->CCR |= (SET_BIT << SHIFT_15);
-            i2c->CCR |= (SET_BIT << SHIFT_14);  // Set duty cycle to 16/9 
+            i2c->CCR |= (SET_BIT << SHIFT_14);   // Set duty cycle to 16/9 
             break;
         
         default:
@@ -243,6 +235,8 @@ void i2c_init(
 
     // Program the I2C_CR1 register to enable the peripheral
     i2c->CR1 |= (SET_BIT << SHIFT_0);
+
+    //==================================================
 }
 
 //=======================================================================================

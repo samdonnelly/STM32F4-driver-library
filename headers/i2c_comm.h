@@ -57,38 +57,6 @@ typedef enum {
 
 
 /**
- * @brief I2C available SCL pins 
- * 
- * @details These pins are the available I2C1 SCL pins on the chip. The values associated 
- *          with these variables are used in i2c_init to determine how to configure 
- *          the pins alternate function. These variables get passed to i2c_init as 
- *          an argument. 
- * 
- * @see i2c_init
- */
-typedef enum {
-    I2C1_SCL_PB6 = 0,
-    I2C1_SCL_PB8 = 2
-} i2c1_scl_pin_t;
-
-
-/**
- * @brief I2C available SDA pins 
- * 
- * @details These pins are the available I2C1 SDA pins on the chip. The values associated 
- *          with these variables are used in i2c_init to determine how to configure 
- *          the pins alternate function. These variables get passed to i2c_init as 
- *          an argument.
- * 
- * @see i2c_init
- */
-typedef enum {
-    I2C1_SDA_PB7 = 0,
-    I2C1_SDA_PB9 = 2
-} i2c1_sda_pin_t;
-
-
-/**
  * @brief I2C run mode selection 
  * 
  * @details I2C can run in standard (SM) or fast (FM) mode. The mode dictates the range 
@@ -156,7 +124,7 @@ typedef enum {
  *              X_2: PCLK1 frequency (MHz) 
  *          
  *          NOTE: A calculation must be done to determine the numbers that work together.
- *                See the Reference Manual for more information. 
+ *                See the reference manual for more information. 
  */
 typedef enum {
     I2C_TRISE_0300_42 = 13,
@@ -187,7 +155,9 @@ typedef i2c_status_t I2C_STATUS;
  * 
  * @param i2c : I2C port to initialize 
  * @param sda_pin : pin used for SDA  
+ * @param sda_gpio : pointer to GPIO port of SDA pin 
  * @param scl_pin : pin used for SCL 
+ * @param scl_gpio : pointer to GPIO port of SCL pin 
  * @param run_mode : specifies Sm or Fm mode 
  * @param apb1_freq : configured APB1 clock frquency 
  * @param ccr_reg : calculated clock control register value
@@ -195,8 +165,10 @@ typedef i2c_status_t I2C_STATUS;
  */
 void i2c_init(
     I2C_TypeDef *i2c, 
-    i2c1_sda_pin_t sda_pin,
-    i2c1_scl_pin_t scl_pin,
+    pin_selector_t sda_pin, 
+    GPIO_TypeDef * sda_gpio, 
+    pin_selector_t scl_pin, 
+    GPIO_TypeDef * scl_gpio, 
     i2c_run_mode_t run_mode,
     i2c_apb1_freq_t apb1_freq,
     i2c_ccr_setpoint_t ccr_reg,

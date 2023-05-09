@@ -90,7 +90,10 @@
 #define DIVIDE_10    10
 #define DIVIDE_100   100
 #define DIVIDE_1000  1000
-#define DIVIDE_10000 10000
+#define DIVIDE_10000 10000 
+
+// Alternate function configuration 
+#define AFR_INDEX_PIN_MASK 0x08        // Distinguishes pins 0-7 from pins 8-15 
 
 //=======================================================================================
 
