@@ -166,9 +166,9 @@ typedef i2c_status_t I2C_STATUS;
 void i2c_init(
     I2C_TypeDef *i2c, 
     pin_selector_t sda_pin, 
-    GPIO_TypeDef * sda_gpio, 
+    GPIO_TypeDef *sda_gpio, 
     pin_selector_t scl_pin, 
-    GPIO_TypeDef * scl_gpio, 
+    GPIO_TypeDef *scl_gpio, 
     i2c_run_mode_t run_mode,
     i2c_apb1_freq_t apb1_freq,
     i2c_ccr_setpoint_t ccr_reg,
