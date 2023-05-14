@@ -196,6 +196,22 @@ typedef enum {
 
 
 //=======================================================================================
+// Structures 
+
+// Non-blocking delay trackers 
+typedef struct tim_compare_s 
+{
+    uint32_t clk_freq;                // Timer clock frquency 
+    uint32_t time_cnt_total;          // Time delay counter total count 
+    uint32_t time_cnt;                // Time delay counter instance 
+    uint8_t  time_start;              // Time delay counter start flag 
+}
+tim_compare_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Datatypes 
 
 typedef uint32_t TIM_COUNTER; 
@@ -410,7 +426,7 @@ void tim_delay_ms(
  *          
  *          It is assumed that when using this function for a non-blocking delay that 
  *          subsequent calls will occur in less time than it takes for the timer counter 
- *          to reset. This is because the the function loops to see where the current 
+ *          to reset. This is because the function loops to see where the current 
  *          timer counter is in relation to the previous counter value. If the counter 
  *          is allowed to loop and surpass it's previously recorded position then it can 
  *          lead to inaccurate comparisons. 
