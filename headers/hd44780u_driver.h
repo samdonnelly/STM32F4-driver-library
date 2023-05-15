@@ -45,6 +45,12 @@
 // General 
 #define HD44780U_4BIT_MASK 0xF0        // Message data mask used for formatting in 4-bit mode 
 
+// Message lengths 
+#define HD44780U_MSG_LINE_LEN_1 1      // 1 line screen message 
+#define HD44780U_MSG_LINE_LEN_2 2      // 2 line screen message 
+#define HD44780U_MSG_LINE_LEN_3 3      // 3 line screen message 
+#define HD44780U_MSG_LINE_LEN_4 4      // 4 line screen message 
+
 // Clear display 
 #define HD44780U_CLEAR_DISPLAY 0x01    // Standard display clear bit 
 
@@ -147,6 +153,21 @@ typedef enum {
     HD44780U_L3,
     HD44780U_L4
 } hd44780u_lines_t;
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Structures 
+
+// Screen information 
+typedef struct hd44780u_msgs_s 
+{
+    hd44780u_lines_t line; 
+    char msg[HD44780U_LINE_LEN]; 
+    uint8_t offset; 
+}
+hd44780u_msgs_t; 
 
 //=======================================================================================
 
