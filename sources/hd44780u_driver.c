@@ -152,6 +152,8 @@ void hd44780u_init(
     // Wait for more than 40 ms after Vcc rises to 2.7V 
     tim_delay_ms(hd44780u_data_record.tim, DELAY_50MS); 
 
+    // tim_delay_ms(hd44780u_data_record.tim, DELAY_500MS); 
+
 
     // Put the LCD into 4-bit mode 
     // This requires sending "function set" 4 times where the first 3 times are sent with 8-bit 
@@ -159,20 +161,20 @@ void hd44780u_init(
 
     // Send 1: Function set - Wait for more than 4.1 ms afterwards 
     hd44780u_send_instruc(HD44780U_FUNCTION_SET | HD44780U_8BIT_MODE); 
-    tim_delay_ms(hd44780u_data_record.tim, DELAY_5MS); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_100MS); 
 
-    // Send 2: Function set - Wait for more than 100 us afterwards, using 5ms instead 
+    // Send 2: Function set - Wait for more than 100 us afterwards 
     hd44780u_send_instruc(HD44780U_FUNCTION_SET | HD44780U_8BIT_MODE); 
-    tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_100MS); 
 
     // Send 3: Function set - No specified wait time 
     hd44780u_send_instruc(HD44780U_FUNCTION_SET | HD44780U_8BIT_MODE); 
-    tim_delay_ms(hd44780u_data_record.tim, DELAY_10MS); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_100MS); 
 
     // Send 4: Function set - Choose 4-bit mode 
     // DL = 0 -> 4-bit data length 
     hd44780u_send_instruc(HD44780U_FUNCTION_SET); 
-    tim_delay_ms(hd44780u_data_record.tim, DELAY_10MS); 
+    tim_delay_ms(hd44780u_data_record.tim, DELAY_100MS); 
 
 
     // Set the display parameters 
