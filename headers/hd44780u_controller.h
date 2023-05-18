@@ -31,7 +31,8 @@
 //=======================================================================================
 // Macros 
 
-#define HD44780U_NUM_STATES 9    // Current number of possible states for the controller 
+#define HD44780U_NUM_STATES 10           // Number of controller states 
+#define HD44780U_LINE_UPDATE_MASK 0x01   // Mask to identify which line contents to send 
 
 //=======================================================================================
 
@@ -43,15 +44,16 @@
  * @brief HD44780U controller states 
  */
 typedef enum {
-    HD44780U_INIT_STATE,                    // Initialization state 
-    HD44780U_RUN_STATE,                     // Run state 
-    HD44780U_WRITE_STATE,                   // Write state 
-    HD44780U_CLEAR_STATE,                   // Clear screen state 
-    HD44780U_LOW_PWR_ENTER_STATE,           // Low power mode enter state 
-    HD44780U_LOW_PWR_STATE,                 // Low power state 
-    HD44780U_LOW_PWR_EXIT_STATE,            // Low power mode exit state 
-    HD44780U_FAULT_STATE,                   // Fault state 
-    HD44780U_RESET_STATE                    // Reset state 
+    HD44780U_INIT_STATE,                 // State 0: Initialization state 
+    HD44780U_IDLE_STATE,                 // State 1: Idle state 
+    HD44780U_PWR_SAVE_STATE,             // State 2: Power save state 
+    HD44780U_WRITE_STATE,                // State 3: Write state 
+    HD44780U_CLEAR_STATE,                // State 4: Clear screen state 
+    HD44780U_LOW_PWR_ENTER_STATE,        // State 5: Low power mode enter state 
+    HD44780U_LOW_PWR_STATE,              // State 6: Low power state 
+    HD44780U_LOW_PWR_EXIT_STATE,         // State 7: Low power mode exit state 
+    HD44780U_FAULT_STATE,                // State 8: Fault state 
+    HD44780U_RESET_STATE                 // State 9: Reset state 
 } hd44780u_states_t; 
 
 //=======================================================================================
@@ -60,23 +62,37 @@ typedef enum {
 //=======================================================================================
 // Structures 
 
-/**
- * @brief HD44780U controller trackers 
- */
+// HD44780U controller trackers 
 typedef struct hd44780u_trackers_s 
 {
     // Device and controller information 
     hd44780u_states_t state;                // State of the controller 
     uint8_t fault_code;                     // Fault code of the device/controller 
 
+    // Screen sleep (backlight off) timer 
+    TIM_TypeDef *timer;                     // Timer used for non-blocking delays 
+    uint32_t sleep_time;                    // Time (us) until screen sleeps 
+    tim_compare_t sleep_timer;              // Screen sleep timing info 
+
     // State flags 
-    uint8_t write     : 1;                  // Write state trigger 
-    uint8_t clear     : 1;                  // Clear screen state trigger 
-    uint8_t low_power : 1;                  // Low power state trigger 
-    uint8_t reset     : 1;                  // Reset state trigger 
     uint8_t startup   : 1;                  // Ensures the init state is run 
+    uint8_t pwr_save  : 1;                  // Power save state flag 
+    uint8_t write     : 1;                  // Write state flag 
+    uint8_t clear     : 1;                  // Clear screen state flag 
+    uint8_t low_power : 1;                  // Low power state flag 
+    uint8_t reset     : 1;                  // Reset state flag 
 }
 hd44780u_trackers_t; 
+
+
+// Screen line information 
+typedef struct hd44780u_msgs_s 
+{
+    hd44780u_lines_t line; 
+    char msg[HD44780U_LINE_LEN]; 
+    uint8_t offset; 
+}
+hd44780u_msgs_t; 
 
 //=======================================================================================
 
@@ -114,8 +130,11 @@ typedef void (*hd44780u_state_functions_t)(
  *          during initialization in the application code. 
  * 
  * @see hd44780u_trackers_t
+ * 
+ * @param timer : timer used screen sleep in power save mode 
  */
-void hd44780u_controller_init(void); 
+void hd44780u_controller_init(
+    TIM_TypeDef *timer); 
 
 
 /**
@@ -134,6 +153,54 @@ void hd44780u_controller(void);
 // Setters 
 
 /**
+ * @brief Set power save mode 
+ * 
+ * @details 
+ */
+void hd44780u_set_pwr_save_flag(void); 
+
+
+/**
+ * @brief Clear power save mode 
+ * 
+ * @details 
+ */
+void hd44780u_clear_pwr_save_flag(void); 
+
+
+/**
+ * @brief Reset the power save state 
+ * 
+ * @details 
+ */
+void hd44780u_wake_up(void); 
+
+
+/**
+ * @brief Set screen sleep time 
+ * 
+ * @details 
+ * 
+ * @param sleep_time 
+ */
+void hd44780u_set_sleep_time(
+    uint32_t sleep_time); 
+
+
+/**
+ * @brief Message set 
+ * 
+ * @details 
+ * 
+ * @param msg 
+ * @param msg_len 
+ */
+void hd44780u_set_msg(
+    hd44780u_msgs_t *msg, 
+    uint8_t msg_len); 
+
+
+/**
  * @brief HD44780U set write flag 
  * 
  * @details Sets the write flag which is used to trigger the write state. In the write state
@@ -142,6 +209,14 @@ void hd44780u_controller(void);
  *          controller is in fault, reset or low power mode states. 
  */
 void hd44780u_set_write_flag(void); 
+
+
+/**
+ * @brief Set the clear screen flag 
+ * 
+ * @details 
+ */
+void hd44780u_set_clear_flag(void); 
 
 
 /**

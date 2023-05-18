@@ -94,6 +94,7 @@ typedef struct hd44780u_data_record_s
     char line2[HD44780U_LINE_LEN];   // LCD line 2 data output 
     char line3[HD44780U_LINE_LEN];   // LCD line 3 data output 
     char line4[HD44780U_LINE_LEN];   // LCD line 4 data output 
+    uint8_t line_update;             // New line content flag 
 
     // User settings 
     uint8_t backlight;               // Backlight state 
@@ -134,6 +135,7 @@ void hd44780u_init(
     hd44780u_line_clear(HD44780U_L2); 
     hd44780u_line_clear(HD44780U_L3); 
     hd44780u_line_clear(HD44780U_L4); 
+    hd44780u_data_record.line_update = CLEAR; 
 
     // Display settings 
     hd44780u_data_record.backlight = HD44780U_BACKLIGHT; 
@@ -211,7 +213,7 @@ void hd44780u_init(
     hd44780u_send_instruc(hd44780u_data_record.display_control); 
 
     // Place the cursor in the home position and delay once more to settle the device 
-    hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_HOME); 
+    hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_NO_OFFSET); 
     tim_delay_ms(hd44780u_data_record.tim, DELAY_1MS); 
 }
 
@@ -316,7 +318,10 @@ void hd44780u_line_set(
     char *data, 
     uint8_t offset)
 {
-    // Move to the screen position address 
+    // Set the line update flag 
+    hd44780u_data_record.line_update |= (SET_BIT << line); 
+
+    // Move to the line data memory address 
     char *line_data = hd44780u_data_record.line1; 
     line_data += (line*HD44780U_LINE_LEN + offset); 
 
@@ -332,14 +337,21 @@ void hd44780u_line_set(
 void hd44780u_line_clear(
     hd44780u_lines_t line)
 {
-    // Move to the screen position address 
+    // Move to the line data memory address 
     char *line_data = hd44780u_data_record.line1; 
     line_data += (line*HD44780U_LINE_LEN); 
 
-    for(uint8_t i = 0; i < HD44780U_LINE_LEN; i++) 
+    for (uint8_t i = 0; i < HD44780U_LINE_LEN; i++) 
     {
         *line_data++ = ' '; 
     }
+}
+
+
+// Get the line update status 
+uint8_t hd44780u_get_line_update(void)
+{
+    return hd44780u_data_record.line_update; 
 }
 
 
@@ -366,21 +378,24 @@ void hd44780u_clear_status(void)
 void hd44780u_send_line(
     hd44780u_lines_t line)
 {
-    // Convert the line index to a screen character address 
+    // Convert the line index to the lines starting character address 
     uint8_t line_start_addr = HD44780U_LINE_ADDR_COMMON | 
                               ((line & HD44780U_L2_L4_MASK) << SHIFT_6) | 
                               (HD44780U_L3_L4_MASK_1 * ((line & HD44780U_L3_L4_MASK_2) 
                               >> SHIFT_1)); 
 
     // Set the cursor to the start of the line 
-    hd44780u_cursor_pos(line_start_addr, HD44780U_CURSOR_HOME); 
+    hd44780u_cursor_pos(line_start_addr, HD44780U_CURSOR_NO_OFFSET); 
+
+    // Clear the line update flag 
+    hd44780u_data_record.line_update &= ~(SET_BIT << line); 
 
     // Move to the line data memory address 
     char *line_data = hd44780u_data_record.line1; 
     line_data += (line*HD44780U_LINE_LEN); 
 
     // Send the line of data 
-    for(uint8_t i = 0; i < HD44780U_LINE_LEN; i++)
+    for (uint8_t i = 0; i < HD44780U_LINE_LEN; i++)
     {
         hd44780u_send_data((uint8_t)(*line_data++));
     }
@@ -413,7 +428,7 @@ void hd44780u_clear(void)
     // at the start of the screen 
     hd44780u_send_instruc(HD44780U_CLEAR_DISPLAY); 
     tim_delay_ms(hd44780u_data_record.tim, DELAY_2MS); 
-    hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_HOME); 
+    hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_NO_OFFSET); 
 }
 
 

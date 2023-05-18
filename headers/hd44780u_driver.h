@@ -78,11 +78,12 @@
 #define HD44780U_NO_BACKLIGHT 0x00        // Backlight off 
 
 // Cursor information 
-#define HD44780U_CURSOR_HOME 0            // Start of a line 
-#define HD44780U_LINE_ADDR_COMMON 0x80    // 
-#define HD44780U_L2_L4_MASK 0x01          // 
-#define HD44780U_L3_L4_MASK_1 0x14        // 
-#define HD44780U_L3_L4_MASK_2 0x02        // 
+#define HD44780U_CURSOR_NO_OFFSET 0       // Start of a line offset 
+// Line index to line starting character address (left most cursor position) conversion 
+#define HD44780U_LINE_ADDR_COMMON 0x80    // Base screen character position address 
+#define HD44780U_L2_L4_MASK 0x01          // Line 2 and 4 identifier mask 
+#define HD44780U_L3_L4_MASK_1 0x14        // Line 3 and 4 identifer mask 2 
+#define HD44780U_L3_L4_MASK_2 0x02        // Line 3 and 4 identifier mask 2 
 
 //=======================================================================================
 
@@ -238,6 +239,16 @@ void hd44780u_line_set(
  */
 void hd44780u_line_clear(
     hd44780u_lines_t line); 
+
+
+/**
+ * @brief Get the line update status 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t hd44780u_get_line_update(void); 
 
 
 /**
