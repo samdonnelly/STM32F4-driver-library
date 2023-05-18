@@ -34,57 +34,55 @@
 
 // Device information 
 
-#define HD44780U_NUM_LINES 4           // Number of lines on the screen 
-#define HD44780U_MSG_PER_CMD 4         // Number of I2C bytes sent per one screen command
-#define HD44780U_NUM_CHAR 80           // Number of character spaces on the screen 
-#define HD44780U_LINE_LEN 20           // Number of characters per line on the screen 
+#define HD44780U_NUM_LINES 4              // Number of lines on the screen 
+#define HD44780U_MSG_PER_CMD 4            // Number of I2C bytes sent per one screen command
+#define HD44780U_NUM_CHAR 80              // Number of character spaces on the screen 
+#define HD44780U_LINE_LEN 20              // Number of characters per line on the screen 
 
 
 // Message information 
 
 // General 
-#define HD44780U_4BIT_MASK 0xF0        // Message data mask used for formatting in 4-bit mode 
-
-// Message lengths 
-#define HD44780U_MSG_LINE_LEN_1 1      // 1 line screen message 
-#define HD44780U_MSG_LINE_LEN_2 2      // 2 line screen message 
-#define HD44780U_MSG_LINE_LEN_3 3      // 3 line screen message 
-#define HD44780U_MSG_LINE_LEN_4 4      // 4 line screen message 
+#define HD44780U_4BIT_MASK 0xF0           // Message data mask for formatting in 4-bit mode 
 
 // Clear display 
-#define HD44780U_CLEAR_DISPLAY 0x01    // Standard display clear bit 
+#define HD44780U_CLEAR_DISPLAY 0x01       // Standard display clear bit 
 
 // Entry mode set 
-#define HD44780U_ENTRY_SET 0x04        // Standard entry mode bit 
-#define HD44780U_CURSOR_DIR 0x02       // I/D - Cursor direction (increment/decrement) 
-#define HD44780U_DISPLAY_SHIFT 0x01    // S - display shift increment 
+#define HD44780U_ENTRY_SET 0x04           // Standard entry mode bit 
+#define HD44780U_CURSOR_DIR 0x02          // I/D - Cursor direction (increment/decrement) 
+#define HD44780U_DISPLAY_SHIFT 0x01       // S - display shift increment 
 
 // Display control 
-#define HD44780U_DISPLAY_CONTROL 0x08  // Standard display control bit 
-#define HD44780U_DISPLAY_ON 0x04       // D - Display on/off 
-#define HD44780U_CURSOR_ON 0x02        // C - Cursor on/off 
-#define HD44780U_BLINK_ON 0x01         // B - Cursor blink on/off 
+#define HD44780U_DISPLAY_CONTROL 0x08     // Standard display control bit 
+#define HD44780U_DISPLAY_ON 0x04          // D - Display on/off 
+#define HD44780U_CURSOR_ON 0x02           // C - Cursor on/off 
+#define HD44780U_BLINK_ON 0x01            // B - Cursor blink on/off 
 
 // Function set 
-#define HD44780U_FUNCTION_SET 0x20     // Standard function set bit 
-#define HD44780U_8BIT_MODE 0x10        // DL - data length, 8-bit mode 
-#define HD44780U_4BIT_MODE 0x00        // DL - data length, 4-bit mode 
-#define HD44780U_2_LINE 0x08           // N - 2 line display 
-#define HD44780U_1_LINE 0x00           // N - 1 line display 
-#define HD44780U_5x10 0x04             // F - 5x10 dot display 
-#define HD44780U_5x8 0x00              // F - 5x8 dot display 
+#define HD44780U_FUNCTION_SET 0x20        // Standard function set bit 
+#define HD44780U_8BIT_MODE 0x10           // DL - data length, 8-bit mode 
+#define HD44780U_4BIT_MODE 0x00           // DL - data length, 4-bit mode 
+#define HD44780U_2_LINE 0x08              // N - 2 line display 
+#define HD44780U_1_LINE 0x00              // N - 1 line display 
+#define HD44780U_5x10 0x04                // F - 5x10 dot display 
+#define HD44780U_5x8 0x00                 // F - 5x8 dot display 
 
 // Additional bits 
-#define HD44780U_EN 0x04               // Enable bit - 1: enable, 0: disable 
-#define HD44780U_RW 0x02               // Read/write bit - 1: read, 0: write 
-#define HD44780U_RS 0x01               // Register select bit - 1: data reg, 0: instruction reg 
+#define HD44780U_EN 0x04                  // Enable bit - 1: enable, 0: disable 
+#define HD44780U_RW 0x02                  // Read/write bit - 1: read, 0: write 
+#define HD44780U_RS 0x01                  // Register select bit - 1: data, 0: instruction 
 
 // Backlight control 
-#define HD44780U_BACKLIGHT 0x08        // Backlight on 
-#define HD44780U_NO_BACKLIGHT 0x00     // Backlight off 
+#define HD44780U_BACKLIGHT 0x08           // Backlight on 
+#define HD44780U_NO_BACKLIGHT 0x00        // Backlight off 
 
-// Other 
-#define HD44780U_CURSOR_HOME 0         // Start of a line 
+// Cursor information 
+#define HD44780U_CURSOR_HOME 0            // Start of a line 
+#define HD44780U_LINE_ADDR_COMMON 0x80    // 
+#define HD44780U_L2_L4_MASK 0x01          // 
+#define HD44780U_L3_L4_MASK_1 0x14        // 
+#define HD44780U_L3_L4_MASK_2 0x02        // 
 
 //=======================================================================================
 

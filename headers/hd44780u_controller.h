@@ -31,7 +31,7 @@
 //=======================================================================================
 // Macros 
 
-#define HD44780U_NUM_STATES 8    // Current number of possible states for the controller 
+#define HD44780U_NUM_STATES 9    // Current number of possible states for the controller 
 
 //=======================================================================================
 
@@ -46,6 +46,7 @@ typedef enum {
     HD44780U_INIT_STATE,                    // Initialization state 
     HD44780U_RUN_STATE,                     // Run state 
     HD44780U_WRITE_STATE,                   // Write state 
+    HD44780U_CLEAR_STATE,                   // Clear screen state 
     HD44780U_LOW_PWR_ENTER_STATE,           // Low power mode enter state 
     HD44780U_LOW_PWR_STATE,                 // Low power state 
     HD44780U_LOW_PWR_EXIT_STATE,            // Low power mode exit state 
@@ -70,6 +71,7 @@ typedef struct hd44780u_trackers_s
 
     // State flags 
     uint8_t write     : 1;                  // Write state trigger 
+    uint8_t clear     : 1;                  // Clear screen state trigger 
     uint8_t low_power : 1;                  // Low power state trigger 
     uint8_t reset     : 1;                  // Reset state trigger 
     uint8_t startup   : 1;                  // Ensures the init state is run 

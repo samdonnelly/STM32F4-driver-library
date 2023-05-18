@@ -366,11 +366,20 @@ void hd44780u_clear_status(void)
 void hd44780u_send_line(
     hd44780u_lines_t line)
 {
-    // Move to the screen position address 
+    // Convert the line index to a screen character address 
+    uint8_t line_start_addr = HD44780U_LINE_ADDR_COMMON | 
+                              ((line & HD44780U_L2_L4_MASK) << SHIFT_6) | 
+                              (HD44780U_L3_L4_MASK_1 * ((line & HD44780U_L3_L4_MASK_2) 
+                              >> SHIFT_1)); 
+
+    // Set the cursor to the start of the line 
+    hd44780u_cursor_pos(line_start_addr, HD44780U_CURSOR_HOME); 
+
+    // Move to the line data memory address 
     char *line_data = hd44780u_data_record.line1; 
     line_data += (line*HD44780U_LINE_LEN); 
 
-    // Send a line of data 
+    // Send the line of data 
     for(uint8_t i = 0; i < HD44780U_LINE_LEN; i++)
     {
         hd44780u_send_data((uint8_t)(*line_data++));

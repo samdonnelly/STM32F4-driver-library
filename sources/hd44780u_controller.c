@@ -74,6 +74,17 @@ void hd44780u_write_state(
 
 
 /**
+ * @brief Clear screen state 
+ * 
+ * @details 
+ * 
+ * @param hd44780u_device 
+ */
+void hd44780u_clear_state(
+    hd44780u_trackers_t *hd44780u_device); 
+
+
+/**
  * @brief HD44780U low power mode enter state 
  * 
  * @details Allows for entering into the controllers low power mode state. When the low 
@@ -178,6 +189,7 @@ static hd44780u_state_functions_t state_table[HD44780U_NUM_STATES] =
     &hd44780u_init_state, 
     &hd44780u_run_state, 
     &hd44780u_write_state, 
+    &hd44780u_clear_state, 
     &hd44780u_low_pwr_enter_state, 
     &hd44780u_low_pwr_state, 
     &hd44780u_low_pwr_exit_state, 
@@ -221,6 +233,7 @@ void hd44780u_controller(void)
     switch (next_state)
     {
         case HD44780U_INIT_STATE: 
+            // Startup flag cleared 
             if (!(hd44780u_device_trackers.startup))
             {
                 next_state = HD44780U_RUN_STATE; 
@@ -276,7 +289,11 @@ void hd44780u_controller(void)
 
             break; 
 
+        case HD44780U_CLEAR_STATE: 
+            break; 
+
         case HD44780U_LOW_PWR_ENTER_STATE: 
+            // Go straight to the low power state 
             next_state = HD44780U_LOW_PWR_STATE; 
             break; 
 
@@ -377,20 +394,26 @@ void hd44780u_write_state(
     hd44780u_trackers_t *hd44780u_device)
 {
     // Write all line contents 
-    hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_HOME);
     hd44780u_send_line(HD44780U_L1); 
-
-    hd44780u_cursor_pos(HD44780U_START_L2, HD44780U_CURSOR_HOME);
     hd44780u_send_line(HD44780U_L2); 
-    
-    hd44780u_cursor_pos(HD44780U_START_L3, HD44780U_CURSOR_HOME);
     hd44780u_send_line(HD44780U_L3); 
-    
-    hd44780u_cursor_pos(HD44780U_START_L4, HD44780U_CURSOR_HOME);
     hd44780u_send_line(HD44780U_L4); 
+
+    // hd44780u_cursor_pos(HD44780U_START_L1, HD44780U_CURSOR_HOME);
+    // hd44780u_cursor_pos(HD44780U_START_L2, HD44780U_CURSOR_HOME);
+    // hd44780u_cursor_pos(HD44780U_START_L3, HD44780U_CURSOR_HOME);
+    // hd44780u_cursor_pos(HD44780U_START_L4, HD44780U_CURSOR_HOME);
 
     // Clear the write flag 
     hd44780u_device->write = CLEAR_BIT; 
+}
+
+
+// Clear screen and line contents state 
+void hd44780u_clear_state(
+    hd44780u_trackers_t *hd44780u_device)
+{
+    // 
 }
 
 
