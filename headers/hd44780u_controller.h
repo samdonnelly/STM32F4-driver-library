@@ -155,7 +155,17 @@ void hd44780u_controller(void);
 /**
  * @brief Set power save mode 
  * 
- * @details 
+ * @details Triggers the power save state in the controller. When set, the controller will 
+ *          default back to the power save state instead of the idle state when not being 
+ *          used. In the power save state the screens backlight will turn off after a 
+ *          specified period of time to save power. This is a non blocking state. The 
+ *          time it takes to turn the backlight off can be set using hd44780u_set_sleep_time. 
+ *          The backlight can be turned back on temporarily (sleep timer reset) using 
+ *          hd44780u_wake_up. Note that writing to the screen will not turn the backlight 
+ *          back on. 
+ * 
+ * @see hd44780u_set_sleep_time
+ * @see hd44780u_wake_up 
  */
 void hd44780u_set_pwr_save_flag(void); 
 
@@ -163,7 +173,9 @@ void hd44780u_set_pwr_save_flag(void);
 /**
  * @brief Clear power save mode 
  * 
- * @details 
+ * @details Takes the controller out of power save mode at which point the controller will 
+ *          default back to the idle state when not being used instead of the power save 
+ *          state. 
  */
 void hd44780u_clear_pwr_save_flag(void); 
 
@@ -171,7 +183,9 @@ void hd44780u_clear_pwr_save_flag(void);
 /**
  * @brief Reset the power save state 
  * 
- * @details 
+ * @details When in power save mode and the screen backlight goes off, a call to this 
+ *          function will turn the backlight on and reset the timer used in the power save 
+ *          state to turn the backlight off. 
  */
 void hd44780u_wake_up(void); 
 
@@ -179,9 +193,12 @@ void hd44780u_wake_up(void);
 /**
  * @brief Set screen sleep time 
  * 
- * @details 
+ * @details Sets the time it takes for the screen backlight to shut off while in the power 
+ *          save state. The time is in microseconds. When the screen is woken up while in the 
+ *          power save state, the timer will be reset and the time set using this function 
+ *          is how long will be before the screen sleeps. 
  * 
- * @param sleep_time 
+ * @param sleep_time : time (us) until screen backlight turns off in power save mode 
  */
 void hd44780u_set_sleep_time(
     uint32_t sleep_time); 
@@ -190,10 +207,15 @@ void hd44780u_set_sleep_time(
 /**
  * @brief Message set 
  * 
- * @details 
+ * @details Takes a whole screen message as an argument, updates the drivers line data with 
+ *          the message, then triggers a write to the screen so the new message is displayed. 
+ *          Screen messages can be defined by creating an array of type hd44780u_msgs_t and 
+ *          passing that array to this function. 
  * 
- * @param msg 
- * @param msg_len 
+ * @see hd44780u_msgs_t 
+ * 
+ * @param msg : pointer to screen message data 
+ * @param msg_len : number of lines used in the message 
  */
 void hd44780u_set_msg(
     hd44780u_msgs_t *msg, 
@@ -214,7 +236,9 @@ void hd44780u_set_write_flag(void);
 /**
  * @brief Set the clear screen flag 
  * 
- * @details 
+ * @details Triggers the clear screen state which clears the screen and data record of 
+ *          message content. This flag is cleared automatically after the clear state is 
+ *          run. 
  */
 void hd44780u_set_clear_flag(void); 
 

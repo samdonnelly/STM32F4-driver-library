@@ -56,7 +56,25 @@ void hd44780u_idle_state(
 /**
  * @brief Power save state 
  * 
- * @details 
+ * @details This state is similar to the idle state except it will turn off the screen 
+ *          backlight after a specified period of time. This is done to save system power 
+ *          during times when the screen shouldn't be fully shut off but does not need to 
+ *          be seen by the user all the time. 
+ *          
+ *          This state can be enabled using the hd44780u_set_pwr_save_flag setter at which 
+ *          point the controller will default to this state when the screen is not being used 
+ *          instead of going back to the idle state. This state can be disabled using the 
+ *          hd44780u_clear_pwr_save_flag setter which will make the idle state the default 
+ *          state again. 
+ *          
+ *          The time it takes for the screen to turn the bcklight off can be set using 
+ *          hd44780u_set_sleep_time. When the backlight is off it can be turned back on using 
+ *          hd44780u_wake_up at which point the timer to turn the backlight off will start over. 
+ * 
+ * @see hd44780u_set_pwr_save_flag 
+ * @see hd44780u_clear_pwr_save_flag 
+ * @see hd44780u_set_sleep_time 
+ * @see hd44780u_wake_up 
  * 
  * @param hd44780u_device 
  */
@@ -69,8 +87,8 @@ void hd44780u_pwr_save_state(
  * 
  * @details Writes the contents of the devices data record to the screen. To trigger this state, 
  *          the write flag should be set via the setter function. At the end of this state, the 
- *          write flag is automatically cleared the state machine returns to idle if no other 
- *          flags are set. <br> 
+ *          write flag is automatically cleared the state machine returns to idle or power save 
+ *          states if no other flags are set. 
  *          
  *          The contents of the data record can be updated through the use of any of the line 
  *          set or line clear functions. The results of updating the data record won't be 
@@ -87,7 +105,12 @@ void hd44780u_write_state(
 /**
  * @brief Clear screen state 
  * 
- * @details 
+ * @details Clears the screen of all it's content and clears the data stored in the screen 
+ *          driver data record. Once this state is executed it will immediately go back to 
+ *          the idle or power save state depending on the application settings. The 
+ *          hd44780u_set_clear_flag setter can be used to trigger this state. 
+ * 
+ * @see hd44780u_set_clear_flag 
  * 
  * @param hd44780u_device 
  */
@@ -155,7 +178,7 @@ void hd44780u_low_pwr_exit_state(
  * @details Currently this state is not used. To enter this state the fault code must be set 
  *          to non-zero and there are currently no methods in place in the controller to set 
  *          the fault code. Regardless of value, the fault code gets cleared in the reset 
- *          state. <br> 
+ *          state. 
  *          
  *          This state takes the highest priority meaning the controller will enter this state 
  *          regardless of any other flags set. 

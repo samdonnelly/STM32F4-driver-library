@@ -214,7 +214,12 @@ void hd44780u_re_init(void);
  *          the data record of the device, meaning the contents will not be seen on the 
  *          screen until the write state is triggered. Note that this function does not 
  *          erase the old contents of the line, it simply overwrites them starting at the 
- *          offset.
+ *          offset. 
+ *          
+ *          When this function is called it updates the line content status for the line 
+ *          being set. 
+ * 
+ * @see hd44780u_get_line_update
  * 
  * @param line : line content to update 
  * @param line_data : pointer to character string used to update the line 
@@ -244,9 +249,12 @@ void hd44780u_line_clear(
 /**
  * @brief Get the line update status 
  * 
- * @details 
+ * @details This function returns the line content status. This status indicates which lines 
+ *          in the data record have been updated but not written to the screen. The status 
+ *          is 4-bits long where one bit corresponds to one line. Bit 0 is line 1 and bit 3 
+ *          is line 4. This is mainly for the controllers use. 
  * 
- * @return uint8_t 
+ * @return uint8_t : line content update status 
  */
 uint8_t hd44780u_get_line_update(void); 
 
@@ -288,7 +296,12 @@ void hd44780u_clear_status(void);
 /**
  * @brief HD44780U send line 
  * 
- * @details Sends the contents of a line in the data record to the screen for viewing. 
+ * @details Sends the contents of a line in the data record to the screen for viewing. When 
+ *          this function is called it clears the bit in the line content status which 
+ *          indicates that the line content has been sent to the screen. 
+ *          
+ *          This function automatically sets the cursor position to the beginning of the 
+ *          specified line before sending the line data record contents. 
  * 
  * @param line : line of the data record to write to the screen 
  */
