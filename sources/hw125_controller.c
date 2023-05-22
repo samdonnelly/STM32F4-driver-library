@@ -240,7 +240,7 @@ static hw125_state_functions_t state_table[HW125_NUM_STATES] =
 
 // HW125 controller initialization 
 void hw125_controller_init(
-    char *path)
+    const char *path)
 {
     // TODO Check that the path length is not too long 
 

@@ -165,7 +165,7 @@ typedef void (*hw125_state_functions_t)(
  * @param path : path to directory to use on the volume 
  */
 void hw125_controller_init(
-    char *path); 
+    const char *path); 
 
 
 /**
