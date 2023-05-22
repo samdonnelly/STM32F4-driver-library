@@ -31,7 +31,7 @@
 // Macros 
 
 // State machine 
-#define HW125_NUM_STATES 6             // Number of possible states for the controller 
+#define HW125_NUM_STATES 7             // Number of possible states for the controller 
 
 // Controller tracker 
 #define HW125_PATH_SIZE 50             // Volume path max length 
@@ -56,6 +56,7 @@ typedef enum {
     HW125_INIT_STATE, 
     HW125_NOT_READY_STATE, 
     HW125_ACCESS_STATE, 
+    HW125_ACCESS_CHECK_STATE, 
     HW125_EJECT_STATE, 
     HW125_FAULT_STATE, 
     HW125_RESET_STATE 
@@ -110,7 +111,8 @@ typedef struct hw125_trackers_s
     // State trackers 
     uint8_t mount      : 1;                      // Volume mount flag 
     uint8_t not_ready  : 1;                      // Not ready flag 
-    uint8_t eject      : 1;                      // Eject flag - set by setters 
+    uint8_t check      : 1;                      // Check flag 
+    uint8_t eject      : 1;                      // Eject flag 
     uint8_t open_file  : 1;                      // Open file flag 
     uint8_t reset      : 1;                      // Reset state trigger 
     uint8_t startup    : 1;                      // Ensures the init state is run 
@@ -179,6 +181,30 @@ void hw125_controller(void);
 
 //=======================================================================================
 // Setters 
+
+/**
+ * @brief Set the check flag 
+ * 
+ * @details The check flag triggers the access check state. In this state the controller will 
+ *          continuously check for the presence of the volume to ensure it is still there. 
+ *          This state is best for when the volume is not consistently in direct use but want 
+ *          to make sure it wasm't removed. Normal read and write operations can still be 
+ *          performed in this state, however there will be the added overhead of checking 
+ *          for the volume presence on each pass. 
+ */
+void hw125_set_check_flag(void); 
+
+
+/**
+ * @brief Clear the check flag 
+ * 
+ * @details Clearing the check flag will make the controller idle in the access state where 
+ *          it does nothing and lets the SD card be accessed through the setters. This state 
+ *          is best when the volume is being accessed consistently so a check is not needed 
+ *          and when you don't want to waste cycle on a ping of the volume. 
+ */
+void hw125_clear_check_flag(void); 
+
 
 /**
  * @brief Set the eject flag 

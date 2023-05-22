@@ -68,6 +68,17 @@ void hw125_not_ready_state(
 /**
  * @brief HW125 access state 
  * 
+ * @details 
+ * 
+ * @param hw125_device 
+ */
+void hw125_access_state(
+    hw125_trackers_t *hw125_device); 
+
+
+/**
+ * @brief HW125 access check state 
+ * 
  * @details Continuously checks for the presence of the volume to see if it goes missing. If 
  *          it is missing the not ready flag will be set. This state indicates that the volume 
  *          is seen by the system and normal read/write operations can be performed (using the 
@@ -77,7 +88,7 @@ void hw125_not_ready_state(
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
-void hw125_access_state(
+void hw125_access_check_state(
     hw125_trackers_t *hw125_device); 
 
 
@@ -215,6 +226,7 @@ static hw125_state_functions_t state_table[HW125_NUM_STATES] =
     &hw125_init_state, 
     &hw125_not_ready_state, 
     &hw125_access_state, 
+    &hw125_access_check_state, 
     &hw125_eject_state, 
     &hw125_fault_state, 
     &hw125_reset_state 
@@ -244,6 +256,7 @@ void hw125_controller_init(
     // State trackers 
     hw125_device_trackers.mount = CLEAR_BIT; 
     hw125_device_trackers.not_ready = CLEAR_BIT; 
+    hw125_device_trackers.check = CLEAR_BIT; 
     hw125_device_trackers.eject = CLEAR_BIT; 
     hw125_device_trackers.open_file = CLEAR_BIT; 
     hw125_device_trackers.startup = SET_BIT; 
@@ -269,6 +282,12 @@ void hw125_controller(void)
                 if (hw125_device_trackers.fault_code) 
                 {
                     next_state = HW125_FAULT_STATE; 
+                }
+
+                // Device successfully mounted and access check requested 
+                else if (hw125_device_trackers.mount && hw125_device_trackers.check) 
+                {
+                    next_state = HW125_ACCESS_CHECK_STATE; 
                 }
 
                 // Device successfully mounted 
@@ -314,15 +333,49 @@ void hw125_controller(void)
                 next_state = HW125_RESET_STATE; 
             }
 
+            // Eject flag set 
+            else if (hw125_device_trackers.eject)
+            {
+                next_state = HW125_EJECT_STATE; 
+            }
+
+            // Check flag set 
+            else if (hw125_device_trackers.check)
+            {
+                next_state = HW125_ACCESS_CHECK_STATE; 
+            }
+
+            break; 
+
+        case HW125_ACCESS_CHECK_STATE: 
+            // File access fault 
+            if (hw125_device_trackers.fault_code) 
+            {
+                next_state = HW125_FAULT_STATE; 
+            }
+
+            // Reset flag set 
+            else if (hw125_device_trackers.reset) 
+            {
+                next_state = HW125_RESET_STATE; 
+            }
+
             // Volume not seen or eject flag set 
             else if (hw125_device_trackers.not_ready || hw125_device_trackers.eject)
             {
                 next_state = HW125_EJECT_STATE; 
             }
 
+            // Check flag cleared 
+            else if (!hw125_device_trackers.check)
+            {
+                next_state = HW125_ACCESS_STATE; 
+            }
+
             break; 
 
         case HW125_EJECT_STATE: 
+            // Default to the not ready state if the eject flag has been set 
             next_state = HW125_NOT_READY_STATE; 
             break; 
 
@@ -373,7 +426,7 @@ void hw125_init_state(
     // Clear startup flag 
     hw125_device->startup = CLEAR_BIT; 
 
-    // Clear reset flag  
+    // Clear reset flag 
     hw125_device->reset = CLEAR_BIT; 
 
     // Attempt to mount the volume 
@@ -409,8 +462,16 @@ void hw125_not_ready_state(
 }
 
 
-// HW125 access file state 
+// HW125 access state 
 void hw125_access_state(
+    hw125_trackers_t *hw125_device)
+{
+    // Do nothing while the volume is accessed 
+}
+
+
+// HW125 access file state 
+void hw125_access_check_state(
     hw125_trackers_t *hw125_device) 
 {
     // Check for the presence of the volume 
@@ -482,6 +543,7 @@ FRESULT hw125_mount(
     return hw125_device_trackers.fresult; 
 }
 
+
 // Unmount the volume 
 FRESULT hw125_unmount(
     hw125_trackers_t *hw125_device) 
@@ -519,21 +581,15 @@ FRESULT hw125_getfree(
 
     if (hw125_device->fresult == FR_OK) 
     {
-        // TODO test the following calculation changes 
-
         // Calculate the total space 
         // (n_fatent - 2) * csize / 2
         hw125_device->total = (uint32_t)(((hw125_device->pfs->n_fatent - 2) * 
                                            hw125_device->pfs->csize) >> SHIFT_1);
-        // hw125_device->total = (uint32_t)((hw125_device->pfs->n_fatent - 2) * 
-        //                                   hw125_device->pfs->csize * 0.5);
         
         // Calculate the free space 
         // fre_clust * csize / 2 
         hw125_device->free_space = (uint32_t)((hw125_device->fre_clust * 
                                                hw125_device->pfs->csize) >> SHIFT_1); 
-        // hw125_device->free_space = (uint32_t)(hw125_device->fre_clust * 
-        //                                       hw125_device->pfs->csize * 0.5); 
 
         // Check if there is sufficient disk space 
         if (hw125_device->free_space < HW125_FREE_THRESH) 
@@ -557,6 +613,20 @@ FRESULT hw125_getfree(
 
 //=======================================================================================
 // Setters 
+
+// Set the check flag 
+void hw125_set_check_flag(void)
+{
+    hw125_device_trackers.check = SET_BIT; 
+}
+
+
+// Clear the check flag 
+void hw125_clear_check_flag(void)
+{
+    hw125_device_trackers.check = CLEAR_BIT; 
+}
+
 
 // Set the eject flag 
 void hw125_set_eject_flag(void) 
@@ -594,7 +664,7 @@ FRESULT hw125_mkdir(
     strcpy(sub_dir, hw125_device_trackers.path); 
 
     // If 'dir' is not a null character then prepare the sub-directory to be concatenated. 
-    // 'dir' will a null character when it's empty such as in the "init" state. 
+    // 'dir' will be a null character when it's empty such as in the "init" state. 
     if (*hw125_device_trackers.dir != NULL_CHAR)
     {
         strcat(sub_dir, "/"); 
