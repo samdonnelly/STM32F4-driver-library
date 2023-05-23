@@ -20,7 +20,7 @@
 //=======================================================================================
 
 
-//===============================================================================
+//=======================================================================================
 // Function prototypes 
 
 /**
@@ -153,51 +153,72 @@ SPI_STATUS spi_read_draft(
 
 #endif   // SPI_DRAFT 
 
-//===============================================================================
+//=======================================================================================
 
 
 //=======================================================================================
 // Inititalization 
 
-// SPI initialization
-// GPIOB and SPI2 was used for all existing spi stuff 
-SPI_STATUS spi_init(
+//==============================================================
+// Pin information for SPI
+// - PB10: SCK
+// - PB14: MISO
+// - PB15: MOSI
+//==============================================================
+
+
+// SPI initialization 
+void spi_init(
     SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio, 
-    spi2_num_slaves_t num_slaves,
+    pin_selector_t sck_pin, 
+    pin_selector_t miso_pin, 
+    pin_selector_t mosi_pin, 
     spi_baud_rate_ctrl_t baud_rate_ctrl,
     spi_clock_mode_t clock_mode)
 {
-    //==============================================================
-    // Pin information for SPI
-    //  PB9:  NSS --> GPIO slave select 1
-    //  PB10: SCK
-    //  PB12: NSS --> GPIO slave select 2
-    //  PB14: MISO
-    //  PB15: MOSI
-    //==============================================================
+    // Local variables 
+    uint8_t af_reg_index; 
+    uint8_t af_pin_index; 
 
     // Enable the SPI clock 
     RCC->APB1ENR |= (SET_BIT << SHIFT_14);
 
-    // Enable the GPIOB clock
-    RCC->AHB1ENR |= (SET_BIT << SHIFT_1);
-
     // Configure the pins for alternative functions
     // Specify SPI pins as using alternative functions
-    gpio->MODER |= (SET_2 << SHIFT_20);  // PB10 
-    gpio->MODER |= (SET_2 << SHIFT_28);  // PB14 
-    gpio->MODER |= (SET_2 << SHIFT_30);  // PB15 
+    // gpio->MODER |= (SET_2 << SHIFT_20);  // PB10 
+    // gpio->MODER |= (SET_2 << SHIFT_28);  // PB14 
+    // gpio->MODER |= (SET_2 << SHIFT_30);  // PB15 
+    gpio->MODER |= (SET_2 << (2*sck_pin)); 
+    gpio->MODER |= (SET_2 << (2*miso_pin)); 
+    gpio->MODER |= (SET_2 << (2*mosi_pin)); 
 
     // Select high speed for the pins 
-    gpio->OSPEEDR |= (SET_3 << SHIFT_20);  // PB10 
-    gpio->OSPEEDR |= (SET_3 << SHIFT_28);  // PB14 
-    gpio->OSPEEDR |= (SET_3 << SHIFT_30);  // PB15 
+    // gpio->OSPEEDR |= (SET_3 << SHIFT_20);  // PB10 
+    // gpio->OSPEEDR |= (SET_3 << SHIFT_28);  // PB14 
+    // gpio->OSPEEDR |= (SET_3 << SHIFT_30);  // PB15 
+    gpio->OSPEEDR |= (SET_3 << (2*sck_pin)); 
+    gpio->OSPEEDR |= (SET_3 << (2*miso_pin)); 
+    gpio->OSPEEDR |= (SET_3 << (2*mosi_pin)); 
 
     // Configure the SPI alternate function in the AFR register 
-    gpio->AFR[1] |= (SET_5 << SHIFT_8);   // PB10 
-    gpio->AFR[1] |= (SET_5 << SHIFT_24);  // PB14 
-    gpio->AFR[1] |= (SET_5 << SHIFT_28);  // PB15 
+    // gpio->AFR[1] |= (SET_5 << SHIFT_8);   // PB10 
+    // gpio->AFR[1] |= (SET_5 << SHIFT_24);  // PB14 
+    // gpio->AFR[1] |= (SET_5 << SHIFT_28);  // PB15 
+    // SCK pin 
+    af_reg_index = ((uint8_t)sck_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
+    af_pin_index = 4*((uint8_t)sck_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
+    gpio->AFR[af_reg_index] |= (SET_5 << af_pin_index); 
+
+    // MISO pin 
+    af_reg_index = ((uint8_t)miso_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
+    af_pin_index = 4*((uint8_t)miso_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
+    gpio->AFR[af_reg_index] |= (SET_5 << af_pin_index); 
+
+    // MOSI pin 
+    af_reg_index = ((uint8_t)mosi_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
+    af_pin_index = 4*((uint8_t)mosi_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
+    gpio->AFR[af_reg_index] |= (SET_5 << af_pin_index); 
 
     // Reset and disable the SPI before making any changes 
     spi->CR1 = CLEAR;
@@ -230,28 +251,20 @@ SPI_STATUS spi_init(
 
     // Set the SPE bit to enable SPI 
     spi_enable(spi);
+}
 
-    // Configure the slave select pins as GPIO 
-    switch (num_slaves)
-    {
-        case SPI_2_SLAVE:  // Initialize PB12 as GPIO
-            gpio_pin_init(gpio, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
-            spi_slave_deselect(gpio, SPI2_SS_2);  // Deselect slave 
-            break; 
-            // Case has no break so PB9 will also be initialized
-            // TODO check if no break statement works 
 
-        case SPI_1_SLAVE:  // Initialize PB9 as GPIO 
-            gpio_pin_init(gpio, PIN_9, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
-            spi_slave_deselect(gpio, SPI2_SS_1);  // Deselect slave 
-            break;
-
-        default:  // Invalid number of slaves specified
-            return SPI_ERROR;
-    }
-
-    // Initialization success 
-    return SPI_OK;
+// SPI slave select pin init 
+void spi_ss_init(
+    GPIO_TypeDef *gpio, 
+    pin_selector_t ss_pin)
+{
+    // Local variables 
+    gpio_pin_num_t pin_num = (SET_BIT << ss_pin); 
+    
+    // Configure the slave select pin and GPIO then deselect the slave device 
+    gpio_pin_init(gpio, ss_pin, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+    spi_slave_deselect(gpio, pin_num); 
 }
 
 //=======================================================================================

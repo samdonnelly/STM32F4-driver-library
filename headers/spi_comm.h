@@ -37,10 +37,6 @@
 // Timers 
 #define SPI_COM_TIMEOUT 0x03FF     // Timer for SPI communication sequence timeouts 
 
-// Slave select pin numbers 
-#define SPI2_SS_1 0x0200           // Pin PB9 
-#define SPI2_SS_2 0x1000           // Pin PB12 
-
 //=======================================================================================
 
 
@@ -91,15 +87,6 @@ typedef enum {
 
 
 /**
- * @brief Number of slave devices to configure on the SPI bus 
- */
-typedef enum {
-    SPI_1_SLAVE,  // Pin PB9 
-    SPI_2_SLAVE   // Pins PB9 and PB12 
-} spi2_num_slaves_t;
-
-
-/**
  * @brief SPI communication operation status - used for timout detection 
  */
 typedef enum {
@@ -130,17 +117,33 @@ typedef spi_com_status_t SPI_STATUS;
  * 
  * @param spi : pointer to SPI port to initialize 
  * @param gpio : pointer to GPIO port used for the SPI port chosen 
- * @param num_slaves : number of slave to devices to set up 
+ * @param sck_pin : 
+ * @param miso_pin : 
+ * @param mosi_pin : 
  * @param baud_rate_ctrl : communication speed to use 
  * @param clock_mode : SPI clock mode - polarity and phase 
- * @return SPI_STATUS : status of the init process 
  */
-SPI_STATUS spi_init(
+void spi_init(
     SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio, 
-    spi2_num_slaves_t num_slaves,
+    pin_selector_t sck_pin, 
+    pin_selector_t miso_pin, 
+    pin_selector_t mosi_pin, 
     spi_baud_rate_ctrl_t baud_rate_ctrl,
-    spi_clock_mode_t clock_mode);
+    spi_clock_mode_t clock_mode); 
+
+
+/**
+ * @brief SPI slave select pin init 
+ * 
+ * @details 
+ * 
+ * @param gpio : GPIO port used for slave select pin 
+ * @param ss_pin : pin number for slave select pin 
+ */
+void spi_ss_init(
+    GPIO_TypeDef *gpio, 
+    pin_selector_t ss_pin); 
 
 //=======================================================================================
 

@@ -313,8 +313,8 @@ static hw125_disk_info_t sd_card;
 
 // HW125 user initialization 
 void hw125_user_init(
-    GPIO_TypeDef *gpio, 
     SPI_TypeDef *spi, 
+    GPIO_TypeDef *gpio, 
     uint16_t hw125_slave_pin)
 {
     // Peripherals 

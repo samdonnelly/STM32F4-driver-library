@@ -337,13 +337,13 @@ typedef hw125_card_type_t CARD_TYPE;
  *          
  *          This function should be called during initialization in the application code. 
  * 
- * @param gpio : 
  * @param spi : 
+ * @param gpio : 
  * @param hw125_slave_pin : slave pin (GPIO pin) used to select the slave device 
  */
 void hw125_user_init(
+    SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio,  
-    SPI_TypeDef *spi,  
     uint16_t hw125_slave_pin); 
 
 
