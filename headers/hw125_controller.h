@@ -235,6 +235,17 @@ void hw125_set_reset_flag(void);
 
 
 /**
+ * @brief Set directory 
+ * 
+ * @details 
+ * 
+ * @param dir : project directory to access 
+ */
+void hw125_set_dir(
+    const TCHAR *dir); 
+
+
+/**
  * @brief Make a new directory in the project directory 
  * 
  * @details Wrapper function for the FATFS function f_mkdir. 
@@ -465,6 +476,23 @@ HW125_FAULT_MODE hw125_get_fault_mode(void);
  * @return HW125_FILE_STATUS : open file flag state 
  */
 HW125_FILE_STATUS hw125_get_file_status(void); 
+
+
+/**
+ * @brief Check for the existance of a file or directory 
+ * 
+ * @details 
+ *          
+ *          NOTE: The root directory is set during the controller init and the sub-directory 
+ *                is set by the hw125_set_dir function. 'str', passed as an argument to this 
+ *                function, is concatenated onto the root + sub-directory that is already 
+ *                defined so do not include those in 'str'. 
+ * 
+ * @param str : string to file or directory to check for 
+ * @return FRESULT 
+ */
+FRESULT hw125_get_exists(
+    const TCHAR *str); 
 
 
 /**

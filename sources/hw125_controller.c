@@ -250,6 +250,7 @@ void hw125_controller_init(
     hw125_device_trackers.fault_mode = CLEAR; 
 
     // File system information 
+    memset((void *)hw125_device_trackers.path, CLEAR, HW125_PATH_SIZE); 
     strcpy(hw125_device_trackers.path, path); 
     memset((void *)hw125_device_trackers.dir, CLEAR, HW125_PATH_SIZE); 
     
@@ -649,6 +650,16 @@ void hw125_set_reset_flag(void)
 }
 
 
+// Set directory 
+void hw125_set_dir(
+    const TCHAR *dir)
+{
+    // Reset the saved directory and set the new directory 
+    memset((void *)hw125_device_trackers.dir, CLEAR, HW125_PATH_SIZE); 
+    strcpy(hw125_device_trackers.dir, dir); 
+}
+
+
 // Make a new directory in the project directory 
 FRESULT hw125_mkdir(
     const TCHAR *dir) 
@@ -660,7 +671,8 @@ FRESULT hw125_mkdir(
     TCHAR sub_dir[HW125_PATH_SIZE*2]; 
 
     // Record 'dir' for future use and establish 'path' as the base of the sub directory 
-    strcpy(hw125_device_trackers.dir, dir); 
+    hw125_set_dir(dir); 
+    // strcpy(hw125_device_trackers.dir, dir); 
     strcpy(sub_dir, hw125_device_trackers.path); 
 
     // If 'dir' is not a null character then prepare the sub-directory to be concatenated. 
@@ -707,7 +719,7 @@ FRESULT hw125_open(
     // Attempt to open file if a file is not already open 
     if (!hw125_device_trackers.open_file) 
     {
-        // Establish 'path' as the base of the file directory 
+        // Establish 'path' as the root of the file directory 
         strcpy(file_dir, hw125_device_trackers.path); 
 
         // If 'dir' is not a null character then concatenate it to the file directory 
@@ -887,6 +899,34 @@ HW125_FAULT_MODE hw125_get_fault_mode(void)
 HW125_FILE_STATUS hw125_get_file_status(void)
 {
     return hw125_device_trackers.open_file; 
+}
+
+
+// Check for the existance of a file or directory 
+FRESULT hw125_get_exists(
+    const TCHAR *str)
+{
+    // Check for a valid file name 
+    if (str == NULL || *str == NULL_CHAR) return FR_INVALID_OBJECT; 
+
+    // Local variables 
+    TCHAR directory[HW125_PATH_SIZE*3]; 
+
+    // Establish 'path' as the root of the file directory 
+    strcpy(directory, hw125_device_trackers.path); 
+
+    // If 'dir' is not a null character then concatenate it to the file directory 
+    if (*hw125_device_trackers.dir != NULL_CHAR)
+    {
+        strcat(directory, "/"); 
+        strcat(directory, hw125_device_trackers.dir); 
+    }
+
+    strcat(directory, "/"); 
+    strcat(directory, str); 
+
+    // Check for the existance of the directory 
+    return f_stat(directory, (FILINFO *)NULL); 
 }
 
 

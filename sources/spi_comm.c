@@ -237,6 +237,7 @@ SPI_STATUS spi_init(
         case SPI_2_SLAVE:  // Initialize PB12 as GPIO
             gpio_pin_init(gpio, PIN_12, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
             spi_slave_deselect(gpio, SPI2_SS_2);  // Deselect slave 
+            break; 
             // Case has no break so PB9 will also be initialized
             // TODO check if no break statement works 
 
