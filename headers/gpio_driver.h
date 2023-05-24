@@ -173,13 +173,32 @@ void gpio_pin_init(
     gpio_moder_t   moder,
     gpio_otyper_t  otyper,
     gpio_ospeedr_t ospeedr,
-    gpio_pupdr_t   pupdr);
+    gpio_pupdr_t   pupdr); 
+
+
+/**
+ * @brief GPIO Alternate Function Register (AFR) configuration 
+ * 
+ * @details Sets the alternate function of the pin. There are macros defined at the top 
+ *          of this file that can be used as arguments. Refer to the reference manual and 
+ *          datasheet of the device for details on what each alternate function does. 
+ * 
+ * @see pin_selector_t
+ * 
+ * @param gpio : pointer to GPIO port 
+ * @param pin : pin number 
+ * @param setpoint : alternate function number that corresponds to the needed peripheral 
+ */
+void gpio_afr(
+    GPIO_TypeDef *gpio, 
+    pin_selector_t pin, 
+    bit_setter_t setpoint); 
 
 //=======================================================================================
 
 
 //=======================================================================================
-// Write functions 
+// Write and read functions 
 
 /**
  * @brief GPIO write
@@ -198,11 +217,6 @@ void gpio_write(
     gpio_pin_num_t pin_num,
     gpio_pin_state_t pin_state);
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Read functions 
 
 /**
  * @brief GPIO read 
@@ -233,48 +247,6 @@ GPIO_STATE gpio_read(
  */
 GPIOX_DR gpio_port_read(
     GPIO_TypeDef *gpio); 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Register functions 
-
-/**
- * @brief Set the GPIO mode 
- * 
- * @details Configures the mode of the pin according to gpio_moder_t
- * 
- * @see gpio_moder_t
- * @see pin_selector_t
- * 
- * @param gpio : pointer to GPIO port 
- * @param moder : mode of the pin 
- * @param pin : pin number 
- */
-void gpio_moder(
-    GPIO_TypeDef *gpio, 
-    gpio_moder_t moder, 
-    pin_selector_t pin); 
-
-
-/**
- * @brief GPIO alternate functions 
- * 
- * @details Sets the alternate function of the pin. There are macros defined at the top 
- *          of this file that can be used as arguments. Refer to the reference manual and 
- *          datasheet of the device for details on what each alternate function does. 
- * 
- * @see pin_selector_t
- * 
- * @param gpio : pointer to GPIO port 
- * @param af : alternate function number 
- * @param pin : pin number 
- */
-void gpio_afr(
-    GPIO_TypeDef *gpio, 
-    uint8_t af, 
-    pin_selector_t pin); 
 
 //=======================================================================================
 

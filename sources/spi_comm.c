@@ -177,39 +177,64 @@ void spi_init(
     spi_baud_rate_ctrl_t baud_rate_ctrl,
     spi_clock_mode_t clock_mode)
 {
-    // Local variables 
-    uint8_t af_reg_index; 
-    uint8_t af_pin_index; 
-
     // Enable the SPI clock 
-    RCC->APB1ENR |= (SET_BIT << SHIFT_14);
+    RCC->APB1ENR |= (SET_BIT << SHIFT_14); 
 
-    // Configure the pins for alternative functions
-    // Specify SPI pins as using alternative functions
-    gpio->MODER |= (SET_2 << (2*sck_pin)); 
-    gpio->MODER |= (SET_2 << (2*miso_pin)); 
-    gpio->MODER |= (SET_2 << (2*mosi_pin)); 
-
-    // Select high speed for the pins 
-    gpio->OSPEEDR |= (SET_3 << (2*sck_pin)); 
-    gpio->OSPEEDR |= (SET_3 << (2*miso_pin)); 
-    gpio->OSPEEDR |= (SET_3 << (2*mosi_pin)); 
-
-    // Configure the SPI alternate function in the AFR register 
+    //==================================================
+    // Configure the pins for alternative functions 
+    
     // SCK pin 
-    af_reg_index = ((uint8_t)sck_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
-    af_pin_index = 4*((uint8_t)sck_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
-    gpio->AFR[af_reg_index] |= (SET_5 << af_pin_index); 
+    gpio_pin_init(gpio, sck_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    gpio_afr(gpio, sck_pin, SET_5); 
 
     // MISO pin 
-    af_reg_index = ((uint8_t)miso_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
-    af_pin_index = 4*((uint8_t)miso_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
-    gpio->AFR[af_reg_index] |= (SET_5 << af_pin_index); 
+    gpio_pin_init(gpio, miso_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    gpio_afr(gpio, miso_pin, SET_5); 
 
     // MOSI pin 
-    af_reg_index = ((uint8_t)mosi_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
-    af_pin_index = 4*((uint8_t)mosi_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
-    gpio->AFR[af_reg_index] |= (SET_5 << af_pin_index); 
+    gpio_pin_init(gpio, mosi_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    gpio_afr(gpio, mosi_pin, SET_5); 
+    
+    //==================================================
+
+    //==================================================
+    // To be deleted pending testing 
+
+    // // Local variables 
+    // uint8_t af_reg_index; 
+    // uint8_t af_pin_index; 
+
+    // // Configure the pins for alternative functions
+    // // Specify SPI pins as using alternative functions
+    // gpio->MODER |= (SET_2 << (2*sck_pin)); 
+    // gpio->MODER |= (SET_2 << (2*miso_pin)); 
+    // gpio->MODER |= (SET_2 << (2*mosi_pin)); 
+
+    // // Select high speed for the pins 
+    // gpio->OSPEEDR |= (SET_3 << (2*sck_pin)); 
+    // gpio->OSPEEDR |= (SET_3 << (2*miso_pin)); 
+    // gpio->OSPEEDR |= (SET_3 << (2*mosi_pin)); 
+
+    // // Configure the SPI alternate function in the AFR register 
+    // // SCK pin 
+    // af_reg_index = ((uint8_t)sck_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
+    // af_pin_index = 4*((uint8_t)sck_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
+    // gpio->AFR[af_reg_index] |= (SET_5 << af_pin_index); 
+
+    // // MISO pin 
+    // af_reg_index = ((uint8_t)miso_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
+    // af_pin_index = 4*((uint8_t)miso_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
+    // gpio->AFR[af_reg_index] |= (SET_5 << af_pin_index); 
+
+    // // MOSI pin 
+    // af_reg_index = ((uint8_t)mosi_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
+    // af_pin_index = 4*((uint8_t)mosi_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
+    // gpio->AFR[af_reg_index] |= (SET_5 << af_pin_index); 
+    
+    //==================================================
+
+    //==================================================
+    // Configure the SPI 
 
     // Reset and disable the SPI before making any changes 
     spi->CR1 = CLEAR;
@@ -242,6 +267,8 @@ void spi_init(
 
     // Set the SPE bit to enable SPI 
     spi_enable(spi);
+    
+    //==================================================
 }
 
 

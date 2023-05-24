@@ -126,6 +126,26 @@ I2C_STATUS i2c_btf_wait(
 //=======================================================================================
 // Initiate I2C 
 
+//==============================================================
+// Pin information for I2C1
+//  PB6: SCL
+//  PB7: SDA
+//  PB8: SCL
+//  PB9: SDA
+// 
+// Pin information for I2C2
+//  PB3:  SDA
+//  PB9:  SDA
+//  PB10: SCL
+// 
+// Pin information for I2C3
+//  PA8: SCL
+//  PB4: SDA
+//  PB8: SDA
+//  PC9: SDA
+//==============================================================
+
+// I2C initialization 
 void i2c_init(
     I2C_TypeDef *i2c, 
     pin_selector_t sda_pin, 
@@ -137,59 +157,53 @@ void i2c_init(
     i2c_ccr_setpoint_t ccr_reg,
     i2c_trise_setpoint_t trise_reg)
 {
-    //==============================================================
-    // Pin information for I2C1
-    //  PB6: SCL
-    //  PB7: SDA
-    //  PB8: SCL
-    //  PB9: SDA
-    // 
-    // Pin information for I2C2
-    //  PB3:  SDA
-    //  PB9:  SDA
-    //  PB10: SCL
-    // 
-    // Pin information for I2C3
-    //  PA8: SCL
-    //  PB4: SDA
-    //  PB8: SDA
-    //  PC9: SDA
-    //==============================================================
-
-    // Local variables 
-    uint8_t af_reg_index; 
-    uint8_t af_pin_index; 
-
     // Enable the I2C clock 
     RCC->APB1ENR |= (SET_BIT << (SHIFT_21 + (uint8_t)((uint32_t)(i2c - I2C1) >> SHIFT_10))); 
 
     //==================================================
     // Configure pins for alternate functions 
 
-    // Select alternate function in MODER register 
-    scl_gpio->MODER |= (SET_2 << (2*scl_pin)); 
-    sda_gpio->MODER |= (SET_2 << (2*sda_pin)); 
+    // SCL pin 
+    gpio_pin_init(scl_gpio, scl_pin, MODER_AF, OTYPER_OD, OSPEEDR_HIGH, PUPDR_PU); 
+    gpio_afr(scl_gpio, scl_pin, SET_4); 
 
-    // Select Open Drain Output - used for lines with multiple devices 
-    scl_gpio->OTYPER |= (SET_BIT << scl_pin); 
-    sda_gpio->OTYPER |= (SET_BIT << sda_pin); 
+    // SDA pin 
+    gpio_pin_init(sda_gpio, sda_pin, MODER_AF, OTYPER_OD, OSPEEDR_HIGH, PUPDR_PU); 
+    gpio_afr(sda_gpio, sda_pin, SET_4); 
 
-    // Select High SPEED for the pins 
-    scl_gpio->OSPEEDR |= (SET_3 << (2*scl_pin)); 
-    sda_gpio->OSPEEDR |= (SET_3 << (2*sda_pin)); 
+    //==================================================
 
-    // Select pull-up for both the pins 
-    scl_gpio->PUPDR |= (SET_BIT << (2*scl_pin)); 
-    sda_gpio->PUPDR |= (SET_BIT << (2*sda_pin)); 
+    //==================================================
+    // To be deleted pending testing 
 
-    // Configure the SCL and SDA Alternate Functions in AFR 
-    af_reg_index = ((uint8_t)scl_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
-    af_pin_index = 4*((uint8_t)scl_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
-    scl_gpio->AFR[af_reg_index] |= (SET_4 << af_pin_index); 
+    // // Local variables 
+    // uint8_t af_reg_index; 
+    // uint8_t af_pin_index; 
 
-    af_reg_index = ((uint8_t)sda_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
-    af_pin_index = 4*((uint8_t)sda_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
-    sda_gpio->AFR[af_reg_index] |= (SET_4 << af_pin_index); 
+    // // Select alternate function in MODER register 
+    // scl_gpio->MODER |= (SET_2 << (2*scl_pin)); 
+    // sda_gpio->MODER |= (SET_2 << (2*sda_pin)); 
+
+    // // Select Open Drain Output - used for lines with multiple devices 
+    // scl_gpio->OTYPER |= (SET_BIT << scl_pin); 
+    // sda_gpio->OTYPER |= (SET_BIT << sda_pin); 
+
+    // // Select High SPEED for the pins 
+    // scl_gpio->OSPEEDR |= (SET_3 << (2*scl_pin)); 
+    // sda_gpio->OSPEEDR |= (SET_3 << (2*sda_pin)); 
+
+    // // Select pull-up for both the pins 
+    // scl_gpio->PUPDR |= (SET_BIT << (2*scl_pin)); 
+    // sda_gpio->PUPDR |= (SET_BIT << (2*sda_pin)); 
+
+    // // Configure the SCL and SDA Alternate Functions in AFR 
+    // af_reg_index = ((uint8_t)scl_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
+    // af_pin_index = 4*((uint8_t)scl_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
+    // scl_gpio->AFR[af_reg_index] |= (SET_4 << af_pin_index); 
+
+    // af_reg_index = ((uint8_t)sda_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
+    // af_pin_index = 4*((uint8_t)sda_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
+    // sda_gpio->AFR[af_reg_index] |= (SET_4 << af_pin_index); 
 
     //==================================================
 

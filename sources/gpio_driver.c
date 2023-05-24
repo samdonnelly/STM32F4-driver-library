@@ -24,6 +24,24 @@
 // Function prototypes 
 
 /**
+ * @brief Set the GPIO mode 
+ * 
+ * @details Configures the mode of the pin according to gpio_moder_t
+ * 
+ * @see gpio_moder_t
+ * @see pin_selector_t
+ * 
+ * @param gpio : pointer to GPIO port 
+ * @param moder : mode of the pin 
+ * @param pin : pin number 
+ */
+void gpio_moder(
+    GPIO_TypeDef *gpio, 
+    gpio_moder_t moder, 
+    pin_selector_t pin); 
+
+
+/**
  * @brief GPIO output type 
  * 
  * @details Sets the output type of the I/O pin using the OTYPER register. 
@@ -119,11 +137,35 @@ void gpio_pin_init(
     gpio_pupdr(gpio, pupdr, pin_num); 
 }
 
+
+// GPIO Alternate Function Register (AFR) configuration 
+void gpio_afr(
+    GPIO_TypeDef *gpio, 
+    pin_selector_t pin, 
+    bit_setter_t setpoint)
+{
+    // Local variables 
+    uint8_t afr_index = 0; 
+
+    // Adjust the AFR index and pin offset if needed 
+    // The AFR is an array of size 2 - index 0: pins 0-7, index 1: 8-15 
+    if (pin > PIN_7) 
+    {
+        afr_index++; 
+        pin -= PIN_8; 
+    }
+
+    // Clear and config the AFR 
+    // Each pin has 4 bits for configuration, hence multiplication by 4 for pin shifting 
+    gpio->AFR[afr_index] &= ~(setpoint << (SHIFT_4*pin)); 
+    gpio->AFR[afr_index] |=  (setpoint << (SHIFT_4*pin)); 
+}
+
 //=======================================================================================
 
 
 //=======================================================================================
-// Write functions 
+// Write and read functions 
 
 // TODO see if the ODR register can be used instead of the BSRR register 
 
@@ -150,11 +192,6 @@ void gpio_write(
     }
 }
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Read functions 
 
 // GPIO read 
 GPIO_STATE gpio_read(
@@ -225,28 +262,6 @@ void gpio_pupdr(
 {
     gpio->PUPDR &= ~(SET_3 << (SHIFT_2*pin)); 
     gpio->PUPDR |= (pupdr << (SHIFT_2*pin)); 
-}
-
-
-// GPIO alternate functions 
-void gpio_afr(
-    GPIO_TypeDef *gpio, 
-    uint8_t af, 
-    pin_selector_t pin)
-{
-    // Local variables 
-    uint8_t i = 0; 
-
-    // Adjust the AFR register index pin offset if needed 
-    if (pin > PIN_7) 
-    {
-        i++; 
-        pin -= PIN_8; 
-    }
-
-    // Clear and config the AFR for the correct pin 
-    gpio->AFR[i] &= ~(af << SHIFT_4*pin); 
-    gpio->AFR[i] |=  (af << SHIFT_4*pin); 
 }
 
 //=======================================================================================
