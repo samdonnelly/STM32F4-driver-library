@@ -186,25 +186,16 @@ void spi_init(
 
     // Configure the pins for alternative functions
     // Specify SPI pins as using alternative functions
-    // gpio->MODER |= (SET_2 << SHIFT_20);  // PB10 
-    // gpio->MODER |= (SET_2 << SHIFT_28);  // PB14 
-    // gpio->MODER |= (SET_2 << SHIFT_30);  // PB15 
     gpio->MODER |= (SET_2 << (2*sck_pin)); 
     gpio->MODER |= (SET_2 << (2*miso_pin)); 
     gpio->MODER |= (SET_2 << (2*mosi_pin)); 
 
     // Select high speed for the pins 
-    // gpio->OSPEEDR |= (SET_3 << SHIFT_20);  // PB10 
-    // gpio->OSPEEDR |= (SET_3 << SHIFT_28);  // PB14 
-    // gpio->OSPEEDR |= (SET_3 << SHIFT_30);  // PB15 
     gpio->OSPEEDR |= (SET_3 << (2*sck_pin)); 
     gpio->OSPEEDR |= (SET_3 << (2*miso_pin)); 
     gpio->OSPEEDR |= (SET_3 << (2*mosi_pin)); 
 
     // Configure the SPI alternate function in the AFR register 
-    // gpio->AFR[1] |= (SET_5 << SHIFT_8);   // PB10 
-    // gpio->AFR[1] |= (SET_5 << SHIFT_24);  // PB14 
-    // gpio->AFR[1] |= (SET_5 << SHIFT_28);  // PB15 
     // SCK pin 
     af_reg_index = ((uint8_t)sck_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
     af_pin_index = 4*((uint8_t)sck_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
