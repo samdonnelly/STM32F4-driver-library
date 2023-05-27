@@ -672,7 +672,6 @@ FRESULT hw125_mkdir(
 
     // Record 'dir' for future use and establish 'path' as the base of the sub directory 
     hw125_set_dir(dir); 
-    // strcpy(hw125_device_trackers.dir, dir); 
     strcpy(sub_dir, hw125_device_trackers.path); 
 
     // If 'dir' is not a null character then prepare the sub-directory to be concatenated. 
