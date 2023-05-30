@@ -67,7 +67,7 @@ typedef enum {
  * @brief HW125 fault codes 
  */
 typedef enum {
-    HW125_FAULT_MKDIR = 0x01,            // Make directory 
+    HW125_FAULT_DIR   = 0x01,            // Directory access - make or delete (unlink) 
     HW125_FAULT_OPEN  = 0x02,            // Open 
     HW125_FAULT_CLOSE = 0x04,            // Close 
     HW125_FAULT_WRITE = 0x08,            // Write 
@@ -419,6 +419,18 @@ int8_t hw125_printf(
  */
 FRESULT hw125_lseek(
     FSIZE_t offset); 
+
+
+/**
+ * @brief Delete a file 
+ * 
+ * @details 
+ * 
+ * @param filename 
+ * @return FRESULT 
+ */
+FRESULT hw125_unlink(
+    const TCHAR* filename); 
 
 //=======================================================================================
 

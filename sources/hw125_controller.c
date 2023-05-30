@@ -696,7 +696,7 @@ FRESULT hw125_mkdir(
         if (hw125_device_trackers.fresult) 
         {
             hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-            hw125_device_trackers.fault_code |= HW125_FAULT_MKDIR; 
+            hw125_device_trackers.fault_code |= HW125_FAULT_DIR; 
         }
     }
 
@@ -862,6 +862,43 @@ FRESULT hw125_lseek(
     {
         hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
         hw125_device_trackers.fault_code |= HW125_FAULT_SEEK; 
+    }
+
+    return hw125_device_trackers.fresult; 
+}
+
+
+// Delete a file 
+FRESULT hw125_unlink(
+    const TCHAR* filename)
+{
+    // Check that path validity 
+    if (filename == NULL) return FR_INVALID_OBJECT; 
+
+    // Local variables 
+    TCHAR file_dir[HW125_PATH_SIZE*3]; 
+
+    // Establish 'path' as the root of the file directory 
+    strcpy(file_dir, hw125_device_trackers.path); 
+
+    // If 'dir' is not a null character then concatenate it to the file directory 
+    if (*hw125_device_trackers.dir != NULL_CHAR)
+    {
+        strcat(file_dir, "/"); 
+        strcat(file_dir, hw125_device_trackers.dir); 
+    }
+
+    strcat(file_dir, "/"); 
+    strcat(file_dir, filename); 
+
+    // Attempt to delete the specified file 
+    hw125_device_trackers.fresult = f_unlink(file_dir); 
+
+    // Set the fault code if the file failed to be deleted 
+    if (hw125_device_trackers.fresult)
+    {
+        hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
+        hw125_device_trackers.fault_code |= HW125_FAULT_DIR; 
     }
 
     return hw125_device_trackers.fresult; 
