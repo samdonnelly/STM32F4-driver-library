@@ -22,10 +22,7 @@
 
 //=======================================================================================
 // TODO Device driver todo's: 
-// - Make the code able to support multiple devices (linked list) 
 // - Should have the ability to also send digits if desired 
-// - Make a proper and dedicated at command mode UI file 
-// - Make the TIMER used an init option 
 //=======================================================================================
 
 
@@ -175,7 +172,8 @@ void hc05_off(void)
 
 
 // HC05 send data 
-void hc05_send(char *send_data)
+void hc05_send(
+    char *send_data)
 {
     uart_sendstring(hc05_data_record.hc05_uart, send_data); 
 }
@@ -189,7 +187,8 @@ HC05_DATA_STATUS hc05_data_status(void)
 
 
 // HC05 read data 
-void hc05_read(char *receive_data)
+void hc05_read(
+    char *receive_data)
 {
     // TODO make sure term char in uart_getstr is universal or configurable 
     uart_getstr(hc05_data_record.hc05_uart, receive_data, UART_STR_TERM_NL); 

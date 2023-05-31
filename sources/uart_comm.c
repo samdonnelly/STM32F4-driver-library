@@ -188,13 +188,13 @@ void uart_set_baud_rate(
     uart->CR1 |= (SET_BIT << SHIFT_2);
     uart->CR1 |= (SET_BIT << SHIFT_3); 
 
-    // Clear buffers 
+    // Clear the TC and RXNE status bits 
     while (!(uart->SR & (SET_BIT << SHIFT_6)));
-    while(uart->SR & (SET_BIT << SHIFT_5)) 
+    while (uart->SR & (SET_BIT << SHIFT_5)) 
     {
         uart_getchar(uart); 
         // uart_clear_dr(uart); 
-        tim_delay_ms(TIM9, UART_DR_CLEAR_TIMER); 
+        // tim_delay_ms(TIM9, UART_DR_CLEAR_TIMER); 
     }
 }
 
