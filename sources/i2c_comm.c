@@ -174,40 +174,6 @@ void i2c_init(
     //==================================================
 
     //==================================================
-    // To be deleted pending testing 
-
-    // // Local variables 
-    // uint8_t af_reg_index; 
-    // uint8_t af_pin_index; 
-
-    // // Select alternate function in MODER register 
-    // scl_gpio->MODER |= (SET_2 << (2*scl_pin)); 
-    // sda_gpio->MODER |= (SET_2 << (2*sda_pin)); 
-
-    // // Select Open Drain Output - used for lines with multiple devices 
-    // scl_gpio->OTYPER |= (SET_BIT << scl_pin); 
-    // sda_gpio->OTYPER |= (SET_BIT << sda_pin); 
-
-    // // Select High SPEED for the pins 
-    // scl_gpio->OSPEEDR |= (SET_3 << (2*scl_pin)); 
-    // sda_gpio->OSPEEDR |= (SET_3 << (2*sda_pin)); 
-
-    // // Select pull-up for both the pins 
-    // scl_gpio->PUPDR |= (SET_BIT << (2*scl_pin)); 
-    // sda_gpio->PUPDR |= (SET_BIT << (2*sda_pin)); 
-
-    // // Configure the SCL and SDA Alternate Functions in AFR 
-    // af_reg_index = ((uint8_t)scl_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
-    // af_pin_index = 4*((uint8_t)scl_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
-    // scl_gpio->AFR[af_reg_index] |= (SET_4 << af_pin_index); 
-
-    // af_reg_index = ((uint8_t)sda_pin & AFR_INDEX_PIN_MASK) >> SHIFT_3; 
-    // af_pin_index = 4*((uint8_t)sda_pin - af_reg_index*AFR_INDEX_PIN_MASK); 
-    // sda_gpio->AFR[af_reg_index] |= (SET_4 << af_pin_index); 
-
-    //==================================================
-
-    //==================================================
     // Configure the I2C 
 
     // Software reset the I2C - enable then disable SWRST bit 

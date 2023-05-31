@@ -208,12 +208,22 @@ static hc05_state_functions_t state_table[HC05_NUM_STATES] =
 void hc05_controller_init(
     TIM_TypeDef *timer)
 {
+    // Peripherals 
     hc05_device_trackers.timer = timer; 
 
+    // Device and controller information 
     hc05_device_trackers.state = HC05_INIT_STATE; 
-
     hc05_device_trackers.fault_code = CLEAR; 
+    memset((void *)hc05_device_trackers.send_data, CLEAR, sizeof(hc05_device_trackers.send_data)); 
+    memset((void *)hc05_device_trackers.send_data, CLEAR, sizeof(hc05_device_trackers.send_data)); 
 
+    // State flags 
+    hc05_device_trackers.connect = CLEAR_BIT; 
+    hc05_device_trackers.send = CLEAR_BIT; 
+    hc05_device_trackers.read = CLEAR_BIT; 
+    hc05_device_trackers.read_status = CLEAR_BIT; 
+    hc05_device_trackers.low_pwr = CLEAR_BIT; 
+    hc05_device_trackers.reset = CLEAR_BIT; 
     hc05_device_trackers.startup = SET_BIT; 
 }
 
@@ -234,6 +244,7 @@ void hc05_controller(void)
             {
                 next_state = HC05_NOT_CONNECTED_STATE; 
             }
+            
             break; 
 
         case HC05_NOT_CONNECTED_STATE: 
@@ -241,18 +252,22 @@ void hc05_controller(void)
             {
                 next_state = HC05_FAULT_STATE; 
             }
+            
             else if (hc05_device_trackers.reset)
             {
                 next_state = HC05_RESET_STATE; 
             }
+            
             else if (hc05_device_trackers.low_pwr)
             {
                 next_state = HC05_LOW_POWER_STATE; 
             }
+            
             else if (hc05_device_trackers.connect)
             {
                 next_state = HC05_CONNECTED_STATE; 
             }
+            
             break; 
 
         case HC05_CONNECTED_STATE: 
@@ -260,26 +275,32 @@ void hc05_controller(void)
             {
                 next_state = HC05_FAULT_STATE; 
             }
+            
             else if (hc05_device_trackers.reset)
             {
                 next_state = HC05_RESET_STATE; 
             }
+            
             else if (hc05_device_trackers.low_pwr)
             {
                 next_state = HC05_LOW_POWER_STATE; 
             }
+            
             else if (!hc05_device_trackers.connect)
             {
                 next_state = HC05_NOT_CONNECTED_STATE; 
             }
+            
             else if (hc05_device_trackers.send)
             {
                 next_state = HC05_SEND_STATE; 
             }
+            
             else if (hc05_device_trackers.read)
             {
                 next_state = HC05_READ_STATE; 
             }
+            
             break; 
 
         case HC05_SEND_STATE: 
@@ -290,18 +311,22 @@ void hc05_controller(void)
             {
                 next_state = HC05_FAULT_STATE; 
             }
+            
             else if (hc05_device_trackers.reset)
             {
                 next_state = HC05_RESET_STATE; 
             }
+            
             else if (!hc05_device_trackers.connect)
             {
                 next_state = HC05_NOT_CONNECTED_STATE; 
             }
+            
             else if (!hc05_device_trackers.read)
             {
                 next_state = HC05_CONNECTED_STATE; 
             }
+            
             break; 
 
         case HC05_LOW_POWER_STATE: 
@@ -311,6 +336,7 @@ void hc05_controller(void)
             {
                 next_state = HC05_LOW_POWER_EXIT_STATE; 
             }
+            
             break; 
 
         case HC05_LOW_POWER_EXIT_STATE: 
@@ -318,14 +344,17 @@ void hc05_controller(void)
             {
                 next_state = HC05_FAULT_STATE; 
             }
+            
             else if (hc05_device_trackers.reset)
             {
                 next_state = HC05_RESET_STATE; 
             }
+            
             else 
             {
                 next_state = HC05_NOT_CONNECTED_STATE; 
             }
+            
             break; 
 
         case HC05_FAULT_STATE: 
@@ -333,10 +362,12 @@ void hc05_controller(void)
             {
                 next_state = HC05_RESET_STATE; 
             }
+            
             else if (!hc05_device_trackers.fault_code)
             {
                 next_state = HC05_NOT_CONNECTED_STATE; 
             }
+            
             break; 
 
         case HC05_RESET_STATE: 

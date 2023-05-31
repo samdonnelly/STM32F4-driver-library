@@ -222,12 +222,14 @@ typedef uint8_t HC05_DATA_STATUS;
  *            - STATE pin (input) --> pin PA12 <br> 
  * 
  * @param uart : USART port used for the module 
+ * @param timer : TIM port for delays 
  * @param pin34_status : AT cmd enable pin status 
  * @param en_status : EN pin status 
  * @param state_status : STATE pin status 
  */
 void hc05_init(
     USART_TypeDef *uart, 
+    TIM_TypeDef *timer, 
     GPIO_TypeDef *gpio_at, 
     pin_selector_t at, 
     GPIO_TypeDef *gpio_en, 

@@ -53,74 +53,109 @@ void uart_baud_select(
 //=======================================================================================
 // Initialization 
 
+//===================================================
+// Pin information for UART1
+//  PA9:  TX
+//  PA10: RX
+// 
+// Pin information for UART2
+//  PA2: TX
+//  PA3: RX
+// 
+// Pin information for UART6 
+//  PC6 or PA11: TX 
+//  PC7 or PA12: RX 
+//===================================================
+
 // UART initialization 
 void uart_init(
     USART_TypeDef *uart, 
+    GPIO_TypeDef *gpio, 
+    pin_selector_t rx_pin, 
+    pin_selector_t tx_pin, 
     uart_baud_rate_t baud_rate,
     uart_clock_speed_t clock_speed)
 {
-    //===================================================
-    // Pin information for UART1
-    //  PA9:  TX
-    //  PA10: RX
-    // 
-    // Pin information for UART2
-    //  PA2: TX
-    //  PA3: RX
-    // 
-    // Pin information for UART6 
-    //  PC6 or PA11: TX 
-    //  PC7 or PA12: RX 
-    //===================================================
+    //==================================================
+    // Old code - to be deleted 
 
-    // UART specific information 
-    if (uart == USART1)
+    // // UART specific information 
+    // if (uart == USART1)
+    // {
+    //     // Enable UART1 Clock - RCC_APB2 register, bit 4
+    //     RCC->APB2ENR |= (SET_BIT << SHIFT_4);
+
+    //     // Configure the UART pins for alternative functions - GPIOA_MODER register 
+    //     GPIOA->MODER |= (SET_2 << SHIFT_18);
+    //     GPIOA->MODER |= (SET_2 << SHIFT_20);
+
+    //     // Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
+    //     GPIOA->OSPEEDR |= (SET_3 << SHIFT_18);
+    //     GPIOA->OSPEEDR |= (SET_3 << SHIFT_20);
+
+    //     // Set the alternative function high ([1]) register for USART1 (AF7)
+    //     GPIOA->AFR[1] |= (SET_7 << SHIFT_4); 
+    //     GPIOA->AFR[1] |= (SET_7 << SHIFT_8);
+    // }
+    // else if (uart == USART2)
+    // {
+    //     // Enable UART2 Clock - RCC_APB1 register, bit 17
+    //     RCC->APB1ENR |= (SET_BIT << SHIFT_17);
+
+    //     // Configure the UART pins for alternative functions - GPIOA_MODER register 
+    //     GPIOA->MODER |= (SET_2 << SHIFT_4);
+    //     GPIOA->MODER |= (SET_2 << SHIFT_6);
+
+    //     // Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
+    //     GPIOA->OSPEEDR |= (SET_3 << SHIFT_4);
+    //     GPIOA->OSPEEDR |= (SET_3 << SHIFT_6);
+
+    //     // Set the alternative function low ([0]) register for USART2 (AF7)
+    //     GPIOA->AFR[0] |= (SET_7 << SHIFT_8); 
+    //     GPIOA->AFR[0] |= (SET_7 << SHIFT_12);
+    // }
+    // else if (uart == USART6)
+    // {
+    //     // Not currently supported 
+    // }
+    
+    //==================================================
+
+    //==================================================
+    // Enable the UART clock 
+
+    if (uart == USART2)
     {
-        // Enable UART1 Clock - RCC_APB2 register, bit 4
-        RCC->APB2ENR |= (SET_BIT << SHIFT_4);
-
-        // Enable GPIOA clock for TX and RX pins - RCC_AHB1 register, bit 0
-        RCC->AHB1ENR |= (SET_BIT << SHIFT_0);
-
-        // Configure the UART pins for alternative functions - GPIOA_MODER register 
-        GPIOA->MODER |= (SET_2 << SHIFT_18);
-        GPIOA->MODER |= (SET_2 << SHIFT_20);
-
-        // Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
-        GPIOA->OSPEEDR |= (SET_3 << SHIFT_18);
-        GPIOA->OSPEEDR |= (SET_3 << SHIFT_20);
-
-        // Set the alternative function high ([1]) register for USART1 (AF7)
-        GPIOA->AFR[1] |= (SET_7 << SHIFT_4); 
-        GPIOA->AFR[1] |= (SET_7 << SHIFT_8);
+        // USART2 
+        RCC->APB1ENR |= (SET_BIT << SHIFT_17); 
     }
-    else if (uart == USART2)
+    else 
     {
-        // Enable UART2 Clock - RCC_APB1 register, bit 17
-        RCC->APB1ENR |= (SET_BIT << SHIFT_17);
-
-        // Enable GPIOA clock for TX and RX pins - RCC_AHB1 register, bit 0
-        RCC->AHB1ENR |= (SET_BIT << SHIFT_0);
-
-        // Configure the UART pins for alternative functions - GPIOA_MODER register 
-        GPIOA->MODER |= (SET_2 << SHIFT_4);
-        GPIOA->MODER |= (SET_2 << SHIFT_6);
-
-        // Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
-        GPIOA->OSPEEDR |= (SET_3 << SHIFT_4);
-        GPIOA->OSPEEDR |= (SET_3 << SHIFT_6);
-
-        // Set the alternative function low ([0]) register for USART2 (AF7)
-        GPIOA->AFR[0] |= (SET_7 << SHIFT_8); 
-        GPIOA->AFR[0] |= (SET_7 << SHIFT_12);
+        // USART1 and USART6 
+        RCC->APB2ENR |= (SET_BIT << (SHIFT_4 + (uint8_t)((uint32_t)(uart - USART1) >> SHIFT_10)));
     }
-    else if (uart == USART6)
-    {
-        // Not currently supported 
-    }
+    
+    //==================================================
 
-    // UART Configuration 
+    //==================================================
+    // Configure the UART pins for alternative functions 
+
+    // RX pin 
+    gpio_pin_init(gpio, rx_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    gpio_afr(gpio, rx_pin, SET_7); 
+
+    // TX pin 
+    gpio_pin_init(gpio, tx_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    gpio_afr(gpio, tx_pin, SET_7); 
+    
+    //==================================================
+
+    //==================================================
+    // Configure the UART 
+
     uart_set_baud_rate(uart, baud_rate, clock_speed); 
+    
+    //==================================================
 }
 
 
@@ -153,11 +188,12 @@ void uart_set_baud_rate(
     uart->CR1 |= (SET_BIT << SHIFT_2);
     uart->CR1 |= (SET_BIT << SHIFT_3); 
 
-    // Clear buffers  
+    // Clear buffers 
     while (!(uart->SR & (SET_BIT << SHIFT_6)));
     while(uart->SR & (SET_BIT << SHIFT_5)) 
     {
-        uart_getchar(uart);
+        uart_getchar(uart); 
+        // uart_clear_dr(uart); 
         tim_delay_ms(TIM9, UART_DR_CLEAR_TIMER); 
     }
 }
@@ -339,7 +375,8 @@ void uart_send_new_line(USART_TypeDef *uart)
 // Read Data 
 
 // UART get character 
-uint8_t uart_getchar(USART_TypeDef *uart)
+uint8_t uart_getchar(
+    USART_TypeDef *uart)
 {
     return (uint8_t)(uart->DR);  // Read and return data from data register 
 }
@@ -380,7 +417,8 @@ void uart_getstr(
 // Misc functions 
 
 // UART clear data register 
-void uart_clear_dr(USART_TypeDef *uart)
+void uart_clear_dr(
+    USART_TypeDef *uart)
 {
     dummy_read(uart->DR); 
 }

@@ -63,6 +63,7 @@ typedef struct hc05_data_record_s
 {
     // Peripherals 
     USART_TypeDef *hc05_uart;        // UART used for communication 
+    TIM_TypeDef *timer;              // TIM for delays 
 
     // Pins 
     GPIO_TypeDef *gpio_at_pin;       // GPIO port for AT Command Mode pin 
@@ -84,9 +85,17 @@ hc05_data_record_t hc05_data_record;
 //=======================================================================================
 // Initialization 
 
+//==============================================================
+// Pin information for HC05 GPIOs 
+// - PA8:  pin 34 (AT cmd mode trigger)
+// - PA11: STATE 
+// - PA12: EN (enable) 
+//==============================================================
+
 // HC05 initialization 
 void hc05_init(
     USART_TypeDef *uart, 
+    TIM_TypeDef *timer, 
     GPIO_TypeDef *gpio_at, 
     pin_selector_t at, 
     GPIO_TypeDef *gpio_en, 
@@ -94,22 +103,19 @@ void hc05_init(
     GPIO_TypeDef *gpio_state, 
     pin_selector_t state) 
 {
-    //==============================================================
-    // Pin information for HC05 GPIOs 
-    // - PA8:  pin 34 (AT cmd mode trigger)
-    // - PA11: STATE 
-    // - PA12: EN (enable) 
-    //==============================================================
-
-    // Initialize module info
+    // Peripherals 
     hc05_data_record.hc05_uart = uart; 
+    hc05_data_record.timer = timer; 
 
+    // AT command mode pin 
     hc05_data_record.gpio_at_pin = gpio_at; 
     hc05_data_record.at_pin = SET_BIT << at; 
 
+    // Enable (EN) pin 
     hc05_data_record.gpio_en_pin = gpio_en; 
     hc05_data_record.en_pin = SET_BIT << en; 
 
+    // State pin 
     hc05_data_record.gpio_state_pin = gpio_state; 
     hc05_data_record.state_pin = SET_BIT << state; 
 
@@ -120,6 +126,7 @@ void hc05_init(
                   OTYPER_PP, 
                   OSPEEDR_HIGH, 
                   PUPDR_NO); 
+    // gpio_pin_init(gpio_at, at, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     hc05_mode(HC05_DATA_MODE); 
     
     // Module power enable 
@@ -129,8 +136,9 @@ void hc05_init(
                   OTYPER_PP, 
                   OSPEEDR_HIGH, 
                   PUPDR_NO); 
+    // gpio_pin_init(gpio_en, en, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     hc05_off(); 
-    tim_delay_ms(TIM9, HC05_INIT_DELAY); 
+    tim_delay_ms(hc05_data_record.timer, HC05_INIT_DELAY); 
     hc05_on(); 
     
     // State feedback enable 
@@ -140,6 +148,7 @@ void hc05_init(
                   OTYPER_PP, 
                   OSPEEDR_HIGH, 
                   PUPDR_NO); 
+    // gpio_pin_init(gpio_state, state, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
 
     // Clear the UART data register 
     uart_clear_dr(hc05_data_record.hc05_uart); 
@@ -234,7 +243,7 @@ void hc05_change_mode(
     hc05_mode(mode); 
 
     // Short delay to ensure power off 
-    tim_delay_ms(TIM9, HC05_INIT_DELAY); 
+    tim_delay_ms(hc05_data_record.timer, HC05_INIT_DELAY); 
 
     // Configure the baud rate depending on the requested mode 
     uart_set_baud_rate(hc05_data_record.hc05_uart, baud_rate, clock_speed);  
@@ -547,7 +556,7 @@ void hc05_at_command(
 
             break; 
         }
-        tim_delay_us(TIM9, TIM9_2US);  // AT mode doesn't run in real time so blocking is ok 
+        tim_delay_us(hc05_data_record.timer, TIM9_2US);  // AT mode doesn't run in real time so blocking is ok 
     }
     while (--at_timeout); 
 

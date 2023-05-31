@@ -186,11 +186,17 @@ typedef enum {
  *          supported. 
  * 
  * @param uart : pointer to the UART port 
+ * @param gpio : 
+ * @param rx_pin : 
+ * @param tx_pin : 
  * @param baud_rate : communication speed of the UART (bps) 
  * @param clock_speed : clock speed of the uart port being initialized 
  */
 void uart_init(
     USART_TypeDef *uart, 
+    GPIO_TypeDef *gpio, 
+    pin_selector_t rx_pin, 
+    pin_selector_t tx_pin, 
     uart_baud_rate_t baud_rate, 
     uart_clock_speed_t clock_speed);
 
