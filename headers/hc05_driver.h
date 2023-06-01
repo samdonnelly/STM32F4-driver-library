@@ -39,14 +39,14 @@
 // Macros 
 
 // HC05 paramters 
-#define HC05_INIT_DELAY   100      // ms delay to ensure full power cycle 
+#define HC05_INIT_DELAY   100          // ms delay to ensure full power cycle 
 
 // AT Command Mode 
-#define HC05_AT_EN          1      // Controls the inclusion of AT command mode code 
-#define HC05_AT_CMD_LEN     30     // Max length of command string 
-#define HC05_AT_DR_CLR_LEN  4      // Length of "OK\r\n" that follows an AT parameter response 
-#define HC05_AT_RESP_STR    43     // 43 == '+' which is the start of a parmeter response 
-#define HC05_AT_RESP_COUNT  65535  // Timout counter to receeive an AT cmd response 
+#define HC05_AT_ENABLE      1          // Controls the inclusion of AT command mode code 
+#define HC05_AT_CMD_LEN     30         // Max length of command string 
+#define HC05_AT_DR_CLR_LEN  4          // Length of "OK\r\n" - follows an AT parameter response 
+#define HC05_AT_RESP_STR    43         // 43 == '+' - start of a parmeter response 
+#define HC05_AT_RESP_COUNT  65535      // Timout counter to receeive an AT cmd response 
 
 //=======================================================================================
 
@@ -67,58 +67,6 @@ typedef enum {
     HC05_DATA_MODE, 
     HC05_AT_CMD_MODE
 } hc05_mode_t; 
-
-
-/**
- * @brief HC05 pin 34 status 
- * 
- * @details Pin 34 on the module is used to trigger AT command mode without needing to press
- *          the pushbutton in the module. This enum is passed as an argument to hc05_init 
- *          to indicate whether this functionality will be used or not. If so then a GPIO will 
- *          be configured for it. 
- * 
- * // TODO delete once init function is changed 
- * 
- * @see hc05_init
- */
-typedef enum {
-    HC05_PIN34_DISABLE, 
-    HC05_PIN34_ENABLE
-} hc05_pin34_status_t; 
-
-
-/**
- * @brief HC05 EN pin status 
- * 
- * @details The EN pin is used to enable power to the module so it can be turned on and off. 
- *          This enum is passed as an argument to hc05_init to indicate whether this 
- *          functionality will be used or not. If so then a GPIO will be configured for it. 
- * 
- * // TODO delete once init function is changed 
- * 
- * @see hc05_init
- */
-typedef enum {
-    HC05_EN_DISABLE, 
-    HC05_EN_ENABLE
-} hc05_en_status_t; 
-
-
-/**
- * @brief HC05 STATE pin status 
- * 
- * @details The STATE pin provides feedback as to whether the module is connected to a device 
- *          or not. This enum is passed as an argument to hc05_init to indicate whether this 
- *          feedback will be used or not. If so then a GPIO pin will be configured for it. 
- * 
- * // TODO delete once init function is changed 
- * 
- * @see hc05_init
- */
-typedef enum {
-    HC05_STATE_DISABLE, 
-    HC05_STATE_ENABLE
-} hc05_state_status_t; 
 
 
 /**
@@ -343,7 +291,7 @@ void hc05_clear(void);
  *          rate gets set during AT Command mode. The default Data mode baud rate is 9600 bps.
  *          <br><br> 
  *          
- *          NOTE: this function is not available when HC05_AT_EN is set to 0. If this 
+ *          NOTE: this function is not available when HC05_AT_ENABLEset to 0. If this 
  *          is set to 0 then this indicates in the code that only data mode will be used. 
  *          <br><br> 
  * 

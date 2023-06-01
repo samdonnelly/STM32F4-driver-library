@@ -42,7 +42,7 @@
  *          AT command mode is not used with the hc05 controller. 
  *          
  *          This function needs to remains available even when AT command mode functions 
- *          are not (HC05_AT_EN) because it is used to intitalize the device in data mode 
+ *          are not (HC05_AT_ENABLE) because it is used to intitalize the device in data mode 
  *          which is the driver default. 
  * 
  * @see hc05_mode_t 
@@ -87,9 +87,9 @@ hc05_data_record_t hc05_data_record;
 
 //==============================================================
 // Pin information for HC05 GPIOs 
-// - PA8:  pin 34 (AT cmd mode trigger)
-// - PA11: STATE 
-// - PA12: EN (enable) 
+// - Pin 34 (on device) - AT cmd mode trigger 
+// - STATE pin - indicates connection status 
+// - EN pin (enable) - Turns the device on and off 
 //==============================================================
 
 // HC05 initialization 
@@ -120,35 +120,35 @@ void hc05_init(
     hc05_data_record.state_pin = SET_BIT << state; 
 
     // AT Command mode enable 
-    gpio_pin_init(hc05_data_record.gpio_at_pin, 
-                  at, 
-                  MODER_GPO, 
-                  OTYPER_PP, 
-                  OSPEEDR_HIGH, 
-                  PUPDR_NO); 
-    // gpio_pin_init(gpio_at, at, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    // gpio_pin_init(hc05_data_record.gpio_at_pin, 
+    //               at, 
+    //               MODER_GPO, 
+    //               OTYPER_PP, 
+    //               OSPEEDR_HIGH, 
+    //               PUPDR_NO); 
+    gpio_pin_init(gpio_at, at, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     hc05_mode(HC05_DATA_MODE); 
     
     // Module power enable 
-    gpio_pin_init(hc05_data_record.gpio_en_pin, 
-                  en, 
-                  MODER_GPO, 
-                  OTYPER_PP, 
-                  OSPEEDR_HIGH, 
-                  PUPDR_NO); 
-    // gpio_pin_init(gpio_en, en, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    // gpio_pin_init(hc05_data_record.gpio_en_pin, 
+    //               en, 
+    //               MODER_GPO, 
+    //               OTYPER_PP, 
+    //               OSPEEDR_HIGH, 
+    //               PUPDR_NO); 
+    gpio_pin_init(gpio_en, en, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     hc05_off(); 
     tim_delay_ms(hc05_data_record.timer, HC05_INIT_DELAY); 
     hc05_on(); 
     
     // State feedback enable 
-    gpio_pin_init(hc05_data_record.gpio_state_pin, 
-                  state, 
-                  MODER_INPUT, 
-                  OTYPER_PP, 
-                  OSPEEDR_HIGH, 
-                  PUPDR_NO); 
-    // gpio_pin_init(gpio_state, state, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    // gpio_pin_init(hc05_data_record.gpio_state_pin, 
+    //               state, 
+    //               MODER_INPUT, 
+    //               OTYPER_PP, 
+    //               OSPEEDR_HIGH, 
+    //               PUPDR_NO); 
+    gpio_pin_init(gpio_state, state, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
 
     // Clear the UART data register 
     uart_clear_dr(hc05_data_record.hc05_uart); 
@@ -160,21 +160,21 @@ void hc05_init(
 //=======================================================================================
 // User functions 
 
-// Set EN pin to high to turn on the module 
+// Set EN pin high to turn the device on 
 void hc05_on(void)
 {
     gpio_write(hc05_data_record.gpio_en_pin, hc05_data_record.en_pin, GPIO_HIGH); 
 }
 
 
-// Set EN pin to low to turn off the module 
+// Set EN pin low to turn the device off 
 void hc05_off(void)
 {
     gpio_write(hc05_data_record.gpio_en_pin, hc05_data_record.en_pin, GPIO_LOW); 
 }
 
 
-// HC05 send data 
+// Send a string of data 
 void hc05_send(char *send_data)
 {
     uart_sendstring(hc05_data_record.hc05_uart, send_data); 
@@ -228,7 +228,7 @@ void hc05_mode(
 }
 
 
-#if HC05_AT_EN
+#if HC05_AT_ENABLE
 
 // Change the module mode 
 void hc05_change_mode(
@@ -563,6 +563,6 @@ void hc05_at_command(
     if (!at_timeout) strcpy(response, "Timeout\r\n");  // No response seen 
 }
 
-#endif   // HC05_AT_EN
+#endif   // HC05_AT_ENABLE
 
 //=======================================================================================
