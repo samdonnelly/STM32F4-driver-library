@@ -77,51 +77,6 @@ void uart_init(
     uart_clock_speed_t clock_speed)
 {
     //==================================================
-    // Old code - to be deleted 
-
-    // // UART specific information 
-    // if (uart == USART1)
-    // {
-    //     // Enable UART1 Clock - RCC_APB2 register, bit 4
-    //     RCC->APB2ENR |= (SET_BIT << SHIFT_4);
-
-    //     // Configure the UART pins for alternative functions - GPIOA_MODER register 
-    //     GPIOA->MODER |= (SET_2 << SHIFT_18);
-    //     GPIOA->MODER |= (SET_2 << SHIFT_20);
-
-    //     // Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
-    //     GPIOA->OSPEEDR |= (SET_3 << SHIFT_18);
-    //     GPIOA->OSPEEDR |= (SET_3 << SHIFT_20);
-
-    //     // Set the alternative function high ([1]) register for USART1 (AF7)
-    //     GPIOA->AFR[1] |= (SET_7 << SHIFT_4); 
-    //     GPIOA->AFR[1] |= (SET_7 << SHIFT_8);
-    // }
-    // else if (uart == USART2)
-    // {
-    //     // Enable UART2 Clock - RCC_APB1 register, bit 17
-    //     RCC->APB1ENR |= (SET_BIT << SHIFT_17);
-
-    //     // Configure the UART pins for alternative functions - GPIOA_MODER register 
-    //     GPIOA->MODER |= (SET_2 << SHIFT_4);
-    //     GPIOA->MODER |= (SET_2 << SHIFT_6);
-
-    //     // Set output speed of GPIO pins to high speed - GPIOA_OSPEEDR register 
-    //     GPIOA->OSPEEDR |= (SET_3 << SHIFT_4);
-    //     GPIOA->OSPEEDR |= (SET_3 << SHIFT_6);
-
-    //     // Set the alternative function low ([0]) register for USART2 (AF7)
-    //     GPIOA->AFR[0] |= (SET_7 << SHIFT_8); 
-    //     GPIOA->AFR[0] |= (SET_7 << SHIFT_12);
-    // }
-    // else if (uart == USART6)
-    // {
-    //     // Not currently supported 
-    // }
-    
-    //==================================================
-
-    //==================================================
     // Enable the UART clock 
 
     if (uart == USART2)
@@ -192,9 +147,7 @@ void uart_set_baud_rate(
     while (!(uart->SR & (SET_BIT << SHIFT_6)));
     while (uart->SR & (SET_BIT << SHIFT_5)) 
     {
-        uart_getchar(uart); 
-        // uart_clear_dr(uart); 
-        // tim_delay_ms(TIM9, UART_DR_CLEAR_TIMER); 
+        uart_clear_dr(uart); 
     }
 }
 
@@ -308,7 +261,7 @@ void uart_send_digit(
     uint8_t digit)
 {
     // Convert the digit into the ASCII character equivalent 
-    uart_sendchar(uart, digit + UART_CHAR_DIGIT_OFFSET);
+    uart_sendchar(uart, digit + UART_CHAR_DIGIT_OFFSET); 
 }
 
 
@@ -383,38 +336,43 @@ uint8_t uart_getchar(
 
 
 // UART get string 
-void uart_getstr(
+UART_STATUS uart_getstr(
     USART_TypeDef *uart, 
-    char *string_to_fill, 
-    uart_string_termination_t end_of_string)
+    char *str_buff, 
+    uint8_t buff_len, 
+    uart_str_term_t term_char)
 {
-    // Store the character input from uart_getchar()
-    uint8_t input = 0; 
+    // Local variables 
+    uint8_t input = CLEAR; 
+    uint8_t char_count = CLEAR; 
     uint16_t timer = UART_GETSTR_TIMEOUT; 
 
-    // Run until the end of string character is seen 
-    // TODO buffer length checking needs to be done to prevent overrun 
+    // Read UART data until string termination, timeout or max buffer length 
     do
     {
         // Wait for data to be available then read and store it 
         if (uart_data_ready(uart))
         {
             input = uart_getchar(uart);
-            *string_to_fill++ = input;
+            *str_buff++ = input;
             timer = UART_GETSTR_TIMEOUT; 
+            char_count++; 
         }
     } 
-    while((input != end_of_string) && timer--);
+    while((input != term_char) && timer-- && (char_count < buff_len));
 
     // Add a null character to the end of the string 
-    *string_to_fill = UART_STR_TERM_NULL;
+    *str_buff = UART_STR_TERM_NULL; 
+
+    // Check for timeout 
+    if (timer)
+    {
+        return UART_OK; 
+    }
+
+    return UART_TIMEOUT; 
 }
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Misc functions 
 
 // UART clear data register 
 void uart_clear_dr(

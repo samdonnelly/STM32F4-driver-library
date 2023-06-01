@@ -792,7 +792,7 @@ void m8q_user_config(void)
     if (uart_data_ready(USART2))
     {
         // Read the input 
-        uart_getstr(USART2, (char *)config_msg, UART_STR_TERM_CARRIAGE); 
+        uart_getstr(USART2, (char *)config_msg, M8Q_MSG_MAX_LEN, UART_STR_TERM_CARRIAGE); 
 
         uart_send_new_line(USART2); 
 

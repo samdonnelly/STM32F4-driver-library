@@ -42,7 +42,8 @@
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_init_state(hc05_device_trackers_t *hc05_device); 
+void hc05_init_state(
+    hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -56,7 +57,8 @@ void hc05_init_state(hc05_device_trackers_t *hc05_device);
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_not_connected_state(hc05_device_trackers_t *hc05_device); 
+void hc05_not_connected_state(
+    hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -69,7 +71,8 @@ void hc05_not_connected_state(hc05_device_trackers_t *hc05_device);
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_connected_state(hc05_device_trackers_t *hc05_device); 
+void hc05_connected_state(
+    hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -84,7 +87,8 @@ void hc05_connected_state(hc05_device_trackers_t *hc05_device);
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_send_state(hc05_device_trackers_t *hc05_device); 
+void hc05_send_state(
+    hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -109,7 +113,8 @@ void hc05_send_state(hc05_device_trackers_t *hc05_device);
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_read_state(hc05_device_trackers_t *hc05_device); 
+void hc05_read_state(
+    hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -127,7 +132,8 @@ void hc05_read_state(hc05_device_trackers_t *hc05_device);
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_low_power_state(hc05_device_trackers_t *hc05_device); 
+void hc05_low_power_state(
+    hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -143,7 +149,8 @@ void hc05_low_power_state(hc05_device_trackers_t *hc05_device);
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_low_power_exit_state(hc05_device_trackers_t *hc05_device); 
+void hc05_low_power_exit_state(
+    hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -157,7 +164,8 @@ void hc05_low_power_exit_state(hc05_device_trackers_t *hc05_device);
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_fault_state(hc05_device_trackers_t *hc05_device); 
+void hc05_fault_state(
+    hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -172,7 +180,8 @@ void hc05_fault_state(hc05_device_trackers_t *hc05_device);
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_reset_state(hc05_device_trackers_t *hc05_device); 
+void hc05_reset_state(
+    hc05_device_trackers_t *hc05_device); 
 
 //=======================================================================================
 
@@ -182,7 +191,6 @@ void hc05_reset_state(hc05_device_trackers_t *hc05_device);
 
 // Instance of device tracker 
 static hc05_device_trackers_t hc05_device_trackers; 
-
 
 // List of function pointers 
 static hc05_state_functions_t state_table[HC05_NUM_STATES] = 
@@ -394,7 +402,8 @@ void hc05_controller(void)
 // State Functions 
 
 // Initialization state 
-void hc05_init_state(hc05_device_trackers_t *hc05_device) 
+void hc05_init_state
+(hc05_device_trackers_t *hc05_device) 
 {
     // Ensures the init state runs once on startup 
     hc05_device->startup = CLEAR_BIT; 
@@ -414,7 +423,8 @@ void hc05_init_state(hc05_device_trackers_t *hc05_device)
 
 
 // Not connected state 
-void hc05_not_connected_state(hc05_device_trackers_t *hc05_device) 
+void hc05_not_connected_state(
+    hc05_device_trackers_t *hc05_device) 
 {
     // Check for a connection 
     hc05_device->connect = hc05_status(); 
@@ -428,7 +438,8 @@ void hc05_not_connected_state(hc05_device_trackers_t *hc05_device)
 
 
 // Connected state 
-void hc05_connected_state(hc05_device_trackers_t *hc05_device) 
+void hc05_connected_state(
+    hc05_device_trackers_t *hc05_device) 
 {
     // Check for a connection 
     hc05_device->connect = hc05_status(); 
@@ -439,7 +450,8 @@ void hc05_connected_state(hc05_device_trackers_t *hc05_device)
 
 
 // Send state 
-void hc05_send_state(hc05_device_trackers_t *hc05_device) 
+void hc05_send_state(
+    hc05_device_trackers_t *hc05_device) 
 {
     // Send data record 
     hc05_send((char *)hc05_device->send_data); 
@@ -451,12 +463,13 @@ void hc05_send_state(hc05_device_trackers_t *hc05_device)
 
 
 // Read state 
-void hc05_read_state(hc05_device_trackers_t *hc05_device) 
+void hc05_read_state(
+    hc05_device_trackers_t *hc05_device) 
 {
     // Pole for data at the UART port 
     if (hc05_data_status())
     {
-        hc05_read((char *)hc05_device->read_data); 
+        hc05_read((char *)hc05_device->read_data, HC05_BUFF_SIZE); 
         hc05_device_trackers.read_status = SET_BIT; 
     }
 
@@ -467,14 +480,16 @@ void hc05_read_state(hc05_device_trackers_t *hc05_device)
 
 
 // Low power state 
-void hc05_low_power_state(hc05_device_trackers_t *hc05_device) 
+void hc05_low_power_state(
+    hc05_device_trackers_t *hc05_device) 
 {
     hc05_off(); 
 }
 
 
 // Low power exit state 
-void hc05_low_power_exit_state(hc05_device_trackers_t *hc05_device) 
+void hc05_low_power_exit_state(
+    hc05_device_trackers_t *hc05_device) 
 {
     hc05_on(); 
 
@@ -488,14 +503,16 @@ void hc05_low_power_exit_state(hc05_device_trackers_t *hc05_device)
 
 
 // Fault state 
-void hc05_fault_state(hc05_device_trackers_t *hc05_device) 
+void hc05_fault_state(
+    hc05_device_trackers_t *hc05_device) 
 {
     // Wait for fault code to clear or reset flag to set 
 }
 
 
 // Reset state 
-void hc05_reset_state(hc05_device_trackers_t *hc05_device) 
+void hc05_reset_state(
+    hc05_device_trackers_t *hc05_device) 
 {
     hc05_device->fault_code = CLEAR; 
 

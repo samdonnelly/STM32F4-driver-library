@@ -21,38 +21,6 @@
 
 
 //=======================================================================================
-// TODO Device driver todo's: 
-// - Should have the ability to also send digits if desired 
-//=======================================================================================
-
-
-//=======================================================================================
-// Function prototypes 
-
-/**
- * @brief HC05 Mmode selection 
- * 
- * @details Sets the mode of the device. The mode options are data mode, used for sending and 
- *          reading data with external devices, and AT command mode, used for reading and 
- *          configuring the device settings. 
- *          
- *          AT command mode is not used with the hc05 controller. 
- *          
- *          This function needs to remains available even when AT command mode functions 
- *          are not (HC05_AT_ENABLE) because it is used to intitalize the device in data mode 
- *          which is the driver default. 
- * 
- * @see hc05_mode_t 
- * 
- * @param mode : device mode - AT command mode or normal mode 
- */
-void hc05_mode(
-    hc05_mode_t mode); 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Variables 
 
 // HC05 data record 
@@ -69,6 +37,10 @@ typedef struct hc05_data_record_s
     gpio_pin_num_t en_pin;           // Pin for power enable 
     GPIO_TypeDef *gpio_state_pin;    // GPIO for the status feedback pin 
     gpio_pin_num_t state_pin;        // Pin for connection status feedback 
+
+    // Status info 
+    // 'status' --> bits 0-8: uart status (see uart_status_t) 
+    uint8_t status; 
 } 
 hc05_data_record_t;
 
@@ -118,7 +90,7 @@ void hc05_init(
 
     // AT Command mode enable 
     gpio_pin_init(gpio_at, at, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-    hc05_mode(HC05_DATA_MODE); 
+    gpio_write(hc05_data_record.gpio_at_pin, hc05_data_record.at_pin, HC05_DATA_MODE); 
     
     // Module power enable 
     gpio_pin_init(gpio_en, en, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
@@ -170,10 +142,19 @@ HC05_DATA_STATUS hc05_data_status(void)
 
 // Read a string of data 
 void hc05_read(
-    char *receive_data)
+    char *receive_data, 
+    uint8_t data_len)
 {
-    // TODO make sure term char in uart_getstr is universal or configurable 
-    uart_getstr(hc05_data_record.hc05_uart, receive_data, UART_STR_TERM_NL); 
+    // Local variables 
+    UART_STATUS uart_status = UART_OK; 
+
+    // Get the data 
+    uart_status |= uart_getstr(hc05_data_record.hc05_uart, 
+                               receive_data, data_len, 
+                               UART_STR_TERM_NL); 
+
+    // Update the driver status 
+    hc05_data_record.status |= (uint8_t)uart_status; 
 }
 
 
@@ -183,11 +164,6 @@ HC05_CONNECT_STATUS hc05_status(void)
     return gpio_read(hc05_data_record.gpio_state_pin, hc05_data_record.state_pin); 
 }
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Data functions 
 
 // Clear the UART data register 
 void hc05_clear(void)
@@ -199,15 +175,26 @@ void hc05_clear(void)
 
 
 //=======================================================================================
-// AT Command Mode functions 
+// Setters and getters 
 
-// Set the device mode 
-void hc05_mode(
-    hc05_mode_t mode)
+// Get status flag 
+uint8_t hd44780u_get_status(void)
 {
-    gpio_write(hc05_data_record.gpio_at_pin, hc05_data_record.at_pin, mode); 
+    return hc05_data_record.status; 
 }
 
+
+// Clear status flag 
+void hd44780u_clear_status(void)
+{
+    hc05_data_record.status = CLEAR; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// AT Command Mode functions 
 
 #if HC05_AT_ENABLE
 
@@ -221,7 +208,7 @@ void hc05_change_mode(
     hc05_off(); 
 
     // Set pin 34 on the module depending on the requested mode 
-    hc05_mode(mode); 
+    gpio_write(hc05_data_record.gpio_at_pin, hc05_data_record.at_pin, mode); 
 
     // Short delay to ensure power off 
     tim_delay_ms(hc05_data_record.timer, HC05_INIT_DELAY); 
@@ -239,7 +226,8 @@ void hc05_at_command(
     hc05_at_commnds_t command, 
     hc05_at_operation_t operation, 
     char *param, 
-    char *response)
+    char *resp, 
+    uint8_t resp_len)
 {
     // Local variables 
     char cmd_str[HC05_AT_CMD_LEN];             // String that holds the AT command 
@@ -511,7 +499,7 @@ void hc05_at_command(
             break; 
         
         default:
-            strcpy(response, "Invalid command\r\n");
+            strcpy(resp, "Invalid command\r\n");
             return; 
     }
 
@@ -527,19 +515,34 @@ void hc05_at_command(
         if (hc05_data_status()) 
         {
             // Read the module response 
-            uart_getstr(hc05_data_record.hc05_uart, response, UART_STR_TERM_NL); 
+            uart_getstr(
+                hc05_data_record.hc05_uart, 
+                resp, 
+                resp_len, 
+                UART_STR_TERM_NL); 
 
             // If a cmd response was received then clear the "OK\r\n" from the DR that follows 
-            if (*response == HC05_AT_RESP_STR) 
-                uart_getstr(hc05_data_record.hc05_uart, clear_dr, UART_STR_TERM_NL);
+            if (*resp == HC05_AT_RESP_STR) 
+            {
+                uart_getstr(
+                    hc05_data_record.hc05_uart, 
+                    clear_dr, 
+                    HC05_AT_DR_CLR_LEN, 
+                    UART_STR_TERM_NL);
+            }
 
             break; 
         }
-        tim_delay_us(hc05_data_record.timer, TIM9_2US);  // AT mode doesn't run in real time so blocking is ok 
+
+        // AT mode doesn't run in real time so blocking is ok 
+        tim_delay_us(hc05_data_record.timer, DELAY_2US); 
     }
     while (--at_timeout); 
 
-    if (!at_timeout) strcpy(response, "Timeout\r\n");  // No response seen 
+    if (!at_timeout) 
+    {
+        strcpy(resp, "Timeout\r\n");  // No response seen 
+    }
 }
 
 #endif   // HC05_AT_ENABLE

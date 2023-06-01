@@ -27,15 +27,22 @@
 //=======================================================================================
 // Macros 
 
-#define UART_DR_CLEAR_TIMER 10    // Timer used while clearing the data register during init 
-
-#define UART_GETSTR_TIMEOUT 10000 // uart_getstr timeout 
+#define UART_GETSTR_TIMEOUT 10000       // uart_getstr timeout 
 
 //=======================================================================================
 
 
 //=======================================================================================
 // Enums 
+
+/**
+ * @brief UART operation status 
+ */
+typedef enum {
+    UART_OK, 
+    UART_TIMEOUT 
+} uart_status_t;
+
 
 /**
  * @brief UART baud rate 
@@ -170,7 +177,15 @@ typedef enum {
     UART_STR_TERM_NULL = 0,        // '\0' == 0
     UART_STR_TERM_NL = 10,         // '\n' == 10
     UART_STR_TERM_CARRIAGE = 13    // '\r' == 13
-} uart_string_termination_t;
+} uart_str_term_t;
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Datatypes 
+
+typedef uart_status_t UART_STATUS; 
 
 //=======================================================================================
 
@@ -367,19 +382,17 @@ uint8_t uart_getchar(
  * @see uart_getchar
  * 
  * @param uart : pointer to the UART port 
- * @param string_to_fill : buffer used to store the string input 
- * @param end_of_string : character, that once seen, will end the read sequence 
+ * @param str_buff : buffer used to store the string input 
+ * @param buff_len : length of string storage buffer 
+ * @param term_char : character, that once seen, will end the read sequence 
+ * @return UART_STATUS : status of the read operation --> see uart_status_t 
  */
-void uart_getstr(
+UART_STATUS uart_getstr(
     USART_TypeDef *uart, 
-    char *string_to_fill,
-    uart_string_termination_t end_of_string);
+    char *str_buff, 
+    uint8_t buff_len, 
+    uart_str_term_t term_char);
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Misc functions 
 
 /**
  * @brief UART clear data register 
@@ -394,4 +407,4 @@ void uart_clear_dr(
 
 //=======================================================================================
 
-#endif  // _UART_COMM_H_
+#endif   // _UART_COMM_H_

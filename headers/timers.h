@@ -57,6 +57,7 @@
 
 // Standard microsecond delays 
 #define DELAY_1US   1 
+#define DELAY_2US   2 
 #define DELAY_5US   5 
 #define DELAY_10US  10 
 #define DELAY_50US  50 

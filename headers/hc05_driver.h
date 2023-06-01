@@ -42,7 +42,7 @@
 #define HC05_INIT_DELAY   100          // ms delay to ensure full power cycle 
 
 // AT Command Mode 
-#define HC05_AT_ENABLE      1          // Controls the inclusion of AT command mode code 
+#define HC05_AT_ENABLE      0          // Controls the inclusion of AT command mode code 
 #define HC05_AT_CMD_LEN     30         // Max length of command string 
 #define HC05_AT_DR_CLR_LEN  4          // Length of "OK\r\n" - follows an AT parameter response 
 #define HC05_AT_RESP_STR    43         // 43 == '+' - start of a parmeter response 
@@ -244,8 +244,11 @@ HC05_DATA_STATUS hc05_data_status(void);
  *          a connected device. 
  * 
  * @param receive_data : pointer to the buffer that stores the received data string 
+ * @param data_len : length of receive_data buffer 
  */
-void hc05_read(char *receive_data); 
+void hc05_read(
+    char *receive_data, 
+    uint8_t data_len); 
 
 
 /**
@@ -259,11 +262,6 @@ void hc05_read(char *receive_data);
  */
 HC05_CONNECT_STATUS hc05_status(void); 
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Data functions 
 
 /**
  * @brief Clear the UART data register 
@@ -277,6 +275,29 @@ void hc05_clear(void);
 
 
 //=======================================================================================
+// Setters and getters 
+
+/**
+ * @brief Get status flag 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t hd44780u_get_status(void); 
+
+
+/**
+ * @brief Clear status flag 
+ * 
+ * @details 
+ */
+void hd44780u_clear_status(void); 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // AT Command Mode functions 
 
 /**
@@ -285,15 +306,13 @@ void hc05_clear(void);
  * @details This functions allows for changing between the two operating modes of the module 
  *          through software. The two modes are Data mode (default) which is used to send and 
  *          receive information with other bluetooth devices, and AT Command mode which allows 
- *          you to modify the module settings. <br><br>
+ *          you to modify the module settings. 
  *          
  *          AT Command mode has a fixed baud rate of 38400 bps. Data mode is whatever baud 
  *          rate gets set during AT Command mode. The default Data mode baud rate is 9600 bps.
- *          <br><br> 
  *          
- *          NOTE: this function is not available when HC05_AT_ENABLEset to 0. If this 
- *          is set to 0 then this indicates in the code that only data mode will be used. 
- *          <br><br> 
+ *          NOTE: this function is not available when HC05_AT_ENABLE is set to 0. If this 
+ *                is 0 then this indicates in the code that only data mode will be used. 
  * 
  * @see hc05_at_command
  * @see hc05_send
@@ -320,13 +339,15 @@ void hc05_change_mode(
  * @param command : number indicating the AT command 
  * @param operation : indicated whether to set or check a parameter 
  * @param param : parameter used when during set operations 
- * @param response : pointer to a buffer that stores the module response 
+ * @param resp : buffer that stores the module response 
+ * @param resp_len : resp buffer length 
  */
 void hc05_at_command(
     hc05_at_commnds_t command, 
     hc05_at_operation_t operation, 
     char *param, 
-    char *response); 
+    char *response, 
+    uint8_t resp_len); 
 
 //=======================================================================================
 
