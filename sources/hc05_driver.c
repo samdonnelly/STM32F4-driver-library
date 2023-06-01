@@ -117,34 +117,16 @@ void hc05_init(
     hc05_data_record.state_pin = SET_BIT << state; 
 
     // AT Command mode enable 
-    // gpio_pin_init(hc05_data_record.gpio_at_pin, 
-    //               at, 
-    //               MODER_GPO, 
-    //               OTYPER_PP, 
-    //               OSPEEDR_HIGH, 
-    //               PUPDR_NO); 
     gpio_pin_init(gpio_at, at, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     hc05_mode(HC05_DATA_MODE); 
     
     // Module power enable 
-    // gpio_pin_init(hc05_data_record.gpio_en_pin, 
-    //               en, 
-    //               MODER_GPO, 
-    //               OTYPER_PP, 
-    //               OSPEEDR_HIGH, 
-    //               PUPDR_NO); 
     gpio_pin_init(gpio_en, en, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     hc05_off(); 
     tim_delay_ms(hc05_data_record.timer, HC05_INIT_DELAY); 
     hc05_on(); 
     
     // State feedback enable 
-    // gpio_pin_init(hc05_data_record.gpio_state_pin, 
-    //               state, 
-    //               MODER_INPUT, 
-    //               OTYPER_PP, 
-    //               OSPEEDR_HIGH, 
-    //               PUPDR_NO); 
     gpio_pin_init(gpio_state, state, MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
 
     // Clear the UART data register 
@@ -171,7 +153,7 @@ void hc05_off(void)
 }
 
 
-// HC05 send data 
+// Send a string of data 
 void hc05_send(
     char *send_data)
 {
@@ -186,7 +168,7 @@ HC05_DATA_STATUS hc05_data_status(void)
 }
 
 
-// Send a string of data 
+// Read a string of data 
 void hc05_read(
     char *receive_data)
 {
@@ -195,7 +177,7 @@ void hc05_read(
 }
 
 
-// Read the connection status (state pin) 
+// Read the connection status (STATE pin) 
 HC05_CONNECT_STATUS hc05_status(void)
 {
     return gpio_read(hc05_data_record.gpio_state_pin, hc05_data_record.state_pin); 
@@ -537,14 +519,12 @@ void hc05_at_command(
     hc05_clear(); 
 
     // Send the AT command to the module 
-    uart_sendstring(hc05_data_record.hc05_uart, cmd_str); 
+    hc05_send(cmd_str); 
 
     // Wait for data to be sent back until timeout 
     do 
     {
-        // TODO change this to use the built in UART data check function 
-        if (hc05_data_record.hc05_uart->SR & (SET_BIT << SHIFT_5)) 
-        // if (hc05_data_status()) 
+        if (hc05_data_status()) 
         {
             // Read the module response 
             uart_getstr(hc05_data_record.hc05_uart, response, UART_STR_TERM_NL); 
