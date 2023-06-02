@@ -244,7 +244,7 @@ void uart_sendchar(
 // UART send string 
 void uart_sendstring(
     USART_TypeDef *uart, 
-    char *string)
+    const char *string)
 {
     // Loop until null character of string is reached. 
     while (*string)

@@ -127,7 +127,7 @@ void hc05_off(void)
 
 // Send a string of data 
 void hc05_send(
-    char *send_data)
+    const char *send_data)
 {
     uart_sendstring(hc05_data_record.hc05_uart, send_data); 
 }
@@ -150,8 +150,9 @@ void hc05_read(
 
     // Get the data 
     uart_status |= uart_getstr(hc05_data_record.hc05_uart, 
-                               receive_data, data_len, 
-                               UART_STR_TERM_NL); 
+                               receive_data, 
+                               data_len, 
+                               UART_STR_TERM_NULL); 
 
     // Update the driver status 
     hc05_data_record.status |= (uint8_t)uart_status; 
@@ -178,14 +179,14 @@ void hc05_clear(void)
 // Setters and getters 
 
 // Get status flag 
-uint8_t hd44780u_get_status(void)
+uint8_t hc05_get_status(void)
 {
     return hc05_data_record.status; 
 }
 
 
 // Clear status flag 
-void hd44780u_clear_status(void)
+void hc05_clear_status(void)
 {
     hc05_data_record.status = CLEAR; 
 }

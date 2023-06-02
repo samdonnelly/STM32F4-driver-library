@@ -284,7 +284,7 @@ void uart_sendchar(
  */
 void uart_sendstring(
     USART_TypeDef *uart, 
-    char *string);
+    const char *string);
 
 
 /**

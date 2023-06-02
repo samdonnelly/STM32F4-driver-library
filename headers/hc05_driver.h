@@ -223,7 +223,8 @@ void hc05_off(void);
  * 
  * @param send_data : pointer to the data string to send 
  */
-void hc05_send(char *send_data); 
+void hc05_send(
+    const char *send_data); 
 
 
 /**
@@ -284,7 +285,7 @@ void hc05_clear(void);
  * 
  * @return uint8_t 
  */
-uint8_t hd44780u_get_status(void); 
+uint8_t hc05_get_status(void); 
 
 
 /**
@@ -292,7 +293,7 @@ uint8_t hd44780u_get_status(void);
  * 
  * @details 
  */
-void hd44780u_clear_status(void); 
+void hc05_clear_status(void); 
 
 //=======================================================================================
 
