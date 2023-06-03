@@ -345,9 +345,12 @@ UART_STATUS uart_getstr(
     // Local variables 
     uint8_t input = CLEAR; 
     uint8_t char_count = CLEAR; 
+    uint8_t max_char_read = buff_len - UART_BUFF_TERM_OFST; 
     uint16_t timer = UART_GETSTR_TIMEOUT; 
 
-    // Read UART data until string termination, timeout or max buffer length 
+    // Read UART data until string termination, timeout or max character read length 
+    // The max character read length is left as one less than the buffer length so 
+    // there is a spot for a NULL termination. 
     do
     {
         // Wait for data to be available then read and store it 
@@ -359,7 +362,7 @@ UART_STATUS uart_getstr(
             char_count++; 
         }
     } 
-    while((input != term_char) && timer-- && (char_count < buff_len));
+    while((input != term_char) && --timer && (char_count < max_char_read)); 
 
     // Add a null character to the end of the string 
     *str_buff = UART_STR_TERM_NULL; 

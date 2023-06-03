@@ -27,7 +27,8 @@
 //=======================================================================================
 // Macros 
 
-#define UART_GETSTR_TIMEOUT 10000       // uart_getstr timeout 
+#define UART_GETSTR_TIMEOUT 30000       // uart_getstr timeout - must accommodate baud rate 
+#define UART_BUFF_TERM_OFST 1           // Buffer termination offset - for NULL termination 
 
 //=======================================================================================
 

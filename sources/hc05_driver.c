@@ -152,7 +152,7 @@ void hc05_read(
     uart_status |= uart_getstr(hc05_data_record.hc05_uart, 
                                receive_data, 
                                data_len, 
-                               UART_STR_TERM_NULL); 
+                               UART_STR_TERM_CARRIAGE); 
 
     // Update the driver status 
     hc05_data_record.status |= (uint8_t)uart_status; 
