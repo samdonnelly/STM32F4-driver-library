@@ -147,9 +147,8 @@ void mpu6050_controller_init(
                                         sizeof(mpu6050_cntrl_data_t)); 
 
     // Check for NULL pointers 
-    if (cntrl_data_ptr == NULL) return;   // Invalid data record pointer 
-    if (timer == NULL) return;            // Invalid timer port 
-    
+    if ((cntrl_data_ptr == NULL) || (timer == NULL)) return; 
+
     // Peripherals 
     cntrl_data_ptr->timer = timer; 
 
@@ -166,10 +165,6 @@ void mpu6050_controller_init(
     // State trackers 
     cntrl_data_ptr->startup = SET_BIT; 
     cntrl_data_ptr->low_power = CLEAR_BIT; 
-
-    // Check for driver faults 
-    cntrl_data_ptr->fault_code |= 
-        mpu6050_get_fault_flag(cntrl_data_ptr->device_num); 
 }
 
 
@@ -186,6 +181,9 @@ void mpu6050_controller(
 
     // Record the controller state 
     MPU6050_STATE next_state = cntrl_data_ptr->state; 
+
+    // Check the driver status 
+    cntrl_data_ptr->fault_code |= mpu6050_get_status(device_num); 
 
     //===================================================
     // State machine 
@@ -309,7 +307,7 @@ void mpu6050_init_state(
 
     // Run self-test and record any faults 
     mpu6050_self_test(mpu6050_device->device_num);
-    mpu6050_device->fault_code |= mpu6050_get_fault_flag(mpu6050_device->device_num); 
+    mpu6050_device->fault_code |= mpu6050_get_status(mpu6050_device->device_num); 
 
     // Provide time for device data to update so self-test data is not used for calibration 
     tim_delay_ms(mpu6050_device->timer, MPU6050_ST_DELAY); 
@@ -333,9 +331,6 @@ void mpu6050_run_state(
     {
         // Sample the data 
         mpu6050_read_all(mpu6050_device->device_num); 
-
-        // Check for faults 
-        mpu6050_device->fault_code |= mpu6050_get_fault_flag(mpu6050_device->device_num); 
 
         if (mpu6050_get_temp_raw(mpu6050_device->device_num) > 
             (MPU6050_RAW_TEMP_MAX-MPU6050_RAW_TEMP_OFST))
@@ -379,7 +374,7 @@ void mpu6050_reset_state(
 {
     // Reset the fault code in both the controller and driver 
     mpu6050_device->fault_code = CLEAR; 
-    mpu6050_clear_fault_flag(mpu6050_device->device_num); 
+    mpu6050_clear_status(mpu6050_device->device_num); 
 
     // Reset the low power flag and make sure to exit sleep mode 
     mpu6050_device->low_power = MPU6050_SLEEP_MODE_DISABLE; 

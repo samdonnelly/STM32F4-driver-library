@@ -611,9 +611,9 @@ typedef struct mpu6050_gyro_s
     int16_t gyro_x;                 // Angular velocity about the x-axis 
     int16_t gyro_y;                 // Angular velocity about the y-axis 
     int16_t gyro_z;                 // Angular velocity about the z-axis 
-    int16_t gyro_x_offset;          // Angular velocity offset about the x-axis 
-    int16_t gyro_y_offset;          // Angular velocity offset about the y-axis 
-    int16_t gyro_z_offset;          // Angular velocity offset about the z-axis 
+    int16_t gyro_x_offset;          // Angular velocity offset (error) about the x-axis 
+    int16_t gyro_y_offset;          // Angular velocity offset (error) about the y-axis 
+    int16_t gyro_z_offset;          // Angular velocity offset (error) about the z-axis 
 }
 mpu6050_gyro_t; 
 
@@ -636,10 +636,10 @@ typedef struct mpu6050_driver_data_s
     // Peripherals 
     I2C_TypeDef *i2c;                // I2C port connected to the device 
     GPIO_TypeDef *gpio;              // GPIO port for the INT pin 
-    pin_selector_t int_pin;          // INT pin number 
 
     // Device information 
     mpu6050_i2c_addr_t addr;         // Device I2C address 
+    pin_selector_t int_pin;          // INT pin number 
     float accel_data_scalar;         // Scales accelerometer raw data into readable values 
     float gyro_data_scalar;          // Scales gyroscope raw data into readable values 
 
@@ -647,7 +647,11 @@ typedef struct mpu6050_driver_data_s
     mpu6050_accel_t accel_data;      // Accelerometer data 
     mpu6050_gyro_t  gyro_data;       // Gyroscope data 
     mpu6050_other_t other_data;      // Other device data 
-    MPU6050_FAULT_FLAG fault_flag;   // Driver fault flag 
+
+    // Status info 
+    // 'status' --> bit 0: i2c status (see i2c_status_t) 
+    //          --> bit 1: init status (WHO_AM_I) 
+    uint8_t status; 
 }
 mpu6050_driver_data_t; 
 
@@ -662,7 +666,7 @@ static mpu6050_driver_data_t *mpu6050_driver_data_ptr = NULL;
 // Initialization 
 
 // MPU6050 Initialization 
-MPU6050_INIT_STATUS mpu6050_init(
+void mpu6050_init(
     device_number_t device_num, 
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t mpu6050_addr,
@@ -679,19 +683,20 @@ MPU6050_INIT_STATUS mpu6050_init(
                                         (void *)&mpu6050_driver_data_ptr, 
                                         sizeof(mpu6050_driver_data_t)); 
 
-    // Assign device information 
-    device_data_ptr->i2c = i2c; 
-    device_data_ptr->addr = mpu6050_addr; 
-    device_data_ptr->fault_flag = CLEAR; 
+    // Status info 
+    device_data_ptr->status = CLEAR; 
 
     // Read the WHO_AM_I register to establish that there is communication 
-    if (mpu6050_who_am_i_read(device_data_ptr->i2c, 
-                              device_data_ptr->addr) != MPU6050_7BIT_ADDR)
+    if (mpu6050_who_am_i_read(i2c, mpu6050_addr) != MPU6050_7BIT_ADDR)
     {
-        device_data_ptr->fault_flag |= SET_BIT; 
+        device_data_ptr->status |= (SET_BIT << SHIFT_1); 
     }
     else 
     {
+        // Initialize I2C trackers 
+        device_data_ptr->i2c = i2c; 
+        device_data_ptr->addr = mpu6050_addr; 
+
         // Choose which sensors to use and frquency of CYCLE mode
         mpu6050_pwr_mgmt_2_write(
             device_data_ptr->i2c, 
@@ -743,16 +748,17 @@ MPU6050_INIT_STATUS mpu6050_init(
         device_data_ptr->gyro_data_scalar = mpu6050_gyro_scalar(device_data_ptr->i2c, 
                                                                 device_data_ptr->addr); 
 
-        // Initialize the gyroscope error correction (offset) to zero 
+        // Initialize device data 
+        device_data_ptr->accel_data.accel_x = CLEAR; 
+        device_data_ptr->accel_data.accel_y = CLEAR; 
+        device_data_ptr->accel_data.accel_z = CLEAR; 
+        device_data_ptr->gyro_data.gyro_x = CLEAR; 
+        device_data_ptr->gyro_data.gyro_y = CLEAR; 
+        device_data_ptr->gyro_data.gyro_z = CLEAR; 
         device_data_ptr->gyro_data.gyro_x_offset = CLEAR; 
         device_data_ptr->gyro_data.gyro_y_offset = CLEAR; 
         device_data_ptr->gyro_data.gyro_z_offset = CLEAR; 
     }
-
-    // The following cast is made to return the lowest 8-bits of the fault code. The init 
-    // function doesn't trigger faults in the upper 8-bits so init status data is not lost. 
-    // The whole fault code is still updated as needed and is accessible from the getters. 
-    return (MPU6050_INIT_STATUS)device_data_ptr->fault_flag; 
 }
 
 
@@ -806,18 +812,21 @@ static void mpu6050_write(
     byte_num_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value)
 {
+    // Local variables 
+    I2C_STATUS i2c_status = I2C_OK; 
+    
     // Create start condition to initiate master mode 
-    i2c_start(i2c); 
+    i2c_status |= i2c_start(i2c); 
 
     // Send the MPU6050 address with a write offset
-    i2c_write_addr(i2c, addr + MPU6050_W_OFFSET);
+    i2c_status |= i2c_write_addr(i2c, addr + MPU6050_W_OFFSET);
     i2c_clear_addr(i2c);
 
     // Send the register address that is going to be written to 
-    i2c_write(i2c, &mpu6050_register, BYTE_1);
+    i2c_status |= i2c_write(i2c, &mpu6050_register, BYTE_1);
 
     // Write the data to the MPU6050 
-    i2c_write(i2c, mpu6050_reg_value, mpu6050_reg_size);
+    i2c_status |= i2c_write(i2c, mpu6050_reg_value, mpu6050_reg_size);
 
     // Create a stop condition
     i2c_stop(i2c); 
@@ -832,24 +841,27 @@ static void mpu6050_read(
     byte_num_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value)
 {
+    // Local variables 
+    I2C_STATUS i2c_status = I2C_OK; 
+
     // Create start condition to initiate master mode 
-    i2c_start(i2c); 
+    i2c_status |= i2c_start(i2c); 
 
     // Send the MPU6050 address with a write offset 
-    i2c_write_addr(i2c, addr + MPU6050_W_OFFSET);
+    i2c_status |= i2c_write_addr(i2c, addr + MPU6050_W_OFFSET);
     i2c_clear_addr(i2c);
 
     // Send the register address that is going to be read 
-    i2c_write(i2c, &mpu6050_register, BYTE_1);
+    i2c_status |= i2c_write(i2c, &mpu6050_register, BYTE_1);
 
     // Create another start signal 
-    i2c_start(i2c); 
+    i2c_status |= i2c_start(i2c); 
 
     // Send the MPU6050 address with a read offset 
-    i2c_write_addr(i2c, addr + MPU6050_R_OFFSET);
+    i2c_status |= i2c_write_addr(i2c, addr + MPU6050_R_OFFSET);
 
     // Read the data sent by the MPU6050 
-    i2c_read(i2c, mpu6050_reg_value, mpu6050_reg_size);
+    i2c_status |= i2c_read(i2c, mpu6050_reg_value, mpu6050_reg_size);
 
     // Create a stop condition
     i2c_stop(i2c); 
@@ -1439,7 +1451,7 @@ MPU6050_ST_RESULT mpu6050_self_test(
         gyro_fsr);
 
     // Update the fault flags 
-    device_data_ptr->fault_flag |= ((uint16_t)self_test_result << SHIFT_2); 
+    device_data_ptr->status |= (self_test_result << SHIFT_2); 
     
     return self_test_result;
 }
@@ -1590,10 +1602,10 @@ static void mpu6050_self_test_result(
 
 
 //=======================================================================================
-// Setters 
+// Setters and getters 
 
-// Clear driver fault flag 
-void mpu6050_clear_fault_flag(
+// Clear status flag 
+void mpu6050_clear_status(
     device_number_t device_num)
 {
     // Get the device data record 
@@ -1603,17 +1615,12 @@ void mpu6050_clear_fault_flag(
     // Check that the data record is valid 
     if (device_data_ptr == NULL) return; 
 
-    device_data_ptr->fault_flag = CLEAR; 
+    device_data_ptr->status = CLEAR; 
 }
 
-//=======================================================================================
 
-
-//=======================================================================================
-// Getters 
-
-// Get driver fault flag 
-MPU6050_FAULT_FLAG mpu6050_get_fault_flag(
+// Get status flag 
+uint8_t mpu6050_get_status(
     device_number_t device_num)
 {
     // Get the device data record 
@@ -1621,9 +1628,9 @@ MPU6050_FAULT_FLAG mpu6050_get_fault_flag(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) return; 
 
-    return device_data_ptr->fault_flag; 
+    return device_data_ptr->status; 
 }
 
 

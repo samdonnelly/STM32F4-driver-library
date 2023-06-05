@@ -217,8 +217,8 @@ MPU6050_STATE mpu6050_get_state(
  * 
  * @details Returns the fault code for the controller. Note that the fault code is a 
  *          combination of the driver and controller faults. Fault code definition: 
- *          - bit 0  : driver init status (who_am_i register read) 
- *          - bit 1  : I2C comms error 
+ *          - bit 0  : I2C comms error 
+ *          - bit 1  : driver init status (who_am_i register read) 
  *          - bit 2  : self-test result - accelerometer x-axis 
  *          - bit 3  : self-test result - accelerometer y-axis 
  *          - bit 4  : self-test result - accelerometer z-axis 

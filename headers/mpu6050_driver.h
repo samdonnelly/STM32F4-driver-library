@@ -403,7 +403,6 @@ typedef enum {
 typedef uint8_t MPU6050_REG_ADDR;        // Register address 
 typedef uint8_t MPU6050_INT_STATUS;      // INT pin status 
 typedef uint8_t MPU6050_INIT_STATUS;     // Initialization status 
-typedef uint16_t MPU6050_FAULT_FLAG;     // Fault code 
 typedef uint8_t MPU6050_SMPLRT_DIV;      // Sample Rate Divider 
 typedef uint8_t MPU6050_ST_RESULT;       // Self-Test Result 
 
@@ -428,9 +427,8 @@ typedef uint8_t MPU6050_ST_RESULT;       // Self-Test Result
  * @param smplrt_div : sample rate divider 
  * @param afs_sel : full scale range of accelerometer 
  * @param fs_sel : full scale range of gyroscope 
- * @return MPU6050_INIT_STATUS : returns the fault code of the init - 0 is no faults 
  */
-MPU6050_INIT_STATUS mpu6050_init(
+void mpu6050_init(
     device_number_t device_num, 
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t mpu6050_address,
@@ -640,29 +638,24 @@ MPU6050_ST_RESULT mpu6050_self_test(
 
 
 //=======================================================================================
-// Setters 
+// Setters and getters 
 
 /**
  * @brief MPU6050 clear device driver fault flag 
  * 
  * @param device_num : data record address of device 
  */
-void mpu6050_clear_fault_flag(
+void mpu6050_clear_status(
     device_number_t device_num); 
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Getters 
 
 /**
  * @brief MPU6050 get device driver fault flag 
  * 
  * @param device_num : data record address of device 
- * @return MPU6050_FAULT_FLAG : driver fault code for a given device number 
+ * @return uint8_t : driver status code for a given device number 
  */
-MPU6050_FAULT_FLAG mpu6050_get_fault_flag(
+uint8_t mpu6050_get_status(
     device_number_t device_num); 
 
 

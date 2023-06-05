@@ -86,8 +86,8 @@ typedef struct hd44780u_data_record_s
     I2C_TypeDef *i2c; 
     TIM_TypeDef *tim; 
 
-    // I2C write address 
-    uint8_t write_addr; 
+    // Device information 
+    uint8_t write_addr;              // I2C write address 
 
     // Display data 
     char line1[HD44780U_LINE_LEN];   // LCD line 1 data output 
