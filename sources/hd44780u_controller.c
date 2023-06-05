@@ -397,8 +397,8 @@ void hd44780u_controller(void)
                 next_state = HD44780U_PWR_SAVE_STATE; 
             }
 
-            // Default back to the idle state 
-            else 
+            // Default back to the idle state if the clear flag is not set 
+            else if (!hd44780u_device_trackers.clear)
             {
                 next_state = HD44780U_IDLE_STATE; 
             }
