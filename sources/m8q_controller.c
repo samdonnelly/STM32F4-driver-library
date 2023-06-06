@@ -345,7 +345,8 @@ void m8q_controller(void)
 // State functions 
 
 // Initialization state 
-void m8q_init_state(m8q_trackers_t *m8q_device)
+void m8q_init_state(
+    m8q_trackers_t *m8q_device)
 {
     // Clear the fix flag 
     m8q_device->fix = CLEAR_BIT; 
@@ -359,7 +360,8 @@ void m8q_init_state(m8q_trackers_t *m8q_device)
 
 
 // No fix state 
-void m8q_no_fix_state(m8q_trackers_t *m8q_device)
+void m8q_no_fix_state(
+    m8q_trackers_t *m8q_device)
 {
     m8q_check_msgs(m8q_device); 
 
@@ -371,7 +373,8 @@ void m8q_no_fix_state(m8q_trackers_t *m8q_device)
 
 
 // Fix state 
-void m8q_fix_state(m8q_trackers_t *m8q_device)
+void m8q_fix_state(
+    m8q_trackers_t *m8q_device)
 {
     m8q_check_msgs(m8q_device); 
 
@@ -383,7 +386,8 @@ void m8q_fix_state(m8q_trackers_t *m8q_device)
 
 
 // Low power state 
-void m8q_low_pwr_state(m8q_trackers_t *m8q_device)
+void m8q_low_pwr_state(
+    m8q_trackers_t *m8q_device)
 {
     // Idle until a flag triggers an exit 
 
@@ -393,7 +397,8 @@ void m8q_low_pwr_state(m8q_trackers_t *m8q_device)
 
 
 // Low power exit state 
-void m8q_low_pwr_exit_state(m8q_trackers_t *m8q_device)
+void m8q_low_pwr_exit_state(
+    m8q_trackers_t *m8q_device)
 {
     // Set the EXTINT pin high to exit the low power state 
     m8q_set_low_power(GPIO_HIGH); 
@@ -425,14 +430,16 @@ void m8q_low_pwr_exit_state(m8q_trackers_t *m8q_device)
 
 
 // Fault state 
-void m8q_fault_state(m8q_trackers_t *m8q_device)
+void m8q_fault_state(
+    m8q_trackers_t *m8q_device)
 {
     // Wait for the reset flag to be set or for the fault code to be cleared 
 }
 
 
 // Reset state 
-void m8q_reset_state(m8q_trackers_t *m8q_device)
+void m8q_reset_state(
+    m8q_trackers_t *m8q_device)
 {
     // Clear the fault codes 
     m8q_device->fault_code = CLEAR; 
@@ -447,7 +454,8 @@ void m8q_reset_state(m8q_trackers_t *m8q_device)
 // Data functions 
 
 // Get the navigation status 
-void m8q_check_msgs(m8q_trackers_t *m8q_device)
+void m8q_check_msgs(
+    m8q_trackers_t *m8q_device)
 {
     // Check if data is available 
     if (m8q_get_tx_ready())

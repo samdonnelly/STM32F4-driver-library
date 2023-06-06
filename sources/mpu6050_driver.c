@@ -651,6 +651,7 @@ typedef struct mpu6050_driver_data_s
     // Status info 
     // 'status' --> bit 0: i2c status (see i2c_status_t) 
     //          --> bit 1: init status (WHO_AM_I) 
+    //          --> bits 2-7: self test results 
     uint8_t status; 
 }
 mpu6050_driver_data_t; 
@@ -1628,7 +1629,7 @@ uint8_t mpu6050_get_status(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return device_data_ptr->status; 
 }

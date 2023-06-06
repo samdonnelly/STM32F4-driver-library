@@ -305,9 +305,8 @@ void mpu6050_init_state(
     mpu6050_device->startup = CLEAR_BIT; 
     mpu6050_device->reset = CLEAR_BIT; 
 
-    // Run self-test and record any faults 
+    // Run self-test 
     mpu6050_self_test(mpu6050_device->device_num);
-    mpu6050_device->fault_code |= mpu6050_get_status(mpu6050_device->device_num); 
 
     // Provide time for device data to update so self-test data is not used for calibration 
     tim_delay_ms(mpu6050_device->timer, MPU6050_ST_DELAY); 
@@ -329,6 +328,7 @@ void mpu6050_run_state(
                     &mpu6050_device->time_cnt, 
                     &mpu6050_device->time_start))
     {
+        // Choose which data to sample 
         // Sample the data 
         mpu6050_read_all(mpu6050_device->device_num); 
 
