@@ -107,6 +107,17 @@ void mpu6050_fault_state(
 void mpu6050_reset_state(
     mpu6050_cntrl_data_t *mpu6050_device); 
 
+
+/**
+ * @brief Check for over temperature 
+ * 
+ * @details 
+ * 
+ * @param mpu6050_device 
+ */
+void mpu6050_temp_check(
+    mpu6050_cntrl_data_t *mpu6050_device); 
+
 //=======================================================================================
 
 
@@ -161,6 +172,7 @@ void mpu6050_controller_init(
     cntrl_data_ptr->time_cnt_total = CLEAR; 
     cntrl_data_ptr->time_cnt = CLEAR; 
     cntrl_data_ptr->time_start = SET_BIT; 
+    cntrl_data_ptr->smpl_type = MPU6050_READ_ALL; 
 
     // State trackers 
     cntrl_data_ptr->startup = SET_BIT; 
@@ -328,15 +340,38 @@ void mpu6050_run_state(
                     &mpu6050_device->time_cnt, 
                     &mpu6050_device->time_start))
     {
-        // Choose which data to sample 
-        // Sample the data 
-        mpu6050_read_all(mpu6050_device->device_num); 
+        // Set the new data flag to indicate that new data is available 
+        mpu6050_device->new_data = SET_BIT; 
 
-        if (mpu6050_get_temp_raw(mpu6050_device->device_num) > 
-            (MPU6050_RAW_TEMP_MAX-MPU6050_RAW_TEMP_OFST))
+        // Choose which data to sample 
+        switch (mpu6050_device->smpl_type)
         {
-            mpu6050_device->fault_code |= (SET_BIT << SHIFT_9); 
+            case MPU6050_READ_A:   // Read accelerometer data 
+                mpu6050_accel_read(mpu6050_device->device_num); 
+                break; 
+
+            case MPU6050_READ_G:   // Read gyroscope data 
+                mpu6050_gyro_read(mpu6050_device->device_num); 
+                break; 
+
+            case MPU6050_READ_T:   // Read temperature data 
+                mpu6050_temp_read(mpu6050_device->device_num); 
+                mpu6050_temp_check(mpu6050_device); 
+                break; 
+
+            case MPU6050_READ_ALL:   // Read all data 
+                mpu6050_read_all(mpu6050_device->device_num); 
+                mpu6050_temp_check(mpu6050_device); 
+                break; 
+
+            default:   // No data read 
+                mpu6050_device->new_data = CLEAR_BIT; 
+                break; 
         }
+    }
+    else 
+    {
+        // Data is now old - clear the new data bit 
     }
 }
 
@@ -357,6 +392,9 @@ void mpu6050_low_power_trans_state(
     mpu6050_low_pwr_config(
         mpu6050_device->device_num, 
         mpu6050_device->low_power); 
+
+    // Reset the non-blocking delay 
+    mpu6050_device->time_start = SET_BIT; 
 }
 
 
@@ -381,6 +419,26 @@ void mpu6050_reset_state(
     mpu6050_low_pwr_config(
         mpu6050_device->device_num, 
         mpu6050_device->low_power); 
+
+    // Reset the non-blocking delay 
+    mpu6050_device->time_start = SET_BIT; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data functions 
+
+// Check for over temperature 
+void mpu6050_temp_check(
+    mpu6050_cntrl_data_t *mpu6050_device)
+{
+    if (mpu6050_get_temp_raw(mpu6050_device->device_num) > 
+        (MPU6050_RAW_TEMP_MAX-MPU6050_RAW_TEMP_OFST))
+    {
+        mpu6050_device->fault_code |= (SET_BIT << SHIFT_9); 
+    }
 }
 
 //=======================================================================================
@@ -433,6 +491,23 @@ void mpu6050_clear_low_power(
     cntrl_data_ptr->low_power = MPU6050_SLEEP_MODE_DISABLE; 
 }
 
+
+// Set the data sample type 
+void mpu6050_set_smpl_type(
+    device_number_t device_num, 
+    mpu6050_sample_type_t type)
+{
+    // Get the controller data record 
+    mpu6050_cntrl_data_t *cntrl_data_ptr = 
+        (mpu6050_cntrl_data_t *)get_linked_list_entry(device_num, mpu6050_cntrl_data_ptr); 
+    
+    // Check that the data record is valid 
+    if (cntrl_data_ptr == NULL) return; 
+
+    // Update the sampling type 
+    cntrl_data_ptr->smpl_type = type; 
+}
+
 //=======================================================================================
 
 
@@ -466,6 +541,21 @@ MPU6050_FAULT_CODE mpu6050_get_fault_code(
     if (cntrl_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return cntrl_data_ptr->fault_code; 
+}
+
+
+// Get the new data flag 
+uint8_t mpu6050_get_data_status(
+    device_number_t device_num)
+{
+    // Get the controller data record 
+    mpu6050_cntrl_data_t *cntrl_data_ptr = 
+        (mpu6050_cntrl_data_t *)get_linked_list_entry(device_num, mpu6050_cntrl_data_ptr); 
+    
+    // Check that the data record is valid 
+    if (cntrl_data_ptr == NULL) return NULL_PTR_RETURN; 
+
+    return cntrl_data_ptr->new_data; 
 }
 
 //=======================================================================================

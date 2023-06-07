@@ -53,6 +53,19 @@ typedef enum {
     MPU6050_RESET_STATE              // State 5: reset 
 } mpu6050_states_t; 
 
+
+/**
+ * @brief MPU6050 sample type 
+ * 
+ * @details determines which data/sensors to read during the run state 
+ */
+typedef enum {
+    MPU6050_READ_A,       // Read accelerometer data 
+    MPU6050_READ_G,       // Read gyroscope data 
+    MPU6050_READ_T,       // Read temperature data 
+    MPU6050_READ_ALL      // Read all data 
+} mpu6050_sample_type_t; 
+
 //=======================================================================================
 
 
@@ -81,16 +94,18 @@ typedef struct mpu6050_cntrl_data_s
     // Device and controller information 
     mpu6050_states_t state;                 // State of the controller 
     MPU6050_FAULT_CODE fault_code;          // Controller fault code 
+    mpu6050_sample_type_t smpl_type;        // Sampling type 
     uint32_t clk_freq;                      // Timer clock frquency 
     uint32_t sample_period;                 // Time between data samples (us) 
     uint32_t time_cnt_total;                // Time delay counter total count 
     uint32_t time_cnt;                      // Time delay counter instance 
     uint8_t  time_start;                    // Time delay counter start flag 
 
-    // State trackers 
+    // Trackers 
     mpu6050_sleep_mode_t low_power : 1;     // Low power flag 
     uint8_t reset                  : 1;     // Reset state trigger 
     uint8_t startup                : 1;     // Ensures the init state is run 
+    uint8_t new_data               : 1;     // Data ready flag - set after sampling 
 }
 mpu6050_cntrl_data_t; 
 
@@ -192,6 +207,22 @@ void mpu6050_set_low_power(
 void mpu6050_clear_low_power(
     device_number_t device_num); 
 
+
+/**
+ * @brief Set the data sample type 
+ * 
+ * @details Used to update the sample type in the data record which is used to determine 
+ *          which data to sample while in the run state 
+ * 
+ * @see mpu6050_sample_type_t 
+ * 
+ * @param device_num : 
+ * @param type : 
+ */
+void mpu6050_set_smpl_type(
+    device_number_t device_num, 
+    mpu6050_sample_type_t type); 
+
 //=======================================================================================
 
 
@@ -238,6 +269,18 @@ MPU6050_STATE mpu6050_get_state(
  * @return MPU6050_FAULT_CODE : controller fault code 
  */
 MPU6050_FAULT_CODE mpu6050_get_fault_code(
+    device_number_t device_num); 
+
+
+/**
+ * @brief Get the new data flag 
+ * 
+ * @details 
+ * 
+ * @param device_num 
+ * @return uint8_t 
+ */
+uint8_t mpu6050_get_data_status(
     device_number_t device_num); 
 
 //=======================================================================================
