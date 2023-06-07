@@ -372,6 +372,7 @@ void mpu6050_run_state(
     else 
     {
         // Data is now old - clear the new data bit 
+        mpu6050_device->new_data = CLEAR_BIT; 
     }
 }
 
