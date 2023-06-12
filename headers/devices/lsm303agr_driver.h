@@ -29,4 +29,30 @@
 
 //=======================================================================================
 
+
+//=======================================================================================
+// Macros 
+
+// I2C addresses (datasheet page 39) 
+#define LSM303AGR_ACCEL_7BIT_ADDR 0x19        // Accelerometer 7-bit I2C address - no R/W bit 
+#define LSM303AGR_MAG_7BIT_ADDR 0x1E          // Magnetometer 7-bit I2C address - no R/W bit 
+#define LSM303AGR_ACCEL_ADDR 0x32             // Accelerometer I2C address - with default W bit 
+#define LSM303AGR_MAG_ADDR 0x3C               // Magnetometer I2C address - with default W bit 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Enums 
+
+/**
+ * @brief 
+ */
+typedef enum {
+    LSM303AGR_W_OFFSET, 
+    LSM303AGR_R_OFFSET 
+} lsm303agr_rw_offset_t; 
+
+//=======================================================================================
+
 #endif   // _LSM303AGR_DRIVER_H_ 

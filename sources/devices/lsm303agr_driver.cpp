@@ -17,12 +17,7 @@
 
 #include "lsm303agr_driver.h"
 
-//=======================================================================================
-
-
-//=======================================================================================
 // C file inclusion 
-
 extern "C" 
 {
     // I2C functions 
@@ -33,5 +28,41 @@ extern "C"
     I2C_STATUS i2c_write(I2C_TypeDef, uint8_t, uint8_t); 
     I2C_STATUS i2c_read(I2C_TypeDef, uint8_t, uint16_t); 
 }
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and Write 
+
+// Procedures start on page 38 of the datasheet 
+
+// General Starting Procedure 
+// - Generate start condition 
+// - Write slave address with a write bit 
+// - Slave acknowledges 
+// - Sub address sent to slave: 
+//   - bits 0-6 --> register address of slave to read/write from/to 
+//   - bit 7 -----> address increment bit 
+//     - 1 == increment to next address after read/write - allows for multiple data read/writes 
+//     - 0 == don't increment address afterwards 
+
+// Read (after completing the general start procedure) 
+// - Generate a start condition 
+// - Send the slave address with a read bit 
+// - Slave acknowledges 
+// - Read data (byte) from slave 
+// - If reading one byte 
+//   - Go to second last step 
+// - If read multiple bytes: 
+//   - Master acknowledge 
+//   - Read data (byte) from slave 
+//   - Repeat the above two steps for all the needed data then proceed to the next step 
+// - Master non-acknowledge 
+// - Generate a stop condition 
+
+// Write (after completing the general start procedure) 
+// - Transmit data to the slave - slave acknowledge between each byte 
+// - Generate a stop condition 
 
 //=======================================================================================
