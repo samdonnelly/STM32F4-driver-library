@@ -41,6 +41,7 @@
 
 // PWM data 
 #define WS2812_84MHZ_PWM_ARR 105       // PWM ARR to hit 1.25us period at 84MHz clock 
+#define WS2812_PWM_BIT_MASK 0x01       // Masks colour data to get bit 0 for the PWM setpoint 
 #define WS2812_0_CODE_DUTY 32          // Duty cycle to send 0 - max of WS2812_84MHZ_PWM_ARR 
 #define WS2812_1_CODE_DUTY 64          // Duty cycle to send 1 - max of WS2812_84MHZ_PWM_ARR 
 
@@ -63,23 +64,18 @@ typedef enum {
 } ws2812_led_index_t; 
 
 
-// LED base colours 
-typedef enum {
-    WS2812_GREEN, 
-    WS2812_RED, 
-    WS2812_BLUE
-} ws2812_colours_t; 
+// // LED base colours 
+// typedef enum {
+//     WS2812_GREEN, 
+//     WS2812_RED, 
+//     WS2812_BLUE
+// } ws2812_colours_t; 
 
 //=======================================================================================
 
 
 //=======================================================================================
-// Datatypes 
-//=======================================================================================
-
-
-//=======================================================================================
-// Function prototypes 
+// Initialization 
 
 /**
  * @brief WS2812 initialization 
@@ -101,6 +97,11 @@ void ws2812_init(
     GPIO_TypeDef *gpio, 
     pin_selector_t pin); 
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Write 
 
 /**
  * @brief WS2812 send data to device 
@@ -108,24 +109,31 @@ void ws2812_init(
  * @details 
  * 
  * @param device_num : 
+ * @param colour_data : 
  */
 void ws2812_send(
-    device_number_t device_num); 
-
-
-/**
- * @brief Colour set 
- * 
- * @details 
- * 
- * @param device_num 
- * @param colour_data 
- * @param led_num 
- */
-void ws2812_colour_set(
     device_number_t device_num, 
-    const uint8_t *colour_data, 
-    uint8_t led_num); 
+    const uint32_t *colour_data); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Setters 
+
+// /**
+//  * @brief Colour set 
+//  * 
+//  * @details 
+//  * 
+//  * @param device_num 
+//  * @param colour_data 
+//  * @param led_num 
+//  */
+// void ws2812_colour_set(
+//     device_number_t device_num, 
+//     const uint8_t *colour_data, 
+//     uint8_t led_num); 
 
 //=======================================================================================
 
