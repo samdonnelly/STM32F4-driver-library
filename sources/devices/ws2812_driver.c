@@ -121,7 +121,7 @@ void ws2812_send(
         for (colour_index = WS2812_BITS_PER_LED; colour_index > 0; colour_index--)
         {
             // if ((driver_data_ptr->colour_data[led_index] >> (colour_index - 1) & 0x01))
-            if ((*colour_data++ >> (colour_index - 1) & WS2812_PWM_BIT_MASK))
+            if ((*colour_data >> (colour_index - 1) & WS2812_PWM_BIT_MASK))
             {
                 // driver_data_ptr->pwm_duty[pwm_duty_index++] = WS2812_1_CODE_DUTY; 
                 pwm_duty[pwm_duty_index++] = WS2812_1_CODE_DUTY; 
@@ -132,6 +132,8 @@ void ws2812_send(
                 pwm_duty[pwm_duty_index++] = WS2812_0_CODE_DUTY; 
             }
         }
+
+        colour_data++; 
     }
 
     //===================================================

@@ -313,8 +313,8 @@ void tim_2_to_5_output_init(
 
     // Configure the output pin 
     gpio_pin_init(gpio, pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-    if (timer == TIM2) gpio_afr(gpio, SET_BIT, pin); 
-    else gpio_afr(gpio, SET_2, pin); 
+    if (timer == TIM2) gpio_afr(gpio, pin, SET_BIT); 
+    else gpio_afr(gpio, pin, SET_2); 
 
     // Set the counter direction 
     tim_dir(timer, dir); 
