@@ -251,7 +251,7 @@ void tim1_output_init(
 
     // Configure the output pin 
     gpio_pin_init(gpio, pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-    gpio_afr(gpio, SET_BIT, pin); 
+    gpio_afr(gpio, pin, SET_BIT); 
 
     // Set the counter direction 
     tim_dir(TIM1, dir); 
@@ -274,7 +274,7 @@ void tim1_output_init(
     // Enable the OCx output 
     tim_cce(TIM1, TIM_CCE_ON, channel); 
 
-    // 
+    // Set the MOE (main output enable) bit 
     TIM1->BDTR |= (SET_BIT << SHIFT_15); 
 
     // Configure the update DMA request 

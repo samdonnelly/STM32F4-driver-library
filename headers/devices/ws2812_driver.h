@@ -25,7 +25,6 @@
 // Drivers 
 #include "linked_list_driver.h" 
 #include "timers.h" 
-#include "dma_driver.h" 
 
 //=======================================================================================
 
@@ -63,14 +62,6 @@ typedef enum {
     WS2812_LED_7 
 } ws2812_led_index_t; 
 
-
-// // LED base colours 
-// typedef enum {
-//     WS2812_GREEN, 
-//     WS2812_RED, 
-//     WS2812_BLUE
-// } ws2812_colours_t; 
-
 //=======================================================================================
 
 
@@ -80,15 +71,18 @@ typedef enum {
 /**
  * @brief WS2812 initialization 
  * 
- * @details 
- *          This driver/function is equipped for TIM2-TIM5. Other timers cannot be used at 
- *          this time. 
+ * @details Creates a data record for the device so multiple devices can easily use this 
+ *          driver. Records the timer info in the data record and sets up the PWM output 
+ *          for a specified timer and pin. Must be called during setup for each device. 
+ *          
+ *          NOTE: This driver/function is equipped for TIM2-TIM5. Other timers cannot be 
+ *                 used at this time. 
  * 
- * @param device_num 
- * @param timer 
- * @param tim_channel 
- * @param gpio 
- * @param pin 
+ * @param device_num : number used to fetch the device data record 
+ * @param timer : timer port used for the PWM output 
+ * @param tim_channel : timer channel used for the pwm output 
+ * @param gpio : GPIO port of PWM pin 
+ * @param pin : number of PWM pin 
  */
 void ws2812_init(
     device_number_t device_num, 
@@ -106,34 +100,33 @@ void ws2812_init(
 /**
  * @brief WS2812 send data to device 
  * 
- * @details 
+ * @details Updates the colour of the LEDs on the device. This function takes the color 
+ *          data as input and generates a PWM waveform that gets sent to the device to
+ *          change the LED colour. 
+ *          
+ *          The WS2812 device reads the length of time the data bus is high to distinguish 
+ *          between 0 and 1 colour data bits (see the datasheet for more info). To achieve 
+ *          this timing, a variable PWM waveform is sent. These devices can also be strung 
+ *          together one after the other and they will pass info sequentially from one to 
+ *          the next making them addressable, however you must send colour data to all 
+ *          LEDs leading up to the desired LED. This particular device contains 8 LEDs 
+ *          and colour data passed to this function must contain 8 sets of data. 
+ *          
+ *          Colour data for a single LED consists of 24-bits - 8 bits for each of green, 
+ *          red and blue: 
+ *          - Bits 0-7: Blue 
+ *          - Bits 8-15: Red 
+ *          - Bits 16-23: Green 
+ *          Colour data should be passed to this function in the above format to achieve 
+ *          the desired colour. The highest bit gets sent first (i.e. bit 23 overall or 
+ *          green bit 7). 
  * 
- * @param device_num : 
- * @param colour_data : 
+ * @param device_num : number used to fetch the device data record 
+ * @param colour_data : pointer to colour data array that gets sent to the device 
  */
 void ws2812_send(
     device_number_t device_num, 
     const uint32_t *colour_data); 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Setters 
-
-// /**
-//  * @brief Colour set 
-//  * 
-//  * @details 
-//  * 
-//  * @param device_num 
-//  * @param colour_data 
-//  * @param led_num 
-//  */
-// void ws2812_colour_set(
-//     device_number_t device_num, 
-//     const uint8_t *colour_data, 
-//     uint8_t led_num); 
 
 //=======================================================================================
 

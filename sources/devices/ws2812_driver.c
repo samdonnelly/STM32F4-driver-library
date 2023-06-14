@@ -33,10 +33,6 @@ typedef struct ws2812_driver_data_s
     // Peripheral information 
     TIM_TypeDef *timer; 
     tim_channel_t tim_channel; 
-
-    // Data 
-    // uint32_t colour_data[WS2812_LED_NUM]; 
-    // uint8_t pwm_duty[WS2812_LED_NUM * WS2812_BITS_PER_LED]; 
 }
 ws2812_driver_data_t; 
 
@@ -82,8 +78,6 @@ void ws2812_init(
     // Initialize data record 
     driver_data_ptr->timer = timer; 
     driver_data_ptr->tim_channel = tim_channel; 
-    // memset((void *)driver_data_ptr->colour_data, CLEAR, sizeof(driver_data_ptr->colour_data)); 
-    // memset((void *)driver_data_ptr->pwm_duty, CLEAR, sizeof(driver_data_ptr->pwm_duty)); 
 
     //===================================================
 }
@@ -120,15 +114,12 @@ void ws2812_send(
     {
         for (colour_index = WS2812_BITS_PER_LED; colour_index > 0; colour_index--)
         {
-            // if ((driver_data_ptr->colour_data[led_index] >> (colour_index - 1) & 0x01))
             if ((*colour_data >> (colour_index - 1) & WS2812_PWM_BIT_MASK))
             {
-                // driver_data_ptr->pwm_duty[pwm_duty_index++] = WS2812_1_CODE_DUTY; 
                 pwm_duty[pwm_duty_index++] = WS2812_1_CODE_DUTY; 
             }
             else 
             {
-                // driver_data_ptr->pwm_duty[pwm_duty_index++] = WS2812_0_CODE_DUTY; 
                 pwm_duty[pwm_duty_index++] = WS2812_0_CODE_DUTY; 
             }
         }
@@ -151,7 +142,6 @@ void ws2812_send(
         // Update the duty cycle to send the right colour code 
         tim_ccr(
             driver_data_ptr->timer, 
-            // (uint32_t)driver_data_ptr->pwm_duty[pwm_duty_index], 
             (uint32_t)pwm_duty[pwm_duty_index], 
             driver_data_ptr->tim_channel); 
 
@@ -175,35 +165,5 @@ void ws2812_send(
     
     //===================================================
 }
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Setters 
-
-// // Colour set 
-// void ws2812_colour_set(
-//     device_number_t device_num, 
-//     const uint8_t *colour_data, 
-//     uint8_t led_num)
-// {
-//     // Get the device data record 
-//     ws2812_driver_data_t *driver_data_ptr = 
-//         (ws2812_driver_data_t *)get_linked_list_entry(device_num, ws2812_driver_data_ptr); 
-
-//     // Check for valid data 
-//     if (driver_data_ptr == NULL ||     // No data record 
-//         colour_data == NULL ||         // No colour data 
-//         led_num > WS2812_LED_NUM)      // LED doesn't exist 
-//     {
-//         return; 
-//     }
-
-//     // Set data 
-//     driver_data_ptr->colour_data[led_num] = (*(colour_data + WS2812_GREEN) << SHIFT_16) + 
-//                                             (*(colour_data + WS2812_RED)   << SHIFT_8) + 
-//                                              *(colour_data + WS2812_BLUE); 
-// }
 
 //=======================================================================================
