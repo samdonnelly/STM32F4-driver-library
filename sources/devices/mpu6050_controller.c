@@ -48,7 +48,7 @@ void mpu6050_init_state(
  * 
  * @param mpu6050_device : pointer to device data record 
  */
-void mpu6050_run_state(
+void mpu6050_read_state(
     mpu6050_cntrl_data_t *mpu6050_device); 
 
 
@@ -131,7 +131,7 @@ static mpu6050_cntrl_data_t *mpu6050_cntrl_data_ptr = NULL;
 static mpu6050_state_functions_t state_table[MPU6050_NUM_STATES] = 
 {
     &mpu6050_init_state, 
-    &mpu6050_run_state, 
+    &mpu6050_read_state, 
     &mpu6050_low_power_state, 
     &mpu6050_low_power_trans_state, 
     &mpu6050_fault_state, 
@@ -328,8 +328,16 @@ void mpu6050_init_state(
 }
 
 
+// Ready state 
+void mpu6050_ready_state(
+    mpu6050_cntrl_data_t *mpu6050_device)
+{
+    // Do nothing - be ready to do something but don't consume time on not needed work 
+}
+
+
 // MPU6050 run state 
-void mpu6050_run_state(
+void mpu6050_read_state(
     mpu6050_cntrl_data_t *mpu6050_device)
 {
     // Wait for a specified period of time before reading new data 
