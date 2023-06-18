@@ -28,12 +28,13 @@
 // Macros 
 
 // Control information 
-#define MPU6050_NUM_STATES 6         // Number of controller states 
-#define MPU6050_ST_DELAY 10          // Post self-test delay (ms)  
+#define MPU6050_NUM_STATES 7             // Number of controller states 
+#define MPU6050_NUM_READS 4              // Number of driver read functions 
+#define MPU6050_ST_DELAY 10              // Post self-test delay (ms) 
 
 // Data 
-#define MPU6050_RAW_TEMP_MAX 28900   // Max raw temp reading before fault (~ 40 degC) 
-#define MPU6050_RAW_TEMP_OFST 27720  // Raw temp reading offset 
+#define MPU6050_RAW_TEMP_MAX 28900       // Max raw temp reading before fault (~ 40 degC) 
+#define MPU6050_RAW_TEMP_OFST 27720      // Raw temp reading offset 
 
 //=======================================================================================
 
@@ -46,12 +47,22 @@
  */
 typedef enum {
     MPU6050_INIT_STATE,              // State 0: init 
-    MPU6050_RUN_STATE,               // State 1: run 
-    MPU6050_LOW_POWER_STATE,         // State 2: low power mode 
+    MPU6050_READ_CONT_STATE,         // State 1: read continuous 
+    MPU6050_READ_READY_STATE,        // State 2: read ready 
     MPU6050_LOW_POWER_TRANS_STATE,   // State 3: low power mode transition 
-    MPU6050_FAULT_STATE,             // State 4: fault 
-    MPU6050_RESET_STATE              // State 5: reset 
+    MPU6050_LOW_POWER_STATE,         // State 4: low power mode 
+    MPU6050_FAULT_STATE,             // State 5: fault 
+    MPU6050_RESET_STATE              // State 6: reset 
 } mpu6050_states_t; 
+
+
+/**
+ * @brief Read states 
+ */
+typedef enum {
+    MPU6050_READ_CONT, 
+    MPU6050_READ_READY 
+} mpu6050_read_state_t; 
 
 
 /**
@@ -94,7 +105,6 @@ typedef struct mpu6050_cntrl_data_s
     // Device and controller information 
     mpu6050_states_t state;                 // State of the controller 
     MPU6050_FAULT_CODE fault_code;          // Controller fault code 
-    mpu6050_sample_type_t smpl_type;        // Sampling type 
     uint32_t clk_freq;                      // Timer clock frquency 
     uint32_t sample_period;                 // Time between data samples (us) 
     uint32_t time_cnt_total;                // Time delay counter total count 
@@ -105,7 +115,9 @@ typedef struct mpu6050_cntrl_data_s
     mpu6050_sleep_mode_t low_power : 1;     // Low power flag 
     uint8_t reset                  : 1;     // Reset state trigger 
     uint8_t startup                : 1;     // Ensures the init state is run 
-    uint8_t new_data               : 1;     // Data ready flag - set after sampling 
+    uint8_t read                   : 1;     // Triggers a read in the read ready state 
+    uint8_t read_state             : 1;     // Sets which read state to use 
+    uint8_t smpl_type              : 3;     // Read function to execute - mpu6050_sample_type_t
 }
 mpu6050_cntrl_data_t; 
 
@@ -122,6 +134,17 @@ mpu6050_cntrl_data_t;
  */
 typedef void (*mpu6050_state_functions_t)(
     mpu6050_cntrl_data_t *mpu6050_device); 
+
+
+/**
+ * @brief Read function pointer 
+ * 
+ * @details 
+ * 
+ * @param device_num : 
+ */
+typedef void (*mpu6050_read_functions_t)(
+    device_number_t device_num); 
 
 //=======================================================================================
 
@@ -171,18 +194,6 @@ void mpu6050_controller(
 // Setters 
 
 /**
- * @brief MPU6050 set reset flag 
- * 
- * @details This flag triggers a controller reset. It is used in the event of a fault. The 
- *          flag clears automatically after being called. 
- * 
- * @param device_num : device number - used for retrieving the correct data record 
- */
-void mpu6050_set_reset_flag(
-    device_number_t device_num); 
-
-
-/**
  * @brief Set low power flag 
  * 
  * @details This flag triggers the low power state which puts the device in sleep mode. 
@@ -222,6 +233,42 @@ void mpu6050_clear_low_power(
 void mpu6050_set_smpl_type(
     device_number_t device_num, 
     mpu6050_sample_type_t type); 
+
+
+/**
+ * @brief Set the read state 
+ * 
+ * @details 
+ * 
+ * @param device_num 
+ * @param read_type 
+ */
+void mpu6050_set_read_state(
+    device_number_t device_num, 
+    mpu6050_read_state_t read_type); 
+
+
+/**
+ * @brief Set the read flag 
+ * 
+ * @details 
+ * 
+ * @param device_num 
+ */
+void mpu6050_set_read_flag(
+    device_number_t device_num); 
+
+
+/**
+ * @brief MPU6050 set reset flag 
+ * 
+ * @details This flag triggers a controller reset. It is used in the event of a fault. The 
+ *          flag clears automatically after being called. 
+ * 
+ * @param device_num : device number - used for retrieving the correct data record 
+ */
+void mpu6050_set_reset_flag(
+    device_number_t device_num); 
 
 //=======================================================================================
 
@@ -269,18 +316,6 @@ MPU6050_STATE mpu6050_get_state(
  * @return MPU6050_FAULT_CODE : controller fault code 
  */
 MPU6050_FAULT_CODE mpu6050_get_fault_code(
-    device_number_t device_num); 
-
-
-/**
- * @brief Get the new data flag 
- * 
- * @details 
- * 
- * @param device_num 
- * @return uint8_t 
- */
-uint8_t mpu6050_get_data_status(
     device_number_t device_num); 
 
 //=======================================================================================

@@ -831,6 +831,8 @@ static void mpu6050_write(
 
     // Create a stop condition
     i2c_stop(i2c); 
+
+    // TODO update the driver status 
 }
 
 
@@ -866,6 +868,8 @@ static void mpu6050_read(
 
     // Create a stop condition
     i2c_stop(i2c); 
+
+    // TODO update the driver status 
 }
 
 //=======================================================================================
@@ -961,23 +965,33 @@ void mpu6050_accel_read(
     if (device_data_ptr == NULL) return; 
 
     // Temporary data storage 
-    uint8_t accel_data_reg[BYTE_6];
+    uint8_t data_reg[BYTE_8];
+    uint8_t reg_index = CLEAR; 
 
     // Read the accelerometer data 
     mpu6050_read(
         device_data_ptr->i2c, 
         device_data_ptr->addr, 
         MPU6050_ACCEL_XOUT_H,
-        BYTE_6,
-        accel_data_reg);
+        BYTE_8,
+        data_reg);
 
     // Combine the return values into signed integers - values are unformatted
-    device_data_ptr->accel_data.accel_x = (int16_t)((accel_data_reg[0] << SHIFT_8) |
-                                                    (accel_data_reg[1] << SHIFT_0));
-    device_data_ptr->accel_data.accel_y = (int16_t)((accel_data_reg[2] << SHIFT_8) |
-                                                    (accel_data_reg[3] << SHIFT_0));
-    device_data_ptr->accel_data.accel_z = (int16_t)((accel_data_reg[4] << SHIFT_8) |
-                                                    (accel_data_reg[5] << SHIFT_0));
+
+    // Acceleration 
+    device_data_ptr->accel_data.accel_x = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    reg_index++; 
+    device_data_ptr->accel_data.accel_y = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    reg_index++; 
+    device_data_ptr->accel_data.accel_z = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    reg_index++; 
+
+    // Temperature 
+    device_data_ptr->other_data.temp = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index])); 
 }
 
 
@@ -993,23 +1007,33 @@ void mpu6050_gyro_read(
     if (device_data_ptr == NULL) return; 
 
     // Temporary data storage 
-    uint8_t gyro_data_reg[BYTE_6];
+    uint8_t data_reg[BYTE_8];
+    uint8_t reg_index = CLEAR; 
 
     // Read the gyroscope data 
     mpu6050_read(
         device_data_ptr->i2c, 
         device_data_ptr->addr, 
-        MPU6050_GYRO_XOUT_H,
-        BYTE_6,
-        gyro_data_reg);
+        MPU6050_TEMP_OUT_H,
+        BYTE_8,
+        data_reg);
 
     // Combine the return values into signed integers - values are unformatted
-    device_data_ptr->gyro_data.gyro_x = (int16_t)((gyro_data_reg[0] << SHIFT_8) |
-                                                  (gyro_data_reg[1] << SHIFT_0));
-    device_data_ptr->gyro_data.gyro_y = (int16_t)((gyro_data_reg[2] << SHIFT_8) |
-                                                  (gyro_data_reg[3] << SHIFT_0));
-    device_data_ptr->gyro_data.gyro_z = (int16_t)((gyro_data_reg[4] << SHIFT_8) |
-                                                  (gyro_data_reg[5] << SHIFT_0));
+
+    // Temperature 
+    device_data_ptr->other_data.temp = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index])); 
+    reg_index++; 
+
+    // Gyroscope 
+    device_data_ptr->gyro_data.gyro_x = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    reg_index++; 
+    device_data_ptr->gyro_data.gyro_y = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    reg_index++; 
+    device_data_ptr->gyro_data.gyro_z = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
 }
 
 
@@ -1025,7 +1049,8 @@ void mpu6050_temp_read(
     if (device_data_ptr == NULL) return; 
 
     // Store the temperature data 
-    uint8_t mpu6050_temp_sensor_reg[BYTE_2]; 
+    uint8_t data_reg[BYTE_2]; 
+    uint8_t reg_index = CLEAR; 
 
     // Read the temperature data 
     mpu6050_read(
@@ -1033,11 +1058,11 @@ void mpu6050_temp_read(
         device_data_ptr->addr, 
         MPU6050_TEMP_OUT_H,
         BYTE_2,
-        mpu6050_temp_sensor_reg);
+        data_reg);
 
-    // Generate an unformatted signed integer from the combine the return values 
-    device_data_ptr->other_data.temp = (int16_t)((mpu6050_temp_sensor_reg[0] << SHIFT_8) |
-                                                 (mpu6050_temp_sensor_reg[1] << SHIFT_0)); 
+    // Combine the return values into a signed integer - value is unformatted
+    device_data_ptr->other_data.temp = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index])); 
 }
 
 
@@ -1054,6 +1079,7 @@ void mpu6050_read_all(
 
     // Temporary data storage 
     uint8_t data_reg[BYTE_14];
+    uint8_t reg_index = CLEAR; 
 
     // Read the accelerometer data 
     mpu6050_read(
@@ -1064,24 +1090,32 @@ void mpu6050_read_all(
         data_reg);
 
     // Combine the return values into signed integers - values are unformatted
-    device_data_ptr->accel_data.accel_x = (int16_t)((data_reg[0] << SHIFT_8) |
-                                                    (data_reg[1] << SHIFT_0));
-    device_data_ptr->accel_data.accel_y = (int16_t)((data_reg[2] << SHIFT_8) |
-                                                    (data_reg[3] << SHIFT_0));
-    device_data_ptr->accel_data.accel_z = (int16_t)((data_reg[4] << SHIFT_8) |
-                                                    (data_reg[5] << SHIFT_0));
 
-    // Generate an unformatted signed integer from the combine the return values 
-    device_data_ptr->other_data.temp = (int16_t)((data_reg[6] << SHIFT_8) |
-                                                 (data_reg[7] << SHIFT_0)); 
+    // Acceleration 
+    device_data_ptr->accel_data.accel_x = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    reg_index++; 
+    device_data_ptr->accel_data.accel_y = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    reg_index++; 
+    device_data_ptr->accel_data.accel_z = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    reg_index++; 
 
-    // Combine the return values into signed integers - values are unformatted
-    device_data_ptr->gyro_data.gyro_x = (int16_t)((data_reg[8] << SHIFT_8) |
-                                                  (data_reg[9] << SHIFT_0));
-    device_data_ptr->gyro_data.gyro_y = (int16_t)((data_reg[10] << SHIFT_8) |
-                                                  (data_reg[11] << SHIFT_0));
-    device_data_ptr->gyro_data.gyro_z = (int16_t)((data_reg[12] << SHIFT_8) |
-                                                  (data_reg[13] << SHIFT_0));
+    // Temperature 
+    device_data_ptr->other_data.temp = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) |  (data_reg[reg_index])); 
+    reg_index++; 
+
+    // Gyroscope 
+    device_data_ptr->gyro_data.gyro_x = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    reg_index++; 
+    device_data_ptr->gyro_data.gyro_y = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    reg_index++; 
+    device_data_ptr->gyro_data.gyro_z = 
+        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
 }
 
 

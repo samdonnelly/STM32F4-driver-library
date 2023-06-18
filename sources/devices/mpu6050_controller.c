@@ -38,7 +38,7 @@ void mpu6050_init_state(
 
 
 /**
- * @brief MPU6050 run state 
+ * @brief Read continuous state 
  * 
  * @details Reads device data at the rate specified in the controller init function. Checks 
  *          for faults after getting the new data. This state is called after the init 
@@ -48,7 +48,18 @@ void mpu6050_init_state(
  * 
  * @param mpu6050_device : pointer to device data record 
  */
-void mpu6050_read_state(
+void mpu6050_read_cont_state(
+    mpu6050_cntrl_data_t *mpu6050_device); 
+
+
+/**
+ * @brief Read ready state 
+ * 
+ * @details Read from the device when the read bit is set. 
+ * 
+ * @param mpu6050_device : pointer to device data record 
+ */
+void mpu6050_read_ready_state(
     mpu6050_cntrl_data_t *mpu6050_device); 
 
 
@@ -131,11 +142,21 @@ static mpu6050_cntrl_data_t *mpu6050_cntrl_data_ptr = NULL;
 static mpu6050_state_functions_t state_table[MPU6050_NUM_STATES] = 
 {
     &mpu6050_init_state, 
-    &mpu6050_read_state, 
-    &mpu6050_low_power_state, 
+    &mpu6050_read_cont_state, 
+    &mpu6050_read_ready_state, 
     &mpu6050_low_power_trans_state, 
+    &mpu6050_low_power_state, 
     &mpu6050_fault_state, 
     &mpu6050_reset_state 
+}; 
+
+// Function pointers to read functions 
+static mpu6050_read_functions_t read_table[MPU6050_NUM_READS] = 
+{
+    &mpu6050_accel_read, 
+    &mpu6050_gyro_read, 
+    &mpu6050_temp_read, 
+    &mpu6050_read_all 
 }; 
 
 //=======================================================================================
@@ -160,11 +181,13 @@ void mpu6050_controller_init(
     // Check for NULL pointers 
     if ((cntrl_data_ptr == NULL) || (timer == NULL)) return; 
 
+    // Linked list tracking 
+    cntrl_data_ptr->device_num = device_num; 
+
     // Peripherals 
     cntrl_data_ptr->timer = timer; 
 
     // Controller information 
-    cntrl_data_ptr->device_num = device_num; 
     cntrl_data_ptr->state = MPU6050_INIT_STATE; 
     cntrl_data_ptr->fault_code = CLEAR; 
     cntrl_data_ptr->clk_freq = tim_get_pclk_freq(cntrl_data_ptr->timer); 
@@ -172,11 +195,14 @@ void mpu6050_controller_init(
     cntrl_data_ptr->time_cnt_total = CLEAR; 
     cntrl_data_ptr->time_cnt = CLEAR; 
     cntrl_data_ptr->time_start = SET_BIT; 
-    cntrl_data_ptr->smpl_type = MPU6050_READ_ALL; 
 
-    // State trackers 
-    cntrl_data_ptr->startup = SET_BIT; 
+    // Trackers 
     cntrl_data_ptr->low_power = CLEAR_BIT; 
+    cntrl_data_ptr->reset = CLEAR_BIT; 
+    cntrl_data_ptr->startup = SET_BIT; 
+    cntrl_data_ptr->read = CLEAR_BIT; 
+    cntrl_data_ptr->read_state = MPU6050_READ_CONT; 
+    cntrl_data_ptr->smpl_type = MPU6050_READ_ALL; 
 }
 
 
@@ -209,15 +235,27 @@ void mpu6050_controller(
                 next_state = MPU6050_FAULT_STATE; 
             }
             
-            // Default to the run state if no faults 
-            else if (!cntrl_data_ptr->startup)
+            // Run the init state at least once 
+            else if (cntrl_data_ptr->startup)
             {
-                next_state = MPU6050_RUN_STATE; 
+                next_state = MPU6050_INIT_STATE; 
+            }
+
+            // Read mode set to ready 
+            else if (cntrl_data_ptr->read_state)
+            {
+                next_state = MPU6050_READ_READY_STATE; 
+            }
+
+            // Read mode set to continuous 
+            else 
+            {
+                next_state = MPU6050_READ_CONT_STATE; 
             }
 
             break;
 
-        case MPU6050_RUN_STATE: 
+        case MPU6050_READ_CONT_STATE: 
             // Fault code set 
             if (cntrl_data_ptr->fault_code)
             {
@@ -236,6 +274,60 @@ void mpu6050_controller(
                 next_state = MPU6050_LOW_POWER_TRANS_STATE; 
             }
 
+            // Read mode set to ready 
+            else if (cntrl_data_ptr->read_state)
+            {
+                next_state = MPU6050_READ_READY_STATE; 
+            }
+
+            break;
+
+        case MPU6050_READ_READY_STATE: 
+            // Fault code set 
+            if (cntrl_data_ptr->fault_code)
+            {
+                next_state = MPU6050_FAULT_STATE; 
+            }
+            
+            // Reset flag set 
+            else if (cntrl_data_ptr->reset)
+            {
+                next_state = MPU6050_RESET_STATE; 
+            }
+
+            // Low power flag set 
+            else if (cntrl_data_ptr->low_power)
+            {
+                next_state = MPU6050_LOW_POWER_TRANS_STATE; 
+            }
+
+            // Read mode set to continuous 
+            else if (!cntrl_data_ptr->read_state)
+            {
+                next_state = MPU6050_READ_CONT_STATE; 
+            }
+
+            break; 
+
+        case MPU6050_LOW_POWER_TRANS_STATE: 
+            // Low power flag is set 
+            if (cntrl_data_ptr->low_power)
+            {
+                next_state = MPU6050_LOW_POWER_STATE; 
+            }
+
+            // Read mode set to ready 
+            else if (cntrl_data_ptr->read_state)
+            {
+                next_state = MPU6050_READ_READY_STATE; 
+            }
+
+            // Read mode set to continuous 
+            else 
+            {
+                next_state = MPU6050_READ_CONT_STATE; 
+            }
+
             break;
 
         case MPU6050_LOW_POWER_STATE: 
@@ -245,33 +337,6 @@ void mpu6050_controller(
                 cntrl_data_ptr->reset)
             {
                 next_state = MPU6050_LOW_POWER_TRANS_STATE; 
-            }
-
-            break;
-
-        case MPU6050_LOW_POWER_TRANS_STATE: 
-            // Fault code set 
-            if (cntrl_data_ptr->fault_code)
-            {
-                next_state = MPU6050_FAULT_STATE; 
-            }
-
-            // Reset flag set 
-            else if (cntrl_data_ptr->reset)
-            {
-                next_state = MPU6050_RESET_STATE; 
-            }
-
-            // Low power flag is set 
-            else if (cntrl_data_ptr->low_power)
-            {
-                next_state = MPU6050_LOW_POWER_STATE; 
-            }
-
-            // No flags set - default back to the run state 
-            else 
-            {
-                next_state = MPU6050_RUN_STATE; 
             }
 
             break;
@@ -328,16 +393,8 @@ void mpu6050_init_state(
 }
 
 
-// Ready state 
-void mpu6050_ready_state(
-    mpu6050_cntrl_data_t *mpu6050_device)
-{
-    // Do nothing - be ready to do something but don't consume time on not needed work 
-}
-
-
-// MPU6050 run state 
-void mpu6050_read_state(
+// Read continuous state 
+void mpu6050_read_cont_state(
     mpu6050_cntrl_data_t *mpu6050_device)
 {
     // Wait for a specified period of time before reading new data 
@@ -348,48 +405,23 @@ void mpu6050_read_state(
                     &mpu6050_device->time_cnt, 
                     &mpu6050_device->time_start))
     {
-        // Set the new data flag to indicate that new data is available 
-        mpu6050_device->new_data = SET_BIT; 
-
-        // Choose which data to sample 
-        switch (mpu6050_device->smpl_type)
-        {
-            case MPU6050_READ_A:   // Read accelerometer data 
-                mpu6050_accel_read(mpu6050_device->device_num); 
-                break; 
-
-            case MPU6050_READ_G:   // Read gyroscope data 
-                mpu6050_gyro_read(mpu6050_device->device_num); 
-                break; 
-
-            case MPU6050_READ_T:   // Read temperature data 
-                mpu6050_temp_read(mpu6050_device->device_num); 
-                mpu6050_temp_check(mpu6050_device); 
-                break; 
-
-            case MPU6050_READ_ALL:   // Read all data 
-                mpu6050_read_all(mpu6050_device->device_num); 
-                mpu6050_temp_check(mpu6050_device); 
-                break; 
-
-            default:   // No data read 
-                mpu6050_device->new_data = CLEAR_BIT; 
-                break; 
-        }
-    }
-    else 
-    {
-        // Data is now old - clear the new data bit 
-        mpu6050_device->new_data = CLEAR_BIT; 
+        read_table[mpu6050_device->smpl_type](mpu6050_device->device_num); 
+        mpu6050_temp_check(mpu6050_device); 
     }
 }
 
 
-// MPU6050 low power state 
-void mpu6050_low_power_state(
+// Read ready state 
+void mpu6050_read_ready_state(
     mpu6050_cntrl_data_t *mpu6050_device)
 {
-    // Waits for low power flag to be cleared 
+    // Read from the device on request 
+    if (mpu6050_device->read)
+    {
+        read_table[mpu6050_device->smpl_type](mpu6050_device->device_num); 
+        mpu6050_device->read = CLEAR_BIT; 
+        mpu6050_temp_check(mpu6050_device); 
+    }
 }
 
 
@@ -404,6 +436,14 @@ void mpu6050_low_power_trans_state(
 
     // Reset the non-blocking delay 
     mpu6050_device->time_start = SET_BIT; 
+}
+
+
+// MPU6050 low power state 
+void mpu6050_low_power_state(
+    mpu6050_cntrl_data_t *mpu6050_device)
+{
+    // Waits for low power flag to be cleared 
 }
 
 
@@ -456,21 +496,6 @@ void mpu6050_temp_check(
 //=======================================================================================
 // Setters 
 
-// Set reset flag 
-void mpu6050_set_reset_flag(
-    device_number_t device_num)
-{
-    // Get the controller data record 
-    mpu6050_cntrl_data_t *cntrl_data_ptr = 
-        (mpu6050_cntrl_data_t *)get_linked_list_entry(device_num, mpu6050_cntrl_data_ptr); 
-    
-    // Check that the data record is valid 
-    if (cntrl_data_ptr == NULL) return; 
-
-    cntrl_data_ptr->reset = SET_BIT; 
-}
-
-
 // Set low power flag 
 void mpu6050_set_low_power(
     device_number_t device_num)
@@ -504,7 +529,7 @@ void mpu6050_clear_low_power(
 // Set the data sample type 
 void mpu6050_set_smpl_type(
     device_number_t device_num, 
-    mpu6050_sample_type_t type)
+    mpu6050_sample_type_t sample_type)
 {
     // Get the controller data record 
     mpu6050_cntrl_data_t *cntrl_data_ptr = 
@@ -514,7 +539,56 @@ void mpu6050_set_smpl_type(
     if (cntrl_data_ptr == NULL) return; 
 
     // Update the sampling type 
-    cntrl_data_ptr->smpl_type = type; 
+    cntrl_data_ptr->smpl_type = sample_type; 
+}
+
+
+// Set the read state 
+void mpu6050_set_read_state(
+    device_number_t device_num, 
+    mpu6050_read_state_t read_type)
+{
+    // Get the controller data record 
+    mpu6050_cntrl_data_t *cntrl_data_ptr = 
+        (mpu6050_cntrl_data_t *)get_linked_list_entry(device_num, mpu6050_cntrl_data_ptr); 
+    
+    // Check that the data record is valid 
+    if (cntrl_data_ptr == NULL) return; 
+
+    // Update the data record 
+    cntrl_data_ptr->read_state = read_type; 
+    cntrl_data_ptr->time_start = SET_BIT; 
+}
+
+
+// Set the read flag 
+void mpu6050_set_read_flag(
+    device_number_t device_num)
+{
+    // Get the controller data record 
+    mpu6050_cntrl_data_t *cntrl_data_ptr = 
+        (mpu6050_cntrl_data_t *)get_linked_list_entry(device_num, mpu6050_cntrl_data_ptr); 
+    
+    // Check that the data record is valid 
+    if (cntrl_data_ptr == NULL) return NULL_PTR_RETURN; 
+
+    // Set the read flag 
+    cntrl_data_ptr->read = SET_BIT; 
+}
+
+
+// Set reset flag 
+void mpu6050_set_reset_flag(
+    device_number_t device_num)
+{
+    // Get the controller data record 
+    mpu6050_cntrl_data_t *cntrl_data_ptr = 
+        (mpu6050_cntrl_data_t *)get_linked_list_entry(device_num, mpu6050_cntrl_data_ptr); 
+    
+    // Check that the data record is valid 
+    if (cntrl_data_ptr == NULL) return; 
+
+    cntrl_data_ptr->reset = SET_BIT; 
 }
 
 //=======================================================================================
@@ -550,21 +624,6 @@ MPU6050_FAULT_CODE mpu6050_get_fault_code(
     if (cntrl_data_ptr == NULL) return NULL_PTR_RETURN; 
 
     return cntrl_data_ptr->fault_code; 
-}
-
-
-// Get the new data flag 
-uint8_t mpu6050_get_data_status(
-    device_number_t device_num)
-{
-    // Get the controller data record 
-    mpu6050_cntrl_data_t *cntrl_data_ptr = 
-        (mpu6050_cntrl_data_t *)get_linked_list_entry(device_num, mpu6050_cntrl_data_ptr); 
-    
-    // Check that the data record is valid 
-    if (cntrl_data_ptr == NULL) return NULL_PTR_RETURN; 
-
-    return cntrl_data_ptr->new_data; 
 }
 
 //=======================================================================================
