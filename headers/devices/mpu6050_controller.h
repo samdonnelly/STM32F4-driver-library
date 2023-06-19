@@ -104,12 +104,16 @@ typedef struct mpu6050_cntrl_data_s
 
     // Device and controller information 
     mpu6050_states_t state;                 // State of the controller 
-    MPU6050_FAULT_CODE fault_code;          // Controller fault code 
     uint32_t clk_freq;                      // Timer clock frquency 
     uint32_t sample_period;                 // Time between data samples (us) 
     uint32_t time_cnt_total;                // Time delay counter total count 
     uint32_t time_cnt;                      // Time delay counter instance 
     uint8_t  time_start;                    // Time delay counter start flag 
+    // Fault code info 
+    // --> bit 0-7: driver faults --> see mpu6050_get_status
+    // --> bit 8: over temperature 
+    // --> bits 9-15: not used 
+    MPU6050_FAULT_CODE fault_code;          // Controller fault code 
 
     // Trackers 
     mpu6050_sleep_mode_t low_power : 1;     // Low power flag 

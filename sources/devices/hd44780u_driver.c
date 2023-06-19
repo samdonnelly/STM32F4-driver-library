@@ -102,7 +102,7 @@ typedef struct hd44780u_data_record_s
     uint8_t display_control;         // Display control parameters 
 
     // Status info 
-    // 'status' --> bits 0-8: i2c status (see i2c_status_t) 
+    // 'status' --> bits 0-7: i2c status (see i2c_status_t) 
     uint8_t status; 
 }
 hd44780u_data_record_t; 

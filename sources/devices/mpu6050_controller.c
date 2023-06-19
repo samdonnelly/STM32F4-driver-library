@@ -221,7 +221,7 @@ void mpu6050_controller(
     MPU6050_STATE next_state = cntrl_data_ptr->state; 
 
     // Check the driver status 
-    cntrl_data_ptr->fault_code |= mpu6050_get_status(device_num); 
+    cntrl_data_ptr->fault_code |= (uint16_t)mpu6050_get_status(device_num); 
 
     //===================================================
     // State machine 
@@ -486,7 +486,7 @@ void mpu6050_temp_check(
     if (mpu6050_get_temp_raw(mpu6050_device->device_num) > 
         (MPU6050_RAW_TEMP_MAX-MPU6050_RAW_TEMP_OFST))
     {
-        mpu6050_device->fault_code |= (SET_BIT << SHIFT_9); 
+        mpu6050_device->fault_code |= (SET_BIT << SHIFT_8); 
     }
 }
 
@@ -570,7 +570,7 @@ void mpu6050_set_read_flag(
         (mpu6050_cntrl_data_t *)get_linked_list_entry(device_num, mpu6050_cntrl_data_ptr); 
     
     // Check that the data record is valid 
-    if (cntrl_data_ptr == NULL) return NULL_PTR_RETURN; 
+    if (cntrl_data_ptr == NULL) return; 
 
     // Set the read flag 
     cntrl_data_ptr->read = SET_BIT; 
