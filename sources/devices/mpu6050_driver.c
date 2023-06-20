@@ -918,7 +918,6 @@ void mpu6050_accel_read(
 
     // Temporary data storage 
     uint8_t data_reg[BYTE_8];
-    uint8_t reg_index = CLEAR; 
 
     // Read the accelerometer data 
     mpu6050_read(
@@ -930,19 +929,12 @@ void mpu6050_accel_read(
     // Combine the return values into signed integers - values are unformatted
 
     // Acceleration 
-    device_data_ptr->accel_data.accel_x = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
-    reg_index++; 
-    device_data_ptr->accel_data.accel_y = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
-    reg_index++; 
-    device_data_ptr->accel_data.accel_z = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
-    reg_index++; 
+    device_data_ptr->accel_data.accel_x = (int16_t)((data_reg[0] << SHIFT_8) | (data_reg[1]));
+    device_data_ptr->accel_data.accel_y = (int16_t)((data_reg[2] << SHIFT_8) | (data_reg[3]));
+    device_data_ptr->accel_data.accel_z = (int16_t)((data_reg[4] << SHIFT_8) | (data_reg[5]));
 
     // Temperature 
-    device_data_ptr->other_data.temp = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index])); 
+    device_data_ptr->other_data.temp = (int16_t)((data_reg[6] << SHIFT_8) | (data_reg[7])); 
 }
 
 
@@ -959,7 +951,6 @@ void mpu6050_gyro_read(
 
     // Temporary data storage 
     uint8_t data_reg[BYTE_8];
-    uint8_t reg_index = CLEAR; 
 
     // Read the gyroscope data 
     mpu6050_read(
@@ -971,19 +962,12 @@ void mpu6050_gyro_read(
     // Combine the return values into signed integers - values are unformatted
 
     // Temperature 
-    device_data_ptr->other_data.temp = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index])); 
-    reg_index++; 
+    device_data_ptr->other_data.temp = (int16_t)((data_reg[0] << SHIFT_8) | (data_reg[1])); 
 
     // Gyroscope 
-    device_data_ptr->gyro_data.gyro_x = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
-    reg_index++; 
-    device_data_ptr->gyro_data.gyro_y = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
-    reg_index++; 
-    device_data_ptr->gyro_data.gyro_z = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    device_data_ptr->gyro_data.gyro_x = (int16_t)((data_reg[2] << SHIFT_8) | (data_reg[3]));
+    device_data_ptr->gyro_data.gyro_y = (int16_t)((data_reg[4] << SHIFT_8) | (data_reg[5]));
+    device_data_ptr->gyro_data.gyro_z = (int16_t)((data_reg[6] << SHIFT_8) | (data_reg[7]));
 }
 
 
@@ -1000,7 +984,6 @@ void mpu6050_temp_read(
 
     // Store the temperature data 
     uint8_t data_reg[BYTE_2]; 
-    uint8_t reg_index = CLEAR; 
 
     // Read the temperature data 
     mpu6050_read(
@@ -1010,8 +993,7 @@ void mpu6050_temp_read(
         data_reg);
 
     // Combine the return values into a signed integer - value is unformatted
-    device_data_ptr->other_data.temp = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index])); 
+    device_data_ptr->other_data.temp = (int16_t)((data_reg[0] << SHIFT_8) | (data_reg[1])); 
 }
 
 
@@ -1028,7 +1010,6 @@ void mpu6050_read_all(
 
     // Temporary data storage 
     uint8_t data_reg[BYTE_14];
-    uint8_t reg_index = CLEAR; 
 
     // Read the accelerometer data 
     mpu6050_read(
