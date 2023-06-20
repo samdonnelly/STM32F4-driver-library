@@ -643,6 +643,8 @@ MPU6050_ST_RESULT mpu6050_self_test(
 /**
  * @brief MPU6050 clear device driver fault flag 
  * 
+ * @details 
+ * 
  * @param device_num : data record address of device 
  */
 void mpu6050_clear_status(
@@ -650,7 +652,14 @@ void mpu6050_clear_status(
 
 
 /**
- * @brief MPU6050 get device driver fault flag 
+ * @brief MPU6050 get device driver fault code 
+ * 
+ * @details 
+ *          
+ *          Status info / fault code: 
+ *            --> bit 0: i2c status (see i2c_status_t) 
+ *            --> bit 1: init status (WHO_AM_I) 
+ *            --> bits 2-7: self test results 
  * 
  * @param device_num : data record address of device 
  * @return uint8_t : driver status code for a given device number 
@@ -677,42 +686,6 @@ MPU6050_INT_STATUS mpu6050_int_status(
     device_number_t device_num); 
 
 
-// /**
-//  * @brief MPU6050 raw x-axis acceleration value 
-//  * 
-//  * @details Returns the unformatted x-axis acceleration data. 
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return int16_t : unformatted x-axis acceleration 
-//  */
-// int16_t mpu6050_get_accel_x_raw(
-//     device_number_t device_num); 
-
-
-// /**
-//  * @brief MPU6050 raw y-axis acceleration value 
-//  * 
-//  * @details Returns the unformatted y-axis acceleration data. 
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return int16_t : unformatted y-axis acceleration 
-//  */
-// int16_t mpu6050_get_accel_y_raw(
-//     device_number_t device_num); 
-
-
-// /**
-//  * @brief MPU6050 raw z-axis acceleration value 
-//  * 
-//  * @details Returns the unformatted z-axis acceleration data. 
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return int16_t : unformatted z-axis acceleration 
-//  */
-// int16_t mpu6050_get_accel_z_raw(
-//     device_number_t device_num); 
-
-
 /**
  * @brief Accelerometer raw values 
  * 
@@ -728,57 +701,6 @@ void mpu6050_get_accel_raw(
     int16_t *accel_x, 
     int16_t *accel_y, 
     int16_t *accel_z); 
-
-
-// /**
-//  * @brief MPU6050 x-axis acceleration calculation 
-//  * 
-//  * @details Calculates and returns the true acceleration along the x-axis in g's using 
-//  *          the raw sensor data. The value is calculated by taking the raw sensor output 
-//  *          and dividing it by the appropriate scalar based on the full scale range of 
-//  *          the accelerometer. 
-//  * 
-//  * @see mpu6050_afs_sel_set_t
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return float : x-axis acceleration (g's)
-//  */
-// float mpu6050_get_accel_x(
-//     device_number_t device_num); 
-
-
-// /**
-//  * @brief MPU6050 y-axis acceleration calculation 
-//  * 
-//  * @details Calculates and returns the true acceleration along the y-axis in g's using 
-//  *          the raw sensor data. The value is calculated by taking the raw sensor output 
-//  *          and dividing it by the appropriate scalar based on the full scale range of 
-//  *          the accelerometer. 
-//  * 
-//  * @see mpu6050_afs_sel_set_t
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return float : y-axis acceleration (g's)
-//  */
-// float mpu6050_get_accel_y(
-//     device_number_t device_num); 
-
-
-// /**
-//  * @brief MPU6050 z-axis acceleration calculation 
-//  * 
-//  * @details Calculates and returns the true acceleration along the z-axis in g's using 
-//  *          the raw sensor data. The value is calculated by taking the raw sensor output 
-//  *          and dividing it by the appropriate scalar based on the full scale range of 
-//  *          the accelerometer. 
-//  * 
-//  * @see mpu6050_afs_sel_set_t
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return float : z-axis acceleration (g's)
-//  */
-// float mpu6050_get_accel_z(
-//     device_number_t device_num); 
 
 
 /**
@@ -798,42 +720,6 @@ void mpu6050_get_accel(
     float *accel_z); 
 
 
-// /**
-//  * @brief MPU6050 raw x-axis angular velocity value 
-//  * 
-//  * @details Returns the unformatted x-axis angular velocity data. 
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return int16_t : unformatted x-axis angular velocity 
-//  */
-// int16_t mpu6050_get_gyro_x_raw(
-//     device_number_t device_num); 
-
-
-// /**
-//  * @brief MPU6050 raw y-axis angular velocity value 
-//  * 
-//  * @details Returns the unformatted y-axis angular velocity data. 
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return int16_t : unformatted y-axis angular velocity 
-//  */
-// int16_t mpu6050_get_gyro_y_raw(
-//     device_number_t device_num); 
-
-
-// /**
-//  * @brief MPU6050 raw z-axis angular velocity value 
-//  * 
-//  * @details Returns the unformatted z-axis angular velocity data. 
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return int16_t : unformatted z-axis angular velocity 
-//  */
-// int16_t mpu6050_get_gyro_z_raw(
-//     device_number_t device_num); 
-
-
 /**
  * @brief Gyroscope raw values 
  * 
@@ -849,66 +735,6 @@ void mpu6050_get_gyro_raw(
     int16_t *gyro_x_raw, 
     int16_t *gyro_y_raw, 
     int16_t *gyro_z_raw); 
-
-
-// /**
-//  * @brief MPU6050 x-axis angular velocity calculation 
-//  * 
-//  * @details Calculates and returns the true gyroscopic value around the x-axis in deg/s 
-//  *          using the raw sensor data. The value is calculated by taking the raw sensor 
-//  *          output and dividing it by the appropriate scalar based on the full scale range 
-//  *          of the gyroscope. The gyroscope is prone to drift/errors over time so the 
-//  *          offset recorded from mpu6050_calibrate is used to correct for errors during 
-//  *          the calculation. 
-//  * 
-//  * @see mpu6050_fs_sel_set_t
-//  * @see mpu6050_calibrate
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return float : x-axis angular velocity (deg/s) 
-//  */
-// float mpu6050_get_gyro_x(
-//     device_number_t device_num);
-
-
-// /**
-//  * @brief MPU6050 y-axis angular velocity calculation 
-//  * 
-//  * @details Calculates and returns the true gyroscopic value around the y-axis in deg/s 
-//  *          using the raw sensor data. The value is calculated by taking the raw sensor 
-//  *          output and dividing it by the appropriate scalar based on the full scale range 
-//  *          of the gyroscope. The gyroscope is prone to drift/errors over time so the 
-//  *          offset recorded from mpu6050_calibrate is used to correct for errors during 
-//  *          the calculation.
-//  * 
-//  * @see mpu6050_fs_sel_set_t
-//  * @see mpu6050_calibrate
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return float : y-axis angular velocity (deg/s) 
-//  */
-// float mpu6050_get_gyro_y(
-//     device_number_t device_num);
-
-
-// /**
-//  * @brief MPU6050 z-axis angular velocity calculation 
-//  * 
-//  * @details Calculates and returns the true gyroscopic value around the z-axis in deg/s 
-//  *          using the raw sensor data. The value is calculated by taking the raw sensor 
-//  *          output and dividing it by the appropriate scalar based on the full scale range 
-//  *          of the gyroscope. The gyroscope is prone to drift/errors over time so the 
-//  *          offset recorded from mpu6050_calibrate is used to correct for errors during 
-//  *          the calculation.
-//  * 
-//  * @see mpu6050_fs_sel_set_t
-//  * @see mpu6050_calibrate
-//  * 
-//  * @param device_num : data record address of device 
-//  * @return float : z-axis angular velocity (deg/s) 
-//  */
-// float mpu6050_get_gyro_z(
-//     device_number_t device_num);
 
 
 /**
