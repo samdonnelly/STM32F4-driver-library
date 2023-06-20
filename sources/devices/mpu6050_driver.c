@@ -652,8 +652,10 @@ void mpu6050_init(
                                         (void *)&mpu6050_driver_data_ptr, 
                                         sizeof(mpu6050_driver_data_t)); 
 
-    // Status info 
+    // Initialize data record 
     device_data_ptr->status = CLEAR; 
+    device_data_ptr->i2c = i2c; 
+    device_data_ptr->addr = mpu6050_addr; 
 
     // Read the WHO_AM_I register to establish that there is communication 
     if (mpu6050_who_am_i_read(device_data_ptr) != MPU6050_7BIT_ADDR)
@@ -662,10 +664,6 @@ void mpu6050_init(
     }
     else 
     {
-        // Initialize I2C trackers 
-        device_data_ptr->i2c = i2c; 
-        device_data_ptr->addr = mpu6050_addr; 
-
         // Choose which sensors to use and frquency of CYCLE mode
         mpu6050_pwr_mgmt_2_write(
             device_data_ptr, 
@@ -1042,30 +1040,17 @@ void mpu6050_read_all(
     // Combine the return values into signed integers - values are unformatted
 
     // Acceleration 
-    device_data_ptr->accel_data.accel_x = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
-    reg_index++; 
-    device_data_ptr->accel_data.accel_y = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
-    reg_index++; 
-    device_data_ptr->accel_data.accel_z = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
-    reg_index++; 
+    device_data_ptr->accel_data.accel_x = (int16_t)((data_reg[0] << SHIFT_8) | (data_reg[1]));
+    device_data_ptr->accel_data.accel_y = (int16_t)((data_reg[2] << SHIFT_8) | (data_reg[3]));
+    device_data_ptr->accel_data.accel_z = (int16_t)((data_reg[4] << SHIFT_8) | (data_reg[5]));
 
     // Temperature 
-    device_data_ptr->other_data.temp = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) |  (data_reg[reg_index])); 
-    reg_index++; 
+    device_data_ptr->other_data.temp = (int16_t)((data_reg[6] << SHIFT_8) |  (data_reg[7])); 
 
     // Gyroscope 
-    device_data_ptr->gyro_data.gyro_x = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
-    reg_index++; 
-    device_data_ptr->gyro_data.gyro_y = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
-    reg_index++; 
-    device_data_ptr->gyro_data.gyro_z = 
-        (int16_t)((data_reg[reg_index] << SHIFT_8) | (data_reg[reg_index]));
+    device_data_ptr->gyro_data.gyro_x = (int16_t)((data_reg[8]  << SHIFT_8) | (data_reg[9]));
+    device_data_ptr->gyro_data.gyro_y = (int16_t)((data_reg[10] << SHIFT_8) | (data_reg[11]));
+    device_data_ptr->gyro_data.gyro_z = (int16_t)((data_reg[12] << SHIFT_8) | (data_reg[13]));
 }
 
 
@@ -1849,9 +1834,9 @@ void mpu6050_get_gyro_raw(
 // Gyroscopic value calculation 
 void mpu6050_get_gyro(
     device_number_t device_num, 
-    int16_t *gyro_x, 
-    int16_t *gyro_y, 
-    int16_t *gyro_z)
+    float *gyro_x, 
+    float *gyro_y, 
+    float *gyro_z)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 

@@ -923,9 +923,9 @@ void mpu6050_get_gyro_raw(
  */
 void mpu6050_get_gyro(
     device_number_t device_num, 
-    int16_t *gyro_x, 
-    int16_t *gyro_y, 
-    int16_t *gyro_z); 
+    float *gyro_x, 
+    float *gyro_y, 
+    float *gyro_z); 
 
 
 /**
