@@ -27,8 +27,9 @@
 // - Clean up UBX config function 
 //=======================================================================================
 
+
 //=======================================================================================
-// Message processing functions 
+// Function prototypes 
 
 /**
  * @brief M8Q message size 
@@ -82,11 +83,6 @@ void m8q_nmea_parse(
     uint8_t arg_num, 
     uint8_t **data); 
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Message configuration functions 
 
 /**
  * @brief M8Q NMEA config function 
@@ -178,11 +174,6 @@ CHECKSUM m8q_ubx_checksum(
     uint8_t *msg, 
     uint16_t len); 
 
-//=======================================================================================
-
-
-//================================================================================
-// User config functions 
 
 /**
  * @brief M8Q NMEA config user interface 
@@ -192,7 +183,7 @@ CHECKSUM m8q_ubx_checksum(
  */
 void m8q_user_config_prompt(void); 
 
-//================================================================================
+//=======================================================================================
 
 
 //=======================================================================================
@@ -242,7 +233,7 @@ m8q_nmea_time_t;
 
 
 // NMEA message data 
-typedef struct m8q_comm_data_s
+typedef struct m8q_driver_data_s
 {
     // Messages 
     m8q_nmea_pos_t  pos_data;                 // POSITION message 
@@ -257,51 +248,57 @@ typedef struct m8q_comm_data_s
     // Pins 
     pin_selector_t pwr_save;      // Low power mode 
     pin_selector_t tx_ready;      // TX-Ready 
+
+    // Status info 
+    // 'status' --> bit 0: i2c status (see i2c_status_t) 
+    //          --> bits 1-12: driver faults (see status getter) 
+    //          --> bits 13-15: not used 
+    uint16_t status; 
 } 
-m8q_comm_data_t; 
+m8q_driver_data_t; 
 
 
 // NMEA message data instance 
-static m8q_comm_data_t m8q_comm_data; 
+static m8q_driver_data_t m8q_driver_data; 
 
 
 // NMEA POSITION message 
 static uint8_t* position[M8Q_NMEA_POS_ARGS+1] = 
 { 
-    m8q_comm_data.pos_data.time, 
-    m8q_comm_data.pos_data.lat, 
-    m8q_comm_data.pos_data.NS, 
-    m8q_comm_data.pos_data.lon, 
-    m8q_comm_data.pos_data.EW, 
-    m8q_comm_data.pos_data.altRef, 
-    m8q_comm_data.pos_data.navStat, 
-    m8q_comm_data.pos_data.hAcc, 
-    m8q_comm_data.pos_data.vAcc,
-    m8q_comm_data.pos_data.SOG,
-    m8q_comm_data.pos_data.COG,
-    m8q_comm_data.pos_data.vVel,
-    m8q_comm_data.pos_data.diffAge,
-    m8q_comm_data.pos_data.HDOP,
-    m8q_comm_data.pos_data.VDOP,
-    m8q_comm_data.pos_data.TDOP,
-    m8q_comm_data.pos_data.numSvs,
-    m8q_comm_data.pos_data.res,
-    m8q_comm_data.pos_data.DR, 
-    m8q_comm_data.pos_data.eom 
+    m8q_driver_data.pos_data.time, 
+    m8q_driver_data.pos_data.lat, 
+    m8q_driver_data.pos_data.NS, 
+    m8q_driver_data.pos_data.lon, 
+    m8q_driver_data.pos_data.EW, 
+    m8q_driver_data.pos_data.altRef, 
+    m8q_driver_data.pos_data.navStat, 
+    m8q_driver_data.pos_data.hAcc, 
+    m8q_driver_data.pos_data.vAcc,
+    m8q_driver_data.pos_data.SOG,
+    m8q_driver_data.pos_data.COG,
+    m8q_driver_data.pos_data.vVel,
+    m8q_driver_data.pos_data.diffAge,
+    m8q_driver_data.pos_data.HDOP,
+    m8q_driver_data.pos_data.VDOP,
+    m8q_driver_data.pos_data.TDOP,
+    m8q_driver_data.pos_data.numSvs,
+    m8q_driver_data.pos_data.res,
+    m8q_driver_data.pos_data.DR, 
+    m8q_driver_data.pos_data.eom 
 }; 
 
 // NMEA TIME message 
 static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] = 
 { 
-    m8q_comm_data.time_data.time, 
-    m8q_comm_data.time_data.date, 
-    m8q_comm_data.time_data.utcTow, 
-    m8q_comm_data.time_data.utcWk, 
-    m8q_comm_data.time_data.leapSec, 
-    m8q_comm_data.time_data.clkBias, 
-    m8q_comm_data.time_data.clkDrift, 
-    m8q_comm_data.time_data.tpGran, 
-    m8q_comm_data.time_data.eom 
+    m8q_driver_data.time_data.time, 
+    m8q_driver_data.time_data.date, 
+    m8q_driver_data.time_data.utcTow, 
+    m8q_driver_data.time_data.utcWk, 
+    m8q_driver_data.time_data.leapSec, 
+    m8q_driver_data.time_data.clkBias, 
+    m8q_driver_data.time_data.clkDrift, 
+    m8q_driver_data.time_data.tpGran, 
+    m8q_driver_data.time_data.eom 
 }; 
 
 //=======================================================================================
@@ -322,22 +319,24 @@ M8Q_MSG_ERROR_CODE m8q_init(
 {
     // Local variables 
     M8Q_MSG_ERROR_CODE msg_error_code = 0; 
+    uint16_t m8q_status = M8Q_FAULT_NONE; 
 
     // Initialize the device communication info 
-    m8q_comm_data.i2c = i2c; 
-    m8q_comm_data.gpio = gpio; 
-    m8q_comm_data.pwr_save = pwr_save_pin; 
-    m8q_comm_data.tx_ready = tx_ready_pin; 
+    m8q_driver_data.i2c = i2c; 
+    m8q_driver_data.gpio = gpio; 
+    m8q_driver_data.pwr_save = pwr_save_pin; 
+    m8q_driver_data.tx_ready = tx_ready_pin; 
+    m8q_driver_data.status = CLEAR; 
 
     // Configure a GPIO output for low power mode 
-    gpio_pin_init(m8q_comm_data.gpio, 
-                  m8q_comm_data.pwr_save, 
+    gpio_pin_init(m8q_driver_data.gpio, 
+                  m8q_driver_data.pwr_save, 
                   MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
     m8q_set_low_power(GPIO_HIGH); 
 
     // Configure a GPIO input for TX_READY 
-    gpio_pin_init(m8q_comm_data.gpio, 
-                  m8q_comm_data.tx_ready, 
+    gpio_pin_init(m8q_driver_data.gpio, 
+                  m8q_driver_data.tx_ready, 
                   MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_PD);
 
     // Send configuration messages 
@@ -347,15 +346,18 @@ M8Q_MSG_ERROR_CODE m8q_init(
         switch (*(config_msgs))
         {
             case M8Q_NMEA_START:  // NMEA message 
-                msg_error_code = (m8q_nmea_config((config_msgs)) << SHIFT_8); 
+                // msg_error_code = (m8q_nmea_config((config_msgs)) << SHIFT_8); 
+                m8q_status |= (m8q_nmea_config((config_msgs)) << SHIFT_8); 
                 break;
 
             case M8Q_UBX_SYNC1:  // UBX message 
-                msg_error_code = (m8q_ubx_config((config_msgs)) << SHIFT_8); 
+                // msg_error_code = (m8q_ubx_config((config_msgs)) << SHIFT_8); 
+                m8q_status |= (m8q_ubx_config((config_msgs)) << SHIFT_8); 
                 break;
             
             default:  // Unknown config message 
                 msg_error_code = (M8Q_NO_DATA << SHIFT_8); 
+                m8q_status |= (SET_BIT << M8Q_FAULT_NO_DATA); 
                 break;  
         }
 
@@ -368,6 +370,9 @@ M8Q_MSG_ERROR_CODE m8q_init(
         config_msgs += msg_max_size; 
     }
 
+    // Update the driver status 
+    m8q_driver_data.status |= (uint16_t)m8q_status; 
+
     return msg_error_code; 
 }
 
@@ -375,16 +380,17 @@ M8Q_MSG_ERROR_CODE m8q_init(
 
 
 //=======================================================================================
-// Read functions 
+// Read and write functions 
 
 // Read a message from the M8Q 
 M8Q_READ_STAT m8q_read(void)
 {    
     // Local variables 
     M8Q_READ_STAT read_status = M8Q_READ_INVALID; 
-    uint8_t data_check = 0; 
-    uint8_t *nmea_data = m8q_comm_data.nmea_resp; 
-    uint8_t *ubx_data  = m8q_comm_data.ubx_resp; 
+    uint8_t data_check = CLEAR; 
+    uint8_t *nmea_data = m8q_driver_data.nmea_resp; 
+    uint8_t *ubx_data  = m8q_driver_data.ubx_resp; 
+    I2C_STATUS i2c_status = I2C_OK; 
 
     // Check for a valid data stream 
     m8q_check_data_stream(&data_check); 
@@ -399,14 +405,18 @@ M8Q_READ_STAT m8q_read(void)
             *nmea_data++ = data_check; 
 
             // Generate a start condition 
-            i2c_start(m8q_comm_data.i2c); 
+            i2c_status |= i2c_start(m8q_driver_data.i2c); 
 
             // Send the device address with a read offset 
-            i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
-            i2c_clear_addr(m8q_comm_data.i2c);  
+            i2c_status |= i2c_write_addr(m8q_driver_data.i2c, 
+                                         M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
+            i2c_clear_addr(m8q_driver_data.i2c);  
 
             // Read the rest of the data stream until "\r\n" 
-            i2c_read_to_term(m8q_comm_data.i2c, nmea_data, M8Q_NMEA_END_PAY, BYTE_4); 
+            i2c_status |= i2c_read_to_term(m8q_driver_data.i2c, 
+                                           nmea_data, 
+                                           M8Q_NMEA_END_PAY, 
+                                           BYTE_4); 
 
             // Parse the message data into its data record 
             m8q_nmea_sort(nmea_data); 
@@ -419,19 +429,20 @@ M8Q_READ_STAT m8q_read(void)
             *ubx_data++ = data_check; 
 
             // Generate a start condition 
-            i2c_start(m8q_comm_data.i2c); 
+            i2c_status |= i2c_start(m8q_driver_data.i2c); 
 
             // Send the device address with a read offset 
-            i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
-            i2c_clear_addr(m8q_comm_data.i2c); 
+            i2c_status |= i2c_write_addr(m8q_driver_data.i2c, 
+                                         M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
+            i2c_clear_addr(m8q_driver_data.i2c); 
 
             // Read the rest of the UBX message 
-            i2c_read_to_len(m8q_comm_data.i2c, 
-                            M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET, 
-                            ubx_data, 
-                            M8Q_UBX_LENGTH_OFST-BYTE_1, 
-                            M8Q_UBX_LENGTH_LEN, 
-                            M8Q_UBX_CS_LEN); 
+            i2c_status |= i2c_read_to_len(m8q_driver_data.i2c, 
+                                          M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET, 
+                                          ubx_data, 
+                                          M8Q_UBX_LENGTH_OFST-BYTE_1, 
+                                          M8Q_UBX_LENGTH_LEN, 
+                                          M8Q_UBX_CS_LEN); 
 
             read_status = M8Q_READ_UBX; 
             break; 
@@ -439,6 +450,9 @@ M8Q_READ_STAT m8q_read(void)
         default:  // Unknown data stream 
             break;
     }
+
+    // Update the driver status 
+    m8q_driver_data.status |= (uint8_t)i2c_status; 
 
     return read_status; 
 }
@@ -451,29 +465,33 @@ void m8q_check_data_size(
     // Local variables 
     uint8_t num_bytes[BYTE_2];        // Store the high and low byte of the data size 
     uint8_t address = M8Q_REG_0XFD;   // Address of high byte for the data size 
+    I2C_STATUS i2c_status = I2C_OK; 
 
     // Generate a start condition 
-    i2c_start(m8q_comm_data.i2c); 
+    i2c_status |= i2c_start(m8q_driver_data.i2c); 
 
     // Write the slave address with write access 
-    i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
-    i2c_clear_addr(m8q_comm_data.i2c); 
+    i2c_status |= i2c_write_addr(m8q_driver_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
+    i2c_clear_addr(m8q_driver_data.i2c); 
 
     // Send the first data size register address to start reading from there 
-    i2c_write(m8q_comm_data.i2c, &address, BYTE_1); 
+    i2c_status |= i2c_write(m8q_driver_data.i2c, &address, BYTE_1); 
 
     // Generate another start condition 
-    i2c_start(m8q_comm_data.i2c); 
+    i2c_status |= i2c_start(m8q_driver_data.i2c); 
 
     // Send the device address again with a read offset 
-    i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET);  
-    i2c_clear_addr(m8q_comm_data.i2c); 
+    i2c_status |= i2c_write_addr(m8q_driver_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET);  
+    i2c_clear_addr(m8q_driver_data.i2c); 
 
     // Read the data size registers 
-    i2c_read(m8q_comm_data.i2c, num_bytes, BYTE_2); 
+    i2c_status |= i2c_read(m8q_driver_data.i2c, num_bytes, BYTE_2); 
 
     // Format the data into the data size 
     *data_size = (uint16_t)((num_bytes[BYTE_0] << SHIFT_8) | num_bytes[BYTE_1]); 
+
+    // Update the driver status 
+    m8q_driver_data.status |= (uint8_t)i2c_status; 
 }
 
 
@@ -481,40 +499,47 @@ void m8q_check_data_size(
 void m8q_check_data_stream(
     uint8_t *data_check)
 {
+    // Local variables 
+    I2C_STATUS i2c_status = I2C_OK; 
+
     // Generate a start condition 
-    i2c_start(m8q_comm_data.i2c); 
+    i2c_status |= i2c_start(m8q_driver_data.i2c); 
 
     // Send the device address with a read offset 
-    i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
-    i2c_clear_addr(m8q_comm_data.i2c); 
+    i2c_status |= i2c_write_addr(m8q_driver_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
+    i2c_clear_addr(m8q_driver_data.i2c); 
 
     // Read the first byte of the data stream 
-    i2c_read(m8q_comm_data.i2c, data_check, BYTE_1); 
+    i2c_status |= i2c_read(m8q_driver_data.i2c, data_check, BYTE_1); 
+
+    // Update the driver status 
+    m8q_driver_data.status |= (uint8_t)i2c_status; 
 }
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Write functions 
 
 // M8Q write 
 void m8q_write(
     uint8_t *data, 
     uint8_t data_size)
 {
+    // Local variables 
+    I2C_STATUS i2c_status = I2C_OK; 
+
     // Generate a start condition 
-    i2c_start(m8q_comm_data.i2c); 
+    i2c_status |= i2c_start(m8q_driver_data.i2c); 
 
     // Send the device address with a write offset 
-    i2c_write_addr(m8q_comm_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
-    i2c_clear_addr(m8q_comm_data.i2c); 
+    i2c_status |= i2c_write_addr(m8q_driver_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
+    i2c_clear_addr(m8q_driver_data.i2c); 
 
     // Send data (at least 2 bytes) 
-    i2c_write(m8q_comm_data.i2c, data, data_size); 
+    i2c_status |= i2c_write(m8q_driver_data.i2c, data, data_size); 
 
     // Generate a stop condition 
-    i2c_stop(m8q_comm_data.i2c); 
+    i2c_stop(m8q_driver_data.i2c); 
+
+    // Update the driver status 
+    m8q_driver_data.status |= (uint8_t)i2c_status; 
 }
 
 //=======================================================================================
@@ -529,7 +554,7 @@ uint8_t m8q_message_size(
     uint8_t term_char)
 {
     // Local variables 
-    uint8_t msg_len = 0; 
+    uint8_t msg_len = CLEAR; 
 
     // Calculate message size 
     while (*msg++ != term_char) msg_len++; 
@@ -587,10 +612,11 @@ void m8q_nmea_parse(
     // Increment to the first data field 
     msg += start_byte; 
 
-    // // Calculate the first data field length 
+    // Calculate the first data field length 
     arg_len = *(&data[data_index] + 1) - data[data_index];  
 
     // Read and parse the message 
+    // TODO term char exit condition 
     while (TRUE)
     {
         // Check for end of message data 
@@ -618,7 +644,7 @@ void m8q_nmea_parse(
                 if (data_index >= arg_num) break; 
 
                 // Reset arg index and calculate the new argument length 
-                arg_index = 0; 
+                arg_index = CLEAR; 
                 arg_len = *(&data[data_index] + 1) - data[data_index]; 
             }
 
@@ -638,17 +664,41 @@ void m8q_nmea_parse(
 
 
 //=======================================================================================
-// Getters 
+// Setters and Getters 
+
+// M8Q clear device driver fault flag 
+void m8q_clear_status(void)
+{
+    m8q_driver_data.status = CLEAR; 
+}
+
+
+// M8Q get device driver fault code 
+uint8_t m8q_get_status(void)
+{
+    return m8q_driver_data.status; 
+}
+
+
+// Low Power Mode setter 
+void m8q_set_low_power(
+    gpio_pin_state_t pin_state)
+{
+    gpio_write(m8q_driver_data.gpio, (SET_BIT << m8q_driver_data.pwr_save), pin_state);
+}
+
 
 // TX-Ready getter 
 uint8_t m8q_get_tx_ready(void)
 {
-    return gpio_read(m8q_comm_data.gpio, (SET_BIT << m8q_comm_data.tx_ready)); 
+    return gpio_read(m8q_driver_data.gpio, (SET_BIT << m8q_driver_data.tx_ready)); 
 }
 
 
 // Latitude getter 
-void m8q_get_lat(uint16_t *deg_min, uint32_t *min_frac)
+void m8q_get_lat(
+    uint16_t *deg_min, 
+    uint32_t *min_frac)
 {
     // Local variables 
     uint8_t deg_min_array[M8Q_COO_DATA_LEN];          // Integer portion of the minute 
@@ -659,16 +709,21 @@ void m8q_get_lat(uint16_t *deg_min, uint32_t *min_frac)
     for (uint8_t i = 0; i < lat_length; i++)
     {
         if (i < (M8Q_COO_DATA_LEN-BYTE_1))
+        {
             deg_min_array[i] = position[M8Q_POS_LAT][i]; 
-        
+        }
         else if (i == (M8Q_COO_DATA_LEN-BYTE_1))
+        {
             deg_min_array[i] = NULL_CHAR; 
-        
+        }
         else if (i < (2*M8Q_COO_DATA_LEN))
+        {
             min_frac_array[i-M8Q_COO_DATA_LEN] = position[M8Q_POS_LAT][i]; 
-        
+        }
         else
+        {
             min_frac_array[i-M8Q_COO_DATA_LEN] = NULL_CHAR; 
+        }
     }
 
     // Convert each number 
@@ -685,7 +740,9 @@ uint8_t m8q_get_NS(void)
 
 
 // Longitude getter 
-void m8q_get_long(uint16_t *deg_min, uint32_t *min_frac)
+void m8q_get_long(
+    uint16_t *deg_min, 
+    uint32_t *min_frac)
 {
     // Local variables 
     uint8_t deg_min_array[M8Q_COO_DATA_LEN+BYTE_1];   // Integer portion of the minute 
@@ -696,16 +753,21 @@ void m8q_get_long(uint16_t *deg_min, uint32_t *min_frac)
     for (uint8_t i = 0; i < lat_length; i++)
     {
         if (i < M8Q_COO_DATA_LEN)
+        {
             deg_min_array[i] = position[M8Q_POS_LON][i]; 
-        
+        }
         else if (i == M8Q_COO_DATA_LEN)
+        {
             deg_min_array[i] = NULL_CHAR; 
-        
+        }
         else if (i < (2*M8Q_COO_DATA_LEN + BYTE_1))
+        {
             min_frac_array[i-(M8Q_COO_DATA_LEN + BYTE_1)] = position[M8Q_POS_LON][i]; 
-        
+        }
         else
+        {
             min_frac_array[i-(M8Q_COO_DATA_LEN + BYTE_1)] = NULL_CHAR; 
+        }
     }
 
     // Convert each number 
@@ -733,30 +795,24 @@ uint16_t m8q_get_navstat(void)
 
 
 // Time getter 
-void m8q_get_time(uint8_t *utc_time)
+void m8q_get_time(
+    uint8_t *utc_time)
 {
     for (uint8_t i = 0; i < M8Q_TIME_CHAR_LEN; i++)
+    {
         *utc_time++ = time[M8Q_TIME_TIME][i]; 
+    }
 }
 
 
 // Date getter 
-void m8q_get_date(uint8_t *utc_date)
+void m8q_get_date(
+    uint8_t *utc_date)
 {
     for (uint8_t i = 0; i < M8Q_DATE_CHAR_LEN; i++)
+    {
         *utc_date++ = time[M8Q_TIME_DATE][i]; 
-}
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Setters 
-
-// Low Power Mode setter 
-void m8q_set_low_power(gpio_pin_state_t pin_state)
-{
-    gpio_write(m8q_comm_data.gpio, (SET_BIT << m8q_comm_data.pwr_save), pin_state);
+    }
 }
 
 //=======================================================================================
@@ -772,7 +828,7 @@ void m8q_user_config_init(
     I2C_TypeDef *i2c) 
 {
     // Initialize I2C pointer 
-    m8q_comm_data.i2c = i2c; 
+    m8q_driver_data.i2c = i2c; 
 
     // Prompt the user for the first message 
     m8q_user_config_prompt();
@@ -809,12 +865,12 @@ void m8q_user_config(void)
                 // Communicate the results 
                 if (!error_code)
                 { 
-                    ubx_pl_len = (m8q_comm_data.ubx_resp[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
-                                  m8q_comm_data.ubx_resp[M8Q_UBX_LENGTH_OFST]; 
+                    ubx_pl_len = (m8q_driver_data.ubx_resp[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
+                                  m8q_driver_data.ubx_resp[M8Q_UBX_LENGTH_OFST]; 
                     
                     for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN+ubx_pl_len+M8Q_UBX_CS_LEN); i++)
                     {
-                        uart_send_integer(USART2, (int16_t)m8q_comm_data.ubx_resp[i]); 
+                        uart_send_integer(USART2, (int16_t)m8q_driver_data.ubx_resp[i]); 
                         uart_send_new_line(USART2);
                     }
 
@@ -869,10 +925,10 @@ M8Q_NMEA_ERROR_CODE m8q_nmea_config(
 {
     // Local variables 
     uint8_t *msg_ptr = msg; 
-    uint8_t msg_args = 0; 
-    uint8_t msg_arg_count = 0; 
-    uint8_t msg_arg_mask = 0; 
-    CHECKSUM checksum = 0; 
+    uint8_t msg_args = CLEAR; 
+    uint8_t msg_arg_count = CLEAR; 
+    uint8_t msg_arg_mask = CLEAR; 
+    CHECKSUM checksum = CLEAR; 
     M8Q_NMEA_ERROR_CODE error_code = M8Q_NMEA_ERROR_NONE; 
     char term_str[M8Q_NMEA_END_MSG]; 
 
@@ -881,15 +937,21 @@ M8Q_NMEA_ERROR_CODE m8q_nmea_config(
     {
         // RATE (ID=40) 
         if (str_compare("40,", (char *)msg, BYTE_6)) 
+        {
             msg_args = M8Q_NMEA_RATE_ARGS; 
+        }
         
         // CONFIG (ID=41) 
         else if (str_compare("41,", (char *)msg, BYTE_6)) 
+        {
             msg_args = M8Q_NMEA_CONFIG_ARGS; 
+        }
 
         // Unsupported message ID 
         else
+        {
             error_code = M8Q_NMEA_ERROR_1; 
+        }
 
         // Check the number of message inputs 
         if (msg_args)
@@ -899,7 +961,9 @@ M8Q_NMEA_ERROR_CODE m8q_nmea_config(
             while(*msg_ptr != CR_CHAR) 
             {
                 if (*msg_ptr == COMMA_CHAR)
+                {
                     msg_arg_mask = 0; 
+                }
                 else 
                 {
                     if (!msg_arg_mask)
@@ -925,12 +989,16 @@ M8Q_NMEA_ERROR_CODE m8q_nmea_config(
                 m8q_write(msg, m8q_message_size(msg, NULL_CHAR));
             } 
             else
+            {
                 error_code = M8Q_NMEA_ERROR_2; 
+            }
         }
     }
     else 
+    {
         error_code = M8Q_NMEA_ERROR_3; 
-    
+    }
+
     return error_code; 
 }
 
@@ -957,8 +1025,11 @@ CHECKSUM m8q_nmea_checksum(
     for (uint8_t i = 0; i < M8Q_NMEA_CS_LEN; i++)
     {
         checksum_char = (xor_result & (FILTER_4_MSB >> SHIFT_4*i)) >> SHIFT_4*(1-i); 
-        if (checksum_char <= HEX_NUM_TO_LET) checksum_char += HEX_TO_NUM_CHAR; 
-        else checksum_char += HEX_TO_LET_CHAR; 
+        // TODO test and replace 
+        // if (checksum_char <= HEX_NUM_TO_LET) checksum_char += HEX_TO_NUM_CHAR; 
+        // else checksum_char += HEX_TO_LET_CHAR; 
+        checksum_char = (checksum_char <= HEX_NUM_TO_LET) ? (checksum_char + HEX_TO_NUM_CHAR) : 
+                                                            (checksum_char + HEX_TO_LET_CHAR); 
         checksum |= (uint16_t)(checksum_char << SHIFT_8*(1-i)); 
     }
 
@@ -1020,16 +1091,23 @@ M8Q_UBX_ERROR_CODE m8q_ubx_config(
                                             input_msg, &byte_count, pl_inputs))
                     {                        
                         if (pl_len == byte_count)
+                        {
                             format_ok++; 
-                        
+                        }
                         else 
+                        {
                             error_code = M8Q_UBX_ERROR_1; 
+                        }
                     } 
                     else
+                    {
                         error_code = M8Q_UBX_ERROR_2; 
+                    }
                 }
                 else
+                {
                     error_code = M8Q_UBX_ERROR_3; 
+                }
             }
 
             if (format_ok)
@@ -1052,23 +1130,33 @@ M8Q_UBX_ERROR_CODE m8q_ubx_config(
                     while(m8q_read() != M8Q_READ_UBX); 
 
                     // Check the response type 
-                    if (m8q_comm_data.ubx_resp[M8Q_UBX_CLASS_OFST] == M8Q_UBX_ACK_CLASS) 
+                    if (m8q_driver_data.ubx_resp[M8Q_UBX_CLASS_OFST] == M8Q_UBX_ACK_CLASS) 
                     {
-                        if (m8q_comm_data.ubx_resp[M8Q_UBX_ID_OFST] != M8Q_UBX_ACK_ID)
+                        if (m8q_driver_data.ubx_resp[M8Q_UBX_ID_OFST] != M8Q_UBX_ACK_ID)
+                        {
                             error_code = M8Q_UBX_ERROR_7; 
+                        }
                     }
                     else
+                    {
                         if (!M8Q_USER_CONFIG) error_code = M8Q_UBX_ERROR_8; 
+                    }
                 }
                 else
+                {
                     error_code = M8Q_UBX_ERROR_4; 
+                }
             } 
         } 
         else 
+        {
             error_code = M8Q_UBX_ERROR_5; 
+        }
     }
     else
+    {
         error_code = M8Q_UBX_ERROR_6; 
+    }
     
     return error_code; 
 }
@@ -1107,13 +1195,19 @@ UBX_MSG_STATUS m8q_ubx_msg_convert(
 
                 // Check the character validity 
                 if ((low_nibble >= ZERO_CHAR) && (low_nibble <= NINE_CHAR))
+                {
                     low_nibble -= HEX_TO_NUM_CHAR; 
+                }
                 
                 else if ((low_nibble >= A_CHAR) && (low_nibble <= F_CHAR)) 
+                {
                     low_nibble -= HEX_TO_LET_CHAR; 
+                }
                 
                 else 
+                {
                     break; 
+                }
                 
                 // Format two characters into one byte 
                 if (char_count)  // Format byte
@@ -1123,7 +1217,9 @@ UBX_MSG_STATUS m8q_ubx_msg_convert(
                 }
 
                 else  // Store the byte 
+                {
                     high_nibble = low_nibble; 
+                }
 
                 char_count = 1 - char_count;
             }

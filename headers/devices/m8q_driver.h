@@ -48,7 +48,7 @@
 #define M8Q_REG_0XFF             0xFF    // Data stream register 
 
 // M8Q messages 
-#define M8Q_NO_DATA              0xff    // NMEA invalid data stream return value 
+#define M8Q_NO_DATA              0xff    // Return value for an invalid NMEA data stream 
 #define M8Q_MSG_MAX_LEN          150     // Message buffer that can hold any message
 #define M8Q_PYL_MAX_LEN          100     // Message payload buffer to store any apyload length 
 
@@ -208,6 +208,28 @@ typedef enum {
     M8Q_UBX_ERROR_8      // Response message sent - only used during user config mode 
 } m8q_ubx_error_code_t; 
 
+
+/**
+ * @brief M8Q driver status codes 
+ * 
+ * @details 
+ */
+typedef enum {
+    M8Q_FAULT_NONE,           // No fault 
+    M8Q_FAULT_NO_DATA,        // No data available 
+    M8Q_FAULT_NMEA_ID,        // Unsupported PUBX message ID 
+    M8Q_FAULT_NMEA_FORM,      // Invalid formatting of PUBX message 
+    M8Q_FAULT_NMEA_INVALID,   // Only PUBX messages are supported 
+    M8Q_FAULT_UBX_SIZE,       // Payload length doesn't match size 
+    M8Q_FAULT_UBX_FORM,       // Invalid payload format 
+    M8Q_FAULT_UBX_LEN,        // Invalid payload length format 
+    M8Q_FAULT_UBX_CONVERT,    // Message conversion failed. Check format 
+    M8Q_FAULT_UBX_ID,         // Invalid ID format 
+    M8Q_FAULT_UBX_NA,         // Unknown message type 
+    M8Q_FAULT_UBX_NAK,        // Message not acknowledged 
+    M8Q_FAULT_UBX_RESP        // Response message sent - only used during user config mode 
+} m8q_status_codes_t; 
+
 //=======================================================================================
 
 
@@ -270,7 +292,7 @@ M8Q_MSG_ERROR_CODE m8q_init(
 
 
 //=======================================================================================
-// Read functions 
+// Read and write functions 
 
 /**
  * @brief Read a message from the M8Q 
@@ -318,11 +340,6 @@ void m8q_check_data_size(
 void m8q_check_data_stream(
     uint8_t *data_check); 
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Write functions 
 
 /**
  * @brief M8Q write 
@@ -341,7 +358,44 @@ void m8q_write(
 
 
 //=======================================================================================
-// Getters 
+// Setters and Getters 
+
+/**
+ * @brief M8Q clear device driver fault flag 
+ * 
+ * @details 
+ */
+void m8q_clear_status(void); 
+
+
+/**
+ * @brief M8Q get device driver fault code 
+ * 
+ * @details 
+ *          
+ *          Status info / fault code: 
+ *            --> bit 0: i2c status (see i2c_status_t) 
+ *            --> bit 1: 
+ * 
+ * @return uint8_t : driver status code for a given device number 
+ */
+uint8_t m8q_get_status(void); 
+
+
+/**
+ * @brief Power save mode setter 
+ * 
+ * @details Sets the output of the power save mode pin. If set to high then the receiver will 
+ *          enter power save mode where it will not report position information. If set low 
+ *          then the receiver will operate as normal. Note that communication with the receiver 
+ *          can't be achieved while in power save mode. The pin used for power save mode setting 
+ *          is initialized in the m8q_init function. 
+ * 
+ * @param pin_state : desired output state of the power save mode pin 
+ */
+void m8q_set_low_power(
+    gpio_pin_state_t pin_state); 
+
 
 /**
  * @brief TX-ready getter 
@@ -368,7 +422,9 @@ uint8_t m8q_get_tx_ready(void);
  * @param deg_min : degrees and minutes of the latitude 
  * @param min_frac : fractional portion of the minutes in the latitude 
  */
-void m8q_get_lat(uint16_t *deg_min, uint32_t *min_frac); 
+void m8q_get_lat(
+    uint16_t *deg_min, 
+    uint32_t *min_frac); 
 
 
 /**
@@ -395,7 +451,9 @@ uint8_t m8q_get_NS(void);
  * @param deg_min : degrees and minutes of the longitude 
  * @param min_frac : fractional portion of the minutes in the longitude 
  */
-void m8q_get_long(uint16_t *deg_min, uint32_t *min_frac); 
+void m8q_get_long(
+    uint16_t *deg_min, 
+    uint32_t *min_frac); 
 
 
 /**
@@ -439,7 +497,8 @@ uint16_t m8q_get_navstat(void);
  * 
  * @param utc_time : pointer to buffer to store the UTC time 
  */
-void m8q_get_time(uint8_t *utc_time); 
+void m8q_get_time(
+    uint8_t *utc_time); 
 
 
 /**
@@ -450,26 +509,8 @@ void m8q_get_time(uint8_t *utc_time);
  * 
  * @param utc_date : pointer to buffer to store the UTC date 
  */
-void m8q_get_date(uint8_t *utc_date); 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Setters 
-
-/**
- * @brief Power save mode setter 
- * 
- * @details Sets the output of the power save mode pin. If set to high then the receiver will 
- *          enter power save mode where it will not report position information. If set low 
- *          then the receiver will operate as normal. Note that communication with the receiver 
- *          can't be achieved while in power save mode. The pin used for power save mode setting 
- *          is initialized in the m8q_init function. 
- * 
- * @param pin_state : desired output state of the power save mode pin 
- */
-void m8q_set_low_power(gpio_pin_state_t pin_state); 
+void m8q_get_date(
+    uint8_t *utc_date); 
 
 //=======================================================================================
 

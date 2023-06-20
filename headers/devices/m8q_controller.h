@@ -143,9 +143,6 @@ typedef void (*m8q_state_functions_t)(
  * @details Initializes device trackers characteristics. Note that the timer passed to 
  *          this function should be a counter timer that can handle any needed 
  *          non-blocking delays of the controller. 
- *          
- * // TODO when multiple device functionaility is added use this function to create a 
- *         data record/instance of the device tracker. 
  * 
  * @param timer : timer used by the controller for non-blocking state delays 
  */
