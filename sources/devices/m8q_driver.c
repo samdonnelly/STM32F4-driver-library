@@ -371,7 +371,7 @@ M8Q_MSG_ERROR_CODE m8q_init(
     }
 
     // Update the driver status 
-    m8q_driver_data.status |= (uint16_t)m8q_status; 
+    m8q_driver_data.status |= m8q_status; 
 
     return msg_error_code; 
 }
@@ -674,7 +674,7 @@ void m8q_clear_status(void)
 
 
 // M8Q get device driver fault code 
-uint8_t m8q_get_status(void)
+uint16_t m8q_get_status(void)
 {
     return m8q_driver_data.status; 
 }

@@ -19,14 +19,6 @@
 
 //=======================================================================================
 
-//===================================================
-// Notes 
-
-// TODO 
-// - How do we translate faults in drivers to the controller? 
-
-//===================================================
-
 
 //=======================================================================================
 // Function prototypes 
@@ -198,6 +190,9 @@ void m8q_controller(void)
 {
     // Local variables 
     m8q_states_t next_state = m8q_device_trackers.state; 
+
+    // Check the driver status 
+    m8q_device_trackers.fault_code |= m8q_get_status(); 
 
     //==================================================
     // State machine 
