@@ -95,9 +95,8 @@ void m8q_nmea_parse(
  * @see m8q_nmea_checksum 
  * 
  * @param msg : pointer to the input message buffer 
- * @return M8Q_NMEA_ERROR_CODE :  
  */
-M8Q_NMEA_ERROR_CODE m8q_nmea_config(
+void m8q_nmea_config(
     uint8_t *msg); 
 
 
@@ -129,9 +128,8 @@ CHECKSUM m8q_nmea_checksum(
  * @see m8q_ubx_msg_convert
  * 
  * @param input_msg : pointer to the input message buffer 
- * @return M8Q_UBX_ERROR_CODE : 
  */
-M8Q_UBX_ERROR_CODE m8q_ubx_config(
+void m8q_ubx_config(
     uint8_t *input_msg); 
 
 
@@ -308,7 +306,7 @@ static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] =
 // Initialization 
 
 // M8Q initialization 
-M8Q_MSG_ERROR_CODE m8q_init(
+void m8q_init(
     I2C_TypeDef *i2c, 
     GPIO_TypeDef *gpio, 
     pin_selector_t pwr_save_pin, 
@@ -318,7 +316,6 @@ M8Q_MSG_ERROR_CODE m8q_init(
     uint8_t *config_msgs)
 {
     // Local variables 
-    M8Q_MSG_ERROR_CODE msg_error_code = 0; 
     uint16_t m8q_status = M8Q_FAULT_NONE; 
 
     // Initialize the device communication info 
@@ -346,25 +343,16 @@ M8Q_MSG_ERROR_CODE m8q_init(
         switch (*(config_msgs))
         {
             case M8Q_NMEA_START:  // NMEA message 
-                // msg_error_code = (m8q_nmea_config((config_msgs)) << SHIFT_8); 
-                m8q_status |= (m8q_nmea_config((config_msgs)) << SHIFT_8); 
+                m8q_nmea_config(config_msgs); 
                 break;
 
             case M8Q_UBX_SYNC1:  // UBX message 
-                // msg_error_code = (m8q_ubx_config((config_msgs)) << SHIFT_8); 
-                m8q_status |= (m8q_ubx_config((config_msgs)) << SHIFT_8); 
+                m8q_ubx_config((config_msgs)); 
                 break;
             
             default:  // Unknown config message 
-                msg_error_code = (M8Q_NO_DATA << SHIFT_8); 
                 m8q_status |= (SET_BIT << M8Q_FAULT_NO_DATA); 
                 break;  
-        }
-
-        if (msg_error_code) 
-        {
-            msg_error_code |= i+1;   // Make note of which message faulted 
-            return msg_error_code; 
         }
         
         config_msgs += msg_max_size; 
@@ -372,8 +360,6 @@ M8Q_MSG_ERROR_CODE m8q_init(
 
     // Update the driver status 
     m8q_driver_data.status |= m8q_status; 
-
-    return msg_error_code; 
 }
 
 //=======================================================================================
@@ -839,7 +825,7 @@ void m8q_user_config_init(
 void m8q_user_config(void)
 {
     // Local variables 
-    M8Q_MSG_ERROR_CODE error_code = 0; 
+    uint16_t error_code = 0; 
     uint8_t config_msg[M8Q_MSG_MAX_LEN]; 
     uint8_t ubx_pl_len = 0; 
     uint8_t ubx_ack_clear_counter = 0; 
@@ -920,16 +906,16 @@ void m8q_user_config_prompt(void)
 // Message configuration functions 
 
 // NMEA config function 
-M8Q_NMEA_ERROR_CODE m8q_nmea_config(
+void m8q_nmea_config(
     uint8_t *msg)
 {
     // Local variables 
+    uint16_t m8q_status = M8Q_FAULT_NONE; 
     uint8_t *msg_ptr = msg; 
     uint8_t msg_args = CLEAR; 
     uint8_t msg_arg_count = CLEAR; 
     uint8_t msg_arg_mask = CLEAR; 
     CHECKSUM checksum = CLEAR; 
-    M8Q_NMEA_ERROR_CODE error_code = M8Q_NMEA_ERROR_NONE; 
     char term_str[M8Q_NMEA_END_MSG]; 
 
     // Check message header and ID 
@@ -950,7 +936,7 @@ M8Q_NMEA_ERROR_CODE m8q_nmea_config(
         // Unsupported message ID 
         else
         {
-            error_code = M8Q_NMEA_ERROR_1; 
+            m8q_status |= (SET_BIT << M8Q_FAULT_NMEA_ID); 
         }
 
         // Check the number of message inputs 
@@ -990,16 +976,17 @@ M8Q_NMEA_ERROR_CODE m8q_nmea_config(
             } 
             else
             {
-                error_code = M8Q_NMEA_ERROR_2; 
+                m8q_status |= (SET_BIT << M8Q_FAULT_NMEA_FORM); 
             }
         }
     }
     else 
     {
-        error_code = M8Q_NMEA_ERROR_3; 
+        m8q_status |= (SET_BIT << M8Q_FAULT_NMEA_INVALID); 
     }
 
-    return error_code; 
+    // Update the driver status 
+    m8q_driver_data.status |= m8q_status; 
 }
 
 
@@ -1038,25 +1025,25 @@ CHECKSUM m8q_nmea_checksum(
 
 
 // UBX config function 
-M8Q_UBX_ERROR_CODE m8q_ubx_config(
+void m8q_ubx_config(
     uint8_t *input_msg)
 {
     // Local variables 
+    uint16_t m8q_status = M8Q_FAULT_NONE; 
     uint8_t *msg_ptr = input_msg; 
     uint8_t config_msg[M8Q_MSG_MAX_LEN];   // Formatted UBX message to send to the receiver 
-    CHECKSUM checksum = 0; 
-    M8Q_UBX_ERROR_CODE error_code = M8Q_UBX_ERROR_NONE; 
+    CHECKSUM checksum = CLEAR; 
 
     // User inputs 
     uint8_t input_msg_len = m8q_message_size(input_msg, CR_CHAR); 
-    uint8_t msg_len_pl_check = 0; 
-    uint8_t msg_id_input = 0; 
+    uint8_t msg_len_pl_check = CLEAR; 
+    uint8_t msg_id_input = CLEAR; 
     uint8_t pl_inputs[M8Q_PYL_MAX_LEN]; 
 
     // Formatters 
-    uint16_t pl_len = 0; 
-    uint16_t byte_count = 0; 
-    uint8_t  format_ok = 0; 
+    uint16_t pl_len = CLEAR; 
+    uint16_t byte_count = CLEAR; 
+    uint8_t  format_ok = CLEAR; 
 
     // Check the sync characters and class 
     if (str_compare("B5,62,06,", (char *)input_msg, BYTE_0))
@@ -1096,17 +1083,17 @@ M8Q_UBX_ERROR_CODE m8q_ubx_config(
                         }
                         else 
                         {
-                            error_code = M8Q_UBX_ERROR_1; 
+                            m8q_status |= (SET_BIT << M8Q_FAULT_UBX_SIZE); 
                         }
                     } 
                     else
                     {
-                        error_code = M8Q_UBX_ERROR_2; 
+                        m8q_status |= (SET_BIT << M8Q_FAULT_UBX_FORM); 
                     }
                 }
                 else
                 {
-                    error_code = M8Q_UBX_ERROR_3; 
+                    m8q_status |= (SET_BIT << M8Q_FAULT_UBX_LEN); 
                 }
             }
 
@@ -1134,31 +1121,33 @@ M8Q_UBX_ERROR_CODE m8q_ubx_config(
                     {
                         if (m8q_driver_data.ubx_resp[M8Q_UBX_ID_OFST] != M8Q_UBX_ACK_ID)
                         {
-                            error_code = M8Q_UBX_ERROR_7; 
+                            m8q_status |= (SET_BIT << M8Q_FAULT_UBX_NAK); 
                         }
                     }
                     else
                     {
-                        if (!M8Q_USER_CONFIG) error_code = M8Q_UBX_ERROR_8; 
+                        if (!M8Q_USER_CONFIG) m8q_status |= (SET_BIT << M8Q_FAULT_UBX_RESP); 
                     }
                 }
                 else
                 {
-                    error_code = M8Q_UBX_ERROR_4; 
+                    m8q_status |= (SET_BIT << M8Q_FAULT_UBX_CONVERT); 
                 }
             } 
         } 
         else 
         {
-            error_code = M8Q_UBX_ERROR_5; 
+
+            m8q_status |= (SET_BIT << M8Q_FAULT_UBX_ID); 
         }
     }
     else
     {
-        error_code = M8Q_UBX_ERROR_6; 
+        m8q_status |= (SET_BIT << M8Q_FAULT_UBX_NA); 
     }
-    
-    return error_code; 
+
+    // Update the driver status 
+    m8q_driver_data.status |= m8q_status; 
 }
 
 

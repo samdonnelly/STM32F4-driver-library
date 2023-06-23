@@ -177,42 +177,15 @@ typedef enum {
 
 
 /**
- * @brief M8Q NMEA message error codes 
- * 
- * @details Codes used to indicate errors during NMEA message processing. These codes help 
- *          with debugging. 
- */
-typedef enum {
-    M8Q_NMEA_ERROR_NONE,  // No error 
-    M8Q_NMEA_ERROR_1,     // Unsupported PUBX message ID
-    M8Q_NMEA_ERROR_2,     // Invalid formatting of PUBX message
-    M8Q_NMEA_ERROR_3      // Only PUBX messages are supported
-} m8q_nmea_error_code_t; 
-
-
-/**
- * @brief M8Q UBX message error codes 
- * 
- * @details Codes used to indicate errors during UBX message processing. These codes help 
- *          with debugging. 
- */
-typedef enum {
-    M8Q_UBX_ERROR_NONE,  // No error 
-    M8Q_UBX_ERROR_1,     // Payload length doesn't match size 
-    M8Q_UBX_ERROR_2,     // Invalid payload format 
-    M8Q_UBX_ERROR_3,     // Invalid payload length format 
-    M8Q_UBX_ERROR_4,     // Message conversion failed. Check format. 
-    M8Q_UBX_ERROR_5,     // Invalid ID format 
-    M8Q_UBX_ERROR_6,     // Unknown message type 
-    M8Q_UBX_ERROR_7,     // Message not acknowledged 
-    M8Q_UBX_ERROR_8      // Response message sent - only used during user config mode 
-} m8q_ubx_error_code_t; 
-
-
-/**
  * @brief M8Q driver status codes 
  * 
  * @details 
+ *          
+ *          Old comments: 
+ *          - Codes used to indicate errors during NMEA message processing. These codes help 
+ *            with debugging. 
+ *          - Codes used to indicate errors during UBX message processing. These codes help 
+ *            with debugging. 
  */
 typedef enum {
     M8Q_FAULT_NONE,           // No fault 
@@ -241,11 +214,6 @@ typedef uint16_t CHECKSUM;
 // Status 
 typedef m8q_read_status_t M8Q_READ_STAT; 
 typedef m8q_ubx_msg_convert_status_t UBX_MSG_STATUS; 
-
-// Error codes 
-typedef uint16_t M8Q_MSG_ERROR_CODE; 
-typedef m8q_nmea_error_code_t M8Q_NMEA_ERROR_CODE; 
-typedef m8q_ubx_error_code_t M8Q_UBX_ERROR_CODE; 
 
 //=======================================================================================
 
@@ -277,9 +245,8 @@ typedef m8q_ubx_error_code_t M8Q_UBX_ERROR_CODE;
  * @param msg_num : number of configuration messages to send 
  * @param msg_max_size : maximum config message size (see config file) 
  * @param config_msgs : pointer to buffer that storages the config messages 
- * @return M8Q_INIT_ERROR_CODE : code that indicates the config message that caused an error 
  */
-M8Q_MSG_ERROR_CODE m8q_init(
+void m8q_init(
     I2C_TypeDef *i2c, 
     GPIO_TypeDef *gpio, 
     pin_selector_t pwr_save_pin, 
@@ -375,11 +342,12 @@ void m8q_clear_status(void);
  *          
  *          Status info / fault code: 
  *            --> bit 0: i2c status (see i2c_status_t) 
- *            --> bit 1: 
+ *            --> bit 1-12: driver faults (see status getter) 
+ *            --> bits 13-15: not used 
  * 
- * @return uint8_t : driver status code for a given device number 
+ * @return uint16_t : driver status code for a given device number 
  */
-uint8_t m8q_get_status(void); 
+uint16_t m8q_get_status(void); 
 
 
 /**
