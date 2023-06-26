@@ -37,30 +37,41 @@ void m8q_init_state(m8q_trackers_t *m8q_device);
 
 
 /**
- * @brief M8Q no fix state 
+ * @brief Run state 
  * 
- * @details State for when the device is in use but does not have a valid position fix. During 
- *          this state, the data read from getters will not be valid. The fix state is checked 
- *          repeatedly to see if a position has been found, and if so it will move to the 
- *          fix state. This state is enetered directly after the init state and can also be 
- *          entered from the fix and low power exit states. 
+ * @details 
  * 
- * @param m8q_device : device tracker that defines controller characteristics 
+ * @param m8q_device 
  */
-void m8q_no_fix_state(m8q_trackers_t *m8q_device); 
+void m8q_run_state(
+    m8q_trackers_t *m8q_device); 
 
 
-/**
- * @brief M8Q fix state 
- * 
- * @details State for when the device is in use and has a valid position fix. During this state, 
- *          valid data will be available through getters. The fix state is checked repeatedly 
- *          to see if a position fix has been lost, and if so it will revert to the no fix state. 
- *          This state can only be entered through the no fix state. 
- * 
- * @param m8q_device : device tracker that defines controller characteristics 
- */
-void m8q_fix_state(m8q_trackers_t *m8q_device); 
+// /**
+//  * @brief M8Q no fix state 
+//  * 
+//  * @details State for when the device is in use but does not have a valid position fix. During 
+//  *          this state, the data read from getters will not be valid. The fix state is checked 
+//  *          repeatedly to see if a position has been found, and if so it will move to the 
+//  *          fix state. This state is enetered directly after the init state and can also be 
+//  *          entered from the fix and low power exit states. 
+//  * 
+//  * @param m8q_device : device tracker that defines controller characteristics 
+//  */
+// void m8q_no_fix_state(m8q_trackers_t *m8q_device); 
+
+
+// /**
+//  * @brief M8Q fix state 
+//  * 
+//  * @details State for when the device is in use and has a valid position fix. During this state, 
+//  *          valid data will be available through getters. The fix state is checked repeatedly 
+//  *          to see if a position fix has been lost, and if so it will revert to the no fix state. 
+//  *          This state can only be entered through the no fix state. 
+//  * 
+//  * @param m8q_device : device tracker that defines controller characteristics 
+//  */
+// void m8q_fix_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -146,8 +157,9 @@ static m8q_trackers_t m8q_device_trackers;
 static m8q_state_functions_t state_table[M8Q_NUM_STATES] =
 {
     &m8q_init_state, 
-    &m8q_no_fix_state, 
-    &m8q_fix_state, 
+    &m8q_run_state, 
+    // &m8q_no_fix_state, 
+    // &m8q_fix_state, 
     &m8q_low_pwr_state, 
     &m8q_low_pwr_exit_state, 
     &m8q_fault_state, 
@@ -203,64 +215,68 @@ void m8q_controller(void)
             // Startup flag cleared 
             if (!(m8q_device_trackers.startup))
             {
-                next_state = M8Q_NO_FIX_STATE; 
+                // next_state = M8Q_NO_FIX_STATE; 
+                next_state = M8Q_RUN_STATE; 
             }
 
             break; 
 
-        case M8Q_NO_FIX_STATE: 
-            // Fault code set 
-            if (m8q_device_trackers.fault_code)
-            {
-                next_state = M8Q_FAULT_STATE; 
-            }
-            
-            // Reset flag set 
-            else if (m8q_device_trackers.reset)
-            {
-                next_state = M8Q_RESET_STATE; 
-            }
-            
-            // Low power flag set 
-            else if (m8q_device_trackers.low_pwr)
-            {
-                next_state = M8Q_LOW_PWR_STATE; 
-            }
-            
-            // Position fix detected 
-            else if (m8q_device_trackers.fix)
-            {
-                next_state = M8Q_FIX_STATE; 
-            }
-            
+        case M8Q_RUN_STATE: 
             break; 
 
-        case M8Q_FIX_STATE: 
-            // Fault code set 
-            if (m8q_device_trackers.fault_code)
-            {
-                next_state = M8Q_FAULT_STATE; 
-            }
+        // case M8Q_NO_FIX_STATE: 
+        //     // Fault code set 
+        //     if (m8q_device_trackers.fault_code)
+        //     {
+        //         next_state = M8Q_FAULT_STATE; 
+        //     }
+            
+        //     // Reset flag set 
+        //     else if (m8q_device_trackers.reset)
+        //     {
+        //         next_state = M8Q_RESET_STATE; 
+        //     }
+            
+        //     // Low power flag set 
+        //     else if (m8q_device_trackers.low_pwr)
+        //     {
+        //         next_state = M8Q_LOW_PWR_STATE; 
+        //     }
+            
+        //     // Position fix detected 
+        //     else if (m8q_device_trackers.fix)
+        //     {
+        //         next_state = M8Q_FIX_STATE; 
+        //     }
+            
+        //     break; 
 
-            // Reset flag set 
-            else if (m8q_device_trackers.reset)
-            {
-                next_state = M8Q_RESET_STATE; 
-            }
+        // case M8Q_FIX_STATE: 
+        //     // Fault code set 
+        //     if (m8q_device_trackers.fault_code)
+        //     {
+        //         next_state = M8Q_FAULT_STATE; 
+        //     }
 
-            // Low power flag set 
-            else if (m8q_device_trackers.low_pwr)
-            {
-                next_state = M8Q_LOW_PWR_STATE; 
-            }
+        //     // Reset flag set 
+        //     else if (m8q_device_trackers.reset)
+        //     {
+        //         next_state = M8Q_RESET_STATE; 
+        //     }
 
-            // Position fix not detected 
-            else if (!(m8q_device_trackers.fix))
-            {
-                next_state = M8Q_NO_FIX_STATE; 
-            }
+        //     // Low power flag set 
+        //     else if (m8q_device_trackers.low_pwr)
+        //     {
+        //         next_state = M8Q_LOW_PWR_STATE; 
+        //     }
 
-            break; 
+        //     // Position fix not detected 
+        //     else if (!(m8q_device_trackers.fix))
+        //     {
+        //         next_state = M8Q_NO_FIX_STATE; 
+        //     }
+
+        //     break; 
 
         case M8Q_LOW_PWR_STATE: 
             // Fault code set, reset flag set, or low power flag cleared 
@@ -292,7 +308,8 @@ void m8q_controller(void)
                 // Default back to the no fix state 
                 else 
                 {
-                    next_state = M8Q_NO_FIX_STATE; 
+                    // next_state = M8Q_NO_FIX_STATE; 
+                    next_state = M8Q_RUN_STATE; 
                 }
 
                 m8q_device_trackers.low_pwr_exit = CLEAR_BIT; 
@@ -354,30 +371,38 @@ void m8q_init_state(
 }
 
 
-// No fix state 
-void m8q_no_fix_state(
+// Run state 
+void m8q_run_state(
     m8q_trackers_t *m8q_device)
 {
-    m8q_check_msgs(m8q_device); 
-
-    if (m8q_device->navstat != M8Q_NAVSTAT_NF)
-    {
-        m8q_device->fix = SET_BIT; 
-    }
+    // 
 }
 
 
-// Fix state 
-void m8q_fix_state(
-    m8q_trackers_t *m8q_device)
-{
-    m8q_check_msgs(m8q_device); 
+// // No fix state 
+// void m8q_no_fix_state(
+//     m8q_trackers_t *m8q_device)
+// {
+//     m8q_check_msgs(m8q_device); 
 
-    if (m8q_device->navstat == M8Q_NAVSTAT_NF)
-    {
-        m8q_device->fix = CLEAR_BIT; 
-    }
-}
+//     if (m8q_device->navstat != M8Q_NAVSTAT_NF)
+//     {
+//         m8q_device->fix = SET_BIT; 
+//     }
+// }
+
+
+// // Fix state 
+// void m8q_fix_state(
+//     m8q_trackers_t *m8q_device)
+// {
+//     m8q_check_msgs(m8q_device); 
+
+//     if (m8q_device->navstat == M8Q_NAVSTAT_NF)
+//     {
+//         m8q_device->fix = CLEAR_BIT; 
+//     }
+// }
 
 
 // Low power state 

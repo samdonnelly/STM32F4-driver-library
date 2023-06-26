@@ -30,7 +30,7 @@
 //=======================================================================================
 // Macros 
 
-#define M8Q_NUM_STATES 7                // Number of controller states 
+#define M8Q_NUM_STATES 6                // Number of controller states 
 #define M8Q_LOW_PWR_EXIT_DELAY 150000   // (us) time to wait when exiting low power mode 
 
 //=======================================================================================
@@ -44,8 +44,9 @@
  */
 typedef enum {
     M8Q_INIT_STATE,           // Initialization state 
-    M8Q_NO_FIX_STATE,         // No fix state 
-    M8Q_FIX_STATE,            // Fix state 
+    M8Q_RUN_STATE,            // Run state 
+    // M8Q_NO_FIX_STATE,         // No fix state 
+    // M8Q_FIX_STATE,            // Fix state 
     M8Q_LOW_PWR_STATE,        // Low power state 
     M8Q_LOW_PWR_EXIT_STATE,   // Low power mode exit state 
     M8Q_FAULT_STATE,          // Fault state 
