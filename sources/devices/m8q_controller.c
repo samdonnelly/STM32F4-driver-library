@@ -442,6 +442,7 @@ void m8q_reset_state(
 {
     // Clear the fault codes 
     m8q_device->fault_code = CLEAR; 
+    m8q_clear_status(); 
 }
 
 //=======================================================================================

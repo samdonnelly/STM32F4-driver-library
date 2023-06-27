@@ -442,15 +442,15 @@ uint8_t m8q_get_EW(void);
  *          ASCII character form and consists of two bytes. The 8 most significant bits of the 
  *          16-bit return value holds the first character and the 8 least significant bits holds 
  *          the second character. For example, a return value of 20038 corresponds to "NF" which 
- *          stands for "No Fix". A list of all available statuses are listed below: <br> 
- *            - NF = No Fix                                    <br> 
- *            - DR = Dead reckoning only solution              <br> 
- *            - G2 = Stand alone 2D solution                   <br> 
- *            - G3 = Stand alone 3D solution                   <br> 
- *            - D2 = Differential 2D solution                  <br> 
- *            - D3 = Differential 3D solution                  <br> 
- *            - RK = Combined GPS + dead reckoning solution    <br> 
- *            - TT = Time only solution                        <br> 
+ *          stands for "No Fix". A list of all available statuses are listed below: 
+ *            - NF = No Fix (0x4E46) 
+ *            - DR = Dead reckoning only solution (0x4452) 
+ *            - G2 = Stand alone 2D solution (0x4732) 
+ *            - G3 = Stand alone 3D solution (0x4733) 
+ *            - D2 = Differential 2D solution (0x4432) 
+ *            - D3 = Differential 3D solution (0x4433) 
+ *            - RK = Combined GPS + dead reckoning solution (0x524B) 
+ *            - TT = Time only solution (0x5454) 
  * 
  * @return uint16_t : Navigation status of the receiver 
  */
