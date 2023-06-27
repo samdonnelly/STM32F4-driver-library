@@ -30,7 +30,7 @@
 //=======================================================================================
 // Macros 
 
-#define M8Q_NUM_STATES 6                // Number of controller states 
+#define M8Q_NUM_STATES 8                // Number of controller states 
 #define M8Q_LOW_PWR_EXIT_DELAY 150000   // (us) time to wait when exiting low power mode 
 
 //=======================================================================================
@@ -44,11 +44,11 @@
  */
 typedef enum {
     M8Q_INIT_STATE,           // Initialization state 
-    M8Q_RUN_STATE,            // Run state 
-    // M8Q_NO_FIX_STATE,         // No fix state 
-    // M8Q_FIX_STATE,            // Fix state 
+    M8Q_READ_CONT_STATE,      // Read continuous state 
+    M8Q_READ_READY_STATE,     // Read ready state 
+    M8Q_LOW_PWR_TRANS_STATE,  // Low power transition state 
     M8Q_LOW_PWR_STATE,        // Low power state 
-    M8Q_LOW_PWR_EXIT_STATE,   // Low power mode exit state 
+    M8Q_LOW_PWR_EXIT_STATE,   // Low power exit state 
     M8Q_FAULT_STATE,          // Fault state 
     M8Q_RESET_STATE           // Reset state 
 } m8q_states_t; 
@@ -100,7 +100,8 @@ typedef struct m8q_trackers_s
     uint8_t  time_start;                       // Time delay counter start flag 
 
     // State flags 
-    uint8_t fix          : 1;                  // Position fix status - fix state trigger 
+    uint8_t read         : 1;                  // Read flag --> for read ready state 
+    uint8_t read_ready   : 1;                  // Triggers read ready state 
     uint8_t low_pwr      : 1;                  // Low power state trigger 
     uint8_t low_pwr_exit : 1;                  // Low power exit state trigger 
     uint8_t reset        : 1;                  // Reset state trigger 
@@ -166,6 +167,22 @@ void m8q_controller(void);
 // Setters 
 
 /**
+ * @brief Set the read flag 
+ * 
+ * @details 
+ */
+void m8q_set_read_flag(void); 
+
+
+/**
+ * @brief Clear the read flag 
+ * 
+ * @details 
+ */
+void m8q_clear_read_flag(void); 
+
+
+/**
  * @brief M8Q set low power flag 
  * 
  * @details This flag will set the interrupt pin on the receiver low to enable low power 
@@ -228,26 +245,6 @@ M8Q_STATE m8q_get_state(void);
  * @return M8Q_FAULT_CODE : device/controller fault code 
  */
 M8Q_FAULT_CODE m8q_get_fault_code(void); 
-
-
-/**
- * @brief Get the navigation status 
- * 
- * @details Returns the navigation status of the device based on m8q_navstat_state_t. The 
- *          status is updated and configured through the m8q_check_msgs function. This 
- *          return value is left for interpretation by the application code - different 
- *          applications will have different standards for an acceptable fix. This 
- *          controller will be in the no-fix state if navstats reads as no fix and will 
- *          otherwise reside in the fix state. 
- * 
- * @see m8q_navstat_state_t
- * 
- * @return M8Q_NAV_STATE : device navigation (fix) statis 
- */
-M8Q_NAV_STATE m8q_get_nav_state(void); 
-
-
-// TODO add GPS data getters as needed 
 
 //=======================================================================================
 
