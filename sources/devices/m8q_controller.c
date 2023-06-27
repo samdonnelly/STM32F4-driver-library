@@ -450,6 +450,20 @@ void m8q_reset_state(
 //=======================================================================================
 // Setters 
 
+// Set the read ready state flag 
+void m8q_set_read_ready(void)
+{
+    m8q_device_trackers.read_ready = SET_BIT; 
+}
+
+
+// Clear the read ready state flag 
+void m8q_clear_read_ready(void)
+{
+    m8q_device_trackers.read_ready = CLEAR_BIT; 
+}
+
+
 // Set the read flag 
 void m8q_set_read_flag(void)
 {

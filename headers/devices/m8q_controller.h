@@ -92,7 +92,7 @@ typedef struct m8q_trackers_s
     
     // Device and controller information 
     m8q_states_t state;                        // Controller state 
-    uint8_t fault_code;                        // Fault code for the device/controller 
+    uint16_t fault_code;                       // Fault code for the device/controller 
     m8q_navstat_state_t navstat;               // Navigation status of device 
     uint32_t clk_freq;                         // Timer clock frquency 
     uint32_t time_cnt_total;                   // Time delay counter total count 
@@ -100,8 +100,8 @@ typedef struct m8q_trackers_s
     uint8_t  time_start;                       // Time delay counter start flag 
 
     // State flags 
-    uint8_t read         : 1;                  // Read flag --> for read ready state 
     uint8_t read_ready   : 1;                  // Triggers read ready state 
+    uint8_t read         : 1;                  // Read flag --> for read ready state 
     uint8_t low_pwr      : 1;                  // Low power state trigger 
     uint8_t low_pwr_exit : 1;                  // Low power exit state trigger 
     uint8_t reset        : 1;                  // Reset state trigger 
@@ -115,7 +115,7 @@ m8q_trackers_t;
 //=======================================================================================
 // Data types 
 
-typedef uint8_t M8Q_FAULT_CODE; 
+typedef uint16_t M8Q_FAULT_CODE; 
 typedef m8q_states_t M8Q_STATE; 
 typedef m8q_navstat_state_t M8Q_NAV_STATE; 
 
@@ -165,6 +165,22 @@ void m8q_controller(void);
 
 //=======================================================================================
 // Setters 
+
+/**
+ * @brief Set the read ready state flag 
+ * 
+ * @details 
+ */
+void m8q_set_read_ready(void); 
+
+
+/**
+ * @brief Clear the read ready state flag 
+ * 
+ * @details 
+ */
+void m8q_clear_read_ready(void); 
+
 
 /**
  * @brief Set the read flag 
