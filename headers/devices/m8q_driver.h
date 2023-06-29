@@ -73,7 +73,10 @@
 #define M8Q_NMEA_STRD_ARG_OFST   7       // First data field offset for standard messages 
 
 // NMEA data fields 
-#define M8Q_COO_DATA_LEN         5       // Coordinate data character length 
+#define M8Q_COO_DATA_LEN         5       // Coordinate data length 
+#define M8Q_COO_FRAC_LEN         7       // Coordinate fractional part length 
+#define M8Q_LAT_LEN              11      // Latitude message length 
+#define M8Q_LON_LEN              12      // Longitude message length 
 
 // UBX message format 
 #define M8Q_UBX_START            0xB5    // 0xB5 --> Start of received UBX message 

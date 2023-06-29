@@ -687,26 +687,26 @@ void m8q_get_lat(
     uint32_t *min_frac)
 {
     // Local variables 
-    uint8_t deg_min_array[M8Q_COO_DATA_LEN];          // Integer portion of the minute 
-    uint8_t min_frac_array[M8Q_COO_DATA_LEN+BYTE_1];  // Fractional part of the minute 
-    uint8_t lat_length = 2*M8Q_COO_DATA_LEN + BYTE_1;
+    uint8_t deg_min_array[M8Q_COO_DATA_LEN];          // Integer portion of the minute - 5 
+    uint8_t min_frac_array[M8Q_COO_DATA_LEN+BYTE_1];  // Fractional part of the minute - 6 
+    // uint8_t lat_length = 2*M8Q_COO_DATA_LEN + BYTE_1;  // 11 
 
     // Copy the latitude into integer and fractional parts 
-    for (uint8_t i = 0; i < lat_length; i++)
+    for (uint8_t i = CLEAR; i < M8Q_LAT_LEN; i++)  // 11 
     {
-        if (i < (M8Q_COO_DATA_LEN-BYTE_1))
+        if (i < (M8Q_COO_DATA_LEN-BYTE_1)) // 4 
         {
             deg_min_array[i] = position[M8Q_POS_LAT][i]; 
         }
-        else if (i == (M8Q_COO_DATA_LEN-BYTE_1))
+        else if (i == (M8Q_COO_DATA_LEN-BYTE_1))  // 4 
         {
             deg_min_array[i] = NULL_CHAR; 
         }
-        else if (i < (2*M8Q_COO_DATA_LEN))
+        else if (i < (2*M8Q_COO_DATA_LEN)) // 10 
         {
             min_frac_array[i-M8Q_COO_DATA_LEN] = position[M8Q_POS_LAT][i]; 
         }
-        else
+        else // 11 
         {
             min_frac_array[i-M8Q_COO_DATA_LEN] = NULL_CHAR; 
         }
@@ -731,26 +731,26 @@ void m8q_get_long(
     uint32_t *min_frac)
 {
     // Local variables 
-    uint8_t deg_min_array[M8Q_COO_DATA_LEN+BYTE_1];   // Integer portion of the minute 
-    uint8_t min_frac_array[M8Q_COO_DATA_LEN+BYTE_1];  // Fractional part of the minute 
-    uint8_t lat_length = 2*M8Q_COO_DATA_LEN + BYTE_2;
+    uint8_t deg_min_array[M8Q_COO_DATA_LEN+BYTE_1];   // Integer portion of the minute - 6 
+    uint8_t min_frac_array[M8Q_COO_DATA_LEN+BYTE_1];  // Fractional part of the minute - 6 
+    uint8_t deg_min_int_len = M8Q_LON_LEN - M8Q_COO_FRAC_LEN; 
 
-    // Copy the latitude into integer and fractional parts 
-    for (uint8_t i = 0; i < lat_length; i++)
+    // Copy the longitude into integer and fractional parts 
+    for (uint8_t i = CLEAR; i < M8Q_LON_LEN; i++)  // 12 
     {
-        if (i < M8Q_COO_DATA_LEN)
+        if (i < deg_min_int_len) // 5 
         {
             deg_min_array[i] = position[M8Q_POS_LON][i]; 
         }
-        else if (i == M8Q_COO_DATA_LEN)
+        else if (i == deg_min_int_len) // 5 
         {
             deg_min_array[i] = NULL_CHAR; 
         }
-        else if (i < (2*M8Q_COO_DATA_LEN + BYTE_1))
+        else if (i < (2*M8Q_COO_DATA_LEN + BYTE_1))  // 11 
         {
             min_frac_array[i-(M8Q_COO_DATA_LEN + BYTE_1)] = position[M8Q_POS_LON][i]; 
         }
-        else
+        else // 12 
         {
             min_frac_array[i-(M8Q_COO_DATA_LEN + BYTE_1)] = NULL_CHAR; 
         }
@@ -759,6 +759,33 @@ void m8q_get_long(
     // Convert each number 
     sscanf((char *)deg_min_array, "%hu", deg_min); 
     sscanf((char *)min_frac_array, "%lu", min_frac); 
+}
+
+
+// Longitude getter (string format) 
+void m8q_get_long_str(
+    char *deg_min, 
+    char *min_frac)
+{
+    for (uint8_t i = CLEAR; i <= M8Q_LON_LEN; i++)
+    {
+        if (i < M8Q_COO_DATA_LEN)
+        {
+            *deg_min++ = position[M8Q_POS_LON][i]; 
+        }
+        else if (i == M8Q_COO_DATA_LEN)
+        {
+            *deg_min = NULL_CHAR; 
+        }
+        else if (i < M8Q_LON_LEN)
+        {
+            *min_frac++ = position[M8Q_POS_LON][i]; 
+        }
+        else 
+        {
+            *min_frac = NULL_CHAR; 
+        }
+    }
 }
 
 
