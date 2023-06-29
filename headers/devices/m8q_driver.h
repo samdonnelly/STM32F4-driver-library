@@ -73,10 +73,9 @@
 #define M8Q_NMEA_STRD_ARG_OFST   7       // First data field offset for standard messages 
 
 // NMEA data fields 
-#define M8Q_COO_DATA_LEN         5       // Coordinate data length 
-#define M8Q_COO_FRAC_LEN         7       // Coordinate fractional part length 
-#define M8Q_LAT_LEN              11      // Latitude message length 
-#define M8Q_LON_LEN              12      // Longitude message length 
+#define M8Q_COO_LEN              6       // Length of integer and fractional parts of coordinates 
+#define M8Q_LAT_LEN              10      // Latitude message length 
+#define M8Q_LON_LEN              11      // Longitude message length 
 
 // UBX message format 
 #define M8Q_UBX_START            0xB5    // 0xB5 --> Start of received UBX message 
@@ -399,6 +398,19 @@ void m8q_get_lat(
 
 
 /**
+ * @brief Latitude getter (string format) 
+ * 
+ * @details 
+ * 
+ * @param deg_min 
+ * @param min_frac 
+ */
+void m8q_get_lat_str(
+    uint8_t *deg_min, 
+    uint8_t *min_frac); 
+
+
+/**
  * @brief North/South getter 
  * 
  * @details Returns the latitude North/South indicator. Note that this return value is in ASCII 
@@ -425,6 +437,19 @@ uint8_t m8q_get_NS(void);
 void m8q_get_long(
     uint16_t *deg_min, 
     uint32_t *min_frac); 
+
+
+/**
+ * @brief Longitude getter (string format) 
+ * 
+ * @details 
+ * 
+ * @param deg_min 
+ * @param min_frac 
+ */
+void m8q_get_long_str(
+    uint8_t *deg_min, 
+    uint8_t *min_frac); 
 
 
 /**
