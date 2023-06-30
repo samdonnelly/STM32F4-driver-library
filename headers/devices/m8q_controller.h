@@ -53,29 +53,6 @@ typedef enum {
     M8Q_RESET_STATE           // Reset state 
 } m8q_states_t; 
 
-
-/**
- * @brief M8Q navigation status states 
- * 
- * @details The device provides the state of its navigation status which can be used to know 
- *          when the device has a fix, and if so what kind of fix. The status is provided in 
- *          the form of a two character string. This enum represents each state by using 
- *          the lowest two digits of the strings decimal number equivalent. For more 
- *          information on the states see the description of m8q_get_navstat. 
- * 
- * @see m8q_get_navstat
- */
-typedef enum {
-    M8Q_NAVSTAT_G2 = 26, 
-    M8Q_NAVSTAT_G3 = 27, 
-    M8Q_NAVSTAT_NF = 38, 
-    M8Q_NAVSTAT_D2 = 58, 
-    M8Q_NAVSTAT_D3 = 59, 
-    M8Q_NAVSTAT_RK = 67, 
-    M8Q_NAVSTAT_TT = 88, 
-    M8Q_NAVSTAT_DR = 90 
-} m8q_navstat_state_t; 
-
 //=======================================================================================
 
 
@@ -93,7 +70,6 @@ typedef struct m8q_trackers_s
     // Device and controller information 
     m8q_states_t state;                        // Controller state 
     uint16_t fault_code;                       // Fault code for the device/controller 
-    m8q_navstat_state_t navstat;               // Navigation status of device 
     uint32_t clk_freq;                         // Timer clock frquency 
     uint32_t time_cnt_total;                   // Time delay counter total count 
     uint32_t time_cnt;                         // Time delay counter instance 
@@ -117,7 +93,6 @@ m8q_trackers_t;
 
 typedef uint16_t M8Q_FAULT_CODE; 
 typedef m8q_states_t M8Q_STATE; 
-typedef m8q_navstat_state_t M8Q_NAV_STATE; 
 
 //=======================================================================================
 

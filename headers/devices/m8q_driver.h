@@ -37,65 +37,75 @@
 // Macros 
 
 // Device configuration 
-#define M8Q_USER_CONFIG          0       // Sets the code to user config mode 
+#define M8Q_USER_CONFIG 0                // Sets the code to user config mode 
 
 // Device parameters 
-#define M8Q_I2C_8_BIT_ADDR       0x84    // Receiver I2C address (default : 0x42 << 1) 
+#define M8Q_I2C_8_BIT_ADDR 0x84          // Receiver I2C address (default : 0x42 << 1) 
 
 // M8Q registers 
-#define M8Q_REG_0XFD             0xFD    // Available data bytes (high byte) register 
-#define M8Q_REG_0XFE             0xFE    // Available data bytes (low byte) register 
-#define M8Q_REG_0XFF             0xFF    // Data stream register 
+#define M8Q_REG_0XFD 0xFD                // Available data bytes (high byte) register 
+#define M8Q_REG_0XFE 0xFE                // Available data bytes (low byte) register 
+#define M8Q_REG_0XFF 0xFF                // Data stream register 
 
 // M8Q messages 
-#define M8Q_NO_DATA              0xff    // Return value for an invalid NMEA data stream 
-#define M8Q_MSG_MAX_LEN          150     // Message buffer that can hold any message
-#define M8Q_PYL_MAX_LEN          100     // Message payload buffer to store any apyload length 
+#define M8Q_NO_DATA     0xff             // Return value for an invalid NMEA data stream 
+#define M8Q_MSG_MAX_LEN 150              // Message buffer that can hold any message
+#define M8Q_PYL_MAX_LEN 100              // Message payload buffer to store any apyload length 
 
 // NMEA message format 
-#define M8Q_NMEA_MSG_MAX_LEN     150     // NMEA message buffer that can hold any received message
-#define M8Q_NMEA_START           0x24    // 0x24 == '$' --> start of NMEA message 
-#define M8Q_NMEA_END_PAY         0x2A    // 0x2A == '*' --> indicates end of NMEA message payload 
-#define M8Q_NMEA_END_MSG         6       // Length of string to append to NMEA message after payload 
-#define M8Q_NMEA_CS_LEN          2       // Number of characters in NMEA message checksum 
-#define M8Q_PUBX_ID_OFST         6       // Starting position of PUBX message ID in message string 
+#define M8Q_NMEA_MSG_MAX_LEN 150         // NMEA message buffer that can hold any received message
+#define M8Q_NMEA_START       0x24        // 0x24 == '$' --> start of NMEA message 
+#define M8Q_NMEA_END_PAY     0x2A        // 0x2A == '*' --> indicates end of NMEA message payload 
+#define M8Q_NMEA_END_MSG     6           // Length of string to append to NMEA message after payload 
+#define M8Q_NMEA_CS_LEN      2           // Number of characters in NMEA message checksum 
+#define M8Q_PUBX_ID_OFST     6           // Starting position of PUBX message ID in message string 
 
 // NMEA messages 
-#define M8Q_NMEA_RATE_ARGS       7       // Number of data fields in RATE 
-#define M8Q_NMEA_CONFIG_ARGS     5       // Number of data fields in CONFIG 
-#define M8Q_NMEA_POS_ARGS        19      // Number of data fields in POSITION 
-#define M8Q_NMEA_POS_ID          48      // "0" == 48 --> Message ID for POSITION 
-#define M8Q_NMEA_SV_ARGS         7       // Number of data fields in SVSTATUS 
-#define M8Q_NMEA_SV_ID           51      // "3" == 51 --> Message ID for SVSTATUS 
-#define M8Q_NMEA_TIME_ARGS       10      // Number of data fields in TIME 
-#define M8Q_NMEA_TIME_ID         52      // "4" == 52 --> Message ID for TIME 
-#define M8Q_NMEA_PUBX_ARG_OFST   9       // First data field offset for PUBX messages 
-#define M8Q_NMEA_STRD_ARG_OFST   7       // First data field offset for standard messages 
+#define M8Q_NMEA_RATE_ARGS     7         // Number of data fields in RATE 
+#define M8Q_NMEA_CONFIG_ARGS   5         // Number of data fields in CONFIG 
+#define M8Q_NMEA_POS_ARGS      19        // Number of data fields in POSITION 
+#define M8Q_NMEA_POS_ID        48        // "0" == 48 --> Message ID for POSITION 
+#define M8Q_NMEA_SV_ARGS       7         // Number of data fields in SVSTATUS 
+#define M8Q_NMEA_SV_ID         51        // "3" == 51 --> Message ID for SVSTATUS 
+#define M8Q_NMEA_TIME_ARGS     10        // Number of data fields in TIME 
+#define M8Q_NMEA_TIME_ID       52        // "4" == 52 --> Message ID for TIME 
+#define M8Q_NMEA_PUBX_ARG_OFST 9         // First data field offset for PUBX messages 
+#define M8Q_NMEA_STRD_ARG_OFST 7         // First data field offset for standard messages 
 
 // NMEA data fields 
-#define M8Q_COO_LEN              6       // Length of integer and fractional parts of coordinates 
-#define M8Q_LAT_LEN              10      // Latitude message length 
-#define M8Q_LON_LEN              11      // Longitude message length 
+#define M8Q_COO_LEN 6                    // Length of integer and fractional parts of coordinates 
+#define M8Q_LAT_LEN 10                   // Latitude message length 
+#define M8Q_LON_LEN 11                   // Longitude message length 
 
 // UBX message format 
-#define M8Q_UBX_START            0xB5    // 0xB5 --> Start of received UBX message 
-#define M8Q_UBX_SYNC1            0x42    // 0x42 == 'B' --> Start of user config UBX message 
-#define M8Q_UBX_MSG_FMT_LEN      4       // Message format length: CLASS + ID + LENGTH 
-#define M8Q_UBX_LENGTH_LEN       2       // LENGTH field length 
-#define M8Q_UBX_HEADER_LEN       6       // Number of bytes before the payload 
-#define M8Q_UBX_CS_LEN           2       // Number of bytes in a UBC message checksum 
+#define M8Q_UBX_START       0xB5         // 0xB5 --> Start of received UBX message 
+#define M8Q_UBX_SYNC1       0x42         // 0x42 == 'B' --> Start of user config UBX message 
+#define M8Q_UBX_MSG_FMT_LEN 4            // Message format length: CLASS + ID + LENGTH 
+#define M8Q_UBX_LENGTH_LEN  2            // LENGTH field length 
+#define M8Q_UBX_HEADER_LEN  6            // Number of bytes before the payload 
+#define M8Q_UBX_CS_LEN      2            // Number of bytes in a UBC message checksum 
 
-#define M8Q_UBX_SYNC1_OFST       0       // First sync character offset 
-#define M8Q_UBX_SYNC2_OFST       1       // Second sync character offset 
-#define M8Q_UBX_CLASS_OFST       2       // Class character offset 
-#define M8Q_UBX_ID_OFST          3       // Message ID character offset 
-#define M8Q_UBX_LENGTH_OFST      4       // LENGTH field offset from start of UBX message frame 
+#define M8Q_UBX_SYNC1_OFST  0            // First sync character offset 
+#define M8Q_UBX_SYNC2_OFST  1            // Second sync character offset 
+#define M8Q_UBX_CLASS_OFST  2            // Class character offset 
+#define M8Q_UBX_ID_OFST     3            // Message ID character offset 
+#define M8Q_UBX_LENGTH_OFST 4            // LENGTH field offset from start of UBX message frame 
 
 // UBX messages 
-#define M8Q_UBX_ACK_CLASS        0x05    // Class of ACK message 
-#define M8Q_UBX_ACK_ID           0x01    // ID of ACK message 
-#define M8Q_TIME_CHAR_LEN        9       // Number of characters for the time in NMEA messages 
-#define M8Q_DATE_CHAR_LEN        6       // Number of characters for the date in NMEA messages 
+#define M8Q_UBX_ACK_CLASS 0x05           // Class of ACK message 
+#define M8Q_UBX_ACK_ID    0x01           // ID of ACK message 
+#define M8Q_TIME_CHAR_LEN 9              // Number of characters for the time in NMEA messages 
+#define M8Q_DATE_CHAR_LEN 6              // Number of characters for the date in NMEA messages 
+
+// NAVSTAT states - read as a two byte character string from the device 
+#define M8Q_NAVSTAT_NF 0x4E46            // No Fix 
+#define M8Q_NAVSTAT_DR 0x4452            // Dead reckoning only solution 
+#define M8Q_NAVSTAT_G2 0x4732            // Stand alone 2D solution 
+#define M8Q_NAVSTAT_G3 0x4733            // Stand alone 3D solution 
+#define M8Q_NAVSTAT_D2 0x4432            // Differential 2D solution 
+#define M8Q_NAVSTAT_D3 0x4433            // Differential 3D solution 
+#define M8Q_NAVSTAT_RK 0x524B            // Combined GPS and DR solution 
+#define M8Q_NAVSTAT_TT 0x5454            // Time only solution 
 
 //=======================================================================================
 

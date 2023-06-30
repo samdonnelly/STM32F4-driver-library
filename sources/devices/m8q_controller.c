@@ -162,7 +162,6 @@ void m8q_controller_init(
     // Device and controller information 
     m8q_device_trackers.state = M8Q_INIT_STATE; 
     m8q_device_trackers.fault_code = CLEAR; 
-    m8q_device_trackers.navstat = M8Q_NAVSTAT_NF; 
     m8q_device_trackers.clk_freq = tim_get_pclk_freq(timer); 
     m8q_device_trackers.time_cnt_total = CLEAR; 
     m8q_device_trackers.time_cnt = CLEAR; 
