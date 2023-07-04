@@ -64,17 +64,17 @@ typedef enum {
 
 
 /**
- * @brief HW125 fault codes 
+ * @brief HW125 fault code bit indexes 
  */
 typedef enum {
-    HW125_FAULT_DIR   = 0x01,            // Directory access - make or delete (unlink) 
-    HW125_FAULT_OPEN  = 0x02,            // Open 
-    HW125_FAULT_CLOSE = 0x04,            // Close 
-    HW125_FAULT_WRITE = 0x08,            // Write 
-    HW125_FAULT_READ  = 0x10,            // Read 
-    HW125_FAULT_SEEK  = 0x20,            // Seek 
-    HW125_FAULT_FREE  = 0x40,            // Free space 
-    HW125_FAULT_COMMS = 0x80             // Comms 
+    HW125_FAULT_DIR,          // Directory access - make or delete (unlink) 
+    HW125_FAULT_OPEN,         // Open 
+    HW125_FAULT_CLOSE,        // Close 
+    HW125_FAULT_WRITE,        // Write 
+    HW125_FAULT_READ,         // Read 
+    HW125_FAULT_SEEK,         // Seek 
+    HW125_FAULT_FREE,         // Free space 
+    HW125_FAULT_COMMS         // Comms 
 } hw125_fault_codes_t; 
 
 //=======================================================================================
@@ -88,7 +88,7 @@ typedef struct hw125_trackers_s
 {
     // Controller information 
     hw125_states_t state;                        // State of the controller 
-    hw125_fault_codes_t fault_code;              // Fault code 
+    uint16_t fault_code;                         // Fault code 
     DWORD fault_mode;                            // Fault mode - based on FRESULT 
 
     // File system information 
@@ -126,7 +126,7 @@ hw125_trackers_t;
 // Datatypes 
 
 typedef hw125_states_t HW125_STATE; 
-typedef hw125_fault_codes_t HW125_FAULT_CODE; 
+typedef uint16_t HW125_FAULT_CODE; 
 typedef DWORD HW125_FAULT_MODE; 
 typedef uint8_t HW125_FILE_STATUS; 
 typedef int8_t HW125_EOF; 

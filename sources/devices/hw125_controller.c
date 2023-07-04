@@ -567,7 +567,7 @@ FRESULT hw125_getlabel(
     if (hw125_device->fresult) 
     {
         hw125_device->fault_mode |= (SET_BIT << hw125_device->fresult); 
-        hw125_device->fault_code |= HW125_FAULT_COMMS; 
+        hw125_device->fault_code |= (SET_BIT << HW125_FAULT_COMMS); 
     }
 
     return hw125_device->fresult; 
@@ -596,14 +596,14 @@ FRESULT hw125_getfree(
         if (hw125_device->free_space < HW125_FREE_THRESH) 
         {
             hw125_device->fault_mode |= (SET_BIT << FR_DENIED); 
-            hw125_device->fault_code |= HW125_FAULT_FREE; 
+            hw125_device->fault_code |= (SET_BIT << HW125_FAULT_FREE); 
         }
 
     }
     else   // Communication fault 
     {
         hw125_device->fault_mode |= (SET_BIT << hw125_device->fresult); 
-        hw125_device->fault_code |= HW125_FAULT_COMMS; 
+        hw125_device->fault_code |= (SET_BIT << HW125_FAULT_COMMS); 
     }
 
     return hw125_device->fresult; 
@@ -696,7 +696,7 @@ FRESULT hw125_mkdir(
         if (hw125_device_trackers.fresult) 
         {
             hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-            hw125_device_trackers.fault_code |= HW125_FAULT_DIR; 
+            hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_DIR); 
         }
     }
 
@@ -742,7 +742,7 @@ FRESULT hw125_open(
         else   // Open fault - record the fault types 
         {
             hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-            hw125_device_trackers.fault_code |= HW125_FAULT_OPEN; 
+            hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_OPEN); 
         }
 
         return hw125_device_trackers.fresult; 
@@ -764,7 +764,7 @@ FRESULT hw125_close(void)
         {
             // Close file fault 
             hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-            hw125_device_trackers.fault_code |= HW125_FAULT_CLOSE; 
+            hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_CLOSE); 
         }
 
         // Clear the open file flag regardless of the fault code 
@@ -798,7 +798,7 @@ FRESULT hw125_f_write(
     if (hw125_device_trackers.fresult && hw125_device_trackers.open_file) 
     {
         hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-        hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
+        hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_WRITE); 
     }
 
     return hw125_device_trackers.fresult; 
@@ -819,7 +819,7 @@ int8_t hw125_puts(
     if ((puts_return < 0) && hw125_device_trackers.open_file) 
     {
         hw125_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
-        hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
+        hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_WRITE); 
     }
 
     return puts_return; 
@@ -843,7 +843,7 @@ int8_t hw125_printf(
     if ((printf_return < 0) && hw125_device_trackers.open_file) 
     {
         hw125_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
-        hw125_device_trackers.fault_code |= HW125_FAULT_WRITE; 
+        hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_WRITE); 
     }
 
     return printf_return; 
@@ -861,7 +861,7 @@ FRESULT hw125_lseek(
     if (hw125_device_trackers.fresult && hw125_device_trackers.open_file) 
     {
         hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-        hw125_device_trackers.fault_code |= HW125_FAULT_SEEK; 
+        hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_SEEK); 
     }
 
     return hw125_device_trackers.fresult; 
@@ -898,7 +898,7 @@ FRESULT hw125_unlink(
     if (hw125_device_trackers.fresult)
     {
         hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-        hw125_device_trackers.fault_code |= HW125_FAULT_DIR; 
+        hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_DIR); 
     }
 
     return hw125_device_trackers.fresult; 
