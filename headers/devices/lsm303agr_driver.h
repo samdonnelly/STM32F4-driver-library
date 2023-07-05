@@ -39,6 +39,13 @@
 #define LSM303AGR_ACCEL_ADDR 0x32             // Accelerometer I2C address - with default W bit 
 #define LSM303AGR_MAG_ADDR 0x3C               // Magnetometer I2C address - with default W bit 
 
+// Magnetometer Register Addresses 
+#define LSM303AGR_WHO_AM_I_M 0x4F             // WHO AM I 
+#define LSM303AGR_CFG_A_M 0x60                // Configuration register A 
+#define LSM303AGR_CFG_B_M 0x61                // Configuration register B 
+#define LSM303AGR_CFG_C_M 0x62                // Configuration register C 
+#define LSM303AGR_X_L_M 0x68                  // 
+
 //=======================================================================================
 
 
