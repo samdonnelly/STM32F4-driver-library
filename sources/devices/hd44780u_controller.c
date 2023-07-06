@@ -304,16 +304,16 @@ void hd44780u_controller(void)
                 next_state = HD44780U_PWR_SAVE_STATE; 
             }
 
-            // Write flag set 
-            else if (hd44780u_device_trackers.write)
-            {
-                next_state = HD44780U_WRITE_STATE; 
-            }
-
             // Clear flag set 
             else if (hd44780u_device_trackers.clear)
             {
                 next_state = HD44780U_CLEAR_STATE; 
+            }
+
+            // Write flag set 
+            else if (hd44780u_device_trackers.write)
+            {
+                next_state = HD44780U_WRITE_STATE; 
             }
             
             break; 
@@ -331,16 +331,16 @@ void hd44780u_controller(void)
                 next_state = HD44780U_LOW_PWR_ENTER_STATE;
             } 
 
-            // Write flag set 
-            else if (hd44780u_device_trackers.write)
-            {
-                next_state = HD44780U_WRITE_STATE; 
-            }
-
             // Clear flag set 
             else if (hd44780u_device_trackers.clear)
             {
                 next_state = HD44780U_CLEAR_STATE; 
+            }
+
+            // Write flag set 
+            else if (hd44780u_device_trackers.write)
+            {
+                next_state = HD44780U_WRITE_STATE; 
             }
 
             // Power save flag cleared 
