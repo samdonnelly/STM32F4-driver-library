@@ -33,7 +33,7 @@ extern "C"
 
 
 //=======================================================================================
-// Read and Write 
+// Notes 
 
 // Procedures start on page 38 of the datasheet 
 
@@ -65,6 +65,19 @@ extern "C"
 // - Transmit data to the slave - slave acknowledge between each byte 
 // - Generate a stop condition 
 
+// Low power mode can achieved by setting the low power bit but also putting the device into 
+// idle mode as well 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and write 
+
+// Read 
+
+// Write 
+
 //=======================================================================================
 
 
@@ -79,6 +92,16 @@ extern "C"
 //=======================================================================================
 // Register functions 
 
-// 
+// Magnetometer 
+
+// Magnetometer configuration register A write/read 
+
+// Magnetometer configuration register B write/read 
+
+// Magnetometer configuration register C write/read 
+
+// Magnetometer interrupt registers write/read 
+
+// Magnetometer status register read 
 
 //=======================================================================================
