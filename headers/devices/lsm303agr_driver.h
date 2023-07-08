@@ -47,7 +47,8 @@
 #define LSM303AGR_CFG_A_M 0x60                // Configuration register A 
 #define LSM303AGR_CFG_B_M 0x61                // Configuration register B 
 #define LSM303AGR_CFG_C_M 0x62                // Configuration register C 
-#define LSM303AGR_X_L_M 0x68                  // 
+#define LSM303AGR_STATUS_M 0x67               // Status register 
+#define LSM303AGR_X_L_M 0x68                  // X component of magnetic field 
 
 //=======================================================================================
 
@@ -99,6 +100,11 @@ typedef enum {
     LSM303AGR_MODE_IDLE 
 } lsm303agr_sys_mode_t; 
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Functions 
 //=======================================================================================
 
 #endif   // _LSM303AGR_DRIVER_H_ 

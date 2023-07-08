@@ -72,6 +72,16 @@ extern "C"
 
 
 //=======================================================================================
+// Initialization 
+
+// Config magnetometer 
+// Config accelerometer 
+// Run self test 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Read and write 
 
 // Read 
@@ -92,15 +102,13 @@ extern "C"
 //=======================================================================================
 // Register functions 
 
-// Magnetometer 
+// Magnetometer data read 
 
 // Magnetometer configuration register A write/read 
 
 // Magnetometer configuration register B write/read 
 
 // Magnetometer configuration register C write/read 
-
-// Magnetometer interrupt registers write/read 
 
 // Magnetometer status register read 
 
