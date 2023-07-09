@@ -47,19 +47,7 @@ extern "C"
 //     - 1 == increment to next address after read/write - allows for multiple data read/writes 
 //     - 0 == don't increment address afterwards 
 
-// Read (after completing the general start procedure) 
-// - Generate a start condition 
-// - Send the slave address with a read bit 
-// - Slave acknowledges 
-// - Read data (byte) from slave 
-// - If reading one byte 
-//   - Go to second last step 
-// - If read multiple bytes: 
-//   - Master acknowledge 
-//   - Read data (byte) from slave 
-//   - Repeat the above two steps for all the needed data then proceed to the next step 
-// - Master non-acknowledge 
-// - Generate a stop condition 
+// 
 
 // Write (after completing the general start procedure) 
 // - Transmit data to the slave - slave acknowledge between each byte 
@@ -72,11 +60,47 @@ extern "C"
 
 
 //=======================================================================================
+// Variables 
+
+// 
+typedef struct lsm303agr_driver_data_s 
+{
+    // Peripherals 
+    I2C_TypeDef *i2c; 
+
+    // Device info 
+    uint8_t addr; 
+
+    // Status info 
+    // 'status' --> bit 0: i2c status (see i2c_status_t) 
+    //          --> bit 1: init status (WHO_AM_I) 
+    //          --> bits 2-7: self test results 
+    uint8_t status; 
+}
+lsm303agr_driver_data_t; 
+
+
+// 
+static lsm303agr_driver_data_t lsm303agr_driver_data; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 // Config magnetometer 
 // Config accelerometer 
 // Run self test 
+void lsm303agr_init(
+    I2C_TypeDef *i2c, 
+    uint8_t i2c_addr)
+{
+    // Initialize data record 
+    lsm303agr_driver_data.i2c = i2c; 
+    lsm303agr_driver_data.addr = i2c_addr; 
+    lsm303agr_driver_data.status = CLEAR; 
+}
 
 //=======================================================================================
 
@@ -84,9 +108,58 @@ extern "C"
 //=======================================================================================
 // Read and write 
 
+// Read (after completing the general start procedure) 
+// - 
+// - 
+// - 
+// - Read data (byte) from slave 
+// - If reading one byte 
+//   - Go to second last step 
+// - If read multiple bytes: 
+//   - Master acknowledge 
+//   - Read data (byte) from slave 
+//   - Repeat the above two steps for all the needed data then proceed to the next step 
+// - Master non-acknowledge 
+// - 
+
 // Read 
+void lsm303agr_read(void)
+{
+    // Local variables 
+    uint8_t i2c_status = I2C_OK; 
+
+    // Generate a start condition 
+    i2c_status |= (uint8_t)i2c_start(lsm303agr_driver_data.i2c); 
+
+    // Send the slave address with a write bit 
+    i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
+                                          lsm303agr_driver_data.addr + LSM303AGR_W_OFFSET); 
+    i2c_clear_addr(lsm303agr_driver_data.i2c); 
+
+    // Write register address 
+
+    // Start condition 
+
+    //Slave address with read bit 
+
+    // Read data 
+
+    // Generate a stop condition 
+    i2c_stop(lsm303agr_driver_data.i2c); 
+
+    // i2c_status |= i2c_write(lsm303agr_driver_data.i2c, uint8_t, uint8_t); 
+    // i2c_status |= i2c_read(lsm303agr_driver_data.i2c, uint8_t, uint16_t); 
+
+    // Update the driver status 
+    lsm303agr_driver_data.status |= i2c_status; 
+}
+
 
 // Write 
+void lsm303agr_write(void)
+{
+    // 
+}
 
 //=======================================================================================
 
@@ -103,13 +176,42 @@ extern "C"
 // Register functions 
 
 // Magnetometer data read 
+void lsm303agr_mag_read(void)
+{
+    // 
+}
+
 
 // Magnetometer configuration register A write/read 
+void lsm303agr_mag_cfga_write(void)
+{
+    // 
+}
+
 
 // Magnetometer configuration register B write/read 
+void lsm303agr_mag_cfga_write(void)
+{
+    // 
+}
+
 
 // Magnetometer configuration register C write/read 
+void lsm303agr_mag_cfga_write(void)
+{
+    // 
+}
+
 
 // Magnetometer status register read 
+void lsm303agr_mag_status_read(void)
+{
+    // 
+}
 
+//=======================================================================================
+
+
+//=======================================================================================
+// User functions 
 //=======================================================================================
