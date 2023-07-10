@@ -33,6 +33,53 @@ extern "C"
 
 
 //=======================================================================================
+// Register functions 
+
+/**
+ * @brief Magnetometer WHO AM I read 
+ * 
+ * @details 
+ * 
+ * @return uint8_t : contents of the WHO AM I register 
+ */
+uint8_t lsm303agr_mag_whoami_read(void); 
+
+
+/**
+ * @brief Magnetometer configuration register A write/read 
+ * 
+ * @details 
+ */
+void lsm303agr_mag_cfga_write(void); 
+
+
+/**
+ * @brief Magnetometer configuration register B write/read 
+ * 
+ * @details 
+ */
+void lsm303agr_mag_cfga_write(void); 
+
+
+/**
+ * @brief Magnetometer configuration register C write/read 
+ * 
+ * @details 
+ */
+void lsm303agr_mag_cfga_write(void); 
+
+
+/**
+ * @brief Magnetometer status register read 
+ * 
+ * @details 
+ */
+void lsm303agr_mag_status_read(void); 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Notes 
 
 // Procedures start on page 38 of the datasheet 
@@ -62,6 +109,49 @@ extern "C"
 //=======================================================================================
 // Variables 
 
+// Magnetometer configuration register A 
+typedef struct lsm303agr_cfga_s 
+{
+    // 
+    uint8_t comp_temp_en      : 1;           // 
+    uint8_t reboot            : 1;           // 
+    uint8_t soft_rst          : 1;           // 
+    uint8_t lp                : 1;           // 
+    uint8_t odr1              : 1;           // 
+    uint8_t odr0              : 1;           // 
+    uint8_t md1               : 1;           // 
+    uint8_t md0               : 1;           // 
+}
+lsm303agr_cfga_t; 
+
+
+// Magnetometer configuration register B 
+typedef struct lsm303agr_cfgb_s 
+{
+    // 
+    uint8_t off_canc_one_shot : 1;           // 
+    uint8_t int_on_dataoff    : 1;           // 
+    uint8_t set_freq          : 1;           // 
+    uint8_t off_canc          : 1;           // 
+    uint8_t lfp               : 1;           // 
+}
+lsm303agr_cfgb_t; 
+
+
+// Magnetometer configuration register C 
+typedef struct lsm303agr_cfgc_s 
+{
+    // 
+    uint8_t int_mag_pin       : 1;           // 
+    uint8_t i2c_dis           : 1;           // 
+    uint8_t bdu               : 1;           // 
+    uint8_t ble               : 1;           // 
+    uint8_t self_test         : 1;           // 
+    uint8_t int_mag           : 1;           // 
+}
+lsm303agr_cfgc_t; 
+
+
 // Data record structure 
 typedef struct lsm303agr_driver_data_s 
 {
@@ -76,6 +166,21 @@ typedef struct lsm303agr_driver_data_s
     //          --> bit 1: init status (WHO_AM_I) 
     //          --> bits 2-7: self test results 
     uint8_t status; 
+
+    // Magnetometer parameters 
+    lsm303agr_cfga_t cfga; 
+    lsm303agr_cfgb_t cfgb; 
+    lsm303agr_cfgc_t cfgc; 
+
+    // Status register 
+    uint8_t zyxor : 1;                       // 
+    uint8_t zor   : 1;                       // 
+    uint8_t yor   : 1;                       // 
+    uint8_t xor   : 1;                       // 
+    uint8_t zyxda : 1;                       // 
+    uint8_t zda   : 1;                       // 
+    uint8_t yda   : 1;                       // 
+    uint8_t xda   : 1;                       // 
 }
 lsm303agr_driver_data_t; 
 
@@ -94,14 +199,60 @@ void lsm303agr_init(
     I2C_TypeDef *i2c, 
     uint8_t i2c_addr)
 {
+    //===================================================
     // Initialize data record 
+
+    // Peripherals 
     lsm303agr_driver_data.i2c = i2c; 
+
+    // Device info 
     lsm303agr_driver_data.addr = i2c_addr; 
+
+    // Status info 
     lsm303agr_driver_data.status = CLEAR; 
 
+    // Magnetometer parameters 
+    lsm303agr_driver_data.cfga.comp_temp_en = CLEAR_BIT; 
+    lsm303agr_driver_data.cfga.reboot = CLEAR_BIT; 
+    lsm303agr_driver_data.cfga.soft_rst = CLEAR_BIT; 
+    lsm303agr_driver_data.cfga.lp = CLEAR_BIT; 
+    lsm303agr_driver_data.cfga.odr0 = CLEAR_BIT; 
+    lsm303agr_driver_data.cfga.odr1 = CLEAR_BIT; 
+    lsm303agr_driver_data.cfga.md0 = CLEAR_BIT; 
+    lsm303agr_driver_data.cfga.md1 = CLEAR_BIT; 
+    lsm303agr_driver_data.cfgb.off_canc_one_shot = CLEAR_BIT; 
+    lsm303agr_driver_data.cfgb.int_on_dataoff = CLEAR_BIT; 
+    lsm303agr_driver_data.cfgb.set_freq = CLEAR_BIT; 
+    lsm303agr_driver_data.cfgb.off_canc = CLEAR_BIT; 
+    lsm303agr_driver_data.cfgb.lfp = CLEAR_BIT; 
+    lsm303agr_driver_data.cfgc.int_mag_pin = CLEAR_BIT; 
+    lsm303agr_driver_data.cfgc.i2c_dis = CLEAR_BIT; 
+    lsm303agr_driver_data.cfgc.bdu = CLEAR_BIT; 
+    lsm303agr_driver_data.cfgc.ble = CLEAR_BIT; 
+    lsm303agr_driver_data.cfgc.self_test = CLEAR_BIT; 
+    lsm303agr_driver_data.cfgc.int_mag = CLEAR_BIT; 
+    
+    //===================================================
+
+    //===================================================
+    // Check ID and configure device 
+
+    // Check WHO AM I 
+    if (lsm303agr_mag_whoami_read() != LSM303AGR_ID_M)
+    {
+        lsm303agr_driver_data.status |= (SET_BIT << SHIFT_1); 
+        return; 
+    }
+
     // Config magnetometer 
+    
     // Config accelerometer 
+    
+    //===================================================
+
+    //===================================================
     // Run self test 
+    //===================================================
     }
 
 //=======================================================================================
@@ -196,10 +347,16 @@ void lsm303agr_write(
 //=======================================================================================
 // Register functions 
 
-// Magnetometer data read 
-void lsm303agr_mag_read(void)
+// Magnetometer WHO AM I read 
+uint8_t lsm303agr_mag_whoami_read(void)
 {
-    // 
+    // Local variables 
+    uint8_t who_am_i; 
+
+    // Read and return the value of the WHO AM I register 
+    lsm303agr_read(LSM303AGR_WHO_AM_I_M, &who_am_i, BYTE_1); 
+
+    return who_am_i; 
 }
 
 
@@ -207,7 +364,14 @@ void lsm303agr_mag_read(void)
 void lsm303agr_mag_cfga_write(void)
 {
     // Format the data 
-    uint8_t cfg_a; 
+    uint8_t cfg_a = (lsm303agr_driver_data.cfga.comp_temp_en << SHIFT_7) | 
+                    (lsm303agr_driver_data.cfga.reboot       << SHIFT_6) | 
+                    (lsm303agr_driver_data.cfga.soft_rst     << SHIFT_5) | 
+                    (lsm303agr_driver_data.cfga.lp           << SHIFT_4) | 
+                    (lsm303agr_driver_data.cfga.odr1         << SHIFT_3) | 
+                    (lsm303agr_driver_data.cfga.odr0         << SHIFT_2) | 
+                    (lsm303agr_driver_data.cfga.md1          << SHIFT_1) | 
+                    (lsm303agr_driver_data.cfga.md0); 
 
     // Write the formatted data to the device 
     lsm303agr_write(LSM303AGR_CFG_A_M, &cfg_a, BYTE_1); 
@@ -218,7 +382,11 @@ void lsm303agr_mag_cfga_write(void)
 void lsm303agr_mag_cfga_write(void)
 {
     // Format the data 
-    uint8_t cfg_b; 
+    uint8_t cfg_b = (lsm303agr_driver_data.cfgb.off_canc_one_shot << SHIFT_4) | 
+                    (lsm303agr_driver_data.cfgb.int_on_dataoff    << SHIFT_3) | 
+                    (lsm303agr_driver_data.cfgb.set_freq          << SHIFT_2) | 
+                    (lsm303agr_driver_data.cfgb.off_canc          << SHIFT_1) | 
+                    (lsm303agr_driver_data.cfgb.lfp); 
 
     // Write the formatted data to the device 
     lsm303agr_write(LSM303AGR_CFG_B_M, &cfg_b, BYTE_1); 
@@ -229,7 +397,12 @@ void lsm303agr_mag_cfga_write(void)
 void lsm303agr_mag_cfga_write(void)
 {
     // Format the data 
-    uint8_t cfg_c; 
+    uint8_t cfg_c = (lsm303agr_driver_data.cfgc.int_mag_pin << SHIFT_6) | 
+                    (lsm303agr_driver_data.cfgc.i2c_dis     << SHIFT_5) | 
+                    (lsm303agr_driver_data.cfgc.bdu         << SHIFT_4) | 
+                    (lsm303agr_driver_data.cfgc.ble         << SHIFT_3) | 
+                    (lsm303agr_driver_data.cfgc.self_test   << SHIFT_1) | 
+                    (lsm303agr_driver_data.cfgc.int_mag); 
 
     // Write the formatted data to the device 
     lsm303agr_write(LSM303AGR_CFG_C_M, &cfg_c, BYTE_1); 
@@ -239,7 +412,21 @@ void lsm303agr_mag_cfga_write(void)
 // Magnetometer status register read 
 void lsm303agr_mag_status_read(void)
 {
-    // 
+    // Local variables 
+    uint8_t status; 
+
+    // Read the magnetometer status 
+    lsm303agr_read(LSM303AGR_STATUS_M, &status, BYTE_1); 
+
+    // Parse the data 
+    lsm303agr_driver_data.zyxor = (status >> SHIFT_7) & LSM303AGR_BIT_MASK; 
+    lsm303agr_driver_data.zor   = (status >> SHIFT_6) & LSM303AGR_BIT_MASK; 
+    lsm303agr_driver_data.yor   = (status >> SHIFT_5) & LSM303AGR_BIT_MASK; 
+    lsm303agr_driver_data.xor   = (status >> SHIFT_4) & LSM303AGR_BIT_MASK; 
+    lsm303agr_driver_data.zyxda = (status >> SHIFT_3) & LSM303AGR_BIT_MASK; 
+    lsm303agr_driver_data.zda   = (status >> SHIFT_2) & LSM303AGR_BIT_MASK; 
+    lsm303agr_driver_data.yda   = (status >> SHIFT_1) & LSM303AGR_BIT_MASK; 
+    lsm303agr_driver_data.xda   = (status) & LSM303AGR_BIT_MASK; 
 }
 
 //=======================================================================================
@@ -247,4 +434,11 @@ void lsm303agr_mag_status_read(void)
 
 //=======================================================================================
 // User functions 
+
+// Magnetometer data read 
+void lsm303agr_mag_read(void)
+{
+    // 
+}
+
 //=======================================================================================

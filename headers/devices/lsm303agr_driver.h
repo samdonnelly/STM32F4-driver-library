@@ -39,6 +39,9 @@
 #define LSM303AGR_ACCEL_ADDR 0x32             // Accelerometer I2C address - with default W bit 
 #define LSM303AGR_MAG_ADDR 0x3C               // Magnetometer I2C address - with default W bit 
 
+// Data tools 
+#define LSM303AGR_BIT_MASK 0x01               // Mask to filter out status bits 
+
 // Magnetometer configuration 
 #define LSM303AGR_ID_M 0x40                   // Value returned from the WHO AM I register 
 
@@ -126,6 +129,19 @@ void lsm303agr_write(
     LSM303AGR_REG_ADDR reg_addr, 
     uint8_t *lsm303agr_reg_value, 
     byte_num_t lsm303agr_reg_size); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// User functions 
+
+/**
+ * @brief Magnetometer data read 
+ * 
+ * @details 
+ */
+void lsm303agr_mag_read(void); 
 
 //=======================================================================================
 
