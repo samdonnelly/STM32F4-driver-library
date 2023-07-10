@@ -62,7 +62,7 @@ extern "C"
 //=======================================================================================
 // Variables 
 
-// 
+// Data record structure 
 typedef struct lsm303agr_driver_data_s 
 {
     // Peripherals 
@@ -80,7 +80,7 @@ typedef struct lsm303agr_driver_data_s
 lsm303agr_driver_data_t; 
 
 
-// 
+// Driver data record instance 
 static lsm303agr_driver_data_t lsm303agr_driver_data; 
 
 //=======================================================================================
@@ -89,9 +89,7 @@ static lsm303agr_driver_data_t lsm303agr_driver_data;
 //=======================================================================================
 // Initialization 
 
-// Config magnetometer 
-// Config accelerometer 
-// Run self test 
+// Initialization 
 void lsm303agr_init(
     I2C_TypeDef *i2c, 
     uint8_t i2c_addr)
@@ -100,7 +98,11 @@ void lsm303agr_init(
     lsm303agr_driver_data.i2c = i2c; 
     lsm303agr_driver_data.addr = i2c_addr; 
     lsm303agr_driver_data.status = CLEAR; 
-}
+
+    // Config magnetometer 
+    // Config accelerometer 
+    // Run self test 
+    }
 
 //=======================================================================================
 
@@ -108,22 +110,11 @@ void lsm303agr_init(
 //=======================================================================================
 // Read and write 
 
-// Read (after completing the general start procedure) 
-// - 
-// - 
-// - 
-// - Read data (byte) from slave 
-// - If reading one byte 
-//   - Go to second last step 
-// - If read multiple bytes: 
-//   - Master acknowledge 
-//   - Read data (byte) from slave 
-//   - Repeat the above two steps for all the needed data then proceed to the next step 
-// - Master non-acknowledge 
-// - 
-
-// Read 
-void lsm303agr_read(void)
+// Read from register 
+void lsm303agr_read(
+    LSM303AGR_REG_ADDR reg_addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_data_size)
 {
     // Local variables 
     uint8_t i2c_status = I2C_OK; 
@@ -136,29 +127,59 @@ void lsm303agr_read(void)
                                           lsm303agr_driver_data.addr + LSM303AGR_W_OFFSET); 
     i2c_clear_addr(lsm303agr_driver_data.i2c); 
 
-    // Write register address 
+    // Send the register address that is going to be read 
+    i2c_status |= (uint8_t)i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1);
 
-    // Start condition 
+    // Create another start signal 
+    i2c_status |= (uint8_t)i2c_start(lsm303agr_driver_data.i2c); 
 
-    //Slave address with read bit 
-
-    // Read data 
+    // Send the LSM303AGR address with a read offset 
+    i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
+                                          lsm303agr_driver_data.addr + LSM303AGR_R_OFFSET);
+    
+    // Read the data sent by the MPU6050 
+    i2c_status |= (uint8_t)i2c_read(lsm303agr_driver_data.i2c, 
+                                    lsm303agr_reg_value, 
+                                    lsm303agr_data_size);
 
     // Generate a stop condition 
     i2c_stop(lsm303agr_driver_data.i2c); 
-
-    // i2c_status |= i2c_write(lsm303agr_driver_data.i2c, uint8_t, uint8_t); 
-    // i2c_status |= i2c_read(lsm303agr_driver_data.i2c, uint8_t, uint16_t); 
 
     // Update the driver status 
     lsm303agr_driver_data.status |= i2c_status; 
 }
 
 
-// Write 
-void lsm303agr_write(void)
+// Write to register 
+void lsm303agr_write(
+    LSM303AGR_REG_ADDR reg_addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_data_size)
 {
-    // 
+    // Local variables 
+    uint8_t i2c_status = I2C_OK; 
+    
+    // Create start condition to initiate master mode 
+    i2c_status |= (uint8_t)i2c_start(lsm303agr_driver_data.i2c); 
+
+    // Send the MPU6050 address with a write offset
+    i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
+                                          lsm303agr_driver_data.addr + LSM303AGR_W_OFFSET);
+    i2c_clear_addr(lsm303agr_driver_data.i2c);
+
+    // Send the register address that is going to be written to 
+    i2c_status |= (uint8_t)i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1);
+
+    // Write the data to the MPU6050 
+    i2c_status |= (uint8_t)i2c_write(lsm303agr_driver_data.i2c, 
+                                     lsm303agr_reg_value, 
+                                     lsm303agr_data_size);
+
+    // Create a stop condition
+    i2c_stop(lsm303agr_driver_data.i2c); 
+
+    // Update the driver status 
+    lsm303agr_driver_data.status |= (uint8_t)i2c_status; 
 }
 
 //=======================================================================================
@@ -185,21 +206,33 @@ void lsm303agr_mag_read(void)
 // Magnetometer configuration register A write/read 
 void lsm303agr_mag_cfga_write(void)
 {
-    // 
+    // Format the data 
+    uint8_t cfg_a; 
+
+    // Write the formatted data to the device 
+    lsm303agr_write(LSM303AGR_CFG_A_M, &cfg_a, BYTE_1); 
 }
 
 
 // Magnetometer configuration register B write/read 
 void lsm303agr_mag_cfga_write(void)
 {
-    // 
+    // Format the data 
+    uint8_t cfg_b; 
+
+    // Write the formatted data to the device 
+    lsm303agr_write(LSM303AGR_CFG_B_M, &cfg_b, BYTE_1); 
 }
 
 
 // Magnetometer configuration register C write/read 
 void lsm303agr_mag_cfga_write(void)
 {
-    // 
+    // Format the data 
+    uint8_t cfg_c; 
+
+    // Write the formatted data to the device 
+    lsm303agr_write(LSM303AGR_CFG_C_M, &cfg_c, BYTE_1); 
 }
 
 

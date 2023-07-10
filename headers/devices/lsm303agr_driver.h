@@ -104,7 +104,29 @@ typedef enum {
 
 
 //=======================================================================================
+// Datatypes 
+
+typedef uint8_t LSM303AGR_REG_ADDR; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Functions 
+
+// Read from register 
+void lsm303agr_read(
+    LSM303AGR_REG_ADDR addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_reg_size); 
+
+
+// Write to register 
+void lsm303agr_write(
+    LSM303AGR_REG_ADDR reg_addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_reg_size); 
+
 //=======================================================================================
 
 #endif   // _LSM303AGR_DRIVER_H_ 
