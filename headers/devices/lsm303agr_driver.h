@@ -52,7 +52,7 @@
 #define LSM303AGR_CFG_B_M 0x61                // Configuration register B 
 #define LSM303AGR_CFG_C_M 0x62                // Configuration register C 
 #define LSM303AGR_STATUS_M 0x67               // Status register 
-#define LSM303AGR_X_L_M 0x68                  // X component of magnetic field 
+#define LSM303AGR_X_L_M 0x68                  // X component of magnetic field (first data reg) 
 
 //=======================================================================================
 
@@ -86,11 +86,11 @@ typedef enum {
  * @details 
  */
 typedef enum {
-    LSM303AGR_ODR_10, 
-    LSM303AGR_ODR_20, 
-    LSM303AGR_ODR_50, 
-    LSM303AGR_ODR_100 
-} lsm303agr_odr_cfg_t; 
+    LSM303AGR_M_ODR_10, 
+    LSM303AGR_M_ODR_20, 
+    LSM303AGR_M_ODR_50, 
+    LSM303AGR_M_ODR_100 
+} lsm303agr_m_odr_cfg_t; 
 
 
 /**
@@ -99,10 +99,10 @@ typedef enum {
  * @details 
  */
 typedef enum {
-    LSM303AGR_MODE_CONT, 
-    LSM303AGR_MODE_SINGLE, 
-    LSM303AGR_MODE_IDLE 
-} lsm303agr_sys_mode_t; 
+    LSM303AGR_M_MODE_CONT, 
+    LSM303AGR_M_MODE_SINGLE, 
+    LSM303AGR_M_MODE_IDLE 
+} lsm303agr_m_sys_mode_t; 
 
 //=======================================================================================
 
@@ -116,7 +116,35 @@ typedef uint8_t LSM303AGR_REG_ADDR;
 
 
 //=======================================================================================
-// Functions 
+// Initialization 
+
+/**
+ * @brief Initialization 
+ * 
+ * @details 
+ * 
+ * @param i2c 
+ * @param m_odr 
+ * @param m_mode 
+ * @param m_off_canc 
+ * @param m_lpf 
+ * @param m_int_mag_pin 
+ * @param m_int_mag 
+ */
+void lsm303agr_init(
+    I2C_TypeDef *i2c, 
+    lsm303agr_m_odr_cfg_t m_odr, 
+    lsm303agr_m_sys_mode_t m_mode, 
+    lsm303agr_cfg_t m_off_canc, 
+    lsm303agr_cfg_t m_lpf, 
+    lsm303agr_cfg_t m_int_mag_pin, 
+    lsm303agr_cfg_t m_int_mag); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and write 
 
 // Read from register 
 void lsm303agr_read(
@@ -142,7 +170,22 @@ void lsm303agr_write(
  * 
  * @details 
  */
-void lsm303agr_mag_read(void); 
+void lsm303agr_m_read(void); 
+
+
+/**
+ * @brief Get magnetometer data 
+ * 
+ * @details 
+ * 
+ * @param m_x_data 
+ * @param m_y_data 
+ * @param m_z_data 
+ */
+void lsm303agr_m_get_data(
+    int16_t *m_x_data, 
+    int16_t *m_y_data, 
+    int16_t *m_z_data); 
 
 //=======================================================================================
 
