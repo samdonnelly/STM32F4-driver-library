@@ -41,6 +41,7 @@
 
 // Data tools 
 #define LSM303AGR_BIT_MASK 0x01               // Mask to filter out status bits 
+#define LSM303AGR_ADDR_INC 0x80               // Register address increment bit 
 
 // Magnetometer configuration 
 #define LSM303AGR_ID_M 0x40                   // Value returned from the WHO AM I register 
