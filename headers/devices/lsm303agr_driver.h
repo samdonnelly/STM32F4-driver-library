@@ -15,6 +15,12 @@
 #ifndef _LSM303AGR_DRIVER_H_ 
 #define _LSM303AGR_DRIVER_H_ 
 
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -111,6 +117,7 @@ typedef enum {
 // Datatypes 
 
 typedef uint8_t LSM303AGR_REG_ADDR; 
+typedef uint8_t LSM303AGR_I2C_ADDR; 
 
 //=======================================================================================
 
@@ -131,7 +138,7 @@ typedef uint8_t LSM303AGR_REG_ADDR;
  * @param m_int_mag_pin 
  * @param m_int_mag 
  */
-void lsm303agr_init(
+EXTERNC void lsm303agr_init(
     I2C_TypeDef *i2c, 
     lsm303agr_m_odr_cfg_t m_odr, 
     lsm303agr_m_sys_mode_t m_mode, 
@@ -148,13 +155,15 @@ void lsm303agr_init(
 
 // Read from register 
 void lsm303agr_read(
-    LSM303AGR_REG_ADDR addr, 
+    LSM303AGR_I2C_ADDR i2c_addr, 
+    LSM303AGR_REG_ADDR reg_addr, 
     uint8_t *lsm303agr_reg_value, 
     byte_num_t lsm303agr_reg_size); 
 
 
 // Write to register 
 void lsm303agr_write(
+    LSM303AGR_I2C_ADDR i2c_addr, 
     LSM303AGR_REG_ADDR reg_addr, 
     uint8_t *lsm303agr_reg_value, 
     byte_num_t lsm303agr_reg_size); 
@@ -188,5 +197,7 @@ void lsm303agr_m_get_data(
     int16_t *m_z_data); 
 
 //=======================================================================================
+
+#undef EXTERNC
 
 #endif   // _LSM303AGR_DRIVER_H_ 

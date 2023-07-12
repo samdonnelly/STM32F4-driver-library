@@ -313,6 +313,7 @@ void lsm303agr_init(
 
 // Read from register 
 void lsm303agr_read(
+    LSM303AGR_I2C_ADDR i2c_addr, 
     LSM303AGR_REG_ADDR reg_addr, 
     uint8_t *lsm303agr_reg_value, 
     byte_num_t lsm303agr_data_size)
@@ -325,7 +326,7 @@ void lsm303agr_read(
 
     // Send the slave address with a write bit 
     i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
-                                          lsm303agr_driver_data.addr + LSM303AGR_W_OFFSET); 
+                                          i2c_addr + LSM303AGR_W_OFFSET); 
     i2c_clear_addr(lsm303agr_driver_data.i2c); 
 
     // Send the register address that is going to be read 
@@ -336,7 +337,7 @@ void lsm303agr_read(
 
     // Send the LSM303AGR address with a read offset 
     i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
-                                          lsm303agr_driver_data.addr + LSM303AGR_R_OFFSET);
+                                          i2c_addr + LSM303AGR_R_OFFSET);
     
     // Read the data sent by the MPU6050 
     i2c_status |= (uint8_t)i2c_read(lsm303agr_driver_data.i2c, 
@@ -353,6 +354,7 @@ void lsm303agr_read(
 
 // Write to register 
 void lsm303agr_write(
+    LSM303AGR_I2C_ADDR i2c_addr, 
     LSM303AGR_REG_ADDR reg_addr, 
     uint8_t *lsm303agr_reg_value, 
     byte_num_t lsm303agr_data_size)
@@ -365,7 +367,7 @@ void lsm303agr_write(
 
     // Send the MPU6050 address with a write offset
     i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
-                                          lsm303agr_driver_data.addr + LSM303AGR_W_OFFSET);
+                                          i2c_addr + LSM303AGR_W_OFFSET);
     i2c_clear_addr(lsm303agr_driver_data.i2c);
 
     // Send the register address that is going to be written to 
@@ -404,7 +406,7 @@ uint8_t lsm303agr_m_whoami_read(void)
     uint8_t who_am_i; 
 
     // Read and return the value of the WHO AM I register 
-    lsm303agr_read(LSM303AGR_WHO_AM_I_M, &who_am_i, BYTE_1); 
+    lsm303agr_read(LSM303AGR_MAG_ADDR, LSM303AGR_WHO_AM_I_M, &who_am_i, BYTE_1); 
 
     return who_am_i; 
 }
@@ -424,7 +426,7 @@ void lsm303agr_m_cfga_write(void)
                    (lsm303agr_driver_data.m_cfga.md0); 
 
     // Write the formatted data to the device 
-    lsm303agr_write(LSM303AGR_CFG_A_M, &cfga, BYTE_1); 
+    lsm303agr_write(LSM303AGR_MAG_ADDR, LSM303AGR_CFG_A_M, &cfga, BYTE_1); 
 }
 
 
@@ -440,7 +442,7 @@ void lsm303agr_m_cfgb_write(void)
                    (lsm303agr_driver_data.m_cfgb.lpf); 
 
     // Write the formatted data to the device 
-    lsm303agr_write(LSM303AGR_CFG_B_M, &cfgb, BYTE_1); 
+    lsm303agr_write(LSM303AGR_MAG_ADDR, LSM303AGR_CFG_B_M, &cfgb, BYTE_1); 
 }
 
 
@@ -458,7 +460,7 @@ void lsm303agr_m_cfgc_write(void)
                    (lsm303agr_driver_data.m_cfgc.int_mag); 
 
     // Write the formatted data to the device 
-    lsm303agr_write(LSM303AGR_CFG_C_M, &cfgc, BYTE_1); 
+    lsm303agr_write(LSM303AGR_MAG_ADDR, LSM303AGR_CFG_C_M, &cfgc, BYTE_1); 
 }
 
 
@@ -469,7 +471,7 @@ void lsm303agr_m_status_read(void)
     uint8_t status; 
 
     // Read the magnetometer status 
-    lsm303agr_read(LSM303AGR_STATUS_M, &status, BYTE_1); 
+    lsm303agr_read(LSM303AGR_MAG_ADDR, LSM303AGR_STATUS_M, &status, BYTE_1); 
 
     // Parse the data 
     lsm303agr_driver_data.m_status.zyx_or = (status >> SHIFT_7) & LSM303AGR_BIT_MASK; 
@@ -497,7 +499,7 @@ void lsm303agr_m_read(void)
     // Read the magnetometer data 
     // The MSB of the register address is set to 1 so the register address will 
     // automatically be incremented between each byte read 
-    lsm303agr_read(LSM303AGR_X_L_M | LSM303AGR_ADDR_INC, mag_data, BYTE_6); 
+    lsm303agr_read(LSM303AGR_MAG_ADDR, LSM303AGR_X_L_M | LSM303AGR_ADDR_INC, mag_data, BYTE_6); 
 
     // Combine the return values into signed integers 
     lsm303agr_driver_data.m_data.m_x = (int16_t)((mag_data[1] << SHIFT_8) | (mag_data[0]));
