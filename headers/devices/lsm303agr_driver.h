@@ -15,12 +15,6 @@
 #ifndef _LSM303AGR_DRIVER_H_ 
 #define _LSM303AGR_DRIVER_H_ 
 
-#ifdef __cplusplus
-#define EXTERNC extern "C"
-#else
-#define EXTERNC
-#endif
-
 //=======================================================================================
 // Includes 
 
@@ -138,7 +132,7 @@ typedef uint8_t LSM303AGR_I2C_ADDR;
  * @param m_int_mag_pin 
  * @param m_int_mag 
  */
-EXTERNC void lsm303agr_init(
+void lsm303agr_init(
     I2C_TypeDef *i2c, 
     lsm303agr_m_odr_cfg_t m_odr, 
     lsm303agr_m_sys_mode_t m_mode, 
@@ -197,7 +191,5 @@ void lsm303agr_m_get_data(
     int16_t *m_z_data); 
 
 //=======================================================================================
-
-#undef EXTERNC
 
 #endif   // _LSM303AGR_DRIVER_H_ 
