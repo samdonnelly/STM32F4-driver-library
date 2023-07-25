@@ -454,12 +454,12 @@ void dma_clear_int_flags(
 // Read the stream interrupt flags 
 void dma_int_flags(
     DMA_TypeDef *dma, 
-    uint32_t lo_streams, 
-    uint32_t hi_streams)
+    uint32_t *lo_streams, 
+    uint32_t *hi_streams)
 {
     // Record all stream interrupt flags 
-    lo_streams = dma->LISR; 
-    hi_streams = dma->HISR; 
+    *lo_streams = dma->LISR; 
+    *hi_streams = dma->HISR; 
 
     // Clear all flags 
     dma_clear_int_flags(dma); 

@@ -313,6 +313,7 @@ void hc05_controller(void)
 
         case HC05_SEND_STATE: 
             next_state = HC05_CONNECTED_STATE; 
+            break; 
 
         case HC05_READ_STATE: 
             if (hc05_device_trackers.fault_code)

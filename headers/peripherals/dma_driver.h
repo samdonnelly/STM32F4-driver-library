@@ -350,16 +350,14 @@ void dma_clear_int_flags(
  *          the contents in the arguments passed to the function. It is left to the application 
  *          to parse the register data as needed. 
  * 
- * // TODO should there be a more granular flag read method? 
- * 
  * @param dma : pointer to the DMA port of which to read the interrupt flags 
  * @param lo_streams : buffer to store interrupt flags for streams 0-3 
  * @param hi_streams : buffer to store interrupt flags for streams 4-7 
  */
 void dma_int_flags(
     DMA_TypeDef *dma, 
-    uint32_t lo_streams, 
-    uint32_t hi_streams); 
+    uint32_t *lo_streams, 
+    uint32_t *hi_streams); 
 
 //================================================================================
 

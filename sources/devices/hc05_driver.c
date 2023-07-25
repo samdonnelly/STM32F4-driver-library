@@ -90,7 +90,10 @@ void hc05_init(
 
     // AT Command mode enable 
     gpio_pin_init(gpio_at, at, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-    gpio_write(hc05_data_record.gpio_at_pin, hc05_data_record.at_pin, HC05_DATA_MODE); 
+    gpio_write(
+        hc05_data_record.gpio_at_pin, 
+        hc05_data_record.at_pin, 
+        (gpio_pin_state_t)HC05_DATA_MODE); 
     
     // Module power enable 
     gpio_pin_init(gpio_en, en, MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
@@ -162,7 +165,8 @@ void hc05_read(
 // Read the connection status (STATE pin) 
 HC05_CONNECT_STATUS hc05_status(void)
 {
-    return gpio_read(hc05_data_record.gpio_state_pin, hc05_data_record.state_pin); 
+    return (HC05_CONNECT_STATUS)gpio_read(hc05_data_record.gpio_state_pin, 
+                                          hc05_data_record.state_pin); 
 }
 
 
