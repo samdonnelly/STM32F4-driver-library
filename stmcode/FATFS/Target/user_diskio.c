@@ -117,7 +117,7 @@ DRESULT USER_read (
 )
 {
   /* USER CODE BEGIN READ */
-    return hw125_read(pdrv, buff, sector, count); 
+    return (DRESULT)hw125_read(pdrv, buff, sector, count); 
   /* USER CODE END READ */
 }
 
@@ -139,7 +139,7 @@ DRESULT USER_write (
 {
   /* USER CODE BEGIN WRITE */
   /* USER CODE HERE */
-    return hw125_write(pdrv, buff, sector, count); 
+    return (DRESULT)hw125_write(pdrv, buff, sector, count); 
   /* USER CODE END WRITE */
 }
 #endif /* _USE_WRITE == 1 */
@@ -159,7 +159,7 @@ DRESULT USER_ioctl (
 )
 {
   /* USER CODE BEGIN IOCTL */
-    return hw125_ioctl(pdrv, cmd, buff); 
+    return (DRESULT)hw125_ioctl(pdrv, cmd, buff); 
   /* USER CODE END IOCTL */
 }
 #endif /* _USE_IOCTL == 1 */

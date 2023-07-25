@@ -1060,9 +1060,14 @@ DWORD get_fat (	/* 0xFFFFFFFF:Disk error, 1:Internal error, 2..0x7FFFFFFF:Cluste
 				}
 			}
 			/* go to default */
+			// The below code is a modification: copied the default case code here so a break statement 
+			// is present and eliminates a compiler warning. 
+			val = 1;	/* Internal error */
+			break; 
 #endif
 		default:
 			val = 1;	/* Internal error */
+			break; 
 		}
 	}
 
@@ -5431,6 +5436,12 @@ FRESULT f_mkfs (
 				}
 				st = 1;			/* Do not compress short run */
 				/* go to next case */
+				// The below code is a modification: copied the 'case 1:' case code here so a break statement 
+				// is present and eliminates a compiler warning. 
+				ch = si++;		/* Fill the short run */
+				if (--j == 0) st = 0;
+				break;
+
 			case 1:
 				ch = si++;		/* Fill the short run */
 				if (--j == 0) st = 0;
@@ -5439,6 +5450,8 @@ FRESULT f_mkfs (
 			default:
 				ch = (WCHAR)j; si += j;	/* Number of chars to skip */
 				st = 0;
+				// The below code is a modification: added a break statement to eliminate compiler warnings 
+				break;
 			}
 			sum = xsum32(buf[i + 0] = (BYTE)ch, sum);		/* Put it into the write buffer */
 			sum = xsum32(buf[i + 1] = (BYTE)(ch >> 8), sum);
