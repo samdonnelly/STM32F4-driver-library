@@ -36,7 +36,7 @@ void *create_linked_list_entry(
     // If pointer is NULL then create entry, otherwise skip and return the existing entry 
     if (data_record == NULL)
     {
-        // Allocate new heap memeory for the list entry 
+        // Allocate new heap memory for the list entry 
         data_record = (linked_list_struct_t *)malloc(record_size); 
 
         // Update the linked list data for the new entry 
@@ -53,7 +53,7 @@ void *create_linked_list_entry(
         else 
         {
             // Need to traverse to the previous node from the beginning since this is 
-            // a singly linked list and out pointer is currently at the new node 
+            // a singly linked list and our pointer is currently at the new node 
             linked_list_struct_t *previous_node = (linked_list_struct_t *)*list_ptr; 
 
             while (previous_node->next_ptr != NULL)
