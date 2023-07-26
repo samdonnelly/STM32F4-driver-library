@@ -17,49 +17,6 @@
 
 #include "lsm303agr_driver.h"
 
-// File inclusion 
-extern "C" 
-{
-    //===================================================
-    // C functions 
-
-    // I2C functions 
-    I2C_STATUS i2c_start(I2C_TypeDef); 
-    void i2c_stop(I2C_TypeDef); 
-    void i2c_clear_addr(I2C_TypeDef); 
-    I2C_STATUS i2c_write_addr(I2C_TypeDef, uint8_t); 
-    I2C_STATUS i2c_write(I2C_TypeDef, uint8_t, uint8_t); 
-    I2C_STATUS i2c_read(I2C_TypeDef, uint8_t, uint16_t); 
-    
-    //===================================================
-
-    //===================================================
-    // C++ functions 
-
-    // void lsm303agr_init(
-    //     I2C_TypeDef *, 
-    //     lsm303agr_m_odr_cfg_t, 
-    //     lsm303agr_m_sys_mode_t,
-    //     lsm303agr_cfg_t, 
-    //     lsm303agr_cfg_t, 
-    //     lsm303agr_cfg_t, 
-    //     lsm303agr_cfg_t); 
-
-    //     // Read from register 
-    //     void lsm303agr_read(LSM303AGR_REG_ADDR, uint8_t *, byte_num_t); 
-
-    //     // Write to register 
-    //     void lsm303agr_write(LSM303AGR_REG_ADDR, uint8_t *, byte_num_t); 
-
-    //     // Magnetometer data read 
-    //     void lsm303agr_m_read(void); 
-
-    //     // Get magnetometer data 
-    //     void lsm303agr_m_get_data(int16_t *, int16_t *, int16_t *); 
-
-    //===================================================
-}
-
 //=======================================================================================
 
 

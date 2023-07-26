@@ -15,6 +15,10 @@
 #ifndef _LSM303AGR_DRIVER_H_ 
 #define _LSM303AGR_DRIVER_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -191,5 +195,9 @@ void lsm303agr_m_get_data(
     int16_t *m_z_data); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _LSM303AGR_DRIVER_H_ 
