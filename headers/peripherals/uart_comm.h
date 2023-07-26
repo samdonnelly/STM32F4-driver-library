@@ -15,11 +15,19 @@
 #ifndef _UART_COMM_H_
 #define _UART_COMM_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
+// Tools 
 #include "stm32f411xe.h"
 #include "tools.h"
+
+// Drivers 
+#include "gpio_driver.h"
 
 //=======================================================================================
 
@@ -407,5 +415,9 @@ void uart_clear_dr(
     USART_TypeDef *uart); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _UART_COMM_H_

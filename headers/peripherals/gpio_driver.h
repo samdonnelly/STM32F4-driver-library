@@ -15,6 +15,10 @@
 #ifndef _GPIO_DRIVER_H_
 #define _GPIO_DRIVER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -249,5 +253,9 @@ GPIOX_DR gpio_port_read(
     GPIO_TypeDef *gpio); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _GPIO_DRIVER_H_
