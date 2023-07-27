@@ -170,6 +170,12 @@ typedef struct lsm303agr_driver_data_s
     //          --> bits 2-7: self test results 
     uint8_t status; 
 
+    // Device orientation 
+    lsm303agr_axis_t f_axis; 
+    lsm303agr_axis_dir_t f_axis_dir; 
+    lsm303agr_axis_t s_axis; 
+    lsm303agr_axis_dir_t s_axis_dir; 
+
     // Magnetometer parameters 
     lsm303agr_m_data_t m_data; 
     lsm303agr_m_cfga_t m_cfga; 
@@ -197,7 +203,11 @@ void lsm303agr_init(
     lsm303agr_cfg_t m_off_canc, 
     lsm303agr_cfg_t m_lpf, 
     lsm303agr_cfg_t m_int_mag_pin, 
-    lsm303agr_cfg_t m_int_mag)
+    lsm303agr_cfg_t m_int_mag, 
+    lsm303agr_axis_t f_axis, 
+    lsm303agr_axis_dir_t f_axis_dir, 
+    lsm303agr_axis_t s_axis, 
+    lsm303agr_axis_dir_t s_axis_dir)
 {
     //===================================================
     // Initialize data record 
@@ -211,6 +221,12 @@ void lsm303agr_init(
 
     // Status info 
     lsm303agr_driver_data.status = CLEAR; 
+
+    // Device orientation 
+    lsm303agr_driver_data.f_axis = f_axis; 
+    lsm303agr_driver_data.f_axis_dir = f_axis_dir; 
+    lsm303agr_driver_data.s_axis = s_axis; 
+    lsm303agr_driver_data.f_axis_dir = s_axis_dir; 
 
     // Magnetometer parameters 
     lsm303agr_driver_data.m_cfga.comp_temp_en = CLEAR_BIT; 
@@ -459,6 +475,7 @@ void lsm303agr_m_read(void)
     lsm303agr_read(LSM303AGR_MAG_ADDR, LSM303AGR_X_L_M | LSM303AGR_ADDR_INC, mag_data, BYTE_6); 
 
     // Combine the return values into signed integers 
+    // These values are raw magnetometer axis readings and have units of milli-gauss 
     lsm303agr_driver_data.m_data.m_x = (int16_t)((mag_data[1] << SHIFT_8) | (mag_data[0]));
     lsm303agr_driver_data.m_data.m_y = (int16_t)((mag_data[3] << SHIFT_8) | (mag_data[2]));
     lsm303agr_driver_data.m_data.m_z = (int16_t)((mag_data[5] << SHIFT_8) | (mag_data[4]));
@@ -471,9 +488,107 @@ void lsm303agr_m_get_data(
     int16_t *m_y_data, 
     int16_t *m_z_data)
 {
-    *m_x_data = lsm303agr_driver_data.m_data.m_x; 
-    *m_y_data = lsm303agr_driver_data.m_data.m_y; 
-    *m_z_data = lsm303agr_driver_data.m_data.m_z; 
+    // Takes the raw axis reading and scale it by the magnetometer sensitivity (1.5) 
+    *m_x_data = (lsm303agr_driver_data.m_data.m_x * LSM303AGR_SENS_M) >> SHIFT_1; 
+    *m_y_data = (lsm303agr_driver_data.m_data.m_y * LSM303AGR_SENS_M) >> SHIFT_1; 
+    *m_z_data = (lsm303agr_driver_data.m_data.m_z * LSM303AGR_SENS_M) >> SHIFT_1; 
+}
+
+
+// Heading 
+int16_t lsm303agr_m_get_heading(void)
+{
+    // Local variables 
+    int16_t fwd_axis; 
+    int16_t side_axis; 
+    double fwd_axis_double; 
+    double side_axis_double; 
+    int16_t heading = CLEAR; 
+    double rad_to_deg = 180.0 / 3.14159; 
+
+    // TODO Assign the forward and side axis in the init so this isn't done all the time 
+    switch (lsm303agr_driver_data.f_axis)
+    {
+        case LSM303AGR_X_AXIS: 
+            fwd_axis = lsm303agr_driver_data.m_data.m_x; 
+            break; 
+
+        case LSM303AGR_Y_AXIS: 
+            fwd_axis = lsm303agr_driver_data.m_data.m_y; 
+            break; 
+
+        case LSM303AGR_Z_AXIS: 
+            fwd_axis = lsm303agr_driver_data.m_data.m_z; 
+            break; 
+
+        default: 
+            fwd_axis = lsm303agr_driver_data.m_data.m_y; 
+            break; 
+    }
+
+    switch (lsm303agr_driver_data.s_axis)
+    {
+        case LSM303AGR_X_AXIS: 
+            side_axis = lsm303agr_driver_data.m_data.m_x; 
+            break; 
+
+        case LSM303AGR_Y_AXIS: 
+            side_axis = lsm303agr_driver_data.m_data.m_y; 
+            break; 
+
+        case LSM303AGR_Z_AXIS: 
+            side_axis = lsm303agr_driver_data.m_data.m_z; 
+            break; 
+
+        default: 
+            side_axis = lsm303agr_driver_data.m_data.m_z; 
+            break; 
+    }
+
+    fwd_axis_double = (double)fwd_axis; 
+    side_axis_double = (double)side_axis; 
+
+    // 
+    if (side_axis == 0)
+    {
+        if (fwd_axis >= 0)
+        {
+            heading = 0; 
+        }
+        else 
+        {
+            heading = 1800; 
+        }
+    }
+    else if (fwd_axis == 0)
+    {
+        if (side_axis >= 0)
+        {
+            heading = 900; 
+        }
+        else 
+        {
+            heading = -900; 
+        }
+    }
+    else if ((fwd_axis > 0) && (side_axis > 0))
+    {
+        heading = (int16_t)((atan(side_axis_double/fwd_axis_double) * rad_to_deg) * 10.0); 
+    }
+    else if ((fwd_axis > 0) && (side_axis < 0))
+    {
+        heading = 3600 + (int16_t)((atan(side_axis_double/fwd_axis_double) * rad_to_deg) * 10.0); 
+    }
+    else if ((fwd_axis < 0) && (side_axis > 0))
+    {
+        heading = 1800 + (int16_t)((atan(side_axis_double/fwd_axis_double) * rad_to_deg) * 10.0); 
+    }
+    else if ((fwd_axis < 0) && (side_axis < 0))
+    {
+        heading = 1800 + (int16_t)((atan(side_axis_double/fwd_axis_double) * rad_to_deg) * 10.0); 
+    }
+
+    return heading; 
 }
 
 

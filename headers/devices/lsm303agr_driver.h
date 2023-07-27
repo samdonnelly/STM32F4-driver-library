@@ -31,6 +31,9 @@ extern "C" {
 #include "gpio_driver.h"
 #include "linked_list_driver.h"
 
+// Standard libraries 
+#include "math.h"
+
 //=======================================================================================
 
 
@@ -46,6 +49,7 @@ extern "C" {
 // Data tools 
 #define LSM303AGR_BIT_MASK 0x01               // Mask to filter out status bits 
 #define LSM303AGR_ADDR_INC 0x80               // Register address increment bit 
+#define LSM303AGR_SENS_M 3                    // Magnetometer sensitivity numerator (3/2 == 1.5) 
 
 // Magnetometer configuration 
 #define LSM303AGR_ID_M 0x40                   // Value returned from the WHO AM I register 
@@ -108,6 +112,29 @@ typedef enum {
     LSM303AGR_M_MODE_IDLE 
 } lsm303agr_m_sys_mode_t; 
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ */
+typedef enum {
+    LSM303AGR_X_AXIS, 
+    LSM303AGR_Y_AXIS, 
+    LSM303AGR_Z_AXIS 
+} lsm303agr_axis_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ */
+typedef enum {
+    LSM303AGR_AXIS_POS, 
+    LSM303AGR_AXIS_NEG 
+} lsm303agr_axis_dir_t; 
+
 //=======================================================================================
 
 
@@ -135,6 +162,10 @@ typedef uint8_t LSM303AGR_I2C_ADDR;
  * @param m_lpf 
  * @param m_int_mag_pin 
  * @param m_int_mag 
+ * @param f_axis : 
+ * @param f_axis_dir : 
+ * @param s_axis : 
+ * @param s_axis_dir : 
  */
 void lsm303agr_init(
     I2C_TypeDef *i2c, 
@@ -143,7 +174,11 @@ void lsm303agr_init(
     lsm303agr_cfg_t m_off_canc, 
     lsm303agr_cfg_t m_lpf, 
     lsm303agr_cfg_t m_int_mag_pin, 
-    lsm303agr_cfg_t m_int_mag); 
+    lsm303agr_cfg_t m_int_mag, 
+    lsm303agr_axis_t f_axis, 
+    lsm303agr_axis_dir_t f_axis_dir, 
+    lsm303agr_axis_t s_axis, 
+    lsm303agr_axis_dir_t s_axis_dir); 
 
 //=======================================================================================
 
@@ -193,6 +228,16 @@ void lsm303agr_m_get_data(
     int16_t *m_x_data, 
     int16_t *m_y_data, 
     int16_t *m_z_data); 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @return int16_t : 
+ */
+int16_t lsm303agr_m_get_heading(void); 
 
 //=======================================================================================
 
