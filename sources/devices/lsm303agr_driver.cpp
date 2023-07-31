@@ -261,13 +261,19 @@ void lsm303agr_init(
     if (lsm303agr_m_whoami_read() != LSM303AGR_ID_M)
     {
         lsm303agr_driver_data.status |= (SET_BIT << SHIFT_1); 
-        return; 
+        // return; 
+    }
+    else 
+    {
+        lsm303agr_m_cfga_write(); 
+        lsm303agr_m_cfgb_write(); 
+        lsm303agr_m_cfgc_write(); 
     }
 
     // Config magnetometer 
-    lsm303agr_m_cfga_write(); 
-    lsm303agr_m_cfgb_write(); 
-    lsm303agr_m_cfgc_write(); 
+    // lsm303agr_m_cfga_write(); 
+    // lsm303agr_m_cfgb_write(); 
+    // lsm303agr_m_cfgc_write(); 
     
     // Config accelerometer 
     
@@ -499,94 +505,19 @@ void lsm303agr_m_get_data(
 int16_t lsm303agr_m_get_heading(void)
 {
     // Local variables 
-    int16_t fwd_axis; 
-    int16_t side_axis; 
-    double fwd_axis_double; 
-    double side_axis_double; 
+    // int16_t fwd_axis; 
+    // int16_t side_axis; 
+    // double fwd_axis_double; 
+    // double side_axis_double; 
     int16_t heading = CLEAR; 
     double rad_to_deg = 180.0 / 3.14159; 
 
-    // TODO Assign the forward and side axis in the init so this isn't done all the time 
-    switch (lsm303agr_driver_data.f_axis)
-    {
-        case LSM303AGR_X_AXIS: 
-            fwd_axis = lsm303agr_driver_data.m_data.m_x; 
-            break; 
+    // Calculate 
+    double compass = atan2((double)lsm303agr_driver_data.m_data.m_y, 
+                           (double)lsm303agr_driver_data.m_data.m_x) * rad_to_deg; 
+    heading = (int16_t)(compass * 10); 
 
-        case LSM303AGR_Y_AXIS: 
-            fwd_axis = lsm303agr_driver_data.m_data.m_y; 
-            break; 
-
-        case LSM303AGR_Z_AXIS: 
-            fwd_axis = lsm303agr_driver_data.m_data.m_z; 
-            break; 
-
-        default: 
-            fwd_axis = lsm303agr_driver_data.m_data.m_y; 
-            break; 
-    }
-
-    switch (lsm303agr_driver_data.s_axis)
-    {
-        case LSM303AGR_X_AXIS: 
-            side_axis = lsm303agr_driver_data.m_data.m_x; 
-            break; 
-
-        case LSM303AGR_Y_AXIS: 
-            side_axis = lsm303agr_driver_data.m_data.m_y; 
-            break; 
-
-        case LSM303AGR_Z_AXIS: 
-            side_axis = lsm303agr_driver_data.m_data.m_z; 
-            break; 
-
-        default: 
-            side_axis = lsm303agr_driver_data.m_data.m_z; 
-            break; 
-    }
-
-    fwd_axis_double = (double)fwd_axis; 
-    side_axis_double = (double)side_axis; 
-
-    // 
-    if (side_axis == 0)
-    {
-        if (fwd_axis >= 0)
-        {
-            heading = 0; 
-        }
-        else 
-        {
-            heading = 1800; 
-        }
-    }
-    else if (fwd_axis == 0)
-    {
-        if (side_axis >= 0)
-        {
-            heading = 900; 
-        }
-        else 
-        {
-            heading = -900; 
-        }
-    }
-    else if ((fwd_axis > 0) && (side_axis > 0))
-    {
-        heading = (int16_t)((atan(side_axis_double/fwd_axis_double) * rad_to_deg) * 10.0); 
-    }
-    else if ((fwd_axis > 0) && (side_axis < 0))
-    {
-        heading = 3600 + (int16_t)((atan(side_axis_double/fwd_axis_double) * rad_to_deg) * 10.0); 
-    }
-    else if ((fwd_axis < 0) && (side_axis > 0))
-    {
-        heading = 1800 + (int16_t)((atan(side_axis_double/fwd_axis_double) * rad_to_deg) * 10.0); 
-    }
-    else if ((fwd_axis < 0) && (side_axis < 0))
-    {
-        heading = 1800 + (int16_t)((atan(side_axis_double/fwd_axis_double) * rad_to_deg) * 10.0); 
-    }
+    // TODO Define the forward and side axis in the init to know how to calculate 
 
     return heading; 
 }
