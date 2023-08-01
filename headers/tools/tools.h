@@ -95,6 +95,9 @@
 // Alternate function configuration 
 #define AFR_INDEX_PIN_MASK 0x08        // Distinguishes pins 0-7 from pins 8-15 
 
+// Math 
+#define RAD_TO_DEG 180.0 / 3.14159     // Radians to degrees conversion 
+
 //=======================================================================================
 
 

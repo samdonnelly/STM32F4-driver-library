@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief LSM303AGR accelerometer and magnetometer driver header 
+ * @brief LSM303AGR magnetometer driver header 
  * 
  * @version 0.1
  * @date 2023-06-07
@@ -40,27 +40,42 @@ extern "C" {
 //=======================================================================================
 // Macros 
 
-// I2C addresses (datasheet page 39) 
-#define LSM303AGR_ACCEL_7BIT_ADDR 0x19        // Accelerometer 7-bit I2C address - no R/W bit 
-#define LSM303AGR_MAG_7BIT_ADDR 0x1E          // Magnetometer 7-bit I2C address - no R/W bit 
-#define LSM303AGR_ACCEL_ADDR 0x32             // Accelerometer I2C address - with default W bit 
-#define LSM303AGR_MAG_ADDR 0x3C               // Magnetometer I2C address - with default W bit 
-
 // Data tools 
 #define LSM303AGR_BIT_MASK 0x01               // Mask to filter out status bits 
 #define LSM303AGR_ADDR_INC 0x80               // Register address increment bit 
-#define LSM303AGR_SENS_M 3                    // Magnetometer sensitivity numerator (3/2 == 1.5) 
+
+// Accelerometer I2C addresses 
+#define LSM303AGR_A_7BIT_ADDR 0x19            // Accelerometer 7-bit I2C address - no R/W bit 
+#define LSM303AGR_A_ADDR 0x32                 // Accelerometer I2C address - with default W bit 
+
+// Magnetometer I2C addresses (datasheet page 39) 
+#define LSM303AGR_M_7BIT_ADDR 0x1E            // Magnetometer 7-bit I2C address - no R/W bit 
+#define LSM303AGR_M_ADDR 0x3C                 // Magnetometer I2C address - with default W bit 
 
 // Magnetometer configuration 
-#define LSM303AGR_ID_M 0x40                   // Value returned from the WHO AM I register 
+#define LSM303AGR_M_ID 0x40                   // Value returned from the WHO AM I register 
 
 // Magnetometer register addresses 
-#define LSM303AGR_WHO_AM_I_M 0x4F             // WHO AM I 
-#define LSM303AGR_CFG_A_M 0x60                // Configuration register A 
-#define LSM303AGR_CFG_B_M 0x61                // Configuration register B 
-#define LSM303AGR_CFG_C_M 0x62                // Configuration register C 
-#define LSM303AGR_STATUS_M 0x67               // Status register 
-#define LSM303AGR_X_L_M 0x68                  // X component of magnetic field (first data reg) 
+#define LSM303AGR_M_WHO_AM_I 0x4F             // WHO AM I 
+#define LSM303AGR_M_CFG_A 0x60                // Configuration register A 
+#define LSM303AGR_M_CFG_B 0x61                // Configuration register B 
+#define LSM303AGR_M_CFG_C 0x62                // Configuration register C 
+#define LSM303AGR_M_STATUS 0x67               // Status register 
+#define LSM303AGR_M_X_L 0x68                  // X component of magnetic field (first data reg) 
+
+// Magnetometer data 
+#define LSM303AGR_M_SENS 3                    // Magnetometer sensitivity numerator (3/2 == 1.5) 
+#define LSM303AGR_M_HEAD_SCALE 10             // Heading scaling factor (to remove decimals) 
+#define LSM303AGR_M_DIR_OFFSET 450            // 45deg (*10) - heading sections (ex. N-->NE) 
+#define LSM303AGR_M_HEAD_MAX 3600             // Max heading value - scaled (360deg * 10)
+#define LSM303AGR_M_N 0                       // North direction heading - scaled 
+#define LSM303AGR_M_NE 450                    // North-East direction heading - scaled 
+#define LSM303AGR_M_E 900                     // East direction heading - scaled 
+#define LSM303AGR_M_SE 1350                   // South-East direction heading - scaled 
+#define LSM303AGR_M_S 1800                    // South direction heading - scaled 
+#define LSM303AGR_M_SW 2250                   // South-West direction heading - scaled 
+#define LSM303AGR_M_W 2700                    // West direction heading - scaled 
+#define LSM303AGR_M_NW 3150                   // North-West direction heading - scaled 
 
 //=======================================================================================
 
@@ -112,29 +127,6 @@ typedef enum {
     LSM303AGR_M_MODE_IDLE 
 } lsm303agr_m_sys_mode_t; 
 
-
-/**
- * @brief 
- * 
- * @details 
- */
-typedef enum {
-    LSM303AGR_X_AXIS, 
-    LSM303AGR_Y_AXIS, 
-    LSM303AGR_Z_AXIS 
-} lsm303agr_axis_t; 
-
-
-/**
- * @brief 
- * 
- * @details 
- */
-typedef enum {
-    LSM303AGR_AXIS_POS, 
-    LSM303AGR_AXIS_NEG 
-} lsm303agr_axis_dir_t; 
-
 //=======================================================================================
 
 
@@ -156,29 +148,23 @@ typedef uint8_t LSM303AGR_I2C_ADDR;
  * @details 
  * 
  * @param i2c 
+ * @param offsets : 
  * @param m_odr 
  * @param m_mode 
  * @param m_off_canc 
  * @param m_lpf 
  * @param m_int_mag_pin 
  * @param m_int_mag 
- * @param f_axis : 
- * @param f_axis_dir : 
- * @param s_axis : 
- * @param s_axis_dir : 
  */
 void lsm303agr_init(
     I2C_TypeDef *i2c, 
+    int16_t *offsets, 
     lsm303agr_m_odr_cfg_t m_odr, 
     lsm303agr_m_sys_mode_t m_mode, 
     lsm303agr_cfg_t m_off_canc, 
     lsm303agr_cfg_t m_lpf, 
     lsm303agr_cfg_t m_int_mag_pin, 
-    lsm303agr_cfg_t m_int_mag, 
-    lsm303agr_axis_t f_axis, 
-    lsm303agr_axis_dir_t f_axis_dir, 
-    lsm303agr_axis_t s_axis, 
-    lsm303agr_axis_dir_t s_axis_dir); 
+    lsm303agr_cfg_t m_int_mag); 
 
 //=======================================================================================
 
