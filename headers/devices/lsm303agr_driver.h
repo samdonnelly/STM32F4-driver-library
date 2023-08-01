@@ -170,27 +170,6 @@ void lsm303agr_init(
 
 
 //=======================================================================================
-// Read and write 
-
-// Read from register 
-void lsm303agr_read(
-    LSM303AGR_I2C_ADDR i2c_addr, 
-    LSM303AGR_REG_ADDR reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_reg_size); 
-
-
-// Write to register 
-void lsm303agr_write(
-    LSM303AGR_I2C_ADDR i2c_addr, 
-    LSM303AGR_REG_ADDR reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_reg_size); 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // User functions 
 
 /**

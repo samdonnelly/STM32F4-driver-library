@@ -51,14 +51,14 @@ lsm303agr_m_data_t;
 // Magnetometer configuration register A 
 typedef struct lsm303agr_m_cfga_s 
 {
-    uint8_t comp_temp_en : 1;      // 
-    uint8_t reboot       : 1;      // 
-    uint8_t soft_rst     : 1;      // 
-    uint8_t lp           : 1;      // 
-    uint8_t odr1         : 1;      // 
-    uint8_t odr0         : 1;      // 
-    uint8_t md1          : 1;      // 
-    uint8_t md0          : 1;      // 
+    uint8_t comp_temp_en : 1;      // Temperature compensation 
+    uint8_t reboot       : 1;      // Reboot memory contents 
+    uint8_t soft_rst     : 1;      // Config and user register reset 
+    uint8_t lp           : 1;      // Low-power mode enable 
+    uint8_t odr1         : 1;      // Output data rate - high bit 
+    uint8_t odr0         : 1;      // Output data rate - low bit 
+    uint8_t md1          : 1;      // Mode select - high bit 
+    uint8_t md0          : 1;      // Mode select - low bit 
 }
 lsm303agr_m_cfga_t; 
 
@@ -67,11 +67,11 @@ lsm303agr_m_cfga_t;
 typedef struct lsm303agr_m_cfgb_s 
 {
     uint8_t unused_1          : 3;      // Not used 
-    uint8_t off_canc_one_shot : 1;      // 
-    uint8_t int_on_dataoff    : 1;      // 
-    uint8_t set_freq          : 1;      // 
-    uint8_t off_canc          : 1;      // 
-    uint8_t lpf               : 1;      // 
+    uint8_t off_canc_one_shot : 1;      // Offset cancellation - single measurement mode 
+    uint8_t int_on_dataoff    : 1;      // Interrupt check after hard-ron correction 
+    uint8_t set_freq          : 1;      // Frequency of set pulse 
+    uint8_t off_canc          : 1;      // Enable offset cancellation 
+    uint8_t lpf               : 1;      // Low pass filter enable 
 }
 lsm303agr_m_cfgb_t; 
 
@@ -80,13 +80,13 @@ lsm303agr_m_cfgb_t;
 typedef struct lsm303agr_m_cfgc_s 
 {
     uint8_t unused_1    : 1;      // Bit not used 
-    uint8_t int_mag_pin : 1;      // 
-    uint8_t i2c_dis     : 1;      // 
-    uint8_t bdu         : 1;      // 
-    uint8_t ble         : 1;      // 
+    uint8_t int_mag_pin : 1;      // Interrupt on INT_MAG_PIN enable 
+    uint8_t i2c_dis     : 1;      // I2C disable 
+    uint8_t bdu         : 1;      // Asynchronous read data protection 
+    uint8_t ble         : 1;      // High and low data inversion 
     uint8_t unused_2    : 1;      // Bit not used 
-    uint8_t self_test   : 1;      // 
-    uint8_t int_mag     : 1;      // 
+    uint8_t self_test   : 1;      // Self-test enable 
+    uint8_t int_mag     : 1;      // DRDY pin configured as digital output 
 }
 lsm303agr_m_cfgc_t; 
 
@@ -94,14 +94,14 @@ lsm303agr_m_cfgc_t;
 // Magnetometer status register 
 typedef struct lsm303agr_m_status_s 
 {
-    uint8_t zyx_or : 1;      // 
-    uint8_t z_or   : 1;      // 
-    uint8_t y_or   : 1;      // 
-    uint8_t x_or   : 1;      // 
-    uint8_t zyx_da : 1;      // 
-    uint8_t z_da   : 1;      // 
-    uint8_t y_da   : 1;      // 
-    uint8_t x_da   : 1;      // 
+    uint8_t zyx_or : 1;      // XYZ-axis data overrun 
+    uint8_t z_or   : 1;      // Z-axis data overrun 
+    uint8_t y_or   : 1;      // Y-axis data overrun 
+    uint8_t x_or   : 1;      // X-axis data overrun 
+    uint8_t zyx_da : 1;      // XYZ-axis new data available 
+    uint8_t z_da   : 1;      // Z-axis new data available 
+    uint8_t y_da   : 1;      // Y-axis new data available 
+    uint8_t x_da   : 1;      // X-axis new data available 
 }
 lsm303agr_m_status_t; 
 
@@ -158,6 +158,57 @@ static lsm303agr_driver_data_t lsm303agr_driver_data;
 // Function prototypes 
 
 /**
+ * @brief Magnetometer heading offset equation generation 
+ * 
+ * @details 
+ * 
+ * @param offset_eqn 
+ * @param dir1_offset 
+ * @param dir2_offset 
+ * @param dir1_heading 
+ */
+void lsm303agr_m_head_offset_eqn(
+    lsm303agr_m_head_offset_t *offset_eqn, 
+    int16_t dir1_offset, 
+    int16_t dir2_offset, 
+    int16_t dir1_heading); 
+
+
+/**
+ * @brief Read from register 
+ * 
+ * @details 
+ * 
+ * @param i2c_addr 
+ * @param reg_addr 
+ * @param lsm303agr_reg_value 
+ * @param lsm303agr_reg_size 
+ */
+void lsm303agr_read(
+    LSM303AGR_I2C_ADDR i2c_addr, 
+    LSM303AGR_REG_ADDR reg_addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_reg_size); 
+
+
+/**
+ * @brief Write to register 
+ * 
+ * @details 
+ * 
+ * @param i2c_addr 
+ * @param reg_addr 
+ * @param lsm303agr_reg_value 
+ * @param lsm303agr_reg_size 
+ */
+void lsm303agr_write(
+    LSM303AGR_I2C_ADDR i2c_addr, 
+    LSM303AGR_REG_ADDR reg_addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_reg_size); 
+
+
+/**
  * @brief Magnetometer WHO AM I read 
  * 
  * @details 
@@ -198,23 +249,6 @@ void lsm303agr_m_cfgc_write(void);
  */
 void lsm303agr_m_status_read(void); 
 
-
-/**
- * @brief Magnetometer heading offset equation generation 
- * 
- * @details 
- * 
- * @param offset_eqn 
- * @param dir1_offset 
- * @param dir2_offset 
- * @param dir1_heading 
- */
-void lsm303agr_m_head_offset_eqn(
-    lsm303agr_m_head_offset_t *offset_eqn, 
-    int16_t dir1_offset, 
-    int16_t dir2_offset, 
-    int16_t dir1_heading); 
-
 //=======================================================================================
 
 
@@ -248,7 +282,7 @@ void lsm303agr_init(
     // Status info 
     lsm303agr_driver_data.status = CLEAR;  
 
-    // Generate heading correction equations 
+    // Generate magnetometer heading correction equations 
     lsm303agr_m_head_offset_eqn(
         &lsm303agr_driver_data.offset_eqn[0], *offset1++, *offset2++, LSM303AGR_M_N); 
     lsm303agr_m_head_offset_eqn(
