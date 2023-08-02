@@ -135,8 +135,9 @@ typedef struct lsm303agr_driver_data_s
     //          --> bits 2-7: self test results 
     uint8_t status; 
 
-    // Magnetometer heading correction equations 
-    lsm303agr_m_head_offset_t offset_eqn[8]; 
+    // Magnetometer heading 
+    lsm303agr_m_head_offset_t offset_eqn[8];        // Error/offset correction equations 
+    int16_t heading;                                // Filtered heading 
 
     // Magnetometer parameters 
     lsm303agr_m_data_t m_data; 
@@ -299,6 +300,8 @@ void lsm303agr_init(
         &lsm303agr_driver_data.offset_eqn[6], *offset1++, *offset2++, LSM303AGR_M_W); 
     lsm303agr_m_head_offset_eqn(
         &lsm303agr_driver_data.offset_eqn[7], *offset1, *offsets, LSM303AGR_M_NW); 
+
+    lsm303agr_driver_data.heading = CLEAR; 
 
     // Magnetometer parameters 
     lsm303agr_driver_data.m_cfga.comp_temp_en = CLEAR_BIT; 
@@ -489,6 +492,8 @@ int16_t lsm303agr_m_get_heading(void)
     int16_t m_z_data; 
     int16_t heading = CLEAR; 
     double heading_temp = CLEAR; 
+    int16_t *heading_ptr = NULL; 
+    int16_t inflection = CLEAR; 
     uint8_t eqn_index = CLEAR; 
     int16_t eqn_check = CLEAR; 
 
@@ -547,7 +552,39 @@ int16_t lsm303agr_m_get_heading(void)
         heading += LSM303AGR_M_HEAD_MAX; 
     }
 
-    return heading; 
+    // Low pass filter the heading signal 
+    // The heading provides circular data meaning it goes from 0 up to 359.9 then back to 
+    // 0 again. Going directly from 0 to 359.9 (counter clockwise rotation) or vice versa 
+    // will make a filter think there was a spike in the data which is not desired. To 
+    // correct for this, the difference between the new sample and old filtered sample is 
+    // checked. If it's magnitude is greater than 1800 (180 degrees) then we add 3600 
+    // (360 degrees) before filtering (this assumes the device will not properly rotate 
+    // more than 180 degrees between two consecutive samples). Adding 3600 tricks the 
+    // filter into adjusting the heading in the correct direction. After filtering the 3600 
+    // is removed if the filtered heading is above the 360 degree limit. 
+    
+    inflection = heading - lsm303agr_driver_data.heading; 
+
+    if ((inflection > LSM303AGR_M_HEAD_DIFF) || (inflection < -LSM303AGR_M_HEAD_DIFF))
+    {
+        // Adjust the appropriate heading (new or old filtered) 
+        heading_ptr = (heading < lsm303agr_driver_data.heading) ? 
+                       &heading : &lsm303agr_driver_data.heading; 
+        *heading_ptr += LSM303AGR_M_HEAD_MAX; 
+    }
+
+    // Find the new filtered heading 
+    lsm303agr_driver_data.heading += 
+        (int16_t)(((double)(heading - lsm303agr_driver_data.heading))*LSM303AGR_M_GAIN); 
+
+    // If the filtered heading is outside the acceptable heading range then revert 
+    // the adjustment 
+    if (lsm303agr_driver_data.heading >= LSM303AGR_M_HEAD_MAX)
+    {
+        lsm303agr_driver_data.heading -= LSM303AGR_M_HEAD_MAX; 
+    }
+
+    return lsm303agr_driver_data.heading; 
 }
 
 

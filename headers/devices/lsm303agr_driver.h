@@ -68,6 +68,7 @@ extern "C" {
 #define LSM303AGR_M_HEAD_SCALE 10             // Heading scaling factor (to remove decimals) 
 #define LSM303AGR_M_DIR_OFFSET 450            // 45deg (*10) - heading sections (ex. N-->NE) 
 #define LSM303AGR_M_HEAD_MAX 3600             // Max heading value - scaled (360deg * 10)
+#define LSM303AGR_M_HEAD_DIFF 1800            // Heading different threshold for filtering 
 #define LSM303AGR_M_N 0                       // North direction heading - scaled 
 #define LSM303AGR_M_NE 450                    // North-East direction heading - scaled 
 #define LSM303AGR_M_E 900                     // East direction heading - scaled 
@@ -76,6 +77,7 @@ extern "C" {
 #define LSM303AGR_M_SW 2250                   // South-West direction heading - scaled 
 #define LSM303AGR_M_W 2700                    // West direction heading - scaled 
 #define LSM303AGR_M_NW 3150                   // North-West direction heading - scaled 
+#define LSM303AGR_M_GAIN 0.2                  // Magnetometer filter gain 
 
 //=======================================================================================
 
