@@ -23,6 +23,7 @@
 
 // Libraries 
 #include <string.h>
+#include <math.h> 
 
 //=======================================================================================
 
@@ -77,9 +78,9 @@
 #define F_CHAR      70   // 'F'  == 70 
 
 // ASCII formatters 
-#define HEX_NUM_TO_LET  0x09  // Inflection point for the below offsets 
-#define HEX_TO_NUM_CHAR 0x30  // Offset from a hex number to the equivalent char number 
-#define HEX_TO_LET_CHAR 0x37  // Offset from a hex letter to the equivalent char letter 
+#define MAX_CHAR_DIGIT 0x09      // Max single digit 
+#define NUM_TO_CHAR_OFFSET 0x30  // Hex number (0x0-0x9) to char number ('0'-'9') offset 
+#define HEX_TO_LET_CHAR 0x37     // Hex letter (0xA-0xF) to char letter ('A'-'F') offset 
 
 // Modulo operator divisors
 #define REMAINDER_10   10
@@ -288,6 +289,20 @@ uint8_t str_compare(
     char *ref_msg, 
     char *msg, 
     uint8_t msg_start); 
+
+
+/**
+ * @brief Character to scaled integer 
+ * 
+ * @details 
+ * 
+ * @param num_char 
+ * @param place 
+ * @return uint32_t 
+ */
+uint32_t char_to_int(
+    uint8_t num_char, 
+    uint8_t place); 
 
 //=======================================================================================
 

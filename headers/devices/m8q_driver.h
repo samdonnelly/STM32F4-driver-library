@@ -77,6 +77,17 @@
 #define M8Q_LAT_LEN 10                   // Latitude message length 
 #define M8Q_LON_LEN 11                   // Longitude message length 
 
+// NMEA POSITION coordinate calculation 
+#define M8Q_MIN_TO_DEG 60                // Used to convert coordinate minutes to degrees 
+#define M8Q_LATITUDE_LEN 11              // Latitude message length 
+#define M8Q_LONGITUDE_LEN 12             // Longitude message length 
+#define M8Q_LAT_DEG_INT_LEN 2            // Number of digits for integer portion of latitude 
+#define M8Q_LON_DEG_INT_LEN 3            // Number of digits for integer portion of longitude 
+#define M8Q_MIN_DIGIT_INDEX 7            // Index of scaled minute portion of coordinate 
+#define M8Q_MIN_FRAC_LEN 6               // Length of fractional part of minutes 
+#define M8Q_DIR_SOUTH 0x53               // Value of South from the North/South indicator 
+#define M8Q_DIR_WEST 0x57                // Value of West from the East/West indicator 
+
 // UBX message format 
 #define M8Q_UBX_START       0xB5         // 0xB5 --> Start of received UBX message 
 #define M8Q_UBX_SYNC1       0x42         // 0x42 == 'B' --> Start of user config UBX message 
@@ -402,9 +413,10 @@ uint8_t m8q_get_tx_ready(void);
  * @param deg_min : degrees and minutes of the latitude 
  * @param min_frac : fractional portion of the minutes in the latitude 
  */
-void m8q_get_lat(
-    uint16_t *deg_min, 
-    uint32_t *min_frac); 
+// void m8q_get_lat(
+//     uint16_t *deg_min, 
+//     uint32_t *min_frac); 
+double m8q_get_lat(void); 
 
 
 /**
@@ -444,9 +456,10 @@ uint8_t m8q_get_NS(void);
  * @param deg_min : degrees and minutes of the longitude 
  * @param min_frac : fractional portion of the minutes in the longitude 
  */
-void m8q_get_long(
-    uint16_t *deg_min, 
-    uint32_t *min_frac); 
+// void m8q_get_long(
+//     uint16_t *deg_min, 
+//     uint32_t *min_frac); 
+double m8q_get_long(void); 
 
 
 /**

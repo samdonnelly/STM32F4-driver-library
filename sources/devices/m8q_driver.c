@@ -682,40 +682,88 @@ uint8_t m8q_get_tx_ready(void)
 
 
 // Latitude getter 
-void m8q_get_lat(
-    uint16_t *deg_min, 
-    uint32_t *min_frac)
+// void m8q_get_lat(
+//     uint16_t *deg_min, 
+//     uint32_t *min_frac)
+double m8q_get_lat(void)
 {
-    // Integer and fractional part buffers and part length 
-    uint8_t int_array[M8Q_COO_LEN - BYTE_1]; 
-    uint8_t frac_array[M8Q_COO_LEN]; 
-    uint8_t int_len = M8Q_LAT_LEN - M8Q_COO_LEN; 
-    uint8_t frac_index = M8Q_COO_LEN - BYTE_1; 
+    //===================================================
+    // Old code - to be replaced 
 
-    // Copy the latitude into integer and fractional parts 
-    for (uint8_t i = CLEAR; i <= M8Q_LAT_LEN; i++) 
+    // // Integer and fractional part buffers and part length 
+    // uint8_t int_array[M8Q_COO_LEN - BYTE_1]; 
+    // uint8_t frac_array[M8Q_COO_LEN]; 
+    // uint8_t int_len = M8Q_LAT_LEN - M8Q_COO_LEN; 
+    // uint8_t frac_index = M8Q_COO_LEN - BYTE_1; 
+
+    // // Copy the latitude into integer and fractional parts 
+    // for (uint8_t i = CLEAR; i <= M8Q_LAT_LEN; i++) 
+    // {
+    //     if (i < int_len) 
+    //     {
+    //         int_array[i] = position[M8Q_POS_LAT][i]; 
+    //     }
+    //     else if (i == int_len) 
+    //     {
+    //         int_array[i] = NULL_CHAR; 
+    //     }
+    //     else if (i < M8Q_LAT_LEN) 
+    //     {
+    //         frac_array[i-frac_index] = position[M8Q_POS_LAT][i]; 
+    //     }
+    //     else 
+    //     {
+    //         frac_array[i-frac_index] = NULL_CHAR; 
+    //     }
+    // }
+
+    // // Convert each number 
+    // sscanf((char *)int_array, "%hu", deg_min); 
+    // sscanf((char *)frac_array, "%lu", min_frac); 
+    
+    //===================================================
+
+    
+    //===================================================
+    // New code 
+
+    // Local variables 
+    int32_t deg_int = CLEAR; 
+    int32_t deg_frac = CLEAR; 
+    uint8_t dec_pos = M8Q_LATITUDE_LEN - (M8Q_MIN_FRAC_LEN + BYTE_1); 
+
+    // Parse the integer and fractional parts of the degree 
+    for (uint8_t i = CLEAR, j = M8Q_MIN_DIGIT_INDEX; i < M8Q_LATITUDE_LEN; i++)
     {
-        if (i < int_len) 
+        if (i < M8Q_LAT_DEG_INT_LEN)
         {
-            int_array[i] = position[M8Q_POS_LAT][i]; 
+            // Integer portion of degrees 
+            deg_int += (int32_t)char_to_int(position[M8Q_POS_LAT][i], 1-i); 
         }
-        else if (i == int_len) 
+        else if (i == dec_pos)
         {
-            int_array[i] = NULL_CHAR; 
-        }
-        else if (i < M8Q_LAT_LEN) 
-        {
-            frac_array[i-frac_index] = position[M8Q_POS_LAT][i]; 
+            // Decimal point character - in the middle of the fractional parts 
+            continue; 
         }
         else 
         {
-            frac_array[i-frac_index] = NULL_CHAR; 
+            // Fractional portion of degrees 
+            deg_frac += (int32_t)char_to_int(position[M8Q_POS_LAT][i], j--); 
         }
     }
 
-    // Convert each number 
-    sscanf((char *)int_array, "%hu", deg_min); 
-    sscanf((char *)frac_array, "%lu", min_frac); 
+    // Adjust the sign of the degree depending on Northern or Southern hemisphere 
+    if (*(position[M8Q_POS_NS]) == M8Q_DIR_SOUTH) 
+    {
+        deg_int = ~deg_int + 1; 
+        deg_frac = ~deg_frac + 1; 
+    }
+
+    // Calculate and return the final degree value 
+    return ((double)deg_int) + 
+           (((double)deg_frac) / (pow(SCALE_10, M8Q_MIN_FRAC_LEN)*M8Q_MIN_TO_DEG)); 
+
+    //===================================================
 }
 
 
@@ -758,39 +806,87 @@ uint8_t m8q_get_NS(void)
 
 
 // Longitude getter 
-void m8q_get_long(
-    uint16_t *deg_min, 
-    uint32_t *min_frac)
+// void m8q_get_long(
+//     uint16_t *deg_min, 
+//     uint32_t *min_frac)
+double m8q_get_long(void)
 {
-    // Integer and fractional part buffers and part length 
-    uint8_t int_array[M8Q_COO_LEN]; 
-    uint8_t frac_array[M8Q_COO_LEN]; 
-    uint8_t int_len = M8Q_LON_LEN - M8Q_COO_LEN; 
+    //===================================================
+    // Old code - to be replaced 
 
-    // Copy the longitude into integer (degees + minutes) and fractional (minutes) parts 
-    for (uint8_t i = CLEAR; i <= M8Q_LON_LEN; i++) 
+    // // Integer and fractional part buffers and part length 
+    // uint8_t int_array[M8Q_COO_LEN]; 
+    // uint8_t frac_array[M8Q_COO_LEN]; 
+    // uint8_t int_len = M8Q_LON_LEN - M8Q_COO_LEN; 
+
+    // // Copy the longitude into integer (degees + minutes) and fractional (minutes) parts 
+    // for (uint8_t i = CLEAR; i <= M8Q_LON_LEN; i++) 
+    // {
+    //     if (i < int_len) 
+    //     {
+    //         int_array[i] = position[M8Q_POS_LON][i]; 
+    //     }
+    //     else if (i == int_len) 
+    //     {
+    //         int_array[i] = NULL_CHAR; 
+    //     }
+    //     else if (i < M8Q_LON_LEN) 
+    //     {
+    //         frac_array[i-M8Q_COO_LEN] = position[M8Q_POS_LON][i]; 
+    //     }
+    //     else 
+    //     {
+    //         frac_array[i-M8Q_COO_LEN] = NULL_CHAR; 
+    //     }
+    // }
+
+    // // Convert each number 
+    // sscanf((char *)int_array, "%hu", deg_min); 
+    // sscanf((char *)frac_array, "%lu", min_frac); 
+    
+    //===================================================
+
+
+    //===================================================
+    // New code 
+
+    // Local variables 
+    int32_t deg_int = CLEAR; 
+    int32_t deg_frac = CLEAR; 
+    uint8_t dec_pos = M8Q_LONGITUDE_LEN - (M8Q_MIN_FRAC_LEN + BYTE_1); 
+
+    // Parse the integer and fractional parts of the degree 
+    for (uint8_t i = CLEAR, j = M8Q_MIN_DIGIT_INDEX; i < M8Q_LONGITUDE_LEN; i++)
     {
-        if (i < int_len) 
+        if (i < M8Q_LON_DEG_INT_LEN)
         {
-            int_array[i] = position[M8Q_POS_LON][i]; 
+            // Integer portion of degrees 
+            deg_int += (int32_t)char_to_int(position[M8Q_POS_LON][i], 1-i); 
         }
-        else if (i == int_len) 
+        else if (i == dec_pos)
         {
-            int_array[i] = NULL_CHAR; 
-        }
-        else if (i < M8Q_LON_LEN) 
-        {
-            frac_array[i-M8Q_COO_LEN] = position[M8Q_POS_LON][i]; 
+            // Decimal point character - in the middle of the fractional parts 
+            continue; 
         }
         else 
         {
-            frac_array[i-M8Q_COO_LEN] = NULL_CHAR; 
+            // Fractional portion of degrees 
+            deg_frac += (int32_t)char_to_int(position[M8Q_POS_LON][i], j--); 
         }
     }
 
-    // Convert each number 
-    sscanf((char *)int_array, "%hu", deg_min); 
-    sscanf((char *)frac_array, "%lu", min_frac); 
+    // Adjust the sign of the degree depending on Eastern or Western hemisphere 
+    if (*(position[M8Q_POS_EW]) == M8Q_DIR_WEST) 
+    {
+        deg_int = ~deg_int + 1; 
+        deg_frac = ~deg_frac + 1; 
+    }
+
+    // Calculate and return the final degree value 
+    return ((double)deg_int) + 
+           (((double)deg_frac) / (pow(SCALE_10, M8Q_MIN_FRAC_LEN)*M8Q_MIN_TO_DEG)); 
+
+    //===================================================
 }
 
 
@@ -1076,9 +1172,9 @@ CHECKSUM m8q_nmea_checksum(
     {
         checksum_char = (xor_result & (FILTER_4_MSB >> SHIFT_4*i)) >> SHIFT_4*(1-i); 
         // TODO test and replace 
-        // if (checksum_char <= HEX_NUM_TO_LET) checksum_char += HEX_TO_NUM_CHAR; 
+        // if (checksum_char <= MAX_CHAR_DIGIT) checksum_char += NUM_TO_CHAR_OFFSET; 
         // else checksum_char += HEX_TO_LET_CHAR; 
-        checksum_char = (checksum_char <= HEX_NUM_TO_LET) ? (checksum_char + HEX_TO_NUM_CHAR) : 
+        checksum_char = (checksum_char <= MAX_CHAR_DIGIT) ? (checksum_char + NUM_TO_CHAR_OFFSET) : 
                                                             (checksum_char + HEX_TO_LET_CHAR); 
         checksum |= (uint16_t)(checksum_char << SHIFT_8*(1-i)); 
     }
@@ -1248,7 +1344,7 @@ UBX_MSG_STATUS m8q_ubx_msg_convert(
                 // Check the character validity 
                 if ((low_nibble >= ZERO_CHAR) && (low_nibble <= NINE_CHAR))
                 {
-                    low_nibble -= HEX_TO_NUM_CHAR; 
+                    low_nibble -= NUM_TO_CHAR_OFFSET; 
                 }
                 
                 else if ((low_nibble >= A_CHAR) && (low_nibble <= F_CHAR)) 
