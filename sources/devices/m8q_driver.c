@@ -191,7 +191,7 @@ void m8q_user_config_prompt(void);
 typedef struct m8q_nmea_pos_s 
 {
     uint8_t time    [BYTE_9];     // UTC time 
-    uint8_t lat     [BYTE_11];    // Latitude 
+    uint8_t lat     [BYTE_10];    // Latitude 
     uint8_t NS      [BYTE_1];     // North/South indicator 
     uint8_t lon     [BYTE_11];    // Longitude 
     uint8_t EW      [BYTE_1];     // East/West indicator 
@@ -681,59 +681,16 @@ uint8_t m8q_get_tx_ready(void)
 }
 
 
-// Latitude getter 
-// void m8q_get_lat(
-//     uint16_t *deg_min, 
-//     uint32_t *min_frac)
+// Latitude coordinate getter 
 double m8q_get_lat(void)
-{
-    //===================================================
-    // Old code - to be replaced 
-
-    // // Integer and fractional part buffers and part length 
-    // uint8_t int_array[M8Q_COO_LEN - BYTE_1]; 
-    // uint8_t frac_array[M8Q_COO_LEN]; 
-    // uint8_t int_len = M8Q_LAT_LEN - M8Q_COO_LEN; 
-    // uint8_t frac_index = M8Q_COO_LEN - BYTE_1; 
-
-    // // Copy the latitude into integer and fractional parts 
-    // for (uint8_t i = CLEAR; i <= M8Q_LAT_LEN; i++) 
-    // {
-    //     if (i < int_len) 
-    //     {
-    //         int_array[i] = position[M8Q_POS_LAT][i]; 
-    //     }
-    //     else if (i == int_len) 
-    //     {
-    //         int_array[i] = NULL_CHAR; 
-    //     }
-    //     else if (i < M8Q_LAT_LEN) 
-    //     {
-    //         frac_array[i-frac_index] = position[M8Q_POS_LAT][i]; 
-    //     }
-    //     else 
-    //     {
-    //         frac_array[i-frac_index] = NULL_CHAR; 
-    //     }
-    // }
-
-    // // Convert each number 
-    // sscanf((char *)int_array, "%hu", deg_min); 
-    // sscanf((char *)frac_array, "%lu", min_frac); 
-    
-    //===================================================
-
-    
-    //===================================================
-    // New code 
-
+{    
     // Local variables 
     int32_t deg_int = CLEAR; 
     int32_t deg_frac = CLEAR; 
-    uint8_t dec_pos = M8Q_LATITUDE_LEN - (M8Q_MIN_FRAC_LEN + BYTE_1); 
+    uint8_t dec_pos = M8Q_LAT_LEN - (M8Q_MIN_FRAC_LEN + BYTE_1); 
 
     // Parse the integer and fractional parts of the degree 
-    for (uint8_t i = CLEAR, j = M8Q_MIN_DIGIT_INDEX; i < M8Q_LATITUDE_LEN; i++)
+    for (uint8_t i = CLEAR, j = M8Q_MIN_DIGIT_INDEX; i < M8Q_LAT_LEN; i++)
     {
         if (i < M8Q_LAT_DEG_INT_LEN)
         {
@@ -753,7 +710,7 @@ double m8q_get_lat(void)
     }
 
     // Adjust the sign of the degree depending on Northern or Southern hemisphere 
-    if (*(position[M8Q_POS_NS]) == M8Q_DIR_SOUTH) 
+    if (m8q_get_NS() == M8Q_DIR_SOUTH) 
     {
         deg_int = ~deg_int + 1; 
         deg_frac = ~deg_frac + 1; 
@@ -762,12 +719,10 @@ double m8q_get_lat(void)
     // Calculate and return the final degree value 
     return ((double)deg_int) + 
            (((double)deg_frac) / (pow(SCALE_10, M8Q_MIN_FRAC_LEN)*M8Q_MIN_TO_DEG)); 
-
-    //===================================================
 }
 
 
-// Latitude getter (string format) 
+// Latitude string getter 
 void m8q_get_lat_str(
     uint8_t *deg_min, 
     uint8_t *min_frac)
@@ -805,63 +760,21 @@ uint8_t m8q_get_NS(void)
 }
 
 
-// Longitude getter 
-// void m8q_get_long(
-//     uint16_t *deg_min, 
-//     uint32_t *min_frac)
+// Longitude coordinate getter 
 double m8q_get_long(void)
 {
-    //===================================================
-    // Old code - to be replaced 
-
-    // // Integer and fractional part buffers and part length 
-    // uint8_t int_array[M8Q_COO_LEN]; 
-    // uint8_t frac_array[M8Q_COO_LEN]; 
-    // uint8_t int_len = M8Q_LON_LEN - M8Q_COO_LEN; 
-
-    // // Copy the longitude into integer (degees + minutes) and fractional (minutes) parts 
-    // for (uint8_t i = CLEAR; i <= M8Q_LON_LEN; i++) 
-    // {
-    //     if (i < int_len) 
-    //     {
-    //         int_array[i] = position[M8Q_POS_LON][i]; 
-    //     }
-    //     else if (i == int_len) 
-    //     {
-    //         int_array[i] = NULL_CHAR; 
-    //     }
-    //     else if (i < M8Q_LON_LEN) 
-    //     {
-    //         frac_array[i-M8Q_COO_LEN] = position[M8Q_POS_LON][i]; 
-    //     }
-    //     else 
-    //     {
-    //         frac_array[i-M8Q_COO_LEN] = NULL_CHAR; 
-    //     }
-    // }
-
-    // // Convert each number 
-    // sscanf((char *)int_array, "%hu", deg_min); 
-    // sscanf((char *)frac_array, "%lu", min_frac); 
-    
-    //===================================================
-
-
-    //===================================================
-    // New code 
-
     // Local variables 
     int32_t deg_int = CLEAR; 
     int32_t deg_frac = CLEAR; 
-    uint8_t dec_pos = M8Q_LONGITUDE_LEN - (M8Q_MIN_FRAC_LEN + BYTE_1); 
+    uint8_t dec_pos = M8Q_LON_LEN - (M8Q_MIN_FRAC_LEN + BYTE_1); 
 
     // Parse the integer and fractional parts of the degree 
-    for (uint8_t i = CLEAR, j = M8Q_MIN_DIGIT_INDEX; i < M8Q_LONGITUDE_LEN; i++)
+    for (uint8_t i = CLEAR, j = M8Q_MIN_DIGIT_INDEX; i < M8Q_LON_LEN; i++)
     {
         if (i < M8Q_LON_DEG_INT_LEN)
         {
             // Integer portion of degrees 
-            deg_int += (int32_t)char_to_int(position[M8Q_POS_LON][i], 1-i); 
+            deg_int += (int32_t)char_to_int(position[M8Q_POS_LON][i], 2-i); 
         }
         else if (i == dec_pos)
         {
@@ -876,7 +789,7 @@ double m8q_get_long(void)
     }
 
     // Adjust the sign of the degree depending on Eastern or Western hemisphere 
-    if (*(position[M8Q_POS_EW]) == M8Q_DIR_WEST) 
+    if (m8q_get_EW() == M8Q_DIR_WEST) 
     {
         deg_int = ~deg_int + 1; 
         deg_frac = ~deg_frac + 1; 
@@ -885,12 +798,10 @@ double m8q_get_long(void)
     // Calculate and return the final degree value 
     return ((double)deg_int) + 
            (((double)deg_frac) / (pow(SCALE_10, M8Q_MIN_FRAC_LEN)*M8Q_MIN_TO_DEG)); 
-
-    //===================================================
 }
 
 
-// Longitude getter (string format) 
+// Longitude string getter 
 void m8q_get_long_str(
     uint8_t *deg_min, 
     uint8_t *min_frac)

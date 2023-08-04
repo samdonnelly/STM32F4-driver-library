@@ -72,21 +72,17 @@
 #define M8Q_NMEA_PUBX_ARG_OFST 9         // First data field offset for PUBX messages 
 #define M8Q_NMEA_STRD_ARG_OFST 7         // First data field offset for standard messages 
 
-// NMEA data fields 
-#define M8Q_COO_LEN 6                    // Length of integer and fractional parts of coordinates 
+// NMEA POSITION coordinate calculation 
 #define M8Q_LAT_LEN 10                   // Latitude message length 
 #define M8Q_LON_LEN 11                   // Longitude message length 
-
-// NMEA POSITION coordinate calculation 
-#define M8Q_MIN_TO_DEG 60                // Used to convert coordinate minutes to degrees 
-#define M8Q_LATITUDE_LEN 11              // Latitude message length 
-#define M8Q_LONGITUDE_LEN 12             // Longitude message length 
 #define M8Q_LAT_DEG_INT_LEN 2            // Number of digits for integer portion of latitude 
 #define M8Q_LON_DEG_INT_LEN 3            // Number of digits for integer portion of longitude 
-#define M8Q_MIN_DIGIT_INDEX 7            // Index of scaled minute portion of coordinate 
-#define M8Q_MIN_FRAC_LEN 6               // Length of fractional part of minutes 
+#define M8Q_MIN_DIGIT_INDEX 6            // Index of scaled minute portion of coordinate 
+#define M8Q_MIN_FRAC_LEN 5               // Length of fractional part of minutes 
 #define M8Q_DIR_SOUTH 0x53               // Value of South from the North/South indicator 
 #define M8Q_DIR_WEST 0x57                // Value of West from the East/West indicator 
+#define M8Q_MIN_TO_DEG 60                // Used to convert coordinate minutes to degrees 
+#define M8Q_COO_LEN 6                    // Length of integer and fractional parts of coordinates 
 
 // UBX message format 
 #define M8Q_UBX_START       0xB5         // 0xB5 --> Start of received UBX message 
@@ -401,31 +397,28 @@ uint8_t m8q_get_tx_ready(void);
 
 
 /**
- * @brief Latitude getter 
+ * @brief Latitude coordinate getter 
  * 
- * @details Reads the current latitude of the receiver. The integer portion of the latitude 
- *          (degrees and minutes) is stored in deg_min and the decimal/fractional part (minutes) 
- *          is stored in min_frac. The latitude is broken up into these two parts because the 
- *          full latitude value is not always needed so being able to use just the fractional 
- *          portion becomes easier. For more information on latitude formatting see the 
- *          M8Q protocol specification documentation. 
+ * @details Takes the NMEA standard formatted latitude read from the device and converts 
+ *          it to a coordinate in degrees. This can be used to perform navigation 
+ *          calculations. 
  * 
- * @param deg_min : degrees and minutes of the latitude 
- * @param min_frac : fractional portion of the minutes in the latitude 
+ * @return double : latitude coordinate (degrees) 
  */
-// void m8q_get_lat(
-//     uint16_t *deg_min, 
-//     uint32_t *min_frac); 
 double m8q_get_lat(void); 
 
 
 /**
- * @brief Latitude getter (string format) 
+ * @brief Latitude string getter 
  * 
- * @details 
+ * @details Copies the NMEA standard formatted latitude string read from the receiver. The 
+ *          integer portion of the latitude (degrees and integer minutes) is stored in deg_min 
+ *          and the fractional part (fractional minutes) is stored in min_frac. This allows 
+ *          for the application to use the coordinate string as needed. For more information 
+ *          on latitude formatting see the M8Q protocol specification documentation. 
  * 
- * @param deg_min 
- * @param min_frac 
+ * @param deg_min : pointer to buffer to store degrees and integer minutes 
+ * @param min_frac : pointer to buffer to store fractional minutes 
  */
 void m8q_get_lat_str(
     uint8_t *deg_min, 
@@ -444,31 +437,28 @@ uint8_t m8q_get_NS(void);
 
 
 /**
- * @brief Longitude getter 
+ * @brief Longitude coordinate getter 
  * 
- * @details Reads the current longitude of the receiver. The integer portion of the longitude 
- *          (degrees and minutes) is stored in deg_min and the decimal/fractional part (minutes) 
- *          is stored in min_frac. The longitude is broken up into these two parts because the 
- *          full longitude value is not always needed so being able to use just the fractional 
- *          portion becomes easier. For more information on longitude formatting see the 
- *          M8Q protocol specification documentation. 
+ * @details Takes the NMEA standard formatted longitude read from the device and converts 
+ *          it to a coordinate in degrees. This can be used to perform navigation 
+ *          calculations. 
  * 
- * @param deg_min : degrees and minutes of the longitude 
- * @param min_frac : fractional portion of the minutes in the longitude 
+ * @return double : longitude coordinate (degrees) 
  */
-// void m8q_get_long(
-//     uint16_t *deg_min, 
-//     uint32_t *min_frac); 
 double m8q_get_long(void); 
 
 
 /**
- * @brief Longitude getter (string format) 
+ * @brief Longitude string getter 
  * 
- * @details 
+ * @details Copies the NMEA standard formatted longitude string read from the receiver. The 
+ *          integer portion of the longitude (degrees and integer minutes) is stored in deg_min 
+ *          and the fractional part (fractional minutes) is stored in min_frac. This allows 
+ *          for the application to use the coordinate string as needed. For more information 
+ *          on longitude formatting see the M8Q protocol specification documentation. 
  * 
- * @param deg_min 
- * @param min_frac 
+ * @param deg_min : pointer to buffer to store degrees and integer minutes 
+ * @param min_frac : pointer to buffer to store fractional minutes 
  */
 void m8q_get_long_str(
     uint8_t *deg_min, 
