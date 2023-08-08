@@ -77,7 +77,7 @@ extern "C" {
 #define LSM303AGR_M_SW 2250                   // South-West direction heading - scaled 
 #define LSM303AGR_M_W 2700                    // West direction heading - scaled 
 #define LSM303AGR_M_NW 3150                   // North-West direction heading - scaled 
-#define LSM303AGR_M_GAIN 0.2                  // Magnetometer filter gain 
+#define LSM303AGR_M_GAIN 0.1                  // Magnetometer filter gain 
 
 //=======================================================================================
 
