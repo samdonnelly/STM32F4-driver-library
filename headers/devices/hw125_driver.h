@@ -337,8 +337,8 @@ typedef hw125_card_type_t CARD_TYPE;
  *          
  *          This function should be called during initialization in the application code. 
  * 
- * @param spi : 
- * @param gpio : 
+ * @param spi : SPI port used by the SD card 
+ * @param gpio : GPIO port used for the SD card slave select pin 
  * @param hw125_slave_pin : slave pin (GPIO pin) used to select the slave device 
  */
 void hw125_user_init(

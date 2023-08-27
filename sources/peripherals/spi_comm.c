@@ -402,7 +402,7 @@ void spi_write(
 // TODO add timeouts 
 void spi_write_read(
     SPI_TypeDef *spi, 
-    uint8_t  write_data, 
+    uint8_t write_data, 
     uint8_t *read_data, 
     uint32_t data_len)
 {

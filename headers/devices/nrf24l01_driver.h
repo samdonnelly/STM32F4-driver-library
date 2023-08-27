@@ -35,6 +35,37 @@ extern "C" {
 
 //=======================================================================================
 // Macros 
+
+// Commands 
+#define NRF24L01_CMD_R_REG 0x00     // Read command and status registers 
+#define NRF24L01_CMD_W_REG 0x20     // Write command and status registers 
+#define NRF24L01_CMD_R_RX_PL 0x61   // Read RX payload 
+#define NRF24L01_CMD_W_RX_PL 0xA0   // Write TX payload 
+#define NRF24L01_CMD_FLUSH_TX 0xE1  // Flush TX FIFO 
+#define NRF24L01_CMD_FLUSH_RX 0xE2  // Flush RX FIFO 
+#define NRF24L01_CMD_REUSE_TX 0x00  // Reuse TX payload 
+#define NRF24L01_CMD_NOP 0xFF       // No operation 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Initialization 
+
+/**
+ * @brief nRF24L01 initialization 
+ * 
+ * @details 
+ * 
+ * @param spi : 
+ * @param gpio : 
+ * @param ss_pin : 
+ */
+void nrf24l01_init(
+    SPI_TypeDef *spi, 
+    GPIO_TypeDef *gpio, 
+    gpio_pin_num_t ss_pin); 
+
 //=======================================================================================
 
 #ifdef __cplusplus
