@@ -57,6 +57,21 @@
 
 //=======================================================================================
 // Register data 
+
+// CONFIG register 
+typedef struct nrf24l01_config_reg_s 
+{
+    uint8_t unused_1 : 1;        // Reserved 
+    uint8_t mask_rx_dr : 1;      // Mask interrupt caused by RX_DR 
+    uint8_t mask_tx_ds : 1;      // Mask interrupt caused by TX_DS 
+    uint8_t mask_max_rt : 1;     // Mask interrupt caused by MAX_RT 
+    uint8_t en_crc : 1;          // Enable CRC 
+    uint8_t crco : 1;            // CRC encoding scheme 
+    uint8_t pwr_up : 1;          // Power up / power down 
+    uint8_t prim_rx : 1;         // RX/TX control 
+}
+nrf24l01_config_reg_t; 
+
 //=======================================================================================
 
 

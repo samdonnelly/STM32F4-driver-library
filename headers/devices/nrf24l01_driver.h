@@ -46,6 +46,13 @@ extern "C" {
 #define NRF24L01_CMD_REUSE_TX 0x00  // Reuse TX payload 
 #define NRF24L01_CMD_NOP 0xFF       // No operation 
 
+// Register addresses 
+#define NRF24L01_REG_CONFIG 0x00   // CONFIG register address 
+#define NRF24L01_REG_RF_CH 0x05    // RF_CH register address 
+#define NRF24L01_REG_RF_SET 0x06   // RF_SETUP register address 
+#define NRF24L01_REG_STATUS 0x07   // STATUS register address 
+#define NRF24L01_REG_FIFO 0x17     // FIFO_STATUS register address 
+
 //=======================================================================================
 
 
