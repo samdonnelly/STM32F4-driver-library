@@ -53,6 +53,27 @@ extern "C" {
 #define NRF24L01_REG_STATUS 0x07   // STATUS register address 
 #define NRF24L01_REG_FIFO 0x17     // FIFO_STATUS register address 
 
+// Data handling 
+#define NRF24L01_RF_CH_MASK 0x7F   // RF channel frequency mask 
+#define NRF24L01_RF_DR_MASK 0x01   // RF data rate bit mask 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Enums 
+/**
+ * @brief Data rate to use 
+ * 
+ * @details A slower data rate will allow for longer range communication. A higher data rate 
+ *          will be less susceptible to noise. 
+ */
+typedef enum {
+    NRF24L01_DR_1MBPS, 
+    NRF24L01_DR_2MBPS, 
+    NRF24L01_DR_250KBPS 
+} nrf24l01_data_rate_t; 
+
 //=======================================================================================
 
 
@@ -67,11 +88,15 @@ extern "C" {
  * @param spi : 
  * @param gpio : 
  * @param ss_pin : 
+ * @param rate : 
+ * @param rf_ch_freq : 
  */
 void nrf24l01_init(
     SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio, 
-    gpio_pin_num_t ss_pin); 
+    gpio_pin_num_t ss_pin, 
+    nrf24l01_data_rate_t rate, 
+    uint8_t rf_ch_freq); 
 
 //=======================================================================================
 
