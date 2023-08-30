@@ -133,8 +133,10 @@ typedef struct nrf24l01_driver_data_s
 {
     // Peripherals 
     SPI_TypeDef *spi; 
-    GPIO_TypeDef *gpio; 
+    GPIO_TypeDef *gpio_ss; 
+    GPIO_TypeDef *gpio_en; 
     gpio_pin_num_t ss_pin; 
+    gpio_pin_num_t en_pin; 
 
     // Status info 
     // 'status' --> bit 0: spi status 
@@ -146,7 +148,7 @@ typedef struct nrf24l01_driver_data_s
     nrf24l01_config_reg_t config; 
     nrf24l01_rf_ch_reg_t rf_ch; 
     nrf24l01_rf_set_reg_t rf_setup; 
-    nrf24l01_status_reg_t status; 
+    nrf24l01_status_reg_t status_reg; 
     nrf24l01_fifo_status_reg_t fifo_status; 
 }
 nrf24l01_driver_data_t; 
@@ -189,57 +191,66 @@ void nrf24l01_rf_ch_reg_write(void);
 // nRF24L01 initialization 
 void nrf24l01_init(
     SPI_TypeDef *spi, 
-    GPIO_TypeDef *gpio, 
+    GPIO_TypeDef *gpio_ss, 
     gpio_pin_num_t ss_pin, 
+    GPIO_TypeDef *gpio_en, 
+    gpio_pin_num_t en_pin, 
     nrf24l01_data_rate_t rate, 
     uint8_t rf_ch_freq)
 {
+    // Configure GPIO for enable and slave select pins 
+
     //===================================================
     // Initialize data record 
 
     // Peripherals 
     nrf24l01_driver_data.spi = spi; 
-    nrf24l01_driver_data.gpio = gpio; 
+    nrf24l01_driver_data.gpio_ss = gpio_ss; 
+    nrf24l01_driver_data.gpio_en = gpio_en; 
     nrf24l01_driver_data.ss_pin = ss_pin; 
+    nrf24l01_driver_data.en_pin = en_pin; 
+
+    // Driver status 
+    nrf24l01_driver_data.status = CLEAR; 
 
     // CONFIG register 
-    nrf24l01_driver_data.config.unused_1 = CLEAR; 
-    nrf24l01_driver_data.config.mask_rx_dr = CLEAR; 
-    nrf24l01_driver_data.config.mask_tx_ds = CLEAR; 
-    nrf24l01_driver_data.config.mask_max_rt = CLEAR; 
-    nrf24l01_driver_data.config.en_crc = CLEAR; 
-    nrf24l01_driver_data.config.crco = CLEAR; 
+    nrf24l01_driver_data.config.unused_1 = CLEAR_BIT; 
+    nrf24l01_driver_data.config.mask_rx_dr = CLEAR_BIT; 
+    nrf24l01_driver_data.config.mask_tx_ds = CLEAR_BIT; 
+    nrf24l01_driver_data.config.mask_max_rt = CLEAR_BIT; 
+    nrf24l01_driver_data.config.en_crc = CLEAR_BIT; 
+    nrf24l01_driver_data.config.crco = CLEAR_BIT; 
     nrf24l01_driver_data.config.pwr_up = SET_BIT; 
     nrf24l01_driver_data.config.prim_rx = SET_BIT; 
 
     // RF_CH register 
-    nrf24l01_driver_data.rf_ch.unused_1 = CLEAR; 
+    nrf24l01_driver_data.rf_ch.unused_1 = CLEAR_BIT; 
     nrf24l01_driver_data.rf_ch.rf_ch = rf_ch_freq & NRF24L01_RF_CH_MASK; 
 
     // RF_SETUP register 
-    nrf24l01_driver_data.rf_setup.cont_wave = CLEAR; 
-    nrf24l01_driver_data.rf_setup.unused_1 = CLEAR; 
+    nrf24l01_driver_data.rf_setup.cont_wave = CLEAR_BIT; 
+    nrf24l01_driver_data.rf_setup.unused_1 = CLEAR_BIT; 
     nrf24l01_driver_data.rf_setup.rf_dr_low = (rate >> SHIFT_1) & NRF24L01_RF_DR_MASK; 
-    nrf24l01_driver_data.rf_setup.pll_lock = CLEAR; 
+    nrf24l01_driver_data.rf_setup.pll_lock = CLEAR_BIT; 
     nrf24l01_driver_data.rf_setup.rf_dr_high = rate & NRF24L01_RF_DR_MASK; 
     nrf24l01_driver_data.rf_setup.rf_pwr = CLEAR; 
-    nrf24l01_driver_data.rf_setup.unused_2 = CLEAR; 
+    nrf24l01_driver_data.rf_setup.unused_2 = CLEAR_BIT; 
 
     // STATUS register 
-    nrf24l01_driver_data.status.unused_1 = CLEAR; 
-    nrf24l01_driver_data.status.rx_dr = CLEAR; 
-    nrf24l01_driver_data.status.tx_ds = CLEAR; 
-    nrf24l01_driver_data.status.max_rt = CLEAR; 
-    nrf24l01_driver_data.status.rx_p_no = SET_7; 
-    nrf24l01_driver_data.status.tx_full = CLEAR; 
+    nrf24l01_driver_data.status_reg.unused_1 = CLEAR_BIT; 
+    nrf24l01_driver_data.status_reg.rx_dr = CLEAR_BIT; 
+    nrf24l01_driver_data.status_reg.tx_ds = CLEAR_BIT; 
+    nrf24l01_driver_data.status_reg.max_rt = CLEAR_BIT; 
+    nrf24l01_driver_data.status_reg.rx_p_no = SET_7; 
+    nrf24l01_driver_data.status_reg.tx_full = CLEAR_BIT; 
 
     // FIFO_STATUS register 
-    nrf24l01_driver_data.fifo_status.unused_1 = CLEAR; 
-    nrf24l01_driver_data.fifo_status.tx_reuse = CLEAR; 
-    nrf24l01_driver_data.fifo_status.tx_full = CLEAR; 
+    nrf24l01_driver_data.fifo_status.unused_1 = CLEAR_BIT; 
+    nrf24l01_driver_data.fifo_status.tx_reuse = CLEAR_BIT; 
+    nrf24l01_driver_data.fifo_status.tx_full = CLEAR_BIT; 
     nrf24l01_driver_data.fifo_status.tx_empty = SET_BIT; 
     nrf24l01_driver_data.fifo_status.unused_2 = CLEAR; 
-    nrf24l01_driver_data.fifo_status.rx_full = CLEAR; 
+    nrf24l01_driver_data.fifo_status.rx_full = CLEAR_BIT; 
     nrf24l01_driver_data.fifo_status.rx_empty = SET_BIT; 
     
     //===================================================
@@ -255,7 +266,10 @@ void nrf24l01_init(
 
 
 // Write 
-// - CSN left high normally, set low to start transaction ad kept there until done. 
+// - CSN left high normally, set low to start transaction and keep there until done. 
+// - If just writing and not reading the status that gets sent back by the device when 
+//   writing a command then maybe clear the controllers read buffer when done --> this 
+//   may already be handled by the SPI write function. 
 
 
 // Set frequency channel 
