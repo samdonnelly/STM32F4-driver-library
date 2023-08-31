@@ -65,8 +65,11 @@ extern "C" {
 /**
  * @brief Data rate to use 
  * 
- * @details A slower data rate will allow for longer range communication. A higher data rate 
- *          will be less susceptible to noise. 
+ * @details A slower data rate will allow for longer range communication (better receiver 
+ *          sensitivity). A higher data rate has lower average current consumption and 
+ *          reduced probability of on-air collisions. The transmitter and receiver must 
+ *          have the same data rate set in order to communicate with one another, the same 
+ *          goes with the channel frequency. 
  */
 typedef enum {
     NRF24L01_DR_1MBPS, 
@@ -86,15 +89,19 @@ typedef enum {
  * @details 
  * 
  * @param spi : 
- * @param gpio : 
+ * @param gpio_ss : 
  * @param ss_pin : 
+ * @param gpio_en : 
+ * @param en_pin : 
  * @param rate : 
  * @param rf_ch_freq : 
  */
 void nrf24l01_init(
     SPI_TypeDef *spi, 
-    GPIO_TypeDef *gpio, 
+    GPIO_TypeDef *gpio_ss, 
     gpio_pin_num_t ss_pin, 
+    GPIO_TypeDef *gpio_en, 
+    gpio_pin_num_t en_pin, 
     nrf24l01_data_rate_t rate, 
     uint8_t rf_ch_freq); 
 

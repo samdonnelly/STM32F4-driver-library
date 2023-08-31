@@ -25,33 +25,6 @@
 
 // 0-10Mbps 4-wire SPI --> Max data rate of 10Mbps 
 
-// States available for the device: 
-// - Power down (low power) 
-//   - PWR_UP bit in the CONFIG register gets set to 0 (low_ )
-//   - Register values are maintained and SPI is kept active meaning registers can still 
-//     be updated in this state. 
-// 
-// - Standby 
-// 
-// - RX mode 
-//   - Configure CE pin (GPIO output) 
-//   - To enter this mode, the PWR_UP bit, PRIM_RX bit and CE pin must be set high 
-//   - Valid received data is stored in the RX FIFO. If the RX FIFO is full then new data 
-//     coming in is discarded. 
-// 
-// - TX mode 
-//   - Configure CE pin (GPIO output) 
-//   - To enter this mode, the PWR_UP bit must be set high, PRIM_RX set low, there must be 
-//     a payload in the TX FIFO and a high pulse on the CE for more than 10us. 
-//   - The device stays in this mode until it finished transmitting a packet. 
-//   - If CE is low then the device returns to standby-1 mode. 
-//   - If CE is high and the TX FIFO is not empty then it stays in TX mode. 
-//   - If CE is high and the TX FIFO is empty then the device enters standby-2 mode. 
-//   - TX mode should not be longer than 4ms --> ensure to enable Enhanced ShockBurst feature 
-//     - This means data sent should be short or in short bursts. 
-//   - Make sure to pulse the CE pin instead of holding it high so 1 packet is sent at a 
-//     time and 4ms is not exceeded. 
-
 //=======================================================================================
 
 
@@ -254,15 +227,49 @@ void nrf24l01_init(
     nrf24l01_driver_data.fifo_status.rx_empty = SET_BIT; 
     
     //===================================================
+
+    //===================================================
+    // Configure the device 
+
+    // Set PWR_UP=1 to start up the device --> ~1.5ms to enter standby-1 mode 
+
+    //===================================================
 }
 
 //=======================================================================================
 
 
 //=======================================================================================
-// Functions 
+// Read and write 
 
 // Read 
+// - Write-read the first byte (command and status return) then dummy write and read the 
+//   remaining data 
+// RX mode 
+// - You can't go directly from RX to TX mode or vice versa, you have to go through the 
+//   standby-1 state. 
+// - From standby-1 state: 
+//   - Set PRIM_RX=1 
+//   - Set CE=1 
+//   - There will be a 130us delay (RX settling state) before reading data 
+// - Data can be read when available --> have to check the FIFO status to see if there 
+//   is data first. 
+// - When configured in the RX state then the device will automatically read incoming 
+//   data and store it in the RX FIFO. If the RX FIFO is full then new incoming data 
+//   will be discarded. 
+// RX mode 
+//   - Configure CE pin (GPIO output) 
+//   - To enter this mode, the PWR_UP bit, PRIM_RX bit and CE pin must be set high 
+//   - Valid received data is stored in the RX FIFO. If the RX FIFO is full then new data 
+//     coming in is discarded. 
+
+// Send data to another transceiver 
+void nrf24l01_send(
+    uint8_t cmd, 
+    const uint8_t *send_buff)
+{
+    // 
+}
 
 
 // Write 
@@ -270,6 +277,56 @@ void nrf24l01_init(
 // - If just writing and not reading the status that gets sent back by the device when 
 //   writing a command then maybe clear the controllers read buffer when done --> this 
 //   may already be handled by the SPI write function. 
+// TX mode 
+// - You can't go directly from RX to TX mode or vice versa, you have to go through the 
+//   standby-1 state. 
+// - From the standby-1 state: 
+//   - Load the TX FIFO with the data 
+//   - Set PRIM_RX=0 
+//   - Set CE=1 
+//   - There will be a 130us delay (TX settling state) before sending data 
+// - When in the TX state: 
+//   - If there is more data to be sent then reload the TX FIFO as data is sent out. 
+//   - Hold CE=1 until data is done being sent at which point set CE=0. 
+// - When wanting to exit the TX mode/state then set CE=0. 
+// TX mode 
+//   - Configure CE pin (GPIO output) 
+//   - To enter this mode, the PWR_UP bit must be set high, PRIM_RX set low, there must be 
+//     a payload in the TX FIFO and a high pulse on the CE for more than 10us. 
+//   - The device stays in this mode until it finished transmitting a packet. 
+//   - If CE is low then the device returns to standby-1 mode. 
+//   - If CE is high and the TX FIFO is not empty then it stays in TX mode. 
+//   - If CE is high and the TX FIFO is empty then the device enters standby-2 mode. 
+//   - TX mode should not be longer than 4ms 
+//     - This means data sent should be short or in short bursts. 
+//   - Make sure to pulse the CE pin instead of holding it high so 1 packet is sent at a 
+//     time and 4ms is not exceeded. 
+
+// Receive data from another transceiver 
+void nrf24l01_receive(
+    uint8_t *rec_buff)
+{
+    // 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// User functions 
+
+// Receive payload 
+void nrf24l01_receive_payload(void)
+{
+    // 
+}
+
+
+// Send payload 
+void nrf24l01_send_payload(void)
+{
+    // 
+}
 
 
 // Set frequency channel 
@@ -281,7 +338,23 @@ void nrf24l01_init(
 // Status read --> non-operation write 
 
 
-// Set TX and RX modes? 
+// Set RX mode 
+// - Set PRIM_RX=1 
+// - Set CE=1 
+
+
+// Set TX mode 
+// - Set PRIM_RX=0 
+// - Set CE=1 
+
+
+// Low power mode 
+// - Make sure current data transfers are wrapped up. 
+// - Set CE=0 to enter standby-1 state. 
+// - Set PWR_UP=0 to enter power down state 
+
+
+// Standby mode 
 
 //=======================================================================================
 
