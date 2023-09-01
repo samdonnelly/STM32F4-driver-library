@@ -107,6 +107,90 @@ void nrf24l01_init(
 
 //=======================================================================================
 
+
+//=======================================================================================
+// User functions 
+
+/**
+ * @brief Receive payload 
+ * 
+ * @details 
+ */
+void nrf24l01_receive_payload(void); 
+
+
+/**
+ * @brief Send payload 
+ * 
+ * @details 
+ */
+void nrf24l01_send_payload(void); 
+
+
+/**
+ * @brief Set frequency channel 
+ * 
+ * @details 
+ */
+void nrf24l01_set_channel(void); 
+
+
+/**
+ * @brief RF data rate set 
+ * 
+ * @details 
+ */
+void nrf24l01_set_rate(void); 
+
+
+/**
+ * @brief Status read --> non-operation write 
+ * 
+ * @details 
+ */
+void nrf24l01_get_status(void); 
+
+
+/**
+ * @brief Set RX mode 
+ * 
+ * @details 
+ *          - Set PRIM_RX=1 
+ *          - Set CE=1 
+ */
+void nrf24l01_set_rx_mode(void); 
+
+
+/**
+ * @brief Set TX mode 
+ * 
+ * @details 
+ *          - Set PRIM_RX=0 
+ *          - Set CE=1 
+ */
+void nrf24l01_set_tx_mode(void); 
+
+
+/**
+ * @brief Low power mode 
+ * 
+ * @details 
+ *          Make sure current data transfers are wrapped up. 
+ *          Set CE=0 to enter standby-1 state. 
+ *          Set PWR_UP=0 to enter power down state 
+ */
+void nrf24l01_set_low_pwr(void); 
+
+
+/**
+ * @brief Standby mode 
+ * 
+ * @details 
+ */
+void nrf24l01_set_standby(void); 
+
+//=======================================================================================
+
 #ifdef __cplusplus
 }
 #endif

@@ -330,31 +330,59 @@ void nrf24l01_send_payload(void)
 
 
 // Set frequency channel 
+void nrf24l01_set_channel(void)
+{
+    // 
+}
 
 
 // RF data rate set 
+void nrf24l01_set_rate(void)
+{
+    // 
+}
 
 
 // Status read --> non-operation write 
+void nrf24l01_get_status(void)
+{
+    // 
+}
 
 
 // Set RX mode 
 // - Set PRIM_RX=1 
 // - Set CE=1 
+void nrf24l01_set_rx_mode(void)
+{
+    // 
+}
 
 
 // Set TX mode 
 // - Set PRIM_RX=0 
 // - Set CE=1 
+void nrf24l01_set_tx_mode(void)
+{
+    // 
+}
 
 
 // Low power mode 
 // - Make sure current data transfers are wrapped up. 
 // - Set CE=0 to enter standby-1 state. 
 // - Set PWR_UP=0 to enter power down state 
+void nrf24l01_set_low_pwr(void)
+{
+    // 
+}
 
 
 // Standby mode 
+void nrf24l01_set_standby(void)
+{
+    // 
+}
 
 //=======================================================================================
 
