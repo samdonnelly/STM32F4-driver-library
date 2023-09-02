@@ -31,9 +31,6 @@
 //=======================================================================================
 // Macros 
 
-// Conditional compilation 
-#define SPI_DRAFT 0                // Draft code that is not ready yet 
-
 // Timers 
 #define SPI_COM_TIMEOUT 0x03FF     // Timer for SPI communication sequence timeouts 
 
@@ -195,8 +192,9 @@ void spi_slave_deselect(
  * @param spi : pointer to SPI port 
  * @param write_data : buffer that contains the data to write 
  * @param data_len : length of the data (bytes) in the buffer 
+ * @return SPI_STATUS : SPI status 
  */
-void spi_write(
+SPI_STATUS spi_write(
     SPI_TypeDef *spi, 
     const uint8_t *write_data, 
     uint32_t data_len);
@@ -219,8 +217,9 @@ void spi_write(
  * @param write_data : dummy data to send to run the SPI clock so data can be read 
  * @param read_data : buffer to store the read data 
  * @param data_len : length of the data (bytes) to be read 
+ * @return SPI_STATUS : SPI status 
  */
-void spi_write_read(
+SPI_STATUS spi_write_read(
     SPI_TypeDef *spi, 
     uint8_t write_data, 
     uint8_t *read_data, 

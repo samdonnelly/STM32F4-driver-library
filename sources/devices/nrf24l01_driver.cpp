@@ -115,7 +115,7 @@ typedef struct nrf24l01_driver_data_s
     // 'status' --> bit 0: spi status 
     //          --> bit 1: init status 
     //          --> bits 2-7: not used 
-    uint8_t status; 
+    uint8_t driver_status; 
 
     // Register data 
     nrf24l01_config_reg_t config; 
@@ -135,6 +135,36 @@ static nrf24l01_driver_data_t nrf24l01_driver_data;
 
 //=======================================================================================
 // Function prototypes 
+
+/**
+ * @brief Receive data from another transceiver 
+ * 
+ * @details 
+ * 
+ * @param cmd 
+ * @param rec_buff 
+ * @param data_len 
+ */
+void nrf24l01_receive(
+    uint8_t cmd, 
+    uint8_t *rec_buff, 
+    uint8_t data_len); 
+
+
+/**
+ * @brief Send data to another transceiver 
+ * 
+ * @details 
+ * 
+ * @param cmd 
+ * @param send_buff 
+ * @param data_len 
+ */
+void nrf24l01_send(
+    uint8_t cmd, 
+    const uint8_t *send_buff, 
+    uint8_t data_len); 
+
 
 /**
  * @brief CONFIG register write 
@@ -184,7 +214,7 @@ void nrf24l01_init(
     nrf24l01_driver_data.en_pin = en_pin; 
 
     // Driver status 
-    nrf24l01_driver_data.status = CLEAR; 
+    nrf24l01_driver_data.driver_status = CLEAR; 
 
     // CONFIG register 
     nrf24l01_driver_data.config.unused_1 = CLEAR_BIT; 
@@ -263,12 +293,38 @@ void nrf24l01_init(
 //   - Valid received data is stored in the RX FIFO. If the RX FIFO is full then new data 
 //     coming in is discarded. 
 
-// Send data to another transceiver 
-void nrf24l01_send(
+// Receive data from another transceiver 
+void nrf24l01_receive(
     uint8_t cmd, 
-    const uint8_t *send_buff)
+    uint8_t *rec_buff, 
+    uint8_t data_len)
 {
-    // 
+    // Local variables 
+    uint8_t spi_status = SPI_OK; 
+    uint8_t status_reg = CLEAR;   // TODO update driver data record 
+
+    // Select slave 
+    spi_slave_select(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
+
+    // Write the command and read the status back from the slave 
+    spi_status = (uint8_t)spi_write_read(nrf24l01_driver_data.spi, 
+                                         cmd, 
+                                         &status_reg, 
+                                         BYTE_1); 
+
+    // Dummy write while reading the returned info 
+    spi_status = (uint8_t)spi_write_read(nrf24l01_driver_data.spi, 
+                                         NRF24L01_DUMMY_WRITE, 
+                                         rec_buff, 
+                                         data_len); 
+
+    // Deselect slave 
+    spi_slave_deselect(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
+
+    // Update the status register data record 
+
+    // Update the driver status 
+    nrf24l01_driver_data.driver_status |= spi_status; 
 }
 
 
@@ -302,11 +358,37 @@ void nrf24l01_send(
 //   - Make sure to pulse the CE pin instead of holding it high so 1 packet is sent at a 
 //     time and 4ms is not exceeded. 
 
-// Receive data from another transceiver 
-void nrf24l01_receive(
-    uint8_t *rec_buff)
+// Send data to another transceiver 
+void nrf24l01_send(
+    uint8_t cmd, 
+    const uint8_t *send_buff, 
+    uint8_t data_len)
 {
-    // 
+    // Local variables 
+    uint8_t spi_status = SPI_OK; 
+    uint8_t status_reg = CLEAR;   // TODO update driver data record 
+
+    // Select slave 
+    spi_slave_select(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
+
+    // Write the command and read the status back from the slave 
+    spi_status = (uint8_t)spi_write_read(nrf24l01_driver_data.spi, 
+                                         cmd, 
+                                         &status_reg, 
+                                         BYTE_1); 
+
+    // Write the data to the device 
+    spi_status = (uint8_t)spi_write(nrf24l01_driver_data.spi, 
+                                    send_buff, 
+                                    data_len); 
+
+    // Deselect slave 
+    spi_slave_deselect(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
+
+    // Update the status register data record 
+
+    // Update the driver status 
+    nrf24l01_driver_data.driver_status |= spi_status; 
 }
 
 //=======================================================================================

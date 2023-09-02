@@ -85,74 +85,6 @@ void spi_rxne_wait(
 void spi_bsy_wait(
     SPI_TypeDef *spi);
 
-
-#if SPI_DRAFT 
-
-/**
- * @brief Wait for TXE bit to set - draft 
- * 
- * @param spi : pointer to spi port 
- * @return SPI_STATUS : status of the SPI operation 
- */
-SPI_STATUS spi_txe_wait_draft(
-    SPI_TypeDef *spi); 
-
-
-/**
- * @brief Wait for RXNE bit to set - draft 
- * 
- * @param spi : pointer to spi port 
- * @return SPI_STATUS : status of the SPI operation 
- */
-SPI_STATUS spi_rxne_wait_draft(
-    SPI_TypeDef *spi); 
-
-
-/**
- * @brief Wait for BSY bit to clear - draft 
- * 
- * @param spi : pointer to spi port 
- * @return SPI_STATUS : status of the SPI operation 
- */
-SPI_STATUS spi_bsy_wait_draft(
-    SPI_TypeDef *spi); 
-
-
-/**
- * @brief SPI write - draft 
- * 
- * @details This 
- * 
- * @param spi 
- * @param write_data 
- * @param data_len 
- */
-SPI_STATUS spi_write_draft(
-    SPI_TypeDef *spi, 
-    uint8_t *write_data, 
-    uint32_t data_len);
-
-
-/**
- * @brief SPI write then read - draft 
- * 
- * @details 
- *          This can be used to request information from a slave device (write) then 
- *          receive the needed information immediately afterwards (read). 
- * 
- * @param spi 
- * @param write_data 
- * @param read_data 
- * @param data_len 
- */
-SPI_STATUS spi_read_draft(
-    SPI_TypeDef *spi, 
-    uint8_t  write_data, 
-    uint8_t *read_data, 
-    uint32_t data_len);
-
-#endif   // SPI_DRAFT 
-
 //=======================================================================================
 
 
@@ -326,43 +258,6 @@ void spi_slave_deselect(
     gpio_write(gpio, slave_num, GPIO_HIGH);
 }
 
-
-#if SPI_DRAFT 
-
-// Wait for TXE bit to set before writing - draft 
-SPI_STATUS spi_txe_wait_draft(
-    SPI_TypeDef *spi) 
-{
-    uint16_t timer = SPI_COM_TIMEOUT;   // TODO test/verify timer/counter size 
-    while(!(spi->SR & (SET_BIT << SHIFT_1)) && timer--); 
-    if (!timer) return SPI_ERROR; 
-    return SPI_OK; 
-}
-
-
-// Wait for RXNE bit to set before reading - draft 
-SPI_STATUS spi_rxne_wait_draft(
-    SPI_TypeDef *spi)
-{
-    uint16_t timer = SPI_COM_TIMEOUT; 
-    while(!(spi->SR & (SET_BIT << SHIFT_0)) && timer--); 
-    if (!timer) return SPI_ERROR; 
-    return SPI_OK; 
-}
-
-
-// Wait for BSY bit to clear - draft 
-SPI_STATUS spi_bsy_wait_draft(
-    SPI_TypeDef *spi)
-{
-    uint16_t timer = SPI_COM_TIMEOUT; 
-    while((spi->SR & (SET_BIT << SHIFT_7)) && timer--); 
-    if (!timer) return SPI_ERROR; 
-    return SPI_OK; 
-}
-
-#endif   // SPI_DRAFT 
-
 //=======================================================================================
 
 
@@ -371,11 +266,14 @@ SPI_STATUS spi_bsy_wait_draft(
 
 // SPI write 
 // TODO add timeouts 
-void spi_write(
+SPI_STATUS spi_write(
     SPI_TypeDef *spi, 
     const uint8_t *write_data, 
     uint32_t data_len)
 {
+    // Local variables 
+    SPI_STATUS spi_status = SPI_OK; 
+
     // Argument check - NULL pointers and zero length 
     if (spi == NULL || write_data == NULL || !data_len) return; 
 
@@ -395,17 +293,22 @@ void spi_write(
     // Read the data and status registers to clear the RX buffer and overrun error bit
     dummy_read(spi->DR); 
     dummy_read(spi->SR); 
+
+    return spi_status; 
 }
 
 
 // SPI write then read 
 // TODO add timeouts 
-void spi_write_read(
+SPI_STATUS spi_write_read(
     SPI_TypeDef *spi, 
     uint8_t write_data, 
     uint8_t *read_data, 
     uint32_t data_len)
 {
+    // Local variables 
+    SPI_STATUS spi_status = SPI_OK; 
+
     // Argument check - NULL pointers and zero length 
     if (spi == NULL || read_data == NULL || !data_len) return; 
 
@@ -432,85 +335,8 @@ void spi_write_read(
 
     // Wait for BSY to clear 
     spi_bsy_wait(spi);
+
+    return spi_status; 
 }
-
-
-#if SPI_DRAFT 
-
-// SPI write - draft 
-SPI_STATUS spi_write_draft(
-    SPI_TypeDef *spi, 
-    uint8_t *write_data, 
-    uint32_t data_len)
-{
-    SPI_STATUS status = SPI_OK; 
-
-    // Transmit all the data 
-    for (uint32_t i = 0; i < data_len; i++)
-    {
-        status = spi_txe_wait_draft(spi); 
-
-        if (status)  // SPI transmission fault 
-        {
-            // Clear registers 
-            dummy_read(spi->DR); 
-            dummy_read(spi->SR); 
-            return status; 
-        }
-
-        spi->DR = *write_data++; 
-    }
-
-    // Wait for TXE bit to set and BSY bit to clear 
-    spi_txe_wait_draft(spi); 
-    spi_bsy_wait_draft(spi); 
-
-    // Read the data and status registers to clear the RX buffer and overrun error bit
-    dummy_read(spi->DR); 
-    dummy_read(spi->SR); 
-
-    return status; 
-}
-
-
-// SPI read - draft 
-SPI_STATUS spi_read_draft(
-    SPI_TypeDef *spi, 
-    uint8_t  write_data, 
-    uint8_t *read_data, 
-    uint32_t data_len)
-{
-    // Argument check - NULL pointers and zero length 
-    if (spi == NULL || read_data == NULL || !data_len) return SPI_ERROR; 
-
-    // Write the first piece of data 
-    if (spi_txe_wait_draft(spi)) return SPI_ERROR; 
-    spi->DR = write_data; 
-
-    // Iterate through all data to be sent and received
-    for (uint32_t i = 0; i < data_len-1; i++)
-    {
-        // Write to slave to provide a bus clock 
-        if (spi_txe_wait_draft(spi)) return SPI_ERROR; 
-        spi->DR = write_data; 
-
-        // Read the slave response 
-        if (spi_rxne_wait_draft(spi)) return SPI_ERROR; 
-        *read_data++ = spi->DR; 
-    }
-
-    // Read the last piece of data 
-    if (spi_rxne_wait_draft(spi)) return SPI_ERROR; 
-    *read_data++ = spi->DR; 
-
-    // Wait for TXE bit to set and the BSY bit to clear 
-    spi_txe_wait_draft(spi);
-    spi_bsy_wait_draft(spi); 
-
-    // return status; 
-    return SPI_OK; 
-}
-
-#endif   // SPI_DRAFT 
 
 //=======================================================================================
