@@ -141,9 +141,9 @@ static nrf24l01_driver_data_t nrf24l01_driver_data;
  * 
  * @details 
  * 
- * @param cmd 
- * @param rec_buff 
- * @param data_len 
+ * @param cmd : device command 
+ * @param rec_buff : buffer to store received data 
+ * @param data_len : length of data to read (excluding status) 
  */
 void nrf24l01_receive(
     uint8_t cmd, 
@@ -156,9 +156,9 @@ void nrf24l01_receive(
  * 
  * @details 
  * 
- * @param cmd 
- * @param send_buff 
- * @param data_len 
+ * @param cmd : device command 
+ * @param send_buff : buffer that stores data to be sent to the device 
+ * @param data_len : length of data to send (excluding command) 
  */
 void nrf24l01_send(
     uint8_t cmd, 
