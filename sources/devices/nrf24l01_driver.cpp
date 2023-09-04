@@ -139,7 +139,10 @@ static nrf24l01_driver_data_t nrf24l01_driver_data;
 /**
  * @brief Receive data from another transceiver 
  * 
- * @details 
+ * @details Takes a command and a data length and reads data from the device into the 
+ *          read buffer over SPI. The driver status is updated with the result of the 
+ *          SPI transaction and status register is updated in the data record since 
+ *          the status is sent by the device when the master sends a command. 
  * 
  * @param cmd : device command 
  * @param rec_buff : buffer to store received data 
