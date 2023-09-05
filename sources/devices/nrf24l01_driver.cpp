@@ -157,7 +157,10 @@ void nrf24l01_receive(
 /**
  * @brief Send data to another transceiver 
  * 
- * @details 
+ * @details Takes a command and a data length and writes data from the send buffer to 
+ *          the device over SPI. The driver status is updated with the result of the 
+ *          SPI transaction and status register is updated in the data record since 
+ *          the status is sent by the device when the master sends a command. 
  * 
  * @param cmd : device command 
  * @param send_buff : buffer that stores data to be sent to the device 
