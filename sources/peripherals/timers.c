@@ -262,7 +262,7 @@ void tim1_output_init(
     // Set the auto-reload register (ARR) 
     tim_arr_set(TIM1, arr); 
 
-    // Configure the preload register 
+    // Configure the output compare preload enable register 
     tim_ocpe(TIM1, ocpe, channel); 
 
     // Configure the auto-reload preload register 
@@ -295,6 +295,7 @@ void tim_2_to_5_output_init(
     GPIO_TypeDef *gpio, 
     pin_selector_t pin, 
     tim_dir_t dir, 
+    timer_us_prescalars_t prescalar, 
     uint16_t arr, 
     tim_ocm_t ocm, 
     tim_ocpe_t ocpe, 
@@ -322,10 +323,13 @@ void tim_2_to_5_output_init(
     // Set the capture/compare mode 
     tim_ocm(timer, ocm, channel); 
 
+    // Set the clock prescalar 
+    tim_psc_set(timer, prescalar); 
+
     // Set the auto-reload register (ARR) 
     tim_arr_set(timer, arr); 
 
-    // Configure the preload register 
+    // Configure the output compare preload enable register 
     tim_ocpe(timer, ocpe, channel); 
 
     // Configure the auto-reload preload register 

@@ -68,6 +68,7 @@ void ws2812_init(
         gpio, 
         pin, 
         TIM_DIR_UP, 
+        CLEAR, 
         WS2812_84MHZ_PWM_ARR, 
         TIM_OCM_PWM1, 
         TIM_OCPE_ENABLE, 
@@ -78,8 +79,6 @@ void ws2812_init(
     // Initialize data record 
     driver_data_ptr->timer = timer; 
     driver_data_ptr->tim_channel = tim_channel; 
-
-    //===================================================
 }
 
 //=======================================================================================

@@ -267,6 +267,7 @@ void tim1_output_init(
  * @param gpio : pointer to GPIO port of chosen output pin 
  * @param pin : output pin chosen 
  * @param dir : counter direction 
+ * @param prescalar : counter clock prescaler (clock divider) 
  * @param arr : auto-reload register value 
  * @param ocm : output compare mode configuration 
  * @param ocpe : output compare preload configuration 
@@ -280,6 +281,7 @@ void tim_2_to_5_output_init(
     GPIO_TypeDef *gpio, 
     pin_selector_t pin, 
     tim_dir_t dir, 
+    timer_us_prescalars_t prescalar, 
     uint16_t arr, 
     tim_ocm_t ocm, 
     tim_ocpe_t ocpe, 

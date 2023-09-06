@@ -76,7 +76,9 @@ typedef enum {
  *          for a specified timer and pin. Must be called during setup for each device. 
  *          
  *          NOTE: This driver/function is equipped for TIM2-TIM5. Other timers cannot be 
- *                 used at this time. 
+ *                used at this time. 
+ *          NOTE: The APB1 frequency (for timers 2-5) must be comfigured to 84MHz for this 
+ *                driver to work properly. 
  * 
  * @param device_num : number used to fetch the device data record 
  * @param timer : timer port used for the PWM output 
