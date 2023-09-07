@@ -34,10 +34,13 @@
 
 // Output 
 #define ESC_NEUTRAL_TIME 1500     // PWM pulse duration for "neutral" gear (us) 
-#define ESC_REV_BASE_TIME 1480    // PWM pulse duration for start of reverse thrust (us) 
-#define ESC_REV_MAX_TIME 1000     // PWM pulse duration for max reverse thrust (us) 
-#define ESC_FWD_BASE_TIME 1520    // PWM pulse duration for start of forward thrust (us) 
-#define ESC_FWD_MAX_TIME 2000     // PWM pulse duration for max forward thrust (us) 
+#define ESC_REV_START_TIME 1480   // PWM pulse duration for start of reverse thrust (us) 
+#define ESC_REV_MAX_TIME 1200     // PWM pulse duration for max reverse thrust (us) 
+#define ESC_FWD_START_TIME 1520   // PWM pulse duration for start of forward thrust (us) 
+#define ESC_FWD_MAX_TIME 1800     // PWM pulse duration for max forward thrust (us) 
+
+// 
+#define ESC_CMD_SCALAR 100        // 
 
 //=======================================================================================
 
@@ -75,8 +78,8 @@ void esc_readytosky_init(
     pin_selector_t pin, 
     timer_us_prescalars_t prescalar, 
     uint16_t arr, 
-    uint16_t fwd_speed_lim, 
-    uint16_t rev_speed_lim); 
+    int16_t fwd_speed_lim, 
+    int16_t rev_speed_lim); 
 
 //=======================================================================================
 
@@ -94,7 +97,7 @@ void esc_readytosky_init(
  */
 void esc_readytosky_send(
     device_number_t device_num, 
-    int8_t throttle_cmd); 
+    int16_t throttle_cmd); 
 
 //=======================================================================================
 
