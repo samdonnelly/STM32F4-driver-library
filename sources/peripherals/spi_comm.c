@@ -275,7 +275,7 @@ SPI_STATUS spi_write(
     SPI_STATUS spi_status = SPI_OK; 
 
     // Argument check - NULL pointers and zero length 
-    if (spi == NULL || write_data == NULL || !data_len) return; 
+    if (spi == NULL || write_data == NULL || !data_len) return spi_status; 
 
     // Iterate through all data to be sent 
     for (uint32_t i = 0; i < data_len; i++)
@@ -310,7 +310,7 @@ SPI_STATUS spi_write_read(
     SPI_STATUS spi_status = SPI_OK; 
 
     // Argument check - NULL pointers and zero length 
-    if (spi == NULL || read_data == NULL || !data_len) return; 
+    if (spi == NULL || read_data == NULL || !data_len) return spi_status; 
 
     // Write the first piece of data 
     spi_txe_wait(spi); 

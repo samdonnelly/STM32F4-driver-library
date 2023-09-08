@@ -24,10 +24,10 @@
 // Global variables 
 
 // Throttle command calculation 
-const static int16_t fwd_slope = ESC_FWD_MAX_TIME - ESC_FWD_START_TIME; 
-const static int16_t fwd_int = ESC_FWD_START_TIME; 
-const static int16_t rev_slope = ESC_REV_START_TIME - ESC_REV_MAX_TIME; 
-const static int16_t rev_int = ESC_REV_START_TIME; 
+static const int16_t fwd_slope = ESC_FWD_MAX_TIME - ESC_FWD_START_TIME; 
+static const int16_t fwd_int = ESC_FWD_START_TIME; 
+static const int16_t rev_slope = ESC_REV_START_TIME - ESC_REV_MAX_TIME; 
+static const int16_t rev_int = ESC_REV_START_TIME; 
 
 // Device data record 
 typedef struct esc_readytosky_driver_data_s
