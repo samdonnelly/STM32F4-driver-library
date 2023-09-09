@@ -33,14 +33,14 @@
 // Macros 
 
 // Output 
-#define ESC_NEUTRAL_TIME 1500     // PWM pulse duration for "neutral" gear (us) 
+#define ESC_NEUTRAL_TIME 1520     // PWM pulse duration for "neutral" gear (us) 
 #define ESC_REV_START_TIME 1480   // PWM pulse duration for start of reverse thrust (us) 
-#define ESC_REV_MAX_TIME 1200     // PWM pulse duration for max reverse thrust (us) 
-#define ESC_FWD_START_TIME 1520   // PWM pulse duration for start of forward thrust (us) 
-#define ESC_FWD_MAX_TIME 1800     // PWM pulse duration for max forward thrust (us) 
+#define ESC_REV_MAX_TIME 1220     // PWM pulse duration for max reverse thrust (us) 
+#define ESC_FWD_START_TIME 1560   // PWM pulse duration for start of forward thrust (us) 
+#define ESC_FWD_MAX_TIME 1820     // PWM pulse duration for max forward thrust (us) 
 
-// 
-#define ESC_CMD_SCALAR 100        // 
+// Calculation 
+#define ESC_CMD_SCALAR 100        // PWM calculation scalar (0-100% throttle scalar) 
 
 //=======================================================================================
 
@@ -58,17 +58,17 @@
  * 
  * @details 
  *          NOTE: The prescalar and auto reload register must combine to make a counter 
- *                reload period of 3ms or 3000us. 
+ *                reload period of 20ms or 20000us. 
  * 
  * @param device_num : number used to fetch the device data record 
  * @param timer : timer port used for the PWM output 
  * @param tim_channel : timer channel used for the pwm output 
  * @param gpio : GPIO port of PWM pin 
  * @param pin : number of PWM pin 
- * @param prescalar 
- * @param arr 
- * @param fwd_speed_lim 
- * @param rev_speed_lim 
+ * @param prescalar : timer clock divider to set counter rate 
+ * @param arr : counter auto-reload register value 
+ * @param fwd_speed_lim : max PWM output (max forward speed) to cap the ESC at 
+ * @param rev_speed_lim : min PWM output (max reverse speed) to cap the ESC at 
  */
 void esc_readytosky_init(
     device_number_t device_num, 

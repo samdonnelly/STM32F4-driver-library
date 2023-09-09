@@ -41,8 +41,8 @@ typedef struct esc_readytosky_driver_data_s
     tim_channel_t tim_channel; 
 
     // Speed information 
-    int8_t fwd_cmd_lim; 
-    int8_t rev_cmd_lim; 
+    int16_t fwd_cmd_lim; 
+    int16_t rev_cmd_lim; 
 }
 esc_readytosky_driver_data_t; 
 
@@ -95,8 +95,8 @@ void esc_readytosky_init(
     driver_data_ptr->tim_channel = tim_channel; 
 
     // Check and set speed bounds 
-    driver_data_ptr->fwd_cmd_lim = (int8_t)(ESC_CMD_SCALAR*(fwd_speed_lim - fwd_int)/fwd_slope); 
-    driver_data_ptr->rev_cmd_lim = (int8_t)(ESC_CMD_SCALAR*(rev_speed_lim - rev_int)/rev_slope); 
+    driver_data_ptr->fwd_cmd_lim = ESC_CMD_SCALAR*(fwd_speed_lim - fwd_int)/fwd_slope; 
+    driver_data_ptr->rev_cmd_lim = ESC_CMD_SCALAR*(rev_speed_lim - rev_int)/rev_slope; 
 
     // Set PWM to "neutral" 
     tim_ccr(driver_data_ptr->timer, ESC_NEUTRAL_TIME, driver_data_ptr->tim_channel); 
