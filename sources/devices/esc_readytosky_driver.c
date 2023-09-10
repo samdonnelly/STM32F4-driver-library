@@ -65,8 +65,8 @@ void esc_readytosky_init(
     pin_selector_t pin, 
     timer_us_prescalars_t prescalar, 
     uint16_t arr, 
-    int16_t fwd_speed_lim, 
-    int16_t rev_speed_lim)
+    uint16_t fwd_speed_lim, 
+    uint16_t rev_speed_lim)
 {
     // Create a data record for the device 
     esc_readytosky_driver_data_t *driver_data_ptr = 
@@ -95,8 +95,10 @@ void esc_readytosky_init(
     driver_data_ptr->tim_channel = tim_channel; 
 
     // Check and set speed bounds 
-    driver_data_ptr->fwd_cmd_lim = ESC_CMD_SCALAR*(fwd_speed_lim - fwd_int)/fwd_slope; 
-    driver_data_ptr->rev_cmd_lim = ESC_CMD_SCALAR*(rev_speed_lim - rev_int)/rev_slope; 
+    driver_data_ptr->fwd_cmd_lim = ESC_CMD_SCALAR*((int16_t)fwd_speed_lim - fwd_int)/fwd_slope; 
+    driver_data_ptr->rev_cmd_lim = ESC_CMD_SCALAR*((int16_t)rev_speed_lim - rev_int)/rev_slope; 
+
+    // TODO cap the speed limits if they're above 100%. Also set a minumum speed. 
 
     // Set PWM to "neutral" 
     tim_ccr(driver_data_ptr->timer, ESC_NEUTRAL_TIME, driver_data_ptr->tim_channel); 

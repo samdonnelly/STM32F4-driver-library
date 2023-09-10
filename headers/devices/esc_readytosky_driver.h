@@ -56,7 +56,19 @@
 /**
  * @brief ESC initialization 
  * 
- * @details 
+ * @details Configures the specified pin for PWM output and sets the the ESC to "neutral". 
+ *          Neutral is needed before the motor can be spun and in this state the ESC will 
+ *          not actuate the motor. Neutral state is achieved in operation by a throttle 
+ *          command of 0. 
+ *          
+ *          The forward and reverse speed limit arguments specify the PWM range the driver 
+ *          will operate in. The ESC operates on a 50Hz or 20ms period and the full range 
+ *          is from roughly 1ms/1000us to 2ms/2000us of PWM on-time. Roughly in the middle 
+ *          is the Neutral command (1520us), below this is reverse and above is forward. 
+ *          The speed limit arguments can be within this range. Outside of this range and 
+ *          the limit will default to the edge of the range. These arguments are in 
+ *          microseconds. The exact operating values of the ESC are listed as macros above. 
+ *          
  *          NOTE: The prescalar and auto reload register must combine to make a counter 
  *                reload period of 20ms or 20000us. 
  * 
@@ -78,8 +90,8 @@ void esc_readytosky_init(
     pin_selector_t pin, 
     timer_us_prescalars_t prescalar, 
     uint16_t arr, 
-    int16_t fwd_speed_lim, 
-    int16_t rev_speed_lim); 
+    uint16_t fwd_speed_lim, 
+    uint16_t rev_speed_lim); 
 
 //=======================================================================================
 
