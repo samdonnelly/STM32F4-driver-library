@@ -41,6 +41,7 @@
 
 // Calculation 
 #define ESC_CMD_SCALAR 100        // PWM calculation scalar (0-100% throttle scalar) 
+#define ESC_MAX_THROTTLE 100      // Max throttle command 
 
 //=======================================================================================
 
@@ -102,7 +103,21 @@ void esc_readytosky_init(
 /**
  * @brief ESC PWM command send 
  * 
- * @details 
+ * @details Send a throttle command to the ESC. The throttle command is anywhere between 
+ *          -100 and 100 where: 
+ *           - -100 --> -100% reverse throttle 
+ *           - 0 -----> 0% throttle - neutral 
+ *           - 100 ---> 100% forward throttle 
+ *          
+ *          Throttle commands outside of this range will be capped at +-/100%. 
+ *          
+ *          The limits of the ESC are defined in the macros above. In the init functions 
+ *          there are arguments specifying the speed limit for a particular ESC. If these 
+ *          limits are less than full reverse/forward throttle then that becomes the max
+ *          speed for a particular direction and throttle commands that exceed this limit 
+ *          will be capped. Note that the init function specifys speed limits in the form 
+ *          of PWM time whereas this function takes a 0 to +/-100% throttle command so 
+ *          the mapping between these two metrics should be accounted for. 
  * 
  * @param device_num : number used to fetch the device data record 
  * @param throttle_cmd : -100% to 100% throttle command 
