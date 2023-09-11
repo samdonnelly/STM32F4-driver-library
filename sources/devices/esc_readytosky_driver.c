@@ -95,10 +95,10 @@ void esc_readytosky_init(
     driver_data_ptr->tim_channel = tim_channel; 
 
     // Check and set speed bounds 
-    driver_data_ptr->fwd_cmd_lim = (fwd_speed_lim > ESC_MAX_THROTTLE) ? 
+    driver_data_ptr->fwd_cmd_lim = (fwd_speed_lim > ESC_FWD_MAX_TIME) ? 
                                    ESC_MAX_THROTTLE : 
                                    ESC_CMD_SCALAR*((int16_t)fwd_speed_lim - fwd_int)/fwd_slope; 
-    driver_data_ptr->rev_cmd_lim = (rev_speed_lim < -ESC_MAX_THROTTLE) ? 
+    driver_data_ptr->rev_cmd_lim = (rev_speed_lim < ESC_REV_MAX_TIME) ? 
                                    -ESC_MAX_THROTTLE : 
                                    ESC_CMD_SCALAR*((int16_t)rev_speed_lim - rev_int)/rev_slope; 
 
