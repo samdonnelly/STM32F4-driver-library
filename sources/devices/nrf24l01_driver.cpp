@@ -173,6 +173,15 @@ void nrf24l01_send(
 
 
 /**
+ * @brief Set mode 
+ * 
+ * @details 
+ */
+void nrf24l01_set_mode(
+    nrf24l01_mode_select_t mode); 
+
+
+/**
  * @brief CONFIG register write 
  * 
  * @details 
@@ -201,14 +210,12 @@ void nrf24l01_rf_ch_reg_write(void);
 void nrf24l01_init(
     SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio_ss, 
-    gpio_pin_num_t ss_pin, 
+    pin_selector_t ss_pin, 
     GPIO_TypeDef *gpio_en, 
-    gpio_pin_num_t en_pin, 
+    pin_selector_t en_pin, 
     nrf24l01_data_rate_t rate, 
     uint8_t rf_ch_freq)
 {
-    // Configure GPIO for enable and slave select pins 
-
     //===================================================
     // Initialize data record 
 
@@ -216,8 +223,8 @@ void nrf24l01_init(
     nrf24l01_driver_data.spi = spi; 
     nrf24l01_driver_data.gpio_ss = gpio_ss; 
     nrf24l01_driver_data.gpio_en = gpio_en; 
-    nrf24l01_driver_data.ss_pin = ss_pin; 
-    nrf24l01_driver_data.en_pin = en_pin; 
+    nrf24l01_driver_data.ss_pin = (gpio_pin_num_t)(SET_BIT << ss_pin); 
+    nrf24l01_driver_data.en_pin = (gpio_pin_num_t)(SET_BIT << en_pin); 
 
     // Driver status 
     nrf24l01_driver_data.driver_status = CLEAR; 
@@ -265,11 +272,33 @@ void nrf24l01_init(
     //===================================================
 
     //===================================================
+    // Configure GPIO pins 
+
+    // SPI slave select pin 
+    spi_ss_init(nrf24l01_driver_data.gpio_ss, ss_pin); 
+
+    // Device enable pin 
+    gpio_pin_init(
+        nrf24l01_driver_data.gpio_en, 
+        en_pin, 
+        MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
+    
+    //===================================================
+
+    //===================================================
     // Configure the device 
 
     // Set PWR_UP=1 to start up the device --> ~1.5ms to enter standby-1 mode 
 
+    // Write to device registers 
+    nrf24l01_config_reg_write(); 
+    nrf24l01_rf_ch_reg_write(); 
+
     //===================================================
+
+    // Set the device into RX mode 
+    nrf24l01_set_mode(NRF24L01_RX_MODE); 
 }
 
 //=======================================================================================
@@ -363,6 +392,9 @@ void nrf24l01_receive(
 //     - This means data sent should be short or in short bursts. 
 //   - Make sure to pulse the CE pin instead of holding it high so 1 packet is sent at a 
 //     time and 4ms is not exceeded. 
+// - Data sheet says there are 3 separate 32-byte TX FIFOs so I don't think you can write more 
+//   than 32-bytes at a time. 
+// - After data is uploaded to the TX FIFO the device automatically sends the data out. 
 
 // Send data to another transceiver 
 void nrf24l01_send(
@@ -411,9 +443,27 @@ void nrf24l01_receive_payload(void)
 
 
 // Send payload 
-void nrf24l01_send_payload(void)
+void nrf24l01_send_payload(
+    const uint8_t *send_buff, 
+    uint8_t data_len)
 {
-    // 
+    // Cap the data length if it's too large 
+    if (data_len > NRF24L01_MAX_DATA_LEN) 
+    {
+        data_len = NRF24L01_MAX_DATA_LEN; 
+    }
+
+    // Enter TX mode 
+    nrf24l01_set_mode(NRF24L01_TX_MODE); 
+
+    // Write data to the device 
+    nrf24l01_send(
+        NRF24L01_CMD_W_RX_PL, 
+        send_buff, 
+        data_len); 
+
+    // Enter RX mode 
+    nrf24l01_set_mode(NRF24L01_RX_MODE); 
 }
 
 
@@ -433,24 +483,6 @@ void nrf24l01_set_rate(void)
 
 // Status read --> non-operation write 
 void nrf24l01_get_status(void)
-{
-    // 
-}
-
-
-// Set RX mode 
-// - Set PRIM_RX=1 
-// - Set CE=1 
-void nrf24l01_set_rx_mode(void)
-{
-    // 
-}
-
-
-// Set TX mode 
-// - Set PRIM_RX=0 
-// - Set CE=1 
-void nrf24l01_set_tx_mode(void)
 {
     // 
 }
@@ -478,17 +510,55 @@ void nrf24l01_set_standby(void)
 //=======================================================================================
 // Register functions 
 
+// Set mode 
+void nrf24l01_set_mode(
+    nrf24l01_mode_select_t mode)
+{
+    // Set CE=0 to get out of the current mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
+    
+    // Write PRIM_RX=mode to the device 
+    nrf24l01_driver_data.config.prim_rx = (uint8_t)mode; 
+    nrf24l01_config_reg_write(); 
+
+    // Set CE=1 to enter the new mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
+}
+
+
 // CONFIG register write 
 void nrf24l01_config_reg_write(void)
 {
-    // 
+    // Format the data to send 
+    uint8_t config = (nrf24l01_driver_data.config.unused_1    << SHIFT_7) | 
+                     (nrf24l01_driver_data.config.mask_rx_dr  << SHIFT_6) | 
+                     (nrf24l01_driver_data.config.mask_tx_ds  << SHIFT_5) | 
+                     (nrf24l01_driver_data.config.mask_max_rt << SHIFT_4) | 
+                     (nrf24l01_driver_data.config.en_crc      << SHIFT_3) | 
+                     (nrf24l01_driver_data.config.crco        << SHIFT_2) | 
+                     (nrf24l01_driver_data.config.pwr_up      << SHIFT_1) | 
+                     (nrf24l01_driver_data.config.prim_rx); 
+
+    // Send the data to the CONFIG register 
+    nrf24l01_send(
+        NRF24L01_CMD_W_REG & NRF24L01_REG_CONFIG, 
+        &config, 
+        BYTE_1); 
 }
 
 
 // RF_CH register write 
 void nrf24l01_rf_ch_reg_write(void)
 {
-    // 
+    // Format the data to send 
+    uint8_t rf_ch = (nrf24l01_driver_data.rf_ch.unused_1 << SHIFT_7) | 
+                    (nrf24l01_driver_data.rf_ch.rf_ch); 
+
+    // Send the data to the CONFIG register 
+    nrf24l01_send(
+        NRF24L01_CMD_W_REG & NRF24L01_REG_RF_CH, 
+        &rf_ch, 
+        BYTE_1); 
 }
 
 //=======================================================================================

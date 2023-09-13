@@ -57,6 +57,7 @@ extern "C" {
 #define NRF24L01_RF_CH_MASK 0x7F   // RF channel frequency mask 
 #define NRF24L01_RF_DR_MASK 0x01   // RF data rate bit mask 
 #define NRF24L01_DUMMY_WRITE 0xFF  // Dummy data for SPI write-read operations 
+#define NRF24L01_MAX_DATA_LEN 32   // Max data size that can be sent at a time 
 
 //=======================================================================================
 
@@ -77,6 +78,17 @@ typedef enum {
     NRF24L01_DR_2MBPS, 
     NRF24L01_DR_250KBPS 
 } nrf24l01_data_rate_t; 
+
+
+/**
+ * @brief 
+ * 
+ * @details 
+ */
+typedef enum {
+    NRF24L01_TX_MODE, 
+    NRF24L01_RX_MODE
+} nrf24l01_mode_select_t; 
 
 //=======================================================================================
 
@@ -100,9 +112,9 @@ typedef enum {
 void nrf24l01_init(
     SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio_ss, 
-    gpio_pin_num_t ss_pin, 
+    pin_selector_t ss_pin, 
     GPIO_TypeDef *gpio_en, 
-    gpio_pin_num_t en_pin, 
+    pin_selector_t en_pin, 
     nrf24l01_data_rate_t rate, 
     uint8_t rf_ch_freq); 
 
@@ -150,26 +162,6 @@ void nrf24l01_set_rate(void);
  * @details 
  */
 void nrf24l01_get_status(void); 
-
-
-/**
- * @brief Set RX mode 
- * 
- * @details 
- *          - Set PRIM_RX=1 
- *          - Set CE=1 
- */
-void nrf24l01_set_rx_mode(void); 
-
-
-/**
- * @brief Set TX mode 
- * 
- * @details 
- *          - Set PRIM_RX=0 
- *          - Set CE=1 
- */
-void nrf24l01_set_tx_mode(void); 
 
 
 /**
