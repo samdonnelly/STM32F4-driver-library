@@ -46,8 +46,6 @@
  * @details Divider used to set the baud rate. This value indicated the value that the 
  *          PCLK frequency will be divided by to get the baud rate. The init function 
  *          takes this as an argument. 
- * 
- * @see spi2_init
  */
 typedef enum {
     SPI_BR_FPCLK_2,         // F_PCLK/2 
@@ -122,8 +120,9 @@ typedef spi_com_status_t SPI_STATUS;
  */
 void spi_init(
     SPI_TypeDef *spi, 
-    GPIO_TypeDef *gpio, 
+    GPIO_TypeDef *gpio_sck, 
     pin_selector_t sck_pin, 
+    GPIO_TypeDef *gpio_data, 
     pin_selector_t miso_pin, 
     pin_selector_t mosi_pin, 
     spi_baud_rate_ctrl_t baud_rate_ctrl,

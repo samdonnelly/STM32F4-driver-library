@@ -91,18 +91,12 @@ void spi_bsy_wait(
 //=======================================================================================
 // Inititalization 
 
-//==============================================================
-// Pin information for SPI
-// - PB10: SCK
-// - PB14: MISO
-// - PB15: MOSI
-//==============================================================
-
 // SPI initialization 
 void spi_init(
     SPI_TypeDef *spi, 
-    GPIO_TypeDef *gpio, 
+    GPIO_TypeDef *gpio_sck, 
     pin_selector_t sck_pin, 
+    GPIO_TypeDef *gpio_data, 
     pin_selector_t miso_pin, 
     pin_selector_t mosi_pin, 
     spi_baud_rate_ctrl_t baud_rate_ctrl,
@@ -128,16 +122,16 @@ void spi_init(
     // Configure the pins for alternative functions 
     
     // SCK pin 
-    gpio_pin_init(gpio, sck_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-    gpio_afr(gpio, sck_pin, SET_5); 
+    gpio_pin_init(gpio_sck, sck_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    gpio_afr(gpio_sck, sck_pin, SET_5); 
 
     // MISO pin 
-    gpio_pin_init(gpio, miso_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-    gpio_afr(gpio, miso_pin, SET_5); 
+    gpio_pin_init(gpio_data, miso_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    gpio_afr(gpio_data, miso_pin, SET_5); 
 
     // MOSI pin 
-    gpio_pin_init(gpio, mosi_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-    gpio_afr(gpio, mosi_pin, SET_5); 
+    gpio_pin_init(gpio_data, mosi_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    gpio_afr(gpio_data, mosi_pin, SET_5); 
     
     //==================================================
 
