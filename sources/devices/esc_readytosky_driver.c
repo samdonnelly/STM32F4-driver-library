@@ -101,9 +101,6 @@ void esc_readytosky_init(
     driver_data_ptr->rev_cmd_lim = (rev_speed_lim < ESC_REV_MAX_TIME) ? 
                                    -ESC_MAX_THROTTLE : 
                                    ESC_CMD_SCALAR*((int16_t)rev_speed_lim - rev_int)/rev_slope; 
-
-    // Set PWM to "neutral" 
-    tim_ccr(driver_data_ptr->timer, ESC_NEUTRAL_TIME, driver_data_ptr->tim_channel); 
 }
 
 //=======================================================================================

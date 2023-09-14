@@ -36,9 +36,7 @@ uint8_t str_compare(
     msg += msg_start; 
     for (uint8_t i = 0; i < str_length; i++)
     {
-        if (*msg != *ref_msg) return FALSE; 
-        msg++; 
-        ref_msg++; 
+        if (*msg++ != *ref_msg++) return FALSE; 
     }
 
     return TRUE; 
