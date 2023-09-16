@@ -65,6 +65,15 @@
 #define FILTER_6_MSB 0xFC
 #define FILTER_7_MSB 0xFE
 
+#define FILTER_BIT_0 0x01 
+#define FILTER_BIT_1 0x02 
+#define FILTER_BIT_2 0x04 
+#define FILTER_BIT_3 0x08 
+#define FILTER_BIT_4 0x10 
+#define FILTER_BIT_5 0x20 
+#define FILTER_BIT_6 0x40 
+#define FILTER_BIT_7 0x80 
+
 // String formatting 
 #define NULL_CHAR   0    // '\0' == 0
 #define NL_CHAR     10   // '\n' == 10

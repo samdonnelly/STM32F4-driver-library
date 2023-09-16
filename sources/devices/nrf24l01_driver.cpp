@@ -196,6 +196,41 @@ void nrf24l01_config_reg_write(void);
  */
 void nrf24l01_rf_ch_reg_write(void); 
 
+
+/**
+ * @brief RF_SETUP register write 
+ * 
+ * @details 
+ */
+void nrf24l01_rf_set_reg_write(void); 
+
+
+/**
+ * @brief STATUS register read 
+ * 
+ * @details 
+ */
+void nrf24l01_status_reg_read(void); 
+
+
+/**
+ * @brief STATUS register state update 
+ * 
+ * @details 
+ * 
+ * @param status 
+ */
+void nrf24l01_status_reg_update(
+    uint8_t status); 
+
+
+/**
+ * @brief FIFO_STATUS register read 
+ * 
+ * @details 
+ */
+void nrf24l01_status_reg_read(void); 
+
 //=======================================================================================
 
 
@@ -336,7 +371,7 @@ void nrf24l01_receive(
 {
     // Local variables 
     uint8_t spi_status = SPI_OK; 
-    uint8_t status_reg = CLEAR;   // TODO update driver data record 
+    uint8_t status_reg = CLEAR; 
 
     // Select slave 
     spi_slave_select(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
@@ -357,6 +392,7 @@ void nrf24l01_receive(
     spi_slave_deselect(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
 
     // Update the status register data record 
+    nrf24l01_status_reg_update(status_reg); 
 
     // Update the driver status 
     nrf24l01_driver_data.driver_status |= spi_status; 
@@ -404,7 +440,7 @@ void nrf24l01_send(
 {
     // Local variables 
     uint8_t spi_status = SPI_OK; 
-    uint8_t status_reg = CLEAR;   // TODO update driver data record 
+    uint8_t status_reg = CLEAR; 
 
     // Select slave 
     spi_slave_select(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
@@ -424,6 +460,7 @@ void nrf24l01_send(
     spi_slave_deselect(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
 
     // Update the status register data record 
+    nrf24l01_status_reg_update(status_reg); 
 
     // Update the driver status 
     nrf24l01_driver_data.driver_status |= spi_status; 
@@ -554,11 +591,82 @@ void nrf24l01_rf_ch_reg_write(void)
     uint8_t rf_ch = (nrf24l01_driver_data.rf_ch.unused_1 << SHIFT_7) | 
                     (nrf24l01_driver_data.rf_ch.rf_ch); 
 
-    // Send the data to the CONFIG register 
+    // Send the data to the RF_CH register 
     nrf24l01_send(
         NRF24L01_CMD_W_REG & NRF24L01_REG_RF_CH, 
         &rf_ch, 
         BYTE_1); 
+}
+
+
+// RF_SETUP register write 
+void nrf24l01_rf_set_reg_write(void)
+{
+    // Format the data to send 
+    uint8_t rf_set = (nrf24l01_driver_data.rf_setup.cont_wave  << SHIFT_7) | 
+                     (nrf24l01_driver_data.rf_setup.unused_1   << SHIFT_6) | 
+                     (nrf24l01_driver_data.rf_setup.rf_dr_low  << SHIFT_5) | 
+                     (nrf24l01_driver_data.rf_setup.pll_lock   << SHIFT_4) | 
+                     (nrf24l01_driver_data.rf_setup.rf_dr_high << SHIFT_3) | 
+                     (nrf24l01_driver_data.rf_setup.rf_pwr     << SHIFT_1) | 
+                     (nrf24l01_driver_data.rf_setup.unused_2); 
+
+    // Send the data to the RF_SET register 
+    nrf24l01_send(
+        NRF24L01_CMD_W_REG & NRF24L01_REG_RF_SET, 
+        &rf_set, 
+        BYTE_1); 
+}
+
+
+// STATUS register read 
+void nrf24l01_status_reg_read(void)
+{
+    // Local variables 
+    uint8_t buff = CLEAR;   // dummy variable to pass to the receive function 
+
+    // Read the STATUS register and update the data record 
+    nrf24l01_receive(
+        NRF24L01_CMD_NOP, 
+        &buff, 
+        BYTE_0); 
+}
+
+
+// STATUS register state update 
+void nrf24l01_status_reg_update(
+    uint8_t status)
+{
+    // Sort the status register byte into the data record 
+    nrf24l01_driver_data.status_reg.unused_1 = (status & FILTER_BIT_7) >> SHIFT_7; 
+    nrf24l01_driver_data.status_reg.rx_dr    = (status & FILTER_BIT_6) >> SHIFT_6; 
+    nrf24l01_driver_data.status_reg.tx_ds    = (status & FILTER_BIT_5) >> SHIFT_5; 
+    nrf24l01_driver_data.status_reg.max_rt   = (status & FILTER_BIT_4) >> SHIFT_4; 
+    nrf24l01_driver_data.status_reg.rx_p_no  = (status & FILTER_4_LSB) >> SHIFT_1; 
+    nrf24l01_driver_data.status_reg.tx_full  = (status & FILTER_BIT_0); 
+}
+
+
+// FIFO_STATUS register read 
+void nrf24l01_status_reg_read(void)
+{
+    // Local variables 
+    uint8_t fifo_status_buff = CLEAR; 
+
+    // Read the STATUS register and update the data record 
+    nrf24l01_receive(
+        NRF24L01_CMD_R_REG & NRF24L01_REG_FIFO, 
+        &fifo_status_buff, 
+        BYTE_1); 
+
+    // Store the FIFO status register byte into the data record 
+    nrf24l01_driver_data.fifo_status.unused_1 = (fifo_status_buff & FILTER_BIT_7) >> SHIFT_7; 
+    nrf24l01_driver_data.fifo_status.tx_reuse = (fifo_status_buff & FILTER_BIT_6) >> SHIFT_6; 
+    nrf24l01_driver_data.fifo_status.tx_full  = (fifo_status_buff & FILTER_BIT_5) >> SHIFT_5; 
+    nrf24l01_driver_data.fifo_status.tx_empty = (fifo_status_buff & FILTER_BIT_4) >> SHIFT_4; 
+    nrf24l01_driver_data.fifo_status.unused_2 = (fifo_status_buff & FILTER_4_LSB) >> SHIFT_2; 
+    nrf24l01_driver_data.fifo_status.rx_full  = (fifo_status_buff & FILTER_BIT_1) >> SHIFT_1; 
+    nrf24l01_driver_data.fifo_status.rx_empty = (fifo_status_buff & FILTER_BIT_0); 
 }
 
 //=======================================================================================
