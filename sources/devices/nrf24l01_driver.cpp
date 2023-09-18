@@ -102,6 +102,7 @@ typedef struct nrf24l01_driver_data_s
     GPIO_TypeDef *gpio_en; 
     gpio_pin_num_t ss_pin; 
     gpio_pin_num_t en_pin; 
+    TIM_TypeDef *timer; 
 
     // Status info 
     // 'status' --> bit 0: spi status 
@@ -169,7 +170,7 @@ void nrf24l01_send(
  * 
  * @details 
  */
-void nrf24l01_set_mode(
+void nrf24l01_set_data_mode(
     nrf24l01_mode_select_t mode); 
 
 
@@ -230,8 +231,6 @@ void nrf24l01_fifo_status_reg_read(void);
 // Initialization 
 
 // Allow for power on reset state of the device to be run (100ms) 
-// Set frequency channel to operate on 
-// Set RF data rate 
 
 // nRF24L01 initialization 
 void nrf24l01_init(
@@ -240,6 +239,7 @@ void nrf24l01_init(
     pin_selector_t ss_pin, 
     GPIO_TypeDef *gpio_en, 
     pin_selector_t en_pin, 
+    TIM_TypeDef *timer, 
     nrf24l01_data_rate_t rate, 
     uint8_t rf_ch_freq)
 {
@@ -252,6 +252,7 @@ void nrf24l01_init(
     nrf24l01_driver_data.gpio_en = gpio_en; 
     nrf24l01_driver_data.ss_pin = (gpio_pin_num_t)(SET_BIT << ss_pin); 
     nrf24l01_driver_data.en_pin = (gpio_pin_num_t)(SET_BIT << en_pin); 
+    nrf24l01_driver_data.timer = timer; 
 
     // Driver status 
     nrf24l01_driver_data.driver_status = CLEAR; 
@@ -316,14 +317,18 @@ void nrf24l01_init(
     //===================================================
     // Configure the device by writing the settings to the device registers 
 
-    nrf24l01_config_reg_write(); 
+    // Delay to ensure power on reset state is cleared 
+    tim_delay_ms(nrf24l01_driver_data.timer, NRF24L01_PWR_ON_DELAY); 
+
+    // Configure the RF registers 
     nrf24l01_rf_ch_reg_write(); 
     nrf24l01_rf_set_reg_write(); 
 
-    //===================================================
+    // Set the CONFIG register and delay for the start up transition state 
+    nrf24l01_config_reg_write(); 
+    tim_delay_ms(nrf24l01_driver_data.timer, NRF24L01_START_DELAY); 
 
-    // Set the device into RX mode 
-    nrf24l01_set_mode(NRF24L01_RX_MODE); 
+    //===================================================
 }
 
 //=======================================================================================
@@ -462,73 +467,117 @@ void nrf24l01_send(
 //=======================================================================================
 // User functions 
 
-// Receive payload 
-void nrf24l01_receive_payload(void)
+// Data ready status 
+uint8_t nrf24l01_data_ready_status(void)
 {
-    // 
+    nrf24l01_status_reg_read(); 
+    return nrf24l01_driver_data.status_reg.rx_dr; 
+}
+
+
+// Receive payload 
+void nrf24l01_receive_payload(
+    const uint8_t *read_buff)
+{
+    // Local variables 
+    uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
+
+    // Check FIFO status before attempting a read 
+    if (nrf24l01_driver_data.status_reg.rx_dr)
+    {
+        // Read the first two bytes from the RX FIFO --> This is the data length 
+        // Convert the data length bytes to a useable number 
+        // Use the data length number to read the remaining RX FIFO data 
+
+        // Flush the RX FIFO to ensure old data is not read later 
+        nrf24l01_send(
+            NRF24L01_CMD_FLUSH_RX, 
+            &buff, 
+            BYTE_0); 
+
+        // Clear the RX_DR bit in the STATUS register 
+    }
 }
 
 
 // Send payload 
 void nrf24l01_send_payload(
-    const uint8_t *send_buff, 
-    uint8_t data_len)
+    const uint8_t *data_buff, 
+    uint8_t buff_len)
 {
-    // Cap the data length if it's too large 
-    if (data_len > NRF24L01_MAX_DATA_LEN) 
+    // Local variables 
+    uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
+    uint8_t pack_buff[NRF24L01_MAX_PACK_LEN]; 
+    uint8_t data_len = CLEAR; 
+
+    // Fill the packet buffer with the data to be sent 
+    for (uint8_t i = NRF24L01_DATA_SIZE_LEN; i < NRF24L01_MAX_PACK_LEN; i++)
     {
-        data_len = NRF24L01_MAX_DATA_LEN; 
+        if (*data_buff == NULL_CHAR)
+        {
+            break; 
+        }
+
+        pack_buff[i] = *data_buff++; 
+        data_len++; 
     }
 
+    // Write the data size to the packet buffer 
+    pack_buff[0] = (data_len / DIVIDE_10) + NUM_TO_CHAR_OFFSET; 
+    pack_buff[1] = (data_len % REMAINDER_10) + NUM_TO_CHAR_OFFSET; 
+
     // Enter TX mode 
-    nrf24l01_set_mode(NRF24L01_TX_MODE); 
+    nrf24l01_set_data_mode(NRF24L01_TX_MODE); 
 
     // Write data to the device 
     nrf24l01_send(
-        NRF24L01_CMD_W_RX_PL, 
-        send_buff, 
+        NRF24L01_CMD_W_TX_PL, 
+        pack_buff, 
         data_len); 
 
+    // Flush the TX FIFO to ensure no data sits in the FIFO 
+    nrf24l01_send(
+        NRF24L01_CMD_FLUSH_TX, 
+        &buff, 
+        BYTE_0); 
+
     // Exit TX mode / Enter RX mode 
-    nrf24l01_set_mode(NRF24L01_RX_MODE); 
+    nrf24l01_set_data_mode(NRF24L01_RX_MODE); 
 }
 
 
 // Set frequency channel 
-void nrf24l01_set_channel(void)
+void nrf24l01_set_channel(
+    uint8_t rf_ch_freq)
 {
-    // 
+    nrf24l01_driver_data.rf_ch.rf_ch = rf_ch_freq & NRF24L01_RF_CH_MASK; 
+    nrf24l01_rf_ch_reg_write(); 
 }
 
 
-// RF data rate set 
-void nrf24l01_set_rate(void)
+// Set RF data rate 
+void nrf24l01_set_rate(
+    nrf24l01_data_rate_t rate)
 {
-    // 
+    nrf24l01_driver_data.rf_setup.rf_dr_low = (rate >> SHIFT_1) & NRF24L01_RF_DR_MASK; 
+    nrf24l01_driver_data.rf_setup.rf_dr_high = rate & NRF24L01_RF_DR_MASK; 
+    nrf24l01_rf_set_reg_write(); 
 }
 
 
-// Status read --> non-operation write 
-void nrf24l01_get_status(void)
+// Set power mode 
+void nrf24l01_set_pwr_mode(
+    nrf24l01_pwr_mode_t pwr_mode)
 {
-    // 
-}
+    // Set CE=0 to enter standby-1 state 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
 
+    // Set PWR_UP=pwr_mode to the desired power mode 
+    nrf24l01_driver_data.config.pwr_up = (uint8_t)pwr_mode; 
+    nrf24l01_config_reg_write(); 
 
-// Low power mode 
-// - Make sure current data transfers are wrapped up. 
-// - Set CE=0 to enter standby-1 state. 
-// - Set PWR_UP=0 to enter power down state 
-void nrf24l01_set_low_pwr(void)
-{
-    // 
-}
-
-
-// Standby mode 
-void nrf24l01_set_standby(void)
-{
-    // 
+    // Delay to allow for Startup time (~1.5ms) --> Only needed for exiting power down state 
+    tim_delay_ms(nrf24l01_driver_data.timer, NRF24L01_START_DELAY); 
 }
 
 //=======================================================================================
@@ -538,24 +587,24 @@ void nrf24l01_set_standby(void)
 // Register functions 
 
 // Set mode 
-void nrf24l01_set_mode(
+void nrf24l01_set_data_mode(
     nrf24l01_mode_select_t mode)
 {
-    // Set CE=0 to get out of the current mode 
-    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
-    
     // Write PRIM_RX=mode to the device 
     nrf24l01_driver_data.config.prim_rx = (uint8_t)mode; 
     nrf24l01_config_reg_write(); 
 
-    // Set CE=1 to enter the new mode 
-    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
+    // Delay to clear the device settling state 
+    tim_delay_us(nrf24l01_driver_data.timer, NRF24L01_SETTLE_DELAY); 
 }
 
 
 // CONFIG register write 
 void nrf24l01_config_reg_write(void)
 {
+    // Set CE=0 to make sure the device is not in TX/RX mode when writing to registers 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
+
     // Format the data to send 
     uint8_t config = (nrf24l01_driver_data.config.unused_1    << SHIFT_7) | 
                      (nrf24l01_driver_data.config.mask_rx_dr  << SHIFT_6) | 
@@ -571,12 +620,18 @@ void nrf24l01_config_reg_write(void)
         NRF24L01_CMD_W_REG & NRF24L01_REG_CONFIG, 
         &config, 
         BYTE_1); 
+
+    // Set CE=1 to put the device back into it's previous data mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
 }
 
 
 // RF_CH register write 
 void nrf24l01_rf_ch_reg_write(void)
 {
+    // Set CE=0 to make sure the device is not in TX/RX mode when writing to registers 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
+
     // Format the data to send 
     uint8_t rf_ch = (nrf24l01_driver_data.rf_ch.unused_1 << SHIFT_7) | 
                     (nrf24l01_driver_data.rf_ch.rf_ch); 
@@ -586,12 +641,18 @@ void nrf24l01_rf_ch_reg_write(void)
         NRF24L01_CMD_W_REG & NRF24L01_REG_RF_CH, 
         &rf_ch, 
         BYTE_1); 
+
+    // Set CE=1 to put the device back into it's previous data mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
 }
 
 
 // RF_SETUP register write 
 void nrf24l01_rf_set_reg_write(void)
 {
+    // Set CE=0 to make sure the device is not in TX/RX mode when writing to registers 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
+
     // Format the data to send 
     uint8_t rf_set = (nrf24l01_driver_data.rf_setup.cont_wave  << SHIFT_7) | 
                      (nrf24l01_driver_data.rf_setup.unused_1   << SHIFT_6) | 
@@ -606,6 +667,9 @@ void nrf24l01_rf_set_reg_write(void)
         NRF24L01_CMD_W_REG & NRF24L01_REG_RF_SET, 
         &rf_set, 
         BYTE_1); 
+
+    // Set CE=1 to put the device back into it's previous data mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
 }
 
 
