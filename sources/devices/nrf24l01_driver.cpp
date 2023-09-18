@@ -21,14 +21,6 @@
 
 
 //=======================================================================================
-// Notes 
-
-// 0-10Mbps 4-wire SPI --> Max data rate of 10Mbps 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Register data 
 
 // CONFIG register 
@@ -229,7 +221,7 @@ void nrf24l01_status_reg_update(
  * 
  * @details 
  */
-void nrf24l01_status_reg_read(void); 
+void nrf24l01_fifo_status_reg_read(void); 
 
 //=======================================================================================
 
@@ -271,7 +263,7 @@ void nrf24l01_init(
     nrf24l01_driver_data.config.mask_max_rt = CLEAR_BIT; 
     nrf24l01_driver_data.config.en_crc = CLEAR_BIT; 
     nrf24l01_driver_data.config.crco = CLEAR_BIT; 
-    nrf24l01_driver_data.config.pwr_up = SET_BIT; 
+    nrf24l01_driver_data.config.pwr_up = SET_BIT;   // Set to start up the device 
     nrf24l01_driver_data.config.prim_rx = SET_BIT; 
 
     // RF_CH register 
@@ -322,13 +314,11 @@ void nrf24l01_init(
     //===================================================
 
     //===================================================
-    // Configure the device 
+    // Configure the device by writing the settings to the device registers 
 
-    // Set PWR_UP=1 to start up the device --> ~1.5ms to enter standby-1 mode 
-
-    // Write to device registers 
     nrf24l01_config_reg_write(); 
     nrf24l01_rf_ch_reg_write(); 
+    nrf24l01_rf_set_reg_write(); 
 
     //===================================================
 
@@ -499,7 +489,7 @@ void nrf24l01_send_payload(
         send_buff, 
         data_len); 
 
-    // Enter RX mode 
+    // Exit TX mode / Enter RX mode 
     nrf24l01_set_mode(NRF24L01_RX_MODE); 
 }
 
@@ -625,7 +615,7 @@ void nrf24l01_status_reg_read(void)
     // Local variables 
     uint8_t buff = CLEAR;   // dummy variable to pass to the receive function 
 
-    // Read the STATUS register and update the data record 
+    // Read the STATUS register and update the data record using a "No Operation" 
     nrf24l01_receive(
         NRF24L01_CMD_NOP, 
         &buff, 
@@ -648,12 +638,12 @@ void nrf24l01_status_reg_update(
 
 
 // FIFO_STATUS register read 
-void nrf24l01_status_reg_read(void)
+void nrf24l01_fifo_status_reg_read(void)
 {
     // Local variables 
     uint8_t fifo_status_buff = CLEAR; 
 
-    // Read the STATUS register and update the data record 
+    // Read the FIFO_STATUS register and update the data record 
     nrf24l01_receive(
         NRF24L01_CMD_R_REG & NRF24L01_REG_FIFO, 
         &fifo_status_buff, 

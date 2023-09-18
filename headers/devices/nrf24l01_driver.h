@@ -100,6 +100,9 @@ typedef enum {
  * @brief nRF24L01 initialization 
  * 
  * @details 
+ *          
+ *          NOTE: The device can run onto SPI up to 10Mbps. Ensure the SPI initialized has 
+ *                a speed less than or equal to this. 
  * 
  * @param spi : 
  * @param gpio_ss : 
