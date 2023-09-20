@@ -58,8 +58,7 @@ extern "C" {
 #define NRF24L01_RF_CH_MASK 0x7F    // RF channel frequency mask 
 #define NRF24L01_RF_DR_MASK 0x01    // RF data rate bit mask 
 #define NRF24L01_DUMMY_WRITE 0xFF   // Dummy data for SPI write-read operations 
-#define NRF24L01_DATA_SIZE_LEN 2    // Data size indicator length 
-#define NRF24L01_MAX_DATA_LEN 30    // Max data size that can be sent in one transaction 
+#define NRF24L01_DATA_SIZE_LEN 1    // Data size indicator length 
 #define NRF24L01_MAX_PACK_LEN 32    // Max data packet size (data size + data) 
 
 // Control 
@@ -155,6 +154,12 @@ void nrf24l01_init(
  * @brief Returns data ready status 
  * 
  * @details Data in RX FIFO 
+ *          
+ *          It's important to read data from the RX FIFO when it's available. Data will fill 
+ *          up in the RX FIFO and if the FIFO becomes full then new incoming data will be 
+ *          ignored/discarded/lost. 
+ * 
+ * @return uint8_t : RX FIFO data status 
  */
 uint8_t nrf24l01_data_ready_status(void); 
 
@@ -163,24 +168,49 @@ uint8_t nrf24l01_data_ready_status(void);
  * @brief Receive payload 
  * 
  * @details 
+ *          
+ *          NOTE: This function can only be properly used while not in low power mode. 
+ *          
+ *          NOTE: read_buff must be at least 31 bytes long. This is the longest possible 
+ *                data packet that can be received so if read_buff is smaller than this 
+ *                some data could be lost. 
  * 
- * @param read_buff 
+ * @param read_buff : buffer to store the received payload 
  */
 void nrf24l01_receive_payload(
-    const uint8_t *read_buff); 
+    uint8_t *read_buff); 
 
 
 /**
  * @brief Send payload 
  * 
  * @details 
+ *          
+ *          This function will put the device into TX mode just long enough to send the payload 
+ *          out. The device is not supposed to remain in TX mode for longer than 4ms so once a 
+ *          single packet has been sent the device is put back into RX mode. 
+ *          
+ *          The device has 3 separate 32-byte TX FIFOs. This means the data between each FIFO is 
+ *          not connected. When sending payloads you can send up to 32 bytes to the device at once 
+ *          because that is the capacity of a single FIFO. 
+ *          
+ *          This function determines the length of the payload passed in data_buff so that it 
+ *          doesn't have to be specified by the application. However, if the length of the 
+ *          payload is too large, not all the data will be sent (see note below). Determining 
+ *          payload length is handled here and not left to the application because if this 
+ *          device is used to send data that doesn't have a predefined length then the length of 
+ *          the data would have to be determined anyway. 
+ *          
+ *          NOTE: The max data length that can be sent at one time (one call of this function) 
+ *                is 31 bytes. The device FIFO supports 32 bytes but the first byte is used to 
+ *                store the data length. 
+ *          
+ *          NOTE: This function can only be properly used while not in low power mode. 
  * 
- * @param data_buff 
- * @param buff_len 
+ * @param data_buff : buffer that contains data to be sent 
  */
 void nrf24l01_send_payload(
-    const uint8_t *data_buff, 
-    uint8_t buff_len); 
+    const uint8_t *data_buff); 
 
 
 /**

@@ -106,8 +106,7 @@ typedef struct nrf24l01_driver_data_s
 
     // Status info 
     // 'status' --> bit 0: spi status 
-    //          --> bit 1: init status 
-    //          --> bits 2-7: not used 
+    //          --> bits 1-7: not used 
     uint8_t driver_status; 
 
     // Register data 
@@ -196,6 +195,14 @@ void nrf24l01_rf_ch_reg_write(void);
  * @details 
  */
 void nrf24l01_rf_set_reg_write(void); 
+
+
+/**
+ * @brief STATUS register write 
+ * 
+ * @details 
+ */
+void nrf24l01_status_reg_write(void); 
 
 
 /**
@@ -337,27 +344,6 @@ void nrf24l01_init(
 //=======================================================================================
 // Read and write 
 
-// Read 
-// - Write-read the first byte (command and status return) then dummy write and read the 
-//   remaining data 
-// RX mode 
-// - You can't go directly from RX to TX mode or vice versa, you have to go through the 
-//   standby-1 state. 
-// - From standby-1 state: 
-//   - Set PRIM_RX=1 
-//   - Set CE=1 
-//   - There will be a 130us delay (RX settling state) before reading data 
-// - Data can be read when available --> have to check the FIFO status to see if there 
-//   is data first. 
-// - When configured in the RX state then the device will automatically read incoming 
-//   data and store it in the RX FIFO. If the RX FIFO is full then new incoming data 
-//   will be discarded. 
-// RX mode 
-//   - Configure CE pin (GPIO output) 
-//   - To enter this mode, the PWR_UP bit, PRIM_RX bit and CE pin must be set high 
-//   - Valid received data is stored in the RX FIFO. If the RX FIFO is full then new data 
-//     coming in is discarded. 
-
 // Receive data from another transceiver 
 void nrf24l01_receive(
     uint8_t cmd, 
@@ -393,39 +379,6 @@ void nrf24l01_receive(
     nrf24l01_driver_data.driver_status |= spi_status; 
 }
 
-
-// Write 
-// - CSN left high normally, set low to start transaction and keep there until done. 
-// - If just writing and not reading the status that gets sent back by the device when 
-//   writing a command then maybe clear the controllers read buffer when done --> this 
-//   may already be handled by the SPI write function. 
-// TX mode 
-// - You can't go directly from RX to TX mode or vice versa, you have to go through the 
-//   standby-1 state. 
-// - From the standby-1 state: 
-//   - Load the TX FIFO with the data 
-//   - Set PRIM_RX=0 
-//   - Set CE=1 
-//   - There will be a 130us delay (TX settling state) before sending data 
-// - When in the TX state: 
-//   - If there is more data to be sent then reload the TX FIFO as data is sent out. 
-//   - Hold CE=1 until data is done being sent at which point set CE=0. 
-// - When wanting to exit the TX mode/state then set CE=0. 
-// TX mode 
-//   - Configure CE pin (GPIO output) 
-//   - To enter this mode, the PWR_UP bit must be set high, PRIM_RX set low, there must be 
-//     a payload in the TX FIFO and a high pulse on the CE for more than 10us. 
-//   - The device stays in this mode until it finished transmitting a packet. 
-//   - If CE is low then the device returns to standby-1 mode. 
-//   - If CE is high and the TX FIFO is not empty then it stays in TX mode. 
-//   - If CE is high and the TX FIFO is empty then the device enters standby-2 mode. 
-//   - TX mode should not be longer than 4ms 
-//     - This means data sent should be short or in short bursts. 
-//   - Make sure to pulse the CE pin instead of holding it high so 1 packet is sent at a 
-//     time and 4ms is not exceeded. 
-// - Data sheet says there are 3 separate 32-byte TX FIFOs so I don't think you can write more 
-//   than 32-bytes at a time. 
-// - After data is uploaded to the TX FIFO the device automatically sends the data out. 
 
 // Send data to another transceiver 
 void nrf24l01_send(
@@ -477,17 +430,26 @@ uint8_t nrf24l01_data_ready_status(void)
 
 // Receive payload 
 void nrf24l01_receive_payload(
-    const uint8_t *read_buff)
+    uint8_t *read_buff)
 {
     // Local variables 
+    uint8_t data_len = CLEAR; 
     uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
 
     // Check FIFO status before attempting a read 
     if (nrf24l01_driver_data.status_reg.rx_dr)
     {
-        // Read the first two bytes from the RX FIFO --> This is the data length 
-        // Convert the data length bytes to a useable number 
+        // Read the first byte from the RX FIFO --> This is the data length 
+        nrf24l01_receive(
+            NRF24L01_CMD_R_RX_PL, 
+            &data_len, 
+            BYTE_1); 
+
         // Use the data length number to read the remaining RX FIFO data 
+        nrf24l01_receive(
+            NRF24L01_CMD_R_RX_PL, 
+            read_buff, 
+            data_len); 
 
         // Flush the RX FIFO to ensure old data is not read later 
         nrf24l01_send(
@@ -496,19 +458,20 @@ void nrf24l01_receive_payload(
             BYTE_0); 
 
         // Clear the RX_DR bit in the STATUS register 
+        nrf24l01_driver_data.status_reg.rx_dr = CLEAR_BIT; 
+        nrf24l01_status_reg_write(); 
     }
 }
 
 
 // Send payload 
 void nrf24l01_send_payload(
-    const uint8_t *data_buff, 
-    uint8_t buff_len)
+    const uint8_t *data_buff)
 {
     // Local variables 
-    uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
     uint8_t pack_buff[NRF24L01_MAX_PACK_LEN]; 
     uint8_t data_len = CLEAR; 
+    uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
 
     // Fill the packet buffer with the data to be sent 
     for (uint8_t i = NRF24L01_DATA_SIZE_LEN; i < NRF24L01_MAX_PACK_LEN; i++)
@@ -523,8 +486,7 @@ void nrf24l01_send_payload(
     }
 
     // Write the data size to the packet buffer 
-    pack_buff[0] = (data_len / DIVIDE_10) + NUM_TO_CHAR_OFFSET; 
-    pack_buff[1] = (data_len % REMAINDER_10) + NUM_TO_CHAR_OFFSET; 
+    pack_buff[0] = data_len; 
 
     // Enter TX mode 
     nrf24l01_set_data_mode(NRF24L01_TX_MODE); 
@@ -535,14 +497,14 @@ void nrf24l01_send_payload(
         pack_buff, 
         data_len); 
 
+    // Exit TX mode / Enter RX mode 
+    nrf24l01_set_data_mode(NRF24L01_RX_MODE); 
+
     // Flush the TX FIFO to ensure no data sits in the FIFO 
     nrf24l01_send(
         NRF24L01_CMD_FLUSH_TX, 
         &buff, 
         BYTE_0); 
-
-    // Exit TX mode / Enter RX mode 
-    nrf24l01_set_data_mode(NRF24L01_RX_MODE); 
 }
 
 
@@ -666,6 +628,31 @@ void nrf24l01_rf_set_reg_write(void)
     nrf24l01_send(
         NRF24L01_CMD_W_REG & NRF24L01_REG_RF_SET, 
         &rf_set, 
+        BYTE_1); 
+
+    // Set CE=1 to put the device back into it's previous data mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
+}
+
+
+// STATUS register write 
+void nrf24l01_status_reg_write(void)
+{
+    // Set CE=0 to make sure the device is not in TX/RX mode when writing to registers 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
+
+    // Format the data to send 
+    uint8_t status_reg = (nrf24l01_driver_data.status_reg.unused_1 << SHIFT_7) | 
+                         (nrf24l01_driver_data.status_reg.rx_dr    << SHIFT_6) | 
+                         (nrf24l01_driver_data.status_reg.tx_ds    << SHIFT_5) | 
+                         (nrf24l01_driver_data.status_reg.max_rt   << SHIFT_4) | 
+                         (nrf24l01_driver_data.status_reg.rx_p_no  << SHIFT_1) | 
+                         (nrf24l01_driver_data.status_reg.tx_full); 
+
+    // Send the data to the STATUS register 
+    nrf24l01_send(
+        NRF24L01_CMD_W_REG & NRF24L01_REG_STATUS, 
+        &status_reg, 
         BYTE_1); 
 
     // Set CE=1 to put the device back into it's previous data mode 
