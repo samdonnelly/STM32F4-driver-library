@@ -471,22 +471,29 @@ void nrf24l01_send_payload(
     // Local variables 
     uint8_t pack_buff[NRF24L01_MAX_PACK_LEN]; 
     uint8_t data_len = CLEAR; 
+    uint8_t index = NRF24L01_DATA_SIZE_LEN; 
     uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
 
-    // Fill the packet buffer with the data to be sent 
-    for (uint8_t i = NRF24L01_DATA_SIZE_LEN; i < NRF24L01_MAX_PACK_LEN; i++)
+    // Fill the packet buffer with the data to be sent. The packet will be capped at a max of 
+    // 30 data bytes with one byte always being saves at the beginning and end of the packet for 
+    // the data length and a NULL termination, respectfully. The following loop counts the data 
+    // length and saves the data/payload into the packet buffer. If the data length is less than 
+    // 30 bytes then the loop ends early. 
+    while (index <= NRF24L01_MAX_DATA_LEN)
     {
+        data_len++; 
+
         if (*data_buff == NULL_CHAR)
         {
             break; 
         }
 
-        pack_buff[i] = *data_buff++; 
-        data_len++; 
+        pack_buff[index++] = *data_buff++; 
     }
 
-    // Write the data size to the packet buffer 
+    // Write the data size to the packet buffer and terminate the payload 
     pack_buff[0] = data_len; 
+    pack_buff[index] = NULL_CHAR; 
 
     // Enter TX mode 
     nrf24l01_set_data_mode(NRF24L01_TX_MODE); 

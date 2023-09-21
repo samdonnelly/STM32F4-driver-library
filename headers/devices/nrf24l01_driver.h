@@ -60,6 +60,7 @@ extern "C" {
 #define NRF24L01_DUMMY_WRITE 0xFF   // Dummy data for SPI write-read operations 
 #define NRF24L01_DATA_SIZE_LEN 1    // Data size indicator length 
 #define NRF24L01_MAX_PACK_LEN 32    // Max data packet size (data size + data) 
+#define NRF24L01_MAX_DATA_LEN 30    // Max user data length 
 
 // Control 
 #define NRF24L01_PWR_ON_DELAY 100   // Device power on reset delay (ms) 
@@ -171,7 +172,7 @@ uint8_t nrf24l01_data_ready_status(void);
  *          
  *          NOTE: This function can only be properly used while not in low power mode. 
  *          
- *          NOTE: read_buff must be at least 31 bytes long. This is the longest possible 
+ *          NOTE: read_buff must be at least 30 bytes long. This is the longest possible 
  *                data packet that can be received so if read_buff is smaller than this 
  *                some data could be lost. 
  * 
@@ -192,7 +193,8 @@ void nrf24l01_receive_payload(
  *          
  *          The device has 3 separate 32-byte TX FIFOs. This means the data between each FIFO is 
  *          not connected. When sending payloads you can send up to 32 bytes to the device at once 
- *          because that is the capacity of a single FIFO. 
+ *          because that is the capacity of a single FIFO. However, this driver caps the data size 
+ *          at 30 bytes to make room for data length and NULL termination bytes. 
  *          
  *          This function determines the length of the payload passed in data_buff so that it 
  *          doesn't have to be specified by the application. However, if the length of the 
@@ -202,8 +204,8 @@ void nrf24l01_receive_payload(
  *          the data would have to be determined anyway. 
  *          
  *          NOTE: The max data length that can be sent at one time (one call of this function) 
- *                is 31 bytes. The device FIFO supports 32 bytes but the first byte is used to 
- *                store the data length. 
+ *                is 30 bytes. The device FIFO supports 32 bytes but the first byte is used to 
+ *                store the data length and the data is terminated with a NULL character. 
  *          
  *          NOTE: This function can only be properly used while not in low power mode. 
  * 
