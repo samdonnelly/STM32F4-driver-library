@@ -204,10 +204,14 @@ void hc05_clear_status(void)
 #if HC05_AT_ENABLE
 
 // Change the module mode 
+// void hc05_change_mode(
+//     hc05_mode_t mode, 
+//     uart_baud_rate_t baud_rate, 
+//     uart_clock_speed_t clock_speed)
 void hc05_change_mode(
     hc05_mode_t mode, 
-    uart_baud_rate_t baud_rate, 
-    uart_clock_speed_t clock_speed)
+    uart_fractional_baud_t baud_frac, 
+    uart_mantissa_baud_t baud_mant)
 {
     // Turn the module off 
     hc05_off(); 
@@ -219,7 +223,8 @@ void hc05_change_mode(
     tim_delay_ms(hc05_data_record.timer, HC05_INIT_DELAY); 
 
     // Configure the baud rate depending on the requested mode 
-    uart_set_baud_rate(hc05_data_record.hc05_uart, baud_rate, clock_speed);  
+    // uart_set_baud_rate(hc05_data_record.hc05_uart, baud_rate, clock_speed); 
+    uart_set_baud_rate(hc05_data_record.hc05_uart, baud_frac, baud_mant); 
 
     // Turn the module on 
     hc05_on(); 

@@ -319,13 +319,17 @@ void hc05_clear_status(void);
  * @see hc05_send
  * 
  * @param mode : Moudle mode - either Data mode (default) or AT Command mode 
- * @param baud_rate : Baud rate of the selected mode 
- * @param clock_speed : Clock speed of the USART port used by the module 
+//  * @param baud_rate : Baud rate of the selected mode 
+//  * @param clock_speed : Clock speed of the USART port used by the module 
  */
+// void hc05_change_mode(
+//     hc05_mode_t mode, 
+//     uart_baud_rate_t baud_rate, 
+//     uart_clock_speed_t clock_speed); 
 void hc05_change_mode(
     hc05_mode_t mode, 
-    uart_baud_rate_t baud_rate, 
-    uart_clock_speed_t clock_speed); 
+    uart_fractional_baud_t baud_frac, 
+    uart_mantissa_baud_t baud_mant); 
 
 
 /**
