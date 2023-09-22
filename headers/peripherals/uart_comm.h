@@ -53,37 +53,37 @@ typedef enum {
 } uart_status_t;
 
 
-/**
- * @brief UART baud rate 
- * 
- * @details Passed as an argument to uart_baud_select that allows the user to define 
- *          the baud rate of UART. The baud rates here are defined from 0-X and not 
- *          the actual value of the baud rate. This method is chosen to prevent the need 
- *          to define large numbers for the baud rate. 
- */
-typedef enum {
-    UART_BAUD_9600,    // 9600 bits/s 
-    UART_BAUD_38400,   // 38400 bits/s 
-    UART_BAUD_115200   // 115200 bits/s 
-} uart_baud_rate_t;
+// /**
+//  * @brief UART baud rate 
+//  * 
+//  * @details Passed as an argument to uart_baud_select that allows the user to define 
+//  *          the baud rate of UART. The baud rates here are defined from 0-X and not 
+//  *          the actual value of the baud rate. This method is chosen to prevent the need 
+//  *          to define large numbers for the baud rate. 
+//  */
+// typedef enum {
+//     UART_BAUD_9600,    // 9600 bits/s 
+//     UART_BAUD_38400,   // 38400 bits/s 
+//     UART_BAUD_115200   // 115200 bits/s 
+// } uart_baud_rate_t;
 
 
-/**
- * @brief UART clock speed 
- * 
- * @details Specifies the speed of the clock for a given UART port. This is used as an 
- *          argument in the uart init function. Specifying the clock speed of the UART 
- *          being initialized helps with correctly setting the baud rate. The clock 
- *          speeds shown below are speeds that have been implemented already, however 
- *          others can be added. 
- * 
- * @see uart_fractional_baud_t
- * @see uart_mantissa_baud_t
- */
-typedef enum {
-    UART_CLOCK_42,   // APBX clock speed = 42 MHz 
-    UART_CLOCK_84    // APBX clock speed = 84 MHz 
-} uart_clock_speed_t; 
+// /**
+//  * @brief UART clock speed 
+//  * 
+//  * @details Specifies the speed of the clock for a given UART port. This is used as an 
+//  *          argument in the uart init function. Specifying the clock speed of the UART 
+//  *          being initialized helps with correctly setting the baud rate. The clock 
+//  *          speeds shown below are speeds that have been implemented already, however 
+//  *          others can be added. 
+//  * 
+//  * @see uart_fractional_baud_t
+//  * @see uart_mantissa_baud_t
+//  */
+// typedef enum {
+//     UART_CLOCK_42,   // APBX clock speed = 42 MHz 
+//     UART_CLOCK_84    // APBX clock speed = 84 MHz 
+// } uart_clock_speed_t; 
 
 /**
  * @brief Fractional portion of UART baud rate setup 
@@ -96,17 +96,30 @@ typedef enum {
  *          the decimal places. This enum defines the fraction portion for a given UART 
  *          clock speed and baud rate. Refer to the reference manual for more information.
  *          
- *          enum code: UART_(X_1)_(X_2)_FRAC 
+ *          enum code: UART_FRAC_(X_1)_(X_2)
  *              X_1: PCLK1 frquency (MHz) 
  *              X_2: baud rate (bps) 
+ *          
+ *          Baud rate description: 
+ *          - Passed as an argument to uart_baud_select that allows the user to define 
+ *            the baud rate of UART. The baud rates here are defined from 0-X and not 
+ *            the actual value of the baud rate. This method is chosen to prevent the need 
+ *            to define large numbers for the baud rate. 
+ *          
+ *          Clock speed description: 
+ *          - Specifies the speed of the clock for a given UART port. This is used as an 
+ *            argument in the uart init function. Specifying the clock speed of the UART 
+ *            being initialized helps with correctly setting the baud rate. The clock 
+ *            speeds shown below are speeds that have been implemented already, however 
+ *            others can be added. 
  * 
  * @see uart_mantissa_baud_t 
  */
 typedef enum {
-    UART_42_9600_FRAC = 0x7,
-    UART_84_9600_FRAC = 0xE,
-    UART_84_38400_FRAC = 0xB, 
-    UART_84_115200_FRAC = 0x9
+    UART_FRAC_42_9600 = 0x07,
+    UART_FRAC_84_9600 = 0x0E,
+    UART_FRAC_84_38400 = 0x0B, 
+    UART_FRAC_84_115200 = 0x09
 } uart_fractional_baud_t;
 
 
@@ -121,18 +134,55 @@ typedef enum {
  *          the decimal places. This enum defines the mantissa portion for a given UART 
  *          clock speed and baud rate. Refer to the reference manual for more information.
  *          
- *          enum code: UART_(X_1)_(X_2)_MANT 
- *              X_1: PCLK1 frquency (MHz)    
- *              X_2: Baud rate (bps)         
+ *          enum code: UART_MANT_(X_1)_(X_2) 
+ *              X_1: PCLK1 frquency (MHz) 
+ *              X_2: Baud rate (bps) 
+ *          
+ *          Baud rate description: 
+ *          - Passed as an argument to uart_baud_select that allows the user to define 
+ *            the baud rate of UART. The baud rates here are defined from 0-X and not 
+ *            the actual value of the baud rate. This method is chosen to prevent the need 
+ *            to define large numbers for the baud rate. 
+ *          
+ *          Clock speed description: 
+ *          - Specifies the speed of the clock for a given UART port. This is used as an 
+ *            argument in the uart init function. Specifying the clock speed of the UART 
+ *            being initialized helps with correctly setting the baud rate. The clock 
+ *            speeds shown below are speeds that have been implemented already, however 
+ *            others can be added. 
  * 
  * @see uart_fractional_baud_t
  */
 typedef enum {
-    UART_42_9600_MANT = 0x111,
-    UART_84_9600_MANT = 0x222, 
-    UART_84_38400_MANT = 0x88, 
-    UART_84_115200_MANT = 0x2D
+    UART_MANT_42_9600 = 0x111,
+    UART_MANT_84_9600 = 0x222, 
+    UART_MANT_84_38400 = 0x88, 
+    UART_MANT_84_115200 = 0x2D
 } uart_mantissa_baud_t;
+
+
+/**
+ * @brief UART transmission using DMA configuration 
+ * 
+ * @details 
+ */
+typedef enum 
+{
+    UART_DMA_TX_DISABLE, 
+    UART_DMA_TX_ENABLE 
+} uart_dma_tx_t; 
+
+
+/**
+ * @brief UART reception using DMA configuration 
+ * 
+ * @details 
+ */
+typedef enum 
+{
+    UART_DMA_RX_DISABLE, 
+    UART_DMA_RX_ENABLE 
+} uart_dma_rx_t; 
 
 
 /**
@@ -213,16 +263,29 @@ typedef uart_status_t UART_STATUS;
  * @param gpio : 
  * @param rx_pin : 
  * @param tx_pin : 
- * @param baud_rate : communication speed of the UART (bps) 
- * @param clock_speed : clock speed of the uart port being initialized 
+//  * @param baud_rate : communication speed of the UART (bps) 
+//  * @param clock_speed : clock speed of the uart port being initialized 
+ * @param tx_dma : 
+ * @param rx_dma : 
  */
+// void uart_init(
+//     USART_TypeDef *uart, 
+//     GPIO_TypeDef *gpio, 
+//     pin_selector_t rx_pin, 
+//     pin_selector_t tx_pin, 
+//     uart_baud_rate_t baud_rate, 
+//     uart_clock_speed_t clock_speed, 
+//     uart_dma_tx_t tx_dma, 
+//     uart_dma_rx_t rx_dma);
 void uart_init(
     USART_TypeDef *uart, 
     GPIO_TypeDef *gpio, 
     pin_selector_t rx_pin, 
     pin_selector_t tx_pin, 
-    uart_baud_rate_t baud_rate, 
-    uart_clock_speed_t clock_speed);
+    uart_fractional_baud_t baud_frac, 
+    uart_mantissa_baud_t baud_mant, 
+    uart_dma_tx_t tx_dma, 
+    uart_dma_rx_t rx_dma);
 
 
 /**
@@ -232,13 +295,17 @@ void uart_init(
  *          function but can also be called independently if the rate needs to change. 
  * 
  * @param uart : pointer to the UART port 
- * @param baud_rate : communication speed of the UART (bps) 
- * @param clock_speed : clock speed of the uart port being initialized 
+//  * @param baud_rate : communication speed of the UART (bps) 
+//  * @param clock_speed : clock speed of the uart port being initialized 
  */
+// void uart_set_baud_rate(
+//     USART_TypeDef *uart, 
+//     uart_baud_rate_t baud_rate,
+//     uart_clock_speed_t clock_speed); 
 void uart_set_baud_rate(
     USART_TypeDef *uart, 
-    uart_baud_rate_t baud_rate,
-    uart_clock_speed_t clock_speed); 
+    uart_fractional_baud_t baud_frac, 
+    uart_mantissa_baud_t baud_mant); 
 
 //=======================================================================================
 
