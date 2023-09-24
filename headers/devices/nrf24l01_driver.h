@@ -38,34 +38,57 @@ extern "C" {
 // Macros 
 
 // Commands 
-#define NRF24L01_CMD_R_REG 0x00     // Read command and status registers 
-#define NRF24L01_CMD_W_REG 0x20     // Write command and status registers 
-#define NRF24L01_CMD_R_RX_PL 0x61   // Read RX payload 
-#define NRF24L01_CMD_W_TX_PL 0xA0   // Write TX payload 
-#define NRF24L01_CMD_FLUSH_TX 0xE1  // Flush TX FIFO 
-#define NRF24L01_CMD_FLUSH_RX 0xE2  // Flush RX FIFO 
-#define NRF24L01_CMD_REUSE_TX 0x00  // Reuse TX payload 
-#define NRF24L01_CMD_NOP 0xFF       // No operation 
+#define NRF24L01_CMD_R_REG    0x00     // Read command and status registers 
+#define NRF24L01_CMD_W_REG    0x20     // Write command and status registers 
+#define NRF24L01_CMD_R_RX_PL  0x61     // Read RX payload 
+#define NRF24L01_CMD_W_TX_PL  0xA0     // Write TX payload 
+#define NRF24L01_CMD_FLUSH_TX 0xE1     // Flush TX FIFO 
+#define NRF24L01_CMD_FLUSH_RX 0xE2     // Flush RX FIFO 
+#define NRF24L01_CMD_REUSE_TX 0x00     // Reuse TX payload 
+#define NRF24L01_CMD_NOP      0xFF     // No operation 
 
 // Register addresses 
-#define NRF24L01_REG_CONFIG 0x00    // CONFIG register address 
-#define NRF24L01_REG_RF_CH 0x05     // RF_CH register address 
-#define NRF24L01_REG_RF_SET 0x06    // RF_SETUP register address 
-#define NRF24L01_REG_STATUS 0x07    // STATUS register address 
-#define NRF24L01_REG_FIFO 0x17      // FIFO_STATUS register address 
+#define NRF24L01_REG_CONFIG     0x00   // CONFIG register address 
+#define NRF24L01_REG_EN_AA      0x01   // EN_AA register address 
+#define NRF24L01_REG_EN_RXADDR  0x02   // EN_RXADDR register address 
+#define NRF24L01_REG_SETUP_AW   0x03   // SETUP_AW register address 
+#define NRF24L01_REG_SETUP_RETR 0x04   // SETUP_RETR register address 
+#define NRF24L01_REG_RF_CH      0x05   // RF_CH register address 
+#define NRF24L01_REG_RF_SET     0x06   // RF_SETUP register address 
+#define NRF24L01_REG_STATUS     0x07   // STATUS register address 
+#define NRF24L01_REG_OBSERVE_TX 0x08   // OBSERVE_TX register address 
+#define NRF24L01_REG_RPD        0x09   // RPD register address 
+#define NRF24L01_REG_RX_ADDR_P0 0x0A   // RX_ADDR_P0 register address 
+#define NRF24L01_REG_RX_ADDR_P1 0x0B   // RX_ADDR_P1 register address 
+#define NRF24L01_REG_RX_ADDR_P2 0x0C   // RX_ADDR_P2 register address 
+#define NRF24L01_REG_RX_ADDR_P3 0x0D   // RX_ADDR_P3 register address 
+#define NRF24L01_REG_RX_ADDR_P4 0x0E   // RX_ADDR_P4 register address 
+#define NRF24L01_REG_RX_ADDR_P5 0x0F   // RX_ADDR_P5 register address 
+#define NRF24L01_REG_TX_ADDR    0x10   // TX_ADDR register address 
+#define NRF24L01_REG_RX_PW_P0   0x11   // RX_PW_P0 register address 
+#define NRF24L01_REG_RX_PW_P1   0x12   // RX_PW_P1 register address 
+#define NRF24L01_REG_RX_PW_P2   0x13   // RX_PW_P2 register address 
+#define NRF24L01_REG_RX_PW_P3   0x14   // RX_PW_P3 register address 
+#define NRF24L01_REG_RX_PW_P4   0x15   // RX_PW_P4 register address 
+#define NRF24L01_REG_RX_PW_P5   0x16   // RX_PW_P5 register address 
+#define NRF24L01_REG_FIFO       0x17   // FIFO_STATUS register address 
+#define NRF24L01_REG_DYNPD      0x1C   // DYNPD register address 
+#define NRF24L01_REG_FEATURE    0x1D   // FEATURE register address 
+
+// Data pipe addresses 
 
 // Data handling 
-#define NRF24L01_RF_CH_MASK 0x7F    // RF channel frequency mask 
-#define NRF24L01_RF_DR_MASK 0x01    // RF data rate bit mask 
-#define NRF24L01_DUMMY_WRITE 0xFF   // Dummy data for SPI write-read operations 
-#define NRF24L01_DATA_SIZE_LEN 1    // Data size indicator length 
-#define NRF24L01_MAX_PACK_LEN 32    // Max data packet size (data size + data) 
-#define NRF24L01_MAX_DATA_LEN 30    // Max user data length 
+#define NRF24L01_RF_CH_MASK 0x7F       // RF channel frequency mask 
+#define NRF24L01_RF_DR_MASK 0x01       // RF data rate bit mask 
+#define NRF24L01_DUMMY_WRITE 0xFF      // Dummy data for SPI write-read operations 
+#define NRF24L01_DATA_SIZE_LEN 1       // Data size indicator length 
+#define NRF24L01_MAX_PACK_LEN 32       // Max data packet size (data size + data) 
+#define NRF24L01_MAX_DATA_LEN 30       // Max user data length 
 
 // Control 
-#define NRF24L01_PWR_ON_DELAY 100   // Device power on reset delay (ms) 
-#define NRF24L01_START_DELAY 2      // Device start up delay (ms) 
-#define NRF24L01_SETTLE_DELAY 130   // Device state settling time delay (us) 
+#define NRF24L01_PWR_ON_DELAY 100      // Device power on reset delay (ms) 
+#define NRF24L01_START_DELAY 2         // Device start up delay (ms) 
+#define NRF24L01_SETTLE_DELAY 130      // Device state settling time delay (us) 
 
 //=======================================================================================
 
@@ -249,6 +272,10 @@ void nrf24l01_set_rate(
  */
 void nrf24l01_set_pwr_mode(
     nrf24l01_pwr_mode_t pwr_mode); 
+
+
+// CONFIG register read 
+uint8_t nrf24l01_config_reg_read(void); 
 
 //=======================================================================================
 
