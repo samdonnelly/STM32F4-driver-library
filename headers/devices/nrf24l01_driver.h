@@ -75,8 +75,6 @@ extern "C" {
 #define NRF24L01_REG_DYNPD      0x1C   // DYNPD register address 
 #define NRF24L01_REG_FEATURE    0x1D   // FEATURE register address 
 
-// Data pipe addresses 
-
 // Data handling 
 #define NRF24L01_RF_CH_MASK 0x7F       // RF channel frequency mask 
 #define NRF24L01_RF_DR_MASK 0x01       // RF data rate bit mask 
@@ -233,45 +231,47 @@ void nrf24l01_receive_payload(
  *          NOTE: This function can only be properly used while not in low power mode. 
  * 
  * @param data_buff : buffer that contains data to be sent 
+ * @param data_len : 
  */
 void nrf24l01_send_payload(
-    const uint8_t *data_buff); 
+    const uint8_t *data_buff, 
+    uint8_t data_len); 
 
 
-/**
- * @brief Set frequency channel 
- * 
- * @details 
- * 
- * @param rf_ch_freq 
- */
-void nrf24l01_set_channel(
-    uint8_t rf_ch_freq); 
+// /**
+//  * @brief Set frequency channel 
+//  * 
+//  * @details 
+//  * 
+//  * @param rf_ch_freq 
+//  */
+// void nrf24l01_set_channel(
+//     uint8_t rf_ch_freq); 
 
 
-/**
- * @brief RF data rate set 
- * 
- * @details 
- * 
- * @param rate 
- */
-void nrf24l01_set_rate(
-    nrf24l01_data_rate_t rate); 
+// /**
+//  * @brief RF data rate set 
+//  * 
+//  * @details 
+//  * 
+//  * @param rate 
+//  */
+// void nrf24l01_set_rate(
+//     nrf24l01_data_rate_t rate); 
 
 
-/**
- * @brief Low power mode 
- * 
- * @details 
- *          Make sure current data transfers are wrapped up. 
- *          Set CE=0 to enter standby-1 state. 
- *          Set PWR_UP=0 to enter power down state 
- * 
- * @param pwr_mode 
- */
-void nrf24l01_set_pwr_mode(
-    nrf24l01_pwr_mode_t pwr_mode); 
+// /**
+//  * @brief Low power mode 
+//  * 
+//  * @details 
+//  *          Make sure current data transfers are wrapped up. 
+//  *          Set CE=0 to enter standby-1 state. 
+//  *          Set PWR_UP=0 to enter power down state 
+//  * 
+//  * @param pwr_mode 
+//  */
+// void nrf24l01_set_pwr_mode(
+//     nrf24l01_pwr_mode_t pwr_mode); 
 
 
 // CONFIG register read 
