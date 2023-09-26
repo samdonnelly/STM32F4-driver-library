@@ -83,7 +83,7 @@ extern "C" {
 #define NRF24L01_REG_RESET_SETUP_RETR 0x03   // SETUP_RETR register reset value 
 #define NRF24L01_REG_RESET_RF_CH      0x02   // RF_CH register reset value 
 #define NRF24L01_REG_RESET_RF_SET     0x0E   // RF_SETUP register reset value 
-#define NRF24L01_REG_RESET_STATUS     0x00   // STATUS register reset value 
+#define NRF24L01_REG_RESET_STATUS     0x70   // STATUS register reset value 
 #define NRF24L01_REG_RESET_OBSERVE_TX 0x00   // OBSERVE_TX register reset value 
 #define NRF24L01_REG_RESET_RPD        0x00   // RPD register reset value 
 #define NRF24L01_REG_RESET_RX_ADDR_P0 0xE7   // RX_ADDR_P0 register reset value 
@@ -104,6 +104,7 @@ extern "C" {
 #define NRF24L01_DATA_SIZE_LEN 1       // Data size indicator length 
 #define NRF24L01_MAX_PACK_LEN 32       // Max data packet size (data size + data) 
 #define NRF24L01_MAX_DATA_LEN 30       // Max user data length 
+#define NRF24l01_ADDR_WIDTH 5          // Address width 
 
 // Control 
 #define NRF24L01_PWR_ON_DELAY 100      // Device power on reset delay (ms) 
@@ -187,6 +188,22 @@ void nrf24l01_init(
     TIM_TypeDef *timer, 
     nrf24l01_data_rate_t rate, 
     uint8_t rf_ch_freq); 
+
+
+/**
+ * @brief Configure a device as PTX 
+ * 
+ * @details 
+ */
+void nrf24l01_ptx_config(void); 
+
+
+/**
+ * @brief Configure a device as PRX 
+ * 
+ * @details 
+ */
+void nrf24l01_prx_config(void); 
 
 //=======================================================================================
 
