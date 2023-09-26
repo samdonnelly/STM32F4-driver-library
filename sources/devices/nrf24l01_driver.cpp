@@ -20,12 +20,6 @@
 //=======================================================================================
 
 
-// TODO 
-// - Change power output in registers 
-// - Disable automatic acknowledge 
-// - Solder capacitor to supply pins 
-
-
 //=======================================================================================
 // Register data 
 
@@ -262,6 +256,14 @@ void nrf24l01_status_reg_update(
  */
 void nrf24l01_fifo_status_reg_read(void); 
 
+
+/**
+ * @brief Read all device registers to verify values 
+ * 
+ * @details 
+ */
+void nrf24l01_read_all_reg(void); 
+
 //=======================================================================================
 
 
@@ -291,8 +293,6 @@ void nrf24l01_init(
     uint8_t p5_addr_buff = 0xC6; 
 
     uint8_t pipe_addr_buff[5] = {0xB3, 0xB4, 0xB5, 0xB6, 0x05}; 
-
-    uint8_t addr_buff[5]; 
 
     //===================================================
     // Initialize data record 
@@ -354,6 +354,9 @@ void nrf24l01_init(
         MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     
     //===================================================
+
+    //==================================================
+    // Prep the device for initialization 
     
     // Set CE low to prevent entering an active (TX/RX) state 
     gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
@@ -370,6 +373,8 @@ void nrf24l01_init(
         NRF24L01_CMD_FLUSH_RX, 
         &reg_buff, 
         BYTE_0); 
+
+    //==================================================
 
     //==================================================
     // Set register values to default 
@@ -454,114 +459,6 @@ void nrf24l01_init(
     nrf24l01_reg_write(NRF24L01_CMD_W_REG | NRF24L01_REG_RX_PW_P1, &reg_buff); 
 
     //===================================================
-
-    //==================================================
-    // Read register values to confirm them 
-
-    // // CONFIG register read 
-    // reg_buff = nrf24l01_config_reg_read(); 
-    
-    // // EN_AA register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_EN_AA); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_EN_AA, &reg_buff, BYTE_1); 
-    
-    // // EN_RXADDR register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_EN_RXADDR); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_EN_RXADDR, &reg_buff, BYTE_1); 
-    
-    // // SETUP_AW register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_SETUP_AW); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_SETUP_AW, &reg_buff, BYTE_1); 
-    
-    // // SETUP_RETR register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_SETUP_RETR); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_SETUP_RETR, &reg_buff, BYTE_1); 
-    
-    // // RF_CH register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RF_CH); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RF_CH, &reg_buff, BYTE_1); 
-    
-    // // RF_SETUP register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RF_SET); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RF_SET, &reg_buff, BYTE_1); 
-    
-    // // // STATUS register read 
-    // // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_STATUS); 
-    // // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_STATUS, &reg_buff, BYTE_1); 
-    
-    // // OBSERVE_TX register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_OBSERVE_TX); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_OBSERVE_TX, &reg_buff, BYTE_1); 
-    
-    // // RPD register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RPD); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RPD, &reg_buff, BYTE_1); 
-    
-    // // RX_ADDR_P0 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P0); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P0, addr_buff, BYTE_5); 
-    
-    // // RX_ADDR_P1 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P1); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P1, addr_buff, BYTE_5); 
-    
-    // // RX_ADDR_P2 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P2); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P2, &reg_buff, BYTE_1); 
-    
-    // // RX_ADDR_P3 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P3); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P3, &reg_buff, BYTE_1); 
-    
-    // // RX_ADDR_P4 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P4); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P4, &reg_buff, BYTE_1); 
-    
-    // // RX_ADDR_P5 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P5); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P5, &reg_buff, BYTE_1); 
-    
-    // // TX_ADDR register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_TX_ADDR); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_TX_ADDR, addr_buff, BYTE_5); 
-    
-    // // RX_PW_P0 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P0); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P0, &reg_buff, BYTE_1); 
-    
-    // // RX_PW_P1 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P1); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P1, &reg_buff, BYTE_1); 
-    
-    // // RX_PW_P2 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P2); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P2, &reg_buff, BYTE_1); 
-    
-    // // RX_PW_P3 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P3); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P3, &reg_buff, BYTE_1); 
-    
-    // // RX_PW_P4 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P4); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P4, &reg_buff, BYTE_1); 
-    
-    // // RX_PW_P5 register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P5); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P5, &reg_buff, BYTE_1); 
-    
-    // // FIFO_STATUS register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_FIFO); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_FIFO, &reg_buff, BYTE_1); 
-    
-    // // DYNPD register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_DYNPD); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_DYNPD, &reg_buff, BYTE_1); 
-    
-    // // FEATURE register read 
-    // // reg_buff = nrf24l01_reg_read(NRF24L01_CMD_R_REG | NRF24L01_REG_FEATURE); 
-    // nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_FEATURE, &reg_buff, BYTE_1); 
-
-    //==================================================
 
     // Set CE high to enter RX mode 
     gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
@@ -1015,6 +912,98 @@ void nrf24l01_fifo_status_reg_read(void)
     nrf24l01_driver_data.fifo_status.unused_2 = (fifo_status_buff & FILTER_4_LSB) >> SHIFT_2; 
     nrf24l01_driver_data.fifo_status.rx_full  = (fifo_status_buff & FILTER_BIT_1) >> SHIFT_1; 
     nrf24l01_driver_data.fifo_status.rx_empty = (fifo_status_buff & FILTER_BIT_0); 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Test functions 
+
+// Read all device registers to verify values 
+void nrf24l01_read_all_reg(void)
+{
+    // Local variables 
+    uint8_t reg_buff = CLEAR; 
+    uint8_t addr_buff[5]; 
+
+    // CONFIG register read 
+    reg_buff = nrf24l01_config_reg_read(); 
+    
+    // EN_AA register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_EN_AA, &reg_buff, BYTE_1); 
+    
+    // EN_RXADDR register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_EN_RXADDR, &reg_buff, BYTE_1); 
+    
+    // SETUP_AW register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_SETUP_AW, &reg_buff, BYTE_1); 
+    
+    // SETUP_RETR register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_SETUP_RETR, &reg_buff, BYTE_1); 
+    
+    // RF_CH register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RF_CH, &reg_buff, BYTE_1); 
+    
+    // RF_SETUP register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RF_SET, &reg_buff, BYTE_1); 
+    
+    // STATUS register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_STATUS, &reg_buff, BYTE_1); 
+    
+    // OBSERVE_TX register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_OBSERVE_TX, &reg_buff, BYTE_1); 
+    
+    // RPD register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RPD, &reg_buff, BYTE_1); 
+    
+    // RX_ADDR_P0 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P0, addr_buff, BYTE_5); 
+    
+    // RX_ADDR_P1 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P1, addr_buff, BYTE_5); 
+    
+    // RX_ADDR_P2 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P2, &reg_buff, BYTE_1); 
+    
+    // RX_ADDR_P3 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P3, &reg_buff, BYTE_1); 
+    
+    // RX_ADDR_P4 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P4, &reg_buff, BYTE_1); 
+    
+    // RX_ADDR_P5 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_ADDR_P5, &reg_buff, BYTE_1); 
+    
+    // TX_ADDR register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_TX_ADDR, addr_buff, BYTE_5); 
+    
+    // RX_PW_P0 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P0, &reg_buff, BYTE_1); 
+    
+    // RX_PW_P1 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P1, &reg_buff, BYTE_1); 
+    
+    // RX_PW_P2 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P2, &reg_buff, BYTE_1); 
+    
+    // RX_PW_P3 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P3, &reg_buff, BYTE_1); 
+    
+    // RX_PW_P4 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P4, &reg_buff, BYTE_1); 
+    
+    // RX_PW_P5 register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_RX_PW_P5, &reg_buff, BYTE_1); 
+    
+    // FIFO_STATUS register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_FIFO, &reg_buff, BYTE_1); 
+    
+    // DYNPD register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_DYNPD, &reg_buff, BYTE_1); 
+    
+    // FEATURE register read 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | NRF24L01_REG_FEATURE, &reg_buff, BYTE_1); 
 }
 
 //=======================================================================================

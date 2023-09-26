@@ -75,6 +75,28 @@ extern "C" {
 #define NRF24L01_REG_DYNPD      0x1C   // DYNPD register address 
 #define NRF24L01_REG_FEATURE    0x1D   // FEATURE register address 
 
+// Register reset values (excludes read only bits) 
+#define NRF24L01_REG_RESET_CONFIG     0x08   // CONFIG register reset value 
+#define NRF24L01_REG_RESET_EN_AA      0x3F   // EN_AA register reset value 
+#define NRF24L01_REG_RESET_EN_RXADDR  0x03   // EN_RXADDR register reset value 
+#define NRF24L01_REG_RESET_SETUP_AW   0x03   // SETUP_AW register reset value 
+#define NRF24L01_REG_RESET_SETUP_RETR 0x03   // SETUP_RETR register reset value 
+#define NRF24L01_REG_RESET_RF_CH      0x02   // RF_CH register reset value 
+#define NRF24L01_REG_RESET_RF_SET     0x0E   // RF_SETUP register reset value 
+#define NRF24L01_REG_RESET_STATUS     0x00   // STATUS register reset value 
+#define NRF24L01_REG_RESET_OBSERVE_TX 0x00   // OBSERVE_TX register reset value 
+#define NRF24L01_REG_RESET_RPD        0x00   // RPD register reset value 
+#define NRF24L01_REG_RESET_RX_ADDR_P0 0xE7   // RX_ADDR_P0 register reset value 
+#define NRF24L01_REG_RESET_RX_ADDR_P1 0xC2   // RX_ADDR_P1 register reset value 
+#define NRF24L01_REG_RESET_RX_ADDR_P2 0xC3   // RX_ADDR_P2 register reset value 
+#define NRF24L01_REG_RESET_RX_ADDR_P3 0xC4   // RX_ADDR_P3 register reset value 
+#define NRF24L01_REG_RESET_RX_ADDR_P4 0xC5   // RX_ADDR_P4 register reset value 
+#define NRF24L01_REG_RESET_RX_ADDR_P5 0xC6   // RX_ADDR_P5 register reset value 
+#define NRF24L01_REG_RESET_TX_ADDR    0xE7   // TX_ADDR register reset value 
+#define NRF24L01_REG_RESET_RX_PW_PX   0x00   // RX_PW_PX (X-->0-5) register reset value 
+#define NRF24L01_REG_RESET_DYNPD      0x00   // DYNPD register reset value 
+#define NRF24L01_REG_RESET_FEATURE    0x00   // FEATURE register reset value 
+
 // Data handling 
 #define NRF24L01_RF_CH_MASK 0x7F       // RF channel frequency mask 
 #define NRF24L01_RF_DR_MASK 0x01       // RF data rate bit mask 
