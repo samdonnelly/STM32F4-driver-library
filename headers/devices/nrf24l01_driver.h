@@ -232,8 +232,9 @@ void nrf24l01_receive_payload(
  * 
  * @param data_buff : buffer that contains data to be sent 
  * @param data_len : 
+ * @return uint8_t : 
  */
-void nrf24l01_send_payload(
+uint8_t nrf24l01_send_payload(
     const uint8_t *data_buff, 
     uint8_t data_len); 
 
