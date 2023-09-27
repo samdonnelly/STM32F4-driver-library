@@ -270,8 +270,6 @@ static nrf24l01_driver_data_t nrf24l01_driver_data;
 //=======================================================================================
 // Initialization 
 
-// Allow for power on reset state of the device to be run (100ms) 
-
 // nRF24L01 initialization 
 void nrf24l01_init(
     SPI_TypeDef *spi, 
@@ -314,20 +312,25 @@ void nrf24l01_init(
     nrf24l01_driver_data.config.en_crc = CLEAR_BIT; 
     nrf24l01_driver_data.config.crco = CLEAR_BIT; 
     nrf24l01_driver_data.config.pwr_up = SET_BIT;   // Set to start up the device 
-    nrf24l01_driver_data.config.prim_rx = SET_BIT; 
+    nrf24l01_driver_data.config.prim_rx = SET_BIT;  // Default to RX mode 
 
     // RF_CH register 
     nrf24l01_driver_data.rf_ch.unused_1 = CLEAR_BIT; 
-    nrf24l01_driver_data.rf_ch.rf_ch = rf_ch_freq & NRF24L01_RF_CH_MASK; 
+    // nrf24l01_driver_data.rf_ch.rf_ch = rf_ch_freq & NRF24L01_RF_CH_MASK; 
+    nrf24l01_driver_data.rf_ch.rf_ch = NRF24L01_REG_RESET_RF_CH; 
 
     // RF_SETUP register 
     nrf24l01_driver_data.rf_setup.cont_wave = CLEAR_BIT; 
     nrf24l01_driver_data.rf_setup.unused_1 = CLEAR_BIT; 
-    nrf24l01_driver_data.rf_setup.rf_dr_low = (rate >> SHIFT_1) & NRF24L01_RF_DR_MASK; 
+    nrf24l01_driver_data.rf_setup.rf_dr_low = 
+        ((uint8_t)NRF24L01_DR_2MBPS >> SHIFT_1) & NRF24L01_RF_DR_MASK;   // Set to default 
     nrf24l01_driver_data.rf_setup.pll_lock = CLEAR_BIT; 
-    nrf24l01_driver_data.rf_setup.rf_dr_high = rate & NRF24L01_RF_DR_MASK; 
-    nrf24l01_driver_data.rf_setup.rf_pwr = SET_3; 
+    nrf24l01_driver_data.rf_setup.rf_dr_high = 
+        (uint8_t)NRF24L01_DR_2MBPS & NRF24L01_RF_DR_MASK;                // Set to default 
+    nrf24l01_driver_data.rf_setup.rf_pwr = SET_3;                        // Set to default 
     nrf24l01_driver_data.rf_setup.unused_2 = CLEAR_BIT; 
+    // nrf24l01_driver_data.rf_setup.rf_dr_low = (rate >> SHIFT_1) & NRF24L01_RF_DR_MASK; 
+    // nrf24l01_driver_data.rf_setup.rf_dr_high = rate & NRF24L01_RF_DR_MASK; 
 
     // STATUS register 
     nrf24l01_driver_data.status_reg.unused_1 = CLEAR_BIT; 
@@ -369,7 +372,7 @@ void nrf24l01_init(
     //==================================================
 
     //==================================================
-    // Set register values to default 
+    // Set register values to their reset/default value 
 
     nrf24l01_reg_write(NRF24L01_REG_CONFIG, NRF24L01_REG_RESET_CONFIG); 
     nrf24l01_reg_write(NRF24L01_REG_EN_AA, NRF24L01_REG_RESET_EN_AA); 
@@ -400,26 +403,22 @@ void nrf24l01_init(
     //==================================================
 
     //==================================================
-    // Configure register values in the device for the application 
+    // Configure registers to work for this driver 
 
-    reg_buff = nrf24l01_reg_read(NRF24L01_REG_EN_RXADDR); 
-
-    // Common between both PRX and PTX devices 
+    // These settings are ommon between both PRX and PTX devices. Registers not chaned here remain 
+    // at their default value or are changed selectively by setters. 
 
     // CONFIG - power up the device and default to a PRX device - delay for start up state 
     nrf24l01_config_reg_write(); 
     tim_delay_ms(nrf24l01_driver_data.timer, NRF24L01_START_DELAY); 
     
-    // EN_AA - disable auto acknowledgment - set 0 
+    // EN_AA - disable auto acknowledgment (Enhanced Shockburst TM not used) - set 0 
     nrf24l01_reg_write(NRF24L01_REG_EN_AA, NRF24L01_DISABLE_REG); 
     
-    // EN_RXADDR - disable data pipes - set 0 
+    // EN_RXADDR - disable data pipes for now - configured separately - set 0 
     nrf24l01_reg_write(NRF24L01_REG_EN_RXADDR, NRF24L01_DISABLE_REG); 
-    reg_buff = nrf24l01_reg_read(NRF24L01_REG_EN_RXADDR); 
     
-    // SETUP_AW - stays at the default of 5 bytes 
-    
-    // SETUP_RETR - not using auto acknowledgement so no need for retransmission - set 0 
+    // SETUP_RETR - disable retransmission because auto acknowledgement not used - set 0 
     nrf24l01_reg_write(NRF24L01_REG_SETUP_RETR, NRF24L01_DISABLE_REG); 
     
     // RF_CH - set the channel 
@@ -427,24 +426,8 @@ void nrf24l01_init(
     
     // RF_SET - set as needed - try different power outputs and data rates 
     nrf24l01_rf_set_reg_write(); 
-    
-    // STATUS - should be no need to write again 
-    
-    // OBSERVE_TX - nothing needed 
-    
-    // RDP - nothing needed 
-    
-    // RX_ADDR_PX - later 
-    
-    // TX_ADDR - later 
-    
-    // RX_PW_PX - later 
-    
-    // FIFO_STATUS - nothing to be done 
-    
-    // DYNPD - nothing needed 
-    
-    // FEATURE - nothing needed 
+
+    // FIFO_STATUS - read the FIFO status register to update the driver data record 
 
     //==================================================
 
@@ -452,6 +435,11 @@ void nrf24l01_init(
     gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
 }
 
+//=======================================================================================
+
+
+//=======================================================================================
+// User configuration functions 
 
 // Configure a devices PTX settings 
 void nrf24l01_ptx_config(
@@ -503,107 +491,142 @@ void nrf24l01_prx_config(
     gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
 }
 
+
+// Set RF channel 
+void nrf24l01_set_rf_channel(
+    uint8_t rf_ch_freq)
+{
+    // Set CE low to exit any active mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
+
+    // Update and write the channel 
+    nrf24l01_driver_data.rf_ch.rf_ch = rf_ch_freq & NRF24L01_RF_CH_MASK; 
+    nrf24l01_rf_ch_reg_write(); 
+
+    // Set CE high to enter back into an active mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
+}
+
+
+// Set data rate 
+void nrf24l01_set_rf_dr(
+    nrf24l01_data_rate_t rate)
+{
+    // Set CE low to exit any active mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
+
+    // Update and write the data rate 
+    nrf24l01_driver_data.rf_setup.rf_dr_low = (rate >> SHIFT_1) & NRF24L01_RF_DR_MASK; 
+    nrf24l01_driver_data.rf_setup.rf_dr_high = rate & NRF24L01_RF_DR_MASK; 
+    nrf24l01_rf_set_reg_write(); 
+
+    // Set CE high to enter back into an active mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
+}
+
+
+// Set power output 
+void nrf24l01_set_rf_pwr(
+    nrf24l01_rf_pwr_t rf_pwr)
+{
+    // Set CE low to exit any active mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
+    
+    // Update and write the power output 
+    nrf24l01_driver_data.rf_setup.rf_pwr = (uint8_t)rf_pwr; 
+    nrf24l01_rf_set_reg_write(); 
+
+    // Set CE high to enter back into an active mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
+}
+
+
+// Power down 
+void nrf24l01_pwr_down(void)
+{
+    // Set CE low to exit any active mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
+
+    // Set PWR_UP low to go to power down state 
+    nrf24l01_driver_data.config.pwr_up = (uint8_t)NRF24L01_PWR_DOWN; 
+    nrf24l01_config_reg_write(); 
+}
+
+
+// Power up 
+void nrf24l01_pwr_up(void)
+{   
+    // Set PWR_UP high to exit the power down state 
+    nrf24l01_driver_data.config.pwr_up = (uint8_t)NRF24L01_PWR_UP; 
+    nrf24l01_config_reg_write(); 
+
+    // Delay to allow for the startup state to pass (~1.5ms) 
+    tim_delay_ms(nrf24l01_driver_data.timer, NRF24L01_START_DELAY); 
+
+    // Set CE high to enter back into an active mode 
+    gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
+}
+
 //=======================================================================================
 
 
 //=======================================================================================
-// Write and read 
+// User status functions 
 
-// Send data to another transceiver 
-void nrf24l01_write(
-    uint8_t cmd, 
-    const uint8_t *send_buff, 
-    uint8_t data_len)
+// Data ready status 
+uint8_t nrf24l01_data_ready_status(
+    nrf24l01_data_pipe_t pipe_num)
+{
+    // Check if there is data in the RX FIFO and if the data belongs to the specified pipe 
+    // number. 
+    nrf24l01_status_reg_read(); 
+    return (nrf24l01_driver_data.status_reg.rx_dr && 
+           (nrf24l01_driver_data.status_reg.rx_p_no & (uint8_t)pipe_num)); 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// User data functions 
+
+// Receive payload 
+void nrf24l01_receive_payload(
+    uint8_t *read_buff, 
+    nrf24l01_data_pipe_t pipe_num)
 {
     // Local variables 
-    uint8_t spi_status = SPI_OK; 
-    uint8_t status_reg = CLEAR; 
+    // uint8_t data_len = CLEAR; 
+    uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
 
-    // Select slave 
-    spi_slave_select(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
+    // Check FIFO status before attempting a read 
+    if (nrf24l01_driver_data.status_reg.rx_dr && 
+       (nrf24l01_driver_data.status_reg.rx_p_no & (uint8_t)pipe_num))
+    {
+        // // Read the first byte from the RX FIFO --> This is the data length 
+        // nrf24l01_receive(
+        //     NRF24L01_CMD_R_RX_PL, 
+        //     &data_len, 
+        //     BYTE_1); 
 
-    // Write the command and read the status back from the slave 
-    spi_status = (uint8_t)spi_write_read(nrf24l01_driver_data.spi, 
-                                         cmd, 
-                                         &status_reg, 
-                                         BYTE_1); 
+        // // Use the data length number to read the remaining RX FIFO data 
+        // nrf24l01_receive(
+        //     NRF24L01_CMD_R_RX_PL, 
+        //     read_buff, 
+        //     data_len); 
 
-    // Write the data to the device 
-    spi_status = (uint8_t)spi_write(nrf24l01_driver_data.spi, 
-                                    send_buff, 
-                                    data_len); 
+        // Read the contents from the RX FIFO 
+        nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, NRF24L01_MAX_PAYLOAD_LEN); 
 
-    // Deselect slave 
-    spi_slave_deselect(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
+        // Flush the RX FIFO to ensure old data is not read later 
+        nrf24l01_write(NRF24L01_CMD_FLUSH_RX, &buff, BYTE_0); 
 
-    // Update the status register data record 
-    nrf24l01_status_reg_update(status_reg); 
-
-    // Update the driver status 
-    nrf24l01_driver_data.driver_status |= spi_status; 
+        // Clear the RX_DR bit in the STATUS register 
+        nrf24l01_status_reg_write(); 
+        nrf24l01_status_reg_read(); 
+    }
 }
 
-
-// Register write 
-void nrf24l01_reg_write(
-    uint8_t cmd, 
-    uint8_t reg_write)
-{
-    nrf24l01_write(NRF24L01_CMD_W_REG | cmd, &reg_write, BYTE_1); 
-}
-
-
-// Receive data from another transceiver 
-void nrf24l01_receive(
-    uint8_t cmd, 
-    uint8_t *rec_buff, 
-    uint8_t data_len)
-{
-    // Local variables 
-    uint8_t spi_status = SPI_OK; 
-    uint8_t status_reg = CLEAR; 
-
-    // Select slave 
-    spi_slave_select(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
-
-    // Write the command and read the status back from the slave 
-    spi_status = (uint8_t)spi_write_read(nrf24l01_driver_data.spi, 
-                                         cmd, 
-                                         &status_reg, 
-                                         BYTE_1); 
-
-    // Dummy write while reading the returned info 
-    spi_status = (uint8_t)spi_write_read(nrf24l01_driver_data.spi, 
-                                         NRF24L01_DUMMY_WRITE, 
-                                         rec_buff, 
-                                         data_len); 
-
-    // Deselect slave 
-    spi_slave_deselect(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
-
-    // Update the status register data record 
-    nrf24l01_status_reg_update(status_reg); 
-
-    // Update the driver status 
-    nrf24l01_driver_data.driver_status |= spi_status; 
-}
-
-
-// Register read 
-uint8_t nrf24l01_reg_read(
-    uint8_t cmd)
-{
-    // Read and return the register value 
-    uint8_t reg_read = CLEAR; 
-    nrf24l01_receive(NRF24L01_CMD_R_REG | cmd, &reg_read, BYTE_1); 
-    return reg_read; 
-}
-
-//=======================================================================================
-
-
-//=======================================================================================
-// User functions 
 
 // Send payload 
 uint8_t nrf24l01_send_payload(
@@ -686,96 +709,11 @@ uint8_t nrf24l01_send_payload(
     return result; 
 }
 
-
-// Data ready status 
-uint8_t nrf24l01_data_ready_status(
-    nrf24l01_data_pipe_t pipe_num)
-{
-    nrf24l01_status_reg_read(); 
-    return (nrf24l01_driver_data.status_reg.rx_dr && 
-           (nrf24l01_driver_data.status_reg.rx_p_no & (uint8_t)pipe_num)); 
-    // return nrf24l01_driver_data.status_reg.rx_dr; 
-}
-
-
-// Receive payload 
-void nrf24l01_receive_payload(
-    uint8_t *read_buff, 
-    nrf24l01_data_pipe_t pipe_num)
-{
-    // Local variables 
-    // uint8_t data_len = CLEAR; 
-    uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
-
-    // Check FIFO status before attempting a read 
-    // if (nrf24l01_driver_data.status_reg.rx_dr)
-    if (nrf24l01_driver_data.status_reg.rx_dr && 
-       (nrf24l01_driver_data.status_reg.rx_p_no & (uint8_t)pipe_num))
-    {
-        // // Read the first byte from the RX FIFO --> This is the data length 
-        // nrf24l01_receive(
-        //     NRF24L01_CMD_R_RX_PL, 
-        //     &data_len, 
-        //     BYTE_1); 
-
-        // // Use the data length number to read the remaining RX FIFO data 
-        // nrf24l01_receive(
-        //     NRF24L01_CMD_R_RX_PL, 
-        //     read_buff, 
-        //     data_len); 
-
-        // Read the contents from the RX FIFO 
-        nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, NRF24L01_MAX_PAYLOAD_LEN); 
-
-        // Flush the RX FIFO to ensure old data is not read later 
-        nrf24l01_write(NRF24L01_CMD_FLUSH_RX, &buff, BYTE_0); 
-
-        // Clear the RX_DR bit in the STATUS register 
-        nrf24l01_status_reg_write(); 
-        nrf24l01_status_reg_read(); 
-    }
-}
-
-
-// // Set frequency channel 
-// void nrf24l01_set_channel(
-//     uint8_t rf_ch_freq)
-// {
-//     nrf24l01_driver_data.rf_ch.rf_ch = rf_ch_freq & NRF24L01_RF_CH_MASK; 
-//     nrf24l01_rf_ch_reg_write(); 
-// }
-
-
-// // Set RF data rate 
-// void nrf24l01_set_rate(
-//     nrf24l01_data_rate_t rate)
-// {
-//     nrf24l01_driver_data.rf_setup.rf_dr_low = (rate >> SHIFT_1) & NRF24L01_RF_DR_MASK; 
-//     nrf24l01_driver_data.rf_setup.rf_dr_high = rate & NRF24L01_RF_DR_MASK; 
-//     nrf24l01_rf_set_reg_write(); 
-// }
-
-
-// // Set power mode 
-// void nrf24l01_set_pwr_mode(
-//     nrf24l01_pwr_mode_t pwr_mode)
-// {
-//     // Set CE=0 to enter standby-1 state 
-//     gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
-
-//     // Set PWR_UP=pwr_mode to the desired power mode 
-//     nrf24l01_driver_data.config.pwr_up = (uint8_t)pwr_mode; 
-//     nrf24l01_config_reg_write(); 
-
-//     // Delay to allow for Startup time (~1.5ms) --> Only needed for exiting power down state 
-//     tim_delay_ms(nrf24l01_driver_data.timer, NRF24L01_START_DELAY); 
-// }
-
 //=======================================================================================
 
 
 //=======================================================================================
-// Other functions 
+// Configuration functions 
 
 // Set mode 
 void nrf24l01_set_data_mode(
@@ -832,6 +770,13 @@ void nrf24l01_rf_ch_reg_write(void)
 }
 
 
+// RF_CH register read 
+uint8_t nrf24l01_rf_ch_reg_read(void)
+{
+    // 
+}
+
+
 // RF_SETUP register write 
 void nrf24l01_rf_set_reg_write(void)
 {
@@ -872,10 +817,7 @@ void nrf24l01_status_reg_read(void)
     uint8_t buff = CLEAR;   // dummy variable to pass to the receive function 
 
     // Read the STATUS register and update the data record using a "No Operation" 
-    nrf24l01_receive(
-        NRF24L01_CMD_NOP, 
-        &buff, 
-        BYTE_0); 
+    nrf24l01_receive(NRF24L01_CMD_NOP, &buff, BYTE_0); 
 }
 
 
@@ -907,6 +849,102 @@ void nrf24l01_fifo_status_reg_read(void)
     nrf24l01_driver_data.fifo_status.unused_2 = (fifo_status_buff & FILTER_4_LSB) >> SHIFT_2; 
     nrf24l01_driver_data.fifo_status.rx_full  = (fifo_status_buff & FILTER_BIT_1) >> SHIFT_1; 
     nrf24l01_driver_data.fifo_status.rx_empty = (fifo_status_buff & FILTER_BIT_0); 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and write 
+
+// Receive data from another transceiver 
+void nrf24l01_receive(
+    uint8_t cmd, 
+    uint8_t *rec_buff, 
+    uint8_t data_len)
+{
+    // Local variables 
+    uint8_t spi_status = SPI_OK; 
+    uint8_t status_reg = CLEAR; 
+
+    // Select slave 
+    spi_slave_select(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
+
+    // Write the command and read the status back from the slave 
+    spi_status = (uint8_t)spi_write_read(nrf24l01_driver_data.spi, 
+                                         cmd, 
+                                         &status_reg, 
+                                         BYTE_1); 
+
+    // Dummy write while reading the returned info 
+    spi_status = (uint8_t)spi_write_read(nrf24l01_driver_data.spi, 
+                                         NRF24L01_DUMMY_WRITE, 
+                                         rec_buff, 
+                                         data_len); 
+
+    // Deselect slave 
+    spi_slave_deselect(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
+
+    // Update the status register data record 
+    nrf24l01_status_reg_update(status_reg); 
+
+    // Update the driver status 
+    nrf24l01_driver_data.driver_status |= spi_status; 
+}
+
+
+// Register read 
+uint8_t nrf24l01_reg_read(
+    uint8_t cmd)
+{
+    // Read and return the register value 
+    uint8_t reg_read = CLEAR; 
+    nrf24l01_receive(NRF24L01_CMD_R_REG | cmd, &reg_read, BYTE_1); 
+    return reg_read; 
+}
+
+
+// Send data to another transceiver 
+void nrf24l01_write(
+    uint8_t cmd, 
+    const uint8_t *send_buff, 
+    uint8_t data_len)
+{
+    // Local variables 
+    uint8_t spi_status = SPI_OK; 
+    uint8_t status_reg = CLEAR; 
+
+    // Select slave 
+    spi_slave_select(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
+
+    // Write the command and read the status back from the slave 
+    spi_status = (uint8_t)spi_write_read(nrf24l01_driver_data.spi, 
+                                         cmd, 
+                                         &status_reg, 
+                                         BYTE_1); 
+
+    // Write the data to the device 
+    spi_status = (uint8_t)spi_write(nrf24l01_driver_data.spi, 
+                                    send_buff, 
+                                    data_len); 
+
+    // Deselect slave 
+    spi_slave_deselect(nrf24l01_driver_data.gpio_ss, nrf24l01_driver_data.ss_pin); 
+
+    // Update the status register data record 
+    nrf24l01_status_reg_update(status_reg); 
+
+    // Update the driver status 
+    nrf24l01_driver_data.driver_status |= spi_status; 
+}
+
+
+// Register write 
+void nrf24l01_reg_write(
+    uint8_t cmd, 
+    uint8_t reg_write)
+{
+    nrf24l01_write(NRF24L01_CMD_W_REG | cmd, &reg_write, BYTE_1); 
 }
 
 //=======================================================================================

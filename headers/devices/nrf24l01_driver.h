@@ -134,6 +134,19 @@ typedef enum {
 
 
 /**
+ * @brief 
+ * 
+ * @details 
+ */
+typedef enum {
+    NRF24L01_RF_PWR_18DBM, 
+    NRF24L01_RF_PWR_12DBM, 
+    NRF24L01_RF_PWR_6DBM, 
+    NRF24L01_RF_PWR_0DBM
+} nrf24l01_rf_pwr_t; 
+
+
+/**
  * @brief TX/RX mode setter 
  * 
  * @details Used to set the PRIM_RX bit to choose between TX and RX mode. 
@@ -150,8 +163,8 @@ typedef enum {
  * @details 
  */
 typedef enum {
-    NRF24L01_PWR_UP, 
-    NRF24L01_PWR_DOWN 
+    NRF24L01_PWR_DOWN, 
+    NRF24L01_PWR_UP 
 } nrf24l01_pwr_mode_t; 
 
 
@@ -205,6 +218,11 @@ void nrf24l01_init(
     nrf24l01_data_rate_t rate, 
     uint8_t rf_ch_freq); 
 
+//=======================================================================================
+
+
+//=======================================================================================
+// User configuration functions 
 
 /**
  * @brief Configure a device as PTX 
@@ -229,11 +247,61 @@ void nrf24l01_prx_config(
     const uint8_t *rx_addr, 
     nrf24l01_data_pipe_t pipe_num); 
 
+
+/**
+ * @brief Set frequency channel 
+ * 
+ * @details 
+ * 
+ * @param rf_ch_freq 
+ */
+void nrf24l01_set_rf_channel(
+    uint8_t rf_ch_freq); 
+
+
+/**
+ * @brief RF data rate set 
+ * 
+ * @details 
+ * 
+ * @param rate 
+ */
+void nrf24l01_set_rf_dr(
+    nrf24l01_data_rate_t rate); 
+
+
+/**
+ * @brief Set power output 
+ * 
+ * @param rf_pwr 
+ */
+void nrf24l01_set_rf_pwr(
+    nrf24l01_rf_pwr_t rf_pwr); 
+
+
+/**
+ * @brief Enter low power mode - power down 
+ * 
+ * @details 
+ *          Make sure current data transfers are wrapped up. 
+ *          Set CE=0 to enter standby-1 state. 
+ *          Set PWR_UP=0 to enter power down state 
+ */
+void nrf24l01_pwr_down(void); 
+
+
+/**
+ * @brief Exit low power mode - power up 
+ * 
+ * @details 
+ */
+void nrf24l01_pwr_up(void); 
+
 //=======================================================================================
 
 
 //=======================================================================================
-// User functions 
+// User status functions 
 
 /**
  * @brief Returns data ready status 
@@ -250,6 +318,11 @@ void nrf24l01_prx_config(
 uint8_t nrf24l01_data_ready_status(
     nrf24l01_data_pipe_t pipe_num); 
 
+//=======================================================================================
+
+
+//=======================================================================================
+// User data functions 
 
 /**
  * @brief Receive payload 
@@ -305,42 +378,11 @@ uint8_t nrf24l01_send_payload(
     const uint8_t *data_buff, 
     uint8_t data_len); 
 
-
-// /**
-//  * @brief Set frequency channel 
-//  * 
-//  * @details 
-//  * 
-//  * @param rf_ch_freq 
-//  */
-// void nrf24l01_set_channel(
-//     uint8_t rf_ch_freq); 
+//=======================================================================================
 
 
-// /**
-//  * @brief RF data rate set 
-//  * 
-//  * @details 
-//  * 
-//  * @param rate 
-//  */
-// void nrf24l01_set_rate(
-//     nrf24l01_data_rate_t rate); 
-
-
-// /**
-//  * @brief Low power mode 
-//  * 
-//  * @details 
-//  *          Make sure current data transfers are wrapped up. 
-//  *          Set CE=0 to enter standby-1 state. 
-//  *          Set PWR_UP=0 to enter power down state 
-//  * 
-//  * @param pwr_mode 
-//  */
-// void nrf24l01_set_pwr_mode(
-//     nrf24l01_pwr_mode_t pwr_mode); 
-
+//=======================================================================================
+// Status functions 
 
 // CONFIG register read 
 uint8_t nrf24l01_config_reg_read(void); 
