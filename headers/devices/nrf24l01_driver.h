@@ -102,7 +102,7 @@ extern "C" {
 #define NRF24L01_RF_DR_MASK 0x01       // RF data rate bit mask 
 #define NRF24L01_DUMMY_WRITE 0xFF      // Dummy data for SPI write-read operations 
 #define NRF24L01_DATA_SIZE_LEN 1       // Data size indicator length 
-#define NRF24L01_MAX_PACK_LEN 32       // Max data packet size (data size + data) 
+#define NRF24L01_MAX_PAYLOAD_LEN 32    // Max data packet size (data size + data) 
 #define NRF24L01_MAX_DATA_LEN 30       // Max user data length 
 #define NRF24l01_ADDR_WIDTH 5          // Address width 
 
@@ -110,6 +110,7 @@ extern "C" {
 #define NRF24L01_PWR_ON_DELAY 100      // Device power on reset delay (ms) 
 #define NRF24L01_START_DELAY 2         // Device start up delay (ms) 
 #define NRF24L01_SETTLE_DELAY 130      // Device state settling time delay (us) 
+#define NRF24L01_DISABLE_REG 0x00      // Disable settings in a register 
 
 //=======================================================================================
 
@@ -153,6 +154,21 @@ typedef enum {
     NRF24L01_PWR_DOWN 
 } nrf24l01_pwr_mode_t; 
 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ */
+typedef enum {
+    NRF24L01_DP_0, 
+    NRF24L01_DP_1, 
+    NRF24L01_DP_2, 
+    NRF24L01_DP_3, 
+    NRF24L01_DP_4, 
+    NRF24L01_DP_5 
+} nrf24l01_data_pipe_t; 
+
 //=======================================================================================
 
 
@@ -194,16 +210,24 @@ void nrf24l01_init(
  * @brief Configure a device as PTX 
  * 
  * @details 
+ * 
+ * @param tx_addr : 
  */
-void nrf24l01_ptx_config(void); 
+void nrf24l01_ptx_config(
+    const uint8_t *tx_addr); 
 
 
 /**
  * @brief Configure a device as PRX 
  * 
  * @details 
+ * 
+ * @param rx_addr 
+ * @param pipe_num 
  */
-void nrf24l01_prx_config(void); 
+void nrf24l01_prx_config(
+    const uint8_t *rx_addr, 
+    nrf24l01_data_pipe_t pipe_num); 
 
 //=======================================================================================
 
@@ -220,9 +244,11 @@ void nrf24l01_prx_config(void);
  *          up in the RX FIFO and if the FIFO becomes full then new incoming data will be 
  *          ignored/discarded/lost. 
  * 
+ * @param pipe_num : 
  * @return uint8_t : RX FIFO data status 
  */
-uint8_t nrf24l01_data_ready_status(void); 
+uint8_t nrf24l01_data_ready_status(
+    nrf24l01_data_pipe_t pipe_num); 
 
 
 /**
@@ -237,9 +263,11 @@ uint8_t nrf24l01_data_ready_status(void);
  *                some data could be lost. 
  * 
  * @param read_buff : buffer to store the received payload 
+ * @param pipe_num : 
  */
 void nrf24l01_receive_payload(
-    uint8_t *read_buff); 
+    uint8_t *read_buff, 
+    nrf24l01_data_pipe_t pipe_num); 
 
 
 /**
@@ -316,6 +344,14 @@ uint8_t nrf24l01_send_payload(
 
 // CONFIG register read 
 uint8_t nrf24l01_config_reg_read(void); 
+
+
+/**
+ * @brief Read all device registers to verify values 
+ * 
+ * @details 
+ */
+void nrf24l01_read_all_reg(void); 
 
 //=======================================================================================
 
