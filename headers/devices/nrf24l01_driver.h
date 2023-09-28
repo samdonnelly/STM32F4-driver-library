@@ -205,8 +205,6 @@ typedef enum {
  * @param gpio_en : 
  * @param en_pin : 
  * @param timer : 
- * @param rate : 
- * @param rf_ch_freq : 
  */
 void nrf24l01_init(
     SPI_TypeDef *spi, 
@@ -214,9 +212,7 @@ void nrf24l01_init(
     pin_selector_t ss_pin, 
     GPIO_TypeDef *gpio_en, 
     pin_selector_t en_pin, 
-    TIM_TypeDef *timer, 
-    nrf24l01_data_rate_t rate, 
-    uint8_t rf_ch_freq); 
+    TIM_TypeDef *timer); 
 
 //=======================================================================================
 
@@ -318,6 +314,56 @@ void nrf24l01_pwr_up(void);
 uint8_t nrf24l01_data_ready_status(
     nrf24l01_data_pipe_t pipe_num); 
 
+
+/**
+ * @brief Get power mode 
+ * 
+ * @details 
+ * 
+ * @return nrf24l01_pwr_mode_t 
+ */
+nrf24l01_pwr_mode_t nrf24l01_get_pwr_mode(void); 
+
+
+/**
+ * @brief Get active mode 
+ * 
+ * @details 
+ * 
+ * @return nrf24l01_mode_select_t 
+ */
+nrf24l01_mode_select_t nrf24l01_get_mode(void); 
+
+
+/**
+ * @brief Get RF channel 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t nrf24l01_get_rf_ch(void); 
+
+
+/**
+ * @brief Get RF data rate 
+ * 
+ * @details 
+ * 
+ * @return nrf24l01_data_rate_t 
+ */
+nrf24l01_data_rate_t nrf24l01_get_rf_dr(void); 
+
+
+/**
+ * @brief Get power output 
+ * 
+ * @details 
+ * 
+ * @return nrf24l01_rf_pwr_t 
+ */
+nrf24l01_rf_pwr_t nrf24l01_get_rf_pwr(void); 
+
 //=======================================================================================
 
 
@@ -377,23 +423,6 @@ void nrf24l01_receive_payload(
 uint8_t nrf24l01_send_payload(
     const uint8_t *data_buff, 
     uint8_t data_len); 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Status functions 
-
-// CONFIG register read 
-uint8_t nrf24l01_config_reg_read(void); 
-
-
-/**
- * @brief Read all device registers to verify values 
- * 
- * @details 
- */
-void nrf24l01_read_all_reg(void); 
 
 //=======================================================================================
 
