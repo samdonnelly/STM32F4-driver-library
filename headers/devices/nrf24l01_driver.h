@@ -106,6 +106,10 @@ extern "C" {
 #define NRF24L01_MAX_DATA_LEN 30       // Max user data length 
 #define NRF24l01_ADDR_WIDTH 5          // Address width 
 
+// Timing 
+#define NRF24L01_CE_TX_DELAY 20        // Time CE is held high in TX (us) 
+#define NRF24L01_TX_TIMEOUT 0x0FFF     // Max number of times to check for successful transmission 
+
 // Control 
 #define NRF24L01_PWR_ON_DELAY 100      // Device power on reset delay (ms) 
 #define NRF24L01_START_DELAY 2         // Device start up delay (ms) 
@@ -417,12 +421,10 @@ void nrf24l01_receive_payload(
  *          NOTE: This function can only be properly used while not in low power mode. 
  * 
  * @param data_buff : buffer that contains data to be sent 
- * @param data_len : 
  * @return uint8_t : 
  */
 uint8_t nrf24l01_send_payload(
-    const uint8_t *data_buff, 
-    uint8_t data_len); 
+    const uint8_t *data_buff); 
 
 //=======================================================================================
 

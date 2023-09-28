@@ -346,7 +346,6 @@ void nrf24l01_init(
 
     // RF_CH register 
     nrf24l01_driver_data.rf_ch.unused_1 = CLEAR_BIT; 
-    // nrf24l01_driver_data.rf_ch.rf_ch = rf_ch_freq & NRF24L01_RF_CH_MASK; 
     nrf24l01_driver_data.rf_ch.rf_ch = NRF24L01_REG_RESET_RF_CH; 
 
     // RF_SETUP register 
@@ -359,8 +358,6 @@ void nrf24l01_init(
         (uint8_t)NRF24L01_DR_2MBPS & NRF24L01_RF_DR_MASK;                // Set to default 
     nrf24l01_driver_data.rf_setup.rf_pwr = SET_3;                        // Set to default 
     nrf24l01_driver_data.rf_setup.unused_2 = CLEAR_BIT; 
-    // nrf24l01_driver_data.rf_setup.rf_dr_low = (rate >> SHIFT_1) & NRF24L01_RF_DR_MASK; 
-    // nrf24l01_driver_data.rf_setup.rf_dr_high = rate & NRF24L01_RF_DR_MASK; 
 
     // STATUS register 
     nrf24l01_driver_data.status_reg.unused_1 = CLEAR_BIT; 
@@ -598,8 +595,6 @@ void nrf24l01_pwr_up(void)
 //=======================================================================================
 // User getter functions 
 
-// TODO check what the state of the CE pin needs to be in to read from registers 
-
 // Data ready status 
 uint8_t nrf24l01_data_ready_status(
     nrf24l01_data_pipe_t pipe_num)
@@ -664,27 +659,21 @@ void nrf24l01_receive_payload(
     nrf24l01_data_pipe_t pipe_num)
 {
     // Local variables 
-    // uint8_t data_len = CLEAR; 
+    uint8_t data_len = CLEAR; 
     uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
 
     // Check FIFO status before attempting a read 
     if (nrf24l01_driver_data.status_reg.rx_dr && 
        (nrf24l01_driver_data.status_reg.rx_p_no & (uint8_t)pipe_num))
     {
-        // // Read the first byte from the RX FIFO --> This is the data length 
-        // nrf24l01_receive(
-        //     NRF24L01_CMD_R_RX_PL, 
-        //     &data_len, 
-        //     BYTE_1); 
+        // Read the first byte from the RX FIFO --> This is the data length 
+        nrf24l01_receive(NRF24L01_CMD_R_RX_PL, &data_len, BYTE_1); 
 
-        // // Use the data length number to read the remaining RX FIFO data 
-        // nrf24l01_receive(
-        //     NRF24L01_CMD_R_RX_PL, 
-        //     read_buff, 
-        //     data_len); 
+        // Use the data length number to read the remaining RX FIFO data 
+        nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, data_len); 
 
-        // Read the contents from the RX FIFO 
-        nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, NRF24L01_MAX_PAYLOAD_LEN); 
+        // // Read the contents from the RX FIFO 
+        // nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, NRF24L01_MAX_PAYLOAD_LEN); 
 
         // Flush the RX FIFO to ensure old data is not read later 
         nrf24l01_write(NRF24L01_CMD_FLUSH_RX, &buff, BYTE_0); 
@@ -698,38 +687,36 @@ void nrf24l01_receive_payload(
 
 // Send payload 
 uint8_t nrf24l01_send_payload(
-    const uint8_t *data_buff, 
-    uint8_t data_len)
+    const uint8_t *data_buff)
 {
     // Local variables 
-    // uint8_t pack_buff[NRF24L01_MAX_PAYLOAD_LEN]; 
-    // uint8_t data_len = CLEAR; 
-    // uint8_t index = NRF24L01_DATA_SIZE_LEN; 
+    uint8_t pack_buff[NRF24L01_MAX_PAYLOAD_LEN]; 
+    uint8_t data_len = CLEAR; 
+    uint8_t index = NRF24L01_DATA_SIZE_LEN; 
+    uint8_t tx_status = CLEAR; 
+    uint16_t time_out = NRF24L01_TX_TIMEOUT; 
     uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
-    uint8_t result = CLEAR; 
-    uint16_t time_out = 0xFFFF; 
 
-    // // Fill the packet buffer with the data to be sent. The packet will be capped at a max of 
-    // // 30 data bytes with one byte always being saves at the beginning and end of the packet for 
-    // // the data length and a NULL termination, respectfully. The following loop counts the data 
-    // // length and saves the data/payload into the packet buffer. If the data length is less than 
-    // // 30 bytes then the loop ends early. 
-    // while (index <= NRF24L01_MAX_DATA_LEN)
-    // {
-    //     data_len++; 
+    // Fill the packet buffer with the data to be sent. The packet will be capped at a max of 
+    // 30 data bytes with one byte always being saves at the beginning and end of the packet for 
+    // the data length and a NULL termination, respectfully. The following loop counts the data 
+    // length and saves the data/payload into the packet buffer. If the data length is less than 
+    // 30 bytes then the loop ends early. 
+    while (index <= NRF24L01_MAX_DATA_LEN)
+    {
+        data_len++; 
 
-    //     if (*data_buff == NULL_CHAR)
-    //     {
-    //         break; 
-    //     }
+        if (*data_buff == NULL_CHAR)
+        {
+            break; 
+        }
 
-    //     pack_buff[index++] = *data_buff++; 
-    // }
+        pack_buff[index++] = *data_buff++; 
+    }
 
-    // // Write the data size to the packet buffer and terminate the payload 
-    // pack_buff[0] = data_len; 
-    // pack_buff[index] = NULL_CHAR; 
-
+    // Write the data size to the first position of the packet buffer and terminate the payload 
+    pack_buff[0] = data_len; 
+    pack_buff[index] = NULL_CHAR; 
     
     // Set CE low to exit RX mode 
     gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
@@ -738,22 +725,16 @@ uint8_t nrf24l01_send_payload(
     nrf24l01_set_data_mode(NRF24L01_TX_MODE); 
 
     // Write the payload to the TX FIFO 
-    nrf24l01_write(NRF24L01_CMD_W_TX_PL, data_buff, data_len); 
-    // nrf24l01_write(
-    //     NRF24L01_CMD_W_TX_PL, 
-    //     pack_buff, 
-    //     data_len); 
+    nrf24l01_write(NRF24L01_CMD_W_TX_PL, pack_buff, data_len); 
 
-    // Set CE high to enter TX mode and start the transmission 
+    // Set CE high to enter TX mode and start the transmission. Delay to ensure CE is high long 
+    // enough then set CE low so the device goes back to Standby-1 when done sending. 
     gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
-
-    // Delay to ensure CE is high for the minumum amount of time 
-    tim_delay_us(nrf24l01_driver_data.timer, 20); 
-
-    // Set CE low so the device goes back to Standby-1 state after transmission 
+    tim_delay_us(nrf24l01_driver_data.timer, NRF24L01_CE_TX_DELAY); 
     gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
 
-    // Check to see if the TX FIFO is empty - means data was transmitted 
+    // Check to see if the TX FIFO is empty - means data was transmitted. 
+    // If data has not been transferred before timeout then it's considered to have failed. 
     do 
     {
         nrf24l01_fifo_status_reg_read(); 
@@ -762,7 +743,8 @@ uint8_t nrf24l01_send_payload(
 
     if (time_out)
     {
-        result = SET_BIT; 
+        // Time left on the timer so data has successfully been set. 
+        tx_status = SET_BIT; 
     }
 
     // Flush the TX FIFO 
@@ -774,7 +756,7 @@ uint8_t nrf24l01_send_payload(
     // Set CE back high to enter RX mode 
     gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
 
-    return result; 
+    return tx_status; 
 }
 
 //=======================================================================================
