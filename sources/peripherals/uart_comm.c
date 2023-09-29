@@ -21,35 +21,6 @@
 
 
 //=======================================================================================
-// Finction Prototypes 
-
-// /**
-//  * @brief Select the fractional and mantissa portions of the baud rate setup 
-//  * 
-//  * @details Uses the baud_rate to determine the fractional and mantissa values used in 
-//  *          the initialization of the baud rate in uart2_init. This function is made 
-//  *          to make uart2_init easier to use by allowing for a baud rate to be passsed 
-//  *          when initializing UART2 as opposed to fractional and mantissa parameters. 
-//  * 
-//  * @see uart1_init
-//  * @see uart2_init
-//  * @see uart_fractional_baud_t
-//  * @see uart_mantissa_baud_t
-//  * 
-//  * @param baud_rate : (bps) communication speed of UART2
-//  * @param baud_frac : fractional portion of UART2 baud rate setup 
-//  * @param baud_mant : mantissa portion of UART2 baud rate setup
-//  */
-// void uart_baud_select(
-//     uart_baud_rate_t baud_rate,
-//     uart_clock_speed_t clock_speed, 
-//     uart_fractional_baud_t *baud_frac,
-//     uart_mantissa_baud_t *baud_mant);
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Initialization 
 
 //===================================================
@@ -67,15 +38,6 @@
 //===================================================
 
 // UART initialization 
-// void uart_init(
-//     USART_TypeDef *uart, 
-//     GPIO_TypeDef *gpio, 
-//     pin_selector_t rx_pin, 
-//     pin_selector_t tx_pin, 
-//     uart_baud_rate_t baud_rate,
-//     uart_clock_speed_t clock_speed, 
-//     uart_dma_tx_t tx_dma, 
-//     uart_dma_rx_t rx_dma)
 void uart_init(
     USART_TypeDef *uart, 
     GPIO_TypeDef *gpio, 
@@ -130,19 +92,11 @@ void uart_init(
 
 
 // Change the baud rate of the UART 
-// void uart_set_baud_rate(
-//     USART_TypeDef *uart, 
-//     uart_baud_rate_t baud_rate,
-//     uart_clock_speed_t clock_speed)
 void uart_set_baud_rate(
     USART_TypeDef *uart, 
     uart_fractional_baud_t baud_frac, 
     uart_mantissa_baud_t baud_mant)
 {
-    // Baud rate setup variables 
-    // uart_fractional_baud_t baud_frac;
-    // uart_mantissa_baud_t baud_mant;
-
     // Clear the USART_CR1 register 
     uart->CR1 = CLEAR;
     uart->BRR = CLEAR; 
@@ -154,9 +108,6 @@ void uart_set_baud_rate(
     uart->CR1 &= ~(SET_BIT << SHIFT_12);
 
     // Set the baud rate 
-    // uart_baud_select(baud_rate, clock_speed, &baud_frac, &baud_mant);
-    // uart->BRR |= (baud_frac << SHIFT_0);  // Fractional 
-    // uart->BRR |= (baud_mant << SHIFT_4);  // Mantissa 
     uart->BRR |= (baud_frac << SHIFT_0);  // Fractional 
     uart->BRR |= (baud_mant << SHIFT_4);  // Mantissa 
 
@@ -171,57 +122,6 @@ void uart_set_baud_rate(
         uart_clear_dr(uart); 
     }
 }
-
-
-// // Select the fractional and mantissa portions of the baud rate setup 
-// void uart_baud_select(
-//     uart_baud_rate_t baud_rate,
-//     uart_clock_speed_t clock_speed, 
-//     uart_fractional_baud_t *baud_frac,
-//     uart_mantissa_baud_t *baud_mant)
-// {
-//     switch (clock_speed)
-//     {
-//         case UART_CLOCK_42:
-//             switch (baud_rate)
-//             {
-//                 case UART_BAUD_9600:
-//                     *baud_frac = UART_FRAC_42_9600;
-//                     *baud_mant = UART_MANT_42_9600;
-//                     break;
-                
-//                 default:
-//                     break;
-//             }
-//             break;
-
-//         case UART_CLOCK_84:
-//             switch (baud_rate)
-//             {
-//                 case UART_BAUD_9600:
-//                     *baud_frac = UART_FRAC_84_9600;
-//                     *baud_mant = UART_MANT_84_9600;
-//                     break;
-                
-//                 case UART_BAUD_38400:
-//                     *baud_frac = UART_FRAC_84_38400;
-//                     *baud_mant = UART_MANT_84_38400;
-//                     break;
-                
-//                 case UART_BAUD_115200:
-//                     *baud_frac = UART_FRAC_84_115200;
-//                     *baud_mant = UART_MANT_84_115200;
-//                     break;
-                
-//                 default:
-//                     break;
-//             }
-//             break;
-        
-//         default:
-//             break;
-//     }
-// }
 
 //=======================================================================================
 
