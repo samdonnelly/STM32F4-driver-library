@@ -45,8 +45,8 @@ void uart_init(
     pin_selector_t tx_pin, 
     uart_fractional_baud_t baud_frac, 
     uart_mantissa_baud_t baud_mant, 
-    uart_dma_tx_t tx_dma, 
-    uart_dma_rx_t rx_dma)
+    uart_dma_config_t tx_dma, 
+    uart_dma_config_t rx_dma)
 {
     //==================================================
     // Enable the UART clock 
@@ -80,7 +80,7 @@ void uart_init(
     //==================================================
     // Configure the UART 
 
-    // uart_set_baud_rate(uart, baud_rate, clock_speed); 
+    // Set the baud rate of the UART 
     uart_set_baud_rate(uart, baud_frac, baud_mant); 
 
     // Configure TX and RX DMA in the USART_CR3 register 
@@ -121,6 +121,40 @@ void uart_set_baud_rate(
     {
         uart_clear_dr(uart); 
     }
+}
+
+
+// UART interrupt initialization 
+void uart_interrupt_init(
+    USART_TypeDef *uart, 
+    uart_int_config_t peie, 
+    uart_int_config_t txeie, 
+    uart_int_config_t tcie, 
+    uart_int_config_t rxneie, 
+    uart_int_config_t idleie, 
+    uart_int_config_t cts, 
+    uart_int_config_t eie)
+{
+    // Parity error (PE) interrupt enable 
+    uart->CR1 |= (peie << SHIFT_8); 
+
+    // Transmit data register interrupt enable (TXE) 
+    uart->CR1 |= (txeie << SHIFT_7); 
+    
+    // Transmission complete interrupt enable (TCIE) 
+    uart->CR1 |= (tcie << SHIFT_6); 
+    
+    // Read data register interrupt enable (RXNEIE) 
+    uart->CR1 |= (rxneie << SHIFT_5); 
+    
+    // IDLE line detected interrupt enable (IDLEIE) 
+    uart->CR1 |= (idleie << SHIFT_4); 
+    
+    // CTS interrupt enable 
+    uart->CR3 |= (cts << SHIFT_10); 
+    
+    // Error interrupt enable (EIE) 
+    uart->CR3 |= (eie << SHIFT_0); 
 }
 
 //=======================================================================================

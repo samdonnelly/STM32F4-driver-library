@@ -52,39 +52,6 @@ typedef enum {
     UART_TIMEOUT 
 } uart_status_t;
 
-
-// /**
-//  * @brief UART baud rate 
-//  * 
-//  * @details Passed as an argument to uart_baud_select that allows the user to define 
-//  *          the baud rate of UART. The baud rates here are defined from 0-X and not 
-//  *          the actual value of the baud rate. This method is chosen to prevent the need 
-//  *          to define large numbers for the baud rate. 
-//  */
-// typedef enum {
-//     UART_BAUD_9600,    // 9600 bits/s 
-//     UART_BAUD_38400,   // 38400 bits/s 
-//     UART_BAUD_115200   // 115200 bits/s 
-// } uart_baud_rate_t;
-
-
-// /**
-//  * @brief UART clock speed 
-//  * 
-//  * @details Specifies the speed of the clock for a given UART port. This is used as an 
-//  *          argument in the uart init function. Specifying the clock speed of the UART 
-//  *          being initialized helps with correctly setting the baud rate. The clock 
-//  *          speeds shown below are speeds that have been implemented already, however 
-//  *          others can be added. 
-//  * 
-//  * @see uart_fractional_baud_t
-//  * @see uart_mantissa_baud_t
-//  */
-// typedef enum {
-//     UART_CLOCK_42,   // APBX clock speed = 42 MHz 
-//     UART_CLOCK_84    // APBX clock speed = 84 MHz 
-// } uart_clock_speed_t; 
-
 /**
  * @brief Fractional portion of UART baud rate setup 
  * 
@@ -162,27 +129,27 @@ typedef enum {
 
 
 /**
- * @brief UART transmission using DMA configuration 
+ * @brief UART TX/RX DMA configuration 
  * 
  * @details 
  */
 typedef enum 
 {
-    UART_DMA_TX_DISABLE, 
-    UART_DMA_TX_ENABLE 
-} uart_dma_tx_t; 
+    UART_DMA_DISABLE, 
+    UART_DMA_ENABLE 
+} uart_dma_config_t; 
 
 
 /**
- * @brief UART reception using DMA configuration 
+ * @brief UART interrupt configuration 
  * 
  * @details 
  */
 typedef enum 
 {
-    UART_DMA_RX_DISABLE, 
-    UART_DMA_RX_ENABLE 
-} uart_dma_rx_t; 
+    UART_INT_DISABLE, 
+    UART_INT_ENABLE 
+} uart_int_config_t; 
 
 
 /**
@@ -260,23 +227,14 @@ typedef uart_status_t UART_STATUS;
  *          supported. 
  * 
  * @param uart : pointer to the UART port 
- * @param gpio : 
- * @param rx_pin : 
- * @param tx_pin : 
-//  * @param baud_rate : communication speed of the UART (bps) 
-//  * @param clock_speed : clock speed of the uart port being initialized 
- * @param tx_dma : 
- * @param rx_dma : 
+ * @param gpio 
+ * @param rx_pin 
+ * @param tx_pin 
+ * @param baud_frac 
+ * @param baud_mant 
+ * @param tx_dma 
+ * @param rx_dma 
  */
-// void uart_init(
-//     USART_TypeDef *uart, 
-//     GPIO_TypeDef *gpio, 
-//     pin_selector_t rx_pin, 
-//     pin_selector_t tx_pin, 
-//     uart_baud_rate_t baud_rate, 
-//     uart_clock_speed_t clock_speed, 
-//     uart_dma_tx_t tx_dma, 
-//     uart_dma_rx_t rx_dma);
 void uart_init(
     USART_TypeDef *uart, 
     GPIO_TypeDef *gpio, 
@@ -284,8 +242,8 @@ void uart_init(
     pin_selector_t tx_pin, 
     uart_fractional_baud_t baud_frac, 
     uart_mantissa_baud_t baud_mant, 
-    uart_dma_tx_t tx_dma, 
-    uart_dma_rx_t rx_dma);
+    uart_dma_config_t tx_dma, 
+    uart_dma_config_t rx_dma);
 
 
 /**
@@ -295,17 +253,38 @@ void uart_init(
  *          function but can also be called independently if the rate needs to change. 
  * 
  * @param uart : pointer to the UART port 
-//  * @param baud_rate : communication speed of the UART (bps) 
-//  * @param clock_speed : clock speed of the uart port being initialized 
+ * @param baud_frac 
+ * @param baud_mant 
  */
-// void uart_set_baud_rate(
-//     USART_TypeDef *uart, 
-//     uart_baud_rate_t baud_rate,
-//     uart_clock_speed_t clock_speed); 
 void uart_set_baud_rate(
     USART_TypeDef *uart, 
     uart_fractional_baud_t baud_frac, 
     uart_mantissa_baud_t baud_mant); 
+
+
+/**
+ * @brief UART interrupt initialization 
+ * 
+ * @details 
+ * 
+ * @param uart : USART port to configure 
+ * @param peie : Parity error (PE) interrupt enable 
+ * @param txeie : Transmit data register interrupt enable (TXE) 
+ * @param tcie : Transmission complete interrupt enable (TCIE) 
+ * @param rxneie : Read data register interrupt enable (RXNEIE) 
+ * @param idleie : IDLE line detected interrupt enable (IDLEIE) 
+ * @param cts : CTS interrupt enable 
+ * @param eie : Error interrupt enable (EIE) 
+ */
+void uart_interrupt_init(
+    USART_TypeDef *uart, 
+    uart_int_config_t peie, 
+    uart_int_config_t txeie, 
+    uart_int_config_t tcie, 
+    uart_int_config_t rxneie, 
+    uart_int_config_t idleie, 
+    uart_int_config_t cts, 
+    uart_int_config_t eie); 
 
 //=======================================================================================
 
