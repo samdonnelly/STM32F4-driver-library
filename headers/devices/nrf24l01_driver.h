@@ -99,6 +99,7 @@ extern "C" {
 
 // Data handling 
 #define NRF24L01_RF_CH_MASK 0x7F       // RF channel frequency mask 
+#define NRF24L01_RF_CH_MAX 0x7D        // RF channel frequency max setting 
 #define NRF24L01_RF_DR_MASK 0x01       // RF data rate bit mask 
 #define NRF24L01_DUMMY_WRITE 0xFF      // Dummy data for SPI write-read operations 
 #define NRF24L01_DATA_SIZE_LEN 1       // Data size indicator length 

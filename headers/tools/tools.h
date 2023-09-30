@@ -84,8 +84,10 @@
 #define PERIOD_CHAR 46   // '.'  == 46 
 #define ZERO_CHAR   48   // '0'  == 48
 #define NINE_CHAR   57   // '9'  == 57 
-#define A_CHAR      65   // 'A'  == 65
-#define F_CHAR      70   // 'F'  == 70 
+#define A_UP_CHAR   65   // 'A'  == 65
+#define F_UP_CHAR   70   // 'F'  == 70 
+#define A_LO_CHAR   97   // 'a'  == 97
+#define Z_LO_CHAR   122  // 'z'  == 122 
 
 // ASCII formatters 
 #define MAX_CHAR_DIGIT 0x09      // Max single digit 

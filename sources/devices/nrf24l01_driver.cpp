@@ -839,7 +839,7 @@ uint8_t nrf24l01_rf_ch_reg_read(void)
     uint8_t rf_ch = nrf24l01_reg_read(NRF24L01_REG_RF_CH); 
 
     nrf24l01_driver_data.rf_ch.unused_1 = (rf_ch & FILTER_BIT_7) >> SHIFT_7; 
-    nrf24l01_driver_data.rf_ch.rf_ch    = (rf_ch & FILTER_6_LSB); 
+    nrf24l01_driver_data.rf_ch.rf_ch    = (rf_ch & FILTER_7_LSB); 
 
     return rf_ch; 
 }

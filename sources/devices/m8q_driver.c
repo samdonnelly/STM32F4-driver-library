@@ -1258,7 +1258,7 @@ UBX_MSG_STATUS m8q_ubx_msg_convert(
                     low_nibble -= NUM_TO_CHAR_OFFSET; 
                 }
                 
-                else if ((low_nibble >= A_CHAR) && (low_nibble <= F_CHAR)) 
+                else if ((low_nibble >= A_UP_CHAR) && (low_nibble <= F_UP_CHAR)) 
                 {
                     low_nibble -= HEX_TO_LET_CHAR; 
                 }
