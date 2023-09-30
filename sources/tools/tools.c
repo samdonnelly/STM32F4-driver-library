@@ -32,14 +32,48 @@ uint8_t str_compare(
     // Local variables 
     uint8_t str_length = strlen(ref_msg); 
 
+    // Check for invalid data 
+    if (ref_msg == NULL || msg == NULL || str_length == CLEAR) return FALSE; 
+
     // Check message ID 
     msg += msg_start; 
-    for (uint8_t i = 0; i < str_length; i++)
+    for (uint8_t i = CLEAR; i < str_length; i++)
     {
         if (*msg++ != *ref_msg++) return FALSE; 
     }
 
     return TRUE; 
+}
+
+
+// Circular buffer parse 
+void cb_parse(
+    uint8_t *circ_buff, 
+    uint8_t *msg_buff, 
+    uint8_t *buff_index,
+    uint8_t max_buff_size)
+{
+    // Copy the new contents in the circular buffer to the user input buffer 
+    for (uint8_t i = CLEAR; i < max_buff_size; i++)
+    {
+        // Reset the circular buffer index if needed 
+        if (*buff_index >= max_buff_size)
+        {
+            *buff_index = CLEAR; 
+        }
+
+        // Populate the user input buffer - terminate the input at the end 
+        if (circ_buff[*buff_index] == CR_CHAR)
+        {
+            msg_buff[i] = NULL_CHAR; 
+            (*buff_index)++; 
+            break; 
+        }
+        else 
+        {
+            msg_buff[i] = circ_buff[(*buff_index)++]; 
+        }
+    }
 }
 
 

@@ -302,6 +302,25 @@ uint8_t str_compare(
 
 
 /**
+ * @brief Circular buffer parse 
+ * 
+ * @details Copies content from a circular buffer starting at a specified index into 
+ *          another buffer starting an index 0 up until the end of the data segment in the 
+ *          circular buffer. 
+ * 
+ * @param circ_buff 
+ * @param msg_buff 
+ * @param buff_index 
+ * @param max_buff_size 
+ */
+void cb_parse(
+    uint8_t *circ_buff, 
+    uint8_t *msg_buff, 
+    uint8_t *buff_index,
+    uint8_t max_buff_size); 
+
+
+/**
  * @brief Character to scaled integer 
  * 
  * @details 
