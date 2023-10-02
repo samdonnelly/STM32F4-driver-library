@@ -439,18 +439,14 @@ void nrf24l01_init(
     nrf24l01_config_reg_write(); 
     tim_delay_ms(nrf24l01_driver_data.timer, NRF24L01_START_DELAY); 
     
-    // TODO trying Enhanced Shockburst TM so not disabling auto acknowledge 
-    // // EN_AA - disable auto acknowledgment (Enhanced Shockburst TM not used) - set 0 
-    // nrf24l01_reg_write(NRF24L01_REG_EN_AA, NRF24L01_DISABLE_REG); 
+    // EN_AA - disable auto acknowledgment (Enhanced Shockburst TM not used) - set 0 
+    nrf24l01_reg_write(NRF24L01_REG_EN_AA, NRF24L01_DISABLE_REG); 
     
     // EN_RXADDR - disable data pipes for now - configured separately - set 0 
     nrf24l01_reg_write(NRF24L01_REG_EN_RXADDR, NRF24L01_DISABLE_REG); 
     
-    // // SETUP_RETR - disable retransmission because auto acknowledgement not used - set 0 
-    // nrf24l01_reg_write(NRF24L01_REG_SETUP_RETR, NRF24L01_DISABLE_REG); 
-    // TODO trying Enhanced Shockburst TM so setting retransmit 
     // SETUP_RETR - disable retransmission because auto acknowledgement not used - set 0 
-    nrf24l01_reg_write(NRF24L01_REG_SETUP_RETR, 0x3F); 
+    nrf24l01_reg_write(NRF24L01_REG_SETUP_RETR, NRF24L01_DISABLE_REG); 
 
     // FIFO_STATUS - read the FIFO status register to update the driver data record 
     nrf24l01_fifo_status_reg_read(); 
@@ -476,10 +472,6 @@ void nrf24l01_ptx_config(
     
     // Set up TX_ADDR - don't need to match RX_ADDR_P0 as not using auto acknowledge 
     nrf24l01_write(NRF24L01_CMD_W_REG | NRF24L01_REG_TX_ADDR, tx_addr, NRF24l01_ADDR_WIDTH); 
-
-    // TODO trying Enhanced Shockburst TM 
-    // Attempting auto acknowledge so setting P0 to the same TX_ADDR 
-    nrf24l01_write(NRF24L01_CMD_W_REG | NRF24L01_REG_RX_ADDR_P0, tx_addr, NRF24l01_ADDR_WIDTH); 
 
     // Set CE high to enter back into an active mode 
     gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_HIGH); 
@@ -698,7 +690,7 @@ uint8_t nrf24l01_send_payload(
     uint8_t data_len = CLEAR; 
     uint8_t index = NRF24L01_DATA_SIZE_LEN; 
     uint8_t tx_status = CLEAR; 
-    // uint16_t time_out = NRF24L01_TX_TIMEOUT; 
+    uint16_t time_out = NRF24L01_TX_TIMEOUT; 
     uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
 
     // Fill the packet buffer with the data to be sent. The packet will be capped at a max of 
@@ -737,38 +729,19 @@ uint8_t nrf24l01_send_payload(
     tim_delay_us(nrf24l01_driver_data.timer, NRF24L01_CE_TX_DELAY); 
     gpio_write(nrf24l01_driver_data.gpio_en, nrf24l01_driver_data.en_pin, GPIO_LOW); 
 
-    // // Check to see if the TX FIFO is empty - means data was transmitted. 
-    // // If data has not been transferred before timeout then it's considered to have failed. 
-    // do 
-    // {
-    //     nrf24l01_fifo_status_reg_read(); 
-    // }
-    // while(!(nrf24l01_driver_data.fifo_status.tx_empty) && (--time_out)); 
-
-    // if (time_out)
-    // {
-    //     // Time left on the timer so data has successfully been set. 
-    //     tx_status = SET_BIT; 
-    // }
-
-    //==================================================
-    // TODO trying Enhanced Shockburst TM 
-
+    // Check to see if the TX FIFO is empty - means data was transmitted. 
+    // If data has not been transferred before timeout then it's considered to have failed. 
     do 
     {
-        nrf24l01_status_reg_read(); 
+        nrf24l01_fifo_status_reg_read(); 
     }
-    while(!(nrf24l01_driver_data.status_reg.tx_ds) && !(nrf24l01_driver_data.status_reg.max_rt)); 
+    while(!(nrf24l01_driver_data.fifo_status.tx_empty) && (--time_out)); 
 
-    if (nrf24l01_driver_data.status_reg.tx_ds)
+    if (time_out)
     {
+        // Time left on the timer so data has successfully been set. 
         tx_status = SET_BIT; 
     }
-
-    // Clear status bits 
-    nrf24l01_status_reg_write(); 
-
-    //==================================================
     
     // Flush the TX FIFO 
     nrf24l01_write(NRF24L01_CMD_FLUSH_TX, &buff, BYTE_0); 
