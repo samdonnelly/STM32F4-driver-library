@@ -86,6 +86,7 @@
 #define NINE_CHAR   57   // '9'  == 57 
 #define A_UP_CHAR   65   // 'A'  == 65
 #define F_UP_CHAR   70   // 'F'  == 70 
+#define Z_UP_CHAR   90   // 'Z'  == 90
 #define A_LO_CHAR   97   // 'a'  == 97
 #define Z_LO_CHAR   122  // 'z'  == 122 
 
