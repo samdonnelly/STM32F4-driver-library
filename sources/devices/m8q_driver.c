@@ -1103,6 +1103,8 @@ void m8q_ubx_config(
     uint8_t *msg_ptr = input_msg; 
     uint8_t config_msg[M8Q_MSG_MAX_LEN];   // Formatted UBX message to send to the receiver 
     CHECKSUM checksum = CLEAR; 
+    // TODO replace ghost number 
+    uint16_t response_timeout = 0xFFFF; 
 
     // User inputs 
     uint8_t input_msg_len = m8q_message_size(input_msg, CR_CHAR); 
@@ -1184,7 +1186,7 @@ void m8q_ubx_config(
                     m8q_write(config_msg, M8Q_UBX_HEADER_LEN + pl_len + M8Q_UBX_CS_LEN); 
 
                     // Read the UBX CFG response 
-                    while(m8q_read() != M8Q_READ_UBX); 
+                    while((m8q_read() != M8Q_READ_UBX) && --response_timeout); 
 
                     // Check the response type 
                     if (m8q_driver_data.ubx_resp[M8Q_UBX_CLASS_OFST] == M8Q_UBX_ACK_CLASS) 
