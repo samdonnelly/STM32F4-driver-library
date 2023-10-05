@@ -429,6 +429,29 @@ uint8_t nrf24l01_send_payload(
 
 //=======================================================================================
 
+
+//=======================================================================================
+// Status 
+
+/**
+ * @brief nrF24L01 clear device driver status code 
+ * 
+ * @details 
+ */
+void nrf24l01_clear_status(void); 
+
+
+/**
+ * @brief nrF24L01 get device driver status code 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t nrf24l01_get_status(void); 
+
+//=======================================================================================
+
 #ifdef __cplusplus
 }
 #endif

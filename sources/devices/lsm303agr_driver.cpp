@@ -692,3 +692,22 @@ void lsm303agr_m_status_read(void)
 }
 
 //=======================================================================================
+
+
+//=======================================================================================
+// Status 
+
+// LSM303AGR clear device driver fault flag 
+void lsm303agr_clear_status(void)
+{
+    lsm303agr_driver_data.status = CLEAR; 
+}
+
+
+// LSM303AGR get device driver fault code 
+uint8_t lsm303agr_get_status(void)
+{
+    return lsm303agr_driver_data.status; 
+}
+
+//=======================================================================================

@@ -1033,6 +1033,25 @@ void nrf24l01_reg_write(
 
 
 //=======================================================================================
+// Status 
+
+// nrF24L01 clear device driver status code 
+void nrf24l01_clear_status(void)
+{
+    nrf24l01_driver_data.driver_status = CLEAR; 
+}
+
+
+// nrF24L01 get device driver status code 
+uint8_t nrf24l01_get_status(void)
+{
+    return nrf24l01_driver_data.driver_status; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Test functions 
 
 // Read all device registers to verify values 

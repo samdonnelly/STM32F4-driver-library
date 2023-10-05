@@ -208,6 +208,29 @@ int16_t lsm303agr_m_get_heading(void);
 
 //=======================================================================================
 
+
+//=======================================================================================
+// Status 
+
+/**
+ * @brief LSM303AGR clear device driver fault flag 
+ * 
+ * @details 
+ */
+void lsm303agr_clear_status(void); 
+
+
+/**
+ * @brief LSM303AGR get device driver fault code 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t lsm303agr_get_status(void); 
+
+//=======================================================================================
+
 #ifdef __cplusplus
 }
 #endif
