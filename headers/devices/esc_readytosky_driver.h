@@ -40,7 +40,7 @@
 #define ESC_FWD_MAX_TIME 1820     // PWM pulse duration for max forward thrust (us) 
 
 // Calculation 
-#define ESC_CMD_SCALAR 100        // PWM calculation scalar (0-100% throttle scalar) 
+// #define ESC_CMD_SCALAR 100        // PWM calculation scalar (0-100% throttle scalar) 
 #define ESC_MAX_THROTTLE 100      // Max throttle command 
 
 //=======================================================================================

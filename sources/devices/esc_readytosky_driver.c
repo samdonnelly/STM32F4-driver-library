@@ -23,11 +23,11 @@
 //=======================================================================================
 // Global variables 
 
-// Throttle command calculation 
-static const int16_t fwd_slope = ESC_FWD_MAX_TIME - ESC_FWD_START_TIME; 
-static const int16_t fwd_int = ESC_FWD_START_TIME; 
-static const int16_t rev_slope = ESC_REV_START_TIME - ESC_REV_MAX_TIME; 
-static const int16_t rev_int = ESC_REV_START_TIME; 
+// // Throttle command calculation 
+// static const int16_t fwd_slope = ESC_FWD_MAX_TIME - ESC_FWD_START_TIME; 
+// static const int16_t fwd_int = ESC_FWD_START_TIME; 
+// static const int16_t rev_slope = ESC_REV_START_TIME - ESC_REV_MAX_TIME; 
+// static const int16_t rev_int = ESC_REV_START_TIME; 
 
 // Device data record 
 typedef struct esc_readytosky_driver_data_s
@@ -40,9 +40,18 @@ typedef struct esc_readytosky_driver_data_s
     TIM_TypeDef *timer; 
     tim_channel_t tim_channel; 
 
+    // // Speed information 
+    // int16_t fwd_cmd_lim; 
+    // int16_t rev_cmd_lim; 
+
+    //==================================================
+    // Test 
+
     // Speed information 
-    int16_t fwd_cmd_lim; 
-    int16_t rev_cmd_lim; 
+    uint16_t fwd_speed_lim; 
+    uint16_t rev_speed_lim; 
+
+    //==================================================
 }
 esc_readytosky_driver_data_t; 
 
@@ -94,13 +103,46 @@ void esc_readytosky_init(
     driver_data_ptr->timer = timer; 
     driver_data_ptr->tim_channel = tim_channel; 
 
-    // Check and set speed bounds 
-    driver_data_ptr->fwd_cmd_lim = (fwd_speed_lim > ESC_FWD_MAX_TIME) ? 
-                                   ESC_MAX_THROTTLE : 
-                                   ESC_CMD_SCALAR*((int16_t)fwd_speed_lim - fwd_int)/fwd_slope; 
-    driver_data_ptr->rev_cmd_lim = (rev_speed_lim < ESC_REV_MAX_TIME) ? 
-                                   -ESC_MAX_THROTTLE : 
-                                   ESC_CMD_SCALAR*((int16_t)rev_speed_lim - rev_int)/rev_slope; 
+    // // Check and set speed bounds 
+    // driver_data_ptr->fwd_cmd_lim = (fwd_speed_lim > ESC_FWD_MAX_TIME) ? 
+    //                                ESC_MAX_THROTTLE : 
+    //                                ESC_CMD_SCALAR*((int16_t)fwd_speed_lim - fwd_int)/fwd_slope; 
+    // driver_data_ptr->rev_cmd_lim = (rev_speed_lim < ESC_REV_MAX_TIME) ? 
+    //                                -ESC_MAX_THROTTLE : 
+    //                                ESC_CMD_SCALAR*((int16_t)rev_speed_lim - rev_int)/rev_slope; 
+
+    //==================================================
+    // Test 
+
+    // Make sure the speed limits are within the limitations of the device. 
+
+    if (fwd_speed_lim > ESC_FWD_MAX_TIME)
+    {
+        driver_data_ptr->fwd_speed_lim = ESC_FWD_MAX_TIME; 
+    }
+    else if (fwd_speed_lim < ESC_FWD_START_TIME)
+    {
+        driver_data_ptr->fwd_speed_lim = ESC_FWD_START_TIME; 
+    }
+    else 
+    {
+        driver_data_ptr->fwd_speed_lim = fwd_speed_lim; 
+    }
+
+    if (rev_speed_lim < ESC_REV_MAX_TIME)
+    {
+        driver_data_ptr->rev_speed_lim = ESC_REV_MAX_TIME; 
+    }
+    else if (rev_speed_lim > ESC_REV_START_TIME)
+    {
+        driver_data_ptr->rev_speed_lim = ESC_REV_START_TIME; 
+    }
+    else 
+    {
+        driver_data_ptr->rev_speed_lim = rev_speed_lim; 
+    }
+
+    //==================================================
 }
 
 //=======================================================================================
@@ -123,29 +165,69 @@ void esc_readytosky_send(
 
     // Local variables 
     uint32_t pwm_cmd = ESC_NEUTRAL_TIME; 
+    uint16_t throttle = CLEAR; 
 
     // Determine the PWM output 
     if (throttle_cmd > 0)
     {
-        // Cap the maximum throttle command 
-        if (throttle_cmd > driver_data_ptr->fwd_cmd_lim)
+        // // Cap the maximum throttle command 
+        // if (throttle_cmd > driver_data_ptr->fwd_cmd_lim)
+        // {
+        //     throttle_cmd = driver_data_ptr->fwd_cmd_lim; 
+        // }
+
+        // // Forward throttle calculation 
+        // pwm_cmd = (uint32_t)(fwd_int + (fwd_slope*throttle_cmd) / ESC_CMD_SCALAR); 
+
+        //==================================================
+        // Test 
+
+        // Cap the throttle if the request is above 100% 
+        if (throttle_cmd > ESC_MAX_THROTTLE)
         {
-            throttle_cmd = driver_data_ptr->fwd_cmd_lim; 
+            throttle_cmd = ESC_MAX_THROTTLE; 
         }
 
-        // Forward throttle calculation 
-        pwm_cmd = (uint32_t)(fwd_int + (fwd_slope*throttle_cmd) / ESC_CMD_SCALAR); 
+        // Change the throttle command to an unsigned value 
+        throttle = (uint16_t)throttle_cmd; 
+
+        // Calculate the forward throttle pwm command 
+        pwm_cmd = (uint32_t)(ESC_FWD_START_TIME + 
+            ((driver_data_ptr->fwd_speed_lim - ESC_FWD_START_TIME)*throttle) / ESC_MAX_THROTTLE); 
+
+        //==================================================
     }
     else if (throttle_cmd < 0)
     {
-        // Cap the maximum throttle command 
-        if (throttle_cmd < driver_data_ptr->rev_cmd_lim)
+        // // Cap the maximum throttle command 
+        // if (throttle_cmd < driver_data_ptr->rev_cmd_lim)
+        // {
+        //     throttle_cmd = driver_data_ptr->rev_cmd_lim; 
+        // }
+
+        // // Reverse throttle calculation 
+        // pwm_cmd = (uint32_t)(rev_int + (rev_slope*throttle_cmd) / ESC_CMD_SCALAR); 
+
+        //==================================================
+        // Test 
+
+        // Cap the throttle if the request is more than -100% 
+        if (throttle_cmd < -ESC_MAX_THROTTLE)
         {
-            throttle_cmd = driver_data_ptr->rev_cmd_lim; 
+            throttle_cmd = -ESC_MAX_THROTTLE; 
         }
 
-        // Reverse throttle calculation 
-        pwm_cmd = (uint32_t)(rev_int + (rev_slope*throttle_cmd) / ESC_CMD_SCALAR); 
+        // Invert the direction of the throttle command - make the command a positive number 
+        throttle_cmd += ESC_MAX_THROTTLE; 
+
+        // Change the throttle command to an unsigned value 
+        throttle = (uint16_t)throttle_cmd; 
+
+        // Calculate the reverse throttle pwm command  
+        pwm_cmd = (uint32_t)(driver_data_ptr->rev_speed_lim + 
+            ((ESC_REV_START_TIME - driver_data_ptr->rev_speed_lim)*throttle) / ESC_MAX_THROTTLE); 
+
+        //==================================================
     }
 
     // Write the PWM command 
