@@ -66,12 +66,14 @@ void cb_parse(
         if (circ_buff[*buff_index] == CR_CHAR)
         {
             msg_buff[i] = NULL_CHAR; 
-            (*buff_index)++; 
+            circ_buff[*buff_index] = NULL_CHAR; 
+            *buff_index += 1; 
             break; 
         }
         else 
         {
-            msg_buff[i] = circ_buff[(*buff_index)++]; 
+            msg_buff[i] = circ_buff[*buff_index]; 
+            *buff_index += 1; 
         }
     }
 }
