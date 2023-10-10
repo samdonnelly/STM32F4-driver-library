@@ -34,9 +34,9 @@
 
 // Output 
 #define ESC_NEUTRAL_TIME 1520     // PWM pulse duration for "neutral" gear (us) 
-#define ESC_REV_START_TIME 1480   // PWM pulse duration for start of reverse thrust (us) 
+#define ESC_REV_START_TIME 1470   // PWM pulse duration for start of reverse thrust (us) 
 #define ESC_REV_MAX_TIME 1220     // PWM pulse duration for max reverse thrust (us) 
-#define ESC_FWD_START_TIME 1560   // PWM pulse duration for start of forward thrust (us) 
+#define ESC_FWD_START_TIME 1570   // PWM pulse duration for start of forward thrust (us) 
 #define ESC_FWD_MAX_TIME 1820     // PWM pulse duration for max forward thrust (us) 
 
 // Calculation 
