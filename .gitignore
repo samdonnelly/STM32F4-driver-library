@@ -2,3 +2,6 @@
 
 # VS Code files 
 .vscode/
+
+# Other files and folder 
+flowcharts/ 
