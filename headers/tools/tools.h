@@ -31,6 +31,9 @@
 //=======================================================================================
 // Macros 
 
+// Conditional compilation 
+#define DEV_CODE 0              // For new code in the library that is yet to be tested 
+
 // Logic low - different ways to write zero for readability 
 #define CLEAR 0
 #define RESET_ZERO 0

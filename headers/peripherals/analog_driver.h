@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Analog (ADC and DAQ) data functions 
+ * @brief Analog (ADC) data functions 
  * 
  * @version 0.1
  * @date 2022-09-26
@@ -22,24 +22,14 @@
 #include "stm32f411xe.h"
 #include "tools.h"
 
-// Communication drivers 
+// Drivers 
 #include "gpio_driver.h"
-
-// Other drivers 
 #include "timers.h"
 
 //=======================================================================================
 
 
-//================================================================================
-// Macros 
-
-#define ADC_STAB_TIME 10   // Stabilization time (ms) for ADC after being turned on 
-
-//================================================================================
-
-
-//================================================================================
+//=======================================================================================
 // Enums 
 
 /**
@@ -144,6 +134,65 @@ typedef enum {
 } adc_seq_num_t; 
 
 
+#if DEV_CODE 
+
+/**
+ * @brief ADC parameter configuration 
+ * 
+ * @details This is used for disabling or enabling features of the ADC when setting it up. 
+ *          The ADC initialization functions take this as an argument for a number of 
+ *          features. These features include: 
+ *          
+ *          End of Conversion (EOC) 
+ *          - 0 --> EOC bit set after each sequence of regular conversions 
+ *          - 1 --> EOC bit set after each regular conversion 
+ *          
+ *          End of Conversion (EOC) interrupt 
+ *          - 0 --> Disable EOC interrupt 
+ *          - 1 --> Enable EOC interrupt 
+ *          
+ *          Scan mode 
+ *          - 0 --> Disable scan mode 
+ *          - 1 --> Enable scan mode 
+ *          
+ *          Continuous mode 
+ *          - 0 --> Disable continuous mode (set to single conversion mode) 
+ *          - 1 --> Enable continuous mode 
+ *          
+ *          DMA mode 
+ *          - 0 --> Disable DMA for ADC 
+ *          - 1 --> Enable DMA for ADC 
+ *          
+ *          DMA disable selection 
+ *          - 0 --> No new DMA request is issued after the last transfer 
+ *          - 1 --> DMA requets are issued as long as data are coverted 
+ *          
+ *          Watchdog mode 
+ *          - 0 --> Disable the watchdog 
+ *          - 1 --> Enable the watchdog 
+ *          
+ *          Watchdog single channel selection 
+ *          - 0 --> Disable the watchdog single channel selection 
+ *          - 1 --> Enable the watchdog single channel selection 
+ *          
+ *          Watchdog interrupt 
+ *          - 0 --> Disable the watchdog interrupt 
+ *          - 1 --> Enable the watchdog interrupt 
+ *          
+ *          Overrun interrupt 
+ *          - 0 --> Disable the overrun interrupt 
+ *          - 1 --> Enable the overrun interrupt 
+ * 
+ * @see adc_port_init 
+ * @see adc_wd_init 
+ */
+typedef enum {
+    ADC_PARAM_DISABLE, 
+    ADC_PARAM_ENABLE 
+} adc_param_config_t; 
+
+#else   // DEV_CODE 
+
 /**
  * @brief EOC selection 
  */
@@ -233,10 +282,28 @@ typedef enum {
     ADC_OVR_INT_ENABLE     // Enable the overrun interrupt 
 } adc_ovrie_t; 
 
-//================================================================================
+#endif   // DEV_CODE 
+
+/**
+ * @brief ADC driver status 
+ */
+typedef enum {
+    ADC_OK, 
+    ADC_TIMEOUT 
+} adc_status_t; 
+
+//=======================================================================================
 
 
-//================================================================================
+//=======================================================================================
+// Data types 
+
+typedef uint8_t ADC_STATUS; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 /**
@@ -268,6 +335,20 @@ typedef enum {
  * @param eocie : end of conversion interrupt selection 
  * @param ovrie : overrun behavior selection 
  */
+#if DEV_CODE 
+void adc_port_init(
+    ADC_TypeDef *adc, 
+    ADC_Common_TypeDef *adc_common, 
+    adc_prescalar_t prescalar, 
+    adc_res_t resolution, 
+    adc_param_config_t eoc, 
+    adc_param_config_t eocie, 
+    adc_param_config_t scan, 
+    adc_param_config_t cont, 
+    adc_param_config_t dma, 
+    adc_param_config_t dds, 
+    adc_param_config_t ovrie); 
+#else   // DEV_CODE 
 void adc_port_init(
     ADC_TypeDef *adc, 
     ADC_Common_TypeDef *adc_common, 
@@ -280,6 +361,7 @@ void adc_port_init(
     adc_dds_t dds, 
     adc_eoc_int_t eocie, 
     adc_ovrie_t ovrie); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -329,6 +411,16 @@ void adc_pin_init(
  * @param lo_thresh : lower voltage threshold that triggers the watchdog 
  * @param awdie : watchdog interrupt selection 
  */
+#if DEV_CODE 
+void adc_wd_init(
+    ADC_TypeDef *adc, 
+    adc_param_config_t wd, 
+    adc_param_config_t wdsc, 
+    adc_channel_t channel, 
+    uint16_t hi_thresh, 
+    uint16_t lo_thresh, 
+    adc_param_config_t awdie); 
+#else   // DEV_CODE 
 void adc_wd_init(
     ADC_TypeDef *adc, 
     adc_wd_t wd, 
@@ -337,12 +429,106 @@ void adc_wd_init(
     uint16_t hi_thresh, 
     uint16_t lo_thresh, 
     adc_awdie_t awdie); 
+#endif   // DEV_CODE 
 
-//================================================================================
+
+/**
+ * @brief Channel conversion sequence 
+ * 
+ * @details Defines a single channels position in the conversion sequence. Conversion sequences 
+ *          are only relevant (and necessary) in scan mode. In this mode the ADC will convert 
+ *          the channel defined at sequence position 1, then once done will automatically 
+ *          proceed to convert sequence position 2 and so on until the end of the defined 
+ *          sequence. This function is called during the initialization sequence only if scan 
+ *          mode is being used. A single ADC channel can be assigned to multiple sequence 
+ *          positions by calling this function multiples times for the same channel in 
+ *          different positions. 
+ * 
+ * @see adc_channel_t
+ * @see adc_seq_num_t
+ * 
+ * @param adc : pointer to the ADC port used 
+ * @param channel : channel being assigned a sequence position 
+ * @param seq_num : sequence position of the channel 
+ */
+void adc_seq(
+    ADC_TypeDef *adc, 
+    adc_channel_t channel, 
+    adc_seq_num_t seq_num); 
 
 
-//================================================================================
-// Read 
+/**
+ * @brief Regular channel sequence length setter 
+ * 
+ * @details If using a sequence (scan mode), this function must be called once after the ADC 
+ *          sequence has been defined using the adc_seq function. This specifies the length of 
+ *          the defined sequence so the ADC knows when to stop conversions. 
+ * 
+ * @see adc_seq 
+ * 
+ * @param adc : pointer to the ADC port used 
+ * @param seq_len : number of conversions in the regular channel conversion sequence 
+ */
+void adc_seq_len_set(
+    ADC_TypeDef *adc, 
+    adc_seq_num_t seq_len); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// User functions 
+
+/**
+ * @brief Turn ADC on 
+ * 
+ * @details Enables the ADC. This is needed before the ADC can operate. The ADC must not be 
+ *          enabled while configuring the ADC settings. Note that there is a short, blocking 
+ *          delay within this function to allow time for the ADC to stabilize after being 
+ *          enabled. 
+ * 
+ * @param adc : pointer to the ADC port used 
+ */
+void adc_on(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Turn ADC off 
+ * 
+ * @details Disables the ADC and puts it in power down mode. This can be used during times 
+ *          when the ADC is not needed and must be used if changing ADC settings. By default 
+ *          the ADC is disabled on statup so if the ADC needs to be disabled then this function 
+ *          only needs to be called after adc_on has been called. 
+ * 
+ * @param adc : pointer to the ADC port used 
+ */
+void adc_off(
+    ADC_TypeDef *adc); 
+
+
+/**
+ * @brief Start an ADC conversion 
+ * 
+ * @details Starts the ADC conversion(s). This function only needs to be called when using DMA 
+ *          to convert ADC values. If using continuous mode then this function needs to only 
+ *          be called once after enabling the ADC. If using non-continuous mode then this 
+ *          function needs to be called every time you want a converison or sequence of 
+ *          conversions to happen. Note that this function has no effect (conversion won't 
+ *          start) if the ADC is not enabled. 
+ * 
+ * @see adc_on 
+ * 
+ * @param adc : pointer to the ADC port used 
+ */
+#if DEV_CODE 
+ADC_STATUS adc_start(
+    ADC_TypeDef *adc); 
+#else   // DEV_CODE 
+void adc_start(
+    ADC_TypeDef *adc); 
+#endif   // DEV_CODE 
+
 
 /**
  * @brief Read a single ADC conversion 
@@ -386,153 +572,18 @@ uint16_t adc_read_single(
  * @param seq_len : length of the ADC sequence defined 
  * @param adc_data : pointer to a buffer to store the conversion data 
  */
+#if DEV_CODE 
+ADC_STATUS adc_scan_seq(
+    ADC_TypeDef *adc, 
+    adc_seq_num_t seq_len, 
+    uint16_t *adc_data); 
+#else   // DEV_CODE 
 void adc_scan_seq(
     ADC_TypeDef *adc, 
     adc_seq_num_t seq_len, 
     uint16_t *adc_data); 
+#endif   // DEV_CODE 
 
-//================================================================================
-
-
-//================================================================================
-// Status Registers 
-
-/**
- * @brief Overrun bit status 
- * 
- * @details This returns the status of the ADC overrun which indicates if there has been 
- *          a loss of data. If the overrun interrupt is enabled then this function isn't 
- *          needed. Possible return values: <br> 
- *            - 0: no overrun <br> 
- *            - 1: overrun occured <br> 
- * 
- * @param adc : pointer to the ADC port used 
- * @return uint8_t : overrun status 
- */
-uint8_t adc_overrun_status(ADC_TypeDef *adc); 
-
-
-/**
- * @brief Clear the overrun flag 
- * 
- * @details Clears the overrun bit for a given ADC port. Note that if overrun interrupts are 
- *          enabled for the ADC then this function may be needed by the handler in order to 
- *          exit from the handler. This has yet to be tested. 
- * 
- * @param adc : pointer to the ADC port used 
- */
-void adc_overrun_clear(ADC_TypeDef *adc); 
-
-
-/**
- * @brief Analog watchdog bit status 
- * 
- * @details Returns the status of the ADC watchdog which indicates if a channel has exceeded 
- *          the defined voltage thresholds. If the watchdog interrupt is enabled then this 
- *          function is not needed. Possible return values: <br> 
- *            - 0: no watchdog flag <br> 
- *            - 1: watchdog flag - threshold exceeded <br> 
- * 
- * @param adc : pointer to the ADC port used 
- * @return uint8_t : watchdog status 
- */
-uint8_t adc_wd_flag(ADC_TypeDef *adc); 
-
-//================================================================================
-
-
-//================================================================================
-// Control Registers 
-
-/**
- * @brief Turn ADC on 
- * 
- * @details Enables the ADC. This is needed before the ADC can operate. The ADC must not be 
- *          enabled while configuring the ADC settings. Note that there is a short, blocking 
- *          delay within this function to allow time for the ADC to stabilize after being 
- *          enabled. 
- * 
- * @param adc : pointer to the ADC port used 
- */
-void adc_on(ADC_TypeDef *adc); 
-
-
-/**
- * @brief Turn ADC off 
- * 
- * @details Disables the ADC and puts it in power down mode. This can be used during times 
- *          when the ADC is not needed and must be used if changing ADC settings. By default 
- *          the ADC is disabled on statup so if the ADC needs to be disabled then this function 
- *          only needs to be called after adc_on has been called. 
- * 
- * @param adc : pointer to the ADC port used 
- */
-void adc_off(ADC_TypeDef *adc); 
-
-
-/**
- * @brief Start an ADC conversion 
- * 
- * @details Starts the ADC conversion(s). This function only needs to be called when using DMA 
- *          to convert ADC values. If using continuous mode then this function needs to only 
- *          be called once after enabling the ADC. If using non-continuous mode then this 
- *          function needs to be called every time you want a converison or sequence of 
- *          conversions to happen. Note that this function has no effect (conversion won't 
- *          start) if the ADC is not enabled. 
- * 
- * @see adc_on 
- * 
- * @param adc : pointer to the ADC port used 
- */
-void adc_start(ADC_TypeDef *adc); 
-
-//================================================================================
-
-
-//================================================================================
-// Sequence Registers 
-
-/**
- * @brief Channel conversion sequence 
- * 
- * @details Defines a single channels position in the conversion sequence. Conversion sequences 
- *          are only relevant (and necessary) in scan mode. In this mode the ADC will convert 
- *          the channel defined at sequence position 1, then once done will automatically 
- *          proceed to convert sequence position 2 and so on until the end of the defined 
- *          sequence. This function is called during the initialization sequence only if scan 
- *          mode is being used. A single ADC channel can be assigned to multiple sequence 
- *          positions by calling this function multiples times for the same channel in 
- *          different positions. 
- * 
- * @see adc_channel_t
- * @see adc_seq_num_t
- * 
- * @param adc : pointer to the ADC port used 
- * @param channel : channel being assigned a sequence position 
- * @param seq_num : sequence position of the channel 
- */
-void adc_seq(
-    ADC_TypeDef *adc, 
-    adc_channel_t channel, 
-    adc_seq_num_t seq_num); 
-
-
-/**
- * @brief Regular channel sequence length setter 
- * 
- * @details If using a sequence (scan mode), this function must be called once after the ADC 
- *          sequence has been defined using the adc_seq function. This specifies the length of 
- *          the defined sequence so the ADC knows when to stop conversions. 
- * 
- * @see adc_seq 
- * 
- * @param adc : pointer to the ADC port used 
- * @param seq_len : number of conversions in the regular channel conversion sequence 
- */
-void adc_seq_len_set(
-    ADC_TypeDef *adc, 
-    adc_seq_num_t seq_len); 
-
-//================================================================================
+//=======================================================================================
 
 #endif  // _ANALOG_DRIVER_H_
