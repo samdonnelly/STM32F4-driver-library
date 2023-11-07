@@ -15,10 +15,6 @@
 #ifndef _LSM303AGR_DRIVER_H_ 
 #define _LSM303AGR_DRIVER_H_ 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 //=======================================================================================
 // Includes 
 
@@ -29,10 +25,6 @@ extern "C" {
 // Communication drivers 
 #include "i2c_comm.h"
 #include "gpio_driver.h"
-#include "linked_list_driver.h"
-
-// Standard libraries 
-#include "math.h"
 
 //=======================================================================================
 
@@ -230,9 +222,5 @@ void lsm303agr_clear_status(void);
 uint8_t lsm303agr_get_status(void); 
 
 //=======================================================================================
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif   // _LSM303AGR_DRIVER_H_ 

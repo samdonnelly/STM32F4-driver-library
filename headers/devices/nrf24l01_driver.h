@@ -15,10 +15,6 @@
 #ifndef _NRF24L01_DRIVER_H_ 
 #define _NRF24L01_DRIVER_H_ 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 //=======================================================================================
 // Includes 
 
@@ -451,9 +447,5 @@ void nrf24l01_clear_status(void);
 uint8_t nrf24l01_get_status(void); 
 
 //=======================================================================================
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif   // _NRF24L01_DRIVER_H_ 
