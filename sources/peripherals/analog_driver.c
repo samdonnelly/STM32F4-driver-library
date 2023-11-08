@@ -573,7 +573,6 @@ void adc_on(
     ADC_TypeDef *adc)
 {
     adc->CR2 |= (SET_BIT << SHIFT_0); 
-    tim_delay_ms(TIM9, ADC_STABLE_TIME);   // Give ADC time to stabilize 
 }
 
 
