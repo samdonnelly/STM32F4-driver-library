@@ -594,7 +594,7 @@ ADC_STATUS adc_start(
     // then a fault status will be returned. 
     adc->SR = CLEAR; 
     adc->CR2 |= (SET_BIT << SHIFT_30); 
-    return (ADC_STATUS)adc_start_wait(adc); 
+    return adc_start_wait(adc); 
 }
 #else   // DEV_CODE 
 void adc_start(
@@ -658,13 +658,13 @@ ADC_STATUS adc_scan_seq(
     {
         if (adc_eoc_wait(adc)) 
         {
-            return (ADC_STATUS)ADC_TIMEOUT; 
+            return ADC_TIMEOUT; 
         }
         *adc_data++ = adc_dr(adc); 
     } 
     while (--seq_count); 
 
-    return (ADC_STATUS)ADC_OK; 
+    return ADC_OK; 
 }
 #else   // DEV_CODE 
 void adc_scan_seq(
@@ -706,7 +706,7 @@ ADC_STATUS adc_start_wait(
 {
     uint16_t timeout = ADC_WAIT_TIMEOUT; 
     while ( (!((adc->SR) & (uint32_t)(SET_BIT << SHIFT_4))) && (--timeout) ); 
-    return timeout ? (ADC_STATUS)ADC_OK : (ADC_STATUS)ADC_NOT_OK; 
+    return timeout ? ADC_OK : ADC_NOT_OK; 
 }
 #else   // DEV_CODE 
 void adc_start_wait(
@@ -724,7 +724,7 @@ ADC_STATUS adc_eoc_wait(
 {
     uint16_t timeout = ADC_WAIT_TIMEOUT; 
     while( (!((adc->SR) & (uint32_t)(SET_BIT << SHIFT_1))) && (--timeout) ); 
-    return timeout ? (ADC_STATUS)ADC_OK : (ADC_STATUS)ADC_NOT_OK; 
+    return timeout ? ADC_OK : ADC_NOT_OK; 
 }
 #else   // DEV_CODE 
 void adc_eoc_wait(
