@@ -26,12 +26,27 @@ endif
 # production code C and CPP files.
 #
 
-# ------------ PRACTICE ------------
+# ------------ DEVICES -------------
 
-# TDD practice 
-SRC_DIRS += ./../src/practice/tdd   # Production code 
-SRC_DIRS += tests/tdd/test_srcs     # Test doubles and mocks 
-SRC_FILES += 
+# M8Q 
+SRC_FILES += ./../sources/devices/m8q_driver.c             # Production code 
+SRC_DIRS += tests/devices/m8q                              # Test doubles and mocks 
+
+# ----------------------------------
+
+# ---------- PERIPHERALS -----------
+
+# Analog 
+SRC_FILES += ./../sources/peripherals/analog_driver.c      # Production code 
+SRC_DIRS += tests/peripherals/analog                       # Test doubles and mocks 
+
+# ----------------------------------
+
+# ------------- TOOLS --------------
+
+# Switch debounce 
+SRC_FILES += ./../sources/tools/switch_debounce.c          # Production code 
+SRC_DIRS += tests/tools/switch_debounce                    # Test doubles and mocks 
 
 # ----------------------------------
 
@@ -59,13 +74,37 @@ SRC_FILES +=
 TEST_SRC_DIRS += tests
 TEST_SRC_FILES += 
 
-# TDD practice 
-TEST_SRC_DIRS += tests/tdd/test_code
+# ------------ DEVICES -------------
+
+# M8Q 
+TEST_SRC_DIRS += tests/devices/m8q             # Unit tests 
 TEST_SRC_FILES += 
+
+# ----------------------------------
+
+# ---------- PERIPHERALS -----------
+
+# Analog 
+TEST_SRC_DIRS += tests/peripherals/analog      # Unit tests 
+TEST_SRC_FILES += 
+
+# ----------------------------------
+
+# ------------- TOOLS --------------
+
+# Switch debounce 
+TEST_SRC_DIRS += tests/tools/switch_debounce   # Unit tests 
+TEST_SRC_FILES += 
+
+# ----------------------------------
+
+# ----------------------------------
 
 # 
 TEST_SRC_DIRS += 
 TEST_SRC_FILES += 
+
+# ----------------------------------
 
 # --------------------------------------------------------------------
 
@@ -90,14 +129,34 @@ CPPUTEST_USE_EXTENSIONS = Y
 # This includes all the headers in the subfolders of 'include' 
 INCLUDE_DIRS += $(CPPUTEST_HOME)/include
 
-# General 
-INCLUDE_DIRS += ./../inc
+# stmcode headers needed to get the tests to build 
+INCLUDE_DIRS += ./../stmcode/Drivers/CMSIS/Device/ST/STM32F4xx/Include
+INCLUDE_DIRS += ./../stmcode/Drivers/CMSIS/Core/Include
 
-# ------------ PRACTICE ------------
+# ------------ DEVICES -------------
 
-# TDD practice 
-INCLUDE_DIRS += ./../inc/practice/tdd   # Production code 
-INCLUDE_DIRS += tests/tdd/test_srcs     # Test doubles 
+INCLUDE_DIRS += ./../headers/devices            # Production code 
+
+# M8Q 
+INCLUDE_DIRS += tests/devices/m8q               # Test doubles 
+
+# ----------------------------------
+
+# ---------- PERIPHERALS -----------
+
+INCLUDE_DIRS += ./../headers/peripherals        # Production code 
+
+# Analog 
+INCLUDE_DIRS += tests/peripherals/analog        # Test doubles 
+
+# ----------------------------------
+
+# ------------- TOOLS --------------
+
+INCLUDE_DIRS += ./../headers/tools              # Production code 
+
+# Switch debounce 
+INCLUDE_DIRS += tests/tools/switch_debounce     # Test doubles 
 
 # ----------------------------------
 
@@ -160,6 +219,7 @@ CPPUTEST_WARNINGFLAGS += -Wno-documentation
 CPPUTEST_WARNINGFLAGS += -Wno-missing-noreturn
 endif
 
+# CppUTest flags 
 CPPUTEST_WARNINGFLAGS += -Wall
 CPPUTEST_WARNINGFLAGS += -Werror
 CPPUTEST_WARNINGFLAGS += -Wfatal-errors
@@ -177,6 +237,9 @@ CPPUTEST_CXXFLAGS += -Wno-c++14-compat
 CPPUTEST_CXXFLAGS += --std=c++11
 CPPUTEST_CXXFLAGS += -Wno-c++98-compat-pedantic
 CPPUTEST_CXXFLAGS += -Wno-c++98-compat
+
+# Additional exceptions added by me 
+CPPUTEST_WARNINGFLAGS += -Wno-int-to-pointer-cast
 
 # Coloroze output
 CPPUTEST_EXE_FLAGS += -c

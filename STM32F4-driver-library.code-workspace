@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../cpputest"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"spi_comm.h": "c",
+			"tools.h": "c",
+			"stm32f411xe.h": "c",
+			"hw125_controller.h": "c",
+			"ffconf.h": "c",
+			"core_cm4.h": "c"
+		}
+	}
+}

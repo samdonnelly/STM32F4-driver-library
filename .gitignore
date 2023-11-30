@@ -54,4 +54,4 @@ unit_tests/*.sublime-*
 
 unit_tests/test-lib
 unit_tests/test-obj
-unit_tests/src
+unit_tests/sources
