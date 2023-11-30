@@ -289,6 +289,7 @@ typedef enum {
  */
 typedef enum {
     ADC_OK, 
+    ADC_NO_INIT, 
     ADC_TIMEOUT 
 } adc_status_t; 
 
@@ -305,6 +306,18 @@ typedef uint8_t ADC_STATUS;
 
 //=======================================================================================
 // Initialization 
+
+/**
+ * @brief ADC1 clock enable 
+ * 
+ * @details 
+ * 
+ * @param rcc 
+ * @return ADC_STATUS 
+ */
+ADC_STATUS adc1_clock_enable(
+    RCC_TypeDef *rcc); 
+
 
 /**
  * @brief ADC port initialization 
@@ -334,9 +347,10 @@ typedef uint8_t ADC_STATUS;
  * @param dds : DMA disable behavior 
  * @param eocie : end of conversion interrupt selection 
  * @param ovrie : overrun behavior selection 
+ * @return ADC_STATUS : initialization status 
  */
 #if DEV_CODE 
-void adc_port_init(
+ADC_STATUS adc_port_init(
     ADC_TypeDef *adc, 
     ADC_Common_TypeDef *adc_common, 
     adc_prescalar_t prescalar, 
@@ -382,12 +396,21 @@ void adc_port_init(
  * @param adc_channel : channel that corresponds to the pin used 
  * @param smp : sample time of the channel 
  */
+#if DEV_CODE 
+ADC_STATUS adc_pin_init(
+    ADC_TypeDef *adc, 
+    GPIO_TypeDef *gpio, 
+    pin_selector_t adc_pin, 
+    adc_channel_t adc_channel, 
+    adc_smp_cycles_t smp); 
+#else   // DEV_CODE 
 void adc_pin_init(
     ADC_TypeDef *adc, 
     GPIO_TypeDef *gpio, 
     pin_selector_t adc_pin, 
     adc_channel_t adc_channel, 
     adc_smp_cycles_t smp); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -410,9 +433,10 @@ void adc_pin_init(
  * @param hi_thresh : upper voltage threshold that triggers the watchdog 
  * @param lo_thresh : lower voltage threshold that triggers the watchdog 
  * @param awdie : watchdog interrupt selection 
+ * @return ADC_STATUS : ADC watchdog init status 
  */
 #if DEV_CODE 
-void adc_wd_init(
+ADC_STATUS adc_wd_init(
     ADC_TypeDef *adc, 
     adc_param_config_t wd, 
     adc_param_config_t wdsc, 
@@ -450,11 +474,19 @@ void adc_wd_init(
  * @param adc : pointer to the ADC port used 
  * @param channel : channel being assigned a sequence position 
  * @param seq_num : sequence position of the channel 
+ * @return ADC_STATUS : ADC channel conversion sequence init status 
  */
+#if DEV_CODE 
+ADC_STATUS adc_seq(
+    ADC_TypeDef *adc, 
+    adc_channel_t channel, 
+    adc_seq_num_t seq_num); 
+#else   // DEV_CODE 
 void adc_seq(
     ADC_TypeDef *adc, 
     adc_channel_t channel, 
     adc_seq_num_t seq_num); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -468,10 +500,17 @@ void adc_seq(
  * 
  * @param adc : pointer to the ADC port used 
  * @param seq_len : number of conversions in the regular channel conversion sequence 
+ * @return ADC_STATUS : ADC sequence length setter init status 
  */
+#if DEV_CODE 
+ADC_STATUS adc_seq_len_set(
+    ADC_TypeDef *adc, 
+    adc_seq_num_t seq_len); 
+#else   // DEV_CODE 
 void adc_seq_len_set(
     ADC_TypeDef *adc, 
     adc_seq_num_t seq_len); 
+#endif   // DEV_CODE 
 
 //=======================================================================================
 

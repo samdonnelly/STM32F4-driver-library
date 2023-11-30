@@ -40,6 +40,9 @@ SRC_DIRS += tests/devices/m8q                              # Test doubles and mo
 SRC_FILES += ./../sources/peripherals/analog_driver.c      # Production code 
 SRC_DIRS += tests/peripherals/analog                       # Test doubles and mocks 
 
+# GPIO 
+SRC_FILES += ./../sources/peripherals/gpio_driver.c        # Production code 
+
 # ----------------------------------
 
 # ------------- TOOLS --------------

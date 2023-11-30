@@ -8,18 +8,33 @@ extern "C"
 
 //==================================================
 // Notes 
-
-// Test plan 
-// - 
-
 //==================================================
 
 TEST_GROUP(analog_driver)
 {
+    // Test group global variables 
+    RCC_TypeDef RCC_FAKE; 
+    ADC_TypeDef ADC1_FAKE; 
+    ADC_Common_TypeDef ADC1_COMMON_FAKE; 
+
     // Constructor 
     void setup()
     {
-        // 
+        // Run initialization functions common to all tests 
+        adc1_clock_enable(&RCC_FAKE); 
+
+        adc_port_init(
+            &ADC1_FAKE, 
+            &ADC1_COMMON_FAKE, 
+            ADC_PCLK2_4, 
+            ADC_RES_8, 
+            ADC_PARAM_ENABLE,    // End of Conversion (EOC) 
+            ADC_PARAM_DISABLE,   // End of Conversion (EOC) interrupt 
+            ADC_PARAM_ENABLE,    // Scan mode 
+            ADC_PARAM_DISABLE,   // Continuous mode 
+            ADC_PARAM_DISABLE,   // DMA mode 
+            ADC_PARAM_DISABLE,   // DMA disable selection 
+            ADC_PARAM_DISABLE);  // Overrun interrupt 
     }
 
     // Destructor 
@@ -30,30 +45,31 @@ TEST_GROUP(analog_driver)
 }; 
 
 
-// Test 0 
-TEST(analog_driver, test0)
+// Invalid ADC register pointers - no initialization performed 
+TEST(analog_driver, null_ptr_no_init)
 {
-    // ADC1 
-    // 0x40000000UL + 0x00010000UL + 0x2000UL; 
+    // Local variables 
+    RCC_TypeDef *RCC_LOCAL_FAKE = NULL; 
+    ADC_TypeDef *ADC1_LOCAL_FAKE = NULL; 
+    ADC_Common_TypeDef *ADC1_COMMON_LOCAL_FAKE = NULL; 
 
-    // uint32_t adc1_fake = CLEAR; 
-    // ADC_TypeDef *ADC1_FAKE = (ADC_TypeDef *)((uint32_t)&adc1_fake); 
+    // Run initialization functions 
+    ADC_STATUS clock_status = adc1_clock_enable(RCC_LOCAL_FAKE); 
 
-    // ADC1_FAKE->DR = CLEAR; 
+    ADC_STATUS port_status = adc_port_init(
+        ADC1_LOCAL_FAKE, 
+        ADC1_COMMON_LOCAL_FAKE, 
+        ADC_PCLK2_4, 
+        ADC_RES_8, 
+        ADC_PARAM_DISABLE,   // End of Conversion (EOC) 
+        ADC_PARAM_DISABLE,   // End of Conversion (EOC) interrupt 
+        ADC_PARAM_DISABLE,   // Scan mode 
+        ADC_PARAM_DISABLE,   // Continuous mode 
+        ADC_PARAM_DISABLE,   // DMA mode 
+        ADC_PARAM_DISABLE,   // DMA disable selection 
+        ADC_PARAM_DISABLE);  // Overrun interrupt 
 
-    // ADC COMMON 
-
-    // // 
-    // adc_port_init(
-    //     ADC1, 
-    //     ADC1_COMMON, 
-    //     ADC_PCLK2_4, 
-    //     ADC_RES_8, 
-    //     ADC_EOC_EACH, 
-    //     ADC_SCAN_ENABLE, 
-    //     ADC_CONT_DISABLE, 
-    //     ADC_DMA_DISABLE, 
-    //     ADC_DDS_DISABLE, 
-    //     ADC_EOC_INT_DISABLE, 
-    //     ADC_OVR_INT_DISABLE); 
+    // Check that initialization was skipped due to invalid register addresses 
+    LONGS_EQUAL(ADC_NO_INIT, clock_status); 
+    LONGS_EQUAL(ADC_NO_INIT, port_status); 
 }

@@ -191,9 +191,15 @@ void adc_res(
  * @param adc : pointer to the ADC port used 
  * @param eoc_select : end of conversion behavior 
  */
+#if DEV_CODE 
+void adc_eoc_select(
+    ADC_TypeDef *adc, 
+    adc_param_config_t eoc_select); 
+#else   // DEV_CODE 
 void adc_eoc_select(
     ADC_TypeDef *adc, 
     adc_eoc_config_t eoc_select); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -207,9 +213,15 @@ void adc_eoc_select(
  * @param adc : pointer to the ADC port used 
  * @param eocie : EOC interrupt configuration 
  */
+#if DEV_CODE 
+void adc_eocie(
+    ADC_TypeDef *adc, 
+    adc_param_config_t eocie); 
+#else   // DEV_CODE 
 void adc_eocie(
     ADC_TypeDef *adc, 
     adc_eoc_int_t eocie); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -223,9 +235,15 @@ void adc_eocie(
  * @param adc : pointer to the ADC port used 
  * @param scan : scan mode configuration 
  */
+#if DEV_CODE 
+void adc_scan(
+    ADC_TypeDef *adc, 
+    adc_param_config_t scan); 
+#else   // DEV_CODE 
 void adc_scan(
     ADC_TypeDef *adc, 
     adc_scan_t scan); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -240,9 +258,15 @@ void adc_scan(
  * @param adc : pointer to the ADC port used 
  * @param cont : continuous mode configuration 
  */
+#if DEV_CODE 
+void adc_cont(
+    ADC_TypeDef *adc, 
+    adc_param_config_t cont); 
+#else   // DEV_CODE 
 void adc_cont(
     ADC_TypeDef *adc, 
     adc_cont_t cont); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -254,9 +278,15 @@ void adc_cont(
  * @param adc : pointer to the ADC port used 
  * @param dma : DMA mode configuration 
  */
+#if DEV_CODE 
+void adc_dma(
+    ADC_TypeDef *adc, 
+    adc_param_config_t dma); 
+#else   // DEV_CODE 
 void adc_dma(
     ADC_TypeDef *adc, 
     adc_dma_t dma); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -270,9 +300,15 @@ void adc_dma(
  * @param adc : pointer to the ADC port used 
  * @param dds : DMA disable configuration 
  */
+#if DEV_CODE 
+void adc_dds(
+    ADC_TypeDef *adc, 
+    adc_param_config_t dds); 
+#else   // DEV_CODE 
 void adc_dds(
     ADC_TypeDef *adc, 
     adc_dds_t dds); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -287,9 +323,15 @@ void adc_dds(
  * @param adc : pointer to the ADC port used 
  * @param wd : watchdog configuration 
  */
+#if DEV_CODE 
+void adc_awden(
+    ADC_TypeDef *adc, 
+    adc_param_config_t wd); 
+#else   // DEV_CODE 
 void adc_awden(
     ADC_TypeDef *adc, 
     adc_wd_t wd); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -305,9 +347,15 @@ void adc_awden(
  * @param adc : pointer to the ADC port used 
  * @param wdsc : watchdog single channel configuration 
  */
+#if DEV_CODE 
+void adc_awdsgl(
+    ADC_TypeDef *adc, 
+    adc_param_config_t wdsc); 
+#else   // DEV_CODE 
 void adc_awdsgl(
     ADC_TypeDef *adc, 
     adc_wd_sc_t wdsc); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -337,9 +385,15 @@ void adc_wd_chan_select(
  * @param adc : pointer to the ADC port used 
  * @param awdie : watchdog interrupt configuration 
  */
+#if DEV_CODE 
+void adc_awdie(
+    ADC_TypeDef *adc, 
+    adc_param_config_t awdie); 
+#else   // DEV_CODE 
 void adc_awdie(
     ADC_TypeDef *adc, 
     adc_awdie_t awdie); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -354,9 +408,15 @@ void adc_awdie(
  * @param adc : pointer to the ADC port used 
  * @param ovrie : overrun interrupt configuration 
  */
+#if DEV_CODE 
+void adc_ovrie(
+    ADC_TypeDef *adc, 
+    adc_param_config_t ovrie); 
+#else   // DEV_CODE 
 void adc_ovrie(
     ADC_TypeDef *adc, 
     adc_ovrie_t ovrie); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -412,9 +472,23 @@ void adc_seq_clear(
 //=======================================================================================
 // Initialization 
 
+// ADC1 clock enable 
+ADC_STATUS adc1_clock_enable(
+    RCC_TypeDef *rcc)
+{
+    if (rcc == NULL)
+    {
+        return ADC_NO_INIT; 
+    }
+
+    rcc->APB2ENR |= (SET_BIT << SHIFT_8); 
+    return ADC_OK; 
+}
+
+
 // ADC port init - called once for each ADC port used 
 #if DEV_CODE 
-void adc_port_init(
+ADC_STATUS adc_port_init(
     ADC_TypeDef *adc, 
     ADC_Common_TypeDef *adc_common, 
     adc_prescalar_t prescalar, 
@@ -426,6 +500,39 @@ void adc_port_init(
     adc_param_config_t dma, 
     adc_param_config_t dds, 
     adc_param_config_t ovrie)
+{
+    if ((adc == NULL) || (adc_common == NULL))
+    {
+        return ADC_NO_INIT; 
+    }
+
+    // Set the ADC clock frequency 
+    adc_prescalar(adc_common, prescalar); 
+
+    // Set the channel resolution 
+    adc_res(adc, resolution); 
+
+    // Set the EOC behavior 
+    adc_eoc_select(adc, eoc); 
+
+    // Set scan conversion 
+    adc_scan(adc, scan);
+
+    // Set continuous conversion 
+    adc_cont(adc, cont); 
+
+    // Set DMA settings 
+    adc_dma(adc, dma); 
+    adc_dds(adc, dds); 
+
+    // Set the EOC interrupt 
+    adc_eocie(adc, eocie); 
+
+    // Set overrun interrupt 
+    adc_ovrie(adc, ovrie); 
+
+    return ADC_OK; 
+}
 #else   // DEV_CODE 
 void adc_port_init(
     ADC_TypeDef *adc, 
@@ -439,7 +546,6 @@ void adc_port_init(
     adc_dds_t dds, 
     adc_eoc_int_t eocie, 
     adc_ovrie_t ovrie)
-#endif   // DEV_CODE 
 {
     // Check for a valid ADC port 
     if (adc != ADC1) 
@@ -475,9 +581,32 @@ void adc_port_init(
     // Set overrun interrupt 
     adc_ovrie(adc, ovrie); 
 }
+#endif   // DEV_CODE 
 
 
 // ADC pin init - called for each ADC pin used 
+#if DEV_CODE 
+ADC_STATUS adc_pin_init(
+    ADC_TypeDef *adc, 
+    GPIO_TypeDef *gpio, 
+    pin_selector_t adc_pin, 
+    adc_channel_t adc_channel, 
+    adc_smp_cycles_t smp)
+{
+    if ((adc == NULL) || (gpio == NULL))
+    {
+        return ADC_NO_INIT; 
+    }
+
+    // Configure the GPIO pin for analog mode 
+    gpio_pin_init(gpio, adc_pin, MODER_ANALOG, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+
+    // Set the sample time for the channel 
+    adc_smp(adc, adc_channel, smp); 
+
+    return ADC_OK; 
+}
+#else   // DEV_CODE 
 void adc_pin_init(
     ADC_TypeDef *adc, 
     GPIO_TypeDef *gpio, 
@@ -489,13 +618,14 @@ void adc_pin_init(
     gpio_pin_init(gpio, adc_pin, MODER_ANALOG, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
 
     // Set the sample time for the channel 
-    adc_smp(adc, adc_channel, smp);
+    adc_smp(adc, adc_channel, smp); 
 }
+#endif   // DEV_CODE 
 
 
 // ADC watchdog setup 
 #if DEV_CODE 
-void adc_wd_init(
+ADC_STATUS adc_wd_init(
     ADC_TypeDef *adc, 
     adc_param_config_t wd, 
     adc_param_config_t wdsc, 
@@ -503,6 +633,29 @@ void adc_wd_init(
     uint16_t hi_thresh, 
     uint16_t lo_thresh, 
     adc_param_config_t awdie)
+{
+    if (adc == NULL)
+    {
+        return ADC_NO_INIT; 
+    }
+
+    // Analog watchdog enable on regular channels 
+    adc_awden(adc, wd); 
+
+    // Enable the watchdog on a single channel in scan mode
+    adc_awdsgl(adc, wdsc); 
+
+    // Select the channel that the watchdog watches 
+    adc_wd_chan_select(adc, channel); 
+
+    // Set the watchdog thresholds 
+    adc_wd_thresh(adc, hi_thresh, lo_thresh); 
+
+    // Analog watchdog interrupt 
+    adc_awdie(adc, awdie); 
+
+    return ADC_OK; 
+}
 #else   // DEV_CODE 
 void adc_wd_init(
     ADC_TypeDef *adc, 
@@ -512,7 +665,6 @@ void adc_wd_init(
     uint16_t hi_thresh, 
     uint16_t lo_thresh, 
     adc_awdie_t awdie)
-#endif   // DEV_CODE 
 {
     // Analog watchdog enable on regular channels 
     adc_awden(adc, wd); 
@@ -529,9 +681,39 @@ void adc_wd_init(
     // Analog watchdog interrupt 
     adc_awdie(adc, awdie); 
 }
+#endif   // DEV_CODE 
 
 
 // Channel sequence - called for each ADC input (pin) in the sequence 
+#if DEV_CODE 
+ADC_STATUS adc_seq(
+    ADC_TypeDef *adc, 
+    adc_channel_t channel, 
+    adc_seq_num_t seq_num)
+{
+    if (adc == NULL)
+    {
+        return ADC_NO_INIT; 
+    }
+
+    uint32_t adc_channel = (uint32_t)channel; 
+
+    if (seq_num > ADC_SEQ_12) 
+    {
+        adc->SQR1 |= (adc_channel << (uint32_t)(ADC_CHNL_NUM_SIZE*(seq_num - ADC_SEQ_13))); 
+    }
+    else if (seq_num > ADC_SEQ_6) 
+    {
+        adc->SQR2 |= (adc_channel << (uint32_t)(ADC_CHNL_NUM_SIZE*(seq_num - ADC_SEQ_7))); 
+    }
+    else 
+    {
+        adc->SQR3 |= (adc_channel << (uint32_t)(ADC_CHNL_NUM_SIZE*(seq_num - ADC_SEQ_1))); 
+    }
+
+    return ADC_OK; 
+}
+#else   // DEV_CODE 
 void adc_seq(
     ADC_TypeDef *adc, 
     adc_channel_t channel, 
@@ -552,15 +734,32 @@ void adc_seq(
         adc->SQR3 |= (adc_channel << (uint32_t)(ADC_CHNL_NUM_SIZE*(seq_num - ADC_SEQ_1))); 
     }
 }
+#endif   // DEV_CODE 
 
 
 // Regular channel sequence length setter - called once if a sequence is used 
+#if DEV_CODE 
+ADC_STATUS adc_seq_len_set(
+    ADC_TypeDef *adc, 
+    adc_seq_num_t seq_len) 
+{
+    if (adc == NULL)
+    {
+        return ADC_NO_INIT; 
+    }
+
+    adc->SQR1 |= (uint32_t)((seq_len - ADC_SEQ_1) << SHIFT_20); 
+
+    return ADC_OK; 
+}
+#else   // DEV_CODE 
 void adc_seq_len_set(
     ADC_TypeDef *adc, 
     adc_seq_num_t seq_len) 
 {
     adc->SQR1 |= (uint32_t)((seq_len - ADC_SEQ_1) << SHIFT_20); 
 }
+#endif   // DEV_CODE 
 
 //=======================================================================================
 
@@ -706,7 +905,7 @@ ADC_STATUS adc_start_wait(
 {
     uint16_t timeout = ADC_WAIT_TIMEOUT; 
     while ( (!((adc->SR) & (uint32_t)(SET_BIT << SHIFT_4))) && (--timeout) ); 
-    return timeout ? ADC_OK : ADC_NOT_OK; 
+    return timeout ? ADC_OK : ADC_TIMEOUT; 
 }
 #else   // DEV_CODE 
 void adc_start_wait(
@@ -724,7 +923,7 @@ ADC_STATUS adc_eoc_wait(
 {
     uint16_t timeout = ADC_WAIT_TIMEOUT; 
     while( (!((adc->SR) & (uint32_t)(SET_BIT << SHIFT_1))) && (--timeout) ); 
-    return timeout ? ADC_OK : ADC_NOT_OK; 
+    return timeout ? ADC_OK : ADC_TIMEOUT; 
 }
 #else   // DEV_CODE 
 void adc_eoc_wait(
