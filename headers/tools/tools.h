@@ -45,12 +45,6 @@
 // Data type 
 #define INT16_NUM_DIGITS 5
 
-// Scalars 
-#define SCALE_10 10 
-#define SCALE_100 100 
-#define SCALE_1000 1000 
-#define SCALE_10000 10000 
-
 // AND filters 
 #define FILTER_1_LSB 0x01
 #define FILTER_2_LSB 0x03
@@ -77,6 +71,12 @@
 #define FILTER_BIT_6 0x40 
 #define FILTER_BIT_7 0x80 
 
+// Alternate function configuration 
+#define AFR_INDEX_PIN_MASK 0x08        // Distinguishes pins 0-7 from pins 8-15 
+
+//==================================================
+// Characters 
+
 // String formatting 
 #define NULL_CHAR   0    // '\0' == 0
 #define NL_CHAR     10   // '\n' == 10
@@ -98,6 +98,16 @@
 #define NUM_TO_CHAR_OFFSET 0x30  // Hex number (0x0-0x9) to char number ('0'-'9') offset 
 #define HEX_TO_LET_CHAR 0x37     // Hex letter (0xA-0xF) to char letter ('A'-'F') offset 
 
+//==================================================
+
+//==================================================
+// Scaling 
+
+#define SCALE_10 10 
+#define SCALE_100 100 
+#define SCALE_1000 1000 
+#define SCALE_10000 10000 
+
 // Modulo operator divisors
 #define REMAINDER_10   10
 #define REMAINDER_100  100
@@ -109,11 +119,23 @@
 #define DIVIDE_1000  1000
 #define DIVIDE_10000 10000 
 
-// Alternate function configuration 
-#define AFR_INDEX_PIN_MASK 0x08        // Distinguishes pins 0-7 from pins 8-15 
+//==================================================
 
+//==================================================
 // Math 
-#define RAD_TO_DEG 180.0 / 3.14159     // Radians to degrees conversion 
+
+#define RAD_TO_DEG 180.0 / 3.141592    // Radians to degrees conversion 
+#define DEG_TO_RAD 3.141592 / 180.0    // Radians to degrees conversion 
+#define PI_OVER_2 1.570796             // PI/2 
+
+//==================================================
+
+//==================================================
+// Physics 
+
+#define KM_TO_M 1000    // kilometers to meters 
+
+//==================================================
 
 //=======================================================================================
 
