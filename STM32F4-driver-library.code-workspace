@@ -14,7 +14,10 @@
 			"stm32f411xe.h": "c",
 			"hw125_controller.h": "c",
 			"ffconf.h": "c",
-			"core_cm4.h": "c"
+			"core_cm4.h": "c",
+			"cstring": "cpp",
+			"__bit_reference": "cpp",
+			"__string": "cpp"
 		}
 	}
 }
