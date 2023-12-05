@@ -89,7 +89,7 @@ void debounce(
     uint8_t press_pull_down = CLEAR; 
     uint8_t release_pull_up = CLEAR; 
     uint8_t release_pull_down = CLEAR; 
-    uint8_t and_results = BYTE_HIGH; 
+    uint8_t and_results = HIGH_8BIT; 
     uint8_t or_results = CLEAR; 
 
     // Record the button status 
@@ -111,7 +111,7 @@ void debounce(
 
     // To isolate the pressed pull-up buttons we XOR the OR results with logic high (0xFF) 
     // and AND the XOR results with the pull mask 
-    press_pull_up = (BYTE_HIGH ^ or_results) & debouncer.pull_mask; 
+    press_pull_up = (HIGH_8BIT ^ or_results) & debouncer.pull_mask; 
 
     // To isolate the pressed pull-down buttons we NOT the pull mask and AND this with 
     // the AND results 

@@ -289,7 +289,7 @@ typedef enum {
  */
 typedef enum {
     ADC_OK, 
-    ADC_NO_INIT, 
+    ADC_INVALID_PTR, 
     ADC_TIMEOUT 
 } adc_status_t; 
 
@@ -313,7 +313,7 @@ typedef uint8_t ADC_STATUS;
  * @details 
  * 
  * @param rcc 
- * @return ADC_STATUS 
+ * @return ADC_STATUS : ADC1 clock enable status 
  */
 ADC_STATUS adc1_clock_enable(
     RCC_TypeDef *rcc); 
@@ -347,7 +347,7 @@ ADC_STATUS adc1_clock_enable(
  * @param dds : DMA disable behavior 
  * @param eocie : end of conversion interrupt selection 
  * @param ovrie : overrun behavior selection 
- * @return ADC_STATUS : initialization status 
+ * @return ADC_STATUS : port initialization status 
  */
 #if DEV_CODE 
 ADC_STATUS adc_port_init(
@@ -395,6 +395,7 @@ void adc_port_init(
  * @param adc_pin : pin number of the pin used 
  * @param adc_channel : channel that corresponds to the pin used 
  * @param smp : sample time of the channel 
+ * @return ADC_STATUS : ADC pin initialization status 
  */
 #if DEV_CODE 
 ADC_STATUS adc_pin_init(
@@ -433,7 +434,7 @@ void adc_pin_init(
  * @param hi_thresh : upper voltage threshold that triggers the watchdog 
  * @param lo_thresh : lower voltage threshold that triggers the watchdog 
  * @param awdie : watchdog interrupt selection 
- * @return ADC_STATUS : ADC watchdog init status 
+ * @return ADC_STATUS : ADC watchdog initialization status 
  */
 #if DEV_CODE 
 ADC_STATUS adc_wd_init(
@@ -474,7 +475,7 @@ void adc_wd_init(
  * @param adc : pointer to the ADC port used 
  * @param channel : channel being assigned a sequence position 
  * @param seq_num : sequence position of the channel 
- * @return ADC_STATUS : ADC channel conversion sequence init status 
+ * @return ADC_STATUS : ADC channel conversion sequence initialization status 
  */
 #if DEV_CODE 
 ADC_STATUS adc_seq(
@@ -500,7 +501,7 @@ void adc_seq(
  * 
  * @param adc : pointer to the ADC port used 
  * @param seq_len : number of conversions in the regular channel conversion sequence 
- * @return ADC_STATUS : ADC sequence length setter init status 
+ * @return ADC_STATUS : ADC sequence length setter initialization status 
  */
 #if DEV_CODE 
 ADC_STATUS adc_seq_len_set(
@@ -527,9 +528,15 @@ void adc_seq_len_set(
  *          enabled. 
  * 
  * @param adc : pointer to the ADC port used 
+ * @return ADC_STATUS : ADC on status 
  */
+#if DEV_CODE 
+ADC_STATUS adc_on(
+    ADC_TypeDef *adc); 
+#else   // DEV_CODE 
 void adc_on(
     ADC_TypeDef *adc); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -541,9 +548,15 @@ void adc_on(
  *          only needs to be called after adc_on has been called. 
  * 
  * @param adc : pointer to the ADC port used 
+ * @return ADC_STATUS : ADC off status 
  */
+#if DEV_CODE 
+ADC_STATUS adc_off(
+    ADC_TypeDef *adc); 
+#else   // DEV_CODE 
 void adc_off(
     ADC_TypeDef *adc); 
+#endif   // DEV_CODE 
 
 
 /**
@@ -559,6 +572,7 @@ void adc_off(
  * @see adc_on 
  * 
  * @param adc : pointer to the ADC port used 
+ * @return ADC_STATUS : ADC start status 
  */
 #if DEV_CODE 
 ADC_STATUS adc_start(
@@ -610,6 +624,7 @@ uint16_t adc_read_single(
  * @param adc : pointer to the ADC port used 
  * @param seq_len : length of the ADC sequence defined 
  * @param adc_data : pointer to a buffer to store the conversion data 
+ * @return ADC_STATUS : ADC scan status 
  */
 #if DEV_CODE 
 ADC_STATUS adc_scan_seq(

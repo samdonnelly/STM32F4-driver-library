@@ -34,16 +34,11 @@
 // Conditional compilation 
 #define DEV_CODE 1              // For new code in the library that is yet to be tested 
 
-// Logic low - different ways to write zero for readability 
-#define CLEAR 0
-#define RESET_ZERO 0
-#define NONE 0
-
-// Logic high 
-#define BYTE_HIGH 0xFF 
-
 // Data type 
 #define INT16_NUM_DIGITS 5
+
+//==================================================
+// Masks 
 
 // AND filters 
 #define FILTER_1_LSB 0x01
@@ -73,6 +68,22 @@
 
 // Alternate function configuration 
 #define AFR_INDEX_PIN_MASK 0x08        // Distinguishes pins 0-7 from pins 8-15 
+
+//==================================================
+
+//==================================================
+// Logic setters 
+
+// Logic low - different ways to write zero for readability 
+#define CLEAR 0
+#define RESET_ZERO 0
+#define NONE 0
+
+// Logic high 
+#define HIGH_8BIT 0xFF 
+#define HIGH_32BIT 0xFFFFFFFF 
+
+//==================================================
 
 //==================================================
 // Characters 

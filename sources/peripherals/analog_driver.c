@@ -478,7 +478,7 @@ ADC_STATUS adc1_clock_enable(
 {
     if (rcc == NULL)
     {
-        return ADC_NO_INIT; 
+        return ADC_INVALID_PTR; 
     }
 
     rcc->APB2ENR |= (SET_BIT << SHIFT_8); 
@@ -503,7 +503,7 @@ ADC_STATUS adc_port_init(
 {
     if ((adc == NULL) || (adc_common == NULL))
     {
-        return ADC_NO_INIT; 
+        return ADC_INVALID_PTR; 
     }
 
     // Set the ADC clock frequency 
@@ -595,7 +595,7 @@ ADC_STATUS adc_pin_init(
 {
     if ((adc == NULL) || (gpio == NULL))
     {
-        return ADC_NO_INIT; 
+        return ADC_INVALID_PTR; 
     }
 
     // Configure the GPIO pin for analog mode 
@@ -636,7 +636,7 @@ ADC_STATUS adc_wd_init(
 {
     if (adc == NULL)
     {
-        return ADC_NO_INIT; 
+        return ADC_INVALID_PTR; 
     }
 
     // Analog watchdog enable on regular channels 
@@ -693,7 +693,7 @@ ADC_STATUS adc_seq(
 {
     if (adc == NULL)
     {
-        return ADC_NO_INIT; 
+        return ADC_INVALID_PTR; 
     }
 
     uint32_t adc_channel = (uint32_t)channel; 
@@ -745,7 +745,7 @@ ADC_STATUS adc_seq_len_set(
 {
     if (adc == NULL)
     {
-        return ADC_NO_INIT; 
+        return ADC_INVALID_PTR; 
     }
 
     adc->SQR1 |= (uint32_t)((seq_len - ADC_SEQ_1) << SHIFT_20); 
@@ -768,19 +768,47 @@ void adc_seq_len_set(
 // User functions 
 
 // Turn ADC on 
+#if DEV_CODE 
+ADC_STATUS adc_on(
+    ADC_TypeDef *adc)
+{
+    if (adc == NULL)
+    {
+        return ADC_INVALID_PTR; 
+    }
+
+    adc->CR2 |= (SET_BIT << SHIFT_0); 
+    return ADC_OK; 
+}
+#else   // DEV_CODE 
 void adc_on(
     ADC_TypeDef *adc)
 {
     adc->CR2 |= (SET_BIT << SHIFT_0); 
 }
+#endif   // DEV_CODE 
 
 
 // Turn ADC off 
+#if DEV_CODE 
+ADC_STATUS adc_off(
+    ADC_TypeDef *adc)
+{
+    if (adc == NULL)
+    {
+        return ADC_INVALID_PTR; 
+    }
+
+    adc->CR2 &= ~(SET_BIT << SHIFT_0); 
+    return ADC_OK; 
+}
+#else   // DEV_CODE 
 void adc_off(
     ADC_TypeDef *adc)
 {
     adc->CR2 &= ~(SET_BIT << SHIFT_0); 
 }
+#endif   // DEV_CODE 
 
 
 // Start an ADC conversion 
