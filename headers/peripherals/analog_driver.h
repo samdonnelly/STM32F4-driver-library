@@ -50,8 +50,8 @@ typedef enum {
 /**
  * @brief ADC channel number 
  * 
- * @details Each ADC has up to 15 channels that it serves. This defines each of the channels 
- *          which is used for initialization. 
+ * @details Each ADC has up to 18 channels that it serves. Use this to specify which 
+ *          channel to configure during initialization. 
  */
 typedef enum {
     ADC_CHANNEL_0, 
@@ -69,7 +69,10 @@ typedef enum {
     ADC_CHANNEL_12, 
     ADC_CHANNEL_13, 
     ADC_CHANNEL_14, 
-    ADC_CHANNEL_15  
+    ADC_CHANNEL_15, 
+    ADC_CHANNEL_16, 
+    ADC_CHANNEL_17, 
+    ADC_CHANNEL_18 
 } adc_channel_t; 
 
 

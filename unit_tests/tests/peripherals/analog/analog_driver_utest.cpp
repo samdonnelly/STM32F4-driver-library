@@ -22,6 +22,12 @@ extern "C"
 
 #define NUM_PORT_PARAM_CONFIGS 7 
 
+//==================================================
+// Register bits 
+
+// HTR & LTR 
+#define ADC_WD_THRESH_MASK    0x00000FFF 
+
 // APB2ENR 
 #define APB2ENR_ADC1_CLK_BIT  0x0000100
 
@@ -30,17 +36,57 @@ extern "C"
 #define CCR_PRE_HIGH_BIT      0x00020000 
 
 // CR1 
+#define CR1_AWDCH_LOW_BITS    0x0000000F
+#define CR1_AWDCH_HIGH_BIT    0x00000010
 #define CR1_EOC_INT_BIT       0x00000020 
+#define CR1_AWDIE_BIT         0x00000040 
 #define CR1_SCAN_BIT          0x00000100 
+#define CR1_AWDSGL_BIT        0x00000200 
+#define CR1_AWDEN_BIT         0x00800000
 #define CR1_RES_LOW_BIT       0x01000000 
 #define CR1_RES_HIGH_BIT      0x02000000 
 #define CR1_OVERRUN_BIT       0x04000000 
 
 // CR2 
+#define CR2_ADON_BIT          0x00000001
 #define CR2_CONT_BIT          0x00000002 
 #define CR2_DMA_BIT           0x00000100 
 #define CR2_DMA_DIS_BIT       0x00000200 
 #define CR2_EOC_BIT           0x00000400 
+
+// SMPR1 
+#define SMPR1_17_LOW_BIT      0x00200000 
+#define SMPR1_17_MED_BIT      0x00400000 
+#define SMPR1_17_HIGH_BIT     0x00800000 
+
+// SMPR2 
+#define SMPR2_0_LOW_BIT       0x00000001 
+#define SMPR2_0_MED_BIT       0x00000002 
+#define SMPR2_0_HIGH_BIT      0x00000004 
+#define SMPR2_1_LOW_BIT       0x00000008 
+#define SMPR2_1_MED_BIT       0x00000010 
+#define SMPR2_1_HIGH_BIT      0x00000020 
+
+// SQR1 
+#define SQR1_SEQ13_LOW_BITS   0x0000000F 
+#define SQR1_SEQ13_HIGH_BIT   0x00000010 
+#define SQR1_SEQ14_LOW_BITS   0x000001E0 
+#define SQR1_SEQ14_HIGH_BIT   0x00000200 
+#define SQR1_L_BITS           0x00F00000
+
+// SQR2 
+#define SQR2_SEQ7_LOW_BITS    0x0000001F 
+#define SQR2_SEQ7_HIGH_BIT    0x00000010 
+#define SQR2_SEQ8_LOW_BITS    0x000001E0 
+#define SQR2_SEQ8_HIGH_BIT    0x00000200 
+
+// SQR3 
+#define SQR3_SEQ1_LOW_BITS    0x0000001F 
+#define SQR3_SEQ1_HIGH_BIT    0x00000010 
+#define SQR3_SEQ2_LOW_BITS    0x000001E0 
+#define SQR3_SEQ2_HIGH_BIT    0x00000200 
+
+//==================================================
 
 //=======================================================================================
 
@@ -51,7 +97,7 @@ extern "C"
 TEST_GROUP(analog_driver)
 {
     // Test group global variables 
-    ADC_TypeDef ADC1_FAKE; 
+    ADC_TypeDef ADC_FAKE; 
     adc_param_config_t adc_port_config[NUM_PORT_PARAM_CONFIGS]; 
 
     // Constructor 
@@ -144,13 +190,13 @@ TEST(analog_driver, adc1_clock_init_ok)
 TEST(analog_driver, adc_port_null_ptr)
 {
     // Local variables 
-    ADC_TypeDef *ADC1_LOCAL_FAKE = NULL; 
-    ADC_Common_TypeDef *ADC1_COMMON_LOCAL_FAKE = NULL; 
+    ADC_TypeDef *ADC_LOCAL_FAKE = NULL; 
+    ADC_Common_TypeDef *ADC_COMMON_LOCAL_FAKE = NULL; 
 
     // Run initialization functions 
     ADC_STATUS port_status = adc_port_local_init(
-        ADC1_LOCAL_FAKE, 
-        ADC1_COMMON_LOCAL_FAKE, 
+        ADC_LOCAL_FAKE, 
+        ADC_COMMON_LOCAL_FAKE, 
         ADC_PCLK2_2, 
         ADC_RES_12, 
         adc_port_config); 
@@ -164,13 +210,13 @@ TEST(analog_driver, adc_port_null_ptr)
 TEST(analog_driver, adc_port_valid_ptr)
 {
     // Local variables 
-    ADC_TypeDef ADC1_LOCAL_FAKE; 
-    ADC_Common_TypeDef ADC1_COMMON_LOCAL_FAKE; 
+    ADC_TypeDef ADC_LOCAL_FAKE; 
+    ADC_Common_TypeDef ADC_COMMON_LOCAL_FAKE; 
 
     // Run initialization functions 
     ADC_STATUS port_status = adc_port_local_init(
-        &ADC1_LOCAL_FAKE, 
-        &ADC1_COMMON_LOCAL_FAKE, 
+        &ADC_LOCAL_FAKE, 
+        &ADC_COMMON_LOCAL_FAKE, 
         ADC_PCLK2_2, 
         ADC_RES_12, 
         adc_port_config); 
@@ -184,31 +230,31 @@ TEST(analog_driver, adc_port_valid_ptr)
 TEST(analog_driver, adc_port_init_ok_bits_cleared)
 {
     // Local variables 
-    ADC_Common_TypeDef ADC1_COMMON_LOCAL_FAKE; 
+    ADC_Common_TypeDef ADC_COMMON_LOCAL_FAKE; 
     uint32_t ccr_check = CCR_PRE_HIGH_BIT | CCR_PRE_LOW_BIT; 
     uint32_t cr1_check = CR1_RES_HIGH_BIT | CR1_RES_LOW_BIT | CR1_SCAN_BIT | 
                          CR1_EOC_INT_BIT | CR1_OVERRUN_BIT; 
     uint32_t cr2_check = CR2_EOC_BIT | CR2_CONT_BIT | CR2_DMA_BIT | CR2_DMA_DIS_BIT; 
 
     // Set the register bits high to make sure they get cleared by the init function 
-    ADC1_COMMON_LOCAL_FAKE.CCR = HIGH_32BIT; 
-    ADC1_FAKE.CR1 = HIGH_32BIT; 
-    ADC1_FAKE.CR2 = HIGH_32BIT; 
+    ADC_COMMON_LOCAL_FAKE.CCR = HIGH_32BIT; 
+    ADC_FAKE.CR1 = HIGH_32BIT; 
+    ADC_FAKE.CR2 = HIGH_32BIT; 
 
     // Run initialization functions 
     adc_port_local_init(
-        &ADC1_FAKE, 
-        &ADC1_COMMON_LOCAL_FAKE, 
+        &ADC_FAKE, 
+        &ADC_COMMON_LOCAL_FAKE, 
         ADC_PCLK2_2, 
         ADC_RES_12, 
         adc_port_config); 
 
     // Common Control Register - prescalar 
-    UNSIGNED_LONGS_EQUAL(CLEAR, ADC1_COMMON_LOCAL_FAKE.CCR & ccr_check); 
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_COMMON_LOCAL_FAKE.CCR & ccr_check); 
     // Control Register 1 - resolution, scan, EOC interrupt, overrun interrupt 
-    UNSIGNED_LONGS_EQUAL(CLEAR, ADC1_FAKE.CR1 & cr1_check); 
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.CR1 & cr1_check); 
     // Control Register 2 - EOC select, continuous mode, DMA, DMA disable selection 
-    UNSIGNED_LONGS_EQUAL(CLEAR, ADC1_FAKE.CR2 & cr2_check); 
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.CR2 & cr2_check); 
 }
 
 
@@ -216,15 +262,15 @@ TEST(analog_driver, adc_port_init_ok_bits_cleared)
 TEST(analog_driver, adc_port_init_ok_bits_set)
 {
     // Local variables 
-    ADC_Common_TypeDef ADC1_COMMON_LOCAL_FAKE; 
+    ADC_Common_TypeDef ADC_COMMON_LOCAL_FAKE; 
     uint32_t ccr_check = CCR_PRE_LOW_BIT; 
     uint32_t cr1_check = CR1_RES_HIGH_BIT | CR1_SCAN_BIT | CR1_EOC_INT_BIT | CR1_OVERRUN_BIT; 
     uint32_t cr2_check = CR2_EOC_BIT | CR2_CONT_BIT | CR2_DMA_BIT | CR2_DMA_DIS_BIT; 
 
     // Clear the register bits to make sure they get set by the init function 
-    ADC1_COMMON_LOCAL_FAKE.CCR = CLEAR; 
-    ADC1_FAKE.CR1 = CLEAR; 
-    ADC1_FAKE.CR2 = CLEAR; 
+    ADC_COMMON_LOCAL_FAKE.CCR = CLEAR; 
+    ADC_FAKE.CR1 = CLEAR; 
+    ADC_FAKE.CR2 = CLEAR; 
 
     // Enable all the initialization parameters 
     for (uint8_t i = CLEAR; i < NUM_PORT_PARAM_CONFIGS; i++)
@@ -232,18 +278,18 @@ TEST(analog_driver, adc_port_init_ok_bits_set)
 
     // Initialization 
     adc_port_local_init(
-        &ADC1_FAKE, 
-        &ADC1_COMMON_LOCAL_FAKE, 
+        &ADC_FAKE, 
+        &ADC_COMMON_LOCAL_FAKE, 
         ADC_PCLK2_4, 
         ADC_RES_8, 
         adc_port_config); 
 
     // Common Control Register - prescalar 
-    UNSIGNED_LONGS_EQUAL(ccr_check, ADC1_COMMON_LOCAL_FAKE.CCR); 
+    UNSIGNED_LONGS_EQUAL(ccr_check, ADC_COMMON_LOCAL_FAKE.CCR); 
     // Control Register 1 - resolution, scan, EOC interrupt, overrun interrupt 
-    UNSIGNED_LONGS_EQUAL(cr1_check, ADC1_FAKE.CR1); 
+    UNSIGNED_LONGS_EQUAL(cr1_check, ADC_FAKE.CR1); 
     // Control Register 2 - EOC select, continuous mode, DMA, DMA disable selection 
-    UNSIGNED_LONGS_EQUAL(cr2_check, ADC1_FAKE.CR2); 
+    UNSIGNED_LONGS_EQUAL(cr2_check, ADC_FAKE.CR2); 
 }
 
 //==================================================
@@ -251,12 +297,16 @@ TEST(analog_driver, adc_port_init_ok_bits_set)
 //==================================================
 // ADC pin init 
 
+// Note: the 'adc_pin_init' function calls the GPIO driver, however these tests do not 
+//       test the GPIO driver functionality. GPIO driver functionality is tested in the 
+//       GPIO driver utest so we know it works here. 
+
 // ADC pin init - call the init function with an invalid pointer 
 TEST(analog_driver, adc_pin_init_invalid_ptr)
 {
     GPIO_TypeDef *GPIO_LOCAL_FAKE = nullptr; 
     ADC_STATUS pin_status = adc_pin_init(
-        &ADC1_FAKE, 
+        &ADC_FAKE, 
         GPIO_LOCAL_FAKE, 
         PIN_0, 
         ADC_CHANNEL_0, 
@@ -270,7 +320,7 @@ TEST(analog_driver, adc_pin_init_valid_ptr)
 {
     GPIO_TypeDef GPIO_LOCAL_FAKE; 
     ADC_STATUS pin_status = adc_pin_init(
-        &ADC1_FAKE, 
+        &ADC_FAKE, 
         &GPIO_LOCAL_FAKE, 
         PIN_0, 
         ADC_CHANNEL_0, 
@@ -278,26 +328,238 @@ TEST(analog_driver, adc_pin_init_valid_ptr)
     LONGS_EQUAL(ADC_OK, pin_status); 
 }
 
+
+// ADC pin init - init ok, register bits successfully cleared 
+TEST(analog_driver, adc_pin_init_ok_bits_cleared)
+{
+    GPIO_TypeDef GPIO_LOCAL_FAKE; 
+    uint32_t smpr2_check = SMPR2_0_LOW_BIT | SMPR2_0_MED_BIT | SMPR2_0_HIGH_BIT; 
+
+    ADC_FAKE.SMPR2 = HIGH_32BIT; 
+
+    adc_pin_init(
+        &ADC_FAKE, 
+        &GPIO_LOCAL_FAKE, 
+        PIN_0, 
+        ADC_CHANNEL_0, 
+        ADC_SMP_3); 
+    
+    UNSIGNED_LONGS_EQUAL(ADC_SMP_3, ADC_FAKE.SMPR2 & smpr2_check); 
+}
+
+
+// ADC pin init - init ok, register bits successfully set 
+TEST(analog_driver, adc_pin_init_ok_bits_set)
+{
+    GPIO_TypeDef GPIO_LOCAL_FAKE; 
+    uint32_t smpr1_check = SMPR1_17_MED_BIT | SMPR1_17_HIGH_BIT; 
+    uint32_t smpr2_check = SMPR2_1_LOW_BIT | SMPR2_1_MED_BIT; 
+
+    ADC_FAKE.SMPR1 = CLEAR; 
+    ADC_FAKE.SMPR2 = CLEAR; 
+
+    adc_pin_init(
+        &ADC_FAKE, 
+        &GPIO_LOCAL_FAKE, 
+        PIN_1, 
+        ADC_CHANNEL_17, 
+        ADC_SMP_144); 
+    adc_pin_init(
+        &ADC_FAKE, 
+        &GPIO_LOCAL_FAKE, 
+        PIN_0, 
+        ADC_CHANNEL_1, 
+        ADC_SMP_56); 
+    
+    UNSIGNED_LONGS_EQUAL(smpr1_check, ADC_FAKE.SMPR1); 
+    UNSIGNED_LONGS_EQUAL(smpr2_check, ADC_FAKE.SMPR2); 
+}
+
 //==================================================
 
 //==================================================
 // ADC watchdog init 
+
+// ADC watchdog init - register bits successfully cleared 
+TEST(analog_driver, adc_wd_init_ok_bits_cleared)
+{
+    uint32_t cr1_check = CR1_AWDCH_LOW_BITS | CR1_AWDCH_HIGH_BIT | CR1_AWDEN_BIT | 
+                         CR1_AWDSGL_BIT | CR1_AWDIE_BIT; 
+
+    ADC_FAKE.CR1 = HIGH_32BIT; 
+    ADC_FAKE.HTR = HIGH_32BIT; 
+    ADC_FAKE.LTR = HIGH_32BIT; 
+
+    adc_wd_init(
+        &ADC_FAKE, 
+        ADC_PARAM_DISABLE, 
+        ADC_PARAM_DISABLE, 
+        ADC_CHANNEL_0, 
+        CLEAR, 
+        CLEAR, 
+        ADC_PARAM_DISABLE); 
+    
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.CR1 & cr1_check); 
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.HTR); 
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.LTR); 
+}
+
+
+// ADC watchdog init - register bits successfully set 
+TEST(analog_driver, adc_wd_init_ok_bits_set)
+{
+    uint32_t cr1_check = CR1_AWDCH_LOW_BITS | CR1_AWDEN_BIT | CR1_AWDSGL_BIT | CR1_AWDIE_BIT; 
+
+    ADC_FAKE.CR1 = CLEAR; 
+    ADC_FAKE.HTR = CLEAR; 
+    ADC_FAKE.LTR = CLEAR; 
+
+    adc_wd_init(
+        &ADC_FAKE, 
+        ADC_PARAM_ENABLE, 
+        ADC_PARAM_ENABLE, 
+        ADC_CHANNEL_15, 
+        HIGH_16BIT, 
+        HIGH_16BIT, 
+        ADC_PARAM_ENABLE); 
+    
+    UNSIGNED_LONGS_EQUAL(cr1_check, ADC_FAKE.CR1); 
+    UNSIGNED_LONGS_EQUAL(ADC_WD_THRESH_MASK, ADC_FAKE.HTR); 
+    UNSIGNED_LONGS_EQUAL(ADC_WD_THRESH_MASK, ADC_FAKE.LTR); 
+}
+
 //==================================================
 
 //==================================================
 // ADC sequence 
+
+// ADC sequence init - register bits successfully cleared 
+TEST(analog_driver, adc_seq_init_ok_bits_cleared)
+{
+    uint32_t sqr1_check = SQR1_SEQ13_LOW_BITS | SQR1_SEQ13_HIGH_BIT; 
+    uint32_t sqr2_check = SQR2_SEQ7_LOW_BITS | SQR2_SEQ7_HIGH_BIT; 
+    uint32_t sqr3_check = SQR3_SEQ1_LOW_BITS | SQR3_SEQ1_HIGH_BIT; 
+
+    ADC_FAKE.SQR1 = HIGH_32BIT; 
+    ADC_FAKE.SQR2 = HIGH_32BIT; 
+    ADC_FAKE.SQR3 = HIGH_32BIT; 
+
+    adc_seq(
+        &ADC_FAKE, 
+        ADC_CHANNEL_0, 
+        ADC_SEQ_13); 
+    adc_seq(
+        &ADC_FAKE, 
+        ADC_CHANNEL_0, 
+        ADC_SEQ_7); 
+    adc_seq(
+        &ADC_FAKE, 
+        ADC_CHANNEL_0, 
+        ADC_SEQ_1); 
+    
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.SQR1 & sqr1_check); 
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.SQR2 & sqr2_check); 
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.SQR3 & sqr3_check); 
+}
+
+
+// ADC sequence init - register bits successfully set 
+TEST(analog_driver, adc_seq_init_ok_bits_set)
+{
+    uint32_t sqr1_check = SQR1_SEQ14_LOW_BITS; 
+    uint32_t sqr2_check = SQR2_SEQ8_LOW_BITS; 
+    uint32_t sqr3_check = SQR3_SEQ2_LOW_BITS; 
+
+    ADC_FAKE.SQR1 = CLEAR; 
+    ADC_FAKE.SQR2 = CLEAR; 
+    ADC_FAKE.SQR3 = CLEAR; 
+
+    adc_seq(
+        &ADC_FAKE, 
+        ADC_CHANNEL_15, 
+        ADC_SEQ_14); 
+    adc_seq(
+        &ADC_FAKE, 
+        ADC_CHANNEL_15, 
+        ADC_SEQ_8); 
+    adc_seq(
+        &ADC_FAKE, 
+        ADC_CHANNEL_15, 
+        ADC_SEQ_2); 
+    
+    UNSIGNED_LONGS_EQUAL(sqr1_check, ADC_FAKE.SQR1); 
+    UNSIGNED_LONGS_EQUAL(sqr2_check, ADC_FAKE.SQR2); 
+    UNSIGNED_LONGS_EQUAL(sqr3_check, ADC_FAKE.SQR3); 
+}
+
 //==================================================
 
 //==================================================
 // ADC sequence length 
+
+// ADC sequence length init - register bits successfully cleared 
+TEST(analog_driver, adc_seq_len_init_ok_bits_cleared)
+{
+    uint32_t sqr1_check = SQR1_L_BITS; 
+
+    ADC_FAKE.SQR1 = HIGH_32BIT; 
+
+    adc_seq_len_set(
+        &ADC_FAKE, 
+        ADC_SEQ_1); 
+    
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.SQR1 & sqr1_check); 
+}
+
+
+// ADC sequence length init - register bits successfully set 
+TEST(analog_driver, adc_seq_len_init_ok_bits_set)
+{
+    uint32_t sqr1_check = SQR1_L_BITS; 
+
+    ADC_FAKE.SQR1 = CLEAR; 
+
+    adc_seq_len_set(
+        &ADC_FAKE, 
+        ADC_SEQ_16); 
+    
+    UNSIGNED_LONGS_EQUAL(sqr1_check, ADC_FAKE.SQR1); 
+}
+
 //==================================================
 
 //==================================================
 // ADC on 
+
+// ADC on - register bit successfully set 
+TEST(analog_driver, adc_on_bit_set)
+{
+    uint32_t cr2_check = CR2_ADON_BIT; 
+
+    ADC_FAKE.CR2 = CLEAR; 
+
+    adc_on(&ADC_FAKE); 
+    
+    UNSIGNED_LONGS_EQUAL(cr2_check, ADC_FAKE.CR2); 
+}
+
 //==================================================
 
 //==================================================
 // ADC off 
+
+// ADC off - register bit successfully set 
+TEST(analog_driver, adc_on_bit_cleared)
+{
+    uint32_t cr2_check = CR2_ADON_BIT; 
+
+    ADC_FAKE.CR2 = HIGH_32BIT; 
+
+    adc_off(&ADC_FAKE); 
+    
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.CR2 & cr2_check); 
+}
+
 //==================================================
 
 //==================================================

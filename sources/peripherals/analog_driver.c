@@ -67,8 +67,8 @@ uint16_t adc_dr(
  * @param adc : pointer to the ADC port used 
  */
 #if DEV_CODE 
-ADC_STATUS adc_start_wait(
-    ADC_TypeDef *adc); 
+// ADC_STATUS adc_start_wait(
+//     ADC_TypeDef *adc); 
 #else   // DEV_CODE 
 void adc_start_wait(
     ADC_TypeDef *adc); 
@@ -452,8 +452,8 @@ void adc_smp(
  */
 void adc_wd_thresh(
     ADC_TypeDef *adc, 
-    uint32_t hi_thresh, 
-    uint32_t lo_thresh); 
+    uint16_t hi_thresh, 
+    uint16_t lo_thresh); 
 
 
 /**
@@ -696,19 +696,27 @@ ADC_STATUS adc_seq(
         return ADC_INVALID_PTR; 
     }
 
-    uint32_t adc_channel = (uint32_t)channel; 
+    uint32_t adc_channel = channel; 
+    uint32_t seq_clear = SET_31; 
+    uint32_t bit_shift; 
 
     if (seq_num > ADC_SEQ_12) 
     {
-        adc->SQR1 |= (adc_channel << (uint32_t)(ADC_CHNL_NUM_SIZE*(seq_num - ADC_SEQ_13))); 
+        bit_shift = ADC_CHNL_NUM_SIZE*(seq_num - ADC_SEQ_13); 
+        adc->SQR1 &= ~(seq_clear << bit_shift); 
+        adc->SQR1 |= (adc_channel << bit_shift); 
     }
     else if (seq_num > ADC_SEQ_6) 
     {
-        adc->SQR2 |= (adc_channel << (uint32_t)(ADC_CHNL_NUM_SIZE*(seq_num - ADC_SEQ_7))); 
+        bit_shift = ADC_CHNL_NUM_SIZE*(seq_num - ADC_SEQ_7); 
+        adc->SQR2 &= ~(seq_clear << bit_shift); 
+        adc->SQR2 |= (adc_channel << bit_shift); 
     }
     else 
     {
-        adc->SQR3 |= (adc_channel << (uint32_t)(ADC_CHNL_NUM_SIZE*(seq_num - ADC_SEQ_1))); 
+        bit_shift = ADC_CHNL_NUM_SIZE*(seq_num - ADC_SEQ_1); 
+        adc->SQR3 &= ~(seq_clear << bit_shift); 
+        adc->SQR3 |= (adc_channel << bit_shift); 
     }
 
     return ADC_OK; 
@@ -748,6 +756,7 @@ ADC_STATUS adc_seq_len_set(
         return ADC_INVALID_PTR; 
     }
 
+    adc->SQR1 &= ~((uint32_t)((SET_16 - ADC_SEQ_1) << SHIFT_20)); 
     adc->SQR1 |= (uint32_t)((seq_len - ADC_SEQ_1) << SHIFT_20); 
 
     return ADC_OK; 
@@ -819,9 +828,20 @@ ADC_STATUS adc_start(
     // Clear the status register, set the start bit and wait to see that the start 
     // bit was successfully set. If it does not set (times out) for whatever reason 
     // then a fault status will be returned. 
+
+    uint16_t timeout = ADC_WAIT_TIMEOUT; 
+
+    if (adc == NULL)
+    {
+        return ADC_INVALID_PTR; 
+    }
+
     adc->SR = CLEAR; 
-    adc->CR2 |= (SET_BIT << SHIFT_30); 
-    return adc_start_wait(adc); 
+    adc->CR2 |= (uint32_t)(SET_BIT << SHIFT_30); 
+    while ( (!((adc->SR) & (uint32_t)(SET_BIT << SHIFT_4))) && (--timeout) ); 
+    // return adc_start_wait(adc); 
+
+    return timeout ? ADC_OK : ADC_TIMEOUT; 
 }
 #else   // DEV_CODE 
 void adc_start(
@@ -928,13 +948,13 @@ uint16_t adc_dr(
 
 // Wait for the start bit to set 
 #if DEV_CODE 
-ADC_STATUS adc_start_wait(
-    ADC_TypeDef *adc)
-{
-    uint16_t timeout = ADC_WAIT_TIMEOUT; 
-    while ( (!((adc->SR) & (uint32_t)(SET_BIT << SHIFT_4))) && (--timeout) ); 
-    return timeout ? ADC_OK : ADC_TIMEOUT; 
-}
+// ADC_STATUS adc_start_wait(
+//     ADC_TypeDef *adc)
+// {
+//     uint16_t timeout = ADC_WAIT_TIMEOUT; 
+//     while ( (!((adc->SR) & (uint32_t)(SET_BIT << SHIFT_4))) && (--timeout) ); 
+//     return timeout ? ADC_OK : ADC_TIMEOUT; 
+// }
 #else   // DEV_CODE 
 void adc_start_wait(
     ADC_TypeDef *adc)
@@ -1181,15 +1201,25 @@ void adc_smp(
     adc_channel_t channel, 
     adc_smp_cycles_t smp)
 {
-    uint32_t sample = (uint32_t)smp; 
+    // Channels 0-9 are held in the SMPR2 register and 10-18 in SMPR1. The channel 
+    // sample rate is cleared before the new value is set. The sample rate setting 
+    // is 3-bits wide. 
+
+    uint32_t sample = smp; 
+    uint32_t smp_clear = SET_7; 
+    uint32_t bit_shift; 
 
     if (channel > ADC_CHANNEL_9) 
     {
-        adc->SMPR1 |= (sample << (uint32_t)(ADC_SMPL_TIME_SIZE*(channel - ADC_CHANNEL_10))); 
+        bit_shift = ADC_SMPL_TIME_SIZE*(channel - ADC_CHANNEL_10); 
+        adc->SMPR1 &= ~(smp_clear << bit_shift); 
+        adc->SMPR1 |= (sample << bit_shift); 
     }
     else 
     {
-        adc->SMPR2 |= (sample << (uint32_t)(ADC_SMPL_TIME_SIZE*channel)); 
+        bit_shift = ADC_SMPL_TIME_SIZE*channel; 
+        adc->SMPR2 &= ~(smp_clear << bit_shift); 
+        adc->SMPR2 |= (sample << bit_shift); 
     }
 }
 
@@ -1197,11 +1227,11 @@ void adc_smp(
 // Analog watchdog thresholds 
 void adc_wd_thresh(
     ADC_TypeDef *adc, 
-    uint32_t hi_thresh, 
-    uint32_t lo_thresh)
+    uint16_t hi_thresh, 
+    uint16_t lo_thresh)
 {
-    adc->HTR = hi_thresh & ADC_WD_THRESH_MASK; 
-    adc->LTR = lo_thresh & ADC_WD_THRESH_MASK; 
+    adc->HTR = (uint32_t)hi_thresh & ADC_WD_THRESH_MASK; 
+    adc->LTR = (uint32_t)lo_thresh & ADC_WD_THRESH_MASK; 
 }
 
 

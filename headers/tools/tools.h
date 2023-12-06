@@ -81,6 +81,7 @@
 
 // Logic high 
 #define HIGH_8BIT 0xFF 
+#define HIGH_16BIT 0xFFFF 
 #define HIGH_32BIT 0xFFFFFFFF 
 
 //==================================================
