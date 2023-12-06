@@ -34,6 +34,7 @@
 // Global variables 
 
 const double deg_to_rad = DEG_TO_RAD; 
+const double pi_over_2 = PI_OVER_2; 
 
 //=======================================================================================
 
@@ -69,11 +70,11 @@ int32_t gps_calcs::gps_radius(
     lat_tar *= deg_to_rad; 
     lon_tar *= deg_to_rad; 
 
-    eq1 = cos(PI_OVER_2 - lat_tar)*sin(lon_tar - lon_cur); 
-    eq2 = cos(PI_OVER_2 - lat_cur)*sin(PI_OVER_2 - lat_tar); 
-    eq3 = sin(PI_OVER_2 - lat_cur)*cos(PI_OVER_2 - lat_tar)*cos(lon_tar - lon_cur); 
-    eq4 = sin(PI_OVER_2 - lat_cur)*sin(PI_OVER_2 - lat_tar); 
-    eq5 = cos(PI_OVER_2 - lat_cur)*cos(PI_OVER_2 - lat_tar)*cos(lon_tar - lon_cur); 
+    eq1 = cos(pi_over_2 - lat_tar)*sin(lon_tar - lon_cur); 
+    eq2 = cos(pi_over_2 - lat_cur)*sin(pi_over_2 - lat_tar); 
+    eq3 = sin(pi_over_2 - lat_cur)*cos(pi_over_2 - lat_tar)*cos(lon_tar - lon_cur); 
+    eq4 = sin(pi_over_2 - lat_cur)*sin(pi_over_2 - lat_tar); 
+    eq5 = cos(pi_over_2 - lat_cur)*cos(pi_over_2 - lat_tar)*cos(lon_tar - lon_cur); 
 
     // atan2 is used because it produces an angle between +/-180 (pi). The central angle 
     // should always be positive and never greater than 180. 
