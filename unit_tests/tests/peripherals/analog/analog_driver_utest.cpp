@@ -35,6 +35,10 @@ extern "C"
 #define CCR_PRE_LOW_BIT       0x00010000 
 #define CCR_PRE_HIGH_BIT      0x00020000 
 
+// SR 
+#define SR_EOC_BIT            0x00000002 
+#define SR_STRT_BIT           0x00000010 
+
 // CR1 
 #define CR1_AWDCH_LOW_BITS    0x0000000F
 #define CR1_AWDCH_HIGH_BIT    0x00000010
@@ -53,6 +57,7 @@ extern "C"
 #define CR2_DMA_BIT           0x00000100 
 #define CR2_DMA_DIS_BIT       0x00000200 
 #define CR2_EOC_BIT           0x00000400 
+#define CR2_SWSTART_BIT       0x40000000
 
 // SMPR1 
 #define SMPR1_17_LOW_BIT      0x00200000 
@@ -75,13 +80,13 @@ extern "C"
 #define SQR1_L_BITS           0x00F00000
 
 // SQR2 
-#define SQR2_SEQ7_LOW_BITS    0x0000001F 
+#define SQR2_SEQ7_LOW_BITS    0x0000000F 
 #define SQR2_SEQ7_HIGH_BIT    0x00000010 
 #define SQR2_SEQ8_LOW_BITS    0x000001E0 
 #define SQR2_SEQ8_HIGH_BIT    0x00000200 
 
 // SQR3 
-#define SQR3_SEQ1_LOW_BITS    0x0000001F 
+#define SQR3_SEQ1_LOW_BITS    0x0000000F 
 #define SQR3_SEQ1_HIGH_BIT    0x00000010 
 #define SQR3_SEQ2_LOW_BITS    0x000001E0 
 #define SQR3_SEQ2_HIGH_BIT    0x00000200 
@@ -564,14 +569,83 @@ TEST(analog_driver, adc_on_bit_cleared)
 
 //==================================================
 // ADC start 
+
+// Note: This function sets the start bit in the CR2 register and then waits for the 
+//       hardware to set the start bit in the status register (SR) before returning. 
+//       However, before setting the start bit in CR2, the function must clear the status 
+//       register so the code doesn't prematurely read the status register start bit as 
+//       true. Since this function depends on a hardware action and we can't preemptively 
+//       set the status register to the value we want, there is no easy way to test that 
+//       the status register start bit gets read properly. As a result, this functionality 
+//       is copied here and tested locally instead of in the driver. 
+
+// ADC start - register bits successfully changed 
+TEST(analog_driver, adc_start_bits_changed)
+{
+    // Check that 'adc_start' clears the status register, the start bit in CR2 gets set, 
+    // the function returns a timeout status, and the status register start bit logic 
+    // from the driver works as expected (tested locally - see note above). 
+
+    uint32_t sr_check = SR_STRT_BIT; 
+    uint32_t cr2_check = CR2_SWSTART_BIT; 
+
+    ADC_FAKE.SR = HIGH_32BIT; 
+    ADC_FAKE.CR2 = CLEAR; 
+
+    ADC_STATUS start_check = adc_start(&ADC_FAKE); 
+    
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.SR); 
+    UNSIGNED_LONGS_EQUAL(cr2_check, ADC_FAKE.CR2); 
+    UNSIGNED_LONGS_EQUAL(sr_check, (uint32_t)(SET_BIT << SHIFT_4)); 
+    LONGS_EQUAL(ADC_TIMEOUT, start_check); 
+}
+
 //==================================================
 
 //==================================================
 // ADC read single (no DMA) 
+
+// This function depends on 'adc_start' so refer to the note on that above. This 
+// function also depends on 'adc_eoc_wait' which comes after 'adc_start' in this function 
+// which means it cannot be reached due to the dependency in 'adc_start'. This prevents 
+// the data register function from being tested. However, the data register function just 
+// returns the register value so we can be confident in it's functionality without testing 
+// it. 
+
+// ADC read single - register bits successfully changed 
+TEST(analog_driver, adc_read_single_bits_changed)
+{
+    // Check that 'adc_read_single' clears the SQR registers and sets only a sequence 
+    // of length 1 and the channel number in sequence slot 1. Also check that the function 
+    // returns zero and that the logic of 'adc_eoc_wait' works (tested locally - see note 
+    // above). 
+
+    uint32_t sqr3_check = SQR3_SEQ1_LOW_BITS; 
+    uint32_t sr_check = SR_EOC_BIT; 
+
+    ADC_FAKE.SQR1 = HIGH_32BIT; 
+    ADC_FAKE.SQR2 = HIGH_32BIT; 
+    ADC_FAKE.SQR3 = HIGH_32BIT; 
+
+    ADC_STATUS read_single_check = adc_read_single(
+        &ADC_FAKE, 
+        ADC_CHANNEL_15); 
+
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.SQR1); 
+    UNSIGNED_LONGS_EQUAL(CLEAR, ADC_FAKE.SQR2); 
+    UNSIGNED_LONGS_EQUAL(sqr3_check, ADC_FAKE.SQR3); 
+    UNSIGNED_LONGS_EQUAL(sr_check, (uint32_t)(SET_BIT << SHIFT_1)); 
+    LONGS_EQUAL(NONE, read_single_check); 
+}
+
 //==================================================
 
 //==================================================
 // ADC scan sequence (no DMA) 
+
+// This function depends on 'adc_start' which is called before anything else happens. Due 
+// to the dependency in 'adc_start', this function cannot be easily tested without hardware. 
+
 //==================================================
 
 //=======================================================================================

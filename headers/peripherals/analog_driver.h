@@ -137,8 +137,6 @@ typedef enum {
 } adc_seq_num_t; 
 
 
-#if DEV_CODE 
-
 /**
  * @brief ADC parameter configuration 
  * 
@@ -194,98 +192,6 @@ typedef enum {
     ADC_PARAM_ENABLE 
 } adc_param_config_t; 
 
-#else   // DEV_CODE 
-
-/**
- * @brief EOC selection 
- */
-typedef enum {
-    ADC_EOC_SEQ,   // EOC bit set after each sequence of regular conversions 
-    ADC_EOC_EACH   // EOC bit set after each regular conversion 
-} adc_eoc_config_t; 
-
-
-/**
- * @brief EOC interrupt selection 
- */
-typedef enum {
-    ADC_EOC_INT_DISABLE,   // Disable EOC interrupt 
-    ADC_EOC_INT_ENABLE     // Enable EOC interrupt 
-} adc_eoc_int_t; 
-
-
-/**
- * @brief Scan mode selection 
- */
-typedef enum {
-    ADC_SCAN_DISABLE,   // Disable scan mode 
-    ADC_SCAN_ENABLE     // Enable scan mode 
-} adc_scan_t; 
-
-
-/**
- * @brief Continuous mode selection 
- */
-typedef enum {
-    ADC_CONT_DISABLE,   // Disable continuous mode (single conversion mode) 
-    ADC_CONT_ENABLE     // Enable continuous mode 
-} adc_cont_t; 
-
-
-/**
- * @brief DMA mode selection 
- */
-typedef enum {
-    ADC_DMA_DISABLE,   // Disable DMA for ADC 
-    ADC_DMA_ENABLE     // Enable DMA for ADC 
-} adc_dma_t; 
-
-
-/**
- * @brief DMA Disable selection 
- */
-typedef enum {
-    ADC_DDS_DISABLE,    // No new DMA request is issued after the last transfer 
-    ADC_DDS_ENABLE      // DMA requets are issued as long as data are coverted 
-} adc_dds_t; 
-
-
-/**
- * @brief Watchdog selection 
- */
-typedef enum {
-    ADC_WD_DISABLE,   // Disable the watchdog 
-    ADC_WD_ENABLE     // Enable the watchdog 
-} adc_wd_t; 
-
-
-/**
- * @brief Watchdog single channel selection 
- */
-typedef enum {
-    ADC_WD_SC_DISABLE,   // Disable the watchdog single channel selection 
-    ADC_WD_SC_ENABLE     // Enable the watchdog single channel selection 
-} adc_wd_sc_t; 
-
-
-/**
- * @brief Watchdog interrupt selection 
- */
-typedef enum {
-    ADC_WD_INT_DISABLE,   // Disable the watchdog interrupt 
-    ADC_WD_INT_ENABLE     // Enable the watchdog interrupt 
-} adc_awdie_t; 
-
-
-/**
- * @brief Overrun interrupt selection 
- */
-typedef enum {
-    ADC_OVR_INT_DISABLE,   // Disable the overrun interrupt 
-    ADC_OVR_INT_ENABLE     // Enable the overrun interrupt 
-} adc_ovrie_t; 
-
-#endif   // DEV_CODE 
 
 /**
  * @brief ADC driver status 
@@ -352,7 +258,6 @@ ADC_STATUS adc1_clock_enable(
  * @param ovrie : overrun behavior selection 
  * @return ADC_STATUS : port initialization status 
  */
-#if DEV_CODE 
 ADC_STATUS adc_port_init(
     ADC_TypeDef *adc, 
     ADC_Common_TypeDef *adc_common, 
@@ -365,20 +270,6 @@ ADC_STATUS adc_port_init(
     adc_param_config_t dma, 
     adc_param_config_t dds, 
     adc_param_config_t ovrie); 
-#else   // DEV_CODE 
-void adc_port_init(
-    ADC_TypeDef *adc, 
-    ADC_Common_TypeDef *adc_common, 
-    adc_prescalar_t prescalar, 
-    adc_res_t resolution, 
-    adc_eoc_config_t eoc, 
-    adc_scan_t scan, 
-    adc_cont_t cont, 
-    adc_dma_t dma, 
-    adc_dds_t dds, 
-    adc_eoc_int_t eocie, 
-    adc_ovrie_t ovrie); 
-#endif   // DEV_CODE 
 
 
 /**
@@ -400,21 +291,12 @@ void adc_port_init(
  * @param smp : sample time of the channel 
  * @return ADC_STATUS : ADC pin initialization status 
  */
-#if DEV_CODE 
 ADC_STATUS adc_pin_init(
     ADC_TypeDef *adc, 
     GPIO_TypeDef *gpio, 
     pin_selector_t adc_pin, 
     adc_channel_t adc_channel, 
     adc_smp_cycles_t smp); 
-#else   // DEV_CODE 
-void adc_pin_init(
-    ADC_TypeDef *adc, 
-    GPIO_TypeDef *gpio, 
-    pin_selector_t adc_pin, 
-    adc_channel_t adc_channel, 
-    adc_smp_cycles_t smp); 
-#endif   // DEV_CODE 
 
 
 /**
@@ -439,7 +321,6 @@ void adc_pin_init(
  * @param awdie : watchdog interrupt selection 
  * @return ADC_STATUS : ADC watchdog initialization status 
  */
-#if DEV_CODE 
 ADC_STATUS adc_wd_init(
     ADC_TypeDef *adc, 
     adc_param_config_t wd, 
@@ -448,16 +329,6 @@ ADC_STATUS adc_wd_init(
     uint16_t hi_thresh, 
     uint16_t lo_thresh, 
     adc_param_config_t awdie); 
-#else   // DEV_CODE 
-void adc_wd_init(
-    ADC_TypeDef *adc, 
-    adc_wd_t wd, 
-    adc_wd_sc_t wdsc, 
-    adc_channel_t channel, 
-    uint16_t hi_thresh, 
-    uint16_t lo_thresh, 
-    adc_awdie_t awdie); 
-#endif   // DEV_CODE 
 
 
 /**
@@ -480,17 +351,10 @@ void adc_wd_init(
  * @param seq_num : sequence position of the channel 
  * @return ADC_STATUS : ADC channel conversion sequence initialization status 
  */
-#if DEV_CODE 
 ADC_STATUS adc_seq(
     ADC_TypeDef *adc, 
     adc_channel_t channel, 
     adc_seq_num_t seq_num); 
-#else   // DEV_CODE 
-void adc_seq(
-    ADC_TypeDef *adc, 
-    adc_channel_t channel, 
-    adc_seq_num_t seq_num); 
-#endif   // DEV_CODE 
 
 
 /**
@@ -506,15 +370,9 @@ void adc_seq(
  * @param seq_len : number of conversions in the regular channel conversion sequence 
  * @return ADC_STATUS : ADC sequence length setter initialization status 
  */
-#if DEV_CODE 
 ADC_STATUS adc_seq_len_set(
     ADC_TypeDef *adc, 
     adc_seq_num_t seq_len); 
-#else   // DEV_CODE 
-void adc_seq_len_set(
-    ADC_TypeDef *adc, 
-    adc_seq_num_t seq_len); 
-#endif   // DEV_CODE 
 
 //=======================================================================================
 
@@ -533,13 +391,8 @@ void adc_seq_len_set(
  * @param adc : pointer to the ADC port used 
  * @return ADC_STATUS : ADC on status 
  */
-#if DEV_CODE 
 ADC_STATUS adc_on(
     ADC_TypeDef *adc); 
-#else   // DEV_CODE 
-void adc_on(
-    ADC_TypeDef *adc); 
-#endif   // DEV_CODE 
 
 
 /**
@@ -553,13 +406,8 @@ void adc_on(
  * @param adc : pointer to the ADC port used 
  * @return ADC_STATUS : ADC off status 
  */
-#if DEV_CODE 
 ADC_STATUS adc_off(
     ADC_TypeDef *adc); 
-#else   // DEV_CODE 
-void adc_off(
-    ADC_TypeDef *adc); 
-#endif   // DEV_CODE 
 
 
 /**
@@ -571,19 +419,18 @@ void adc_off(
  *          function needs to be called every time you want a converison or sequence of 
  *          conversions to happen. Note that this function has no effect (conversion won't 
  *          start) if the ADC is not enabled. 
+ *          // TODO 
+ *          After triggering the start of an ADC conversion, the hardware will indicate 
+ *          when the conversion has started. This function is called immediately after 
+ *          adc_start and is used to wait until the conversion has started before proceeding. 
  * 
  * @see adc_on 
  * 
  * @param adc : pointer to the ADC port used 
  * @return ADC_STATUS : ADC start status 
  */
-#if DEV_CODE 
 ADC_STATUS adc_start(
     ADC_TypeDef *adc); 
-#else   // DEV_CODE 
-void adc_start(
-    ADC_TypeDef *adc); 
-#endif   // DEV_CODE 
 
 
 /**
@@ -629,17 +476,10 @@ uint16_t adc_read_single(
  * @param adc_data : pointer to a buffer to store the conversion data 
  * @return ADC_STATUS : ADC scan status 
  */
-#if DEV_CODE 
 ADC_STATUS adc_scan_seq(
     ADC_TypeDef *adc, 
     adc_seq_num_t seq_len, 
     uint16_t *adc_data); 
-#else   // DEV_CODE 
-void adc_scan_seq(
-    ADC_TypeDef *adc, 
-    adc_seq_num_t seq_len, 
-    uint16_t *adc_data); 
-#endif   // DEV_CODE 
 
 //=======================================================================================
 
