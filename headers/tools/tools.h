@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief General code tools used across files 
+ * @brief General code tools 
  * 
  * @version 0.1
  * @date 2022-02-16
@@ -32,7 +32,7 @@
 // Macros 
 
 // Conditional compilation 
-#define DEV_CODE 1              // For new code in the library that is yet to be tested 
+#define DEV_CODE 0              // For new code in the library that is yet to be tested 
 
 // Data type 
 #define INT16_NUM_DIGITS 5

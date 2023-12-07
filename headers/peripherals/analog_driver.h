@@ -219,9 +219,10 @@ typedef uint8_t ADC_STATUS;
 /**
  * @brief ADC1 clock enable 
  * 
- * @details 
+ * @details Enables the clock for ADC port 1. This must be called during setup if ADC1 is 
+ *          used. 
  * 
- * @param rcc 
+ * @param rcc : RCC port 
  * @return ADC_STATUS : ADC1 clock enable status 
  */
 ADC_STATUS adc1_clock_enable(

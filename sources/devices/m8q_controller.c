@@ -355,7 +355,7 @@ void m8q_read_cont_state(
     m8q_trackers_t *m8q_device)
 {
     // Read data when it's available 
-    if (m8q_get_tx_ready())
+    while (m8q_get_tx_ready())
     {
         m8q_read(); 
     }

@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief SAM-M8Q GPS driver 
+ * @brief SAM-M8Q GPS driver implementation 
  * 
  * @version 0.1
  * @date 2022-07-25
@@ -16,15 +16,8 @@
 //=======================================================================================
 // Includes 
 
-// Device drivers 
 #include "m8q_driver.h"
 
-//=======================================================================================
-
-
-//=======================================================================================
-// TODO 
-// - Clean up UBX config function 
 //=======================================================================================
 
 
@@ -108,9 +101,9 @@ void m8q_nmea_config(
  *          message string. 
  * 
  * @param msg : pointer to message buffer  
- * @return CHECKSUM : checksum of an NMEA message to be sent to the receiver 
+ * @return uint16_t : checksum of an NMEA message to be sent to the receiver 
  */
-CHECKSUM m8q_nmea_checksum(
+uint16_t m8q_nmea_checksum(
     uint8_t *msg); 
 
 
@@ -147,9 +140,9 @@ void m8q_ubx_config(
  * @param input_msg : pointer to message string buffer 
  * @param new_msg_byte_count : stores the byte count of the converted message 
  * @param new_msg : pointer to the new (converted) message string buffer 
- * @return UBX_MSG_STATUS : status of the conversion 
+ * @return M8Q_STATUS : status of the conversion 
  */
-UBX_MSG_STATUS m8q_ubx_msg_convert(
+M8Q_STATUS m8q_ubx_msg_convert(
     uint8_t input_msg_len,
     uint8_t input_msg_start, 
     uint8_t *input_msg, 
@@ -166,9 +159,9 @@ UBX_MSG_STATUS m8q_ubx_msg_convert(
  * 
  * @param msg : pointer to message buffer 
  * @param len : Length of checksum calculation range 
- * @return CHECKSUM : checksum of a UBX message to be sent to the receiver 
+ * @return uint16_t : checksum of a UBX message to be sent to the receiver 
  */
-CHECKSUM m8q_ubx_checksum(
+uint16_t m8q_ubx_checksum(
     uint8_t *msg, 
     uint16_t len); 
 
@@ -180,6 +173,101 @@ CHECKSUM m8q_ubx_checksum(
  *          of the receiver. 
  */
 void m8q_user_config_prompt(void); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Enums 
+
+/**
+ * @brief M8Q valid read indicator 
+ * 
+ * @details Used to define a valid or invalid message read in the m8q_read function. m8q_read 
+ *          returns the result indicating the type of message read, if any. 
+ * 
+ * @see m8q_read
+ */
+typedef enum {
+    M8Q_READ_INVALID, 
+    M8Q_READ_NMEA, 
+    M8Q_READ_UBX
+} m8q_read_status_t; 
+
+
+/**
+ * @brief M8Q NMEA POSITION message data fields 
+ * 
+ * @details List of all data fields in the POSITION message. This enum allows for indexing 
+ *          of the POSITION fields for retreival data in getters. 
+ */
+typedef enum {
+    M8Q_POS_TIME, 
+    M8Q_POS_LAT, 
+    M8Q_POS_NS, 
+    M8Q_POS_LON, 
+    M8Q_POS_EW, 
+    M8Q_POS_ALTREF, 
+    M8Q_POS_NAVSTAT, 
+    M8Q_POS_HACC, 
+    M8Q_POS_VACC, 
+    M8Q_POS_SOG, 
+    M8Q_POS_COG, 
+    M8Q_POS_VVEL, 
+    M8Q_POS_DIFFAGE, 
+    M8Q_POS_HDOP, 
+    M8Q_POS_VDOP, 
+    M8Q_POS_TDOP, 
+    M8Q_POS_NUMSVS, 
+    M8Q_POS_RES, 
+    M8Q_POS_DR 
+} m8q_pos_fields_t; 
+
+
+/**
+ * @brief M8Q NMEA TIME message data fields 
+ * 
+ * @details List of all data fields in the TIME message. This enum allows for indexing 
+ *          of the TIME fields for retreival data in getters. 
+ */
+typedef enum {
+    M8Q_TIME_TIME, 
+    M8Q_TIME_DATE, 
+    M8Q_TIME_UTCTOW, 
+    M8Q_TIME_UTCWK, 
+    M8Q_TIME_LEAPSEC, 
+    M8Q_TIME_CLKBIAS, 
+    M8Q_TIME_CLKDRIFT, 
+    M8Q_TIME_TPGRAN 
+} m8q_time_fields_t; 
+
+
+/**
+ * @brief M8Q driver status codes 
+ * 
+ * @details 
+ *          
+ *          Old comments: 
+ *          - Codes used to indicate errors during NMEA message processing. These codes help 
+ *            with debugging. 
+ *          - Codes used to indicate errors during UBX message processing. These codes help 
+ *            with debugging. 
+ */
+typedef enum {
+    M8Q_FAULT_NONE,           // No fault 
+    M8Q_FAULT_NO_DATA,        // No data available 
+    M8Q_FAULT_NMEA_ID,        // Unsupported PUBX message ID 
+    M8Q_FAULT_NMEA_FORM,      // Invalid formatting of PUBX message 
+    M8Q_FAULT_NMEA_INVALID,   // Only PUBX messages are supported 
+    M8Q_FAULT_UBX_SIZE,       // Payload length doesn't match size 
+    M8Q_FAULT_UBX_FORM,       // Invalid payload format 
+    M8Q_FAULT_UBX_LEN,        // Invalid payload length format 
+    M8Q_FAULT_UBX_CONVERT,    // Message conversion failed. Check format 
+    M8Q_FAULT_UBX_ID,         // Invalid ID format 
+    M8Q_FAULT_UBX_NA,         // Unknown message type 
+    M8Q_FAULT_UBX_NAK,        // Message not acknowledged 
+    M8Q_FAULT_UBX_RESP        // Response message sent - only used during user config mode 
+} m8q_status_codes_t; 
 
 //=======================================================================================
 
@@ -303,6 +391,111 @@ static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] =
 
 
 //=======================================================================================
+// Initialization (public) 
+
+// Device initialization 
+M8Q_STATUS m8q_device_init(
+    I2C_TypeDef *i2c)
+{
+    // 
+}
+
+
+// Low power mode pin initialization 
+M8Q_STATUS m8q_pwr_pin_init(
+    GPIO_TypeDef *gpio, 
+    pin_selector_t pwr_save_pin)
+{
+    if (gpio == NULL)
+    {
+        return M8Q_INVALID_PTR; 
+    }
+
+    gpio_pin_init(
+        gpio, 
+        pwr_save_pin, 
+        MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
+    m8q_set_low_power(GPIO_HIGH); 
+}
+
+
+// TX ready pin initialization 
+M8Q_STATUS m8q_txr_pin_init(
+    GPIO_TypeDef *gpio, 
+    pin_selector_t tx_ready_pin)
+{
+    if (gpio == NULL)
+    {
+        return M8Q_INVALID_PTR; 
+    }
+
+    gpio_pin_init(
+        gpio, 
+        tx_ready_pin, 
+        MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_PD);
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// User functions (public) 
+
+// Read - using TX ready pin 
+
+// Read - using device register status 
+
+// Write configuration (singular) 
+
+// Clear driver fault code 
+
+// Get driver fault code 
+
+// Set low power mode 
+
+// Get TX-Ready 
+
+// Get latitude 
+
+// Get North/South 
+
+// Get longitude 
+
+// Get East/West 
+
+// Get navigation status 
+
+// Get time 
+
+// Get date 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and write functions (private) 
+
+// Read 
+
+// Write 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Message processing (private) 
+
+// Sort NMEA data 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Device configuration - config message formatting (private) 
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 // M8Q initialization 
@@ -369,10 +562,10 @@ void m8q_init(
 // Read and write functions 
 
 // Read a message from the M8Q 
-M8Q_READ_STAT m8q_read(void)
-{    
+M8Q_STATUS m8q_read(void)
+{
     // Local variables 
-    M8Q_READ_STAT read_status = M8Q_READ_INVALID; 
+    M8Q_STATUS read_status = M8Q_READ_INVALID; 
     uint8_t data_check = CLEAR; 
     uint8_t *nmea_data = m8q_driver_data.nmea_resp; 
     uint8_t *ubx_data  = m8q_driver_data.ubx_resp; 
@@ -503,6 +696,12 @@ void m8q_check_data_stream(
 }
 
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Write functions 
+
 // M8Q write 
 void m8q_write(
     uint8_t *data, 
@@ -543,7 +742,10 @@ uint8_t m8q_message_size(
     uint8_t msg_len = CLEAR; 
 
     // Calculate message size 
-    while (*msg++ != term_char) msg_len++; 
+    while (*msg++ != term_char) 
+    {
+        msg_len++; 
+    }
 
     return msg_len; 
 }
@@ -985,7 +1187,7 @@ void m8q_nmea_config(
     uint8_t msg_args = CLEAR; 
     uint8_t msg_arg_count = CLEAR; 
     uint8_t msg_arg_mask = CLEAR; 
-    CHECKSUM checksum = CLEAR; 
+    uint16_t checksum = CLEAR; 
     char term_str[M8Q_NMEA_END_MSG]; 
 
     // Check message header and ID 
@@ -1061,11 +1263,11 @@ void m8q_nmea_config(
 
 
 // NMEA message calculation 
-CHECKSUM m8q_nmea_checksum(
+uint16_t m8q_nmea_checksum(
     uint8_t *msg)
 {
     // Local variables 
-    CHECKSUM checksum = 0; 
+    uint16_t checksum = 0; 
     uint8_t xor_result = 0; 
     uint8_t checksum_char = 0; 
 
@@ -1095,6 +1297,7 @@ CHECKSUM m8q_nmea_checksum(
 
 
 // UBX config function 
+// TODO Clean up UBX config function 
 void m8q_ubx_config(
     uint8_t *input_msg)
 {
@@ -1102,7 +1305,7 @@ void m8q_ubx_config(
     uint16_t m8q_status = M8Q_FAULT_NONE; 
     uint8_t *msg_ptr = input_msg; 
     uint8_t config_msg[M8Q_MSG_MAX_LEN];   // Formatted UBX message to send to the receiver 
-    CHECKSUM checksum = CLEAR; 
+    uint16_t checksum = CLEAR; 
     // TODO replace ghost number 
     uint16_t response_timeout = 0xFFFF; 
 
@@ -1224,7 +1427,7 @@ void m8q_ubx_config(
 
 
 // UBX message convert 
-UBX_MSG_STATUS m8q_ubx_msg_convert(
+M8Q_STATUS m8q_ubx_msg_convert(
     uint8_t input_msg_len, 
     uint8_t input_msg_start, 
     uint8_t *input_msg, 
@@ -1232,7 +1435,7 @@ UBX_MSG_STATUS m8q_ubx_msg_convert(
     uint8_t *new_msg)
 {
     // Local variable 
-    UBX_MSG_STATUS status = M8Q_UBX_MSG_CONV_FAIL; 
+    M8Q_STATUS status = M8Q_UBX_MSG_CONV_FAIL; 
     uint8_t char_count = 0; 
     uint8_t low_nibble = 0; 
     uint8_t high_nibble = 0; 
@@ -1305,14 +1508,14 @@ UBX_MSG_STATUS m8q_ubx_msg_convert(
 
 
 // UBX checksum calculation 
-CHECKSUM m8q_ubx_checksum(
+uint16_t m8q_ubx_checksum(
     uint8_t *msg, 
     uint16_t len)
 {
     // Local variables 
     uint8_t checksum_A = 0; 
     uint8_t checksum_B = 0; 
-    CHECKSUM checksum = 0; 
+    uint16_t checksum = 0; 
 
     // Exclude the sync characters from the checksum calculation 
     msg += BYTE_2; 

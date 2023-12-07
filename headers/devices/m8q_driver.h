@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief SAM-M8Q GPS module driver 
+ * @brief SAM-M8Q GPS driver interface 
  * 
  * @version 0.1
  * @date 2022-07-25
@@ -121,106 +121,14 @@
 // Enums 
 
 /**
- * @brief M8Q valid read indicator 
- * 
- * @details Used to define a valid or invalid message read in the m8q_read function. m8q_read 
- *          returns the result indicating the type of message read, if any. 
- * 
- * @see m8q_read
+ * @brief M8Q driver status 
  */
 typedef enum {
-    M8Q_READ_INVALID, 
-    M8Q_READ_NMEA, 
-    M8Q_READ_UBX
-} m8q_read_status_t; 
-
-
-/**
- * @brief M8Q UBX message conversion status 
- * 
- * @details Indicates whether a UBX message string was successfully converted into a format 
- *          readable by the receiver. Message strings come from the receiver config file or 
- *          user input during user config mode. 
- */
-typedef enum {
-    M8Q_UBX_MSG_CONV_FAIL, 
-    M8Q_UBX_MSG_CONV_SUCC
-} m8q_ubx_msg_convert_status_t; 
-
-
-/**
- * @brief M8Q NMEA POSITION message data fields 
- * 
- * @details List of all data fields in the POSITION message. This enum allows for indexing 
- *          of the POSITION fields for retreival data in getters. 
- */
-typedef enum {
-    M8Q_POS_TIME, 
-    M8Q_POS_LAT, 
-    M8Q_POS_NS, 
-    M8Q_POS_LON, 
-    M8Q_POS_EW, 
-    M8Q_POS_ALTREF, 
-    M8Q_POS_NAVSTAT, 
-    M8Q_POS_HACC, 
-    M8Q_POS_VACC, 
-    M8Q_POS_SOG, 
-    M8Q_POS_COG, 
-    M8Q_POS_VVEL, 
-    M8Q_POS_DIFFAGE, 
-    M8Q_POS_HDOP, 
-    M8Q_POS_VDOP, 
-    M8Q_POS_TDOP, 
-    M8Q_POS_NUMSVS, 
-    M8Q_POS_RES, 
-    M8Q_POS_DR 
-} m8q_pos_fields_t; 
-
-
-/**
- * @brief M8Q NMEA TIME message data fields 
- * 
- * @details List of all data fields in the TIME message. This enum allows for indexing 
- *          of the TIME fields for retreival data in getters. 
- */
-typedef enum {
-    M8Q_TIME_TIME, 
-    M8Q_TIME_DATE, 
-    M8Q_TIME_UTCTOW, 
-    M8Q_TIME_UTCWK, 
-    M8Q_TIME_LEAPSEC, 
-    M8Q_TIME_CLKBIAS, 
-    M8Q_TIME_CLKDRIFT, 
-    M8Q_TIME_TPGRAN 
-} m8q_time_fields_t; 
-
-
-/**
- * @brief M8Q driver status codes 
- * 
- * @details 
- *          
- *          Old comments: 
- *          - Codes used to indicate errors during NMEA message processing. These codes help 
- *            with debugging. 
- *          - Codes used to indicate errors during UBX message processing. These codes help 
- *            with debugging. 
- */
-typedef enum {
-    M8Q_FAULT_NONE,           // No fault 
-    M8Q_FAULT_NO_DATA,        // No data available 
-    M8Q_FAULT_NMEA_ID,        // Unsupported PUBX message ID 
-    M8Q_FAULT_NMEA_FORM,      // Invalid formatting of PUBX message 
-    M8Q_FAULT_NMEA_INVALID,   // Only PUBX messages are supported 
-    M8Q_FAULT_UBX_SIZE,       // Payload length doesn't match size 
-    M8Q_FAULT_UBX_FORM,       // Invalid payload format 
-    M8Q_FAULT_UBX_LEN,        // Invalid payload length format 
-    M8Q_FAULT_UBX_CONVERT,    // Message conversion failed. Check format 
-    M8Q_FAULT_UBX_ID,         // Invalid ID format 
-    M8Q_FAULT_UBX_NA,         // Unknown message type 
-    M8Q_FAULT_UBX_NAK,        // Message not acknowledged 
-    M8Q_FAULT_UBX_RESP        // Response message sent - only used during user config mode 
-} m8q_status_codes_t; 
+    M8Q_OK,                  // No problems with the M8Q operation 
+    M8Q_INVALID_PTR,         // Invalid pointer provided to function 
+    M8Q_UBX_MSG_CONV_FAIL,   // UBX message failed to convert to receiver format 
+    M8Q_UBX_MSG_CONV_SUCC    // UBX message successfully converted to receiver format 
+} m8q_status_t; 
 
 //=======================================================================================
 
@@ -228,11 +136,7 @@ typedef enum {
 //=======================================================================================
 // Data types 
 
-typedef uint16_t CHECKSUM; 
-
-// Status 
-typedef m8q_read_status_t M8Q_READ_STAT; 
-typedef m8q_ubx_msg_convert_status_t UBX_MSG_STATUS; 
+typedef uint8_t M8Q_STATUS; 
 
 //=======================================================================================
 
@@ -293,9 +197,9 @@ void m8q_init(
  * @see m8q_check_nmea_stream
  * @see m8q_nmea_read_status_t
  * 
- * @return M8Q_READ_STAT : valid read indicator 
+ * @return M8Q_STATUS : valid read indicator 
  */
-M8Q_READ_STAT m8q_read(void); 
+M8Q_STATUS m8q_read(void); 
 
 
 /**

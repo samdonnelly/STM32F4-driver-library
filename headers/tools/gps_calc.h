@@ -28,6 +28,20 @@ extern "C" {
 
 
 //=======================================================================================
+// Structs 
+
+// Stores the latitude and longitude of a GPS coordinate 
+typedef struct gps_waypoints_t 
+{
+    double lat; 
+    double lon; 
+}
+gps_waypoints_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Classes 
 
 // GPS calculations 
@@ -76,7 +90,7 @@ public:
      * @param lon_cur : current device longitude 
      * @param lat_tar : target waypoint latitude 
      * @param lon_tar : target waypoint longitude 
-     * @return int16_t : GPS radius (meters*10) 
+     * @return int32_t : GPS radius (meters*10) 
      */
     int32_t gps_radius(
         double lat_cur, 
