@@ -178,6 +178,25 @@ void m8q_user_config_prompt(void);
 
 
 //=======================================================================================
+// Macros 
+
+// Message identification 
+#define M8Q_MSG_ID_CHARS 4      // Number of characters used to identify message types 
+
+// NMEA message format 
+#define M8Q_NMEA_START 0x24     // '$' --> NMEA protocol start character 
+
+// UBX message format 
+#define M8Q_UBX_SYNC1 0xB5      // 0xB5 --> UBX protocol SYNC CHAR 1 
+#define M8Q_UBX_SYNC1_HI 0x42   // 'B' --> SYNC CHAR 1 (0xB5) high nibble character 
+#define M8Q_UBX_SYNC1_LO 0x35   // '5' --> SYNC CHAR 1 (0xB5) low nibble character 
+#define M8Q_UBX_SYNC2_HI 0x36   // '6' --> SYNC CHAR 2 (0x62) high nibble character 
+#define M8Q_UBX_SYNC2_LO 0x32   // '2' --> SYNC CHAR 2 (0x62) low nibble character 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Enums 
 
 /**
@@ -321,19 +340,30 @@ m8q_nmea_time_t;
 // NMEA message data 
 typedef struct m8q_driver_data_s
 {
-    // Messages 
-    m8q_nmea_pos_t  pos_data;                 // POSITION message 
-    m8q_nmea_time_t time_data;                // TIME message 
-    uint8_t ubx_resp[M8Q_MSG_MAX_LEN];        // Buffer to store incoming UBX messages 
-    uint8_t nmea_resp[M8Q_NMEA_MSG_MAX_LEN];  // Buffer to store incoming NMEA messages 
+    //==================================================
+    // New 
 
-    // Communications 
+    // Messages 
+    m8q_nmea_pos_t pos_data;                  // POSITION message 
+    m8q_nmea_time_t time_data;                // TIME message 
+
+    // Communication 
     I2C_TypeDef *i2c; 
-    GPIO_TypeDef *gpio; 
+    GPIO_TypeDef *pwr_save_gpio; 
+    GPIO_TypeDef *tx_ready_gpio; 
 
     // Pins 
     pin_selector_t pwr_save;      // Low power mode 
     pin_selector_t tx_ready;      // TX-Ready 
+
+    //==================================================
+    
+    // Messages 
+    uint8_t ubx_resp[M8Q_MSG_MAX_LEN];        // Buffer to store incoming UBX messages 
+    uint8_t nmea_resp[M8Q_NMEA_MSG_MAX_LEN];  // Buffer to store incoming NMEA messages 
+
+    // Communications 
+    GPIO_TypeDef *gpio; 
 
     // Status info 
     // 'status' --> bit 0: i2c status (see i2c_status_t) 
@@ -391,18 +421,59 @@ static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] =
 
 
 //=======================================================================================
-// Initialization (public) 
+// Initialization (public) - dev 
 
 // Device initialization 
-M8Q_STATUS m8q_device_init(
-    I2C_TypeDef *i2c)
+M8Q_STATUS m8q_init_dev(
+    I2C_TypeDef *i2c, 
+    const char *config_msgs, 
+    uint8_t msg_num, 
+    uint8_t max_msg_size)
 {
-    // 
+    if (i2c == NULL)
+    {
+        return M8Q_INVALID_PTR; 
+    }
+
+    // Local varaibles 
+    char config_id[M8Q_MSG_ID_CHARS]; 
+
+    // Assign data record information 
+    m8q_driver_data.i2c = i2c; 
+
+    // Send configuration messages 
+    for (uint8_t i = CLEAR; i < msg_num; i++)
+    {
+        config_id[0] = *config_msgs; 
+        config_id[1] = *(config_msgs+1); 
+        config_id[2] = *(config_msgs+3); 
+        config_id[3] = *(config_msgs+4); 
+
+        config_msgs += max_msg_size; 
+
+        if (config_id[0] == M8Q_NMEA_START)
+        {
+            // m8q_nmea_config(config_msgs); 
+        }
+        else if ((config_id[0] == M8Q_UBX_SYNC1_HI) && 
+                 (config_id[1] == M8Q_UBX_SYNC1_LO) && 
+                 (config_id[2] == M8Q_UBX_SYNC2_HI) && 
+                 (config_id[3] == M8Q_UBX_SYNC2_LO))
+        {
+            // m8q_ubx_config(config_msgs); 
+        }
+        else 
+        {
+            return M8Q_INVALID_CONFIG; 
+        }
+    }
+
+    return M8Q_OK; 
 }
 
 
 // Low power mode pin initialization 
-M8Q_STATUS m8q_pwr_pin_init(
+M8Q_STATUS m8q_pwr_pin_init_dev(
     GPIO_TypeDef *gpio, 
     pin_selector_t pwr_save_pin)
 {
@@ -411,16 +482,21 @@ M8Q_STATUS m8q_pwr_pin_init(
         return M8Q_INVALID_PTR; 
     }
 
+    m8q_driver_data.pwr_save_gpio = gpio; 
+    m8q_driver_data.pwr_save = pwr_save_pin; 
+
     gpio_pin_init(
-        gpio, 
-        pwr_save_pin, 
-        MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO);
-    m8q_set_low_power(GPIO_HIGH); 
+        m8q_driver_data.pwr_save_gpio, 
+        m8q_driver_data.pwr_save, 
+        MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
+    m8q_clear_low_pwr_dev(); 
+
+    return M8Q_OK; 
 }
 
 
 // TX ready pin initialization 
-M8Q_STATUS m8q_txr_pin_init(
+M8Q_STATUS m8q_txr_pin_init_dev(
     GPIO_TypeDef *gpio, 
     pin_selector_t tx_ready_pin)
 {
@@ -429,10 +505,15 @@ M8Q_STATUS m8q_txr_pin_init(
         return M8Q_INVALID_PTR; 
     }
 
+    m8q_driver_data.tx_ready_gpio = gpio; 
+    m8q_driver_data.tx_ready = tx_ready_pin; 
+
     gpio_pin_init(
-        gpio, 
-        tx_ready_pin, 
-        MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_PD);
+        m8q_driver_data.tx_ready_gpio, 
+        m8q_driver_data.tx_ready, 
+        MODER_INPUT, OTYPER_PP, OSPEEDR_HIGH, PUPDR_PD); 
+
+    return M8Q_OK; 
 }
 
 //=======================================================================================
@@ -451,7 +532,19 @@ M8Q_STATUS m8q_txr_pin_init(
 
 // Get driver fault code 
 
-// Set low power mode 
+
+// Enter low power mode 
+void m8q_set_low_pwr_dev(void)
+{
+    gpio_write(m8q_driver_data.gpio, (SET_BIT << m8q_driver_data.pwr_save), GPIO_LOW); 
+}
+
+
+// Exit low power mode 
+void m8q_clear_low_pwr_dev(void)
+{
+    gpio_write(m8q_driver_data.gpio, (SET_BIT << m8q_driver_data.pwr_save), GPIO_HIGH); 
+}
 
 // Get TX-Ready 
 
@@ -539,7 +632,7 @@ void m8q_init(
                 m8q_nmea_config(config_msgs); 
                 break;
 
-            case M8Q_UBX_SYNC1:  // UBX message 
+            case M8Q_UBX_SYNC1_HI:  // UBX message 
                 m8q_ubx_config((config_msgs)); 
                 break;
             
@@ -603,7 +696,7 @@ M8Q_STATUS m8q_read(void)
             read_status = M8Q_READ_NMEA; 
             break;
         
-        case M8Q_UBX_START:  // Start of UBX message 
+        case M8Q_UBX_SYNC1:  // Start of UBX message 
             // Capture the byte checked in the message response 
             *ubx_data++ = data_check; 
 

@@ -43,6 +43,12 @@ SRC_DIRS += tests/peripherals/analog                       # Test doubles and mo
 # GPIO 
 SRC_FILES += ./../sources/peripherals/gpio_driver.c        # Production code 
 
+# I2C 
+SRC_FILES += ./../sources/peripherals/i2c_comm.c        # Production code 
+
+# UART 
+SRC_FILES += ./../sources/peripherals/uart_comm.c        # Production code 
+
 # ----------------------------------
 
 # ------------- TOOLS --------------
@@ -50,6 +56,9 @@ SRC_FILES += ./../sources/peripherals/gpio_driver.c        # Production code
 # Switch debounce 
 SRC_FILES += ./../sources/tools/switch_debounce.c          # Production code 
 SRC_DIRS += tests/tools/switch_debounce                    # Test doubles and mocks 
+
+# Tools 
+SRC_FILES += ./../sources/tools/tools.c                    # Production code 
 
 # ----------------------------------
 

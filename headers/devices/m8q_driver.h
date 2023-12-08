@@ -54,7 +54,6 @@
 
 // NMEA message format 
 #define M8Q_NMEA_MSG_MAX_LEN 150         // NMEA message buffer that can hold any received message
-#define M8Q_NMEA_START       0x24        // 0x24 == '$' --> start of NMEA message 
 #define M8Q_NMEA_END_PAY     0x2A        // 0x2A == '*' --> indicates end of NMEA message payload 
 #define M8Q_NMEA_END_MSG     6           // Length of string to append to NMEA message after payload 
 #define M8Q_NMEA_CS_LEN      2           // Number of characters in NMEA message checksum 
@@ -85,8 +84,6 @@
 #define M8Q_COO_LEN 6                    // Length of integer and fractional parts of coordinates 
 
 // UBX message format 
-#define M8Q_UBX_START       0xB5         // 0xB5 --> Start of received UBX message 
-#define M8Q_UBX_SYNC1       0x42         // 0x42 == 'B' --> Start of user config UBX message 
 #define M8Q_UBX_MSG_FMT_LEN 4            // Message format length: CLASS + ID + LENGTH 
 #define M8Q_UBX_LENGTH_LEN  2            // LENGTH field length 
 #define M8Q_UBX_HEADER_LEN  6            // Number of bytes before the payload 
@@ -126,6 +123,7 @@
 typedef enum {
     M8Q_OK,                  // No problems with the M8Q operation 
     M8Q_INVALID_PTR,         // Invalid pointer provided to function 
+    M8Q_INVALID_CONFIG,      // Invalid configuration message 
     M8Q_UBX_MSG_CONV_FAIL,   // UBX message failed to convert to receiver format 
     M8Q_UBX_MSG_CONV_SUCC    // UBX message successfully converted to receiver format 
 } m8q_status_t; 
@@ -137,6 +135,105 @@ typedef enum {
 // Data types 
 
 typedef uint8_t M8Q_STATUS; 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Initialization - dev 
+
+/**
+ * @brief 
+ * 
+ * @details 
+ * 
+ * @param i2c 
+ * @param config_msgs 
+ * @param msg_num 
+ * @param max_msg_size 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_init_dev(
+    I2C_TypeDef *i2c, 
+    const char *config_msgs, 
+    uint8_t msg_num, 
+    uint8_t max_msg_size); 
+
+
+/**
+ * @brief Low power mode pin initialization 
+ * 
+ * @details 
+ * 
+ * @param gpio 
+ * @param pwr_save_pin 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_pwr_pin_init_dev(
+    GPIO_TypeDef *gpio, 
+    pin_selector_t pwr_save_pin); 
+
+
+/**
+ * @brief TX ready pin initialization 
+ * 
+ * @details 
+ * 
+ * @param gpio 
+ * @param tx_ready_pin 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_txr_pin_init_dev(
+    GPIO_TypeDef *gpio, 
+    pin_selector_t tx_ready_pin); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// User functions - dev 
+
+// Read - using TX ready pin 
+
+// Read - using device register status 
+
+// Write configuration (singular) 
+
+// Clear driver fault code 
+
+// Get driver fault code 
+
+
+/**
+ * @brief Enter low power mode 
+ * 
+ * @details 
+ */
+void m8q_set_low_pwr_dev(void); 
+
+
+/**
+ * @brief Exit low power mode 
+ * 
+ * @details 
+ */
+void m8q_clear_low_pwr_dev(void); 
+
+// Get TX-Ready 
+
+// Get latitude 
+
+// Get North/South 
+
+// Get longitude 
+
+// Get East/West 
+
+// Get navigation status 
+
+// Get time 
+
+// Get date 
 
 //=======================================================================================
 
