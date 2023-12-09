@@ -22,7 +22,408 @@
 
 
 //=======================================================================================
+// Macros 
+
+// Message identification 
+#define MSG_ID_CHARS 8          // Number of characters used to identify message types 
+
+// NMEA message format 
+#define NMEA_START 0x24           // '$' --> NMEA protocol start character 
+#define NMEA_PUBX_FORMAT_NUM 5    // Number of NMEA PUBX formatters 
+#define NMEA_PUBX_FORMAT_LEN 3    // Maximum length of an NMEA PUBX formatter 
+#define NMEA_STD_ID_NUM 5         // Number of standard NMEA message IDs 
+#define NMEA_STD_ID_LEN 3         // Maximum length of a standard NMEA message ID 
+#define NMEA_STD_FORMAT_NUM 19    // Number of standard NMEA formatters 
+#define NMEA_STD_FORMAT_LEN 4     // Maximum length of a standard NMEA formatter 
+
+// UBX message format 
+#define UBX_SYNC1 0xB5            // 0xB5 --> UBX protocol SYNC CHAR 1 
+#define UBX_SYNC1_HI 0x42         // 'B' --> SYNC CHAR 1 (0xB5) high nibble character 
+#define UBX_SYNC1_LO 0x35         // '5' --> SYNC CHAR 1 (0xB5) low nibble character 
+#define UBX_SYNC2_HI 0x36         // '6' --> SYNC CHAR 2 (0x62) high nibble character 
+#define UBX_SYNC2_LO 0x32         // '2' --> SYNC CHAR 2 (0x62) low nibble character 
+#define UBX_CLASS_NUM 14          // Number of UBX classes 
+#define UBX_CLASS_LEN 3           // Maximum length ofa UBX class 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Enums 
+
+//==================================================
+// new 
+
+/**
+ * @brief M8Q message type 
+ * 
+ * @details 
+ */
+typedef enum {
+    M8Q_MSG_INVALID, 
+    M8Q_MSG_NMEA, 
+    M8Q_MSG_UBX, 
+    M8Q_MSG_RTCM 
+} m8q_msg_type_t; 
+
+//==================================================
+
+/**
+ * @brief M8Q valid read indicator 
+ * 
+ * @details Used to define a valid or invalid message read in the m8q_read function. m8q_read 
+ *          returns the result indicating the type of message read, if any. 
+ * 
+ * @see m8q_read
+ */
+typedef enum {
+    M8Q_READ_INVALID, 
+    M8Q_READ_NMEA, 
+    M8Q_READ_UBX
+} m8q_read_status_t; 
+
+
+/**
+ * @brief M8Q NMEA POSITION message data fields 
+ * 
+ * @details List of all data fields in the POSITION message. This enum allows for indexing 
+ *          of the POSITION fields for retreival data in getters. 
+ */
+typedef enum {
+    M8Q_POS_TIME, 
+    M8Q_POS_LAT, 
+    M8Q_POS_NS, 
+    M8Q_POS_LON, 
+    M8Q_POS_EW, 
+    M8Q_POS_ALTREF, 
+    M8Q_POS_NAVSTAT, 
+    M8Q_POS_HACC, 
+    M8Q_POS_VACC, 
+    M8Q_POS_SOG, 
+    M8Q_POS_COG, 
+    M8Q_POS_VVEL, 
+    M8Q_POS_DIFFAGE, 
+    M8Q_POS_HDOP, 
+    M8Q_POS_VDOP, 
+    M8Q_POS_TDOP, 
+    M8Q_POS_NUMSVS, 
+    M8Q_POS_RES, 
+    M8Q_POS_DR 
+} m8q_pos_fields_t; 
+
+
+/**
+ * @brief M8Q NMEA TIME message data fields 
+ * 
+ * @details List of all data fields in the TIME message. This enum allows for indexing 
+ *          of the TIME fields for retreival data in getters. 
+ */
+typedef enum {
+    M8Q_TIME_TIME, 
+    M8Q_TIME_DATE, 
+    M8Q_TIME_UTCTOW, 
+    M8Q_TIME_UTCWK, 
+    M8Q_TIME_LEAPSEC, 
+    M8Q_TIME_CLKBIAS, 
+    M8Q_TIME_CLKDRIFT, 
+    M8Q_TIME_TPGRAN 
+} m8q_time_fields_t; 
+
+
+/**
+ * @brief M8Q driver status codes 
+ * 
+ * @details 
+ *          
+ *          Old comments: 
+ *          - Codes used to indicate errors during NMEA message processing. These codes help 
+ *            with debugging. 
+ *          - Codes used to indicate errors during UBX message processing. These codes help 
+ *            with debugging. 
+ */
+typedef enum {
+    M8Q_FAULT_NONE,           // No fault 
+    M8Q_FAULT_NO_DATA,        // No data available 
+    M8Q_FAULT_NMEA_ID,        // Unsupported PUBX message ID 
+    M8Q_FAULT_NMEA_FORM,      // Invalid formatting of PUBX message 
+    M8Q_FAULT_NMEA_INVALID,   // Only PUBX messages are supported 
+    M8Q_FAULT_UBX_SIZE,       // Payload length doesn't match size 
+    M8Q_FAULT_UBX_FORM,       // Invalid payload format 
+    M8Q_FAULT_UBX_LEN,        // Invalid payload length format 
+    M8Q_FAULT_UBX_CONVERT,    // Message conversion failed. Check format 
+    M8Q_FAULT_UBX_ID,         // Invalid ID format 
+    M8Q_FAULT_UBX_NA,         // Unknown message type 
+    M8Q_FAULT_UBX_NAK,        // Message not acknowledged 
+    M8Q_FAULT_UBX_RESP        // Response message sent - only used during user config mode 
+} m8q_status_codes_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Datatypes 
+
+typedef uint8_t M8Q_MSG_TYPE; 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Messages 
+
+//==================================================
+// NMEA message address 
+
+// Start character of all NMEA messages 
+const char nmea_start = NMEA_START; 
+
+// U-Blox defined NMEA message 
+const char nmea_pubx_id[] = "PUBX"; 
+
+// NMEA PUBX messages 
+const char nmea_pubx_format[NMEA_PUBX_FORMAT_NUM][NMEA_PUBX_FORMAT_LEN] = 
+{
+    "00",      // POSITION 
+    "03",      // SVSTATUS 
+    "04",      // TIME 
+    "40",      // RATE 
+    "41",      // CONFIG 
+}; 
+
+// NMEA talker IDs 
+const char nmea_std_id[NMEA_STD_ID_NUM][NMEA_STD_ID_LEN] = 
+{
+    "GP",      // GPS, SBAS, QZSS 
+    "GL",      // GLONASS 
+    "GA",      // Galileo 
+    "GB",      // BeiDou 
+    "GN",      // Any combination of GNSS 
+}; 
+
+// NMEA standard messages 
+const char nmea_std_format[NMEA_STD_FORMAT_NUM][NMEA_STD_FORMAT_LEN] = 
+{
+    "DTM",     // Datum reference 
+    "GBQ",     // Poll a standard message (Talker ID GB) 
+    "GBS",     // GNSS satellite fault detection 
+    "GGA",     // Global positioning system fix data 
+    "GLL",     // Latitude and longitude, with time of position fix and status 
+    "GLQ",     // Poll a standard message (Talker ID GL) 
+    "GNQ",     // Poll a standard message (Talker ID GN) 
+    "GNS",     // GNSS fix data 
+    "GPQ",     // Poll a standard message (Talker ID GP) 
+    "GRS",     // GNSS range residuals 
+    "GSA",     // GNSS DOP and active satellites 
+    "GST",     // GNSS pseudorange error statistics 
+    "GSV",     // GNSS satellites in view 
+    "RMC",     // Recommended minimum data 
+    "THS",     // True heading and status 
+    "TXT",     // Text transmission 
+    "VLW",     // Dual ground/water distance 
+    "VTG",     // Course over ground and ground speed 
+    "ZDA",     // Time and data 
+}; 
+
+//==================================================
+
+//==================================================
+// UBX sync characters and class 
+
+const char ubx_sync[] = "B562"; 
+
+const char ubx_class[UBX_CLASS_NUM][UBX_CLASS_LEN] = 
+{
+    "01",   // NAV 
+    "02",   // RXM 
+    "04",   // INF 
+    "05",   // ACK 
+    "06",   // CFG 
+    "09",   // UPD 
+    "0A",   // MON 
+    "0B",   // AID 
+    "0D",   // TIM 
+    "10",   // ESF 
+    "13",   // MGA 
+    "21",   // LOG 
+    "27",   // SEC 
+    "28"    // HNR 
+}; 
+
+//==================================================
+
+//==================================================
+// Stored messages 
+// NMEA POSITION message fields  
+typedef struct m8q_nmea_pos_s 
+{
+    uint8_t time    [BYTE_9];     // UTC time 
+    uint8_t lat     [BYTE_10];    // Latitude 
+    uint8_t NS      [BYTE_1];     // North/South indicator 
+    uint8_t lon     [BYTE_11];    // Longitude 
+    uint8_t EW      [BYTE_1];     // East/West indicator 
+    uint8_t altRef  [BYTE_9];     // Altitude above user datum ellipsoid 
+    uint8_t navStat [BYTE_2];     // Navigation status 
+    uint8_t hAcc    [BYTE_5];     // Horizontal accuracy estimate 
+    uint8_t vAcc    [BYTE_5];     // Vertical accuracy estimate 
+    uint8_t SOG     [BYTE_6];     // Speed over ground 
+    uint8_t COG     [BYTE_6];     // Course over ground 
+    uint8_t vVel    [BYTE_6];     // Vertical velocity (+ downwards) 
+    uint8_t diffAge [BYTE_1];     // Age of differential corrections 
+    uint8_t HDOP    [BYTE_5];     // Horizontal dilution of precision 
+    uint8_t VDOP    [BYTE_5];     // Vertical dilution of precision 
+    uint8_t TDOP    [BYTE_5];     // Time dilution of precision 
+    uint8_t numSvs  [BYTE_2];     // Number of satellites used in the navigation solution 
+    uint8_t res     [BYTE_1];     // Reserved --> 0 
+    uint8_t DR      [BYTE_1];     // DR used 
+    uint8_t eom     [BYTE_1];     // End of memory --> used for parsing function only 
+} 
+m8q_nmea_pos_t;
+
+
+// NMEA TIME message fields 
+typedef struct m8q_nmea_time_s
+{
+    uint8_t time     [BYTE_9];     // UTC time 
+    uint8_t date     [BYTE_6];     // UTC date 
+    uint8_t utcTow   [BYTE_9];     // UTC time of week 
+    uint8_t utcWk    [BYTE_4];     // UTC week number 
+    uint8_t leapSec  [BYTE_3];     // Leap seconds 
+    uint8_t clkBias  [BYTE_8];     // Receiver clock bias 
+    uint8_t clkDrift [BYTE_10];    // Receiver clock drift 
+    uint8_t tpGran   [BYTE_3];     // Time pulse granularity 
+    uint8_t eom      [BYTE_1];     // End of memory --> used for parsing function only 
+} 
+m8q_nmea_time_t;
+
+//==================================================
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Global variables 
+
+// NMEA message data 
+typedef struct m8q_driver_data_s
+{
+    //==================================================
+    // New 
+
+    // Messages 
+    m8q_nmea_pos_t pos_data;      // POSITION message 
+    m8q_nmea_time_t time_data;    // TIME message 
+
+    // Communication 
+    I2C_TypeDef *i2c; 
+    GPIO_TypeDef *pwr_save_gpio; 
+    GPIO_TypeDef *tx_ready_gpio; 
+
+    // Pins 
+    pin_selector_t pwr_save;      // Low power mode 
+    pin_selector_t tx_ready;      // TX-Ready 
+
+    //==================================================
+    
+    // Messages 
+    uint8_t ubx_resp[M8Q_MSG_MAX_LEN];        // Buffer to store incoming UBX messages 
+    uint8_t nmea_resp[M8Q_NMEA_MSG_MAX_LEN];  // Buffer to store incoming NMEA messages 
+
+    // Communications 
+    GPIO_TypeDef *gpio; 
+
+    // Status info 
+    // 'status' --> bit 0: i2c status (see i2c_status_t) 
+    //          --> bits 1-12: driver faults (see status getter) 
+    //          --> bits 13-15: not used 
+    uint16_t status; 
+} 
+m8q_driver_data_t; 
+
+
+// NMEA message data instance 
+static m8q_driver_data_t m8q_driver_data; 
+
+
+// NMEA POSITION message 
+static uint8_t* position[M8Q_NMEA_POS_ARGS+1] = 
+{ 
+    m8q_driver_data.pos_data.time, 
+    m8q_driver_data.pos_data.lat, 
+    m8q_driver_data.pos_data.NS, 
+    m8q_driver_data.pos_data.lon, 
+    m8q_driver_data.pos_data.EW, 
+    m8q_driver_data.pos_data.altRef, 
+    m8q_driver_data.pos_data.navStat, 
+    m8q_driver_data.pos_data.hAcc, 
+    m8q_driver_data.pos_data.vAcc,
+    m8q_driver_data.pos_data.SOG,
+    m8q_driver_data.pos_data.COG,
+    m8q_driver_data.pos_data.vVel,
+    m8q_driver_data.pos_data.diffAge,
+    m8q_driver_data.pos_data.HDOP,
+    m8q_driver_data.pos_data.VDOP,
+    m8q_driver_data.pos_data.TDOP,
+    m8q_driver_data.pos_data.numSvs,
+    m8q_driver_data.pos_data.res,
+    m8q_driver_data.pos_data.DR, 
+    m8q_driver_data.pos_data.eom 
+}; 
+
+// NMEA TIME message 
+static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] = 
+{ 
+    m8q_driver_data.time_data.time, 
+    m8q_driver_data.time_data.date, 
+    m8q_driver_data.time_data.utcTow, 
+    m8q_driver_data.time_data.utcWk, 
+    m8q_driver_data.time_data.leapSec, 
+    m8q_driver_data.time_data.clkBias, 
+    m8q_driver_data.time_data.clkDrift, 
+    m8q_driver_data.time_data.tpGran, 
+    m8q_driver_data.time_data.eom 
+}; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Function prototypes 
+
+//==================================================
+// new 
+
+/**
+ * @brief Message identification 
+ * 
+ * @details 
+ * 
+ * @param msg 
+ * @return M8Q_MSG_TYPE 
+ */
+M8Q_MSG_TYPE m8q_msg_id_dev(
+    const char *msg); 
+
+
+/**
+ * @brief Message identification helper function 
+ * 
+ * @details 
+ * 
+ * @param msg 
+ * @param ref_msg 
+ * @param num_compare 
+ * @param max_size 
+ * @param offset 
+ * @return uint8_t 
+ */
+uint8_t m8q_msg_id_check_dev(
+    const char *msg, 
+    const char *ref_msg, 
+    uint8_t num_compare, 
+    uint8_t max_size, 
+    uint8_t offset); 
+
+//==================================================
 
 /**
  * @brief M8Q message size 
@@ -178,249 +579,6 @@ void m8q_user_config_prompt(void);
 
 
 //=======================================================================================
-// Macros 
-
-// Message identification 
-#define M8Q_MSG_ID_CHARS 4      // Number of characters used to identify message types 
-
-// NMEA message format 
-#define M8Q_NMEA_START 0x24     // '$' --> NMEA protocol start character 
-
-// UBX message format 
-#define M8Q_UBX_SYNC1 0xB5      // 0xB5 --> UBX protocol SYNC CHAR 1 
-#define M8Q_UBX_SYNC1_HI 0x42   // 'B' --> SYNC CHAR 1 (0xB5) high nibble character 
-#define M8Q_UBX_SYNC1_LO 0x35   // '5' --> SYNC CHAR 1 (0xB5) low nibble character 
-#define M8Q_UBX_SYNC2_HI 0x36   // '6' --> SYNC CHAR 2 (0x62) high nibble character 
-#define M8Q_UBX_SYNC2_LO 0x32   // '2' --> SYNC CHAR 2 (0x62) low nibble character 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Enums 
-
-/**
- * @brief M8Q valid read indicator 
- * 
- * @details Used to define a valid or invalid message read in the m8q_read function. m8q_read 
- *          returns the result indicating the type of message read, if any. 
- * 
- * @see m8q_read
- */
-typedef enum {
-    M8Q_READ_INVALID, 
-    M8Q_READ_NMEA, 
-    M8Q_READ_UBX
-} m8q_read_status_t; 
-
-
-/**
- * @brief M8Q NMEA POSITION message data fields 
- * 
- * @details List of all data fields in the POSITION message. This enum allows for indexing 
- *          of the POSITION fields for retreival data in getters. 
- */
-typedef enum {
-    M8Q_POS_TIME, 
-    M8Q_POS_LAT, 
-    M8Q_POS_NS, 
-    M8Q_POS_LON, 
-    M8Q_POS_EW, 
-    M8Q_POS_ALTREF, 
-    M8Q_POS_NAVSTAT, 
-    M8Q_POS_HACC, 
-    M8Q_POS_VACC, 
-    M8Q_POS_SOG, 
-    M8Q_POS_COG, 
-    M8Q_POS_VVEL, 
-    M8Q_POS_DIFFAGE, 
-    M8Q_POS_HDOP, 
-    M8Q_POS_VDOP, 
-    M8Q_POS_TDOP, 
-    M8Q_POS_NUMSVS, 
-    M8Q_POS_RES, 
-    M8Q_POS_DR 
-} m8q_pos_fields_t; 
-
-
-/**
- * @brief M8Q NMEA TIME message data fields 
- * 
- * @details List of all data fields in the TIME message. This enum allows for indexing 
- *          of the TIME fields for retreival data in getters. 
- */
-typedef enum {
-    M8Q_TIME_TIME, 
-    M8Q_TIME_DATE, 
-    M8Q_TIME_UTCTOW, 
-    M8Q_TIME_UTCWK, 
-    M8Q_TIME_LEAPSEC, 
-    M8Q_TIME_CLKBIAS, 
-    M8Q_TIME_CLKDRIFT, 
-    M8Q_TIME_TPGRAN 
-} m8q_time_fields_t; 
-
-
-/**
- * @brief M8Q driver status codes 
- * 
- * @details 
- *          
- *          Old comments: 
- *          - Codes used to indicate errors during NMEA message processing. These codes help 
- *            with debugging. 
- *          - Codes used to indicate errors during UBX message processing. These codes help 
- *            with debugging. 
- */
-typedef enum {
-    M8Q_FAULT_NONE,           // No fault 
-    M8Q_FAULT_NO_DATA,        // No data available 
-    M8Q_FAULT_NMEA_ID,        // Unsupported PUBX message ID 
-    M8Q_FAULT_NMEA_FORM,      // Invalid formatting of PUBX message 
-    M8Q_FAULT_NMEA_INVALID,   // Only PUBX messages are supported 
-    M8Q_FAULT_UBX_SIZE,       // Payload length doesn't match size 
-    M8Q_FAULT_UBX_FORM,       // Invalid payload format 
-    M8Q_FAULT_UBX_LEN,        // Invalid payload length format 
-    M8Q_FAULT_UBX_CONVERT,    // Message conversion failed. Check format 
-    M8Q_FAULT_UBX_ID,         // Invalid ID format 
-    M8Q_FAULT_UBX_NA,         // Unknown message type 
-    M8Q_FAULT_UBX_NAK,        // Message not acknowledged 
-    M8Q_FAULT_UBX_RESP        // Response message sent - only used during user config mode 
-} m8q_status_codes_t; 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Messages 
-
-// NMEA POSITION message fields  
-typedef struct m8q_nmea_pos_s 
-{
-    uint8_t time    [BYTE_9];     // UTC time 
-    uint8_t lat     [BYTE_10];    // Latitude 
-    uint8_t NS      [BYTE_1];     // North/South indicator 
-    uint8_t lon     [BYTE_11];    // Longitude 
-    uint8_t EW      [BYTE_1];     // East/West indicator 
-    uint8_t altRef  [BYTE_9];     // Altitude above user datum ellipsoid 
-    uint8_t navStat [BYTE_2];     // Navigation status 
-    uint8_t hAcc    [BYTE_5];     // Horizontal accuracy estimate 
-    uint8_t vAcc    [BYTE_5];     // Vertical accuracy estimate 
-    uint8_t SOG     [BYTE_6];     // Speed over ground 
-    uint8_t COG     [BYTE_6];     // Course over ground 
-    uint8_t vVel    [BYTE_6];     // Vertical velocity (+ downwards) 
-    uint8_t diffAge [BYTE_1];     // Age of differential corrections 
-    uint8_t HDOP    [BYTE_5];     // Horizontal dilution of precision 
-    uint8_t VDOP    [BYTE_5];     // Vertical dilution of precision 
-    uint8_t TDOP    [BYTE_5];     // Time dilution of precision 
-    uint8_t numSvs  [BYTE_2];     // Number of satellites used in the navigation solution 
-    uint8_t res     [BYTE_1];     // Reserved --> 0 
-    uint8_t DR      [BYTE_1];     // DR used 
-    uint8_t eom     [BYTE_1];     // End of memory --> used for parsing function only 
-} 
-m8q_nmea_pos_t;
-
-
-// NMEA TIME message fields 
-typedef struct m8q_nmea_time_s
-{
-    uint8_t time     [BYTE_9];     // UTC time 
-    uint8_t date     [BYTE_6];     // UTC date 
-    uint8_t utcTow   [BYTE_9];     // UTC time of week 
-    uint8_t utcWk    [BYTE_4];     // UTC week number 
-    uint8_t leapSec  [BYTE_3];     // Leap seconds 
-    uint8_t clkBias  [BYTE_8];     // Receiver clock bias 
-    uint8_t clkDrift [BYTE_10];    // Receiver clock drift 
-    uint8_t tpGran   [BYTE_3];     // Time pulse granularity 
-    uint8_t eom      [BYTE_1];     // End of memory --> used for parsing function only 
-} 
-m8q_nmea_time_t;
-
-
-// NMEA message data 
-typedef struct m8q_driver_data_s
-{
-    //==================================================
-    // New 
-
-    // Messages 
-    m8q_nmea_pos_t pos_data;                  // POSITION message 
-    m8q_nmea_time_t time_data;                // TIME message 
-
-    // Communication 
-    I2C_TypeDef *i2c; 
-    GPIO_TypeDef *pwr_save_gpio; 
-    GPIO_TypeDef *tx_ready_gpio; 
-
-    // Pins 
-    pin_selector_t pwr_save;      // Low power mode 
-    pin_selector_t tx_ready;      // TX-Ready 
-
-    //==================================================
-    
-    // Messages 
-    uint8_t ubx_resp[M8Q_MSG_MAX_LEN];        // Buffer to store incoming UBX messages 
-    uint8_t nmea_resp[M8Q_NMEA_MSG_MAX_LEN];  // Buffer to store incoming NMEA messages 
-
-    // Communications 
-    GPIO_TypeDef *gpio; 
-
-    // Status info 
-    // 'status' --> bit 0: i2c status (see i2c_status_t) 
-    //          --> bits 1-12: driver faults (see status getter) 
-    //          --> bits 13-15: not used 
-    uint16_t status; 
-} 
-m8q_driver_data_t; 
-
-
-// NMEA message data instance 
-static m8q_driver_data_t m8q_driver_data; 
-
-
-// NMEA POSITION message 
-static uint8_t* position[M8Q_NMEA_POS_ARGS+1] = 
-{ 
-    m8q_driver_data.pos_data.time, 
-    m8q_driver_data.pos_data.lat, 
-    m8q_driver_data.pos_data.NS, 
-    m8q_driver_data.pos_data.lon, 
-    m8q_driver_data.pos_data.EW, 
-    m8q_driver_data.pos_data.altRef, 
-    m8q_driver_data.pos_data.navStat, 
-    m8q_driver_data.pos_data.hAcc, 
-    m8q_driver_data.pos_data.vAcc,
-    m8q_driver_data.pos_data.SOG,
-    m8q_driver_data.pos_data.COG,
-    m8q_driver_data.pos_data.vVel,
-    m8q_driver_data.pos_data.diffAge,
-    m8q_driver_data.pos_data.HDOP,
-    m8q_driver_data.pos_data.VDOP,
-    m8q_driver_data.pos_data.TDOP,
-    m8q_driver_data.pos_data.numSvs,
-    m8q_driver_data.pos_data.res,
-    m8q_driver_data.pos_data.DR, 
-    m8q_driver_data.pos_data.eom 
-}; 
-
-// NMEA TIME message 
-static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] = 
-{ 
-    m8q_driver_data.time_data.time, 
-    m8q_driver_data.time_data.date, 
-    m8q_driver_data.time_data.utcTow, 
-    m8q_driver_data.time_data.utcWk, 
-    m8q_driver_data.time_data.leapSec, 
-    m8q_driver_data.time_data.clkBias, 
-    m8q_driver_data.time_data.clkDrift, 
-    m8q_driver_data.time_data.tpGran, 
-    m8q_driver_data.time_data.eom 
-}; 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Initialization (public) - dev 
 
 // Device initialization 
@@ -436,7 +594,7 @@ M8Q_STATUS m8q_init_dev(
     }
 
     // Local varaibles 
-    char config_id[M8Q_MSG_ID_CHARS]; 
+    M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
 
     // Assign data record information 
     m8q_driver_data.i2c = i2c; 
@@ -444,21 +602,14 @@ M8Q_STATUS m8q_init_dev(
     // Send configuration messages 
     for (uint8_t i = CLEAR; i < msg_num; i++)
     {
-        config_id[0] = *config_msgs; 
-        config_id[1] = *(config_msgs+1); 
-        config_id[2] = *(config_msgs+3); 
-        config_id[3] = *(config_msgs+4); 
-
+        msg_type = m8q_msg_id_dev(config_msgs); 
         config_msgs += max_msg_size; 
 
-        if (config_id[0] == M8Q_NMEA_START)
+        if (msg_type == M8Q_MSG_NMEA)
         {
             // m8q_nmea_config(config_msgs); 
         }
-        else if ((config_id[0] == M8Q_UBX_SYNC1_HI) && 
-                 (config_id[1] == M8Q_UBX_SYNC1_LO) && 
-                 (config_id[2] == M8Q_UBX_SYNC2_HI) && 
-                 (config_id[3] == M8Q_UBX_SYNC2_LO))
+        else if (msg_type == M8Q_MSG_UBX)
         {
             // m8q_ubx_config(config_msgs); 
         }
@@ -578,6 +729,84 @@ void m8q_clear_low_pwr_dev(void)
 //=======================================================================================
 // Message processing (private) 
 
+// Message identification 
+M8Q_MSG_TYPE m8q_msg_id_dev(
+    const char *msg)
+{
+    // Check for the start of an NMEA message 
+    if (*msg == nmea_start)
+    {
+        // Check for a PUBX message ID 
+        if (str_compare(nmea_pubx_id, msg, BYTE_1))
+        {
+            // Check for a valid PUBX format 
+            if (m8q_msg_id_check_dev(msg, 
+                                     &nmea_pubx_format[0][0], 
+                                     NMEA_PUBX_FORMAT_NUM, 
+                                     NMEA_PUBX_FORMAT_LEN, 
+                                     BYTE_6))
+            {
+                return M8Q_MSG_NMEA; 
+            }
+        }
+
+        // Check for a standard NMEA message ID 
+        if (m8q_msg_id_check_dev(msg, 
+                                 &nmea_std_id[0][0], 
+                                 NMEA_STD_ID_NUM, 
+                                 NMEA_STD_ID_LEN, 
+                                 BYTE_1))
+        {
+            // Check for a valid standard NMEA message format 
+            if (m8q_msg_id_check_dev(msg, 
+                                     &nmea_std_format[0][0], 
+                                     NMEA_STD_FORMAT_NUM, 
+                                     NMEA_STD_FORMAT_LEN, 
+                                     BYTE_3))
+            {
+                return M8Q_MSG_NMEA; 
+            }
+        }
+    }
+    // Check for the start of a UBX message 
+    else if (str_compare(ubx_sync, msg, BYTE_0))
+    {
+        // Check for a valid UBX class 
+        if (m8q_msg_id_check_dev(msg, 
+                                 &ubx_class[0][0], 
+                                 UBX_CLASS_NUM, 
+                                 UBX_CLASS_LEN, 
+                                 BYTE_5))
+        {
+            return M8Q_MSG_UBX; 
+        }
+        // return M8Q_MSG_UBX; 
+    }
+
+    return M8Q_MSG_INVALID; 
+}
+
+
+// Message identification helper function 
+uint8_t m8q_msg_id_check_dev(
+    const char *msg, 
+    const char *ref_msg, 
+    uint8_t num_compare, 
+    uint8_t max_size, 
+    uint8_t offset)
+{
+    for (uint8_t i = CLEAR; i < num_compare; i++)
+    {
+        if (str_compare(ref_msg + i*max_size, msg, offset))
+        {
+            return TRUE; 
+        }
+    }
+
+    return FALSE; 
+}
+
+
 // Sort NMEA data 
 
 //=======================================================================================
@@ -628,11 +857,11 @@ void m8q_init(
         // Identify the message type 
         switch (*(config_msgs))
         {
-            case M8Q_NMEA_START:  // NMEA message 
+            case NMEA_START:  // NMEA message 
                 m8q_nmea_config(config_msgs); 
                 break;
 
-            case M8Q_UBX_SYNC1_HI:  // UBX message 
+            case UBX_SYNC1_HI:  // UBX message 
                 m8q_ubx_config((config_msgs)); 
                 break;
             
@@ -672,7 +901,7 @@ M8Q_STATUS m8q_read(void)
         case M8Q_NO_DATA:  // No data stream available 
             break;
 
-        case M8Q_NMEA_START:  // Start of NMEA message 
+        case NMEA_START:  // Start of NMEA message 
             // Capture the byte checked in the message response 
             *nmea_data++ = data_check; 
 
@@ -696,7 +925,7 @@ M8Q_STATUS m8q_read(void)
             read_status = M8Q_READ_NMEA; 
             break;
         
-        case M8Q_UBX_SYNC1:  // Start of UBX message 
+        case UBX_SYNC1:  // Start of UBX message 
             // Capture the byte checked in the message response 
             *ubx_data++ = data_check; 
 
@@ -1206,11 +1435,11 @@ void m8q_user_config(void)
         // Identify the message type 
         switch (config_msg[0])
         {
-            case M8Q_NMEA_START:  // NMEA message 
+            case NMEA_START:  // NMEA message 
                 error_code = m8q_nmea_config(config_msg); 
                 break;
 
-            case M8Q_UBX_SYNC1:  // UBX message 
+            case UBX_SYNC1:  // UBX message 
                 error_code = m8q_ubx_config(config_msg); 
 
                 // Communicate the results 

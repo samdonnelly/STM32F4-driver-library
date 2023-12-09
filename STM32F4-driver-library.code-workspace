@@ -17,7 +17,9 @@
 			"core_cm4.h": "c",
 			"cstring": "cpp",
 			"__bit_reference": "cpp",
-			"__string": "cpp"
+			"__string": "cpp",
+			"array": "c",
+			"string_view": "c"
 		}
 	}
 }

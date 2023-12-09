@@ -125,9 +125,9 @@ TEST(m8q_driver, m8q_init_config_msg_ok)
         // Message 0 
         "$PUBX,40,GGA,0,0,0,0,0,0*", 
         // Message 9 
-        "B5,62,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
+        "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
         // Message 11 
-        "B5,62,06,09,0C00,00000000,FFFFFFFF,00000000*" 
+        "B562,06,09,0C00,00000000,FFFFFFFF,00000000*" 
     };
 
     m8q_test_config_compare(
@@ -149,42 +149,95 @@ TEST(m8q_driver, m8q_init_invalid_config)
 {
     I2C_TypeDef I2C_LOCAL_FAKE; 
 
-    // Config messages from 'm8q_config_pkt' but the ID characters (first character of 
-    // the NMEA message and first four characters of the UBX messages) are purposely 
-    // written incorrectly. 
-    const char config_msgs[CONFIG_TEST_MSG_NUM][M8Q_CONFIG_MAX_MSG_LEN] = 
-    {
-        // Message 0 
-        "$PUBX,40,GGA,0,0,0,0,0,0*", 
-        // Message 9 
-        "B5,62,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
-        // Message 11 - SYNC CHAR 2 set incorrectly to trip the init function 
-        "B5,63,06,09,0C00,00000000,FFFFFFFF,00000000*" 
-    };
+    // In the following message samples, the first two are invalid and the third is valid. 
+    // Messages are sent one at a time to check that message checks are done correctly. 
 
-    M8Q_STATUS init_check = m8q_init_dev(
-        &I2C_LOCAL_FAKE, 
-        &config_msgs[0][0], 
-        CONFIG_TEST_MSG_NUM, 
-        M8Q_CONFIG_MAX_MSG_LEN); 
+    // Sample PUBX NMEA message 
+    const char config_msg0[] = "$PUBC,40,GGA,0,0,0,0,0,0*"; 
+    const char config_msg1[] = "$PUBX,01,GGA,0,0,0,0,0,0*"; 
+    const char config_msg2[] = "$PUBX,40,GGA,0,0,0,0,0,0*"; 
+    // Sample standard NMEA message 
+    const char config_msg3[] = "$GCGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52"; 
+    const char config_msg4[] = "$GNGRZ,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52"; 
+    const char config_msg5[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52"; 
+    // // Sample UBX message 
+    const char config_msg6[] = "B563,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
+    const char config_msg7[] = "B562,22,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
+    const char config_msg8[] = "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check); 
+    M8Q_STATUS init_check0 = m8q_init_dev(
+                                &I2C_LOCAL_FAKE, config_msg0, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check1 = m8q_init_dev(
+                                &I2C_LOCAL_FAKE, config_msg1, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check2 = m8q_init_dev(
+                                &I2C_LOCAL_FAKE, config_msg2, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check3 = m8q_init_dev(
+                                &I2C_LOCAL_FAKE, config_msg3, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check4 = m8q_init_dev(
+                                &I2C_LOCAL_FAKE, config_msg4, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check5 = m8q_init_dev(
+                                &I2C_LOCAL_FAKE, config_msg5, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check6 = m8q_init_dev(
+                                &I2C_LOCAL_FAKE, config_msg6, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check7 = m8q_init_dev(
+                                &I2C_LOCAL_FAKE, config_msg7, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check8 = m8q_init_dev(
+                                &I2C_LOCAL_FAKE, config_msg8, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+
+    // LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check0); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check1); 
+    LONGS_EQUAL(M8Q_OK, init_check2); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check3); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check4); 
+    LONGS_EQUAL(M8Q_OK, init_check5); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check6); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check7); 
+    LONGS_EQUAL(M8Q_OK, init_check8); 
 }
 
 
-// M8Q device initialization - init ok, valid pointer and config messages 
-TEST(m8q_driver, m8q_init_valid_config)
-{
-    I2C_TypeDef I2C_LOCAL_FAKE; 
+// // M8Q device initialization - no init, invalid config messages 
+// TEST(m8q_driver, m8q_init_invalid_config)
+// {
+//     I2C_TypeDef I2C_LOCAL_FAKE; 
 
-    M8Q_STATUS init_check = m8q_init_dev(
-        &I2C_LOCAL_FAKE, 
-        &m8q_config_pkt[0][0], 
-        CONFIG_TEST_MSG_NUM, 
-        M8Q_CONFIG_MAX_MSG_LEN); 
+//     // Config messages from 'm8q_config_pkt' but the ID characters (first character of 
+//     // the NMEA message and first four characters of the UBX messages) are purposely 
+//     // written incorrectly. 
+//     const char config_msgs[CONFIG_TEST_MSG_NUM][M8Q_CONFIG_MAX_MSG_LEN] = 
+//     {
+//         // Message 0 
+//         "$PUBX,40,GGA,0,0,0,0,0,0*", 
+//         // Message 9 
+//         "B5,62,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
+//         // Message 11 - SYNC CHAR 2 set incorrectly to trip the init function 
+//         "B5,63,06,09,0C00,00000000,FFFFFFFF,00000000*" 
+//     };
 
-    LONGS_EQUAL(M8Q_OK, init_check); 
-}
+//     M8Q_STATUS init_check = m8q_init_dev(
+//         &I2C_LOCAL_FAKE, 
+//         &config_msgs[0][0], 
+//         CONFIG_TEST_MSG_NUM, 
+//         M8Q_CONFIG_MAX_MSG_LEN); 
+
+//     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check); 
+// }
+
+
+// // M8Q device initialization - init ok, valid pointer and config messages 
+// TEST(m8q_driver, m8q_init_valid_config)
+// {
+//     I2C_TypeDef I2C_LOCAL_FAKE; 
+
+//     M8Q_STATUS init_check = m8q_init_dev(
+//         &I2C_LOCAL_FAKE, 
+//         &m8q_config_pkt[0][0], 
+//         CONFIG_TEST_MSG_NUM, 
+//         M8Q_CONFIG_MAX_MSG_LEN); 
+
+//     LONGS_EQUAL(M8Q_OK, init_check); 
+// }
 
 //==================================================
 

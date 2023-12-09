@@ -12,6 +12,14 @@
  * 
  */
 
+//=======================================================================================
+// Notes 
+
+// This driver currently only support writing of UBX messages to the device. It does not 
+// support reading UBX messages. 
+
+//=======================================================================================
+
 #ifndef _M8Q_DRIVER_H_
 #define _M8Q_DRIVER_H_
 
@@ -26,9 +34,6 @@
 #include "i2c_comm.h"
 #include "gpio_driver.h"
 #include "uart_comm.h"
-
-// Standard Libraries 
-#include <stdio.h> 
 
 //=======================================================================================
 

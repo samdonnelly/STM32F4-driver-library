@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief General code tools used across files 
+ * @brief General code tools 
  * 
  * @version 0.1
  * @date 2022-09-14
@@ -25,21 +25,26 @@
 
 // String comparison 
 uint8_t str_compare(
-    char *ref_msg, 
-    char *msg, 
+    const char *ref_msg, 
+    const char *msg, 
     uint8_t msg_start)
 {
-    // Local variables 
-    uint8_t str_length = strlen(ref_msg); 
+    uint8_t str_len = strlen(ref_msg); 
 
-    // Check for invalid data 
-    if (ref_msg == NULL || msg == NULL || str_length == CLEAR) return FALSE; 
-
-    // Check message ID 
-    msg += msg_start; 
-    for (uint8_t i = CLEAR; i < str_length; i++)
+    if ((ref_msg == NULL) || (msg == NULL) || (str_len == NONE)) 
     {
-        if (*msg++ != *ref_msg++) return FALSE; 
+        return FALSE; 
+    } 
+
+    // Move to the first comparison character 
+    msg += msg_start; 
+
+    for (uint8_t i = CLEAR; i < str_len; i++)
+    {
+        if (*msg++ != *ref_msg++)
+        {
+            return FALSE; 
+        }
     }
 
     return TRUE; 

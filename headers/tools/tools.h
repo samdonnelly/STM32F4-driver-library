@@ -21,7 +21,8 @@
 // Tools 
 #include "stm32f411xe.h"
 
-// Libraries 
+// Standard libraries 
+#include <stdio.h> 
 #include <string.h>
 #include <math.h> 
 
@@ -333,11 +334,11 @@ typedef enum {
  * @param ref_msg : reference message to compare against 
  * @param msg : message of interest to compare to the reference message 
  * @param msg_start : index of "msg" from where to start the comparison 
- * @return uint8_t : result of the comparison - true if there is a match 
+ * @return uint8_t : result of the comparison - true if there is a match, false otherwise 
  */
 uint8_t str_compare(
-    char *ref_msg, 
-    char *msg, 
+    const char *ref_msg, 
+    const char *msg, 
     uint8_t msg_start); 
 
 
