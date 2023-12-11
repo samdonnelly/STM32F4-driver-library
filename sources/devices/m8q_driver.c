@@ -687,14 +687,14 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 // Enter low power mode 
 void m8q_set_low_pwr_dev(void)
 {
-    gpio_write(m8q_driver_data.gpio, (SET_BIT << m8q_driver_data.pwr_save), GPIO_LOW); 
+    gpio_write(m8q_driver_data.pwr_save_gpio, (SET_BIT << m8q_driver_data.pwr_save), GPIO_LOW); 
 }
 
 
 // Exit low power mode 
 void m8q_clear_low_pwr_dev(void)
 {
-    gpio_write(m8q_driver_data.gpio, (SET_BIT << m8q_driver_data.pwr_save), GPIO_HIGH); 
+    gpio_write(m8q_driver_data.pwr_save_gpio, (SET_BIT << m8q_driver_data.pwr_save), GPIO_HIGH); 
 }
 
 // Get TX-Ready 
@@ -780,7 +780,6 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
         {
             return M8Q_MSG_UBX; 
         }
-        // return M8Q_MSG_UBX; 
     }
 
     return M8Q_MSG_INVALID; 

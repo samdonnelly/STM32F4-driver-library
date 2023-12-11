@@ -55,7 +55,7 @@ const char m8q_config_pkt[M8Q_CONFIG_NUM_MSG][M8Q_CONFIG_MAX_MSG_LEN] =
     //==================================================
 
     //==================================================
-    // Olf UBX user message format 
+    // Old UBX user message format 
 
     // // UBX config messages  
     // "B5,62,06,01,0800,F1,00,01,00,00,00,00,00*",      // POSITION enable 
