@@ -172,6 +172,111 @@ typedef uint8_t M8Q_MSG_TYPE;
 // Messages 
 
 //==================================================
+// Message components 
+
+// NMEA POSITION message fields  
+typedef struct m8q_nmea_pos_s 
+{
+    uint8_t time    [BYTE_9];     // UTC time 
+    uint8_t lat     [BYTE_10];    // Latitude 
+    uint8_t NS      [BYTE_1];     // North/South indicator 
+    uint8_t lon     [BYTE_11];    // Longitude 
+    uint8_t EW      [BYTE_1];     // East/West indicator 
+    uint8_t altRef  [BYTE_9];     // Altitude above user datum ellipsoid 
+    uint8_t navStat [BYTE_2];     // Navigation status 
+    uint8_t hAcc    [BYTE_5];     // Horizontal accuracy estimate 
+    uint8_t vAcc    [BYTE_5];     // Vertical accuracy estimate 
+    uint8_t SOG     [BYTE_6];     // Speed over ground 
+    uint8_t COG     [BYTE_6];     // Course over ground 
+    uint8_t vVel    [BYTE_6];     // Vertical velocity (+ downwards) 
+    uint8_t diffAge [BYTE_1];     // Age of differential corrections 
+    uint8_t HDOP    [BYTE_5];     // Horizontal dilution of precision 
+    uint8_t VDOP    [BYTE_5];     // Vertical dilution of precision 
+    uint8_t TDOP    [BYTE_5];     // Time dilution of precision 
+    uint8_t numSvs  [BYTE_2];     // Number of satellites used in the navigation solution 
+    uint8_t res     [BYTE_1];     // Reserved --> 0 
+    uint8_t DR      [BYTE_1];     // DR used 
+    uint8_t eom     [BYTE_1];     // End of memory --> used for parsing function only 
+} 
+m8q_nmea_pos_t;
+
+
+// NMEA TIME message fields 
+typedef struct m8q_nmea_time_s
+{
+    uint8_t time     [BYTE_9];     // UTC time 
+    uint8_t date     [BYTE_6];     // UTC date 
+    uint8_t utcTow   [BYTE_9];     // UTC time of week 
+    uint8_t utcWk    [BYTE_4];     // UTC week number 
+    uint8_t leapSec  [BYTE_3];     // Leap seconds 
+    uint8_t clkBias  [BYTE_8];     // Receiver clock bias 
+    uint8_t clkDrift [BYTE_10];    // Receiver clock drift 
+    uint8_t tpGran   [BYTE_3];     // Time pulse granularity 
+    uint8_t eom      [BYTE_1];     // End of memory --> used for parsing function only 
+} 
+m8q_nmea_time_t;
+
+//==================================================
+
+//==================================================
+// Message indexing 
+
+// NMEA POSITION message 
+static uint8_t* position[M8Q_NMEA_POS_ARGS+1] = 
+{ 
+    m8q_driver_data.pos_data.time, 
+    m8q_driver_data.pos_data.lat, 
+    m8q_driver_data.pos_data.NS, 
+    m8q_driver_data.pos_data.lon, 
+    m8q_driver_data.pos_data.EW, 
+    m8q_driver_data.pos_data.altRef, 
+    m8q_driver_data.pos_data.navStat, 
+    m8q_driver_data.pos_data.hAcc, 
+    m8q_driver_data.pos_data.vAcc,
+    m8q_driver_data.pos_data.SOG,
+    m8q_driver_data.pos_data.COG,
+    m8q_driver_data.pos_data.vVel,
+    m8q_driver_data.pos_data.diffAge,
+    m8q_driver_data.pos_data.HDOP,
+    m8q_driver_data.pos_data.VDOP,
+    m8q_driver_data.pos_data.TDOP,
+    m8q_driver_data.pos_data.numSvs,
+    m8q_driver_data.pos_data.res,
+    m8q_driver_data.pos_data.DR, 
+    m8q_driver_data.pos_data.eom 
+}; 
+
+// NMEA TIME message 
+static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] = 
+{ 
+    m8q_driver_data.time_data.time, 
+    m8q_driver_data.time_data.date, 
+    m8q_driver_data.time_data.utcTow, 
+    m8q_driver_data.time_data.utcWk, 
+    m8q_driver_data.time_data.leapSec, 
+    m8q_driver_data.time_data.clkBias, 
+    m8q_driver_data.time_data.clkDrift, 
+    m8q_driver_data.time_data.tpGran, 
+    m8q_driver_data.time_data.eom 
+}; 
+
+//==================================================
+
+//==================================================
+// Message identification 
+
+// 
+typedef struct nmea_pubx_s 
+{
+    // 
+    const char nmea_pubx_form[3]; 
+    uint8_t **msg_index; 
+}
+nmea_pubx_t; 
+
+//==================================================
+
+//==================================================
 // NMEA message address 
 
 // Start character of all NMEA messages 
@@ -189,6 +294,15 @@ const char nmea_pubx_format[NMEA_PUBX_FORMAT_NUM][NMEA_PUBX_FORMAT_LEN] =
     "40",      // RATE 
     "41",      // CONFIG 
 }; 
+
+// static nmea_pubx_t nmea_pubx_msgs[5] = 
+// {
+//     {"00", position}, 
+//     {"03", NULL}, 
+//     {"04", time}, 
+//     {"40", NULL}, 
+//     {"41", NULL} 
+// }; 
 
 // NMEA talker IDs 
 const char nmea_std_id[NMEA_STD_ID_NUM][NMEA_STD_ID_LEN] = 
@@ -251,59 +365,13 @@ const char ubx_class[UBX_CLASS_NUM][UBX_CLASS_LEN] =
 
 //==================================================
 
-//==================================================
-// Stored messages 
-// NMEA POSITION message fields  
-typedef struct m8q_nmea_pos_s 
-{
-    uint8_t time    [BYTE_9];     // UTC time 
-    uint8_t lat     [BYTE_10];    // Latitude 
-    uint8_t NS      [BYTE_1];     // North/South indicator 
-    uint8_t lon     [BYTE_11];    // Longitude 
-    uint8_t EW      [BYTE_1];     // East/West indicator 
-    uint8_t altRef  [BYTE_9];     // Altitude above user datum ellipsoid 
-    uint8_t navStat [BYTE_2];     // Navigation status 
-    uint8_t hAcc    [BYTE_5];     // Horizontal accuracy estimate 
-    uint8_t vAcc    [BYTE_5];     // Vertical accuracy estimate 
-    uint8_t SOG     [BYTE_6];     // Speed over ground 
-    uint8_t COG     [BYTE_6];     // Course over ground 
-    uint8_t vVel    [BYTE_6];     // Vertical velocity (+ downwards) 
-    uint8_t diffAge [BYTE_1];     // Age of differential corrections 
-    uint8_t HDOP    [BYTE_5];     // Horizontal dilution of precision 
-    uint8_t VDOP    [BYTE_5];     // Vertical dilution of precision 
-    uint8_t TDOP    [BYTE_5];     // Time dilution of precision 
-    uint8_t numSvs  [BYTE_2];     // Number of satellites used in the navigation solution 
-    uint8_t res     [BYTE_1];     // Reserved --> 0 
-    uint8_t DR      [BYTE_1];     // DR used 
-    uint8_t eom     [BYTE_1];     // End of memory --> used for parsing function only 
-} 
-m8q_nmea_pos_t;
-
-
-// NMEA TIME message fields 
-typedef struct m8q_nmea_time_s
-{
-    uint8_t time     [BYTE_9];     // UTC time 
-    uint8_t date     [BYTE_6];     // UTC date 
-    uint8_t utcTow   [BYTE_9];     // UTC time of week 
-    uint8_t utcWk    [BYTE_4];     // UTC week number 
-    uint8_t leapSec  [BYTE_3];     // Leap seconds 
-    uint8_t clkBias  [BYTE_8];     // Receiver clock bias 
-    uint8_t clkDrift [BYTE_10];    // Receiver clock drift 
-    uint8_t tpGran   [BYTE_3];     // Time pulse granularity 
-    uint8_t eom      [BYTE_1];     // End of memory --> used for parsing function only 
-} 
-m8q_nmea_time_t;
-
-//==================================================
-
 //=======================================================================================
 
 
 //=======================================================================================
 // Global variables 
 
-// NMEA message data 
+// Driver data record 
 typedef struct m8q_driver_data_s
 {
     //==================================================
@@ -340,48 +408,8 @@ typedef struct m8q_driver_data_s
 m8q_driver_data_t; 
 
 
-// NMEA message data instance 
+// Driver data record instance 
 static m8q_driver_data_t m8q_driver_data; 
-
-
-// NMEA POSITION message 
-static uint8_t* position[M8Q_NMEA_POS_ARGS+1] = 
-{ 
-    m8q_driver_data.pos_data.time, 
-    m8q_driver_data.pos_data.lat, 
-    m8q_driver_data.pos_data.NS, 
-    m8q_driver_data.pos_data.lon, 
-    m8q_driver_data.pos_data.EW, 
-    m8q_driver_data.pos_data.altRef, 
-    m8q_driver_data.pos_data.navStat, 
-    m8q_driver_data.pos_data.hAcc, 
-    m8q_driver_data.pos_data.vAcc,
-    m8q_driver_data.pos_data.SOG,
-    m8q_driver_data.pos_data.COG,
-    m8q_driver_data.pos_data.vVel,
-    m8q_driver_data.pos_data.diffAge,
-    m8q_driver_data.pos_data.HDOP,
-    m8q_driver_data.pos_data.VDOP,
-    m8q_driver_data.pos_data.TDOP,
-    m8q_driver_data.pos_data.numSvs,
-    m8q_driver_data.pos_data.res,
-    m8q_driver_data.pos_data.DR, 
-    m8q_driver_data.pos_data.eom 
-}; 
-
-// NMEA TIME message 
-static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] = 
-{ 
-    m8q_driver_data.time_data.time, 
-    m8q_driver_data.time_data.date, 
-    m8q_driver_data.time_data.utcTow, 
-    m8q_driver_data.time_data.utcWk, 
-    m8q_driver_data.time_data.leapSec, 
-    m8q_driver_data.time_data.clkBias, 
-    m8q_driver_data.time_data.clkDrift, 
-    m8q_driver_data.time_data.tpGran, 
-    m8q_driver_data.time_data.eom 
-}; 
 
 //=======================================================================================
 
@@ -707,7 +735,10 @@ void m8q_clear_low_pwr_dev(void)
 
 // Get East/West 
 
-// Get navigation status 
+// Get raw navigation status - returns the exact navstat value 
+
+// Get accepted navigation status - returns true/false for a valid position lock so the 
+// application doesn't have to determine it. 
 
 // Get time 
 
@@ -1116,8 +1147,11 @@ void m8q_nmea_parse(
     uint8_t data_index = 0; 
 
     // Make sure the data array has a valid length 
-    if (!arg_num) return; 
-    
+    if (!arg_num) 
+    {
+        return; 
+    }
+
     // Increment to the first data field 
     msg += start_byte; 
 
@@ -1144,13 +1178,19 @@ void m8q_nmea_parse(
             else
             {
                 // Terminate the argument if needed 
-                if (arg_index < arg_len) data[data_index][arg_index] = NULL_CHAR; 
+                if (arg_index < arg_len) 
+                {
+                    data[data_index][arg_index] = NULL_CHAR; 
+                } 
 
                 // Increment jagged array index 
                 data_index++; 
 
                 // Exit if the storage array has been exceeded 
-                if (data_index >= arg_num) break; 
+                if (data_index >= arg_num) 
+                {
+                    break; 
+                } 
 
                 // Reset arg index and calculate the new argument length 
                 arg_index = CLEAR; 
@@ -1163,7 +1203,10 @@ void m8q_nmea_parse(
         else
         {
             // Terminate the argument if needed 
-            if (arg_index < arg_len) data[data_index][arg_index] = NULL_CHAR; 
+            if (arg_index < arg_len) 
+            {
+                data[data_index][arg_index] = NULL_CHAR; 
+            }
             break; 
         }
     }
@@ -1284,6 +1327,7 @@ uint8_t m8q_get_NS(void)
 
 
 // Longitude coordinate getter 
+// TODO replace 'position' with a direct call to the struct object 
 double m8q_get_long(void)
 {
     // Local variables 
@@ -1562,7 +1606,11 @@ void m8q_nmea_config(
 
                 // Append the checksum and termination characters onto the message 
                 sprintf(term_str, "*%c%c\r\n", (char)(checksum >> SHIFT_8), (char)(checksum)); 
-                for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) *msg_ptr++ = (uint8_t)term_str[i]; 
+
+                for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) 
+                {
+                    *msg_ptr++ = (uint8_t)term_str[i]; 
+                }
 
                 // Pass the message along to the M8Q write function 
                 m8q_write(msg, m8q_message_size(msg, NULL_CHAR));
