@@ -29,12 +29,11 @@
 
 // NMEA message format 
 #define NMEA_START 0x24           // '$' --> NMEA protocol start character 
-#define NMEA_PUBX_FORMAT_NUM 5    // Number of NMEA PUBX formatters 
-#define NMEA_PUBX_FORMAT_LEN 3    // Maximum length of an NMEA PUBX formatter 
+#define NMEA_PUBX_NUM_MSGS 5      // Number of NMEA PUBX messages 
 #define NMEA_STD_ID_NUM 5         // Number of standard NMEA message IDs 
 #define NMEA_STD_ID_LEN 3         // Maximum length of a standard NMEA message ID 
-#define NMEA_STD_FORMAT_NUM 19    // Number of standard NMEA formatters 
-#define NMEA_STD_FORMAT_LEN 4     // Maximum length of a standard NMEA formatter 
+#define NMEA_STD_NUM_MSGS 19      // Number of standard NMEA formatters 
+#define NMEA_MSG_FORMAT_LEN 4     // Maximum length of an NMEA message formatter 
 
 // UBX message format 
 #define UBX_SYNC1 0xB5            // 0xB5 --> UBX protocol SYNC CHAR 1 
@@ -56,8 +55,6 @@
 
 /**
  * @brief M8Q message type 
- * 
- * @details 
  */
 typedef enum {
     M8Q_MSG_INVALID, 
@@ -65,6 +62,37 @@ typedef enum {
     M8Q_MSG_UBX, 
     M8Q_MSG_RTCM 
 } m8q_msg_type_t; 
+
+
+/**
+ * @brief Number of fields in a message 
+ */
+typedef enum {
+    M8Q_NUM_FIELDS_POSITION = 19, 
+    M8Q_NUM_FIELDS_SVSTATUS = 7, 
+    M8Q_NUM_FIELDS_TIME = 8, 
+    M8Q_NUM_FIELDS_RATE = 7, 
+    M8Q_NUM_FIELDS_CONFIG = 5, 
+    M8Q_NUM_FIELDS_DTM = 8, 
+    M8Q_NUM_FIELDS_GBQ = 1, 
+    M8Q_NUM_FIELDS_GBS = 10, 
+    M8Q_NUM_FIELDS_GGA = 14, 
+    M8Q_NUM_FIELDS_GLL = 7, 
+    M8Q_NUM_FIELDS_GLQ = 1, 
+    M8Q_NUM_FIELDS_GNQ = 1, 
+    M8Q_NUM_FIELDS_GNS = 13, 
+    M8Q_NUM_FIELDS_GPQ = 1, 
+    M8Q_NUM_FIELDS_GRS = 16, 
+    M8Q_NUM_FIELDS_GSA = 18, 
+    M8Q_NUM_FIELDS_GST = 8, 
+    M8Q_NUM_FIELDS_GSV = 8, 
+    M8Q_NUM_FIELDS_RMC = 13, 
+    M8Q_NUM_FIELDS_THS = 2, 
+    M8Q_NUM_FIELDS_TXT = 4, 
+    M8Q_NUM_FIELDS_VLW = 8, 
+    M8Q_NUM_FIELDS_VTG = 9, 
+    M8Q_NUM_FIELDS_ZDA = 6 
+} m8q_num_fields_t; 
 
 //==================================================
 
@@ -169,10 +197,7 @@ typedef uint8_t M8Q_MSG_TYPE;
 
 
 //=======================================================================================
-// Messages 
-
-//==================================================
-// Message components 
+// Stored messages 
 
 // NMEA POSITION message fields  
 typedef struct m8q_nmea_pos_s 
@@ -216,160 +241,11 @@ typedef struct m8q_nmea_time_s
 } 
 m8q_nmea_time_t;
 
-//==================================================
-
-//==================================================
-// Message indexing 
-
-// NMEA POSITION message 
-static uint8_t* position[M8Q_NMEA_POS_ARGS+1] = 
-{ 
-    m8q_driver_data.pos_data.time, 
-    m8q_driver_data.pos_data.lat, 
-    m8q_driver_data.pos_data.NS, 
-    m8q_driver_data.pos_data.lon, 
-    m8q_driver_data.pos_data.EW, 
-    m8q_driver_data.pos_data.altRef, 
-    m8q_driver_data.pos_data.navStat, 
-    m8q_driver_data.pos_data.hAcc, 
-    m8q_driver_data.pos_data.vAcc,
-    m8q_driver_data.pos_data.SOG,
-    m8q_driver_data.pos_data.COG,
-    m8q_driver_data.pos_data.vVel,
-    m8q_driver_data.pos_data.diffAge,
-    m8q_driver_data.pos_data.HDOP,
-    m8q_driver_data.pos_data.VDOP,
-    m8q_driver_data.pos_data.TDOP,
-    m8q_driver_data.pos_data.numSvs,
-    m8q_driver_data.pos_data.res,
-    m8q_driver_data.pos_data.DR, 
-    m8q_driver_data.pos_data.eom 
-}; 
-
-// NMEA TIME message 
-static uint8_t* time[M8Q_NMEA_TIME_ARGS+1] = 
-{ 
-    m8q_driver_data.time_data.time, 
-    m8q_driver_data.time_data.date, 
-    m8q_driver_data.time_data.utcTow, 
-    m8q_driver_data.time_data.utcWk, 
-    m8q_driver_data.time_data.leapSec, 
-    m8q_driver_data.time_data.clkBias, 
-    m8q_driver_data.time_data.clkDrift, 
-    m8q_driver_data.time_data.tpGran, 
-    m8q_driver_data.time_data.eom 
-}; 
-
-//==================================================
-
-//==================================================
-// Message identification 
-
-// 
-typedef struct nmea_pubx_s 
-{
-    // 
-    const char nmea_pubx_form[3]; 
-    uint8_t **msg_index; 
-}
-nmea_pubx_t; 
-
-//==================================================
-
-//==================================================
-// NMEA message address 
-
-// Start character of all NMEA messages 
-const char nmea_start = NMEA_START; 
-
-// U-Blox defined NMEA message 
-const char nmea_pubx_id[] = "PUBX"; 
-
-// NMEA PUBX messages 
-const char nmea_pubx_format[NMEA_PUBX_FORMAT_NUM][NMEA_PUBX_FORMAT_LEN] = 
-{
-    "00",      // POSITION 
-    "03",      // SVSTATUS 
-    "04",      // TIME 
-    "40",      // RATE 
-    "41",      // CONFIG 
-}; 
-
-// static nmea_pubx_t nmea_pubx_msgs[5] = 
-// {
-//     {"00", position}, 
-//     {"03", NULL}, 
-//     {"04", time}, 
-//     {"40", NULL}, 
-//     {"41", NULL} 
-// }; 
-
-// NMEA talker IDs 
-const char nmea_std_id[NMEA_STD_ID_NUM][NMEA_STD_ID_LEN] = 
-{
-    "GP",      // GPS, SBAS, QZSS 
-    "GL",      // GLONASS 
-    "GA",      // Galileo 
-    "GB",      // BeiDou 
-    "GN",      // Any combination of GNSS 
-}; 
-
-// NMEA standard messages 
-const char nmea_std_format[NMEA_STD_FORMAT_NUM][NMEA_STD_FORMAT_LEN] = 
-{
-    "DTM",     // Datum reference 
-    "GBQ",     // Poll a standard message (Talker ID GB) 
-    "GBS",     // GNSS satellite fault detection 
-    "GGA",     // Global positioning system fix data 
-    "GLL",     // Latitude and longitude, with time of position fix and status 
-    "GLQ",     // Poll a standard message (Talker ID GL) 
-    "GNQ",     // Poll a standard message (Talker ID GN) 
-    "GNS",     // GNSS fix data 
-    "GPQ",     // Poll a standard message (Talker ID GP) 
-    "GRS",     // GNSS range residuals 
-    "GSA",     // GNSS DOP and active satellites 
-    "GST",     // GNSS pseudorange error statistics 
-    "GSV",     // GNSS satellites in view 
-    "RMC",     // Recommended minimum data 
-    "THS",     // True heading and status 
-    "TXT",     // Text transmission 
-    "VLW",     // Dual ground/water distance 
-    "VTG",     // Course over ground and ground speed 
-    "ZDA",     // Time and data 
-}; 
-
-//==================================================
-
-//==================================================
-// UBX sync characters and class 
-
-const char ubx_sync[] = "B562"; 
-
-const char ubx_class[UBX_CLASS_NUM][UBX_CLASS_LEN] = 
-{
-    "01",   // NAV 
-    "02",   // RXM 
-    "04",   // INF 
-    "05",   // ACK 
-    "06",   // CFG 
-    "09",   // UPD 
-    "0A",   // MON 
-    "0B",   // AID 
-    "0D",   // TIM 
-    "10",   // ESF 
-    "13",   // MGA 
-    "21",   // LOG 
-    "27",   // SEC 
-    "28"    // HNR 
-}; 
-
-//==================================================
-
 //=======================================================================================
 
 
 //=======================================================================================
-// Global variables 
+// Data record 
 
 // Driver data record 
 typedef struct m8q_driver_data_s
@@ -415,7 +291,171 @@ static m8q_driver_data_t m8q_driver_data;
 
 
 //=======================================================================================
-// Function prototypes 
+// Message processing 
+
+//==================================================
+// Indexing 
+
+// NMEA POSITION message 
+static uint8_t* position[M8Q_NUM_FIELDS_POSITION+1] = 
+{ 
+    m8q_driver_data.pos_data.time, 
+    m8q_driver_data.pos_data.lat, 
+    m8q_driver_data.pos_data.NS, 
+    m8q_driver_data.pos_data.lon, 
+    m8q_driver_data.pos_data.EW, 
+    m8q_driver_data.pos_data.altRef, 
+    m8q_driver_data.pos_data.navStat, 
+    m8q_driver_data.pos_data.hAcc, 
+    m8q_driver_data.pos_data.vAcc,
+    m8q_driver_data.pos_data.SOG,
+    m8q_driver_data.pos_data.COG,
+    m8q_driver_data.pos_data.vVel,
+    m8q_driver_data.pos_data.diffAge,
+    m8q_driver_data.pos_data.HDOP,
+    m8q_driver_data.pos_data.VDOP,
+    m8q_driver_data.pos_data.TDOP,
+    m8q_driver_data.pos_data.numSvs,
+    m8q_driver_data.pos_data.res,
+    m8q_driver_data.pos_data.DR, 
+    m8q_driver_data.pos_data.eom 
+}; 
+
+// NMEA TIME message 
+static uint8_t* time[M8Q_NUM_FIELDS_TIME+1] = 
+{ 
+    m8q_driver_data.time_data.time, 
+    m8q_driver_data.time_data.date, 
+    m8q_driver_data.time_data.utcTow, 
+    m8q_driver_data.time_data.utcWk, 
+    m8q_driver_data.time_data.leapSec, 
+    m8q_driver_data.time_data.clkBias, 
+    m8q_driver_data.time_data.clkDrift, 
+    m8q_driver_data.time_data.tpGran, 
+    m8q_driver_data.time_data.eom 
+}; 
+
+//==================================================
+
+//==================================================
+// Identification 
+
+// NMEA message data 
+typedef struct nmea_msg_data_s 
+{
+    uint8_t num_param; 
+    uint8_t **msg_data; 
+}
+nmea_msg_data_t; 
+
+
+// NMEA message format 
+typedef struct nmea_msg_format_s 
+{
+    const char nmea_msg_format[NMEA_MSG_FORMAT_LEN]; 
+    nmea_msg_data_t nmea_msg_data; 
+}
+nmea_msg_format_t; 
+
+
+// NMEA target message information 
+typedef struct nmea_msg_target_s 
+{
+    uint8_t arg_offset; 
+    nmea_msg_data_t nmea_msg_data; 
+}
+nmea_msg_target_t; 
+
+// NMEA target message instance 
+static nmea_msg_target_t nmea_msg_target; 
+
+//==================================================
+
+//==================================================
+// NMEA message address 
+
+// Start character of all NMEA messages 
+const char nmea_msg_start = NMEA_START; 
+
+// U-Blox defined NMEA message ID 
+const char nmea_pubx_msg_id[] = "PUBX"; 
+
+// NMEA PUBX messages 
+static nmea_msg_format_t nmea_pubx_msgs[NMEA_PUBX_NUM_MSGS] =   
+{
+    {"00", {M8Q_NUM_FIELDS_POSITION, position}},   // POSITION 
+    {"03", {M8Q_NUM_FIELDS_SVSTATUS, NULL}},       // SVSTATUS 
+    {"04", {M8Q_NUM_FIELDS_TIME, time}},           // TIME 
+    {"40", {M8Q_NUM_FIELDS_RATE, NULL}},           // RATE 
+    {"41", {M8Q_NUM_FIELDS_CONFIG, NULL}}          // CONFIG 
+}; 
+
+// NMEA talker IDs 
+const char nmea_std_msg_id[NMEA_STD_ID_NUM][NMEA_STD_ID_LEN] = 
+{
+    "GP",   // GPS, SBAS, QZSS 
+    "GL",   // GLONASS 
+    "GA",   // Galileo 
+    "GB",   // BeiDou 
+    "GN"    // Any combination of GNSS 
+}; 
+
+// NMEA standard messages 
+static nmea_msg_format_t nmea_std_msgs[NMEA_STD_NUM_MSGS] =   
+{
+    {"DTM", {M8Q_NUM_FIELDS_DTM, NULL}},   // Datum reference 
+    {"GBQ", {M8Q_NUM_FIELDS_GBQ, NULL}},   // Poll a standard message (Talker ID GB) 
+    {"GBS", {M8Q_NUM_FIELDS_GBS, NULL}},   // GNSS satellite fault detection 
+    {"GGA", {M8Q_NUM_FIELDS_GGA, NULL}},   // Global positioning system fix data 
+    {"GLL", {M8Q_NUM_FIELDS_GLL, NULL}},   // Lat and long, with time of position fix and status 
+    {"GLQ", {M8Q_NUM_FIELDS_GLQ, NULL}},   // Poll a standard message (Talker ID GL) 
+    {"GNQ", {M8Q_NUM_FIELDS_GNQ, NULL}},   // Poll a standard message (Talker ID GN) 
+    {"GNS", {M8Q_NUM_FIELDS_GNS, NULL}},   // GNSS fix data 
+    {"GPQ", {M8Q_NUM_FIELDS_GPQ, NULL}},   // Poll a standard message (Talker ID GP) 
+    {"GRS", {M8Q_NUM_FIELDS_GRS, NULL}},   // GNSS range residuals 
+    {"GSA", {M8Q_NUM_FIELDS_GSA, NULL}},   // GNSS DOP and active satellites 
+    {"GST", {M8Q_NUM_FIELDS_GST, NULL}},   // GNSS pseudorange error statistics 
+    {"GSV", {M8Q_NUM_FIELDS_GSV, NULL}},   // GNSS satellites in view 
+    {"RMC", {M8Q_NUM_FIELDS_RMC, NULL}},   // Recommended minimum data 
+    {"THS", {M8Q_NUM_FIELDS_THS, NULL}},   // True heading and status 
+    {"TXT", {M8Q_NUM_FIELDS_TXT, NULL}},   // Text transmission 
+    {"VLW", {M8Q_NUM_FIELDS_VLW, NULL}},   // Dual ground/water distance 
+    {"VTG", {M8Q_NUM_FIELDS_VTG, NULL}},   // Course over ground and ground speed 
+    {"ZDA", {M8Q_NUM_FIELDS_ZDA, NULL}}    // Time and data 
+}; 
+
+//==================================================
+
+//==================================================
+// UBX sync characters and class 
+
+const char ubx_msg_sync[] = "B562"; 
+
+const char ubx_msg_class[UBX_CLASS_NUM][UBX_CLASS_LEN] = 
+{
+    "01",   // NAV 
+    "02",   // RXM 
+    "04",   // INF 
+    "05",   // ACK 
+    "06",   // CFG 
+    "09",   // UPD 
+    "0A",   // MON 
+    "0B",   // AID 
+    "0D",   // TIM 
+    "10",   // ESF 
+    "13",   // MGA 
+    "21",   // LOG 
+    "27",   // SEC 
+    "28"    // HNR 
+}; 
+
+//==================================================
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Prototypes 
 
 //==================================================
 // new 
@@ -442,14 +482,42 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
  * @param num_compare 
  * @param max_size 
  * @param offset 
+ * @param msg_index 
  * @return uint8_t 
  */
 uint8_t m8q_msg_id_check_dev(
     const char *msg, 
-    const char *ref_msg, 
+    const void *ref_msg, 
     uint8_t num_compare, 
     uint8_t max_size, 
-    uint8_t offset); 
+    uint8_t offset, 
+    uint8_t *msg_index); 
+
+
+/**
+ * @brief Send NMEA configuration messages 
+ * 
+ * @details 
+ * 
+ * @param msg 
+ * @param num_args 
+ * @param field_offset 
+ */
+M8Q_STATUS m8q_nmea_config_dev(
+    const char *config_msg, 
+    uint8_t num_args, 
+    uint8_t field_offset); 
+
+
+/**
+ * @brief Send UBX configuration messages 
+ * 
+ * @details 
+ * 
+ * @param input_msg 
+ */
+M8Q_STATUS m8q_ubx_config_dev(
+    const char *config_msg); 
 
 //==================================================
 
@@ -624,8 +692,9 @@ M8Q_STATUS m8q_init_dev(
     // Local varaibles 
     M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
 
-    // Assign data record information 
+    // Initialize driver data 
     m8q_driver_data.i2c = i2c; 
+    memset((void *)&nmea_msg_target, CLEAR, sizeof(nmea_msg_target_t)); 
 
     // Send configuration messages 
     for (uint8_t i = CLEAR; i < msg_num; i++)
@@ -635,11 +704,19 @@ M8Q_STATUS m8q_init_dev(
 
         if (msg_type == M8Q_MSG_NMEA)
         {
-            // m8q_nmea_config(config_msgs); 
+            if (m8q_nmea_config_dev(config_msgs, 
+                                    nmea_msg_target.nmea_msg_data.num_param, 
+                                    nmea_msg_target.arg_offset))
+            {
+                return M8Q_INVALID_CONFIG; 
+            }
         }
         else if (msg_type == M8Q_MSG_UBX)
         {
-            // m8q_ubx_config(config_msgs); 
+            if (m8q_ubx_config_dev(config_msgs))
+            {
+                return M8Q_INVALID_CONFIG; 
+            }
         }
         else 
         {
@@ -764,50 +841,66 @@ void m8q_clear_low_pwr_dev(void)
 M8Q_MSG_TYPE m8q_msg_id_dev(
     const char *msg)
 {
+    uint8_t msg_index = CLEAR; 
+
     // Check for the start of an NMEA message 
-    if (*msg == nmea_start)
+    if (*msg == nmea_msg_start)
     {
         // Check for a PUBX message ID 
-        if (str_compare(nmea_pubx_id, msg, BYTE_1))
+        if (str_compare(nmea_pubx_msg_id, msg, BYTE_1))
         {
-            // Check for a valid PUBX format 
+            // Check for a valid PUBX message format 
             if (m8q_msg_id_check_dev(msg, 
-                                     &nmea_pubx_format[0][0], 
-                                     NMEA_PUBX_FORMAT_NUM, 
-                                     NMEA_PUBX_FORMAT_LEN, 
-                                     BYTE_6))
+                                     (void *)nmea_pubx_msgs, 
+                                     NMEA_PUBX_NUM_MSGS, 
+                                     sizeof(nmea_msg_format_t), 
+                                     BYTE_6, 
+                                     &msg_index))
             {
+                nmea_msg_target.arg_offset = BYTE_9; 
+                nmea_msg_target.nmea_msg_data.num_param = 
+                    nmea_pubx_msgs[msg_index].nmea_msg_data.num_param; 
+                nmea_msg_target.nmea_msg_data.msg_data = 
+                    nmea_pubx_msgs[msg_index].nmea_msg_data.msg_data; 
                 return M8Q_MSG_NMEA; 
             }
         }
 
         // Check for a standard NMEA message ID 
         if (m8q_msg_id_check_dev(msg, 
-                                 &nmea_std_id[0][0], 
+                                 (void *)&nmea_std_msg_id[0][0], 
                                  NMEA_STD_ID_NUM, 
                                  NMEA_STD_ID_LEN, 
-                                 BYTE_1))
+                                 BYTE_1, 
+                                 &msg_index))
         {
             // Check for a valid standard NMEA message format 
             if (m8q_msg_id_check_dev(msg, 
-                                     &nmea_std_format[0][0], 
-                                     NMEA_STD_FORMAT_NUM, 
-                                     NMEA_STD_FORMAT_LEN, 
-                                     BYTE_3))
+                                     (void *)nmea_std_msgs, 
+                                     NMEA_STD_NUM_MSGS, 
+                                     sizeof(nmea_msg_format_t), 
+                                     BYTE_3, 
+                                     &msg_index))
             {
+                nmea_msg_target.arg_offset = BYTE_7; 
+                nmea_msg_target.nmea_msg_data.num_param = 
+                    nmea_std_msgs[msg_index].nmea_msg_data.num_param; 
+                nmea_msg_target.nmea_msg_data.msg_data = 
+                    nmea_std_msgs[msg_index].nmea_msg_data.msg_data; 
                 return M8Q_MSG_NMEA; 
             }
         }
     }
     // Check for the start of a UBX message 
-    else if (str_compare(ubx_sync, msg, BYTE_0))
+    else if (str_compare(ubx_msg_sync, msg, BYTE_0))
     {
         // Check for a valid UBX class 
         if (m8q_msg_id_check_dev(msg, 
-                                 &ubx_class[0][0], 
+                                 (void *)&ubx_msg_class[0][0], 
                                  UBX_CLASS_NUM, 
                                  UBX_CLASS_LEN, 
-                                 BYTE_5))
+                                 BYTE_5, 
+                                 &msg_index))
         {
             return M8Q_MSG_UBX; 
         }
@@ -820,15 +913,17 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
 // Message identification helper function 
 uint8_t m8q_msg_id_check_dev(
     const char *msg, 
-    const char *ref_msg, 
+    const void *ref_msg, 
     uint8_t num_compare, 
     uint8_t max_size, 
-    uint8_t offset)
+    uint8_t offset, 
+    uint8_t *msg_index)
 {
     for (uint8_t i = CLEAR; i < num_compare; i++)
     {
-        if (str_compare(ref_msg + i*max_size, msg, offset))
+        if (str_compare((char *)(ref_msg + i*max_size), msg, offset))
         {
+            *msg_index = i; 
             return TRUE; 
         }
     }
@@ -844,7 +939,75 @@ uint8_t m8q_msg_id_check_dev(
 
 //=======================================================================================
 // Device configuration - config message formatting (private) 
+
+// Send NMEA configuration messages 
+M8Q_STATUS m8q_nmea_config_dev(
+    const char *config_msg, 
+    uint8_t num_args, 
+    uint8_t field_offset)
+{
+    // Local variables 
+    uint8_t *msg_ptr = config_msg + field_offset; 
+    uint8_t msg_arg_count = CLEAR; 
+    uint8_t msg_arg_mask = CLEAR; 
+    uint16_t checksum = CLEAR; 
+    char term_str[M8Q_NMEA_END_MSG]; 
+
+    // 
+    while(*msg_ptr != CR_CHAR) 
+    {
+        if (*msg_ptr == COMMA_CHAR)
+        {
+            msg_arg_mask = 0; 
+        }
+        else 
+        {
+            if (!msg_arg_mask)
+            {
+                msg_arg_count++;   // Count an input 
+                msg_arg_mask++;    // Prevent from double counting an input 
+            }
+        }
+        msg_ptr++; 
+    }
+
+    // Check if the message is valid 
+    if (msg_arg_count == num_args)
+    {
+        // Calculate a checksum 
+        checksum = m8q_nmea_checksum(config_msg);
+
+        // Append the checksum and termination characters onto the message 
+        sprintf(term_str, "*%c%c\r\n", (char)(checksum >> SHIFT_8), (char)(checksum)); 
+
+        for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) 
+        {
+            *msg_ptr++ = (uint8_t)term_str[i]; 
+        }
+
+        // Pass the message along to the M8Q write function 
+        m8q_write(config_msg, m8q_message_size(config_msg, NULL_CHAR));
+    } 
+    else
+    {
+        return M8Q_INVALID_CONFIG; 
+    }
+
+    return M8Q_OK; 
+}
+
+
+// Send UBX configuration messages 
+M8Q_STATUS m8q_ubx_config_dev(
+    const char *config_msg)
+{
+    return M8Q_OK; 
+}
+
 //=======================================================================================
+
+
+
 
 
 //=======================================================================================

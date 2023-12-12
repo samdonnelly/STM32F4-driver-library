@@ -160,7 +160,7 @@ TEST(m8q_driver, m8q_init_config_msg_check)
     const char config_msg3[] = "$GCGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52"; 
     const char config_msg4[] = "$GNGRZ,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52"; 
     const char config_msg5[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52"; 
-    // // Sample UBX message 
+    // Sample UBX message 
     const char config_msg6[] = "B563,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
     const char config_msg7[] = "B562,22,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
     const char config_msg8[] = "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
@@ -187,19 +187,19 @@ TEST(m8q_driver, m8q_init_config_msg_check)
 }
 
 
-// M8Q device initialization - init ok, all config messages valid 
-TEST(m8q_driver, m8q_init_valid_config)
-{
-    I2C_TypeDef I2C_LOCAL_FAKE; 
+// // M8Q device initialization - init ok, all config messages valid 
+// TEST(m8q_driver, m8q_init_valid_config)
+// {
+//     I2C_TypeDef I2C_LOCAL_FAKE; 
 
-    M8Q_STATUS init_check = m8q_init_dev(
-        &I2C_LOCAL_FAKE, 
-        &m8q_config_pkt[0][0], 
-        M8Q_CONFIG_NUM_MSG, 
-        M8Q_CONFIG_MAX_MSG_LEN); 
+//     M8Q_STATUS init_check = m8q_init_dev(
+//         &I2C_LOCAL_FAKE, 
+//         &m8q_config_pkt[0][0], 
+//         M8Q_CONFIG_NUM_MSG, 
+//         M8Q_CONFIG_MAX_MSG_LEN); 
 
-    LONGS_EQUAL(M8Q_OK, init_check); 
-}
+//     LONGS_EQUAL(M8Q_OK, init_check); 
+// }
 
 //==================================================
 

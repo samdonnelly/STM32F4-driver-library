@@ -71,7 +71,7 @@
 #define M8Q_NMEA_POS_ID        48        // "0" == 48 --> Message ID for POSITION 
 #define M8Q_NMEA_SV_ARGS       7         // Number of data fields in SVSTATUS 
 #define M8Q_NMEA_SV_ID         51        // "3" == 51 --> Message ID for SVSTATUS 
-#define M8Q_NMEA_TIME_ARGS     10        // Number of data fields in TIME 
+#define M8Q_NMEA_TIME_ARGS     8         // Number of data fields in TIME 
 #define M8Q_NMEA_TIME_ID       52        // "4" == 52 --> Message ID for TIME 
 #define M8Q_NMEA_PUBX_ARG_OFST 9         // First data field offset for PUBX messages 
 #define M8Q_NMEA_STRD_ARG_OFST 7         // First data field offset for standard messages 
@@ -151,6 +151,10 @@ typedef uint8_t M8Q_STATUS;
  * @brief 
  * 
  * @details 
+ *          The NMEA configuration messages will be checked for a start character, a valid 
+ *          address and the correct number of message fields. The contents of the 
+ *          configuration message fields is not checked for for formatting. That is left 
+ *          to the user to ensure id sone correctly. 
  * 
  * @param i2c 
  * @param config_msgs 
