@@ -156,25 +156,34 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_msg_check)
     // - Message B: Invalid formatter 
     // - Message C: Invalid message character 
     // - Message D: Incorrect number of fields for the specified message 
+    // - Message E: No message termination character ('*') 
+    // - Message F: The message termination character ('*') is not the last character 
+    // - Message G: None 
 
     // Sample PUBX NMEA message 
     char config_msg_a[] = "$PUBC,40,GGA,0,0,0,0,0,0*"; 
     char config_msg_b[] = "$PUBX,01,GGA,0,0,0,0,0,0*"; 
-    // char config_msg_c[] = "$PUBX,40,GGA,0,0,0,0,&,0*"; 
-    // char config_msg_d[] = "$PUBX,40,GGA,0,0,0,0,0*"; 
-    char config_msg_e[] = "$PUBX,40,GGA,0,0,0,0,0,0*"; 
+    char config_msg_c[] = "$PUBX,40,GGA,0,0,0,0,&,0*"; 
+    char config_msg_d[] = "$PUBX,40,GGA,0,0,0,0,0*"; 
+    char config_msg_e[] = "$PUBX,40,GGA,0,0,0,0,0,0"; 
+    char config_msg_f[] = "$PUBX,40,GGA,0,0,0,0,0,0*0"; 
+    char config_msg_g[] = "$PUBX,40,GGA,0,0,0,0,0,0*"; 
 
     M8Q_STATUS init_check_a = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
     M8Q_STATUS init_check_b = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    // M8Q_STATUS init_check_c = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    // M8Q_STATUS init_check_d = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_c = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_d = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
     M8Q_STATUS init_check_e = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_e, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_f = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_f, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_g = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_g, 1, M8Q_CONFIG_MAX_MSG_LEN); 
 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_a); 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_b); 
-    // LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_c); 
-    // LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_d); 
-    LONGS_EQUAL(M8Q_OK, init_check_e); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_c); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_d); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_e); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_f); 
+    LONGS_EQUAL(M8Q_OK, init_check_g); 
 }
 
 
@@ -186,29 +195,38 @@ TEST(m8q_driver, m8q_init_std_nmea_config_msg_check)
     // All sample messages except the last one are invalid. Messages are sent one at a 
     // time to check that message checks are done correctly. 
     // The messages have the following errors: 
-    // - Message A: Incorrect ID 
+    // - Message A: Incorrect ID  
     // - Message B: Invalid formatter 
     // - Message C: Invalid message character 
     // - Message D: Incorrect number of fields for the specified message 
+    // - Message E: No message termination character ('*') 
+    // - Message F: The message termination character ('*') is not the last character 
+    // - Message G: None 
 
     // Sample standard NMEA message 
-    char config_msg_a[] = "$GCGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52"; 
-    char config_msg_b[] = "$GNGRZ,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52"; 
-    // char config_msg_c[] = ""; 
-    // char config_msg_d[] = ""; 
-    char config_msg_e[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52"; 
+    char config_msg_a[] = "$GCGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
+    char config_msg_b[] = "$GNGRZ,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
+    char config_msg_c[] = "$GNGRS,104148.00,1,2.6,+2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
+    char config_msg_d[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,1,,,1,1*"; 
+    char config_msg_e[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1,"; 
+    char config_msg_f[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*N"; 
+    char config_msg_g[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
 
     M8Q_STATUS init_check_a = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
     M8Q_STATUS init_check_b = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    // M8Q_STATUS init_check_c = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    // M8Q_STATUS init_check_d = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_c = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_d = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
     M8Q_STATUS init_check_e = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_e, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_f = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_f, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_g = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_g, 1, M8Q_CONFIG_MAX_MSG_LEN); 
 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_a); 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_b); 
-    // LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_c); 
-    // LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_d); 
-    LONGS_EQUAL(M8Q_OK, init_check_e); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_c); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_d); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_e); 
+    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_f); 
+    LONGS_EQUAL(M8Q_OK, init_check_g); 
 }
 
 

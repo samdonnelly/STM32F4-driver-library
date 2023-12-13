@@ -461,6 +461,20 @@ const char ubx_msg_class[UBX_CLASS_NUM][UBX_CLASS_LEN] =
 // new 
 
 /**
+ * @brief Send messages to the device 
+ * 
+ * @details 
+ * 
+ * @param data 
+ * @param data_size 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_write_dev(
+    char *data, 
+    uint8_t data_size); 
+
+
+/**
  * @brief Message identification 
  * 
  * @details 
@@ -502,11 +516,25 @@ uint8_t m8q_msg_id_check_dev(
  * @param msg 
  * @param num_args 
  * @param field_offset 
+ * @param msg_len 
  */
 M8Q_STATUS m8q_nmea_config_dev(
     char *config_msg, 
     uint8_t num_args, 
-    uint8_t field_offset); 
+    uint8_t field_offset, 
+    uint8_t msg_len); 
+
+
+/**
+ * @brief NMEA message checksum calculation 
+ * 
+ * @details 
+ * 
+ * @param msg 
+ * @return uint16_t 
+ */
+uint16_t m8q_nmea_checksum_dev(
+    const char *msg); 
 
 
 /**
@@ -518,6 +546,18 @@ M8Q_STATUS m8q_nmea_config_dev(
  */
 M8Q_STATUS m8q_ubx_config_dev(
     const char *config_msg); 
+
+
+/**
+ * @brief Get the length of a message 
+ * 
+ * @details 
+ * 
+ * @param msg 
+ * @return uint8_t 
+ */
+uint8_t m8q_msg_size_dev(
+    const char *msg); 
 
 //==================================================
 
@@ -691,6 +731,7 @@ M8Q_STATUS m8q_init_dev(
 
     // Local varaibles 
     M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
+    M8Q_STATUS init_status = M8Q_OK; 
 
     // Initialize driver data 
     m8q_driver_data.i2c = i2c; 
@@ -700,31 +741,36 @@ M8Q_STATUS m8q_init_dev(
     for (uint8_t i = CLEAR; i < msg_num; i++)
     {
         msg_type = m8q_msg_id_dev(config_msgs); 
-        config_msgs += max_msg_size; 
 
         if (msg_type == M8Q_MSG_NMEA)
         {
-            if (m8q_nmea_config_dev(config_msgs, 
-                                    nmea_msg_target.nmea_msg_data.num_param, 
-                                    nmea_msg_target.arg_offset))
+            init_status = m8q_nmea_config_dev(config_msgs, 
+                                              nmea_msg_target.nmea_msg_data.num_param, 
+                                              nmea_msg_target.arg_offset, 
+                                              max_msg_size); 
+            if (init_status)
             {
-                return M8Q_INVALID_CONFIG; 
+                break; 
             }
         }
         else if (msg_type == M8Q_MSG_UBX)
         {
-            if (m8q_ubx_config_dev(config_msgs))
+            init_status = m8q_ubx_config_dev(config_msgs); 
+
+            if (init_status)
             {
-                return M8Q_INVALID_CONFIG; 
+                break; 
             }
         }
         else 
         {
             return M8Q_INVALID_CONFIG; 
         }
+
+        config_msgs += max_msg_size; 
     }
 
-    return M8Q_OK; 
+    return init_status; 
 }
 
 
@@ -829,7 +875,32 @@ void m8q_clear_low_pwr_dev(void)
 
 // Read 
 
-// Write 
+// Send messages to the device 
+M8Q_STATUS m8q_write_dev(
+    char *data, 
+    uint8_t data_size)
+{
+    // // Local variables 
+    // I2C_STATUS i2c_status = I2C_OK; 
+
+    // // Generate a start condition 
+    // i2c_status |= i2c_start(m8q_driver_data.i2c); 
+
+    // // Send the device address with a write offset 
+    // i2c_status |= i2c_write_addr(m8q_driver_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
+    // i2c_clear_addr(m8q_driver_data.i2c); 
+
+    // // Send data (at least 2 bytes) 
+    // i2c_status |= i2c_write(m8q_driver_data.i2c, data, data_size); 
+
+    // // Generate a stop condition 
+    // i2c_stop(m8q_driver_data.i2c); 
+
+    // // Update the driver status 
+    // m8q_driver_data.status |= (uint8_t)i2c_status; 
+
+    return M8Q_OK; 
+}
 
 //=======================================================================================
 
@@ -842,6 +913,7 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
     const char *msg)
 {
     uint8_t msg_index = CLEAR; 
+    uint8_t id_check_status = CLEAR; 
 
     // Check for the start of an NMEA message 
     if (*msg == nmea_msg_start)
@@ -850,44 +922,49 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
         if (str_compare(nmea_pubx_msg_id, msg, BYTE_1))
         {
             // Check for a valid PUBX message format 
-            if (m8q_msg_id_check_dev(msg, 
-                                     (void *)nmea_pubx_msgs, 
-                                     NMEA_PUBX_NUM_MSGS, 
-                                     sizeof(nmea_msg_format_t), 
-                                     BYTE_6, 
-                                     &msg_index))
+            id_check_status = m8q_msg_id_check_dev(msg, 
+                                                   (void *)nmea_pubx_msgs, 
+                                                   NMEA_PUBX_NUM_MSGS, 
+                                                   sizeof(nmea_msg_format_t), 
+                                                   BYTE_6, 
+                                                   &msg_index); 
+            if (id_check_status)
             {
                 nmea_msg_target.arg_offset = BYTE_9; 
                 nmea_msg_target.nmea_msg_data.num_param = 
-                    nmea_pubx_msgs[msg_index].nmea_msg_data.num_param; 
+                                        nmea_pubx_msgs[msg_index].nmea_msg_data.num_param; 
                 nmea_msg_target.nmea_msg_data.msg_data = 
-                    nmea_pubx_msgs[msg_index].nmea_msg_data.msg_data; 
+                                        nmea_pubx_msgs[msg_index].nmea_msg_data.msg_data; 
                 return M8Q_MSG_NMEA; 
             }
         }
-
-        // Check for a standard NMEA message ID 
-        if (m8q_msg_id_check_dev(msg, 
-                                 (void *)&nmea_std_msg_id[0][0], 
-                                 NMEA_STD_ID_NUM, 
-                                 NMEA_STD_ID_LEN, 
-                                 BYTE_1, 
-                                 &msg_index))
+        else 
         {
-            // Check for a valid standard NMEA message format 
-            if (m8q_msg_id_check_dev(msg, 
-                                     (void *)nmea_std_msgs, 
-                                     NMEA_STD_NUM_MSGS, 
-                                     sizeof(nmea_msg_format_t), 
-                                     BYTE_3, 
-                                     &msg_index))
+            // Check for a standard NMEA message ID 
+            id_check_status = m8q_msg_id_check_dev(msg, 
+                                                   (void *)&nmea_std_msg_id[0][0], 
+                                                   NMEA_STD_ID_NUM, 
+                                                   NMEA_STD_ID_LEN, 
+                                                   BYTE_1, 
+                                                   &msg_index); 
+            if (id_check_status)
             {
-                nmea_msg_target.arg_offset = BYTE_7; 
-                nmea_msg_target.nmea_msg_data.num_param = 
-                    nmea_std_msgs[msg_index].nmea_msg_data.num_param; 
-                nmea_msg_target.nmea_msg_data.msg_data = 
-                    nmea_std_msgs[msg_index].nmea_msg_data.msg_data; 
-                return M8Q_MSG_NMEA; 
+                // Check for a valid standard NMEA message format 
+                id_check_status = m8q_msg_id_check_dev(msg, 
+                                                       (void *)nmea_std_msgs, 
+                                                       NMEA_STD_NUM_MSGS, 
+                                                       sizeof(nmea_msg_format_t), 
+                                                       BYTE_3, 
+                                                       &msg_index); 
+                if (id_check_status)
+                {
+                    nmea_msg_target.arg_offset = BYTE_7; 
+                    nmea_msg_target.nmea_msg_data.num_param = 
+                                            nmea_std_msgs[msg_index].nmea_msg_data.num_param; 
+                    nmea_msg_target.nmea_msg_data.msg_data = 
+                                            nmea_std_msgs[msg_index].nmea_msg_data.msg_data; 
+                    return M8Q_MSG_NMEA; 
+                }
             }
         }
     }
@@ -931,30 +1008,29 @@ uint8_t m8q_msg_id_check_dev(
     return FALSE; 
 }
 
-
-// Sort NMEA data 
-
 //=======================================================================================
 
 
 //=======================================================================================
-// Device configuration - config message formatting (private) 
+// Device configuration - config message formatting and writing (private) 
 
 // Send NMEA configuration messages 
 M8Q_STATUS m8q_nmea_config_dev(
     char *config_msg, 
     uint8_t num_args, 
-    uint8_t field_offset)
+    uint8_t field_offset, 
+    uint8_t msg_len)
 {
     // Local variables 
     char *msg_ptr = config_msg + field_offset; 
     char msg_char = CLEAR; 
     uint8_t msg_field_count = CLEAR; 
-    // uint16_t checksum = CLEAR; 
-    // char term_str[M8Q_NMEA_END_MSG]; 
+    uint8_t msg_term_flag = CLEAR; 
+    uint16_t checksum = CLEAR; 
+    char msg_str[msg_len + M8Q_NMEA_END_MSG]; 
 
-    // Check the number of message fields and that the fields contain only valid 
-    // characters. 
+    // Check the number of message fields, that the fields contain only valid characters, 
+    // and that a message termination character ('*') is present. 
     while (*msg_ptr != NULL_CHAR)
     {
         msg_char = *msg_ptr++; 
@@ -967,7 +1043,12 @@ M8Q_STATUS m8q_nmea_config_dev(
         // An asterisks signifies the end of the message 
         else if (msg_char == AST_CHAR)
         {
-            msg_field_count++; 
+            // The asterisks must be the end of the message 
+            if (*msg_ptr == NULL_CHAR)
+            {
+                msg_field_count++; 
+                msg_term_flag++; 
+            }
             break; 
         }
         // Check for an invalid character in the config message 
@@ -986,29 +1067,54 @@ M8Q_STATUS m8q_nmea_config_dev(
         }
     }
 
-    // // Check if the message is valid 
-    // if (msg_arg_count == num_args)
-    // {
-    //     // Calculate a checksum 
-    //     checksum = m8q_nmea_checksum(config_msg);
+    if ((!msg_term_flag) || (msg_field_count != num_args))
+    {
+        return M8Q_INVALID_CONFIG; 
+    }
 
-    //     // Append the checksum and termination characters onto the message 
-    //     sprintf(term_str, "*%c%c\r\n", (char)(checksum >> SHIFT_8), (char)(checksum)); 
+    // Calculate a message checksum and append its character representation onto the 
+    // message contents. Send the formatted message to the device. 
+    checksum = m8q_nmea_checksum_dev(config_msg); 
 
-    //     for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) 
-    //     {
-    //         *msg_ptr++ = (uint8_t)term_str[i]; 
-    //     }
+    sprintf(msg_str, "%s%c%c\r\n", config_msg, 
+                                   (char)(checksum >> SHIFT_8), 
+                                   (char)(checksum)); 
 
-    //     // Pass the message along to the M8Q write function 
-    //     m8q_write(config_msg, m8q_message_size(config_msg, NULL_CHAR));
-    // } 
-    // else
-    // {
-    //     return M8Q_INVALID_CONFIG; 
-    // }
+    m8q_write_dev(msg_str, m8q_msg_size_dev(msg_str)); 
 
     return M8Q_OK; 
+}
+
+
+// NMEA message checksum calculation 
+uint16_t m8q_nmea_checksum_dev(
+    const char *msg)
+{
+    // Local variables 
+    uint16_t xor_result = CLEAR; 
+    uint16_t cs_hi_byte = CLEAR; 
+    uint16_t cs_lo_byte = CLEAR; 
+    uint16_t checksum = CLEAR; 
+
+    // Perform and exlusive OR (XOR) on the NMEA message to calculate the checksum. 
+    // Make sure the start character ('$') is ignored. 
+    while (*(++msg) != AST_CHAR) 
+    {
+        xor_result ^= (uint16_t)(*msg);
+    }
+
+    // Convert the checksum to character representation 
+    cs_hi_byte = (xor_result & FILTER_4_MSB) >> SHIFT_4; 
+    cs_lo_byte = (xor_result & FILTER_4_LSB); 
+
+    cs_hi_byte = (cs_hi_byte <= MAX_CHAR_DIGIT) ? (cs_hi_byte + NUM_TO_CHAR_OFFSET) : 
+                                                  (cs_hi_byte + HEX_TO_LET_CHAR); 
+    cs_lo_byte = (cs_lo_byte <= MAX_CHAR_DIGIT) ? (cs_lo_byte + NUM_TO_CHAR_OFFSET) : 
+                                                  (cs_lo_byte + HEX_TO_LET_CHAR); 
+    
+    checksum |= (cs_hi_byte << SHIFT_8) | cs_lo_byte; 
+
+    return checksum; 
 }
 
 
@@ -1017,6 +1123,21 @@ M8Q_STATUS m8q_ubx_config_dev(
     const char *config_msg)
 {
     return M8Q_OK; 
+}
+
+
+// Get the length of a message 
+uint8_t m8q_msg_size_dev(
+    const char *msg)
+{
+    uint8_t msg_len = CLEAR; 
+
+    while (*msg++) 
+    {
+        msg_len++; 
+    }
+
+    return msg_len; 
 }
 
 //=======================================================================================
@@ -1831,11 +1952,8 @@ uint16_t m8q_nmea_checksum(
     for (uint8_t i = 0; i < M8Q_NMEA_CS_LEN; i++)
     {
         checksum_char = (xor_result & (FILTER_4_MSB >> SHIFT_4*i)) >> SHIFT_4*(1-i); 
-        // TODO test and replace 
-        // if (checksum_char <= MAX_CHAR_DIGIT) checksum_char += NUM_TO_CHAR_OFFSET; 
-        // else checksum_char += HEX_TO_LET_CHAR; 
-        checksum_char = (checksum_char <= MAX_CHAR_DIGIT) ? (checksum_char + NUM_TO_CHAR_OFFSET) : 
-                                                            (checksum_char + HEX_TO_LET_CHAR); 
+        if (checksum_char <= MAX_CHAR_DIGIT) checksum_char += NUM_TO_CHAR_OFFSET; 
+        else checksum_char += HEX_TO_LET_CHAR; 
         checksum |= (uint16_t)(checksum_char << SHIFT_8*(1-i)); 
     }
 
