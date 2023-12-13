@@ -504,7 +504,7 @@ uint8_t m8q_msg_id_check_dev(
  * @param field_offset 
  */
 M8Q_STATUS m8q_nmea_config_dev(
-    const char *config_msg, 
+    char *config_msg, 
     uint8_t num_args, 
     uint8_t field_offset); 
 
@@ -680,7 +680,7 @@ void m8q_user_config_prompt(void);
 // Device initialization 
 M8Q_STATUS m8q_init_dev(
     I2C_TypeDef *i2c, 
-    const char *config_msgs, 
+    char *config_msgs, 
     uint8_t msg_num, 
     uint8_t max_msg_size)
 {
@@ -942,56 +942,71 @@ uint8_t m8q_msg_id_check_dev(
 
 // Send NMEA configuration messages 
 M8Q_STATUS m8q_nmea_config_dev(
-    const char *config_msg, 
+    char *config_msg, 
     uint8_t num_args, 
     uint8_t field_offset)
 {
     // Local variables 
-    uint8_t *msg_ptr = config_msg + field_offset; 
-    uint8_t msg_arg_count = CLEAR; 
-    uint8_t msg_arg_mask = CLEAR; 
-    uint16_t checksum = CLEAR; 
-    char term_str[M8Q_NMEA_END_MSG]; 
+    char *msg_ptr = config_msg + field_offset; 
+    char msg_char = CLEAR; 
+    uint8_t msg_field_count = CLEAR; 
+    // uint16_t checksum = CLEAR; 
+    // char term_str[M8Q_NMEA_END_MSG]; 
 
-    // 
-    while(*msg_ptr != CR_CHAR) 
+    // Check the number of message fields and that the fields contain only valid 
+    // characters. 
+    while (*msg_ptr != NULL_CHAR)
     {
-        if (*msg_ptr == COMMA_CHAR)
+        msg_char = *msg_ptr++; 
+
+        // Commas separate message fields 
+        if (msg_char == COMMA_CHAR)
         {
-            msg_arg_mask = 0; 
+            msg_field_count++; 
         }
-        else 
+        // An asterisks signifies the end of the message 
+        else if (msg_char == AST_CHAR)
         {
-            if (!msg_arg_mask)
+            msg_field_count++; 
+            break; 
+        }
+        // Check for an invalid character in the config message 
+        else if ((msg_char < ZERO_CHAR) || (msg_char > NINE_CHAR))
+        {
+            if ((msg_char < A_UP_CHAR) || (msg_char > Z_UP_CHAR))
             {
-                msg_arg_count++;   // Count an input 
-                msg_arg_mask++;    // Prevent from double counting an input 
+                if ((msg_char < A_LO_CHAR) || (msg_char > Z_LO_CHAR))
+                {
+                    if ((msg_char != PERIOD_CHAR) && (msg_char != MINUS_CHAR))
+                    {
+                        return M8Q_INVALID_CONFIG; 
+                    }
+                }
             }
         }
-        msg_ptr++; 
     }
 
-    // Check if the message is valid 
-    if (msg_arg_count == num_args)
-    {
-        // Calculate a checksum 
-        checksum = m8q_nmea_checksum(config_msg);
+    // // Check if the message is valid 
+    // if (msg_arg_count == num_args)
+    // {
+    //     // Calculate a checksum 
+    //     checksum = m8q_nmea_checksum(config_msg);
 
-        // Append the checksum and termination characters onto the message 
-        sprintf(term_str, "*%c%c\r\n", (char)(checksum >> SHIFT_8), (char)(checksum)); 
+    //     // Append the checksum and termination characters onto the message 
+    //     sprintf(term_str, "*%c%c\r\n", (char)(checksum >> SHIFT_8), (char)(checksum)); 
 
-        for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) 
-        {
-            *msg_ptr++ = (uint8_t)term_str[i]; 
-        }
+    //     for (uint8_t i = 0; i < M8Q_NMEA_END_MSG; i++) 
+    //     {
+    //         *msg_ptr++ = (uint8_t)term_str[i]; 
+    //     }
 
-        // Pass the message along to the M8Q write function 
-        m8q_write(config_msg, m8q_message_size(config_msg, NULL_CHAR));
-    } 
-    else
-    {
-        return M8Q_INVALID_CONFIG; 
-    }
+    //     // Pass the message along to the M8Q write function 
+    //     m8q_write(config_msg, m8q_message_size(config_msg, NULL_CHAR));
+    // } 
+    // else
+    // {
+    //     return M8Q_INVALID_CONFIG; 
+    // }
 
     return M8Q_OK; 
 }

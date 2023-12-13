@@ -152,9 +152,9 @@ typedef uint8_t M8Q_STATUS;
  * 
  * @details 
  *          The NMEA configuration messages will be checked for a start character, a valid 
- *          address and the correct number of message fields. The contents of the 
- *          configuration message fields is not checked for for formatting. That is left 
- *          to the user to ensure id sone correctly. 
+ *          address, the correct number of message fields and valid field characters. Aside 
+ *          from character validity, the fields are not checked for formatting. This is left 
+ *          to the user to ensure it's done correctly. 
  * 
  * @param i2c 
  * @param config_msgs 
@@ -164,7 +164,7 @@ typedef uint8_t M8Q_STATUS;
  */
 M8Q_STATUS m8q_init_dev(
     I2C_TypeDef *i2c, 
-    const char *config_msgs, 
+    char *config_msgs, 
     uint8_t msg_num, 
     uint8_t max_msg_size); 
 
