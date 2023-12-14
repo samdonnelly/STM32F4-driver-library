@@ -13,6 +13,7 @@ extern "C"
 	// Add your C-only include files here 
     #include "m8q_driver.h" 
     #include "m8q_config_test.h" 
+    #include "i2c_comm.h" 
 }
 
 //=======================================================================================
@@ -31,6 +32,9 @@ extern "C"
 
 TEST_GROUP(m8q_driver)
 {
+    // Global test group variables 
+    I2C_TypeDef I2C_FAKE; 
+
     // Constructor 
     void setup()
     {
@@ -144,13 +148,11 @@ TEST(m8q_driver, m8q_init_config_msg_ok)
 }
 
 
-// M8Q device initialization - invalid and valid PUBX NMEA config message check 
-TEST(m8q_driver, m8q_init_pubx_nmea_config_msg_check)
+// M8Q device initialization - invalid PUBX NMEA config message check 
+TEST(m8q_driver, m8q_init_pubx_nmea_config_invalid_msg_check)
 {
-    I2C_TypeDef I2C_LOCAL_FAKE; 
-
-    // All sample messages except the last one are invalid. Messages are sent one at a 
-    // time to check that message checks are done correctly. 
+    // All of the below sample config messages are invalid except for the last one. 
+    // Messages are sent one at a time to verify that message checks are done correctly. 
     // The messages have the following errors: 
     // - Message A: Incorrect ID 
     // - Message B: Invalid formatter 
@@ -158,24 +160,27 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_msg_check)
     // - Message D: Incorrect number of fields for the specified message 
     // - Message E: No message termination character ('*') 
     // - Message F: The message termination character ('*') is not the last character 
-    // - Message G: None 
+    // - Message G: None - fails due to a forced I2C timeout 
 
     // Sample PUBX NMEA message 
-    const char config_msg_a[] = "$PUBC,40,GGA,0,0,0,0,0,0*"; 
-    const char config_msg_b[] = "$PUBX,01,GGA,0,0,0,0,0,0*"; 
-    const char config_msg_c[] = "$PUBX,40,GGA,0,0,0,0,&,0*"; 
-    const char config_msg_d[] = "$PUBX,40,GGA,0,0,0,0,0*"; 
-    const char config_msg_e[] = "$PUBX,40,GGA,0,0,0,0,0,0"; 
-    const char config_msg_f[] = "$PUBX,40,GGA,0,0,0,0,0,0*0"; 
-    const char config_msg_g[] = "$PUBX,40,GGA,0,0,0,0,0,0*"; 
+    const char config_msg_a[] = "$PUBC,40,GLL,1,0,0,0,0,0*"; 
+    const char config_msg_b[] = "$PUBX,01,GLL,1,0,0,0,0,0*"; 
+    const char config_msg_c[] = "$PUBX,40,GLL,1,0,0,0,&,0*"; 
+    const char config_msg_d[] = "$PUBX,40,GLL,1,0,0,0,0*"; 
+    const char config_msg_e[] = "$PUBX,40,GLL,1,0,0,0,0,0"; 
+    const char config_msg_f[] = "$PUBX,40,GLL,1,0,0,0,0,0*0"; 
+    const char config_msg_g[] = "$PUBX,40,GLL,1,0,0,0,0,0*"; 
 
-    M8Q_STATUS init_check_a = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_b = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_c = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_d = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_e = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_e, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_f = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_f, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_g = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_g, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    // Initialize the mock I2C driver to time out 
+    i2c_mock_init(1); 
+
+    M8Q_STATUS init_check_a = m8q_init_dev(&I2C_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_b = m8q_init_dev(&I2C_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_c = m8q_init_dev(&I2C_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_d = m8q_init_dev(&I2C_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_e = m8q_init_dev(&I2C_FAKE, config_msg_e, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_f = m8q_init_dev(&I2C_FAKE, config_msg_f, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_g = m8q_init_dev(&I2C_FAKE, config_msg_g, 1, M8Q_CONFIG_MAX_MSG_LEN); 
 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_a); 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_b); 
@@ -183,17 +188,44 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_msg_check)
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_d); 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_e); 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_f); 
-    LONGS_EQUAL(M8Q_OK, init_check_g); 
+    LONGS_EQUAL(M8Q_WRITE_FAULT, init_check_g); 
 }
 
 
-// M8Q device initialization - invalid and valid standard NMEA config message check 
-TEST(m8q_driver, m8q_init_std_nmea_config_msg_check)
+// M8Q device initialization - valid PUBX NMEA config message check 
+TEST(m8q_driver, m8q_init_pubx_nmea_config_valid_msg_check)
 {
-    I2C_TypeDef I2C_LOCAL_FAKE; 
+    M8Q_STATUS init_check; 
 
-    // All sample messages except the last one are invalid. Messages are sent one at a 
-    // time to check that message checks are done correctly. 
+    // Variables to store the drivers formatted config message 
+    char config_msg_check[30]; 
+    uint8_t config_msg_check_len = CLEAR; 
+
+    // Complete PUBX NMEA message and its length to compare against 
+    const char config_msg_compare[] = "$PUBX,40,GLL,1,0,0,0,0,0*5D\r\n"; 
+    uint8_t config_msg_compare_len = strlen(config_msg_compare); 
+
+    // Correctly formatted sample PUBX NMEA config message 
+    const char config_msg[] = "$PUBX,40,GLL,1,0,0,0,0,0*"; 
+
+    // Initialize the mock I2C driver to not time out, run the init and retrieve the 
+    // driver formatted message that gets sent to the device. Check that the driver 
+    // message and its length are correct. 
+    i2c_mock_init(0); 
+    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    i2c_mock_get_write_data(config_msg_check, &config_msg_check_len); 
+
+    LONGS_EQUAL(M8Q_OK, init_check); 
+    LONGS_EQUAL(config_msg_compare_len, config_msg_check_len); 
+    STRCMP_EQUAL(config_msg_compare, config_msg_check); 
+}
+
+
+// M8Q device initialization - invalid standard NMEA config message check 
+TEST(m8q_driver, m8q_init_std_nmea_config_invalid_msg_check)
+{
+    // All of the below sample config messages are invalid except for the last one. 
+    // Messages are sent one at a time to verify that message checks are done correctly. 
     // The messages have the following errors: 
     // - Message A: Incorrect ID  
     // - Message B: Invalid formatter 
@@ -201,7 +233,7 @@ TEST(m8q_driver, m8q_init_std_nmea_config_msg_check)
     // - Message D: Incorrect number of fields for the specified message 
     // - Message E: No message termination character ('*') 
     // - Message F: The message termination character ('*') is not the last character 
-    // - Message G: None 
+    // - Message G: None - fails initially due to a forced I2C timeout 
 
     // Sample standard NMEA message 
     const char config_msg_a[] = "$GCGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
@@ -212,13 +244,16 @@ TEST(m8q_driver, m8q_init_std_nmea_config_msg_check)
     const char config_msg_f[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*N"; 
     const char config_msg_g[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
 
-    M8Q_STATUS init_check_a = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_b = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_c = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_d = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_e = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_e, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_f = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_f, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_g = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_g, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    // Initialize the mock I2C driver to time out 
+    i2c_mock_init(1); 
+
+    M8Q_STATUS init_check_a = m8q_init_dev(&I2C_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_b = m8q_init_dev(&I2C_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_c = m8q_init_dev(&I2C_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_d = m8q_init_dev(&I2C_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_e = m8q_init_dev(&I2C_FAKE, config_msg_e, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_f = m8q_init_dev(&I2C_FAKE, config_msg_f, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_g = m8q_init_dev(&I2C_FAKE, config_msg_g, 1, M8Q_CONFIG_MAX_MSG_LEN); 
 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_a); 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_b); 
@@ -226,17 +261,46 @@ TEST(m8q_driver, m8q_init_std_nmea_config_msg_check)
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_d); 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_e); 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_f); 
-    LONGS_EQUAL(M8Q_OK, init_check_g); 
+    LONGS_EQUAL(M8Q_WRITE_FAULT, init_check_g); 
+}
+
+
+// M8Q device initialization - valid standard NMEA config message check 
+TEST(m8q_driver, m8q_init_std_nmea_config_valid_msg_check)
+{
+    M8Q_STATUS init_check; 
+
+    // Variables to store the drivers formatted config message 
+    char config_msg_check[70]; 
+    uint8_t config_msg_check_len = CLEAR; 
+
+    // Complete PUBX NMEA message and its length to compare against 
+    const char config_msg_compare[] = 
+        "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52\r\n"; 
+    uint8_t config_msg_compare_len = strlen(config_msg_compare); 
+
+    // Correctly formatted sample PUBX NMEA config message 
+    const char config_msg[] = 
+        "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
+
+    // Initialize the mock I2C driver to not time out, run the init and retrieve the 
+    // driver formatted message that gets sent to the device. Check that the driver 
+    // message and its length are correct. 
+    i2c_mock_init(0); 
+    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    i2c_mock_get_write_data(config_msg_check, &config_msg_check_len); 
+
+    LONGS_EQUAL(M8Q_OK, init_check); 
+    LONGS_EQUAL(config_msg_compare_len, config_msg_check_len); 
+    STRCMP_EQUAL(config_msg_compare, config_msg_check); 
 }
 
 
 // M8Q device initialization - invalid and valid UBX config message check 
 TEST(m8q_driver, m8q_init_ubx_config_msg_check)
 {
-    I2C_TypeDef I2C_LOCAL_FAKE; 
-
-    // All sample messages except the last one are invalid. Messages are sent one at a 
-    // time to check that message checks are done correctly. 
+    // All of the below sample config messages are invalid except for the last one. 
+    // Messages are sent one at a time to verify that message checks are done correctly. 
     // The messages have the following errors: 
     // - Message A: Incorrect ID 
     // - Message B: Invalid formatter 
@@ -250,11 +314,11 @@ TEST(m8q_driver, m8q_init_ubx_config_msg_check)
     // const char config_msg_d[] = ""; 
     const char config_msg_e[] = "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
 
-    M8Q_STATUS init_check_a = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_b = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    // M8Q_STATUS init_check_c = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    // M8Q_STATUS init_check_d = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_e = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_e, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_a = m8q_init_dev(&I2C_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_b = m8q_init_dev(&I2C_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    // M8Q_STATUS init_check_c = m8q_init_dev(&I2C_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    // M8Q_STATUS init_check_d = m8q_init_dev(&I2C_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    M8Q_STATUS init_check_e = m8q_init_dev(&I2C_FAKE, config_msg_e, 1, M8Q_CONFIG_MAX_MSG_LEN); 
 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_a); 
     LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_b); 
@@ -267,10 +331,8 @@ TEST(m8q_driver, m8q_init_ubx_config_msg_check)
 // M8Q device initialization - init ok, all config messages valid 
 TEST(m8q_driver, m8q_init_valid_config)
 {
-    I2C_TypeDef I2C_LOCAL_FAKE; 
-
     M8Q_STATUS init_check = m8q_init_dev(
-        &I2C_LOCAL_FAKE, 
+        &I2C_FAKE, 
         &m8q_config_pkt[0][0], 
         M8Q_CONFIG_NUM_MSG, 
         M8Q_CONFIG_MAX_MSG_LEN); 

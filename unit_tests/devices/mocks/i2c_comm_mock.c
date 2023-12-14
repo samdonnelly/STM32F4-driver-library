@@ -21,139 +21,36 @@
 
 
 //=======================================================================================
-// Macros 
+// Global variables 
 
-#define I2C_TIMEOUT_COUNT 10000       // I2C operation timeout counter 
+// Mock driver data record 
+typedef struct i2c_mock_driver_data_s 
+{
+    char write_data[150]; 
+    uint8_t write_data_size; 
 
-//=======================================================================================
+    uint8_t timeout; 
+}
+i2c_mock_driver_data_t; 
 
-
-//=======================================================================================
-// Function Prototypes 
-
-/**
- * @brief I2C wait for ADDR bit to set
- * 
- * @details This bit is set once the address has been successfully sent in master mode or
- *          successfully matched in slave mode. This event must occur before proceeding 
- *          to transfer data. 
- * 
- * @see i2c_status_t
- * 
- * @param i2c : pointer to I2C port 
- * @return I2C_STATUS : I2C operation status 
- */
-I2C_STATUS i2c_addr_wait(
-    I2C_TypeDef *i2c);
-
-
-/**
- * @brief I2C clear acknowledge bit 
- * 
- * @details This function is used to clear the acknowledge bit which sends a NACK pulse to 
- *          the slave device. The NACK pulse is sent after the last byte of data has been 
- *          recieved from the slave. Once the slave sees the pulse it releases control of 
- *          the bus which allows the master to send a stop or restart condition. 
- * 
- * @param i2c : pointer to I2C port 
- */
-void i2c_clear_ack(
-    I2C_TypeDef *i2c);
-
-
-/**
- * @brief I2C set acknowledge bit 
- * 
- * @details Setting the acknowledge bit is used to tell a slave device that data has been 
- *          recieved so the slave can proceed to send the next byte of data. This function 
- *          is called immediately after the data register is read. The acknowledge bit must
- *          also be set before generating a start condition. 
- * 
- * @param i2c : pointer to I2C port 
- */
-void i2c_set_ack(
-    I2C_TypeDef *i2c);
-
-
-/**
- * @brief I2C wait for RxNE bit to set 
- * 
- * @details The RxNE bit indicates that there is data in the data register to be read from 
- *          the slave. This functions waits for the bit to set before proceeding to read 
- *          the data register. Once the data register is read then this bit clears until 
- *          more data is available. 
- * 
- * @see i2c_status_t
- * 
- * @param i2c : pointer to I2C port 
- * @return I2C_STATUS : I2C operation status 
- */
-I2C_STATUS i2c_rxne_wait(
-    I2C_TypeDef *i2c);
-
-
-/**
- * @brief I2C wait for TxE bit to set 
- * 
- * @details The TxE bit is set when the data register is empty during transmission. It is 
- *          cleared when the data register is written to or when a start or stop condition 
- *          is generated. The bit won't set if a NACK pulse is received from the slave. 
- *          This function is called to wait for the bit to set before writing to the data 
- *          register. 
- * 
- * @see i2c_status_t
- * 
- * @param i2c : pointer to I2C port 
- * @return I2C_STATUS : I2C operation status 
- */
-I2C_STATUS i2c_txe_wait(
-    I2C_TypeDef *i2c);
-
-
-/**
- * @brief I2C wait for BTF bit to set
- * 
- * @details This function is called at the end of a data transmission to a slave device. 
- *          The BTF bit indicates if the byte transfer is in progress or complete. When 
- *          all bytes have been written to the slave this function is called and it waits 
- *          for BTF to set to indicate that the last byte has been transferred at which 
- *          point the write sequence in the code ends and a stop condition can be 
- *          generated. 
- * 
- * @see i2c_status_t
- * 
- * @param i2c : pointer to I2C port 
- * @return I2C_STATUS : I2C operation status 
- */
-I2C_STATUS i2c_btf_wait(
-    I2C_TypeDef *i2c);
+i2c_mock_driver_data_t mock_driver_data; 
 
 //=======================================================================================
 
 
 //=======================================================================================
-// I2C register functions
+// User functions 
 
 // I2C generate start condition 
 I2C_STATUS i2c_start(
     I2C_TypeDef *i2c)
 {
-    // Local variables 
-    uint16_t timeout = I2C_TIMEOUT_COUNT; 
-
-    // Enable the acknowledgement bit and set the start generation bit 
-    i2c_set_ack(i2c); 
-    i2c->CR1 |= (SET_BIT << SHIFT_8); 
-
-    // Wait for the start bit to set - abort if operation times out 
-    while(!(i2c->SR1 & (SET_BIT << SHIFT_0)) && --timeout); 
-
-    if (timeout) 
+    if (mock_driver_data.timeout)
     {
-        return I2C_OK; 
+        return I2C_TIMEOUT; 
     }
     
-    return I2C_TIMEOUT; 
+    return I2C_OK; 
 }
 
 
@@ -161,7 +58,7 @@ I2C_STATUS i2c_start(
 void i2c_stop(
     I2C_TypeDef *i2c)
 {
-    i2c->CR1 |= (SET_BIT << SHIFT_9);
+    // 
 }
 
 
@@ -169,119 +66,16 @@ void i2c_stop(
 void i2c_clear_addr(
     I2C_TypeDef *i2c)
 {
-    dummy_read(((i2c->SR1) | (i2c->SR2))); 
+    // 
 }
 
-
-// I2C wait for ADDR bit to set
-I2C_STATUS i2c_addr_wait(
-    I2C_TypeDef *i2c)
-{
-    // Local variables 
-    uint16_t timeout = I2C_TIMEOUT_COUNT; 
-
-    // Wait for the ADDR bit to set - abort if operation times out 
-    while(!(i2c->SR1 & (SET_BIT << SHIFT_1)) && --timeout); 
-
-    if (timeout)
-    {
-        return I2C_OK; 
-    }
-
-    return I2C_TIMEOUT; 
-}
-
-
-// I2C clear the ACK bit to send a NACK pulse to slave device 
-void i2c_clear_ack(
-    I2C_TypeDef *i2c)
-{
-    i2c->CR1 &= ~(SET_BIT << SHIFT_10);
-}
-
-
-// I2C set the ACK bit to tell the slave that data has been receieved
-void i2c_set_ack(
-    I2C_TypeDef *i2c)
-{
-    i2c->CR1 |= (SET_BIT << SHIFT_10);
-}
-
-
-// I2C wait for RxNE bit to set indicating data is ready 
-I2C_STATUS i2c_rxne_wait(
-    I2C_TypeDef *i2c)
-{
-    // Local variables 
-    uint16_t timeout = I2C_TIMEOUT_COUNT; 
-
-    // Wait for the RXNE bit to set - abort if operation times out 
-    while(!(i2c->SR1 & (SET_BIT << SHIFT_6)) && --timeout); 
-
-    if (timeout)
-    {
-        return I2C_OK; 
-    }
-
-    return I2C_TIMEOUT; 
-}
-
-
-// I2C wait for TxE bit to set 
-I2C_STATUS i2c_txe_wait(
-    I2C_TypeDef *i2c)
-{
-    // Local variables 
-    uint16_t timeout = I2C_TIMEOUT_COUNT; 
-
-    // Wait for the TXE bit to set - abort if operation times out 
-    while(!(i2c->SR1 & (SET_BIT << SHIFT_7)) && --timeout); 
-
-    if (timeout)
-    {
-        return I2C_OK; 
-    }
-
-    return I2C_TIMEOUT; 
-}
-
-
-// I2C wait for BTF to set
-I2C_STATUS i2c_btf_wait(
-    I2C_TypeDef *i2c)
-{
-    // Local variables 
-    uint16_t timeout = I2C_TIMEOUT_COUNT; 
-
-    // Wait for the BTF bit to set - abort if operation times out 
-    while(!(i2c->SR1 & (SET_BIT << SHIFT_2)) && --timeout); 
-
-    if (timeout)
-    {
-        return I2C_OK; 
-    }
-
-    return I2C_TIMEOUT; 
-}
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Write I2C 
 
 // I2C send address 
 I2C_STATUS i2c_write_addr(
     I2C_TypeDef *i2c, 
     uint8_t i2c_address)
 {
-    // Local variables 
-    I2C_STATUS i2c_status = I2C_OK; 
-
-    i2c->DR = i2c_address;                // Send slave address 
-    i2c_status |= i2c_addr_wait(i2c);     // Wait for ADDR to set 
-
-    return i2c_status; 
+    return I2C_OK; 
 }
 
 
@@ -291,26 +85,12 @@ I2C_STATUS i2c_write(
     uint8_t *data, 
     uint8_t data_size)
 {
-    // Local variables 
-    I2C_STATUS i2c_status = I2C_OK; 
+    memcpy((void *)mock_driver_data.write_data, (void *)data, data_size); 
+    mock_driver_data.write_data_size = data_size; 
 
-    for (uint8_t i = 0; i < data_size; i++)
-    {
-        i2c_status |= i2c_txe_wait(i2c);    // Wait for TxE bit to set 
-        i2c->DR = *data++;                  // Send data 
-    }
-
-    // Wait for BTF to set
-    i2c_status |= i2c_btf_wait(i2c); 
-
-    return i2c_status; 
+    return I2C_OK; 
 }
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Read I2C 
 
 // I2C read data from a device
 I2C_STATUS i2c_read(
@@ -321,59 +101,59 @@ I2C_STATUS i2c_read(
     // Local variables 
     I2C_STATUS i2c_status = I2C_OK; 
 
-    // Check the amount of data to be received 
-    switch(data_size)
-    {
-        case BYTE_0:  // No data specified - no transmission
-            break;
+    // // Check the amount of data to be received 
+    // switch(data_size)
+    // {
+    //     case BYTE_0:  // No data specified - no transmission
+    //         break;
 
-        case BYTE_1:  // One-byte transmission 
-            // Clear the ACK bit to send a NACK pulse to the slave
-            i2c_clear_ack(i2c);
+    //     case BYTE_1:  // One-byte transmission 
+    //         // Clear the ACK bit to send a NACK pulse to the slave
+    //         i2c_clear_ack(i2c);
 
-            // Read SR1 and SR2 to clear ADDR
-            i2c_clear_addr(i2c);
+    //         // Read SR1 and SR2 to clear ADDR
+    //         i2c_clear_addr(i2c);
 
-            // Generate stop condition
-            i2c_stop(i2c);
+    //         // Generate stop condition
+    //         i2c_stop(i2c);
 
-            // Wait for RxNE bit to set indicating data is ready 
-            i2c_status |= i2c_rxne_wait(i2c);
+    //         // Wait for RxNE bit to set indicating data is ready 
+    //         i2c_status |= i2c_rxne_wait(i2c);
 
-            // Read the data regsiter
-            *data = i2c->DR;
+    //         // Read the data regsiter
+    //         *data = i2c->DR;
 
-            break;
+    //         break;
 
-        default:  // Greater than one-byte transmission 
-            // Read SR1 and SR2 to clear ADDR
-            i2c_clear_addr(i2c);
+    //     default:  // Greater than one-byte transmission 
+    //         // Read SR1 and SR2 to clear ADDR
+    //         i2c_clear_addr(i2c);
 
-            // Normal reading 
-            for (uint8_t i = 0; i < (data_size - BYTE_2); i++)
-            {
-                i2c_status |= i2c_rxne_wait(i2c);  // Indicates when data is ready 
-                *data++ = i2c->DR;                 // Read data
-                i2c_set_ack(i2c);                  // Set the ACK bit 
-            }
+    //         // Normal reading 
+    //         for (uint8_t i = 0; i < (data_size - BYTE_2); i++)
+    //         {
+    //             i2c_status |= i2c_rxne_wait(i2c);  // Indicates when data is ready 
+    //             *data++ = i2c->DR;                 // Read data
+    //             i2c_set_ack(i2c);                  // Set the ACK bit 
+    //         }
 
-            // Read the second last data byte 
-            i2c_status |= i2c_rxne_wait(i2c);
-            *data = i2c->DR;
+    //         // Read the second last data byte 
+    //         i2c_status |= i2c_rxne_wait(i2c);
+    //         *data = i2c->DR;
 
-            // Clear the ACK bit to send a NACK pulse to the slave
-            i2c_clear_ack(i2c);
+    //         // Clear the ACK bit to send a NACK pulse to the slave
+    //         i2c_clear_ack(i2c);
 
-            // Generate stop condition
-            i2c_stop(i2c);
+    //         // Generate stop condition
+    //         i2c_stop(i2c);
 
-            // Read the last data byte
-            data++;
-            i2c_status |= i2c_rxne_wait(i2c);
-            *data = i2c->DR;
+    //         // Read the last data byte
+    //         data++;
+    //         i2c_status |= i2c_rxne_wait(i2c);
+    //         *data = i2c->DR;
 
-            break;
-    }
+    //         break;
+    // }
 
     return i2c_status; 
 }
@@ -389,19 +169,19 @@ I2C_STATUS i2c_read_to_term(
     // Local variables 
     I2C_STATUS i2c_status = I2C_OK; 
 
-    // Read the data until the termination character is seen 
-    do
-    {
-        i2c_status |= i2c_rxne_wait(i2c); 
-        *data = i2c->DR; 
-        i2c_set_ack(i2c); 
-    } 
-    while (*data++ != term_char); 
+    // // Read the data until the termination character is seen 
+    // do
+    // {
+    //     i2c_status |= i2c_rxne_wait(i2c); 
+    //     *data = i2c->DR; 
+    //     i2c_set_ack(i2c); 
+    // } 
+    // while (*data++ != term_char); 
 
-    // Read the remaining bytes and terminate the data 
-    i2c_status |= i2c_read(i2c, data, bytes_remain); 
-    data += bytes_remain; 
-    *data = 0; 
+    // // Read the remaining bytes and terminate the data 
+    // i2c_status |= i2c_read(i2c, data, bytes_remain); 
+    // data += bytes_remain; 
+    // *data = 0; 
 
     return i2c_status; 
 }
@@ -418,32 +198,59 @@ I2C_STATUS i2c_read_to_len(
 {
     // Local variables 
     I2C_STATUS i2c_status = I2C_OK; 
-    uint16_t msg_length = 0; 
+    // uint16_t msg_length = 0; 
 
-    // Read up to and including the part of the message that specifies the length 
-    i2c_status |= i2c_read(i2c, data, len_location + len_bytes); 
+    // // Read up to and including the part of the message that specifies the length 
+    // i2c_status |= i2c_read(i2c, data, len_location + len_bytes); 
 
-    // Extract the length and correct it using the 'add_bytes' argument 
-    data += len_location; 
+    // // Extract the length and correct it using the 'add_bytes' argument 
+    // data += len_location; 
     
-    if (len_bytes == BYTE_1)
-    {
-        msg_length = (uint16_t)(*data++) + add_bytes; 
-    }
-    else if (len_bytes == BYTE_2)
-    {
-        msg_length  = (uint16_t)(*data++); 
-        msg_length |= (uint16_t)(*data++ << SHIFT_8); 
-        msg_length += add_bytes; 
-    }
+    // if (len_bytes == BYTE_1)
+    // {
+    //     msg_length = (uint16_t)(*data++) + add_bytes; 
+    // }
+    // else if (len_bytes == BYTE_2)
+    // {
+    //     msg_length  = (uint16_t)(*data++); 
+    //     msg_length |= (uint16_t)(*data++ << SHIFT_8); 
+    //     msg_length += add_bytes; 
+    // }
     
-    // Read the rest of the message 
-    i2c_start(i2c); 
-    i2c_status |= i2c_write_addr(i2c, address); 
-    i2c_clear_addr(i2c); 
-    i2c_status |= i2c_read(i2c, data, msg_length); 
+    // // Read the rest of the message 
+    // i2c_start(i2c); 
+    // i2c_status |= i2c_write_addr(i2c, address); 
+    // i2c_clear_addr(i2c); 
+    // i2c_status |= i2c_read(i2c, data, msg_length); 
 
     return i2c_status; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Mocks 
+
+// Mock initialization 
+void i2c_mock_init(
+    uint8_t timeout_status)
+{
+    mock_driver_data.timeout = timeout_status; 
+
+    // Initialize mock data 
+    memset((void *)mock_driver_data.write_data, CLEAR, sizeof(mock_driver_data.write_data)); 
+    mock_driver_data.write_data_size = CLEAR; 
+}
+
+
+// Get write data 
+void i2c_mock_get_write_data(
+    char *data_buff, 
+    uint8_t *data_size)
+{
+    memcpy((void *)data_buff, (void *)mock_driver_data.write_data, mock_driver_data.write_data_size); 
+    *data_size = mock_driver_data.write_data_size; 
 }
 
 //=======================================================================================

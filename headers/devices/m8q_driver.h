@@ -128,6 +128,7 @@ typedef enum {
     M8Q_OK,                  // No problems with the M8Q operation 
     M8Q_INVALID_PTR,         // Invalid pointer provided to function 
     M8Q_INVALID_CONFIG,      // Invalid configuration message 
+    M8Q_WRITE_FAULT,         // 
     M8Q_UBX_MSG_CONV_FAIL,   // UBX message failed to convert to receiver format 
     M8Q_UBX_MSG_CONV_SUCC    // UBX message successfully converted to receiver format 
 } m8q_status_t; 

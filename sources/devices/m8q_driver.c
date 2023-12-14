@@ -373,7 +373,7 @@ const char ubx_msg_class[UBX_CLASS_NUM][UBX_CLASS_LEN] =
  * @return M8Q_STATUS 
  */
 M8Q_STATUS m8q_write_dev(
-    char *data, 
+    const char *data, 
     uint8_t data_size); 
 
 
@@ -475,7 +475,7 @@ M8Q_STATUS m8q_init_dev(
     uint8_t msg_num, 
     uint8_t max_msg_size)
 {
-    if (i2c == NULL)
+    if ((i2c == NULL) || (config_msgs == NULL))
     {
         return M8Q_INVALID_PTR; 
     }
@@ -499,7 +499,8 @@ M8Q_STATUS m8q_init_dev(
                                               nmea_msg_target.nmea_msg_data.num_param, 
                                               nmea_msg_target.arg_offset, 
                                               max_msg_size); 
-            if (init_status)
+            
+            if (init_status == M8Q_INVALID_CONFIG)
             {
                 break; 
             }
@@ -508,12 +509,12 @@ M8Q_STATUS m8q_init_dev(
         {
             init_status = m8q_ubx_config_dev(config_msgs); 
 
-            if (init_status)
+            if (init_status == M8Q_INVALID_CONFIG)
             {
                 break; 
             }
         }
-        else 
+        else if (msg_type == M8Q_MSG_INVALID)
         {
             return M8Q_INVALID_CONFIG; 
         }
@@ -628,27 +629,29 @@ void m8q_clear_low_pwr_dev(void)
 
 // Send messages to the device 
 M8Q_STATUS m8q_write_dev(
-    char *data, 
+    const char *data, 
     uint8_t data_size)
 {
-    // // Local variables 
-    // I2C_STATUS i2c_status = I2C_OK; 
+    // Local variables 
+    I2C_STATUS i2c_status = I2C_OK; 
 
-    // // Generate a start condition 
-    // i2c_status |= i2c_start(m8q_driver_data.i2c); 
+    // Generate a start condition 
+    i2c_status |= i2c_start(m8q_driver_data.i2c); 
 
-    // // Send the device address with a write offset 
-    // i2c_status |= i2c_write_addr(m8q_driver_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
-    // i2c_clear_addr(m8q_driver_data.i2c); 
+    // Send the device address with a write offset 
+    i2c_status |= i2c_write_addr(m8q_driver_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
+    i2c_clear_addr(m8q_driver_data.i2c); 
 
-    // // Send data (at least 2 bytes) 
-    // i2c_status |= i2c_write(m8q_driver_data.i2c, data, data_size); 
+    // Send data 
+    i2c_status |= i2c_write(m8q_driver_data.i2c, (uint8_t *)data, data_size); 
 
-    // // Generate a stop condition 
-    // i2c_stop(m8q_driver_data.i2c); 
+    // Generate a stop condition 
+    i2c_stop(m8q_driver_data.i2c); 
 
-    // // Update the driver status 
-    // m8q_driver_data.status |= (uint8_t)i2c_status; 
+    if (i2c_status == I2C_TIMEOUT)
+    {
+        return M8Q_WRITE_FAULT; 
+    }
 
     return M8Q_OK; 
 }
@@ -772,13 +775,16 @@ M8Q_STATUS m8q_nmea_config_dev(
     uint8_t field_offset, 
     uint8_t msg_len)
 {
-    // Local variables 
+    // Config message validation variables 
     const char *msg_ptr = config_msg + field_offset; 
     char msg_char = CLEAR; 
     uint8_t msg_field_count = CLEAR; 
     uint8_t msg_term_flag = CLEAR; 
+
+    // Config message formatting variables 
     uint16_t checksum = CLEAR; 
     char msg_str[msg_len + M8Q_NMEA_END_MSG]; 
+    uint8_t msg_str_len = CLEAR; 
 
     // Check the number of message fields, that the fields contain only valid characters, 
     // and that a message termination character ('*') is present. 
@@ -827,13 +833,16 @@ M8Q_STATUS m8q_nmea_config_dev(
     // message contents. Send the formatted message to the device. 
     checksum = m8q_nmea_checksum_dev(config_msg); 
 
-    sprintf(msg_str, "%s%c%c\r\n", config_msg, 
-                                   (char)(checksum >> SHIFT_8), 
-                                   (char)(checksum)); 
+    msg_str_len = (uint8_t)sprintf(msg_str, "%s%c%c\r\n", config_msg, 
+                                                          (char)(checksum >> SHIFT_8), 
+                                                          (char)(checksum)); 
+    
+    if (msg_str_len < 0)
+    {
+        return M8Q_INVALID_CONFIG; 
+    }
 
-    m8q_write_dev(msg_str, m8q_msg_size_dev(msg_str)); 
-
-    return M8Q_OK; 
+    return m8q_write_dev(msg_str, msg_str_len); 
 }
 
 
@@ -848,7 +857,8 @@ uint16_t m8q_nmea_checksum_dev(
     uint16_t checksum = CLEAR; 
 
     // Perform and exlusive OR (XOR) on the NMEA message to calculate the checksum. 
-    // Make sure the start character ('$') is ignored. 
+    // Make sure the start character ('$') is ignored. If the code makes it to this 
+    // point then the message being checked will have a termination asterisks. 
     while (*(++msg) != AST_CHAR) 
     {
         xor_result ^= (uint16_t)(*msg);
