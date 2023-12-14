@@ -52,6 +52,14 @@ unit_tests/*.cache
 unit_tests/*.user
 unit_tests/*.sublime-*
 
-unit_tests/test-lib
-unit_tests/test-obj
-unit_tests/sources
+unit_tests/devices/test-lib
+unit_tests/devices/test-obj
+unit_tests/devices/sources
+
+unit_tests/peripherals/test-lib
+unit_tests/peripherals/test-obj
+unit_tests/peripherals/sources
+
+unit_tests/tools/test-lib
+unit_tests/tools/test-obj
+unit_tests/tools/sources

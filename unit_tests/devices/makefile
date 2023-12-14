@@ -6,7 +6,7 @@ COMPONENT_NAME = your
 
 #--- Inputs ----#
 PROJECT_HOME_DIR = .
-CPPUTEST_HOME = ./../../cpputest
+CPPUTEST_HOME = ./../../../cpputest
 ifeq "$(CPPUTEST_HOME)" ""
 $(error The environment variable CPPUTEST_HOME is not set. \
 Set it to where cpputest is installed)
@@ -29,44 +29,14 @@ endif
 # ------------ DEVICES -------------
 
 # M8Q 
-SRC_FILES += ./../sources/devices/m8q_driver.c             # Production code 
-SRC_DIRS += tests/devices/m8q                              # Test doubles and mocks 
-
-# ----------------------------------
-
-# ---------- PERIPHERALS -----------
-
-# Analog 
-SRC_FILES += ./../sources/peripherals/analog_driver.c      # Production code 
-SRC_DIRS += tests/peripherals/analog                       # Test doubles and mocks 
-
-# GPIO 
-SRC_FILES += ./../sources/peripherals/gpio_driver.c        # Production code 
-
-# I2C 
-SRC_FILES += ./../sources/peripherals/i2c_comm.c           # Production code 
-
-# UART 
-SRC_FILES += ./../sources/peripherals/uart_comm.c          # Production code 
+SRC_FILES += ./../../sources/devices/m8q_driver.c          # Production code 
+SRC_DIRS += tests/m8q                                      # Test doubles 
 
 # ----------------------------------
 
 # ------------- TOOLS --------------
 
-# Switch debounce 
-SRC_FILES += ./../sources/tools/switch_debounce.c          # Production code 
-SRC_DIRS += tests/tools/switch_debounce                    # Test doubles and mocks 
-
-# Tools 
-SRC_FILES += ./../sources/tools/tools.c                    # Production code 
-
-# ----------------------------------
-
-# ----------------------------------
-
-# 
-SRC_DIRS += 
-SRC_FILES += 
+SRC_FILES += ./../../sources/tools/tools.c                 # Production code 
 
 # ----------------------------------
 
@@ -89,31 +59,7 @@ TEST_SRC_FILES +=
 # ------------ DEVICES -------------
 
 # M8Q 
-TEST_SRC_DIRS += tests/devices/m8q             # Unit tests 
-TEST_SRC_FILES += 
-
-# ----------------------------------
-
-# ---------- PERIPHERALS -----------
-
-# Analog 
-TEST_SRC_DIRS += tests/peripherals/analog      # Unit tests 
-TEST_SRC_FILES += 
-
-# ----------------------------------
-
-# ------------- TOOLS --------------
-
-# Switch debounce 
-TEST_SRC_DIRS += tests/tools/switch_debounce   # Unit tests 
-TEST_SRC_FILES += 
-
-# ----------------------------------
-
-# ----------------------------------
-
-# 
-TEST_SRC_DIRS += 
+TEST_SRC_DIRS += tests/m8q                         # Unit tests 
 TEST_SRC_FILES += 
 
 # ----------------------------------
@@ -125,7 +71,12 @@ TEST_SRC_FILES +=
 # MOCKS_SRC_DIRS specifies a directories where you can put your
 # mocks, stubs and fakes.  You can also just put them
 # in TEST_SRC_DIRS
-MOCKS_SRC_DIRS +=
+
+# ------------ DEVICES -------------
+
+MOCKS_SRC_DIRS += mocks
+
+# ----------------------------------
 
 # Turn on CppUMock
 CPPUTEST_USE_EXTENSIONS = Y
@@ -142,43 +93,13 @@ CPPUTEST_USE_EXTENSIONS = Y
 INCLUDE_DIRS += $(CPPUTEST_HOME)/include
 
 # stmcode headers needed to get the tests to build 
-INCLUDE_DIRS += ./../stmcode/Drivers/CMSIS/Device/ST/STM32F4xx/Include
-INCLUDE_DIRS += ./../stmcode/Drivers/CMSIS/Core/Include
+INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Device/ST/STM32F4xx/Include
+INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Core/Include
 
-# ------------ DEVICES -------------
-
-INCLUDE_DIRS += ./../headers/devices            # Production code 
-
-# M8Q 
-INCLUDE_DIRS += tests/devices/m8q               # Test doubles 
-
-# ----------------------------------
-
-# ---------- PERIPHERALS -----------
-
-INCLUDE_DIRS += ./../headers/peripherals        # Production code 
-
-# Analog 
-INCLUDE_DIRS += tests/peripherals/analog        # Test doubles 
-
-# ----------------------------------
-
-# ------------- TOOLS --------------
-
-INCLUDE_DIRS += ./../headers/tools              # Production code 
-
-# Switch debounce 
-INCLUDE_DIRS += tests/tools/switch_debounce     # Test doubles 
-
-# ----------------------------------
-
-# ----------------------------------
-
-# 
-INCLUDE_DIRS += 
-INCLUDE_DIRS += 
-
-# ----------------------------------
+INCLUDE_DIRS += ./../../headers/devices            # Production code 
+INCLUDE_DIRS += ./../../headers/tools              # Production code 
+INCLUDE_DIRS += mocks                              # Mocks 
+INCLUDE_DIRS += tests/m8q                          # Test doubles 
 
 # --------------------------------------------------------------------
 

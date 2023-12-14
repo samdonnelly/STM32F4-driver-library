@@ -28,7 +28,9 @@
 			"limits": "c",
 			"memory": "c",
 			"new": "c",
-			"functional": "c"
+			"functional": "c",
+			"i2c_comm.h": "c",
+			"gpio_driver.h": "c"
 		}
 	}
 }
