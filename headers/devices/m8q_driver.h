@@ -164,7 +164,7 @@ typedef uint8_t M8Q_STATUS;
  */
 M8Q_STATUS m8q_init_dev(
     I2C_TypeDef *i2c, 
-    char *config_msgs, 
+    const char *config_msgs, 
     uint8_t msg_num, 
     uint8_t max_msg_size); 
 

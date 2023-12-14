@@ -44,10 +44,10 @@ SRC_DIRS += tests/peripherals/analog                       # Test doubles and mo
 SRC_FILES += ./../sources/peripherals/gpio_driver.c        # Production code 
 
 # I2C 
-SRC_FILES += ./../sources/peripherals/i2c_comm.c        # Production code 
+SRC_FILES += ./../sources/peripherals/i2c_comm.c           # Production code 
 
 # UART 
-SRC_FILES += ./../sources/peripherals/uart_comm.c        # Production code 
+SRC_FILES += ./../sources/peripherals/uart_comm.c          # Production code 
 
 # ----------------------------------
 

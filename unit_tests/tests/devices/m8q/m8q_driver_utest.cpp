@@ -161,13 +161,13 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_msg_check)
     // - Message G: None 
 
     // Sample PUBX NMEA message 
-    char config_msg_a[] = "$PUBC,40,GGA,0,0,0,0,0,0*"; 
-    char config_msg_b[] = "$PUBX,01,GGA,0,0,0,0,0,0*"; 
-    char config_msg_c[] = "$PUBX,40,GGA,0,0,0,0,&,0*"; 
-    char config_msg_d[] = "$PUBX,40,GGA,0,0,0,0,0*"; 
-    char config_msg_e[] = "$PUBX,40,GGA,0,0,0,0,0,0"; 
-    char config_msg_f[] = "$PUBX,40,GGA,0,0,0,0,0,0*0"; 
-    char config_msg_g[] = "$PUBX,40,GGA,0,0,0,0,0,0*"; 
+    const char config_msg_a[] = "$PUBC,40,GGA,0,0,0,0,0,0*"; 
+    const char config_msg_b[] = "$PUBX,01,GGA,0,0,0,0,0,0*"; 
+    const char config_msg_c[] = "$PUBX,40,GGA,0,0,0,0,&,0*"; 
+    const char config_msg_d[] = "$PUBX,40,GGA,0,0,0,0,0*"; 
+    const char config_msg_e[] = "$PUBX,40,GGA,0,0,0,0,0,0"; 
+    const char config_msg_f[] = "$PUBX,40,GGA,0,0,0,0,0,0*0"; 
+    const char config_msg_g[] = "$PUBX,40,GGA,0,0,0,0,0,0*"; 
 
     M8Q_STATUS init_check_a = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
     M8Q_STATUS init_check_b = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
@@ -204,13 +204,13 @@ TEST(m8q_driver, m8q_init_std_nmea_config_msg_check)
     // - Message G: None 
 
     // Sample standard NMEA message 
-    char config_msg_a[] = "$GCGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
-    char config_msg_b[] = "$GNGRZ,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
-    char config_msg_c[] = "$GNGRS,104148.00,1,2.6,+2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
-    char config_msg_d[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,1,,,1,1*"; 
-    char config_msg_e[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1,"; 
-    char config_msg_f[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*N"; 
-    char config_msg_g[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
+    const char config_msg_a[] = "$GCGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
+    const char config_msg_b[] = "$GNGRZ,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
+    const char config_msg_c[] = "$GNGRS,104148.00,1,2.6,+2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
+    const char config_msg_d[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,1,,,1,1*"; 
+    const char config_msg_e[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1,"; 
+    const char config_msg_f[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*N"; 
+    const char config_msg_g[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
 
     M8Q_STATUS init_check_a = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
     M8Q_STATUS init_check_b = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
@@ -244,11 +244,11 @@ TEST(m8q_driver, m8q_init_ubx_config_msg_check)
     // - Message D: Incorrect number of fields for the specified message 
 
     // Sample UBX message 
-    char config_msg_a[] = "B563,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
-    char config_msg_b[] = "B562,22,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
-    // char config_msg_c[] = ""; 
-    // char config_msg_d[] = ""; 
-    char config_msg_e[] = "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
+    const char config_msg_a[] = "B563,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
+    const char config_msg_b[] = "B562,22,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
+    // const char config_msg_c[] = ""; 
+    // const char config_msg_d[] = ""; 
+    const char config_msg_e[] = "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
 
     M8Q_STATUS init_check_a = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
     M8Q_STATUS init_check_b = m8q_init_dev(&I2C_LOCAL_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 

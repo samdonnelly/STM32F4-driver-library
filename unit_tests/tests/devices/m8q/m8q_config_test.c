@@ -24,7 +24,7 @@
 // Config messages 
 
 // Test packet 
-char m8q_config_pkt[M8Q_CONFIG_NUM_MSG][M8Q_CONFIG_MAX_MSG_LEN] = 
+const char m8q_config_pkt[M8Q_CONFIG_NUM_MSG][M8Q_CONFIG_MAX_MSG_LEN] = 
 {
     // Disable default NMEA messages 
     "$PUBX,40,GGA,0,0,0,0,0,0*",    // GGA disable

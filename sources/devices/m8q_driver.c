@@ -50,9 +50,6 @@
 //=======================================================================================
 // Enums 
 
-//==================================================
-// new 
-
 /**
  * @brief M8Q message type 
  */
@@ -93,97 +90,6 @@ typedef enum {
     M8Q_NUM_FIELDS_VTG = 9, 
     M8Q_NUM_FIELDS_ZDA = 6 
 } m8q_num_fields_t; 
-
-//==================================================
-
-/**
- * @brief M8Q valid read indicator 
- * 
- * @details Used to define a valid or invalid message read in the m8q_read function. m8q_read 
- *          returns the result indicating the type of message read, if any. 
- * 
- * @see m8q_read
- */
-typedef enum {
-    M8Q_READ_INVALID, 
-    M8Q_READ_NMEA, 
-    M8Q_READ_UBX
-} m8q_read_status_t; 
-
-
-/**
- * @brief M8Q NMEA POSITION message data fields 
- * 
- * @details List of all data fields in the POSITION message. This enum allows for indexing 
- *          of the POSITION fields for retreival data in getters. 
- */
-typedef enum {
-    M8Q_POS_TIME, 
-    M8Q_POS_LAT, 
-    M8Q_POS_NS, 
-    M8Q_POS_LON, 
-    M8Q_POS_EW, 
-    M8Q_POS_ALTREF, 
-    M8Q_POS_NAVSTAT, 
-    M8Q_POS_HACC, 
-    M8Q_POS_VACC, 
-    M8Q_POS_SOG, 
-    M8Q_POS_COG, 
-    M8Q_POS_VVEL, 
-    M8Q_POS_DIFFAGE, 
-    M8Q_POS_HDOP, 
-    M8Q_POS_VDOP, 
-    M8Q_POS_TDOP, 
-    M8Q_POS_NUMSVS, 
-    M8Q_POS_RES, 
-    M8Q_POS_DR 
-} m8q_pos_fields_t; 
-
-
-/**
- * @brief M8Q NMEA TIME message data fields 
- * 
- * @details List of all data fields in the TIME message. This enum allows for indexing 
- *          of the TIME fields for retreival data in getters. 
- */
-typedef enum {
-    M8Q_TIME_TIME, 
-    M8Q_TIME_DATE, 
-    M8Q_TIME_UTCTOW, 
-    M8Q_TIME_UTCWK, 
-    M8Q_TIME_LEAPSEC, 
-    M8Q_TIME_CLKBIAS, 
-    M8Q_TIME_CLKDRIFT, 
-    M8Q_TIME_TPGRAN 
-} m8q_time_fields_t; 
-
-
-/**
- * @brief M8Q driver status codes 
- * 
- * @details 
- *          
- *          Old comments: 
- *          - Codes used to indicate errors during NMEA message processing. These codes help 
- *            with debugging. 
- *          - Codes used to indicate errors during UBX message processing. These codes help 
- *            with debugging. 
- */
-typedef enum {
-    M8Q_FAULT_NONE,           // No fault 
-    M8Q_FAULT_NO_DATA,        // No data available 
-    M8Q_FAULT_NMEA_ID,        // Unsupported PUBX message ID 
-    M8Q_FAULT_NMEA_FORM,      // Invalid formatting of PUBX message 
-    M8Q_FAULT_NMEA_INVALID,   // Only PUBX messages are supported 
-    M8Q_FAULT_UBX_SIZE,       // Payload length doesn't match size 
-    M8Q_FAULT_UBX_FORM,       // Invalid payload format 
-    M8Q_FAULT_UBX_LEN,        // Invalid payload length format 
-    M8Q_FAULT_UBX_CONVERT,    // Message conversion failed. Check format 
-    M8Q_FAULT_UBX_ID,         // Invalid ID format 
-    M8Q_FAULT_UBX_NA,         // Unknown message type 
-    M8Q_FAULT_UBX_NAK,        // Message not acknowledged 
-    M8Q_FAULT_UBX_RESP        // Response message sent - only used during user config mode 
-} m8q_status_codes_t; 
 
 //=======================================================================================
 
@@ -457,9 +363,6 @@ const char ubx_msg_class[UBX_CLASS_NUM][UBX_CLASS_LEN] =
 //=======================================================================================
 // Prototypes 
 
-//==================================================
-// new 
-
 /**
  * @brief Send messages to the device 
  * 
@@ -519,7 +422,7 @@ uint8_t m8q_msg_id_check_dev(
  * @param msg_len 
  */
 M8Q_STATUS m8q_nmea_config_dev(
-    char *config_msg, 
+    const char *config_msg, 
     uint8_t num_args, 
     uint8_t field_offset, 
     uint8_t msg_len); 
@@ -559,158 +462,6 @@ M8Q_STATUS m8q_ubx_config_dev(
 uint8_t m8q_msg_size_dev(
     const char *msg); 
 
-//==================================================
-
-/**
- * @brief M8Q message size 
- * 
- * @details Calculates the size of a message by counting up until a termination character 
- *          is seen. The termination character is not counted as part of the length. 
- * 
- * @param msg : pointer to the message of unknown length 
- * @param term_char : character or byte that signifies the end of the message 
- * @return uint8_t : length of the message 
- */
-uint8_t m8q_message_size(
-    uint8_t *msg, 
-    uint8_t term_char); 
-
-
-/**
- * @brief M8Q NMEA message sort 
- * 
- * @details Identifies which NMEA message has been received so an appropriate function 
- *          call to m8q_nmea_parse can be made. If a message received doesn't match any of the 
- *          created data records then the message is ignored. This function gets called 
- *          by the m8q_read function after is reads an incoming NMEA message. 
- * 
- * @see m8q_nmea_parse
- * @see m8q_read 
- * 
- * @param msg : pointer to the message to analyze 
- */
-void m8q_nmea_sort(
-    uint8_t *msg); 
-
-
-/**
- * @brief M8Q NMEA message parse 
- * 
- * @details Parses a full NMEA message payload into it's fields and stores the information 
- *          in the message data record. This function gets called by m8q_nmea_sort when 
- *          an NMEA message with a data record is seen. 
- * 
- * @see m8q_nmea_sort
- * 
- * @param msg : pointer to the message being parsed 
- * @param start_byte : byte to start parsing data - where the payload starts 
- * @param arg_num : number of fields the payload of the message carries 
- * @param data : double pointer to the message data record where the information is stored 
- */
-void m8q_nmea_parse(
-    uint8_t *msg, 
-    uint8_t start_byte, 
-    uint8_t arg_num, 
-    uint8_t **data); 
-
-
-/**
- * @brief M8Q NMEA config function 
- * 
- * @details Checks the format of an outgoing NMEA message and prepares it for sending. 
- *          If the message is not formatted correctly it will not send. The function 
- *          calls m8q_nmea_checksum in order to append that information to the end 
- *          of the message. 
- * 
- * @see m8q_nmea_checksum 
- * 
- * @param msg : pointer to the input message buffer 
- */
-void m8q_nmea_config(
-    uint8_t *msg); 
-
-
-/**
- * @brief M8Q NMEA checkusm calculation 
- * 
- * @details Calculates the NMEA config message checksum to be sent along with the message 
- *          to the receiver using an exlusive OR (XOR) operation on all bytes of the 
- *          message string. 
- * 
- * @param msg : pointer to message buffer  
- * @return uint16_t : checksum of an NMEA message to be sent to the receiver 
- */
-uint16_t m8q_nmea_checksum(
-    uint8_t *msg); 
-
-
-/**
- * @brief M8Q UBX config function 
- * 
- * @details Checks the format of an outgoing UBX message and prepares it for sending. 
- *          If the message is not formatted correctly it will not send. The function 
- *          calls m8q_ubx_checksum in order to append that information to the end 
- *          of the message. UBX messages are input by users as strings of ASCII characters 
- *          but UBX messages are sent as numbers. This function converts messages 
- *          using m8q_ubx_msg_convert before sending. 
- * 
- * @see m8q_ubx_checksum 
- * @see m8q_ubx_msg_convert
- * 
- * @param input_msg : pointer to the input message buffer 
- */
-void m8q_ubx_config(
-    uint8_t *input_msg); 
-
-
-/**
- * @brief M8Q UBX message conversion 
- * 
- * @details Converts a UBX message ASCII character string into it's equivalent decimal 
- *          value so that it can be properly interpreted by the receiver when the message 
- *          is sent. This function gets called by m8q_ubx_config. 
- * 
- * @see m8q_ubx_config
- * 
- * @param input_msg_len : length of the message string being converted 
- * @param input_msg_start : starting byte o message string being converted 
- * @param input_msg : pointer to message string buffer 
- * @param new_msg_byte_count : stores the byte count of the converted message 
- * @param new_msg : pointer to the new (converted) message string buffer 
- * @return M8Q_STATUS : status of the conversion 
- */
-M8Q_STATUS m8q_ubx_msg_convert(
-    uint8_t input_msg_len,
-    uint8_t input_msg_start, 
-    uint8_t *input_msg, 
-    uint16_t *new_msg_byte_count, 
-    uint8_t *new_msg); 
-
-
-/**
- * @brief M8Q UBX checksum calculation 
- * 
- * @details Calculates the checksum of the UBX message. This function is called after 
- *          the message has been verified to be valid and it has been fully converted to 
- *          a readable format for the receiver. 
- * 
- * @param msg : pointer to message buffer 
- * @param len : Length of checksum calculation range 
- * @return uint16_t : checksum of a UBX message to be sent to the receiver 
- */
-uint16_t m8q_ubx_checksum(
-    uint8_t *msg, 
-    uint16_t len); 
-
-
-/**
- * @brief M8Q NMEA config user interface 
- * 
- * @details Prints a prompt to the serial terminal to guide the user during configuration 
- *          of the receiver. 
- */
-void m8q_user_config_prompt(void); 
-
 //=======================================================================================
 
 
@@ -720,7 +471,7 @@ void m8q_user_config_prompt(void);
 // Device initialization 
 M8Q_STATUS m8q_init_dev(
     I2C_TypeDef *i2c, 
-    char *config_msgs, 
+    const char *config_msgs, 
     uint8_t msg_num, 
     uint8_t max_msg_size)
 {
@@ -1016,13 +767,13 @@ uint8_t m8q_msg_id_check_dev(
 
 // Send NMEA configuration messages 
 M8Q_STATUS m8q_nmea_config_dev(
-    char *config_msg, 
+    const char *config_msg, 
     uint8_t num_args, 
     uint8_t field_offset, 
     uint8_t msg_len)
 {
     // Local variables 
-    char *msg_ptr = config_msg + field_offset; 
+    const char *msg_ptr = config_msg + field_offset; 
     char msg_char = CLEAR; 
     uint8_t msg_field_count = CLEAR; 
     uint8_t msg_term_flag = CLEAR; 
@@ -1144,6 +895,265 @@ uint8_t m8q_msg_size_dev(
 
 
 
+
+
+
+// Old Code 
+
+
+
+
+
+
+//=======================================================================================
+// Enums 
+
+/**
+ * @brief M8Q valid read indicator 
+ * 
+ * @details Used to define a valid or invalid message read in the m8q_read function. m8q_read 
+ *          returns the result indicating the type of message read, if any. 
+ * 
+ * @see m8q_read
+ */
+typedef enum {
+    M8Q_READ_INVALID, 
+    M8Q_READ_NMEA, 
+    M8Q_READ_UBX
+} m8q_read_status_t; 
+
+
+/**
+ * @brief M8Q NMEA POSITION message data fields 
+ * 
+ * @details List of all data fields in the POSITION message. This enum allows for indexing 
+ *          of the POSITION fields for retreival data in getters. 
+ */
+typedef enum {
+    M8Q_POS_TIME, 
+    M8Q_POS_LAT, 
+    M8Q_POS_NS, 
+    M8Q_POS_LON, 
+    M8Q_POS_EW, 
+    M8Q_POS_ALTREF, 
+    M8Q_POS_NAVSTAT, 
+    M8Q_POS_HACC, 
+    M8Q_POS_VACC, 
+    M8Q_POS_SOG, 
+    M8Q_POS_COG, 
+    M8Q_POS_VVEL, 
+    M8Q_POS_DIFFAGE, 
+    M8Q_POS_HDOP, 
+    M8Q_POS_VDOP, 
+    M8Q_POS_TDOP, 
+    M8Q_POS_NUMSVS, 
+    M8Q_POS_RES, 
+    M8Q_POS_DR 
+} m8q_pos_fields_t; 
+
+
+/**
+ * @brief M8Q NMEA TIME message data fields 
+ * 
+ * @details List of all data fields in the TIME message. This enum allows for indexing 
+ *          of the TIME fields for retreival data in getters. 
+ */
+typedef enum {
+    M8Q_TIME_TIME, 
+    M8Q_TIME_DATE, 
+    M8Q_TIME_UTCTOW, 
+    M8Q_TIME_UTCWK, 
+    M8Q_TIME_LEAPSEC, 
+    M8Q_TIME_CLKBIAS, 
+    M8Q_TIME_CLKDRIFT, 
+    M8Q_TIME_TPGRAN 
+} m8q_time_fields_t; 
+
+
+/**
+ * @brief M8Q driver status codes 
+ * 
+ * @details 
+ *          
+ *          Old comments: 
+ *          - Codes used to indicate errors during NMEA message processing. These codes help 
+ *            with debugging. 
+ *          - Codes used to indicate errors during UBX message processing. These codes help 
+ *            with debugging. 
+ */
+typedef enum {
+    M8Q_FAULT_NONE,           // No fault 
+    M8Q_FAULT_NO_DATA,        // No data available 
+    M8Q_FAULT_NMEA_ID,        // Unsupported PUBX message ID 
+    M8Q_FAULT_NMEA_FORM,      // Invalid formatting of PUBX message 
+    M8Q_FAULT_NMEA_INVALID,   // Only PUBX messages are supported 
+    M8Q_FAULT_UBX_SIZE,       // Payload length doesn't match size 
+    M8Q_FAULT_UBX_FORM,       // Invalid payload format 
+    M8Q_FAULT_UBX_LEN,        // Invalid payload length format 
+    M8Q_FAULT_UBX_CONVERT,    // Message conversion failed. Check format 
+    M8Q_FAULT_UBX_ID,         // Invalid ID format 
+    M8Q_FAULT_UBX_NA,         // Unknown message type 
+    M8Q_FAULT_UBX_NAK,        // Message not acknowledged 
+    M8Q_FAULT_UBX_RESP        // Response message sent - only used during user config mode 
+} m8q_status_codes_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Prototypes 
+
+/**
+ * @brief M8Q message size 
+ * 
+ * @details Calculates the size of a message by counting up until a termination character 
+ *          is seen. The termination character is not counted as part of the length. 
+ * 
+ * @param msg : pointer to the message of unknown length 
+ * @param term_char : character or byte that signifies the end of the message 
+ * @return uint8_t : length of the message 
+ */
+uint8_t m8q_message_size(
+    uint8_t *msg, 
+    uint8_t term_char); 
+
+
+/**
+ * @brief M8Q NMEA message sort 
+ * 
+ * @details Identifies which NMEA message has been received so an appropriate function 
+ *          call to m8q_nmea_parse can be made. If a message received doesn't match any of the 
+ *          created data records then the message is ignored. This function gets called 
+ *          by the m8q_read function after is reads an incoming NMEA message. 
+ * 
+ * @see m8q_nmea_parse
+ * @see m8q_read 
+ * 
+ * @param msg : pointer to the message to analyze 
+ */
+void m8q_nmea_sort(
+    uint8_t *msg); 
+
+
+/**
+ * @brief M8Q NMEA message parse 
+ * 
+ * @details Parses a full NMEA message payload into it's fields and stores the information 
+ *          in the message data record. This function gets called by m8q_nmea_sort when 
+ *          an NMEA message with a data record is seen. 
+ * 
+ * @see m8q_nmea_sort
+ * 
+ * @param msg : pointer to the message being parsed 
+ * @param start_byte : byte to start parsing data - where the payload starts 
+ * @param arg_num : number of fields the payload of the message carries 
+ * @param data : double pointer to the message data record where the information is stored 
+ */
+void m8q_nmea_parse(
+    uint8_t *msg, 
+    uint8_t start_byte, 
+    uint8_t arg_num, 
+    uint8_t **data); 
+
+
+/**
+ * @brief M8Q NMEA config function 
+ * 
+ * @details Checks the format of an outgoing NMEA message and prepares it for sending. 
+ *          If the message is not formatted correctly it will not send. The function 
+ *          calls m8q_nmea_checksum in order to append that information to the end 
+ *          of the message. 
+ * 
+ * @see m8q_nmea_checksum 
+ * 
+ * @param msg : pointer to the input message buffer 
+ */
+void m8q_nmea_config(
+    uint8_t *msg); 
+
+
+/**
+ * @brief M8Q NMEA checkusm calculation 
+ * 
+ * @details Calculates the NMEA config message checksum to be sent along with the message 
+ *          to the receiver using an exlusive OR (XOR) operation on all bytes of the 
+ *          message string. 
+ * 
+ * @param msg : pointer to message buffer  
+ * @return uint16_t : checksum of an NMEA message to be sent to the receiver 
+ */
+uint16_t m8q_nmea_checksum(
+    uint8_t *msg); 
+
+
+/**
+ * @brief M8Q UBX config function 
+ * 
+ * @details Checks the format of an outgoing UBX message and prepares it for sending. 
+ *          If the message is not formatted correctly it will not send. The function 
+ *          calls m8q_ubx_checksum in order to append that information to the end 
+ *          of the message. UBX messages are input by users as strings of ASCII characters 
+ *          but UBX messages are sent as numbers. This function converts messages 
+ *          using m8q_ubx_msg_convert before sending. 
+ * 
+ * @see m8q_ubx_checksum 
+ * @see m8q_ubx_msg_convert
+ * 
+ * @param input_msg : pointer to the input message buffer 
+ */
+void m8q_ubx_config(
+    uint8_t *input_msg); 
+
+
+/**
+ * @brief M8Q UBX message conversion 
+ * 
+ * @details Converts a UBX message ASCII character string into it's equivalent decimal 
+ *          value so that it can be properly interpreted by the receiver when the message 
+ *          is sent. This function gets called by m8q_ubx_config. 
+ * 
+ * @see m8q_ubx_config
+ * 
+ * @param input_msg_len : length of the message string being converted 
+ * @param input_msg_start : starting byte o message string being converted 
+ * @param input_msg : pointer to message string buffer 
+ * @param new_msg_byte_count : stores the byte count of the converted message 
+ * @param new_msg : pointer to the new (converted) message string buffer 
+ * @return M8Q_STATUS : status of the conversion 
+ */
+M8Q_STATUS m8q_ubx_msg_convert(
+    uint8_t input_msg_len,
+    uint8_t input_msg_start, 
+    uint8_t *input_msg, 
+    uint16_t *new_msg_byte_count, 
+    uint8_t *new_msg); 
+
+
+/**
+ * @brief M8Q UBX checksum calculation 
+ * 
+ * @details Calculates the checksum of the UBX message. This function is called after 
+ *          the message has been verified to be valid and it has been fully converted to 
+ *          a readable format for the receiver. 
+ * 
+ * @param msg : pointer to message buffer 
+ * @param len : Length of checksum calculation range 
+ * @return uint16_t : checksum of a UBX message to be sent to the receiver 
+ */
+uint16_t m8q_ubx_checksum(
+    uint8_t *msg, 
+    uint16_t len); 
+
+
+/**
+ * @brief M8Q NMEA config user interface 
+ * 
+ * @details Prints a prompt to the serial terminal to guide the user during configuration 
+ *          of the receiver. 
+ */
+void m8q_user_config_prompt(void); 
+
+//=======================================================================================
 
 
 //=======================================================================================
