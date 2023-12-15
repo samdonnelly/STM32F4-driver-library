@@ -65,31 +65,31 @@ typedef enum {
  * @brief Number of fields in a message 
  */
 typedef enum {
-    M8Q_NUM_FIELDS_POSITION = 19, 
-    M8Q_NUM_FIELDS_SVSTATUS = 7, 
-    M8Q_NUM_FIELDS_TIME = 8, 
-    M8Q_NUM_FIELDS_RATE = 7, 
-    M8Q_NUM_FIELDS_CONFIG = 5, 
-    M8Q_NUM_FIELDS_DTM = 8, 
-    M8Q_NUM_FIELDS_GBQ = 1, 
-    M8Q_NUM_FIELDS_GBS = 10, 
-    M8Q_NUM_FIELDS_GGA = 14, 
-    M8Q_NUM_FIELDS_GLL = 7, 
-    M8Q_NUM_FIELDS_GLQ = 1, 
-    M8Q_NUM_FIELDS_GNQ = 1, 
-    M8Q_NUM_FIELDS_GNS = 13, 
-    M8Q_NUM_FIELDS_GPQ = 1, 
-    M8Q_NUM_FIELDS_GRS = 16, 
-    M8Q_NUM_FIELDS_GSA = 18, 
-    M8Q_NUM_FIELDS_GST = 8, 
-    M8Q_NUM_FIELDS_GSV = 8, 
-    M8Q_NUM_FIELDS_RMC = 13, 
-    M8Q_NUM_FIELDS_THS = 2, 
-    M8Q_NUM_FIELDS_TXT = 4, 
-    M8Q_NUM_FIELDS_VLW = 8, 
-    M8Q_NUM_FIELDS_VTG = 9, 
-    M8Q_NUM_FIELDS_ZDA = 6 
-} m8q_num_fields_t; 
+    NMEA_NUM_FIELDS_POSITION = 19, 
+    NMEA_NUM_FIELDS_SVSTATUS = 7, 
+    NMEA_NUM_FIELDS_TIME = 8, 
+    NMEA_NUM_FIELDS_RATE = 7, 
+    NMEA_NUM_FIELDS_CONFIG = 5, 
+    NMEA_NUM_FIELDS_DTM = 8, 
+    NMEA_NUM_FIELDS_GBQ = 1, 
+    NMEA_NUM_FIELDS_GBS = 10, 
+    NMEA_NUM_FIELDS_GGA = 14, 
+    NMEA_NUM_FIELDS_GLL = 7, 
+    NMEA_NUM_FIELDS_GLQ = 1, 
+    NMEA_NUM_FIELDS_GNQ = 1, 
+    NMEA_NUM_FIELDS_GNS = 13, 
+    NMEA_NUM_FIELDS_GPQ = 1, 
+    NMEA_NUM_FIELDS_GRS = 16, 
+    NMEA_NUM_FIELDS_GSA = 18, 
+    NMEA_NUM_FIELDS_GST = 8, 
+    NMEA_NUM_FIELDS_GSV = 8, 
+    NMEA_NUM_FIELDS_RMC = 13, 
+    NMEA_NUM_FIELDS_THS = 2, 
+    NMEA_NUM_FIELDS_TXT = 4, 
+    NMEA_NUM_FIELDS_VLW = 8, 
+    NMEA_NUM_FIELDS_VTG = 9, 
+    NMEA_NUM_FIELDS_ZDA = 6 
+} nmea_num_fields_t; 
 
 //=======================================================================================
 
@@ -203,7 +203,7 @@ static m8q_driver_data_t m8q_driver_data;
 // Indexing 
 
 // NMEA POSITION message 
-static uint8_t* position[M8Q_NUM_FIELDS_POSITION+1] = 
+static uint8_t* position[NMEA_NUM_FIELDS_POSITION+1] = 
 { 
     m8q_driver_data.pos_data.time, 
     m8q_driver_data.pos_data.lat, 
@@ -228,7 +228,7 @@ static uint8_t* position[M8Q_NUM_FIELDS_POSITION+1] =
 }; 
 
 // NMEA TIME message 
-static uint8_t* time[M8Q_NUM_FIELDS_TIME+1] = 
+static uint8_t* time[NMEA_NUM_FIELDS_TIME+1] = 
 { 
     m8q_driver_data.time_data.time, 
     m8q_driver_data.time_data.date, 
@@ -289,11 +289,11 @@ const char nmea_pubx_msg_id[] = "PUBX";
 // NMEA PUBX messages 
 static nmea_msg_format_t nmea_pubx_msgs[NMEA_PUBX_NUM_MSGS] =   
 {
-    {"00", {M8Q_NUM_FIELDS_POSITION, position}},   // POSITION 
-    {"03", {M8Q_NUM_FIELDS_SVSTATUS, NULL}},       // SVSTATUS 
-    {"04", {M8Q_NUM_FIELDS_TIME, time}},           // TIME 
-    {"40", {M8Q_NUM_FIELDS_RATE, NULL}},           // RATE 
-    {"41", {M8Q_NUM_FIELDS_CONFIG, NULL}}          // CONFIG 
+    {"00", {NMEA_NUM_FIELDS_POSITION, position}},   // POSITION 
+    {"03", {NMEA_NUM_FIELDS_SVSTATUS, NULL}},       // SVSTATUS 
+    {"04", {NMEA_NUM_FIELDS_TIME, time}},           // TIME 
+    {"40", {NMEA_NUM_FIELDS_RATE, NULL}},           // RATE 
+    {"41", {NMEA_NUM_FIELDS_CONFIG, NULL}}          // CONFIG 
 }; 
 
 // NMEA talker IDs 
@@ -309,25 +309,25 @@ const char nmea_std_msg_id[NMEA_STD_ID_NUM][NMEA_STD_ID_LEN] =
 // NMEA standard messages 
 static nmea_msg_format_t nmea_std_msgs[NMEA_STD_NUM_MSGS] =   
 {
-    {"DTM", {M8Q_NUM_FIELDS_DTM, NULL}},   // Datum reference 
-    {"GBQ", {M8Q_NUM_FIELDS_GBQ, NULL}},   // Poll a standard message (Talker ID GB) 
-    {"GBS", {M8Q_NUM_FIELDS_GBS, NULL}},   // GNSS satellite fault detection 
-    {"GGA", {M8Q_NUM_FIELDS_GGA, NULL}},   // Global positioning system fix data 
-    {"GLL", {M8Q_NUM_FIELDS_GLL, NULL}},   // Lat and long, with time of position fix and status 
-    {"GLQ", {M8Q_NUM_FIELDS_GLQ, NULL}},   // Poll a standard message (Talker ID GL) 
-    {"GNQ", {M8Q_NUM_FIELDS_GNQ, NULL}},   // Poll a standard message (Talker ID GN) 
-    {"GNS", {M8Q_NUM_FIELDS_GNS, NULL}},   // GNSS fix data 
-    {"GPQ", {M8Q_NUM_FIELDS_GPQ, NULL}},   // Poll a standard message (Talker ID GP) 
-    {"GRS", {M8Q_NUM_FIELDS_GRS, NULL}},   // GNSS range residuals 
-    {"GSA", {M8Q_NUM_FIELDS_GSA, NULL}},   // GNSS DOP and active satellites 
-    {"GST", {M8Q_NUM_FIELDS_GST, NULL}},   // GNSS pseudorange error statistics 
-    {"GSV", {M8Q_NUM_FIELDS_GSV, NULL}},   // GNSS satellites in view 
-    {"RMC", {M8Q_NUM_FIELDS_RMC, NULL}},   // Recommended minimum data 
-    {"THS", {M8Q_NUM_FIELDS_THS, NULL}},   // True heading and status 
-    {"TXT", {M8Q_NUM_FIELDS_TXT, NULL}},   // Text transmission 
-    {"VLW", {M8Q_NUM_FIELDS_VLW, NULL}},   // Dual ground/water distance 
-    {"VTG", {M8Q_NUM_FIELDS_VTG, NULL}},   // Course over ground and ground speed 
-    {"ZDA", {M8Q_NUM_FIELDS_ZDA, NULL}}    // Time and data 
+    {"DTM", {NMEA_NUM_FIELDS_DTM, NULL}},   // Datum reference 
+    {"GBQ", {NMEA_NUM_FIELDS_GBQ, NULL}},   // Poll a standard message (Talker ID GB) 
+    {"GBS", {NMEA_NUM_FIELDS_GBS, NULL}},   // GNSS satellite fault detection 
+    {"GGA", {NMEA_NUM_FIELDS_GGA, NULL}},   // Global positioning system fix data 
+    {"GLL", {NMEA_NUM_FIELDS_GLL, NULL}},   // Lat and long, with time of position fix and status 
+    {"GLQ", {NMEA_NUM_FIELDS_GLQ, NULL}},   // Poll a standard message (Talker ID GL) 
+    {"GNQ", {NMEA_NUM_FIELDS_GNQ, NULL}},   // Poll a standard message (Talker ID GN) 
+    {"GNS", {NMEA_NUM_FIELDS_GNS, NULL}},   // GNSS fix data 
+    {"GPQ", {NMEA_NUM_FIELDS_GPQ, NULL}},   // Poll a standard message (Talker ID GP) 
+    {"GRS", {NMEA_NUM_FIELDS_GRS, NULL}},   // GNSS range residuals 
+    {"GSA", {NMEA_NUM_FIELDS_GSA, NULL}},   // GNSS DOP and active satellites 
+    {"GST", {NMEA_NUM_FIELDS_GST, NULL}},   // GNSS pseudorange error statistics 
+    {"GSV", {NMEA_NUM_FIELDS_GSV, NULL}},   // GNSS satellites in view 
+    {"RMC", {NMEA_NUM_FIELDS_RMC, NULL}},   // Recommended minimum data 
+    {"THS", {NMEA_NUM_FIELDS_THS, NULL}},   // True heading and status 
+    {"TXT", {NMEA_NUM_FIELDS_TXT, NULL}},   // Text transmission 
+    {"VLW", {NMEA_NUM_FIELDS_VLW, NULL}},   // Dual ground/water distance 
+    {"VTG", {NMEA_NUM_FIELDS_VTG, NULL}},   // Course over ground and ground speed 
+    {"ZDA", {NMEA_NUM_FIELDS_ZDA, NULL}}    // Time and data 
 }; 
 
 //==================================================
@@ -883,6 +883,16 @@ uint16_t m8q_nmea_checksum_dev(
 M8Q_STATUS m8q_ubx_config_dev(
     const char *config_msg)
 {
+    // Check for an ID (not checking for a valid one since there are so many) 
+    // Check for and record a length (this will be used to verify the rest) 
+    // Check for a payload and that the length matches 
+    // Terminated by an asterisks 
+    // Checksum calculated and added at the end 
+    // Invalid inputs: 
+    // - Not having ID, LENGTH and PAYLOAD parts 
+    // - Length parameter matches number of payload inputs 
+    // - Invalid characters 
+    
     return M8Q_OK; 
 }
 
