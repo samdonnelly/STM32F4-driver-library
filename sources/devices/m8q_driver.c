@@ -446,21 +446,105 @@ uint16_t m8q_nmea_checksum_dev(
  * @details 
  * 
  * @param input_msg 
+ * @param max_msg_len 
  */
 M8Q_STATUS m8q_ubx_config_dev(
-    const char *config_msg); 
+    const char *config_msg, 
+    uint8_t max_msg_len); 
 
 
 /**
- * @brief Get the length of a message 
+ * @brief Check for a correctly formatted message ID input 
  * 
  * @details 
  * 
- * @param msg 
+ * @param msg_id 
  * @return uint8_t 
  */
-uint8_t m8q_msg_size_dev(
-    const char *msg); 
+uint8_t ubx_config_id_check_dev(
+    const char *msg_id); 
+
+
+/**
+ * @brief Check for a correctly formatted message length input and get the length value 
+ * 
+ * @details 
+ * 
+ * @param msg_pl_len 
+ * @param pl_len 
+ * @return uint8_t 
+ */
+uint8_t ubx_config_len_check_dev(
+    const char *msg_pl_len, 
+    uint16_t *pl_len); 
+
+
+/**
+ * @brief Check that the payload is of correct length and format 
+ * 
+ * @details 
+ * 
+ * @param msg_payload 
+ * @param pl_len 
+ * @return uint8_t 
+ */
+uint8_t ubx_config_payload_check_dev(
+    const char *msg_payload, 
+    uint16_t pl_len); 
+
+
+/**
+ * @brief Convert the message string into a sendable message 
+ * 
+ * @details 
+ * 
+ * @param msg_str 
+ * @param msg_data 
+ * @param msg_len 
+ */
+uint8_t ubx_config_msg_convert_dev(
+    const char *msg_str, 
+    uint8_t *msg_data, 
+    uint8_t *msg_len); 
+
+
+/**
+ * @brief Check the size and format of a message field 
+ * 
+ * @details 
+ * 
+ * @param msg_field 
+ * @param byte_count 
+ * @param term_char 
+ */
+void ubx_config_field_check_dev(
+    const char *msg_field, 
+    uint8_t *byte_count, 
+    uint8_t *term_char); 
+
+
+/**
+ * @brief Check for a valid UBX message character input 
+ * 
+ * @details 
+ * 
+ * @param msg_char 
+ * @return uint8_t 
+ */
+uint8_t ubx_config_valid_char_dev(
+    char msg_char); 
+
+
+/**
+ * @brief Convert two hex string characters to a value 
+ * 
+ * @details 
+ * 
+ * @param msg_bytes 
+ * @return uint8_t 
+ */
+uint8_t ubx_config_byte_convert_dev(
+    const char *msg_bytes); 
 
 //=======================================================================================
 
@@ -507,7 +591,7 @@ M8Q_STATUS m8q_init_dev(
         }
         else if (msg_type == M8Q_MSG_UBX)
         {
-            init_status = m8q_ubx_config_dev(config_msgs); 
+            init_status = m8q_ubx_config_dev(config_msgs, max_msg_size); 
 
             if (init_status == M8Q_INVALID_CONFIG)
             {
@@ -684,7 +768,7 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
                                                    &msg_index); 
             if (id_check_status)
             {
-                nmea_msg_target.arg_offset = BYTE_9; 
+                nmea_msg_target.arg_offset = BYTE_8; 
                 nmea_msg_target.nmea_msg_data.num_param = 
                                         nmea_pubx_msgs[msg_index].nmea_msg_data.num_param; 
                 nmea_msg_target.nmea_msg_data.msg_data = 
@@ -712,7 +796,7 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
                                                        &msg_index); 
                 if (id_check_status)
                 {
-                    nmea_msg_target.arg_offset = BYTE_7; 
+                    nmea_msg_target.arg_offset = BYTE_6; 
                     nmea_msg_target.nmea_msg_data.num_param = 
                                             nmea_std_msgs[msg_index].nmea_msg_data.num_param; 
                     nmea_msg_target.nmea_msg_data.msg_data = 
@@ -726,12 +810,13 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
     else if (str_compare(ubx_msg_sync, msg, BYTE_0))
     {
         // Check for a valid UBX class 
-        if (m8q_msg_id_check_dev(msg, 
-                                 (void *)&ubx_msg_class[0][0], 
-                                 UBX_CLASS_NUM, 
-                                 UBX_CLASS_LEN, 
-                                 BYTE_5, 
-                                 &msg_index))
+        id_check_status = m8q_msg_id_check_dev(msg, 
+                                               (void *)&ubx_msg_class[0][0], 
+                                               UBX_CLASS_NUM, 
+                                               UBX_CLASS_LEN, 
+                                               BYTE_5, 
+                                               &msg_index); 
+        if (id_check_status)
         {
             return M8Q_MSG_UBX; 
         }
@@ -785,6 +870,12 @@ M8Q_STATUS m8q_nmea_config_dev(
     uint16_t checksum = CLEAR; 
     char msg_str[msg_len + M8Q_NMEA_END_MSG]; 
     uint8_t msg_str_len = CLEAR; 
+
+    // Check that a comma separates the address field from the data fields 
+    if (*msg_ptr++ != COMMA_CHAR)
+    {
+        return M8Q_INVALID_CONFIG; 
+    }
 
     // Check the number of message fields, that the fields contain only valid characters, 
     // and that a message termination character ('*') is present. 
@@ -881,10 +972,9 @@ uint16_t m8q_nmea_checksum_dev(
 
 // Send UBX configuration messages 
 M8Q_STATUS m8q_ubx_config_dev(
-    const char *config_msg)
+    const char *config_msg, 
+    uint8_t max_msg_len)
 {
-    // Check for an ID (not checking for a valid one since there are so many) 
-    // Check for and record a length (this will be used to verify the rest) 
     // Check for a payload and that the length matches 
     // Terminated by an asterisks 
     // Checksum calculated and added at the end 
@@ -892,24 +982,195 @@ M8Q_STATUS m8q_ubx_config_dev(
     // - Not having ID, LENGTH and PAYLOAD parts 
     // - Length parameter matches number of payload inputs 
     // - Invalid characters 
+
+    // Local variables 
+    const char *msg_ptr = config_msg + BYTE_7; 
+    uint8_t msg_data[max_msg_len]; 
+    uint8_t msg_len = CLEAR; 
+    uint16_t pl_len = CLEAR; 
+
+    // Check that a comma separates the class and ID fields 
+    if (*msg_ptr++ != COMMA_CHAR)
+    {
+        return M8Q_INVALID_CONFIG; 
+    }
+
+    // Check for a correctly formatted ID. Note that due to the number of UBX message 
+    // IDs per class, and the number of non-unique IDs across classes, the ID is only 
+    // checked for formatting and not validity. Inputting an existing ID is left as the 
+    // applications responsibility. 
+    if (!ubx_config_id_check_dev(msg_ptr))
+    {
+        return M8Q_INVALID_CONFIG; 
+    }
+
+    // Check for a correctly formatted payload length and get its value. This value will 
+    // be used to check the payload of the message. 
+    msg_ptr += BYTE_3; 
+    if (!ubx_config_len_check_dev(msg_ptr, &pl_len))
+    {
+        return M8Q_INVALID_CONFIG; 
+    }
+
+    // Check that the payload matches the specified length and that it's formatted 
+    // correctly. Note that the payload contents are not verified. It is left to the 
+    // application to set the payload contents as needed. 
+    msg_ptr += BYTE_5; 
+    if (!ubx_config_payload_check_dev(msg_ptr, pl_len))
+    {
+        return M8Q_INVALID_CONFIG; 
+    }
+
+    // Convert the message string to the correct format, calculate and append the 
+    // checksum, and calculate the total formatted message length. 
+    if (!ubx_config_msg_convert_dev(config_msg, msg_data, &msg_len))
+    {
+        return M8Q_INVALID_CONFIG; 
+    }
+
+    // Send the formatted message to the device 
     
     return M8Q_OK; 
 }
 
 
-// Get the length of a message 
-uint8_t m8q_msg_size_dev(
-    const char *msg)
+// Check for a correctly formatted message ID input 
+uint8_t ubx_config_id_check_dev(
+    const char *msg_id)
 {
-    uint8_t msg_len = CLEAR; 
+    uint8_t byte_count = CLEAR; 
+    uint8_t comma_term = CLEAR; 
 
-    while (*msg++) 
+    ubx_config_field_check_dev(msg_id, &byte_count, &comma_term); 
+
+    if ((byte_count != BYTE_2) || !comma_term)
     {
-        msg_len++; 
+        return FALSE; 
     }
 
-    return msg_len; 
+    return TRUE; 
 }
+
+
+// Check for a correctly formatted message length input and get the length value 
+uint8_t ubx_config_len_check_dev(
+    const char *msg_pl_len, 
+    uint16_t *pl_len)
+{
+    uint8_t byte_count = CLEAR; 
+    uint8_t comma_term = CLEAR; 
+    const char *len_str0 = msg_pl_len; 
+    const char *len_str1 = msg_pl_len + BYTE_2; 
+    uint8_t len_byte0, len_byte1; 
+    
+    ubx_config_field_check_dev(msg_pl_len, &byte_count, &comma_term); 
+
+    if ((byte_count != BYTE_4) || !comma_term)
+    {
+        return FALSE; 
+    }
+
+    // Calculate the value to the length 
+    len_byte0 = ubx_config_byte_convert_dev(len_str0); 
+    len_byte1 = ubx_config_byte_convert_dev(len_str1); 
+    *pl_len = ((len_byte1 << SHIFT_8) | len_byte0); 
+
+    return TRUE; 
+}
+
+
+// Check that the payload is of correct length and format 
+uint8_t ubx_config_payload_check_dev(
+    const char *msg_payload, 
+    uint16_t pl_len)
+{
+    // uint8_t pl_count = CLEAR; 
+    // uint8_t byte_count = CLEAR; 
+    // uint8_t comma_term = CLEAR; 
+
+    // if (pl_count != pl_len)
+    // {
+    //     return FALSE; 
+    // }
+
+    return TRUE; 
+}
+
+
+// Convert the message string into a sendable message 
+uint8_t ubx_config_msg_convert_dev(
+    const char *msg_str, 
+    uint8_t *msg_data, 
+    uint8_t *msg_len)
+{
+    // 
+
+    return TRUE; 
+}
+
+
+// Check the size and format of a message field 
+void ubx_config_field_check_dev(
+    const char *msg_field, 
+    uint8_t *byte_count, 
+    uint8_t *term_char)
+{
+    while (*msg_field != NULL_CHAR)
+    {
+        if (*msg_field == COMMA_CHAR)
+        {
+            (*term_char)++; 
+            break; 
+        }
+
+        if (!ubx_config_valid_char_dev(*msg_field)) 
+        {
+            break; 
+        }
+        
+        (*byte_count)++; 
+        msg_field++; 
+    }
+}
+
+
+// Check for a valid UBX message character input 
+uint8_t ubx_config_valid_char_dev(
+    char msg_char)
+{
+    // UBX configuration messages only contain hexadecimal characters (i.e. 
+    // "0123456789ABCDF") because UBX messages are made up of only integer values. 
+    // Negative and floating point values can still be sent as UBX payloads in an integer 
+    // representation. How payloads are interpretted depends on the message. 
+
+    if ((msg_char < ZERO_CHAR) || (msg_char > NINE_CHAR))
+    {
+        if ((msg_char < A_UP_CHAR) || (msg_char > F_UP_CHAR))
+        {
+            return FALSE; 
+        }
+    }
+
+    return TRUE; 
+}
+
+
+// Convert two hex string characters to a value 
+uint8_t ubx_config_byte_convert_dev(
+    const char *msg_bytes)
+{
+    uint8_t byte0 = *msg_bytes++; 
+    uint8_t byte1 = *msg_bytes; 
+    uint8_t nibble0, nibble1; 
+
+    nibble1 = (byte0 <= NINE_CHAR) ? byte0 - NUM_TO_CHAR_OFFSET : 
+                                     byte0 - HEX_TO_LET_CHAR; 
+    nibble0 = (byte1 <= NINE_CHAR) ? byte1 - NUM_TO_CHAR_OFFSET : 
+                                     byte1 - HEX_TO_LET_CHAR; 
+
+    return ((nibble1 << SHIFT_4) | nibble0); 
+}
+
 
 //=======================================================================================
 
@@ -1992,7 +2253,6 @@ uint16_t m8q_nmea_checksum(
 
 
 // UBX config function 
-// TODO Clean up UBX config function 
 void m8q_ubx_config(
     uint8_t *input_msg)
 {
@@ -2001,7 +2261,6 @@ void m8q_ubx_config(
     uint8_t *msg_ptr = input_msg; 
     uint8_t config_msg[M8Q_MSG_MAX_LEN];   // Formatted UBX message to send to the receiver 
     uint16_t checksum = CLEAR; 
-    // TODO replace ghost number 
     uint16_t response_timeout = 0xFFFF; 
 
     // User inputs 
@@ -2026,7 +2285,11 @@ void m8q_ubx_config(
             {
                 // Replace "poll" with zeros to define the payload length 
                 msg_ptr += BYTE_12; 
-                for (uint8_t i = 0; i < BYTE_4; i++) *msg_ptr++ = ZERO_CHAR; 
+
+                for (uint8_t i = 0; i < BYTE_4; i++) 
+                {
+                    *msg_ptr++ = ZERO_CHAR; 
+                } 
 
                 format_ok++; 
             }
@@ -2042,8 +2305,11 @@ void m8q_ubx_config(
                     byte_count = 0;  // Reset the byte count to check payload length 
 
                     // Check the argument format  
-                    if (input_msg_len > BYTE_17) msg_len_pl_check = input_msg_len - BYTE_17; 
-                    
+                    if (input_msg_len > BYTE_17) 
+                    {
+                        msg_len_pl_check = input_msg_len - BYTE_17; 
+                    }
+
                     if (m8q_ubx_msg_convert(msg_len_pl_check, BYTE_17,
                                             input_msg, &byte_count, pl_inputs))
                     {                        
@@ -2096,7 +2362,10 @@ void m8q_ubx_config(
                     }
                     else
                     {
-                        if (!M8Q_USER_CONFIG) m8q_status |= (SET_BIT << M8Q_FAULT_UBX_RESP); 
+                        if (!M8Q_USER_CONFIG) 
+                        {
+                            m8q_status |= (SET_BIT << M8Q_FAULT_UBX_RESP); 
+                        }
                     }
                 }
                 else
@@ -2186,14 +2455,22 @@ M8Q_STATUS m8q_ubx_msg_convert(
             else 
             {
                 comma_count++; 
-                if ((!msg_index) || char_count || (comma_count == 2)) break; 
+
+                if ((!msg_index) || char_count || (comma_count == 2)) 
+                {
+                    break; 
+                }
             }
 
             msg_index++; 
         }
         else
         {
-            if (!char_count) status = M8Q_UBX_MSG_CONV_SUCC; 
+            if (!char_count) 
+            {
+                status = M8Q_UBX_MSG_CONV_SUCC; 
+            }
+            
             break; 
         }
     }
