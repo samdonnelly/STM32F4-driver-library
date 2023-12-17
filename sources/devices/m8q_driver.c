@@ -486,13 +486,11 @@ uint8_t ubx_config_len_check_dev(
  * 
  * @param msg_payload 
  * @param pl_len 
- * @param max_msg_len 
  * @return uint8_t 
  */
 uint8_t ubx_config_payload_check_dev(
     const char *msg_payload, 
-    uint16_t pl_len, 
-    uint8_t max_msg_len); 
+    uint16_t pl_len); 
 
 
 /**
@@ -504,7 +502,7 @@ uint8_t ubx_config_payload_check_dev(
  * @param msg_data 
  * @param msg_len 
  */
-uint8_t ubx_config_msg_convert_dev(
+void ubx_config_msg_convert_dev(
     const char *msg_str, 
     uint8_t *msg_data, 
     uint8_t *msg_len); 
@@ -977,19 +975,12 @@ M8Q_STATUS m8q_ubx_config_dev(
     const char *config_msg, 
     uint8_t max_msg_len)
 {
-    // Check for a payload and that the length matches 
-    // Terminated by an asterisks 
-    // Checksum calculated and added at the end 
-    // Invalid inputs: 
-    // - Not having ID, LENGTH and PAYLOAD parts 
-    // - Length parameter matches number of payload inputs 
-    // - Invalid characters 
-
     // Local variables 
     const char *msg_ptr = config_msg + BYTE_7; 
-    uint8_t msg_data[max_msg_len]; 
-    uint8_t msg_len = CLEAR; 
     uint16_t pl_len = CLEAR; 
+    uint8_t msg_data[max_msg_len]; 
+    memset((void *)msg_data, CLEAR, sizeof(msg_data)); 
+    uint8_t msg_len = CLEAR; 
 
     // Check that a comma separates the class and ID fields 
     if (*msg_ptr++ != COMMA_CHAR)
@@ -1018,21 +1009,17 @@ M8Q_STATUS m8q_ubx_config_dev(
     // correctly. Note that the payload contents are not verified. It is left to the 
     // application to set the payload contents as needed. 
     msg_ptr += BYTE_5; 
-    if (!ubx_config_payload_check_dev(msg_ptr, pl_len, max_msg_len))
+    if (!ubx_config_payload_check_dev(msg_ptr, pl_len))
     {
         return M8Q_INVALID_CONFIG; 
     }
 
     // Convert the message string to the correct format, calculate and append the 
     // checksum, and calculate the total formatted message length. 
-    if (!ubx_config_msg_convert_dev(config_msg, msg_data, &msg_len))
-    {
-        return M8Q_INVALID_CONFIG; 
-    }
+    ubx_config_msg_convert_dev(config_msg, msg_data, &msg_len); 
 
     // Send the formatted message to the device 
-    
-    return M8Q_OK; 
+    return m8q_write_dev((char *)msg_data, msg_len); 
 }
 
 
@@ -1045,7 +1032,7 @@ uint8_t ubx_config_id_check_dev(
 
     ubx_config_field_check_dev(msg_id, &byte_count, &comma_term); 
 
-    if ((byte_count != BYTE_2) || !comma_term)
+    if ((byte_count != BYTE_2) || (comma_term != COMMA_CHAR))
     {
         return FALSE; 
     }
@@ -1067,7 +1054,7 @@ uint8_t ubx_config_len_check_dev(
     
     ubx_config_field_check_dev(msg_pl_len, &byte_count, &comma_term); 
 
-    if ((byte_count != BYTE_4) || !comma_term)
+    if ((byte_count != BYTE_4) || (comma_term != COMMA_CHAR))
     {
         return FALSE; 
     }
@@ -1084,63 +1071,114 @@ uint8_t ubx_config_len_check_dev(
 // Check that the payload is of correct length and format 
 uint8_t ubx_config_payload_check_dev(
     const char *msg_payload, 
-    uint16_t pl_len, 
-    uint8_t max_msg_len)
+    uint16_t pl_len)
 {
-    // uint8_t pl_count = CLEAR; 
-    // uint8_t byte_count = CLEAR; 
-    // uint8_t comma_term = CLEAR; 
+    uint8_t pl_count = CLEAR; 
+    uint8_t char_count = CLEAR; 
+    uint8_t term_char = CLEAR; 
+    uint8_t asterisk_term = CLEAR; 
 
-    // for (uint8_t i = CLEAR; i < max_msg_len; i++)
-    // {
-    //     ubx_config_field_check_dev(msg_payload, &byte_count, &comma_term); 
+    // Go through the config message payload and check that each data field has an even 
+    // number of bytes, each data field is terminated by a comma or asterisks, there are no 
+    // invalid characters in the message and that the number of bytes in the payload matches 
+    // the specified payload length. 
+    // The payload gets looped through one data field at a time and each data field must 
+    // have at least one byte (or two message characters) in it. The payload length specifies 
+    // the number of bytes in the payload so if every payload field has one byte then the 
+    // specified payload length is the maximum number of times we need to loop through the 
+    // payload. 
 
-    //     msg_payload += byte_count; 
+    for (uint8_t i = CLEAR; i < pl_len; i++)
+    {
+        ubx_config_field_check_dev(msg_payload, &char_count, &term_char); 
 
-    //     // Make sure the byte count is an even number 
-    //     if (byte_count % 2)
-    //     {
-    //         return FALSE; 
-    //     }
+        if (!term_char)
+        {
+            // Invalid character or end of string seen before a valid termination 
+            // character. 
+            return FALSE; 
+        }
+        else 
+        {
+            // Data field has valid characters and a proper termination. Check that the 
+            // number of message characters is even (two message characters create one 
+            // formatted message byte), and if so then increment the payload counter and 
+            // check if the end of the message has been reached. 
+            
+            if (char_count % 2)
+            {
+                return FALSE; 
+            }
 
-    //     // Check for the termination asterisks 
-    //     if (*msg_payload == AST_CHAR)
-    //     {
-    //         pl_count++; 
-    //         break; 
-    //     }
+            pl_count += (char_count / 2); 
+            
+            if (term_char == AST_CHAR)
+            {
+                asterisk_term++; 
+                break; 
+            }
+            
+            // 'char_count' will account of the message data field and the +1 moves the 
+            // message pointer past the termination character. 
+            msg_payload += char_count + 1; 
+            char_count = CLEAR; 
+            term_char = CLEAR; 
+        }
+    }
 
-    //     // If the byte count is good and an asterisks is not after the data then there 
-    //     // must be a comma or else it's not formatted correctly. 
-    //     if (!comma_term)
-    //     {
-    //         return FALSE; 
-    //     }
-
-    //     msg_payload++; 
-    //     pl_count++; 
-    //     byte_count = CLEAR; 
-    //     comma_term = CLEAR; 
-    // }
-
-    // if (pl_count != pl_len)
-    // {
-    //     return FALSE; 
-    // }
+    if ((pl_count != pl_len) || (!asterisk_term))
+    {
+        return FALSE; 
+    }
 
     return TRUE; 
 }
 
 
 // Convert the message string into a sendable message 
-uint8_t ubx_config_msg_convert_dev(
+void ubx_config_msg_convert_dev(
     const char *msg_str, 
     uint8_t *msg_data, 
     uint8_t *msg_len)
 {
-    // 
+    // Local variables 
+    uint8_t *msg_data_copy = msg_data; 
+    uint8_t checksum_len = CLEAR; 
+    uint8_t checksum_A = CLEAR; 
+    uint8_t checksum_B = CLEAR; 
 
-    return TRUE; 
+    // Convert the message string into a valid format 
+    while (*msg_str != AST_CHAR)
+    {
+        if (*msg_str == COMMA_CHAR)
+        {
+            msg_str++; 
+        }
+        else 
+        {
+            *msg_data_copy++ = ubx_config_byte_convert_dev(msg_str); 
+            msg_str += 2; 
+            (*msg_len)++; 
+        }
+    }
+
+    // Calculate the checksum. Exclude the sync characters from the calculation. See the 
+    // datasheet for information about calculating the checksum. 
+    msg_data += BYTE_2; 
+    checksum_len = *msg_len - BYTE_2; 
+
+    for (uint8_t i = CLEAR; i < checksum_len; i++)
+    {
+        checksum_A += *msg_data++; 
+        checksum_B += checksum_A; 
+    }
+
+    // The last two bytes of the message are the checksum 
+    *msg_data_copy++ = checksum_A; 
+    *msg_data_copy = checksum_B; 
+
+    // Add two more to the message length to account for the checksum 
+    *msg_len += BYTE_2; 
 }
 
 
@@ -1154,7 +1192,13 @@ void ubx_config_field_check_dev(
     {
         if (*msg_field == COMMA_CHAR)
         {
-            (*term_char)++; 
+            *term_char = COMMA_CHAR; 
+            break; 
+        }
+
+        if (*msg_field == AST_CHAR)
+        {
+            *term_char = AST_CHAR; 
             break; 
         }
 

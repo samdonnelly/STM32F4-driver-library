@@ -26,7 +26,7 @@
 // Mock driver data record 
 typedef struct i2c_mock_driver_data_s 
 {
-    char write_data[150]; 
+    uint8_t write_data[150]; 
     uint8_t write_data_size; 
 
     uint8_t timeout; 
@@ -246,10 +246,10 @@ void i2c_mock_init(
 
 // Get write data 
 void i2c_mock_get_write_data(
-    char *data_buff, 
+    void *data_buff, 
     uint8_t *data_size)
 {
-    memcpy((void *)data_buff, (void *)mock_driver_data.write_data, mock_driver_data.write_data_size); 
+    memcpy(data_buff, (void *)mock_driver_data.write_data, mock_driver_data.write_data_size); 
     *data_size = mock_driver_data.write_data_size; 
 }
 

@@ -234,7 +234,7 @@ void i2c_mock_init(
 
 // Get write data 
 void i2c_mock_get_write_data(
-    char *data_buff, 
+    void *data_buff, 
     uint8_t *data_size); 
 
 //=======================================================================================

@@ -23,6 +23,8 @@ extern "C"
 // Macros 
 
 #define CONFIG_TEST_MSG_NUM 3 
+#define NUM_NMEA_TEST_MSGS 8 
+#define NUM_UBX_TEST_MSGS 18 
 
 //=======================================================================================
 
@@ -151,6 +153,8 @@ TEST(m8q_driver, m8q_init_config_msg_ok)
 // M8Q device initialization - invalid PUBX NMEA config message check 
 TEST(m8q_driver, m8q_init_pubx_nmea_config_invalid_msg_check)
 {
+    M8Q_STATUS init_checks[NUM_NMEA_TEST_MSGS]; 
+
     // All of the below sample config messages are invalid except for the last one. 
     // Messages are sent one at a time to verify that message checks are done correctly. 
     // The messages have the following errors: 
@@ -164,35 +168,32 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_invalid_msg_check)
     // - Message H: None - fails due to a forced I2C timeout 
 
     // Sample PUBX NMEA message 
-    const char config_msg_a[] = "$PUBC,40,GLL,1,0,0,0,0,0*"; 
-    const char config_msg_b[] = "$PUBX,01,GLL,1,0,0,0,0,0*"; 
-    const char config_msg_c[] = "$PUBX,40GLL,1,0,0,0,0,0*"; 
-    const char config_msg_d[] = "$PUBX,40,GLL,1,0,0,0,&,0*"; 
-    const char config_msg_e[] = "$PUBX,40,GLL,1,0,0,0,0*"; 
-    const char config_msg_f[] = "$PUBX,40,GLL,1,0,0,0,0,0"; 
-    const char config_msg_g[] = "$PUBX,40,GLL,1,0,0,0,0,0*0"; 
-    const char config_msg_h[] = "$PUBX,40,GLL,1,0,0,0,0,0*"; 
+    const char config_msgs[NUM_NMEA_TEST_MSGS][M8Q_CONFIG_MAX_MSG_LEN] = 
+    {
+        "$PUBC,40,GLL,1,0,0,0,0,0*", 
+        "$PUBX,01,GLL,1,0,0,0,0,0*", 
+        "$PUBX,40GLL,1,0,0,0,0,0*", 
+        "$PUBX,40,GLL,1,0,0,0,&,0*", 
+        "$PUBX,40,GLL,1,0,0,0,0*", 
+        "$PUBX,40,GLL,1,0,0,0,0,0", 
+        "$PUBX,40,GLL,1,0,0,0,0,0*0", 
+        "$PUBX,40,GLL,1,0,0,0,0,0*" 
+    }; 
 
     // Initialize the mock I2C driver to time out 
     i2c_mock_init(1); 
 
-    M8Q_STATUS init_check_a = m8q_init_dev(&I2C_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_b = m8q_init_dev(&I2C_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_c = m8q_init_dev(&I2C_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_d = m8q_init_dev(&I2C_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_e = m8q_init_dev(&I2C_FAKE, config_msg_e, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_f = m8q_init_dev(&I2C_FAKE, config_msg_f, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_g = m8q_init_dev(&I2C_FAKE, config_msg_g, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_h = m8q_init_dev(&I2C_FAKE, config_msg_h, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    for (uint8_t i = CLEAR; i < NUM_NMEA_TEST_MSGS; i++)
+    {
+        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    }
 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_a); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_b); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_c); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_d); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_e); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_f); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_g); 
-    LONGS_EQUAL(M8Q_WRITE_FAULT, init_check_h); 
+    for (uint8_t i = CLEAR; i < (NUM_NMEA_TEST_MSGS-1); i++)
+    {
+        LONGS_EQUAL(M8Q_INVALID_CONFIG, init_checks[i]); 
+    }
+
+    LONGS_EQUAL(M8Q_WRITE_FAULT, init_checks[NUM_NMEA_TEST_MSGS-1]); 
 }
 
 
@@ -218,7 +219,7 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_valid_msg_check)
     // message and its length are correct. 
     i2c_mock_init(0); 
     init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    i2c_mock_get_write_data(config_msg_check, &config_msg_check_len); 
+    i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len); 
 
     LONGS_EQUAL(M8Q_OK, init_check); 
     LONGS_EQUAL(config_msg_compare_len, config_msg_check_len); 
@@ -229,48 +230,47 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_valid_msg_check)
 // M8Q device initialization - invalid standard NMEA config message check 
 TEST(m8q_driver, m8q_init_std_nmea_config_invalid_msg_check)
 {
+    M8Q_STATUS init_checks[NUM_NMEA_TEST_MSGS]; 
+
     // All of the below sample config messages are invalid except for the last one. 
     // Messages are sent one at a time to verify that message checks are done correctly. 
     // The messages have the following errors: 
-    // - Message A: Incorrect ID  
-    // - Message B: Invalid formatter 
-    // - Message C: Missing a comma separator between the address and data fields 
-    // - Message D: Invalid message character 
-    // - Message E: Incorrect number of fields for the specified message 
-    // - Message F: No message termination character ('*') 
-    // - Message G: The message termination character ('*') is not the last character 
-    // - Message H: None - fails due to a forced I2C timeout 
+    // - Message 0: Incorrect ID  
+    // - Message 1: Invalid formatter 
+    // - Message 2: Missing a comma separator between the address and data fields 
+    // - Message 3: Invalid message character 
+    // - Message 4: Incorrect number of fields for the specified message 
+    // - Message 5: No message termination character ('*') 
+    // - Message 6: The message termination character ('*') is not the last character 
+    // - Message 7: None - fails due to a forced I2C timeout 
 
     // Sample standard NMEA message 
-    const char config_msg_a[] = "$GCGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
-    const char config_msg_b[] = "$GNGRZ,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
-    const char config_msg_c[] = "$GNGRS104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
-    const char config_msg_d[] = "$GNGRS,104148.00,1,2.6,+2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
-    const char config_msg_e[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,1,,,1,1*"; 
-    const char config_msg_f[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1,"; 
-    const char config_msg_g[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*N"; 
-    const char config_msg_h[] = "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
+    const char config_msgs[NUM_NMEA_TEST_MSGS][M8Q_CONFIG_MAX_MSG_LEN] = 
+    {
+        "$GCGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*", 
+        "$GNGRZ,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*", 
+        "$GNGRS104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*", 
+        "$GNGRS,104148.00,1,2.6,+2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*", 
+        "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,1,,,1,1*", 
+        "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1,", 
+        "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*N", 
+        "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*" 
+    }; 
 
     // Initialize the mock I2C driver to time out 
     i2c_mock_init(1); 
 
-    M8Q_STATUS init_check_a = m8q_init_dev(&I2C_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_b = m8q_init_dev(&I2C_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_c = m8q_init_dev(&I2C_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_d = m8q_init_dev(&I2C_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_e = m8q_init_dev(&I2C_FAKE, config_msg_e, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_f = m8q_init_dev(&I2C_FAKE, config_msg_f, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_g = m8q_init_dev(&I2C_FAKE, config_msg_g, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_h = m8q_init_dev(&I2C_FAKE, config_msg_h, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    for (uint8_t i = CLEAR; i < NUM_NMEA_TEST_MSGS; i++)
+    {
+        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    }
 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_a); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_b); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_c); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_d); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_e); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_f); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_g); 
-    LONGS_EQUAL(M8Q_WRITE_FAULT, init_check_h); 
+    for (uint8_t i = CLEAR; i < (NUM_NMEA_TEST_MSGS-1); i++)
+    {
+        LONGS_EQUAL(M8Q_INVALID_CONFIG, init_checks[i]); 
+    }
+
+    LONGS_EQUAL(M8Q_WRITE_FAULT, init_checks[NUM_NMEA_TEST_MSGS-1]); 
 }
 
 
@@ -298,7 +298,7 @@ TEST(m8q_driver, m8q_init_std_nmea_config_valid_msg_check)
     // message and its length are correct. 
     i2c_mock_init(0); 
     init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    i2c_mock_get_write_data(config_msg_check, &config_msg_check_len); 
+    i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len); 
 
     LONGS_EQUAL(M8Q_OK, init_check); 
     LONGS_EQUAL(config_msg_compare_len, config_msg_check_len); 
@@ -307,67 +307,110 @@ TEST(m8q_driver, m8q_init_std_nmea_config_valid_msg_check)
 
 
 // M8Q device initialization - invalid and valid UBX config message check 
-TEST(m8q_driver, m8q_init_ubx_config_msg_check)
+TEST(m8q_driver, m8q_init_ubx_config_invalid_msg_check)
 {
+    M8Q_STATUS init_checks[NUM_UBX_TEST_MSGS]; 
+
     // All of the below sample config messages are invalid except for the last one. 
     // Messages are sent one at a time to verify that message checks are done correctly. 
     // The messages have the following errors: 
-    // - Message A: Incorrect ID 
-    // - Message B: Invalid formatter 
-    // - Message C: Missing a comma separator between the address and data fields 
-    // - Message D: Missing message fields - cut off at the ID 
-    // - Message E: ID field too short 
-    // - Message F: Invalid UBX message character in the ID 
-    // - Message G: ID field too long 
-    // - Message H: Missing message fields - Cut off at the payload length 
-    // - Message I: Payload length field too short 
-    // - Message J: Invalid UBX message character in the payload length 
-    // - Message K: Payload length field too long 
-    // - Message 
-    // - Message Z: None 
+    // - Message 0: Incorrect ID 
+    // - Message 1: Invalid formatter 
+    // - Message 2: Missing a comma separator between the address and data fields 
+    // - Message 3: Missing message fields - cut off at the ID 
+    // - Message 4: ID field too short 
+    // - Message 5: Invalid UBX message character in the ID 
+    // - Message 6: ID field too long 
+    // - Message 7: Missing message fields - Cut off at the payload length 
+    // - Message 8: Payload length field too short 
+    // - Message 9: Invalid UBX message character in the payload length 
+    // - Message 10: Payload length field too long 
+    // - Message 11: No termination character seen before the end of the message 
+    // - Message 12: Not enough payload bytes 
+    // - Message 13: Uneven number of payload characters 
+    // - Message 14: Too many payload bytes 
+    // - Message 15: Invalid payload character 
+    // - Message 16: No termination character at the end of the message - comma instead 
+    // - Message 17: None - fails due to a forced I2C timeout 
 
     // Sample UBX message 
-    const char config_msg_a[] = "B563,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
-    const char config_msg_b[] = "B562,22,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
-    const char config_msg_c[] = "B562,0600,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
-    const char config_msg_d[] = "B562,06,0"; 
-    const char config_msg_e[] = "B562,06,0,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
-    const char config_msg_f[] = "B562,06,-0,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
-    const char config_msg_g[] = "B562,06,001,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
-    const char config_msg_h[] = "B562,06,00,14"; 
-    const char config_msg_i[] = "B562,06,00,14,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
-    const char config_msg_j[] = "B562,06,00,14.0,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
-    const char config_msg_k[] = "B562,06,00,14009,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
+    const char config_msgs[NUM_UBX_TEST_MSGS][M8Q_CONFIG_MAX_MSG_LEN] = 
+    {
+        "B563,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
+        "B562,22,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
+        "B562,0600,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
+        "B562,06,0", 
+        "B562,06,0,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
+        "B562,06,-0,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
+        "B562,06,001,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
+        "B562,06,00,14", 
+        "B562,06,00,14,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
+        "B562,06,00,14.0,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
+        "B562,06,00,14009,01,00,0000,C0080000,80250000,0000,0000,0000,0000*", 
+        "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000", 
+        "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000*", 
+        "B562,06,00,1400,01,00,00001,C0080000,80250000,0000,0000,0000,0000*", 
+        "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,000022*", 
+        "B562,06,00,1400,01,00,0000,C0080000,80250000,00%0,0000,0000,0000*", 
+        "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000,", 
+        "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*" 
+    }; 
 
-    const char config_msg_z[] = "B562,06,00,1441,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
+    // Initialize the mock I2C driver to time out 
+    i2c_mock_init(1); 
 
-    M8Q_STATUS init_check_a = m8q_init_dev(&I2C_FAKE, config_msg_a, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_b = m8q_init_dev(&I2C_FAKE, config_msg_b, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_c = m8q_init_dev(&I2C_FAKE, config_msg_c, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_d = m8q_init_dev(&I2C_FAKE, config_msg_d, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_e = m8q_init_dev(&I2C_FAKE, config_msg_e, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_f = m8q_init_dev(&I2C_FAKE, config_msg_f, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_g = m8q_init_dev(&I2C_FAKE, config_msg_g, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_h = m8q_init_dev(&I2C_FAKE, config_msg_h, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_i = m8q_init_dev(&I2C_FAKE, config_msg_i, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_j = m8q_init_dev(&I2C_FAKE, config_msg_j, 1, M8Q_CONFIG_MAX_MSG_LEN); 
-    M8Q_STATUS init_check_k = m8q_init_dev(&I2C_FAKE, config_msg_k, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    for (uint8_t i = CLEAR; i < NUM_UBX_TEST_MSGS; i++)
+    {
+        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    }
 
-    M8Q_STATUS init_check_z = m8q_init_dev(&I2C_FAKE, config_msg_z, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    for (uint8_t i = CLEAR; i < (NUM_UBX_TEST_MSGS-1); i++)
+    {
+        LONGS_EQUAL(M8Q_INVALID_CONFIG, init_checks[i]); 
+    }
 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_a); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_b); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_c); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_d); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_e); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_f); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_g); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_h); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_i); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_j); 
-    LONGS_EQUAL(M8Q_INVALID_CONFIG, init_check_k); 
+    LONGS_EQUAL(M8Q_WRITE_FAULT, init_checks[NUM_UBX_TEST_MSGS-1]); 
+}
 
-    LONGS_EQUAL(M8Q_OK, init_check_z); 
+
+// M8Q device initialization - valid UBX config message check 
+TEST(m8q_driver, m8q_init_ubx_config_valid_msg_check)
+{
+    M8Q_STATUS init_check; 
+
+    // Variables to store the drivers formatted config message 
+    uint8_t config_msg_check[30]; 
+    memset((void *)config_msg_check, CLEAR, sizeof(config_msg_check)); 
+    uint8_t config_msg_check_len = CLEAR; 
+
+    // Complete UBX message and its length to compare against 
+    const uint8_t config_msg_compare[] = 
+        {181,98,6,0,20,0,1,0,0,0,192,8,0,0,128,37,0,0,0,0,0,0,0,0,0,0,136,107}; 
+    uint8_t config_msg_compare_len = sizeof(config_msg_compare)/sizeof(config_msg_compare[0]); 
+    uint8_t config_msg_compare_status = SET_BIT; 
+
+    // Correctly formatted sample UBX config message 
+    const char config_msg[] = 
+        "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
+
+    // Initialize the mock I2C driver to not time out, run the init and retrieve the 
+    // driver formatted message that gets sent to the device. Check that the driver 
+    // message and its length are correct. 
+    i2c_mock_init(0); 
+    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len); 
+
+    LONGS_EQUAL(M8Q_OK, init_check); 
+    LONGS_EQUAL(config_msg_compare_len, config_msg_check_len); 
+
+    for (uint8_t i = CLEAR; i < config_msg_compare_len; i++)
+    {
+        if (config_msg_compare[i] != config_msg_check[i])
+        {
+            config_msg_compare_status = CLEAR; 
+        }
+    }
+    LONGS_EQUAL(SET_BIT, config_msg_compare_status); 
 }
 
 
