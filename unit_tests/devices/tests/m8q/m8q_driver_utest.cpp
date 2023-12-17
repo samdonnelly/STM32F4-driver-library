@@ -203,6 +203,7 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_valid_msg_check)
 
     // Variables to store the drivers formatted config message 
     char config_msg_check[30]; 
+    memset((void *)config_msg_check, CLEAR, sizeof(config_msg_check)); 
     uint8_t config_msg_check_len = CLEAR; 
 
     // Complete PUBX NMEA message and its length to compare against 
@@ -280,6 +281,7 @@ TEST(m8q_driver, m8q_init_std_nmea_config_valid_msg_check)
 
     // Variables to store the drivers formatted config message 
     char config_msg_check[70]; 
+    memset((void *)config_msg_check, CLEAR, sizeof(config_msg_check)); 
     uint8_t config_msg_check_len = CLEAR; 
 
     // Complete PUBX NMEA message and its length to compare against 
