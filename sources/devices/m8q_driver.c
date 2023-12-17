@@ -486,11 +486,13 @@ uint8_t ubx_config_len_check_dev(
  * 
  * @param msg_payload 
  * @param pl_len 
+ * @param max_msg_len 
  * @return uint8_t 
  */
 uint8_t ubx_config_payload_check_dev(
     const char *msg_payload, 
-    uint16_t pl_len); 
+    uint16_t pl_len, 
+    uint8_t max_msg_len); 
 
 
 /**
@@ -1016,7 +1018,7 @@ M8Q_STATUS m8q_ubx_config_dev(
     // correctly. Note that the payload contents are not verified. It is left to the 
     // application to set the payload contents as needed. 
     msg_ptr += BYTE_5; 
-    if (!ubx_config_payload_check_dev(msg_ptr, pl_len))
+    if (!ubx_config_payload_check_dev(msg_ptr, pl_len, max_msg_len))
     {
         return M8Q_INVALID_CONFIG; 
     }
@@ -1082,11 +1084,44 @@ uint8_t ubx_config_len_check_dev(
 // Check that the payload is of correct length and format 
 uint8_t ubx_config_payload_check_dev(
     const char *msg_payload, 
-    uint16_t pl_len)
+    uint16_t pl_len, 
+    uint8_t max_msg_len)
 {
     // uint8_t pl_count = CLEAR; 
     // uint8_t byte_count = CLEAR; 
     // uint8_t comma_term = CLEAR; 
+
+    // for (uint8_t i = CLEAR; i < max_msg_len; i++)
+    // {
+    //     ubx_config_field_check_dev(msg_payload, &byte_count, &comma_term); 
+
+    //     msg_payload += byte_count; 
+
+    //     // Make sure the byte count is an even number 
+    //     if (byte_count % 2)
+    //     {
+    //         return FALSE; 
+    //     }
+
+    //     // Check for the termination asterisks 
+    //     if (*msg_payload == AST_CHAR)
+    //     {
+    //         pl_count++; 
+    //         break; 
+    //     }
+
+    //     // If the byte count is good and an asterisks is not after the data then there 
+    //     // must be a comma or else it's not formatted correctly. 
+    //     if (!comma_term)
+    //     {
+    //         return FALSE; 
+    //     }
+
+    //     msg_payload++; 
+    //     pl_count++; 
+    //     byte_count = CLEAR; 
+    //     comma_term = CLEAR; 
+    // }
 
     // if (pl_count != pl_len)
     // {

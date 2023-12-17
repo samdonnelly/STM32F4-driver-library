@@ -369,17 +369,17 @@ TEST(m8q_driver, m8q_init_ubx_config_msg_check)
 }
 
 
-// // M8Q device initialization - init ok, all config messages valid 
-// TEST(m8q_driver, m8q_init_valid_config)
-// {
-//     M8Q_STATUS init_check = m8q_init_dev(
-//         &I2C_FAKE, 
-//         &m8q_config_pkt[0][0], 
-//         M8Q_CONFIG_NUM_MSG, 
-//         M8Q_CONFIG_MAX_MSG_LEN); 
+// M8Q device initialization - init ok, all config messages valid 
+TEST(m8q_driver, m8q_init_valid_config)
+{
+    M8Q_STATUS init_check = m8q_init_dev(
+        &I2C_FAKE, 
+        &m8q_config_pkt[0][0], 
+        M8Q_CONFIG_NUM_MSG, 
+        M8Q_CONFIG_MAX_MSG_LEN); 
 
-//     LONGS_EQUAL(M8Q_OK, init_check); 
-// }
+    LONGS_EQUAL(M8Q_OK, init_check); 
+}
 
 //==================================================
 
