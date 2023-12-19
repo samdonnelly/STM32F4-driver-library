@@ -364,13 +364,67 @@ const char ubx_msg_class[UBX_CLASS_NUM][UBX_CLASS_LEN] =
 // Prototypes 
 
 /**
- * @brief Get TX-Ready status 
+ * @brief Read the whole data stream and store the data 
  * 
  * @details 
  * 
- * @return GPIO_STATE 
+ * @param stream_len 
+ * @return I2C_STATUS 
  */
-GPIO_STATE m8q_get_tx_ready_dev(void); 
+I2C_STATUS m8q_read_ds_dev(
+    uint16_t stream_len); 
+
+
+/**
+ * @brief Read the current value at the data stream register 
+ * 
+ * @details 
+ * 
+ * @param ds_buff 
+ * @return I2C_STATUS 
+ */
+I2C_STATUS m8q_read_ds_reg_dev(
+    uint8_t *ds_buff); 
+
+
+/**
+ * @brief Read the data stream size 
+ * 
+ * @details 
+ * 
+ * @param data_size 
+ * @return I2C_STATUS 
+ */
+I2C_STATUS m8q_read_ds_size_dev(
+    uint16_t *data_size); 
+
+
+/**
+ * @brief Read data from the device 
+ * 
+ * @details 
+ * 
+ * @param data_buff 
+ * @param data_size 
+ * @return I2C_STATUS 
+ */
+I2C_STATUS m8q_read_dev(
+    uint8_t *data_buff, 
+    uint16_t data_size); 
+
+
+/**
+ * @brief Send a message to the device 
+ * 
+ * @details 
+ * 
+ * @param msg 
+ * @param msg_size 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_write_msg_dev(
+    const void *msg, 
+    uint8_t msg_size); 
 
 
 /**
@@ -380,10 +434,10 @@ GPIO_STATE m8q_get_tx_ready_dev(void);
  * 
  * @param data 
  * @param data_size 
- * @return M8Q_STATUS 
+ * @return I2C_STATUS 
  */
-M8Q_STATUS m8q_write_dev(
-    const void *data, 
+I2C_STATUS m8q_write_dev(
+    const uint8_t *data, 
     uint8_t data_size); 
 
 
@@ -682,19 +736,98 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 //=======================================================================================
 // User functions (public) 
 
-// Read - using TX ready pin 
-M8Q_STATUS m8q_read_txr_dev(void)
+// Read one message at a time 
+M8Q_STATUS m8q_read_msg_dev(void)
 {
-    // 
+    // // Local variables 
+    // M8Q_STATUS read_status = M8Q_READ_INVALID; 
+    // uint8_t data_check = CLEAR; 
+    // uint8_t *nmea_data = m8q_driver_data.nmea_resp; 
+    // uint8_t *ubx_data  = m8q_driver_data.ubx_resp; 
+    // I2C_STATUS i2c_status = I2C_OK; 
+
+    // // Check for a valid data stream 
+    // m8q_read_ds_reg_dev(&data_check); 
+
+    // switch (data_check)
+    // {
+    //     case M8Q_NO_DATA:  // No data stream available 
+    //         break;
+
+    //     case NMEA_START:  // Start of NMEA message 
+    //         // Capture the byte checked in the message response 
+    //         *nmea_data++ = data_check; 
+
+    //         // Generate a start condition 
+    //         i2c_status |= i2c_start(m8q_driver_data.i2c); 
+
+    //         // Send the device address with a read offset 
+    //         i2c_status |= i2c_write_addr(m8q_driver_data.i2c, 
+    //                                      M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
+    //         i2c_clear_addr(m8q_driver_data.i2c);  
+
+    //         // Read the rest of the data stream until "\r\n" 
+    //         i2c_status |= i2c_read_to_term(m8q_driver_data.i2c, 
+    //                                        nmea_data, 
+    //                                        M8Q_NMEA_END_PAY, 
+    //                                        BYTE_4); 
+
+    //         // Parse the message data into its data record 
+    //         m8q_nmea_sort(nmea_data); 
+
+    //         read_status = M8Q_READ_NMEA; 
+    //         break;
+        
+    //     case UBX_SYNC1:  // Start of UBX message 
+    //         // Capture the byte checked in the message response 
+    //         *ubx_data++ = data_check; 
+
+    //         // Generate a start condition 
+    //         i2c_status |= i2c_start(m8q_driver_data.i2c); 
+
+    //         // Send the device address with a read offset 
+    //         i2c_status |= i2c_write_addr(m8q_driver_data.i2c, 
+    //                                      M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
+    //         i2c_clear_addr(m8q_driver_data.i2c); 
+
+    //         // Read the rest of the UBX message 
+    //         i2c_status |= i2c_read_to_len(m8q_driver_data.i2c, 
+    //                                       M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET, 
+    //                                       ubx_data, 
+    //                                       M8Q_UBX_LENGTH_OFST-BYTE_1, 
+    //                                       M8Q_UBX_LENGTH_LEN, 
+    //                                       M8Q_UBX_CS_LEN); 
+
+    //         read_status = M8Q_READ_UBX; 
+    //         break; 
+
+    //     default:  // Unknown data stream 
+    //         break;
+    // }
+
+    // // Update the driver status 
+    // m8q_driver_data.status |= (uint8_t)i2c_status; 
+
+    // return read_status; 
 
     return M8Q_OK; 
 }
 
 
-// Read - using device register status 
+// Read the whole data stream 
 M8Q_STATUS m8q_read_stream_dev(void)
 {
+    // Read the data stream size 
+    // Call the stream read function and pass the size to it 
+    // Sort the messages 
+
     // 
+    I2C_STATUS i2c_status = I2C_OK; 
+    uint16_t stream_len = CLEAR; 
+
+    // 
+    i2c_status |= m8q_read_ds_size_dev(&stream_len); 
+    i2c_status |= m8q_read_ds_dev(stream_len); 
 
     return M8Q_OK; 
 }
@@ -709,6 +842,14 @@ M8Q_STATUS m8q_read_stream_dev(void)
 
 
 // Write configuration (singular) 
+
+
+// Get TX-Ready status 
+GPIO_STATE m8q_get_tx_ready_dev(void)
+{
+    return gpio_read(m8q_driver_data.tx_ready_gpio, (SET_BIT << m8q_driver_data.tx_ready)); 
+}
+
 
 // Clear driver fault code 
 
@@ -726,13 +867,6 @@ void m8q_set_low_pwr_dev(void)
 void m8q_clear_low_pwr_dev(void)
 {
     gpio_write(m8q_driver_data.pwr_save_gpio, (SET_BIT << m8q_driver_data.pwr_save), GPIO_HIGH); 
-}
-
-
-// Get TX-Ready status 
-GPIO_STATE m8q_get_tx_ready_dev(void)
-{
-    return gpio_read(m8q_driver_data.tx_ready_gpio, (SET_BIT << m8q_driver_data.tx_ready)); 
 }
 
 
@@ -759,178 +893,76 @@ GPIO_STATE m8q_get_tx_ready_dev(void)
 //=======================================================================================
 // Read and write functions (private) 
 
-// Read 
-
-// // Read a message from the M8Q 
-// M8Q_STATUS m8q_read_dev(void); 
-
-
-// // Read the data stream size 
-// void m8q_check_data_size_dev(
-//     uint16_t *data_size); 
-
-
-// // Read the current value at the data stream register 
-// void m8q_check_data_stream_dev(
-//     uint8_t *data_check); 
-
-
-// // Read a message from the M8Q 
-// M8Q_STATUS m8q_read_dev(void)
-// {
-//     // Local variables 
-//     M8Q_STATUS read_status = M8Q_READ_INVALID; 
-//     uint8_t data_check = CLEAR; 
-//     uint8_t *nmea_data = m8q_driver_data.nmea_resp; 
-//     uint8_t *ubx_data  = m8q_driver_data.ubx_resp; 
-//     I2C_STATUS i2c_status = I2C_OK; 
-
-//     // Check for a valid data stream 
-//     m8q_check_data_stream_dev(&data_check); 
-
-//     switch (data_check)
-//     {
-//         case M8Q_NO_DATA:  // No data stream available 
-//             break;
-
-//         case NMEA_START:  // Start of NMEA message 
-//             // Capture the byte checked in the message response 
-//             *nmea_data++ = data_check; 
-
-//             // Generate a start condition 
-//             i2c_status |= i2c_start(m8q_driver_data.i2c); 
-
-//             // Send the device address with a read offset 
-//             i2c_status |= i2c_write_addr(m8q_driver_data.i2c, 
-//                                          M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
-//             i2c_clear_addr(m8q_driver_data.i2c);  
-
-//             // Read the rest of the data stream until "\r\n" 
-//             i2c_status |= i2c_read_to_term(m8q_driver_data.i2c, 
-//                                            nmea_data, 
-//                                            M8Q_NMEA_END_PAY, 
-//                                            BYTE_4); 
-
-//             // Parse the message data into its data record 
-//             m8q_nmea_sort(nmea_data); 
-
-//             read_status = M8Q_READ_NMEA; 
-//             break;
-        
-//         case UBX_SYNC1:  // Start of UBX message 
-//             // Capture the byte checked in the message response 
-//             *ubx_data++ = data_check; 
-
-//             // Generate a start condition 
-//             i2c_status |= i2c_start(m8q_driver_data.i2c); 
-
-//             // Send the device address with a read offset 
-//             i2c_status |= i2c_write_addr(m8q_driver_data.i2c, 
-//                                          M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
-//             i2c_clear_addr(m8q_driver_data.i2c); 
-
-//             // Read the rest of the UBX message 
-//             i2c_status |= i2c_read_to_len(m8q_driver_data.i2c, 
-//                                           M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET, 
-//                                           ubx_data, 
-//                                           M8Q_UBX_LENGTH_OFST-BYTE_1, 
-//                                           M8Q_UBX_LENGTH_LEN, 
-//                                           M8Q_UBX_CS_LEN); 
-
-//             read_status = M8Q_READ_UBX; 
-//             break; 
-
-//         default:  // Unknown data stream 
-//             break;
-//     }
-
-//     // Update the driver status 
-//     m8q_driver_data.status |= (uint8_t)i2c_status; 
-
-//     return read_status; 
-// }
-
-
-// // Read the data stream size 
-// void m8q_check_data_size_dev(
-//     uint16_t *data_size)
-// {
-//     // Local variables 
-//     uint8_t num_bytes[BYTE_2];        // Store the high and low byte of the data size 
-//     uint8_t address = M8Q_REG_0XFD;   // Address of high byte for the data size 
-//     I2C_STATUS i2c_status = I2C_OK; 
-
-//     // Generate a start condition 
-//     i2c_status |= i2c_start(m8q_driver_data.i2c); 
-
-//     // Write the slave address with write access 
-//     i2c_status |= i2c_write_addr(m8q_driver_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
-//     i2c_clear_addr(m8q_driver_data.i2c); 
-
-//     // Send the first data size register address to start reading from there 
-//     i2c_status |= i2c_write(m8q_driver_data.i2c, &address, BYTE_1); 
-
-//     // Generate another start condition 
-//     i2c_status |= i2c_start(m8q_driver_data.i2c); 
-
-//     // Send the device address again with a read offset 
-//     i2c_status |= i2c_write_addr(m8q_driver_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET);  
-//     i2c_clear_addr(m8q_driver_data.i2c); 
-
-//     // Read the data size registers 
-//     i2c_status |= i2c_read(m8q_driver_data.i2c, num_bytes, BYTE_2); 
-
-//     // Format the data into the data size 
-//     *data_size = (uint16_t)((num_bytes[BYTE_0] << SHIFT_8) | num_bytes[BYTE_1]); 
-
-//     // Update the driver status 
-//     m8q_driver_data.status |= (uint8_t)i2c_status; 
-// }
-
-
-// // Read the current value at the data stream register 
-// void m8q_check_data_stream_dev(
-//     uint8_t *data_check)
-// {
-//     // Local variables 
-//     I2C_STATUS i2c_status = I2C_OK; 
-
-//     // Generate a start condition 
-//     i2c_status |= i2c_start(m8q_driver_data.i2c); 
-
-//     // Send the device address with a read offset 
-//     i2c_status |= i2c_write_addr(m8q_driver_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
-//     i2c_clear_addr(m8q_driver_data.i2c); 
-
-//     // Read the first byte of the data stream 
-//     i2c_status |= i2c_read(m8q_driver_data.i2c, data_check, BYTE_1); 
-
-//     // Update the driver status 
-//     m8q_driver_data.status |= (uint8_t)i2c_status; 
-// }
-
-
-// Send messages to the device 
-M8Q_STATUS m8q_write_dev(
-    const void *data, 
-    uint8_t data_size)
+// Read the whole data stream and store the data 
+I2C_STATUS m8q_read_ds_dev(
+    uint16_t stream_len)
 {
-    // Local variables 
+    uint8_t stream_data[stream_len]; 
     I2C_STATUS i2c_status = I2C_OK; 
 
-    // // Generate a start condition 
-    // i2c_status |= i2c_start(m8q_driver_data.i2c); 
+    i2c_status |= m8q_read_dev(stream_data, stream_len); 
 
-    // // Send the device address with a write offset 
-    // i2c_status |= i2c_write_addr(m8q_driver_data.i2c, M8Q_I2C_8_BIT_ADDR + I2C_W_OFFSET); 
-    // i2c_clear_addr(m8q_driver_data.i2c); 
+    return i2c_status; 
+}
 
-    i2c_status |= m8q_start_trans_dev(I2C_W_OFFSET); 
 
-    // Send data 
-    i2c_status |= i2c_write(m8q_driver_data.i2c, (uint8_t *)data, data_size); 
+// Read the current value at the data stream register 
+I2C_STATUS m8q_read_ds_reg_dev(
+    uint8_t *ds_buff)
+{
+    I2C_STATUS i2c_status = I2C_OK; 
 
-    // Generate a stop condition 
+    // Read the 0xFF register once 
+    i2c_status |= m8q_read_dev(ds_buff, BYTE_1); 
+
+    return i2c_status; 
+}
+
+
+// Read the data stream size 
+I2C_STATUS m8q_read_ds_size_dev(
+    uint16_t *data_size)
+{
+    I2C_STATUS i2c_status = I2C_OK; 
+    uint8_t address = M8Q_REG_0XFD; 
+    uint8_t num_bytes[BYTE_2]; 
+
+    // Send the data size register address to the device then read the data high and 
+    // low bytes of the data size. 
+    i2c_status |= m8q_write_dev(&address, BYTE_1); 
+    i2c_status |= m8q_read_dev(num_bytes, BYTE_2); 
+
+    // Format the data into the data size 
+    *data_size = ((uint16_t)num_bytes[BYTE_0] << SHIFT_8) | (uint16_t)num_bytes[BYTE_1]; 
+
+    return i2c_status; 
+}
+
+
+// Read data from the device 
+I2C_STATUS m8q_read_dev(
+    uint8_t *data_buff, 
+    uint16_t data_size)
+{
+    I2C_STATUS i2c_status = I2C_OK; 
+
+    // Initiate the transmission then read the data 
+    i2c_status |= m8q_start_trans_dev(I2C_R_OFFSET); 
+    i2c_status |= i2c_read(m8q_driver_data.i2c, data_buff, data_size); 
+
+    return i2c_status; 
+}
+
+
+// Send a message to the device 
+M8Q_STATUS m8q_write_msg_dev(
+    const void *msg, 
+    uint8_t msg_size)
+{
+    I2C_STATUS i2c_status = I2C_OK; 
+
+    // Send the message to the device and generate a stop condition when done. 
+    i2c_status |= m8q_write_dev((uint8_t *)msg, msg_size); 
     i2c_stop(m8q_driver_data.i2c); 
 
     if (i2c_status == I2C_TIMEOUT)
@@ -939,6 +971,21 @@ M8Q_STATUS m8q_write_dev(
     }
 
     return M8Q_OK; 
+}
+
+
+// Write data to the device 
+I2C_STATUS m8q_write_dev(
+    const uint8_t *data, 
+    uint8_t data_size)
+{
+    I2C_STATUS i2c_status = I2C_OK; 
+
+    // Initiate the transmission and send the data 
+    i2c_status |= m8q_start_trans_dev(I2C_W_OFFSET); 
+    i2c_status |= i2c_write(m8q_driver_data.i2c, data, data_size); 
+
+    return i2c_status; 
 }
 
 
@@ -1150,7 +1197,7 @@ M8Q_STATUS m8q_nmea_config_dev(
         return M8Q_INVALID_CONFIG; 
     }
 
-    return m8q_write_dev((void *)msg_str, msg_str_len); 
+    return m8q_write_msg_dev((void *)msg_str, msg_str_len); 
 }
 
 
@@ -1236,7 +1283,7 @@ M8Q_STATUS m8q_ubx_config_dev(
     ubx_config_msg_convert_dev(config_msg, msg_data, &msg_len); 
 
     // Send the formatted message to the device 
-    return m8q_write_dev((void *)msg_data, msg_len); 
+    return m8q_write_msg_dev((void *)msg_data, msg_len); 
 }
 
 

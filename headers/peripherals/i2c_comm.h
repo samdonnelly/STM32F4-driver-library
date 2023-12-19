@@ -265,7 +265,7 @@ I2C_STATUS i2c_write_addr(
  */
 I2C_STATUS i2c_write(
     I2C_TypeDef *i2c, 
-    uint8_t *data, 
+    const uint8_t *data, 
     uint8_t data_size);
 
 //=======================================================================================
