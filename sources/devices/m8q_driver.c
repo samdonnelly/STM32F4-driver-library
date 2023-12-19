@@ -335,9 +335,11 @@ static nmea_msg_format_t nmea_std_msgs[NMEA_STD_NUM_MSGS] =
 //==================================================
 // UBX sync characters and class 
 
-const char ubx_msg_sync[] = "B562"; 
+const char ubx_msg_sync_str[] = "B562"; 
 
-const char ubx_msg_class[UBX_CLASS_NUM][UBX_CLASS_LEN] = 
+const uint8_t ubx_msg_sync_data[] = { 0xB5, 0x62 }; 
+
+const char ubx_msg_class_str[UBX_CLASS_NUM][UBX_CLASS_LEN] = 
 {
     "01",   // NAV 
     "02",   // RXM 
@@ -353,6 +355,24 @@ const char ubx_msg_class[UBX_CLASS_NUM][UBX_CLASS_LEN] =
     "21",   // LOG 
     "27",   // SEC 
     "28"    // HNR 
+}; 
+
+const uint8_t ubx_msg_class_data[UBX_CLASS_NUM] = 
+{
+    0x01,   // NAV 
+    0x02,   // RXM 
+    0x04,   // INF 
+    0x05,   // ACK 
+    0x06,   // CFG 
+    0x09,   // UPD 
+    0x0A,   // MON 
+    0x0B,   // AID 
+    0x0D,   // TIM 
+    0x10,   // ESF 
+    0x13,   // MGA 
+    0x21,   // LOG 
+    0x27,   // SEC 
+    0x28    // HNR 
 }; 
 
 //==================================================
@@ -817,15 +837,11 @@ M8Q_STATUS m8q_read_msg_dev(void)
 // Read the whole data stream 
 M8Q_STATUS m8q_read_stream_dev(void)
 {
-    // Read the data stream size 
-    // Call the stream read function and pass the size to it 
-    // Sort the messages 
-
-    // 
     I2C_STATUS i2c_status = I2C_OK; 
     uint16_t stream_len = CLEAR; 
 
-    // 
+    // Read the size of the steam then read the data stream in its entirety and sort 
+    // all the read messages. 
     i2c_status |= m8q_read_ds_size_dev(&stream_len); 
     i2c_status |= m8q_read_ds_dev(stream_len); 
 
@@ -1071,11 +1087,11 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
         }
     }
     // Check for the start of a UBX message 
-    else if (str_compare(ubx_msg_sync, msg, BYTE_0))
+    else if (str_compare(ubx_msg_sync_str, msg, BYTE_0))
     {
         // Check for a valid UBX class 
         id_check_status = m8q_msg_id_check_dev(msg, 
-                                               (void *)&ubx_msg_class[0][0], 
+                                               (void *)&ubx_msg_class_str[0][0], 
                                                UBX_CLASS_NUM, 
                                                UBX_CLASS_LEN, 
                                                BYTE_5, 
@@ -1284,6 +1300,19 @@ M8Q_STATUS m8q_ubx_config_dev(
 
     // Send the formatted message to the device 
     return m8q_write_msg_dev((void *)msg_data, msg_len); 
+
+    // TODO Read the ACK message from the device - ACK is returned in response to CFG messages 
+    // // Read the UBX CFG response 
+    // while((m8q_read() != M8Q_READ_UBX) && --response_timeout); 
+
+    // // Check the response type 
+    // if (m8q_driver_data.ubx_resp[M8Q_UBX_CLASS_OFST] == M8Q_UBX_ACK_CLASS) 
+    // {
+    //     if (m8q_driver_data.ubx_resp[M8Q_UBX_ID_OFST] != M8Q_UBX_ACK_ID)
+    //     {
+    //         m8q_status |= (SET_BIT << M8Q_FAULT_UBX_NAK); 
+    //     }
+    // }
 }
 
 
@@ -1513,7 +1542,6 @@ uint8_t ubx_config_byte_convert_dev(
 
     return ((nibble1 << SHIFT_4) | nibble0); 
 }
-
 
 //=======================================================================================
 
