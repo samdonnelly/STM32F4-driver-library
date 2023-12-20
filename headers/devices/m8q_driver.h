@@ -51,11 +51,6 @@
 #define M8Q_REG_0XFE 0xFE                // Available data bytes (low byte) register 
 #define M8Q_REG_0XFF 0xFF                // Data stream register 
 
-// M8Q messages 
-#define M8Q_NO_DATA     0xff             // Return value for an invalid NMEA data stream 
-#define M8Q_MSG_MAX_LEN 150              // Message buffer that can hold any message
-#define M8Q_PYL_MAX_LEN 100              // Message payload buffer to store any apyload length 
-
 // NMEA message format 
 #define M8Q_NMEA_MSG_MAX_LEN 150         // NMEA message buffer that can hold any received message
 #define M8Q_NMEA_END_PAY     0x2A        // 0x2A == '*' --> indicates end of NMEA message payload 
@@ -125,12 +120,15 @@
  * @brief M8Q driver status 
  */
 typedef enum {
-    M8Q_OK,                  // No problems with the M8Q operation 
-    M8Q_INVALID_PTR,         // Invalid pointer provided to function 
-    M8Q_INVALID_CONFIG,      // Invalid configuration message 
-    M8Q_WRITE_FAULT,         // 
-    M8Q_UBX_MSG_CONV_FAIL,   // UBX message failed to convert to receiver format 
-    M8Q_UBX_MSG_CONV_SUCC    // UBX message successfully converted to receiver format 
+    M8Q_OK,                   // No problems with the M8Q operation 
+    M8Q_INVALID_PTR,          // Invalid pointer provided to function 
+    M8Q_INVALID_CONFIG,       // Invalid configuration message 
+    M8Q_WRITE_FAULT,          // A problem occurred while writing via I2C 
+    M8Q_READ_FAULT,           // A problem occurred while reading via I2C 
+    M8Q_NO_DATA_AVAILABLE,    // No data is in the data stream 
+    M8Q_DATA_BUFF_OVERFLOW,   // Device data buffer (stream size) exceeds driver threshold 
+    M8Q_UBX_MSG_CONV_FAIL,    // UBX message failed to convert to receiver format 
+    M8Q_UBX_MSG_CONV_SUCC     // UBX message successfully converted to receiver format 
 } m8q_status_t; 
 
 //=======================================================================================
@@ -160,13 +158,15 @@ typedef uint8_t M8Q_STATUS;
  * @param config_msgs 
  * @param msg_num 
  * @param max_msg_size 
+ * @param data_buff_limit 
  * @return M8Q_STATUS 
  */
 M8Q_STATUS m8q_init_dev(
     I2C_TypeDef *i2c, 
     const char *config_msgs, 
     uint8_t msg_num, 
-    uint8_t max_msg_size); 
+    uint8_t max_msg_size, 
+    uint16_t data_buff_limit); 
 
 
 /**
@@ -201,16 +201,6 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 
 //=======================================================================================
 // User functions - dev 
-
-// /**
-//  * @brief Read one message at a time 
-//  * 
-//  * @details 
-//  * 
-//  * @return M8Q_STATUS 
-//  */
-// M8Q_STATUS m8q_read_msg_dev(void); 
-
 
 /**
  * @brief Read the whole data stream 

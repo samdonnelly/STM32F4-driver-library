@@ -22,9 +22,10 @@ extern "C"
 //=======================================================================================
 // Macros 
 
-#define CONFIG_TEST_MSG_NUM 3 
+#define NUM_CONFIG_TEST_MSGS 3 
 #define NUM_NMEA_TEST_MSGS 8 
 #define NUM_UBX_TEST_MSGS 18 
+#define NO_DATA_BUFF_LIMIT 0 
 
 //=======================================================================================
 
@@ -113,7 +114,8 @@ TEST(m8q_driver, m8q_init_invalid_ptr)
         I2C_LOCAL_FAKE, 
         &m8q_config_pkt[0][0], 
         M8Q_CONFIG_NUM_MSG, 
-        M8Q_CONFIG_MAX_MSG_LEN); 
+        M8Q_CONFIG_MAX_MSG_LEN, 
+        NO_DATA_BUFF_LIMIT); 
 
     UNSIGNED_LONGS_EQUAL(M8Q_INVALID_PTR, ptr_status); 
 }
@@ -122,11 +124,11 @@ TEST(m8q_driver, m8q_init_invalid_ptr)
 // M8Q device initialization - config message ok 
 TEST(m8q_driver, m8q_init_config_msg_ok)
 {
-    uint8_t msg_num[CONFIG_TEST_MSG_NUM] = {0, 9, 11}; 
-    uint8_t msg_status[CONFIG_TEST_MSG_NUM] = {0, 0, 0}; 
+    uint8_t msg_num[NUM_CONFIG_TEST_MSGS] = {0, 9, 11}; 
+    uint8_t msg_status[NUM_CONFIG_TEST_MSGS] = {0, 0, 0}; 
 
     // Config messages from 'm8q_config_pkt' 
-    const char config_msgs[CONFIG_TEST_MSG_NUM][M8Q_CONFIG_MAX_MSG_LEN] = 
+    const char config_msgs[NUM_CONFIG_TEST_MSGS][M8Q_CONFIG_MAX_MSG_LEN] = 
     {
         // Message 0 
         "$PUBX,40,GGA,0,0,0,0,0,0*", 
@@ -139,7 +141,7 @@ TEST(m8q_driver, m8q_init_config_msg_ok)
     m8q_test_config_compare(
         &m8q_config_pkt[0][0], 
         &config_msgs[0][0], 
-        CONFIG_TEST_MSG_NUM, 
+        NUM_CONFIG_TEST_MSGS, 
         msg_num, 
         M8Q_CONFIG_MAX_MSG_LEN, 
         msg_status); 
@@ -185,7 +187,8 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_invalid_msg_check)
 
     for (uint8_t i = CLEAR; i < NUM_NMEA_TEST_MSGS; i++)
     {
-        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, M8Q_CONFIG_MAX_MSG_LEN); 
+        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, 
+                                      M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     }
 
     for (uint8_t i = CLEAR; i < (NUM_NMEA_TEST_MSGS-1); i++)
@@ -218,7 +221,8 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_valid_msg_check)
     // driver formatted message that gets sent to the device. Check that the driver 
     // message and its length are correct. 
     i2c_mock_init(0); 
-    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
+                              M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len); 
 
     LONGS_EQUAL(M8Q_OK, init_check); 
@@ -262,7 +266,8 @@ TEST(m8q_driver, m8q_init_std_nmea_config_invalid_msg_check)
 
     for (uint8_t i = CLEAR; i < NUM_NMEA_TEST_MSGS; i++)
     {
-        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, M8Q_CONFIG_MAX_MSG_LEN); 
+        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, 
+                                      M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     }
 
     for (uint8_t i = CLEAR; i < (NUM_NMEA_TEST_MSGS-1); i++)
@@ -297,7 +302,8 @@ TEST(m8q_driver, m8q_init_std_nmea_config_valid_msg_check)
     // driver formatted message that gets sent to the device. Check that the driver 
     // message and its length are correct. 
     i2c_mock_init(0); 
-    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
+                              M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len); 
 
     LONGS_EQUAL(M8Q_OK, init_check); 
@@ -361,7 +367,8 @@ TEST(m8q_driver, m8q_init_ubx_config_invalid_msg_check)
 
     for (uint8_t i = CLEAR; i < NUM_UBX_TEST_MSGS; i++)
     {
-        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, M8Q_CONFIG_MAX_MSG_LEN); 
+        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, 
+                                      M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     }
 
     for (uint8_t i = CLEAR; i < (NUM_UBX_TEST_MSGS-1); i++)
@@ -397,7 +404,8 @@ TEST(m8q_driver, m8q_init_ubx_config_valid_msg_check)
     // driver formatted message that gets sent to the device. Check that the driver 
     // message and its length are correct. 
     i2c_mock_init(0); 
-    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, M8Q_CONFIG_MAX_MSG_LEN); 
+    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
+                              M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len); 
 
     LONGS_EQUAL(M8Q_OK, init_check); 
@@ -421,7 +429,8 @@ TEST(m8q_driver, m8q_init_valid_config)
         &I2C_FAKE, 
         &m8q_config_pkt[0][0], 
         M8Q_CONFIG_NUM_MSG, 
-        M8Q_CONFIG_MAX_MSG_LEN); 
+        M8Q_CONFIG_MAX_MSG_LEN, 
+        NO_DATA_BUFF_LIMIT); 
 
     LONGS_EQUAL(M8Q_OK, init_check); 
 }

@@ -44,6 +44,11 @@
 #define UBX_CLASS_NUM 14          // Number of UBX classes 
 #define UBX_CLASS_LEN 3           // Maximum length of a UBX class 
 
+// M8Q messages 
+#define M8Q_NO_DATA     0xff             // Return value for an invalid NMEA data stream 
+#define M8Q_MSG_MAX_LEN 150              // Message buffer that can hold any message
+#define M8Q_PYL_MAX_LEN 100              // Message payload buffer to store any apyload length 
+
 //=======================================================================================
 
 
@@ -172,6 +177,9 @@ typedef struct m8q_driver_data_s
     pin_selector_t pwr_save;      // Low power mode 
     pin_selector_t tx_ready;      // TX-Ready 
 
+    // Other 
+    uint16_t data_buff_limit; 
+
     //==================================================
     
     // Messages 
@@ -258,7 +266,7 @@ nmea_msg_data_t;
 // NMEA message format 
 typedef struct nmea_msg_format_s 
 {
-    const char nmea_msg_format[NMEA_MSG_FORMAT_LEN]; 
+    char nmea_msg_format[NMEA_MSG_FORMAT_LEN]; 
     nmea_msg_data_t nmea_msg_data; 
 }
 nmea_msg_format_t; 
@@ -274,6 +282,15 @@ nmea_msg_target_t;
 
 // NMEA target message instance 
 static nmea_msg_target_t nmea_msg_target; 
+
+
+// UBX message class data 
+typedef struct ubx_msg_class_s 
+{
+    char ubx_msg_class_str[UBX_CLASS_LEN]; 
+    uint8_t ubc_msg_class_data; 
+}
+ubx_msg_class_t; 
 
 //==================================================
 
@@ -338,6 +355,24 @@ static const nmea_msg_format_t nmea_std_msgs[NMEA_STD_NUM_MSGS] =
 static const char ubx_msg_sync_str[] = "B562"; 
 
 static const uint8_t ubx_msg_sync_data[] = { 0xB5, 0x62 }; 
+
+// static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] = 
+// {
+//     {"01", 0x01},   // NAV 
+//     {"02", 0x02},   // RXM 
+//     {"04", 0x04},   // INF 
+//     {"05", 0x05},   // ACK 
+//     {"06", 0x06},   // CFG 
+//     {"09", 0x09},   // UPD 
+//     {"0A", 0x0A},   // MON 
+//     {"0B", 0x0B},   // AID 
+//     {"0D", 0x0D},   // TIM 
+//     {"10", 0x10},   // ESF 
+//     {"13", 0x13},   // MGA 
+//     {"21", 0x21},   // LOG 
+//     {"27", 0x27},   // SEC 
+//     {"28", 0x28}    // HNR 
+// }; 
 
 static const char ubx_msg_class_str[UBX_CLASS_NUM][UBX_CLASS_LEN] = 
 {
@@ -653,7 +688,8 @@ M8Q_STATUS m8q_init_dev(
     I2C_TypeDef *i2c, 
     const char *config_msgs, 
     uint8_t msg_num, 
-    uint8_t max_msg_size)
+    uint8_t max_msg_size, 
+    uint16_t data_buff_limit)
 {
     if ((i2c == NULL) || (config_msgs == NULL))
     {
@@ -666,6 +702,7 @@ M8Q_STATUS m8q_init_dev(
 
     // Initialize driver data 
     m8q_driver_data.i2c = i2c; 
+    m8q_driver_data.data_buff_limit = (!data_buff_limit) ? HIGH_16BIT : data_buff_limit; 
     memset((void *)&nmea_msg_target, CLEAR, sizeof(nmea_msg_target_t)); 
 
     // Send configuration messages 
@@ -756,84 +793,6 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 //=======================================================================================
 // User functions (public) 
 
-// // Read one message at a time 
-// M8Q_STATUS m8q_read_msg_dev(void)
-// {
-//     // Local variables 
-//     M8Q_STATUS read_status = M8Q_READ_INVALID; 
-//     uint8_t data_check = CLEAR; 
-//     uint8_t *nmea_data = m8q_driver_data.nmea_resp; 
-//     uint8_t *ubx_data  = m8q_driver_data.ubx_resp; 
-//     I2C_STATUS i2c_status = I2C_OK; 
-
-//     // Check for a valid data stream 
-//     m8q_read_ds_reg_dev(&data_check); 
-
-//     switch (data_check)
-//     {
-//         case M8Q_NO_DATA:  // No data stream available 
-//             break;
-
-//         case NMEA_START:  // Start of NMEA message 
-//             // Capture the byte checked in the message response 
-//             *nmea_data++ = data_check; 
-
-//             // Generate a start condition 
-//             i2c_status |= i2c_start(m8q_driver_data.i2c); 
-
-//             // Send the device address with a read offset 
-//             i2c_status |= i2c_write_addr(m8q_driver_data.i2c, 
-//                                          M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
-//             i2c_clear_addr(m8q_driver_data.i2c);  
-
-//             // Read the rest of the data stream until "\r\n" 
-//             i2c_status |= i2c_read_to_term(m8q_driver_data.i2c, 
-//                                            nmea_data, 
-//                                            M8Q_NMEA_END_PAY, 
-//                                            BYTE_4); 
-
-//             // Parse the message data into its data record 
-//             m8q_nmea_sort(nmea_data); 
-
-//             read_status = M8Q_READ_NMEA; 
-//             break;
-        
-//         case UBX_SYNC1:  // Start of UBX message 
-//             // Capture the byte checked in the message response 
-//             *ubx_data++ = data_check; 
-
-//             // Generate a start condition 
-//             i2c_status |= i2c_start(m8q_driver_data.i2c); 
-
-//             // Send the device address with a read offset 
-//             i2c_status |= i2c_write_addr(m8q_driver_data.i2c, 
-//                                          M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET); 
-//             i2c_clear_addr(m8q_driver_data.i2c); 
-
-//             // Read the rest of the UBX message 
-//             i2c_status |= i2c_read_to_len(m8q_driver_data.i2c, 
-//                                           M8Q_I2C_8_BIT_ADDR + I2C_R_OFFSET, 
-//                                           ubx_data, 
-//                                           M8Q_UBX_LENGTH_OFST-BYTE_1, 
-//                                           M8Q_UBX_LENGTH_LEN, 
-//                                           M8Q_UBX_CS_LEN); 
-
-//             read_status = M8Q_READ_UBX; 
-//             break; 
-
-//         default:  // Unknown data stream 
-//             break;
-//     }
-
-//     // Update the driver status 
-//     m8q_driver_data.status |= (uint8_t)i2c_status; 
-
-//     return read_status; 
-
-//     return M8Q_OK; 
-// }
-
-
 // Read the whole data stream 
 M8Q_STATUS m8q_read_stream_dev(void)
 {
@@ -844,10 +803,18 @@ M8Q_STATUS m8q_read_stream_dev(void)
     // entirety and sort all the read messages. 
     i2c_status |= m8q_read_ds_size_dev(&stream_len); 
 
-    if (stream_len)
+    if (!stream_len)
     {
-        i2c_status |= m8q_read_ds_dev(stream_len); 
+        return M8Q_NO_DATA_AVAILABLE; 
     }
+
+    if (stream_len > m8q_driver_data.data_buff_limit)
+    {
+        // Flush the data buffer 
+        // Return an overflow status 
+    }
+    
+    i2c_status |= m8q_read_ds_dev(stream_len); 
 
     return M8Q_OK; 
 }
