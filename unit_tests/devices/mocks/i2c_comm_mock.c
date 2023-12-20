@@ -166,24 +166,7 @@ I2C_STATUS i2c_read_to_term(
     uint8_t term_char, 
     uint16_t bytes_remain)
 {
-    // Local variables 
-    I2C_STATUS i2c_status = I2C_OK; 
-
-    // // Read the data until the termination character is seen 
-    // do
-    // {
-    //     i2c_status |= i2c_rxne_wait(i2c); 
-    //     *data = i2c->DR; 
-    //     i2c_set_ack(i2c); 
-    // } 
-    // while (*data++ != term_char); 
-
-    // // Read the remaining bytes and terminate the data 
-    // i2c_status |= i2c_read(i2c, data, bytes_remain); 
-    // data += bytes_remain; 
-    // *data = 0; 
-
-    return i2c_status; 
+    return I2C_OK; 
 }
 
 
@@ -196,34 +179,7 @@ I2C_STATUS i2c_read_to_len(
     uint8_t len_bytes, 
     uint8_t add_bytes)
 {
-    // Local variables 
-    I2C_STATUS i2c_status = I2C_OK; 
-    // uint16_t msg_length = 0; 
-
-    // // Read up to and including the part of the message that specifies the length 
-    // i2c_status |= i2c_read(i2c, data, len_location + len_bytes); 
-
-    // // Extract the length and correct it using the 'add_bytes' argument 
-    // data += len_location; 
-    
-    // if (len_bytes == BYTE_1)
-    // {
-    //     msg_length = (uint16_t)(*data++) + add_bytes; 
-    // }
-    // else if (len_bytes == BYTE_2)
-    // {
-    //     msg_length  = (uint16_t)(*data++); 
-    //     msg_length |= (uint16_t)(*data++ << SHIFT_8); 
-    //     msg_length += add_bytes; 
-    // }
-    
-    // // Read the rest of the message 
-    // i2c_start(i2c); 
-    // i2c_status |= i2c_write_addr(i2c, address); 
-    // i2c_clear_addr(i2c); 
-    // i2c_status |= i2c_read(i2c, data, msg_length); 
-
-    return i2c_status; 
+    return I2C_OK; 
 }
 
 //=======================================================================================

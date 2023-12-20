@@ -202,14 +202,14 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 //=======================================================================================
 // User functions - dev 
 
-/**
- * @brief Read one message at a time 
- * 
- * @details 
- * 
- * @return M8Q_STATUS 
- */
-M8Q_STATUS m8q_read_msg_dev(void); 
+// /**
+//  * @brief Read one message at a time 
+//  * 
+//  * @details 
+//  * 
+//  * @return M8Q_STATUS 
+//  */
+// M8Q_STATUS m8q_read_msg_dev(void); 
 
 
 /**
@@ -225,14 +225,14 @@ M8Q_STATUS m8q_read_stream_dev(void);
 // Write configuration (singular) 
 
 
-/**
- * @brief Get TX-Ready status 
- * 
- * @details 
- * 
- * @return GPIO_STATE 
- */
-GPIO_STATE m8q_get_tx_ready_dev(void); 
+// /**
+//  * @brief Get TX-Ready status 
+//  * 
+//  * @details 
+//  * 
+//  * @return GPIO_STATE 
+//  */
+// GPIO_STATE m8q_get_tx_ready_dev(void); 
 
 
 // Clear driver fault code 
@@ -240,12 +240,12 @@ GPIO_STATE m8q_get_tx_ready_dev(void);
 // Get driver fault code 
 
 
-/**
- * @brief Enter low power mode 
- * 
- * @details 
- */
-void m8q_set_low_pwr_dev(void); 
+// /**
+//  * @brief Enter low power mode 
+//  * 
+//  * @details 
+//  */
+// void m8q_set_low_pwr_dev(void); 
 
 
 /**
