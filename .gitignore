@@ -56,8 +56,11 @@ unit_tests/test-lib
 unit_tests/test-obj
 unit_tests/sources
 unit_tests/devices/*.exe
+unit_tests/devices/*.exe.stackdump
 unit_tests/peripherals/*.exe
+unit_tests/peripherals/*.exe.stackdump
 unit_tests/tools/*.exe
+unit_tests/tools/*.exe.stackdump
 unit_tests/devices/your_tests
 unit_tests/peripherals/your_tests
 unit_tests/tools/your_tests

@@ -202,14 +202,14 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 //=======================================================================================
 // User functions - dev 
 
-// /**
-//  * @brief Read the whole data stream 
-//  * 
-//  * @details 
-//  * 
-//  * @return M8Q_STATUS 
-//  */
-// M8Q_STATUS m8q_read_stream_dev(void); 
+/**
+ * @brief Read the whole data stream 
+ * 
+ * @details 
+ * 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_read_stream_dev(void); 
 
 
 /**

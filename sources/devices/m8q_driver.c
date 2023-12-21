@@ -656,16 +656,17 @@ M8Q_STATUS m8q_init_dev(
     }
 
     // Local varaibles 
-    // M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
     M8Q_STATUS init_status = M8Q_OK; 
-    // uint8_t msg_offset = CLEAR; 
 
     // Initialize driver data 
     m8q_driver_data.i2c = i2c; 
     m8q_driver_data.data_buff_limit = (!data_buff_limit) ? HIGH_16BIT : data_buff_limit; 
     memset((void *)&nmea_msg_target, CLEAR, sizeof(nmea_msg_data_t)); 
 
-    // 
+    // Check, format and write each message to the device. If there is a problem with a 
+    // message then the operation is aborted and the status is returned. If the message 
+    // being sent is a UBX CFG message and it successfully writes to the device then the 
+    // code looks for an ACK response. 
     for (uint8_t i = CLEAR; i < msg_num; i++)
     {
         init_status = m8q_write_dev(config_msgs, max_msg_size); 
@@ -675,48 +676,14 @@ M8Q_STATUS m8q_init_dev(
             break; 
         }
 
+        if (*(config_msgs + BYTE_6) == 
+            *(ubx_msg_class[M8Q_UBX_CFG_INDEX].ubx_msg_class_str + BYTE_1))
+        {
+            // 
+        }
+
         config_msgs += max_msg_size; 
     }
-
-    // // Send configuration messages 
-    // for (uint8_t i = CLEAR; i < msg_num; i++)
-    // {
-    //     msg_type = m8q_msg_id_dev(config_msgs, &msg_offset); 
-
-    //     if (msg_type == M8Q_MSG_NMEA)
-    //     {
-    //         init_status = m8q_nmea_config_dev(config_msgs, 
-    //                                           nmea_msg_target.num_param, 
-    //                                           msg_offset, 
-    //                                           max_msg_size); 
-            
-    //         if (init_status)
-    //         {
-    //             break; 
-    //         }
-    //     }
-    //     else if (msg_type == M8Q_MSG_UBX)
-    //     {
-    //         init_status = m8q_ubx_config_dev(config_msgs, max_msg_size); 
-
-    //         if (init_status)
-    //         {
-    //             break; 
-    //         }
-
-    //         // Look for an acknowledge message from the device if it's a CFG message 
-    //         if (msg_offset == M8Q_UBX_CFG_INDEX)
-    //         {
-    //             // 
-    //         }
-    //     }
-    //     else if (msg_type == M8Q_MSG_INVALID)
-    //     {
-    //         return M8Q_INVALID_CONFIG; 
-    //     }
-
-    //     config_msgs += max_msg_size; 
-    // }
 
     return init_status; 
 }
@@ -772,31 +739,31 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 //=======================================================================================
 // User functions (public) 
 
-// // Read the whole data stream 
-// M8Q_STATUS m8q_read_stream_dev(void)
-// {
-//     I2C_STATUS i2c_status = I2C_OK; 
-//     uint16_t stream_len = CLEAR; 
+// Read the whole data stream 
+M8Q_STATUS m8q_read_stream_dev(void)
+{
+    I2C_STATUS i2c_status = I2C_OK; 
+    uint16_t stream_len = CLEAR; 
 
-//     // Read the size of the stream. If it's not zero then read the data stream in its 
-//     // entirety and sort all the read messages. 
-//     i2c_status |= m8q_read_ds_size_dev(&stream_len); 
+    // Read the size of the stream. If it's not zero then read the data stream in its 
+    // entirety and sort all the read messages. 
+    i2c_status |= m8q_read_ds_size_dev(&stream_len); 
 
-//     if (!stream_len)
-//     {
-//         return M8Q_NO_DATA_AVAILABLE; 
-//     }
+    // if (!stream_len)
+    // {
+    //     return M8Q_NO_DATA_AVAILABLE; 
+    // }
 
-//     if (stream_len > m8q_driver_data.data_buff_limit)
-//     {
-//         // Flush the data buffer 
-//         // Return an overflow status 
-//     }
+    // if (stream_len > m8q_driver_data.data_buff_limit)
+    // {
+    //     // Flush the data buffer 
+    //     // Return an overflow status 
+    // }
     
-//     i2c_status |= m8q_read_ds_dev(stream_len); 
+    // i2c_status |= m8q_read_ds_dev(stream_len); 
 
-//     return M8Q_OK; 
-// }
+    return M8Q_OK; 
+}
 
 
 // Flush the device data buffer 
@@ -967,7 +934,7 @@ M8Q_STATUS m8q_write_msg_dev(
     i2c_status |= m8q_write_data_dev((uint8_t *)msg, msg_size); 
     i2c_stop(m8q_driver_data.i2c); 
 
-    if (i2c_status == I2C_TIMEOUT)
+    if (i2c_status)
     {
         return M8Q_WRITE_FAULT; 
     }
@@ -1306,19 +1273,6 @@ M8Q_STATUS m8q_ubx_config_dev(
 
     // Send the formatted message to the device 
     return m8q_write_msg_dev((void *)msg_data, msg_len); 
-
-    // TODO Read the ACK message from the device - ACK is returned in response to CFG messages 
-    // // Read the UBX CFG response 
-    // while((m8q_read() != M8Q_READ_UBX) && --response_timeout); 
-
-    // // Check the response type 
-    // if (m8q_driver_data.ubx_resp[M8Q_UBX_CLASS_OFST] == M8Q_UBX_ACK_CLASS) 
-    // {
-    //     if (m8q_driver_data.ubx_resp[M8Q_UBX_ID_OFST] != M8Q_UBX_ACK_ID)
-    //     {
-    //         m8q_status |= (SET_BIT << M8Q_FAULT_UBX_NAK); 
-    //     }
-    // }
 }
 
 

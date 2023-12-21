@@ -21,19 +21,33 @@
 
 
 //=======================================================================================
+// Macros 
+
+#define MAX_DATA_OPS 2 
+#define MAX_DATA_SIZE 300 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Global variables 
 
 // Mock driver data record 
 typedef struct i2c_mock_driver_data_s 
 {
-    uint8_t write_data[150]; 
-    uint8_t write_data_size; 
+    uint8_t i2c_timeout; 
+    uint8_t increment_mode; 
 
-    uint8_t timeout; 
+    uint8_t write_data[MAX_DATA_OPS][MAX_DATA_SIZE]; 
+    uint8_t write_data_size[MAX_DATA_OPS]; 
+    uint8_t write_index; 
+
+    uint8_t read_data[MAX_DATA_OPS][MAX_DATA_SIZE]; 
+    uint8_t read_index; 
 }
 i2c_mock_driver_data_t; 
 
-i2c_mock_driver_data_t mock_driver_data; 
+static i2c_mock_driver_data_t mock_driver_data; 
 
 //=======================================================================================
 
@@ -45,7 +59,7 @@ i2c_mock_driver_data_t mock_driver_data;
 I2C_STATUS i2c_start(
     I2C_TypeDef *i2c)
 {
-    if (mock_driver_data.timeout)
+    if (mock_driver_data.i2c_timeout)
     {
         return I2C_TIMEOUT; 
     }
@@ -85,8 +99,19 @@ I2C_STATUS i2c_write(
     const uint8_t *data, 
     uint8_t data_size)
 {
-    memcpy((void *)mock_driver_data.write_data, (void *)data, data_size); 
-    mock_driver_data.write_data_size = data_size; 
+    if ((data == NULL) || (mock_driver_data.write_index >= MAX_DATA_OPS))
+    {
+        return I2C_NULL_PTR; 
+    }
+
+    memcpy((void *)(&mock_driver_data.write_data[mock_driver_data.write_index][0]), 
+           (void *)data, data_size); 
+    mock_driver_data.write_data_size[mock_driver_data.write_index] = data_size; 
+
+    if (mock_driver_data.increment_mode)
+    {
+        mock_driver_data.write_index++; 
+    }
 
     return I2C_OK; 
 }
@@ -98,64 +123,21 @@ I2C_STATUS i2c_read(
     uint8_t *data, 
     uint16_t data_size)
 {
-    // Local variables 
-    I2C_STATUS i2c_status = I2C_OK; 
+    if ((data == NULL) || (mock_driver_data.read_index >= MAX_DATA_OPS))
+    {
+        return I2C_NULL_PTR; 
+    }
 
-    // // Check the amount of data to be received 
-    // switch(data_size)
-    // {
-    //     case BYTE_0:  // No data specified - no transmission
-    //         break;
+    memcpy((void *)data, 
+           (void *)(&mock_driver_data.read_data[mock_driver_data.read_index][0]), 
+           data_size); 
 
-    //     case BYTE_1:  // One-byte transmission 
-    //         // Clear the ACK bit to send a NACK pulse to the slave
-    //         i2c_clear_ack(i2c);
+    if (mock_driver_data.increment_mode)
+    {
+        mock_driver_data.read_index++; 
+    }
 
-    //         // Read SR1 and SR2 to clear ADDR
-    //         i2c_clear_addr(i2c);
-
-    //         // Generate stop condition
-    //         i2c_stop(i2c);
-
-    //         // Wait for RxNE bit to set indicating data is ready 
-    //         i2c_status |= i2c_rxne_wait(i2c);
-
-    //         // Read the data regsiter
-    //         *data = i2c->DR;
-
-    //         break;
-
-    //     default:  // Greater than one-byte transmission 
-    //         // Read SR1 and SR2 to clear ADDR
-    //         i2c_clear_addr(i2c);
-
-    //         // Normal reading 
-    //         for (uint8_t i = 0; i < (data_size - BYTE_2); i++)
-    //         {
-    //             i2c_status |= i2c_rxne_wait(i2c);  // Indicates when data is ready 
-    //             *data++ = i2c->DR;                 // Read data
-    //             i2c_set_ack(i2c);                  // Set the ACK bit 
-    //         }
-
-    //         // Read the second last data byte 
-    //         i2c_status |= i2c_rxne_wait(i2c);
-    //         *data = i2c->DR;
-
-    //         // Clear the ACK bit to send a NACK pulse to the slave
-    //         i2c_clear_ack(i2c);
-
-    //         // Generate stop condition
-    //         i2c_stop(i2c);
-
-    //         // Read the last data byte
-    //         data++;
-    //         i2c_status |= i2c_rxne_wait(i2c);
-    //         *data = i2c->DR;
-
-    //         break;
-    // }
-
-    return i2c_status; 
+    return I2C_OK; 
 }
 
 
@@ -190,23 +172,51 @@ I2C_STATUS i2c_read_to_len(
 
 // Mock initialization 
 void i2c_mock_init(
-    uint8_t timeout_status)
+    i2c_mock_timeout_t timeout_status, 
+    i2c_mock_increment_mode_t increment_mode)
 {
-    mock_driver_data.timeout = timeout_status; 
+    mock_driver_data.i2c_timeout = timeout_status; 
 
-    // Initialize mock data 
     memset((void *)mock_driver_data.write_data, CLEAR, sizeof(mock_driver_data.write_data)); 
-    mock_driver_data.write_data_size = CLEAR; 
+    memset((void *)mock_driver_data.write_data_size, CLEAR, 
+            sizeof(mock_driver_data.write_data_size)); 
+    mock_driver_data.write_index = CLEAR; 
+
+    memset((void *)mock_driver_data.read_data, CLEAR, sizeof(mock_driver_data.read_data)); 
+    mock_driver_data.read_index = CLEAR; 
 }
 
 
 // Get write data 
 void i2c_mock_get_write_data(
-    void *data_buff, 
-    uint8_t *data_size)
+    void *write_buff, 
+    uint8_t *write_data_size, 
+    uint8_t write_index)
 {
-    memcpy(data_buff, (void *)mock_driver_data.write_data, mock_driver_data.write_data_size); 
-    *data_size = mock_driver_data.write_data_size; 
+    if ((write_buff == NULL) || (write_data_size == NULL) || (write_index >= MAX_DATA_OPS))
+    {
+        return; 
+    }
+
+    memcpy(write_buff, (void *)(mock_driver_data.write_data + write_index*MAX_DATA_SIZE), 
+           mock_driver_data.write_data_size[write_index]); 
+    *write_data_size = mock_driver_data.write_data_size[write_index]; 
+}
+
+
+// Set read data 
+void i2c_mock_set_read_data(
+    const void *read_data, 
+    uint16_t read_data_size, 
+    uint8_t read_index)
+{
+    if ((read_data == NULL) || (read_index >= MAX_DATA_OPS))
+    {
+        return; 
+    }
+
+    memcpy((void *)(mock_driver_data.read_data + read_index*MAX_DATA_SIZE), read_data, 
+            read_data_size); 
 }
 
 //=======================================================================================

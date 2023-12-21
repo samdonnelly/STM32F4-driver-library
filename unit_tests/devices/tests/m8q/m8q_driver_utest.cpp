@@ -183,7 +183,7 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_invalid_msg_check)
     }; 
 
     // Initialize the mock I2C driver to time out 
-    i2c_mock_init(1); 
+    i2c_mock_init(I2C_MOCK_TIMEOUT_ENABLE, I2C_MOCK_INC_MODE_DISABLE); 
 
     for (uint8_t i = CLEAR; i < NUM_NMEA_TEST_MSGS; i++)
     {
@@ -220,10 +220,10 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_valid_msg_check)
     // Initialize the mock I2C driver to not time out, run the init and retrieve the 
     // driver formatted message that gets sent to the device. Check that the driver 
     // message and its length are correct. 
-    i2c_mock_init(0); 
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
     init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
                               M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
-    i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len); 
+    i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len, I2C_MOCK_INDEX_0); 
 
     LONGS_EQUAL(M8Q_OK, init_check); 
     LONGS_EQUAL(config_msg_compare_len, config_msg_check_len); 
@@ -262,7 +262,7 @@ TEST(m8q_driver, m8q_init_std_nmea_config_invalid_msg_check)
     }; 
 
     // Initialize the mock I2C driver to time out 
-    i2c_mock_init(1); 
+    i2c_mock_init(I2C_MOCK_TIMEOUT_ENABLE, I2C_MOCK_INC_MODE_DISABLE); 
 
     for (uint8_t i = CLEAR; i < NUM_NMEA_TEST_MSGS; i++)
     {
@@ -301,10 +301,10 @@ TEST(m8q_driver, m8q_init_std_nmea_config_valid_msg_check)
     // Initialize the mock I2C driver to not time out, run the init and retrieve the 
     // driver formatted message that gets sent to the device. Check that the driver 
     // message and its length are correct. 
-    i2c_mock_init(0); 
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
     init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
                               M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
-    i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len); 
+    i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len, I2C_MOCK_INDEX_0); 
 
     LONGS_EQUAL(M8Q_OK, init_check); 
     LONGS_EQUAL(config_msg_compare_len, config_msg_check_len); 
@@ -338,6 +338,7 @@ TEST(m8q_driver, m8q_init_ubx_config_invalid_msg_check)
     // - Message 15: Invalid payload character 
     // - Message 16: No termination character at the end of the message - comma instead 
     // - Message 17: None - fails due to a forced I2C timeout 
+    // - Message 18: None - fails due to a forced NAK response (CFG message) 
 
     // Sample UBX message 
     const char config_msgs[NUM_UBX_TEST_MSGS][M8Q_CONFIG_MAX_MSG_LEN] = 
@@ -360,10 +361,11 @@ TEST(m8q_driver, m8q_init_ubx_config_invalid_msg_check)
         "B562,06,00,1400,01,00,0000,C0080000,80250000,00%0,0000,0000,0000*", 
         "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000,", 
         "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*" 
+        // "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*" 
     }; 
 
     // Initialize the mock I2C driver to time out 
-    i2c_mock_init(1); 
+    i2c_mock_init(I2C_MOCK_TIMEOUT_ENABLE, I2C_MOCK_INC_MODE_DISABLE); 
 
     for (uint8_t i = CLEAR; i < NUM_UBX_TEST_MSGS; i++)
     {
@@ -371,12 +373,15 @@ TEST(m8q_driver, m8q_init_ubx_config_invalid_msg_check)
                                       M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     }
 
+    // for (uint8_t i = CLEAR; i < (NUM_UBX_TEST_MSGS-2); i++)
     for (uint8_t i = CLEAR; i < (NUM_UBX_TEST_MSGS-1); i++)
     {
         LONGS_EQUAL(M8Q_INVALID_CONFIG, init_checks[i]); 
     }
 
     LONGS_EQUAL(M8Q_WRITE_FAULT, init_checks[NUM_UBX_TEST_MSGS-1]); 
+    // LONGS_EQUAL(M8Q_WRITE_FAULT, init_checks[NUM_UBX_TEST_MSGS-2]); 
+    // LONGS_EQUAL(M8Q_WRITE_FAULT, init_checks[NUM_UBX_TEST_MSGS-1]); 
 }
 
 
@@ -403,10 +408,10 @@ TEST(m8q_driver, m8q_init_ubx_config_valid_msg_check)
     // Initialize the mock I2C driver to not time out, run the init and retrieve the 
     // driver formatted message that gets sent to the device. Check that the driver 
     // message and its length are correct. 
-    i2c_mock_init(0); 
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
     init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
                               M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
-    i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len); 
+    i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len, I2C_MOCK_INDEX_0); 
 
     LONGS_EQUAL(M8Q_OK, init_check); 
     LONGS_EQUAL(config_msg_compare_len, config_msg_check_len); 
@@ -471,7 +476,7 @@ TEST(m8q_driver, m8q_pin_init_init_ok)
 //==================================================
 
 //==================================================
-// Read and write test 
+// Read test 
 
 // M8Q read 
 TEST(m8q_driver, m8q_read_test)
