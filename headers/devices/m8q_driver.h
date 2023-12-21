@@ -202,17 +202,28 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 //=======================================================================================
 // User functions - dev 
 
+// /**
+//  * @brief Read the whole data stream 
+//  * 
+//  * @details 
+//  * 
+//  * @return M8Q_STATUS 
+//  */
+// M8Q_STATUS m8q_read_stream_dev(void); 
+
+
 /**
- * @brief Read the whole data stream 
+ * @brief Write a message to the device 
  * 
  * @details 
  * 
+ * @param write_msg 
+ * @param max_msg_size 
  * @return M8Q_STATUS 
  */
-M8Q_STATUS m8q_read_stream_dev(void); 
-
-
-// Write configuration (singular) 
+M8Q_STATUS m8q_write_dev(
+    const char *write_msg, 
+    uint8_t max_msg_size); 
 
 
 // /**

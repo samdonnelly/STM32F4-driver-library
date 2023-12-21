@@ -49,6 +49,9 @@
 #define M8Q_MSG_MAX_LEN 150              // Message buffer that can hold any message
 #define M8Q_PYL_MAX_LEN 100              // Message payload buffer to store any apyload length 
 
+
+#define M8Q_UBX_CFG_INDEX 4 
+
 //=======================================================================================
 
 
@@ -254,13 +257,15 @@ static uint8_t* time[NMEA_NUM_FIELDS_TIME+1] =
 //==================================================
 // Identification 
 
-// NMEA message data 
+// Message info 
 typedef struct nmea_msg_data_s 
 {
     uint8_t num_param; 
     uint8_t **msg_data; 
 }
 nmea_msg_data_t; 
+
+static nmea_msg_data_t nmea_msg_target; 
 
 
 // NMEA message format 
@@ -270,18 +275,6 @@ typedef struct nmea_msg_format_s
     nmea_msg_data_t nmea_msg_data; 
 }
 nmea_msg_format_t; 
-
-
-// NMEA target message information 
-typedef struct nmea_msg_target_s 
-{
-    uint8_t arg_offset; 
-    nmea_msg_data_t nmea_msg_data; 
-}
-nmea_msg_target_t; 
-
-// NMEA target message instance 
-static nmea_msg_target_t nmea_msg_target; 
 
 
 // UBX message class data 
@@ -356,58 +349,22 @@ static const char ubx_msg_sync_str[] = "B562";
 
 static const uint8_t ubx_msg_sync_data[] = { 0xB5, 0x62 }; 
 
-// static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] = 
-// {
-//     {"01", 0x01},   // NAV 
-//     {"02", 0x02},   // RXM 
-//     {"04", 0x04},   // INF 
-//     {"05", 0x05},   // ACK 
-//     {"06", 0x06},   // CFG 
-//     {"09", 0x09},   // UPD 
-//     {"0A", 0x0A},   // MON 
-//     {"0B", 0x0B},   // AID 
-//     {"0D", 0x0D},   // TIM 
-//     {"10", 0x10},   // ESF 
-//     {"13", 0x13},   // MGA 
-//     {"21", 0x21},   // LOG 
-//     {"27", 0x27},   // SEC 
-//     {"28", 0x28}    // HNR 
-// }; 
-
-static const char ubx_msg_class_str[UBX_CLASS_NUM][UBX_CLASS_LEN] = 
+static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] = 
 {
-    "01",   // NAV 
-    "02",   // RXM 
-    "04",   // INF 
-    "05",   // ACK 
-    "06",   // CFG 
-    "09",   // UPD 
-    "0A",   // MON 
-    "0B",   // AID 
-    "0D",   // TIM 
-    "10",   // ESF 
-    "13",   // MGA 
-    "21",   // LOG 
-    "27",   // SEC 
-    "28"    // HNR 
-}; 
-
-static const uint8_t ubx_msg_class_data[UBX_CLASS_NUM] = 
-{
-    0x01,   // NAV 
-    0x02,   // RXM 
-    0x04,   // INF 
-    0x05,   // ACK 
-    0x06,   // CFG 
-    0x09,   // UPD 
-    0x0A,   // MON 
-    0x0B,   // AID 
-    0x0D,   // TIM 
-    0x10,   // ESF 
-    0x13,   // MGA 
-    0x21,   // LOG 
-    0x27,   // SEC 
-    0x28    // HNR 
+    {"01", 0x01},   // NAV 
+    {"02", 0x02},   // RXM 
+    {"04", 0x04},   // INF 
+    {"05", 0x05},   // ACK 
+    {"06", 0x06},   // CFG 
+    {"09", 0x09},   // UPD 
+    {"0A", 0x0A},   // MON 
+    {"0B", 0x0B},   // AID 
+    {"0D", 0x0D},   // TIM 
+    {"10", 0x10},   // ESF 
+    {"13", 0x13},   // MGA 
+    {"21", 0x21},   // LOG 
+    {"27", 0x27},   // SEC 
+    {"28", 0x28}    // HNR 
 }; 
 
 //==================================================
@@ -469,7 +426,7 @@ I2C_STATUS m8q_read_dev(
 
 
 /**
- * @brief Send a message to the device 
+ * @brief Send a formatted message to the device 
  * 
  * @details 
  * 
@@ -491,7 +448,7 @@ M8Q_STATUS m8q_write_msg_dev(
  * @param data_size 
  * @return I2C_STATUS 
  */
-I2C_STATUS m8q_write_dev(
+I2C_STATUS m8q_write_data_dev(
     const uint8_t *data, 
     uint8_t data_size); 
 
@@ -514,10 +471,12 @@ I2C_STATUS m8q_start_trans_dev(
  * @details 
  * 
  * @param msg 
+ * @param msg_offset 
  * @return M8Q_MSG_TYPE 
  */
 M8Q_MSG_TYPE m8q_msg_id_dev(
-    const char *msg); 
+    const char *msg, 
+    uint8_t *msg_offset); 
 
 
 /**
@@ -697,47 +656,67 @@ M8Q_STATUS m8q_init_dev(
     }
 
     // Local varaibles 
-    M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
+    // M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
     M8Q_STATUS init_status = M8Q_OK; 
+    // uint8_t msg_offset = CLEAR; 
 
     // Initialize driver data 
     m8q_driver_data.i2c = i2c; 
     m8q_driver_data.data_buff_limit = (!data_buff_limit) ? HIGH_16BIT : data_buff_limit; 
-    memset((void *)&nmea_msg_target, CLEAR, sizeof(nmea_msg_target_t)); 
+    memset((void *)&nmea_msg_target, CLEAR, sizeof(nmea_msg_data_t)); 
 
-    // Send configuration messages 
+    // 
     for (uint8_t i = CLEAR; i < msg_num; i++)
     {
-        msg_type = m8q_msg_id_dev(config_msgs); 
+        init_status = m8q_write_dev(config_msgs, max_msg_size); 
 
-        if (msg_type == M8Q_MSG_NMEA)
+        if (init_status)
         {
-            init_status = m8q_nmea_config_dev(config_msgs, 
-                                              nmea_msg_target.nmea_msg_data.num_param, 
-                                              nmea_msg_target.arg_offset, 
-                                              max_msg_size); 
-            
-            if (init_status == M8Q_INVALID_CONFIG)
-            {
-                break; 
-            }
-        }
-        else if (msg_type == M8Q_MSG_UBX)
-        {
-            init_status = m8q_ubx_config_dev(config_msgs, max_msg_size); 
-
-            if (init_status == M8Q_INVALID_CONFIG)
-            {
-                break; 
-            }
-        }
-        else if (msg_type == M8Q_MSG_INVALID)
-        {
-            return M8Q_INVALID_CONFIG; 
+            break; 
         }
 
         config_msgs += max_msg_size; 
     }
+
+    // // Send configuration messages 
+    // for (uint8_t i = CLEAR; i < msg_num; i++)
+    // {
+    //     msg_type = m8q_msg_id_dev(config_msgs, &msg_offset); 
+
+    //     if (msg_type == M8Q_MSG_NMEA)
+    //     {
+    //         init_status = m8q_nmea_config_dev(config_msgs, 
+    //                                           nmea_msg_target.num_param, 
+    //                                           msg_offset, 
+    //                                           max_msg_size); 
+            
+    //         if (init_status)
+    //         {
+    //             break; 
+    //         }
+    //     }
+    //     else if (msg_type == M8Q_MSG_UBX)
+    //     {
+    //         init_status = m8q_ubx_config_dev(config_msgs, max_msg_size); 
+
+    //         if (init_status)
+    //         {
+    //             break; 
+    //         }
+
+    //         // Look for an acknowledge message from the device if it's a CFG message 
+    //         if (msg_offset == M8Q_UBX_CFG_INDEX)
+    //         {
+    //             // 
+    //         }
+    //     }
+    //     else if (msg_type == M8Q_MSG_INVALID)
+    //     {
+    //         return M8Q_INVALID_CONFIG; 
+    //     }
+
+    //     config_msgs += max_msg_size; 
+    // }
 
     return init_status; 
 }
@@ -793,31 +772,31 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 //=======================================================================================
 // User functions (public) 
 
-// Read the whole data stream 
-M8Q_STATUS m8q_read_stream_dev(void)
-{
-    I2C_STATUS i2c_status = I2C_OK; 
-    uint16_t stream_len = CLEAR; 
+// // Read the whole data stream 
+// M8Q_STATUS m8q_read_stream_dev(void)
+// {
+//     I2C_STATUS i2c_status = I2C_OK; 
+//     uint16_t stream_len = CLEAR; 
 
-    // Read the size of the stream. If it's not zero then read the data stream in its 
-    // entirety and sort all the read messages. 
-    i2c_status |= m8q_read_ds_size_dev(&stream_len); 
+//     // Read the size of the stream. If it's not zero then read the data stream in its 
+//     // entirety and sort all the read messages. 
+//     i2c_status |= m8q_read_ds_size_dev(&stream_len); 
 
-    if (!stream_len)
-    {
-        return M8Q_NO_DATA_AVAILABLE; 
-    }
+//     if (!stream_len)
+//     {
+//         return M8Q_NO_DATA_AVAILABLE; 
+//     }
 
-    if (stream_len > m8q_driver_data.data_buff_limit)
-    {
-        // Flush the data buffer 
-        // Return an overflow status 
-    }
+//     if (stream_len > m8q_driver_data.data_buff_limit)
+//     {
+//         // Flush the data buffer 
+//         // Return an overflow status 
+//     }
     
-    i2c_status |= m8q_read_ds_dev(stream_len); 
+//     i2c_status |= m8q_read_ds_dev(stream_len); 
 
-    return M8Q_OK; 
-}
+//     return M8Q_OK; 
+// }
 
 
 // Flush the device data buffer 
@@ -828,7 +807,43 @@ M8Q_STATUS m8q_read_stream_dev(void)
 // - Would this just be integrated into the read function? 
 
 
-// Write configuration (singular) 
+// Write a message to the device 
+M8Q_STATUS m8q_write_dev(
+    const char *write_msg, 
+    uint8_t max_msg_size)
+{
+    if (write_msg == NULL)
+    {
+        return M8Q_INVALID_PTR; 
+    }
+
+    // Local varaibles 
+    M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
+    M8Q_STATUS init_status = M8Q_OK; 
+    uint8_t msg_offset = CLEAR; 
+
+    // Identify the message type. If the message is identifiable then attempt to configure 
+    // it and send it to the device. 
+    msg_type = m8q_msg_id_dev(write_msg, &msg_offset); 
+
+    if (msg_type == M8Q_MSG_NMEA)
+    {
+        init_status = m8q_nmea_config_dev(write_msg, 
+                                          nmea_msg_target.num_param, 
+                                          msg_offset, 
+                                          max_msg_size); 
+    }
+    else if (msg_type == M8Q_MSG_UBX)
+    {
+        init_status = m8q_ubx_config_dev(write_msg, max_msg_size); 
+    }
+    else
+    {
+        init_status = M8Q_INVALID_CONFIG; 
+    }
+
+    return init_status; 
+}
 
 
 // Get TX-Ready status 
@@ -880,17 +895,17 @@ void m8q_clear_low_pwr_dev(void)
 //=======================================================================================
 // Read and write functions (private) 
 
-// Read the whole data stream and store the data 
-I2C_STATUS m8q_read_ds_dev(
-    uint16_t stream_len)
-{
-    uint8_t stream_data[stream_len]; 
-    I2C_STATUS i2c_status = I2C_OK; 
+// // Read the whole data stream and store the data 
+// I2C_STATUS m8q_read_ds_dev(
+//     uint16_t stream_len)
+// {
+//     uint8_t stream_data[stream_len]; 
+//     I2C_STATUS i2c_status = I2C_OK; 
 
-    i2c_status |= m8q_read_dev(stream_data, stream_len); 
+//     i2c_status |= m8q_read_dev(stream_data, stream_len); 
 
-    return i2c_status; 
-}
+//     return i2c_status; 
+// }
 
 
 // // Read the current value at the data stream register 
@@ -916,7 +931,7 @@ I2C_STATUS m8q_read_ds_size_dev(
 
     // Send the data size register address to the device then read the data high and 
     // low bytes of the data size. 
-    i2c_status |= m8q_write_dev(&address, BYTE_1); 
+    i2c_status |= m8q_write_data_dev(&address, BYTE_1); 
     i2c_status |= m8q_read_dev(num_bytes, BYTE_2); 
 
     // Format the data into the data size 
@@ -941,7 +956,7 @@ I2C_STATUS m8q_read_dev(
 }
 
 
-// Send a message to the device 
+// Send a formatted message to the device 
 M8Q_STATUS m8q_write_msg_dev(
     const void *msg, 
     uint8_t msg_size)
@@ -949,7 +964,7 @@ M8Q_STATUS m8q_write_msg_dev(
     I2C_STATUS i2c_status = I2C_OK; 
 
     // Send the message to the device and generate a stop condition when done. 
-    i2c_status |= m8q_write_dev((uint8_t *)msg, msg_size); 
+    i2c_status |= m8q_write_data_dev((uint8_t *)msg, msg_size); 
     i2c_stop(m8q_driver_data.i2c); 
 
     if (i2c_status == I2C_TIMEOUT)
@@ -962,7 +977,7 @@ M8Q_STATUS m8q_write_msg_dev(
 
 
 // Write data to the device 
-I2C_STATUS m8q_write_dev(
+I2C_STATUS m8q_write_data_dev(
     const uint8_t *data, 
     uint8_t data_size)
 {
@@ -999,7 +1014,8 @@ I2C_STATUS m8q_start_trans_dev(
 
 // Message identification 
 M8Q_MSG_TYPE m8q_msg_id_dev(
-    const char *msg)
+    const char *msg, 
+    uint8_t *msg_offset)
 {
     uint8_t msg_index = CLEAR; 
     uint8_t id_check_status = CLEAR; 
@@ -1019,11 +1035,10 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
                                                    &msg_index); 
             if (id_check_status)
             {
-                nmea_msg_target.arg_offset = BYTE_8; 
-                nmea_msg_target.nmea_msg_data.num_param = 
-                                        nmea_pubx_msgs[msg_index].nmea_msg_data.num_param; 
-                nmea_msg_target.nmea_msg_data.msg_data = 
-                                        nmea_pubx_msgs[msg_index].nmea_msg_data.msg_data; 
+                *msg_offset = BYTE_8; 
+                nmea_msg_target.num_param = nmea_pubx_msgs[msg_index].nmea_msg_data.num_param; 
+                nmea_msg_target.msg_data = nmea_pubx_msgs[msg_index].nmea_msg_data.msg_data; 
+
                 return M8Q_MSG_NMEA; 
             }
         }
@@ -1047,11 +1062,10 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
                                                        &msg_index); 
                 if (id_check_status)
                 {
-                    nmea_msg_target.arg_offset = BYTE_6; 
-                    nmea_msg_target.nmea_msg_data.num_param = 
-                                            nmea_std_msgs[msg_index].nmea_msg_data.num_param; 
-                    nmea_msg_target.nmea_msg_data.msg_data = 
-                                            nmea_std_msgs[msg_index].nmea_msg_data.msg_data; 
+                    *msg_offset = BYTE_6; 
+                    nmea_msg_target.num_param = nmea_std_msgs[msg_index].nmea_msg_data.num_param; 
+                    nmea_msg_target.msg_data = nmea_std_msgs[msg_index].nmea_msg_data.msg_data; 
+
                     return M8Q_MSG_NMEA; 
                 }
             }
@@ -1062,13 +1076,15 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
     {
         // Check for a valid UBX class string 
         id_check_status = m8q_msg_id_check_dev(msg, 
-                                               (void *)&ubx_msg_class_str[0][0], 
+                                               (void *)ubx_msg_class[0].ubx_msg_class_str, 
                                                UBX_CLASS_NUM, 
-                                               UBX_CLASS_LEN, 
+                                               sizeof(ubx_msg_class_t), 
                                                BYTE_5, 
                                                &msg_index); 
         if (id_check_status)
         {
+            *msg_offset = msg_index; 
+
             return M8Q_MSG_UBX; 
         }
     }
@@ -1077,9 +1093,9 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
     {
         // Check for a valid UBX class byte 
         id_check_status = m8q_msg_id_check_dev(msg, 
-                                               (void *)ubx_msg_class_data, 
+                                               (void *)&ubx_msg_class[0].ubc_msg_class_data, 
                                                UBX_CLASS_NUM, 
-                                               BYTE_1, 
+                                               sizeof(ubx_msg_class_t), 
                                                BYTE_2, 
                                                &msg_index); 
         if (id_check_status)
