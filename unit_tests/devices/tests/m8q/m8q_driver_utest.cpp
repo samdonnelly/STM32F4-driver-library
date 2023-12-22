@@ -41,7 +41,8 @@ TEST_GROUP(m8q_driver)
     // Constructor 
     void setup()
     {
-        // 
+        // Initialize driver but don't send/check any messages 
+        m8q_init_dev(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, CLEAR); 
     }
 
     // Destructor 
@@ -482,6 +483,8 @@ TEST(m8q_driver, m8q_pin_init_init_ok)
 TEST(m8q_driver, m8q_read_test)
 {
     // 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
 }
 
 //==================================================
