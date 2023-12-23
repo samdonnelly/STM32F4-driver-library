@@ -479,12 +479,57 @@ TEST(m8q_driver, m8q_pin_init_init_ok)
 //==================================================
 // Read test 
 
-// M8Q read 
-TEST(m8q_driver, m8q_read_test)
+// M8Q read - stream length is zero (no data available) 
+TEST(m8q_driver, m8q_read_stream_length_zero)
 {
-    // 
+    M8Q_STATUS read_status; 
+    uint8_t stream_len[] = { 0x00, 0x00 }; 
 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data(stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+
+    read_status = m8q_read_data_dev(); 
+
+    LONGS_EQUAL(M8Q_NO_DATA_AVAILABLE, read_status); 
+}
+
+
+// M8Q read - data in the stream is larger than the threshold 
+TEST(m8q_driver, m8q_read_stream_too_large)
+{
+    // TODO still have to implement flushing of data 
+
+    M8Q_STATUS read_status; 
+    uint8_t stream_len[] = { 0x01, 0x04 }; 
+    // Stream data to set 
+
+    // Set the data buffer threshold 
+    m8q_init_dev(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, 200); 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data(stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    // Set the stream data to read 
+
+    read_status = m8q_read_data_dev(); 
+
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, read_status); 
+}
+
+
+// M8Q read - I2C timeout 
+TEST(m8q_driver, m8q_read_i2c_timeout)
+{
+    M8Q_STATUS read_status; 
+    uint8_t stream_len[] = { 0x01, 0x04 }; 
+    // Data to write 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_ENABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data(stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    // Set the stream data to read 
+
+    read_status = m8q_read_data_dev(); 
+
+    LONGS_EQUAL(M8Q_READ_FAULT, read_status); 
 }
 
 //==================================================

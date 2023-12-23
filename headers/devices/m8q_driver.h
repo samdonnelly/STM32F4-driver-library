@@ -127,6 +127,7 @@ typedef enum {
     M8Q_READ_FAULT,           // A problem occurred while reading via I2C 
     M8Q_NO_DATA_AVAILABLE,    // No data is in the data stream 
     M8Q_DATA_BUFF_OVERFLOW,   // Device data buffer (stream size) exceeds driver threshold 
+    M8Q_UNKNOWN_DATA,         // Unknown message stream data 
     M8Q_UBX_MSG_CONV_FAIL,    // UBX message failed to convert to receiver format 
     M8Q_UBX_MSG_CONV_SUCC     // UBX message successfully converted to receiver format 
 } m8q_status_t; 
@@ -203,13 +204,37 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 // User functions - dev 
 
 /**
- * @brief Read the whole data stream 
+ * @brief Read the data stream and sort/store relevant message data 
  * 
  * @details 
  * 
  * @return M8Q_STATUS 
  */
-M8Q_STATUS m8q_read_stream_dev(void); 
+M8Q_STATUS m8q_read_data_dev(void); 
+
+
+// /**
+//  * @brief Read and return the data stream contents 
+//  * 
+//  * @details 
+//  * 
+//  * @param data_buff 
+//  * @param buff_size 
+//  * @return M8Q_STATUS 
+//  */
+// M8Q_STATUS m8q_read_ds_dev(
+//     uint8_t *data_buff, 
+//     uint16_t buff_size); 
+
+
+// /**
+//  * @brief Look for a UBX acknowledgment message 
+//  * 
+//  * @details 
+//  * 
+//  * @return M8Q_STATUS 
+//  */
+// M8Q_STATUS m8q_read_ack_dev(void); 
 
 
 /**
@@ -221,7 +246,7 @@ M8Q_STATUS m8q_read_stream_dev(void);
  * @param max_msg_size 
  * @return M8Q_STATUS 
  */
-M8Q_STATUS m8q_write_dev(
+M8Q_STATUS m8q_send_msg_dev(
     const char *write_msg, 
     uint8_t max_msg_size); 
 

@@ -198,7 +198,7 @@ void i2c_mock_get_write_data(
         return; 
     }
 
-    memcpy(write_buff, (void *)(mock_driver_data.write_data + write_index*MAX_DATA_SIZE), 
+    memcpy(write_buff, (void *)(&mock_driver_data.write_data[write_index][0]), 
            mock_driver_data.write_data_size[write_index]); 
     *write_data_size = mock_driver_data.write_data_size[write_index]; 
 }
@@ -215,8 +215,7 @@ void i2c_mock_set_read_data(
         return; 
     }
 
-    memcpy((void *)(mock_driver_data.read_data + read_index*MAX_DATA_SIZE), read_data, 
-            read_data_size); 
+    memcpy((void *)(&mock_driver_data.read_data[read_index][0]), read_data, read_data_size); 
 }
 
 //=======================================================================================

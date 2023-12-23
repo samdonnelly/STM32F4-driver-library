@@ -187,7 +187,7 @@ typedef struct m8q_driver_data_s
     
     // Messages 
     uint8_t ubx_resp[M8Q_MSG_MAX_LEN];        // Buffer to store incoming UBX messages 
-    uint8_t nmea_resp[M8Q_NMEA_MSG_MAX_LEN];  // Buffer to store incoming NMEA messages 
+    uint8_t nmea_resp[M8Q_MSG_MAX_LEN];       // Buffer to store incoming NMEA messages 
 
     // Communications 
     GPIO_TypeDef *gpio; 
@@ -381,22 +381,10 @@ static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] =
  * @details 
  * 
  * @param stream_len 
- * @return I2C_STATUS 
+ * @return M8Q_STATUS 
  */
-I2C_STATUS m8q_read_ds_dev(
+M8Q_STATUS m8q_read_sort_ds_dev(
     uint16_t stream_len); 
-
-
-/**
- * @brief Read the current value at the data stream register 
- * 
- * @details 
- * 
- * @param ds_buff 
- * @return I2C_STATUS 
- */
-I2C_STATUS m8q_read_ds_reg_dev(
-    uint8_t *ds_buff); 
 
 
 /**
@@ -405,9 +393,9 @@ I2C_STATUS m8q_read_ds_reg_dev(
  * @details 
  * 
  * @param data_size 
- * @return I2C_STATUS 
+ * @return M8Q_STATUS 
  */
-I2C_STATUS m8q_read_ds_size_dev(
+M8Q_STATUS m8q_read_ds_size_dev(
     uint16_t *data_size); 
 
 
@@ -448,7 +436,7 @@ M8Q_STATUS m8q_write_msg_dev(
  * @param data_size 
  * @return I2C_STATUS 
  */
-I2C_STATUS m8q_write_data_dev(
+I2C_STATUS m8q_write_dev(
     const uint8_t *data, 
     uint8_t data_size); 
 
@@ -499,6 +487,23 @@ uint8_t m8q_msg_id_check_dev(
     uint8_t max_size, 
     uint8_t offset, 
     uint8_t *msg_index); 
+
+
+/**
+ * @brief Incoming NMEA message parse 
+ * 
+ * @details 
+ * 
+ * @param nmea_msg 
+ * @param data_offset 
+ * @param arg_num 
+ * @param data 
+ */
+void m8q_nmea_msg_parse_dev(
+    const uint8_t *nmea_msg, 
+    uint8_t data_offset, 
+    uint8_t arg_num, 
+    uint8_t **data); 
 
 
 /**
@@ -669,7 +674,7 @@ M8Q_STATUS m8q_init_dev(
     // code looks for an ACK response. 
     for (uint8_t i = CLEAR; i < msg_num; i++)
     {
-        init_status = m8q_write_dev(config_msgs, max_msg_size); 
+        init_status = m8q_send_msg_dev(config_msgs, max_msg_size); 
 
         if (init_status)
         {
@@ -739,43 +744,56 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 //=======================================================================================
 // User functions (public) 
 
-// Read the whole data stream 
-M8Q_STATUS m8q_read_stream_dev(void)
+// Read the data stream and sort/store relevant message data 
+M8Q_STATUS m8q_read_data_dev(void)
 {
-    I2C_STATUS i2c_status = I2C_OK; 
+    M8Q_STATUS read_status; 
     uint16_t stream_len = CLEAR; 
 
     // Read the size of the stream. If it's not zero then read the data stream in its 
     // entirety and sort all the read messages. 
-    i2c_status |= m8q_read_ds_size_dev(&stream_len); 
+    read_status = m8q_read_ds_size_dev(&stream_len); 
 
-    // if (!stream_len)
-    // {
-    //     return M8Q_NO_DATA_AVAILABLE; 
-    // }
+    if (!read_status)
+    {
+        read_status = m8q_read_sort_ds_dev(stream_len); 
+    }
+    else if (read_status == M8Q_DATA_BUFF_OVERFLOW)
+    {
+        // Flush the data buffer 
+    }
 
-    // if (stream_len > m8q_driver_data.data_buff_limit)
-    // {
-    //     // Flush the data buffer 
-    //     // Return an overflow status 
-    // }
-    
-    // i2c_status |= m8q_read_ds_dev(stream_len); 
-
-    return M8Q_OK; 
+    return read_status; 
 }
 
 
-// Flush the device data buffer 
-// - Messages will pile up in the data buffer if they're not read and once the buffer is 
-//   full, new messages will get rejected. If this happens then reading the data buffer 
-//   will provide old data. This function would read all the data buffer contents so 
-//   new messages could start to be read. 
-// - Would this just be integrated into the read function? 
+// // Read and return the data stream contents 
+// M8Q_STATUS m8q_read_ds_dev(
+//     uint8_t *data_buff, 
+//     uint16_t buff_size)
+// {
+//     // - Read the data stream size 
+//     // - Compare the size to the buff size 
+//     // - If the buff size is smaller than the stream then read the stream and return an 
+//     //   overflow error 
+//     // - Otherwise, set the read size to the stream size and read the whole stream into 
+//     //   the data buffer 
+
+//     return M8Q_OK; 
+// }
 
 
-// Write a message to the device 
-M8Q_STATUS m8q_write_dev(
+// // Look for a UBX acknowledgment message 
+// M8Q_STATUS m8q_read_ack_dev(void)
+// {
+//     // 
+
+//     return M8Q_OK; 
+// }
+
+
+// Send a message to the device 
+M8Q_STATUS m8q_send_msg_dev(
     const char *write_msg, 
     uint8_t max_msg_size)
 {
@@ -862,34 +880,62 @@ void m8q_clear_low_pwr_dev(void)
 //=======================================================================================
 // Read and write functions (private) 
 
-// // Read the whole data stream and store the data 
-// I2C_STATUS m8q_read_ds_dev(
-//     uint16_t stream_len)
-// {
-//     uint8_t stream_data[stream_len]; 
-//     I2C_STATUS i2c_status = I2C_OK; 
-
-//     i2c_status |= m8q_read_dev(stream_data, stream_len); 
-
-//     return i2c_status; 
-// }
+// Flush the device data buffer 
+// - Messages will pile up in the data buffer if they're not read and once the buffer is 
+//   full, new messages will get rejected. If this happens then reading the data buffer 
+//   will provide old data. This function would read all the data buffer contents so 
+//   new messages could start to be read. 
+// - Would this just be integrated into the read function? 
 
 
-// // Read the current value at the data stream register 
-// I2C_STATUS m8q_read_ds_reg_dev(
-//     uint8_t *ds_buff)
-// {
-//     I2C_STATUS i2c_status = I2C_OK; 
+// Read the whole data stream and sort/store the data 
+M8Q_STATUS m8q_read_sort_ds_dev(
+    uint16_t stream_len)
+{
+    I2C_STATUS i2c_status; 
+    uint8_t stream_data[stream_len]; 
+    M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
+    uint16_t stream_index = CLEAR; 
+    uint8_t msg_offset = CLEAR; 
 
-//     // Read the 0xFF register once 
-//     i2c_status |= m8q_read_dev(ds_buff, BYTE_1); 
+    // Read the whole data stream 
+    i2c_status = m8q_read_dev(stream_data, stream_len); 
 
-//     return i2c_status; 
-// }
+    if (i2c_status)
+    {
+        return M8Q_READ_FAULT; 
+    }
+
+    while (stream_index < stream_len)
+    {
+        // Identify the message type 
+        msg_type = m8q_msg_id_dev((char *)&stream_data[stream_index], &msg_offset); 
+
+        // Sort the message data as needed 
+        if (msg_type == M8Q_MSG_NMEA)
+        {
+            m8q_nmea_msg_parse_dev(
+                &stream_data[stream_index], 
+                msg_offset + BYTE_1, 
+                nmea_msg_target.num_param, 
+                nmea_msg_target.msg_data); 
+        }
+        else if (msg_type == M8Q_MSG_UBX)
+        {
+            // 
+        }
+        else 
+        {
+            return M8Q_UNKNOWN_DATA; 
+        }
+    }
+
+    return M8Q_OK; 
+}
 
 
 // Read the data stream size 
-I2C_STATUS m8q_read_ds_size_dev(
+M8Q_STATUS m8q_read_ds_size_dev(
     uint16_t *data_size)
 {
     I2C_STATUS i2c_status = I2C_OK; 
@@ -898,13 +944,29 @@ I2C_STATUS m8q_read_ds_size_dev(
 
     // Send the data size register address to the device then read the data high and 
     // low bytes of the data size. 
-    i2c_status |= m8q_write_data_dev(&address, BYTE_1); 
+    i2c_status |= m8q_write_dev(&address, BYTE_1); 
     i2c_status |= m8q_read_dev(num_bytes, BYTE_2); 
+
+    if (i2c_status)
+    {
+        *data_size = CLEAR; 
+        return M8Q_READ_FAULT; 
+    }
 
     // Format the data into the data size 
     *data_size = ((uint16_t)num_bytes[BYTE_0] << SHIFT_8) | (uint16_t)num_bytes[BYTE_1]; 
 
-    return i2c_status; 
+    if (!(*data_size))
+    {
+        return M8Q_NO_DATA_AVAILABLE; 
+    }
+
+    if (*data_size > m8q_driver_data.data_buff_limit)
+    {
+        return M8Q_DATA_BUFF_OVERFLOW; 
+    }
+
+    return M8Q_OK; 
 }
 
 
@@ -931,7 +993,7 @@ M8Q_STATUS m8q_write_msg_dev(
     I2C_STATUS i2c_status = I2C_OK; 
 
     // Send the message to the device and generate a stop condition when done. 
-    i2c_status |= m8q_write_data_dev((uint8_t *)msg, msg_size); 
+    i2c_status |= m8q_write_dev((uint8_t *)msg, msg_size); 
     i2c_stop(m8q_driver_data.i2c); 
 
     if (i2c_status)
@@ -944,7 +1006,7 @@ M8Q_STATUS m8q_write_msg_dev(
 
 
 // Write data to the device 
-I2C_STATUS m8q_write_data_dev(
+I2C_STATUS m8q_write_dev(
     const uint8_t *data, 
     uint8_t data_size)
 {
@@ -1097,8 +1159,89 @@ uint8_t m8q_msg_id_check_dev(
 }
 
 
-// TODO NMEA message sorting 
-//      UBX message sorting 
+// Incoming NMEA message parse 
+void m8q_nmea_msg_parse_dev(
+    const uint8_t *nmea_msg, 
+    uint8_t data_offset, 
+    uint8_t arg_num, 
+    uint8_t **data)
+{
+    // Local variables 
+    uint8_t arg_index = CLEAR; 
+    uint8_t arg_len = CLEAR; 
+    uint8_t data_index = CLEAR; 
+    uint8_t msg_length = CLEAR; 
+
+    // Make sure the data array has a valid length 
+    if (!arg_num) 
+    {
+        return; 
+    }
+
+    // Increment to where message data begins and keep track of the total message length. 
+    nmea_msg += data_offset; 
+    msg_length += data_offset + BYTE_1; 
+
+    // Calculate the length of the first data array by finding the number of bytes between 
+    // jagged array entries. 
+    arg_len = *(&data[data_index] + 1) - data[data_index];  
+
+    // Read and parse the message 
+    // TODO term char exit condition 
+    while (TRUE)
+    {
+        // Check for end of message data 
+        if (*nmea_msg != AST_CHAR)
+        {
+            // Check for argument separation 
+            if (*nmea_msg != COMMA_CHAR)
+            {
+                // Record the byte if there is space 
+                if (arg_index < arg_len)
+                {
+                    data[data_index][arg_index] = *nmea_msg; 
+                    arg_index++; 
+                }
+            }
+            else
+            {
+                // Terminate the argument if needed 
+                if (arg_index < arg_len) 
+                {
+                    data[data_index][arg_index] = NULL_CHAR; 
+                } 
+
+                // Increment jagged array index 
+                data_index++; 
+
+                // Exit if the storage array has been exceeded 
+                if (data_index >= arg_num) 
+                {
+                    break; 
+                } 
+
+                // Reset arg index and calculate the new argument length 
+                arg_index = CLEAR; 
+                arg_len = *(&data[data_index] + 1) - data[data_index]; 
+            }
+
+            // Increment nmea_msg index 
+            nmea_msg++; 
+        }
+        else
+        {
+            // Terminate the argument if needed 
+            if (arg_index < arg_len) 
+            {
+                data[data_index][arg_index] = NULL_CHAR; 
+            }
+            break; 
+        }
+    }
+}
+
+
+// TODO UBX message sorting 
 
 //=======================================================================================
 
