@@ -30,7 +30,9 @@
 			"new": "c",
 			"functional": "c",
 			"i2c_comm.h": "c",
-			"gpio_driver.h": "c"
+			"gpio_driver.h": "c",
+			"span": "c",
+			"vector": "c"
 		}
 	}
 }

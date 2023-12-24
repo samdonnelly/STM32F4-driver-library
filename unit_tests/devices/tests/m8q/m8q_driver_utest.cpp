@@ -532,6 +532,18 @@ TEST(m8q_driver, m8q_read_i2c_timeout)
     LONGS_EQUAL(M8Q_READ_FAULT, read_status); 
 }
 
+
+// M8Q read - test 
+TEST(m8q_driver, m8q_read_test0)
+{
+    uint8_t stream_len[] = { 0x01, 0x04 }; 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data(stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+
+    m8q_read_data_dev(); 
+}
+
 //==================================================
 
 //==================================================
