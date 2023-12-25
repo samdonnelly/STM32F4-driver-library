@@ -52,6 +52,8 @@
 
 #define M8Q_UBX_CFG_INDEX 4 
 
+#define M8Q_EOM_BYTE 1 
+
 //=======================================================================================
 
 
@@ -135,7 +137,7 @@ typedef struct m8q_nmea_pos_s
     uint8_t numSvs  [BYTE_2];     // Number of satellites used in the navigation solution 
     uint8_t res     [BYTE_1];     // Reserved --> 0 
     uint8_t DR      [BYTE_1];     // DR used 
-    // uint8_t eom     [BYTE_1];     // End of memory --> used for parsing function only 
+    uint8_t eom     [BYTE_1];     // End of memory --> used for parsing function only 
 } 
 m8q_nmea_pos_t;
 
@@ -214,8 +216,7 @@ static m8q_driver_data_t m8q_driver_data;
 // Indexing 
 
 // NMEA POSITION message 
-// static uint8_t *position[NMEA_NUM_FIELDS_POSITION+1] = 
-static uint8_t *position[NMEA_NUM_FIELDS_POSITION] = 
+static uint8_t *position[NMEA_NUM_FIELDS_POSITION + M8Q_EOM_BYTE] = 
 { 
     m8q_driver_data.pos_data.time, 
     m8q_driver_data.pos_data.lat, 
@@ -236,11 +237,11 @@ static uint8_t *position[NMEA_NUM_FIELDS_POSITION] =
     m8q_driver_data.pos_data.numSvs,
     m8q_driver_data.pos_data.res,
     m8q_driver_data.pos_data.DR, 
-    // m8q_driver_data.pos_data.eom 
+    m8q_driver_data.pos_data.eom 
 }; 
 
 // NMEA TIME message 
-static uint8_t *time[NMEA_NUM_FIELDS_TIME+1] = 
+static uint8_t *time[NMEA_NUM_FIELDS_TIME + M8Q_EOM_BYTE] = 
 { 
     m8q_driver_data.time_data.time, 
     m8q_driver_data.time_data.date, 
@@ -499,8 +500,9 @@ uint8_t m8q_msg_id_check_dev(
  * @param data_offset 
  * @param arg_num 
  * @param data 
+ * @return uint16_t 
  */
-void m8q_nmea_msg_parse_dev(
+uint16_t m8q_nmea_msg_parse_dev(
     const uint8_t *nmea_msg, 
     uint8_t data_offset, 
     uint8_t arg_num, 
@@ -895,78 +897,43 @@ void m8q_clear_low_pwr_dev(void)
 M8Q_STATUS m8q_read_sort_ds_dev(
     uint16_t stream_len)
 {
-    // I2C_STATUS i2c_status; 
-    // uint8_t stream_data[stream_len]; 
-    // M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
-    // uint16_t stream_index = CLEAR; 
-    // uint8_t msg_offset = CLEAR; 
+    I2C_STATUS i2c_status; 
+    uint8_t stream_data[stream_len]; 
+    M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
+    uint16_t stream_index = CLEAR; 
+    uint8_t msg_offset = CLEAR; 
 
-    // // Read the whole data stream 
-    // i2c_status = m8q_read_dev(stream_data, stream_len); 
+    // Read the whole data stream 
+    i2c_status = m8q_read_dev(stream_data, stream_len); 
 
-    // if (i2c_status)
-    // {
-    //     return M8Q_READ_FAULT; 
-    // }
+    if (i2c_status)
+    {
+        return M8Q_READ_FAULT; 
+    }
 
-    // while (stream_index < stream_len)
-    // {
-    //     // Identify the message type 
-    //     msg_type = m8q_msg_id_dev((char *)&stream_data[stream_index], &msg_offset); 
+    while (stream_index < stream_len)
+    {
+        // Identify the message type 
+        msg_type = m8q_msg_id_dev((char *)&stream_data[stream_index], &msg_offset); 
 
-    //     // Sort the message data as needed 
-    //     if (msg_type == M8Q_MSG_NMEA)
-    //     {
-    //         m8q_nmea_msg_parse_dev(
-    //             &stream_data[stream_index], 
-    //             msg_offset + BYTE_1, 
-    //             nmea_msg_target.num_param, 
-    //             nmea_msg_target.msg_data); 
-    //     }
-    //     else if (msg_type == M8Q_MSG_UBX)
-    //     {
-    //         // 
-    //     }
-    //     else 
-    //     {
-    //         return M8Q_UNKNOWN_DATA; 
-    //     }
-    // }
-
-    memset((void *)&m8q_driver_data.pos_data, CLEAR, sizeof(m8q_driver_data_t)); 
-
-    // uint8_t data_index = CLEAR; 
-    uint8_t arg_len = CLEAR; 
-
-    // printf("\r\n%lu\r\n", sizeof(m8q_nmea_pos_t)); 
-
-    // printf("\r\n%lu\r\n", sizeof(position)); 
-
-    // printf("\r\n%p\r\n", position); 
-    // printf("\r\n%p\r\n", position[NMEA_NUM_FIELDS_POSITION-1]); 
-    // printf("\r\n%p\r\n", position + sizeof(position)); 
-
-    // printf("\r\n%lu\r\n", sizeof(m8q_driver_data.pos_data.DR)); 
-    // printf("\r\n%lu\r\n", sizeof(&position[NMEA_NUM_FIELDS_POSITION-1][0])); 
-
-    printf("\r\n"); 
-
-    arg_len = *(&m8q_driver_data.pos_data.DR + 1) - m8q_driver_data.pos_data.DR; 
-    printf("%u ", arg_len); 
-
-    // for (uint8_t i = CLEAR; i < NMEA_NUM_FIELDS_POSITION; i++)
-    // {
-    //     arg_len = *(&position[data_index] + 1) - position[data_index]; 
-    //     // arg_len = position[data_index+1] - position[data_index]; 
-    //     data_index++; 
-    //     printf("%u-%u ", i, arg_len); 
-    //     // printf("%u-%p \r\n", i, position[data_index]); 
-    //     // data_index++; 
-    // }
-
-    // arg_len = *(&data[data_index] + 1) - data[data_index]; 
-
-    printf("\r\n "); 
+        // Sort the message data as needed 
+        if (msg_type == M8Q_MSG_NMEA)
+        {
+            stream_index += m8q_nmea_msg_parse_dev(
+                                &stream_data[stream_index], 
+                                msg_offset + BYTE_1, 
+                                nmea_msg_target.num_param, 
+                                nmea_msg_target.msg_data); 
+        }
+        else if (msg_type == M8Q_MSG_UBX)
+        {
+            // 
+        }
+        else 
+        {
+            return M8Q_UNKNOWN_DATA; 
+        }
+    }
 
     return M8Q_OK; 
 }
@@ -1198,7 +1165,7 @@ uint8_t m8q_msg_id_check_dev(
 
 
 // Incoming NMEA message parse 
-void m8q_nmea_msg_parse_dev(
+uint16_t m8q_nmea_msg_parse_dev(
     const uint8_t *nmea_msg, 
     uint8_t data_offset, 
     uint8_t arg_num, 
@@ -1208,36 +1175,50 @@ void m8q_nmea_msg_parse_dev(
     uint8_t arg_index = CLEAR; 
     uint8_t arg_len = CLEAR; 
     uint8_t data_index = CLEAR; 
-    // uint8_t msg_length = CLEAR; 
+    uint8_t msg_byte = *(nmea_msg + data_offset); 
+    uint16_t msg_length = data_offset; 
 
-    // Make sure the data array has a valid length 
-    if (!arg_num) 
+    // Check if the message has a data record in the driver. If not, then count the length of 
+    // the message and return. 
+    if (data == NULL)
     {
-        return; 
+        while (msg_byte != NULL_CHAR)
+        {
+            if (msg_byte != AST_CHAR)
+            {
+                msg_length++; 
+            }
+            else 
+            {
+                // Add remaining NMEA message bytes and exit 
+                msg_length += 5; 
+                break; 
+            }
+
+            msg_byte = *(++nmea_msg); 
+        }
+
+        return msg_length; 
     }
 
-    // Increment to where message data begins and keep track of the total message length. 
+    // There is a data record to store the message. Offset the message to the first data 
+    // byte, get the length of the first data array to fill and start parsing the message 
+    // into it's data fields and storing them in the data record. 
     nmea_msg += data_offset; 
-    // msg_length += data_offset + BYTE_1; 
-
-    // Calculate the length of the first data array by finding the number of bytes between 
-    // jagged array entries. 
     arg_len = *(&data[data_index] + 1) - data[data_index]; 
 
-    // Read and parse the message 
-    // TODO term char exit condition 
-    while (TRUE)
+    while (msg_byte != NULL_CHAR)
     {
         // Check for end of message data 
-        if (*nmea_msg != AST_CHAR)
+        if (msg_byte != AST_CHAR)
         {
             // Check for argument separation 
-            if (*nmea_msg != COMMA_CHAR)
+            if (msg_byte != COMMA_CHAR)
             {
                 // Record the byte if there is space 
                 if (arg_index < arg_len)
                 {
-                    data[data_index][arg_index] = *nmea_msg; 
+                    data[data_index][arg_index] = msg_byte; 
                     arg_index++; 
                 }
             }
@@ -1264,7 +1245,8 @@ void m8q_nmea_msg_parse_dev(
             }
 
             // Increment nmea_msg index 
-            nmea_msg++; 
+            msg_byte = *(++nmea_msg); 
+            msg_length++; 
         }
         else
         {
@@ -1273,9 +1255,15 @@ void m8q_nmea_msg_parse_dev(
             {
                 data[data_index][arg_index] = NULL_CHAR; 
             }
+
+            // Add remaining NMEA message bytes and exit 
+            msg_length += 5; 
+            
             break; 
         }
     }
+
+    return msg_length; 
 }
 
 
