@@ -536,10 +536,14 @@ TEST(m8q_driver, m8q_read_i2c_timeout)
 // M8Q read - test 
 TEST(m8q_driver, m8q_read_test0)
 {
-    uint8_t stream_len[] = { 0x01, 0x04 }; 
+    uint8_t stream_len[] = { 0x00, 0x6D }; 
+    const char device_msg[] = "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3," 
+                              "2.1,2.0,0.007,77.52,0.007,,0.92,1.19,0.77,9,0,0*5F"; 
+    uint16_t msg_len = 109;   // Length of the above message 
 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
-    i2c_mock_set_read_data(stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)device_msg, msg_len, I2C_MOCK_INDEX_1); 
 
     m8q_read_data_dev(); 
 }
