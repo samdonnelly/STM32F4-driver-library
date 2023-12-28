@@ -41,6 +41,10 @@ TEST_GROUP(m8q_driver)
     // Constructor 
     void setup()
     {
+        // Initialize the mock I2C driver to default settings - no timeout and no data 
+        // buffer increment. 
+        i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
+
         // Initialize driver but don't send/check any messages 
         m8q_init_dev(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, CLEAR); 
     }
@@ -218,10 +222,8 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_valid_msg_check)
     // Correctly formatted sample PUBX NMEA config message 
     const char config_msg[] = "$PUBX,40,GLL,1,0,0,0,0,0*"; 
 
-    // Initialize the mock I2C driver to not time out, run the init and retrieve the 
-    // driver formatted message that gets sent to the device. Check that the driver 
-    // message and its length are correct. 
-    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
+    // Run the init and retrieve the driver formatted message that gets sent to the device. 
+    // Check that the driver message and its length are correct. 
     init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
                               M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len, I2C_MOCK_INDEX_0); 
@@ -299,10 +301,8 @@ TEST(m8q_driver, m8q_init_std_nmea_config_valid_msg_check)
     const char config_msg[] = 
         "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*"; 
 
-    // Initialize the mock I2C driver to not time out, run the init and retrieve the 
-    // driver formatted message that gets sent to the device. Check that the driver 
-    // message and its length are correct. 
-    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
+    // Run the init and retrieve the driver formatted message that gets sent to the device. 
+    // Check that the driver message and its length are correct. 
     init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
                               M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len, I2C_MOCK_INDEX_0); 
@@ -406,10 +406,8 @@ TEST(m8q_driver, m8q_init_ubx_config_valid_msg_check)
     const char config_msg[] = 
         "B562,06,00,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
 
-    // Initialize the mock I2C driver to not time out, run the init and retrieve the 
-    // driver formatted message that gets sent to the device. Check that the driver 
-    // message and its length are correct. 
-    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
+    // Run the init and retrieve the driver formatted message that gets sent to the device. 
+    // Check that the driver message and its length are correct. 
     init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
                               M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len, I2C_MOCK_INDEX_0); 
@@ -533,20 +531,91 @@ TEST(m8q_driver, m8q_read_i2c_timeout)
 }
 
 
-// M8Q read - test 
-TEST(m8q_driver, m8q_read_test0)
+// M8Q read - Unknown stream message 
+TEST(m8q_driver, m8q_read_unknown_msg)
 {
-    uint8_t stream_len[] = { 0x00, 0x6D }; 
-    const char device_msg[] = "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3," 
+    M8Q_STATUS read_status; 
+    uint8_t stream_len[] = { 0x00, 0x6F }; 
+    const char device_msg[] = "$PUBC,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3," 
                               "2.1,2.0,0.007,77.52,0.007,,0.92,1.19,0.77,9,0,0*5F"; 
-    uint16_t msg_len = 109;   // Length of the above message 
+
+    uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_msg, msg_len, I2C_MOCK_INDEX_1); 
 
-    m8q_read_data_dev(); 
+    read_status = m8q_read_data_dev(); 
+
+    LONGS_EQUAL(M8Q_UNKNOWN_DATA, read_status); 
 }
+
+
+// M8Q read - multiple message parsing - messages ok and no storing 
+TEST(m8q_driver, m8q_read_unknown_msg_multi_msg)
+{
+    // M8Q_STATUS read_status; 
+
+    uint8_t stream_len[] = { 0x00, 0x61 }; 
+    uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
+
+    const char device_msg0[] = 
+        "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52\r\n"; 
+    const uint8_t device_msg1[] = 
+        {181,98,6,0,20,0,1,0,0,0,192,8,0,0,128,37,0,0,0,0,0,0,0,0,0,0,136,107}; 
+    char device_stream[msg_len]; 
+
+    sprintf(device_stream, "%s%s", device_msg0, (char *)device_msg1); 
+
+    uint8_t length = strlen(device_stream); 
+
+    printf("\r\n%s\r\n", device_stream); 
+    printf("\r\n%u\r\n", length); 
+
+    // i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    // i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    // i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
+
+    // read_status = m8q_read_data_dev(); 
+
+    // LONGS_EQUAL(M8Q_OK, read_status); 
+}
+
+
+// // M8Q read - Unknown stream message - multiple messages 
+// TEST(m8q_driver, m8q_read_unknown_msg_multi_msg)
+// {
+//     M8Q_STATUS read_status; 
+//     uint8_t stream_len[] = { 0x00, 0x6D }; 
+//     const char device_msg[] = "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3," 
+//                               "2.1,2.0,0.007,77.52,0.007,,0.92,1.19,0.77,9,0,0*5FB562,99,0" 
+//                               "0,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
+//     uint16_t msg_len = 109;   // Length of the above message 
+
+//     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+//     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+//     i2c_mock_set_read_data((void *)device_msg, msg_len, I2C_MOCK_INDEX_1); 
+
+//     read_status = m8q_read_data_dev(); 
+
+//     LONGS_EQUAL(M8Q_UNKNOWN_DATA, read_status); 
+// }
+
+
+// // M8Q read - test 
+// TEST(m8q_driver, m8q_read_test0)
+// {
+//     uint8_t stream_len[] = { 0x00, 0x6D }; 
+//     const char device_msg[] = "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3," 
+//                               "2.1,2.0,0.007,77.52,0.007,,0.92,1.19,0.77,9,0,0*5F"; 
+//     uint16_t msg_len = 109;   // Length of the above message 
+
+//     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+//     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+//     i2c_mock_set_read_data((void *)device_msg, msg_len, I2C_MOCK_INDEX_1); 
+
+//     m8q_read_data_dev(); 
+// }
 
 //==================================================
 

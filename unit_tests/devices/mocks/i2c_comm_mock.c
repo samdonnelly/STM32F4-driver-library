@@ -176,6 +176,7 @@ void i2c_mock_init(
     i2c_mock_increment_mode_t increment_mode)
 {
     mock_driver_data.i2c_timeout = timeout_status; 
+    mock_driver_data.increment_mode = increment_mode; 
 
     memset((void *)mock_driver_data.write_data, CLEAR, sizeof(mock_driver_data.write_data)); 
     memset((void *)mock_driver_data.write_data_size, CLEAR, 

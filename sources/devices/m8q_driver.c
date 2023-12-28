@@ -899,47 +899,43 @@ M8Q_STATUS m8q_read_sort_ds_dev(
 {
     I2C_STATUS i2c_status; 
     uint8_t stream_data[stream_len]; 
-    // M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
-    // uint16_t stream_index = CLEAR; 
-    // uint8_t msg_offset = CLEAR; 
+    M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
+    uint16_t stream_index = CLEAR; 
+    uint8_t msg_offset = CLEAR; 
 
     // Read the whole data stream 
     i2c_status = m8q_read_dev(stream_data, stream_len); 
 
-    printf("\r\n%u\r\n", stream_len); 
+    if (i2c_status)
+    {
+        return M8Q_READ_FAULT; 
+    }
 
-    // if (i2c_status)
-    // {
-    //     return M8Q_READ_FAULT; 
-    // }
+    while (stream_index < stream_len)
+    {
+        // Identify the message type 
+        msg_type = m8q_msg_id_dev((char *)&stream_data[stream_index], &msg_offset); 
 
-    // while (stream_index < stream_len)
-    // {
-    //     // Identify the message type 
-    //     msg_type = m8q_msg_id_dev((char *)&stream_data[stream_index], &msg_offset); 
+        // Sort the message data as needed 
+        if (msg_type == M8Q_MSG_NMEA)
+        {
+            // stream_index += m8q_nmea_msg_parse_dev(
+            //                     &stream_data[stream_index], 
+            //                     msg_offset + BYTE_1, 
+            //                     nmea_msg_target.num_param, 
+            //                     nmea_msg_target.msg_data); 
+        }
+        else if (msg_type == M8Q_MSG_UBX)
+        {
+            // 
+        }
+        else 
+        {
+            return M8Q_UNKNOWN_DATA; 
+        }
+    }
 
-    //     // Sort the message data as needed 
-    //     if (msg_type == M8Q_MSG_NMEA)
-    //     {
-    //         stream_index += m8q_nmea_msg_parse_dev(
-    //                             &stream_data[stream_index], 
-    //                             msg_offset + BYTE_1, 
-    //                             nmea_msg_target.num_param, 
-    //                             nmea_msg_target.msg_data); 
-    //     }
-    //     else if (msg_type == M8Q_MSG_UBX)
-    //     {
-    //         // 
-    //     }
-    //     else 
-    //     {
-    //         return M8Q_UNKNOWN_DATA; 
-    //     }
-    // }
-
-    // return M8Q_OK; 
-
-    return i2c_status; 
+    return M8Q_OK; 
 }
 
 
