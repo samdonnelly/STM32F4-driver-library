@@ -283,7 +283,7 @@ nmea_msg_format_t;
 typedef struct ubx_msg_class_s 
 {
     char ubx_msg_class_str[UBX_CLASS_LEN]; 
-    uint8_t ubc_msg_class_data; 
+    uint8_t ubc_msg_class_data[2]; 
 }
 ubx_msg_class_t; 
 
@@ -349,24 +349,24 @@ static const nmea_msg_format_t nmea_std_msgs[NMEA_STD_NUM_MSGS] =
 
 static const char ubx_msg_sync_str[] = "B562"; 
 
-static const uint8_t ubx_msg_sync_data[] = { 0xB5, 0x62 }; 
+static const uint8_t ubx_msg_sync_data[] = { 0xB5, 0x62 , NULL_CHAR}; 
 
 static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] = 
 {
-    {"01", 0x01},   // NAV 
-    {"02", 0x02},   // RXM 
-    {"04", 0x04},   // INF 
-    {"05", 0x05},   // ACK 
-    {"06", 0x06},   // CFG 
-    {"09", 0x09},   // UPD 
-    {"0A", 0x0A},   // MON 
-    {"0B", 0x0B},   // AID 
-    {"0D", 0x0D},   // TIM 
-    {"10", 0x10},   // ESF 
-    {"13", 0x13},   // MGA 
-    {"21", 0x21},   // LOG 
-    {"27", 0x27},   // SEC 
-    {"28", 0x28}    // HNR 
+    {"01", {0x01, NULL_CHAR}},   // NAV 
+    {"02", {0x02, NULL_CHAR}},   // RXM 
+    {"04", {0x04, NULL_CHAR}},   // INF 
+    {"05", {0x05, NULL_CHAR}},   // ACK 
+    {"06", {0x06, NULL_CHAR}},   // CFG 
+    {"09", {0x09, NULL_CHAR}},   // UPD 
+    {"0A", {0x0A, NULL_CHAR}},   // MON 
+    {"0B", {0x0B, NULL_CHAR}},   // AID 
+    {"0D", {0x0D, NULL_CHAR}},   // TIM 
+    {"10", {0x10, NULL_CHAR}},   // ESF 
+    {"13", {0x13, NULL_CHAR}},   // MGA 
+    {"21", {0x21, NULL_CHAR}},   // LOG 
+    {"27", {0x27, NULL_CHAR}},   // SEC 
+    {"28", {0x28, NULL_CHAR}}    // HNR 
 }; 
 
 //==================================================
@@ -924,10 +924,46 @@ M8Q_STATUS m8q_read_sort_ds_dev(
             //                     msg_offset + BYTE_1, 
             //                     nmea_msg_target.num_param, 
             //                     nmea_msg_target.msg_data); 
+
+            // stream_index += msg_offset; 
+
+            while (stream_index < stream_len)
+            {
+                if (stream_data[stream_index++] == NL_CHAR)
+                {
+                    break; 
+                }
+            }
         }
         else if (msg_type == M8Q_MSG_UBX)
         {
-            // 
+            // stream_index += msg_offset; 
+
+            uint16_t counter = CLEAR; 
+            uint16_t max_count = 4; 
+
+            while (stream_index < stream_len)
+            {
+                if (counter == 4)
+                {
+                    max_count = stream_data[stream_index]; 
+                }
+                else if (counter == 5)
+                {
+                    max_count |= (stream_data[stream_index] << SHIFT_8); 
+                    max_count += 8; // account for sync, class, ID, PL length and checksum bytes 
+                }
+                else 
+                {
+                    if (counter >= max_count)
+                    {
+                        break; 
+                    }
+                }
+                
+                counter++; 
+                stream_index++; 
+            }
         }
         else 
         {
@@ -1137,6 +1173,14 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
             return M8Q_MSG_UBX; 
         }
     }
+    // else 
+    // {
+    //     uint8_t check = ((char)ubx_msg_sync_data[0] == msg[0]) ? TRUE : FALSE; 
+    //     printf("\r\nCheck: %u\r\n", check); 
+
+    //     printf("\r\nmsg int: %u %u", (uint8_t)msg[0], (uint8_t)msg[1]); 
+    //     printf("\r\nmsg char: %c %c\r\n", msg[0], msg[1]); 
+    // }
 
     return M8Q_MSG_INVALID; 
 }

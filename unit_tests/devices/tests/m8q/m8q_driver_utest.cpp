@@ -554,31 +554,34 @@ TEST(m8q_driver, m8q_read_unknown_msg)
 // M8Q read - multiple message parsing - messages ok and no storing 
 TEST(m8q_driver, m8q_read_unknown_msg_multi_msg)
 {
-    // M8Q_STATUS read_status; 
+    M8Q_STATUS read_status; 
 
-    uint8_t stream_len[] = { 0x00, 0x61 }; 
+    uint8_t msg0_len = 67; 
+    uint8_t msg1_len = 28; 
+    uint8_t msg2_len = 29; 
+    uint8_t stream_len[] = { 0x00, 0x7C }; 
     uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
+
+    uint8_t device_stream[msg_len]; 
 
     const char device_msg0[] = 
         "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52\r\n"; 
     const uint8_t device_msg1[] = 
         {181,98,6,0,20,0,1,0,0,0,192,8,0,0,128,37,0,0,0,0,0,0,0,0,0,0,136,107}; 
-    char device_stream[msg_len]; 
+    const char device_msg2[] = 
+        "$PUBX,40,GLL,1,0,0,0,0,0*5D\r\n"; 
 
-    sprintf(device_stream, "%s%s", device_msg0, (char *)device_msg1); 
+    memcpy((void *)&device_stream[0], (void *)device_msg0, msg0_len); 
+    memcpy((void *)&device_stream[msg0_len], (void *)device_msg1, msg1_len); 
+    memcpy((void *)&device_stream[msg0_len + msg1_len], (void *)device_msg2, msg2_len); 
 
-    uint8_t length = strlen(device_stream); 
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
 
-    printf("\r\n%s\r\n", device_stream); 
-    printf("\r\n%u\r\n", length); 
+    read_status = m8q_read_data_dev(); 
 
-    // i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
-    // i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
-    // i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
-
-    // read_status = m8q_read_data_dev(); 
-
-    // LONGS_EQUAL(M8Q_OK, read_status); 
+    LONGS_EQUAL(M8Q_OK, read_status); 
 }
 
 
