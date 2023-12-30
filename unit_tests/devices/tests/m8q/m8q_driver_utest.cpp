@@ -14,6 +14,7 @@ extern "C"
     #include "m8q_driver.h" 
     #include "m8q_config_test.h" 
     #include "i2c_comm.h" 
+    #include "i2c_comm_mock.h"
 }
 
 //=======================================================================================

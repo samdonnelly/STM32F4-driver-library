@@ -97,6 +97,7 @@ INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Device/ST/STM32F4xx/Include
 INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Core/Include
 
 INCLUDE_DIRS += ./../../headers/devices            # Production code 
+INCLUDE_DIRS += ./../../headers/peripherals        # Production code 
 INCLUDE_DIRS += ./../../headers/tools              # Production code 
 INCLUDE_DIRS += mocks                              # Mocks 
 INCLUDE_DIRS += tests/m8q                          # Test doubles 

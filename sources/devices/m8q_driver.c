@@ -497,13 +497,16 @@ uint8_t m8q_msg_id_check_dev(
  * @details 
  * 
  * @param nmea_msg 
+ * @param msg_index 
+ * @param stream_len 
  * @param data_offset 
  * @param arg_num 
  * @param data 
- * @return uint16_t 
  */
-uint16_t m8q_nmea_msg_parse_dev(
+void m8q_nmea_msg_parse_dev(
     const uint8_t *nmea_msg, 
+    uint16_t *stream_index, 
+    uint16_t stream_len, 
     uint8_t data_offset, 
     uint8_t arg_num, 
     uint8_t **data); 
@@ -919,49 +922,43 @@ M8Q_STATUS m8q_read_sort_ds_dev(
         // Sort the message data as needed 
         if (msg_type == M8Q_MSG_NMEA)
         {
-            // stream_index += m8q_nmea_msg_parse_dev(
-            //                     &stream_data[stream_index], 
-            //                     msg_offset + BYTE_1, 
-            //                     nmea_msg_target.num_param, 
-            //                     nmea_msg_target.msg_data); 
+            stream_index += msg_offset + BYTE_1; 
 
-            // stream_index += msg_offset; 
+            m8q_nmea_msg_parse_dev(
+                &stream_data[stream_index], 
+                &stream_index, 
+                stream_len, 
+                msg_offset + BYTE_1, 
+                nmea_msg_target.num_param, 
+                nmea_msg_target.msg_data); 
 
-            while (stream_index < stream_len)
-            {
-                if (stream_data[stream_index++] == NL_CHAR)
-                {
-                    break; 
-                }
-            }
+            // while (stream_index < stream_len)
+            // {
+            //     if (stream_data[stream_index++] == NL_CHAR)
+            //     {
+            //         break; 
+            //     }
+            // }
         }
         else if (msg_type == M8Q_MSG_UBX)
         {
-            // stream_index += msg_offset; 
+            printf("\r\nUBX\r\n"); 
 
-            uint16_t counter = CLEAR; 
-            uint16_t max_count = 4; 
+            stream_index += BYTE_4; 
+
+            uint16_t counter = BYTE_2; 
+            uint16_t max_count = ((stream_data[stream_index]) | 
+                                  (stream_data[stream_index + BYTE_1] << SHIFT_8)) + BYTE_4; 
+
+            stream_index += BYTE_2; 
 
             while (stream_index < stream_len)
             {
-                if (counter == 4)
+                if (counter++ >= max_count)
                 {
-                    max_count = stream_data[stream_index]; 
-                }
-                else if (counter == 5)
-                {
-                    max_count |= (stream_data[stream_index] << SHIFT_8); 
-                    max_count += 8; // account for sync, class, ID, PL length and checksum bytes 
-                }
-                else 
-                {
-                    if (counter >= max_count)
-                    {
-                        break; 
-                    }
+                    break; 
                 }
                 
-                counter++; 
                 stream_index++; 
             }
         }
@@ -1153,8 +1150,6 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
                                                &msg_index); 
         if (id_check_status)
         {
-            *msg_offset = msg_index; 
-
             return M8Q_MSG_UBX; 
         }
     }
@@ -1173,14 +1168,6 @@ M8Q_MSG_TYPE m8q_msg_id_dev(
             return M8Q_MSG_UBX; 
         }
     }
-    // else 
-    // {
-    //     uint8_t check = ((char)ubx_msg_sync_data[0] == msg[0]) ? TRUE : FALSE; 
-    //     printf("\r\nCheck: %u\r\n", check); 
-
-    //     printf("\r\nmsg int: %u %u", (uint8_t)msg[0], (uint8_t)msg[1]); 
-    //     printf("\r\nmsg char: %c %c\r\n", msg[0], msg[1]); 
-    // }
 
     return M8Q_MSG_INVALID; 
 }
@@ -1209,8 +1196,10 @@ uint8_t m8q_msg_id_check_dev(
 
 
 // Incoming NMEA message parse 
-uint16_t m8q_nmea_msg_parse_dev(
+void m8q_nmea_msg_parse_dev(
     const uint8_t *nmea_msg, 
+    uint16_t *stream_index, 
+    uint16_t stream_len, 
     uint8_t data_offset, 
     uint8_t arg_num, 
     uint8_t **data)
@@ -1226,23 +1215,15 @@ uint16_t m8q_nmea_msg_parse_dev(
     // the message and return. 
     if (data == NULL)
     {
-        while (msg_byte != NULL_CHAR)
+        while ((*stream_index)++ < stream_len)
         {
-            if (msg_byte != AST_CHAR)
+            if (*nmea_msg == NL_CHAR)
             {
-                msg_length++; 
-            }
-            else 
-            {
-                // Add remaining NMEA message bytes and exit 
-                msg_length += 5; 
                 break; 
             }
-
-            msg_byte = *(++nmea_msg); 
         }
 
-        return msg_length; 
+        return; 
     }
 
     // There is a data record to store the message. Offset the message to the first data 
@@ -1307,7 +1288,8 @@ uint16_t m8q_nmea_msg_parse_dev(
         }
     }
 
-    return msg_length; 
+    // return msg_length; 
+    return; 
 }
 
 

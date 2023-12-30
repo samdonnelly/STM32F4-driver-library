@@ -56,7 +56,8 @@ typedef enum {
  */
 typedef enum {
     I2C_OK, 
-    I2C_TIMEOUT 
+    I2C_TIMEOUT, 
+    I2C_NULL_PTR 
 } i2c_status_t; 
 
 
