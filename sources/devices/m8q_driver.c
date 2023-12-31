@@ -499,7 +499,6 @@ uint8_t m8q_msg_id_check_dev(
  * @param nmea_msg 
  * @param msg_index 
  * @param stream_len 
- * @param data_offset 
  * @param arg_num 
  * @param data 
  */
@@ -507,9 +506,38 @@ void m8q_nmea_msg_parse_dev(
     const uint8_t *nmea_msg, 
     uint16_t *stream_index, 
     uint16_t stream_len, 
-    uint8_t data_offset, 
     uint8_t arg_num, 
     uint8_t **data); 
+
+
+/**
+ * @brief Incoming NMEA message counter 
+ * 
+ * @details 
+ * 
+ * @param nmea_msg 
+ * @param stream_index 
+ * @param stream_len 
+ */
+void m8q_nmea_msg_count_dev(
+    const uint8_t *nmea_msg, 
+    uint16_t *stream_index, 
+    uint16_t stream_len); 
+
+
+/**
+ * @brief Incoming UBX message parse 
+ * 
+ * @details 
+ * 
+ * @param ubx_msg 
+ * @param stream_index 
+ * @param stream_len 
+ */
+void m8q_ubx_msg_parse_dev(
+    const uint8_t *ubx_msg, 
+    uint16_t *stream_index, 
+    uint16_t stream_len); 
 
 
 /**
@@ -922,23 +950,16 @@ M8Q_STATUS m8q_read_sort_ds_dev(
         // Sort the message data as needed 
         if (msg_type == M8Q_MSG_NMEA)
         {
+            printf("\r\nNMEA\r\n"); 
+            
             stream_index += msg_offset + BYTE_1; 
 
             m8q_nmea_msg_parse_dev(
                 &stream_data[stream_index], 
                 &stream_index, 
                 stream_len, 
-                msg_offset + BYTE_1, 
                 nmea_msg_target.num_param, 
                 nmea_msg_target.msg_data); 
-
-            // while (stream_index < stream_len)
-            // {
-            //     if (stream_data[stream_index++] == NL_CHAR)
-            //     {
-            //         break; 
-            //     }
-            // }
         }
         else if (msg_type == M8Q_MSG_UBX)
         {
@@ -946,21 +967,10 @@ M8Q_STATUS m8q_read_sort_ds_dev(
 
             stream_index += BYTE_4; 
 
-            uint16_t counter = BYTE_2; 
-            uint16_t max_count = ((stream_data[stream_index]) | 
-                                  (stream_data[stream_index + BYTE_1] << SHIFT_8)) + BYTE_4; 
-
-            stream_index += BYTE_2; 
-
-            while (stream_index < stream_len)
-            {
-                if (counter++ >= max_count)
-                {
-                    break; 
-                }
-                
-                stream_index++; 
-            }
+            m8q_ubx_msg_parse_dev(
+                &stream_data[stream_index], 
+                &stream_index, 
+                stream_len); 
         }
         else 
         {
@@ -1200,100 +1210,121 @@ void m8q_nmea_msg_parse_dev(
     const uint8_t *nmea_msg, 
     uint16_t *stream_index, 
     uint16_t stream_len, 
-    uint8_t data_offset, 
     uint8_t arg_num, 
     uint8_t **data)
 {
     // Local variables 
-    uint8_t arg_index = CLEAR; 
-    uint8_t arg_len = CLEAR; 
+    uint8_t param_index = CLEAR; 
+    uint8_t param_len = CLEAR; 
     uint8_t data_index = CLEAR; 
-    uint8_t msg_byte = *(nmea_msg + data_offset); 
-    uint16_t msg_length = data_offset; 
+    uint8_t msg_byte = *nmea_msg; 
 
     // Check if the message has a data record in the driver. If not, then count the length of 
     // the message and return. 
     if (data == NULL)
     {
-        while ((*stream_index)++ < stream_len)
-        {
-            if (*nmea_msg == NL_CHAR)
-            {
-                break; 
-            }
-        }
-
+        m8q_nmea_msg_count_dev(nmea_msg, stream_index, stream_len); 
         return; 
     }
 
     // There is a data record to store the message. Offset the message to the first data 
     // byte, get the length of the first data array to fill and start parsing the message 
     // into it's data fields and storing them in the data record. 
-    nmea_msg += data_offset; 
-    arg_len = *(&data[data_index] + 1) - data[data_index]; 
+    param_len = data[data_index + BYTE_1] - data[data_index]; 
 
-    while (msg_byte != NULL_CHAR)
+    while ((*stream_index)++ < stream_len)
     {
-        // Check for end of message data 
+        // Check for the end of the NMEA message parameters 
         if (msg_byte != AST_CHAR)
         {
-            // Check for argument separation 
+            // Check for a comma - a comma is the separation between parameters 
             if (msg_byte != COMMA_CHAR)
             {
-                // Record the byte if there is space 
-                if (arg_index < arg_len)
+                // Message parameter byte seen. Store the byte in the data record if there 
+                // is room for it (so not to exceed parameter allocated memory). 
+                if (param_index < param_len)
                 {
-                    data[data_index][arg_index] = msg_byte; 
-                    arg_index++; 
+                    data[data_index][param_index++] = msg_byte; 
                 }
             }
-            else
+            else 
             {
-                // Terminate the argument if needed 
-                if (arg_index < arg_len) 
+                // End of message parameter. If the message data is less than the memory 
+                // allocated to store it then terminate the data so old data is not mixed 
+                // in. Proceed to check of there are any remainding parameters to fill. 
+                if (param_index < param_len)
                 {
-                    data[data_index][arg_index] = NULL_CHAR; 
-                } 
+                    data[data_index++][param_index] = NULL_CHAR; 
+                }
 
-                // Increment jagged array index 
-                data_index++; 
-
-                // Exit if the storage array has been exceeded 
-                if (data_index >= arg_num) 
+                if (data_index >= arg_num)
                 {
                     break; 
-                } 
+                }
 
-                // Reset arg index and calculate the new argument length 
-                arg_index = CLEAR; 
-                arg_len = *(&data[data_index] + 1) - data[data_index]; 
+                // If there are additional parameters to store then get the next parameter 
+                // storage size and reset the parameter index. 
+                param_index = CLEAR; 
+                param_len = data[data_index + BYTE_1] - data[data_index]; 
             }
-
-            // Increment nmea_msg index 
-            msg_byte = *(++nmea_msg); 
-            msg_length++; 
         }
-        else
+        else 
         {
-            // Terminate the argument if needed 
-            if (arg_index < arg_len) 
+            // End of message parameters seen. If the message data is less than the memory 
+            // allocated to store it then terminate the data so old data is not mixed in. 
+            // Storing is done so check the remaining message bytes and exit the loop. 
+            if (param_index < param_len)
             {
-                data[data_index][arg_index] = NULL_CHAR; 
+                data[data_index][param_index] = NULL_CHAR; 
             }
 
-            // Add remaining NMEA message bytes and exit 
-            msg_length += 5; 
-            
+            m8q_nmea_msg_count_dev(++nmea_msg, stream_index, stream_len); 
             break; 
         }
-    }
 
-    // return msg_length; 
-    return; 
+        msg_byte = *(++nmea_msg); 
+    }
 }
 
 
-// TODO UBX message sorting 
+// Incoming NMEA message counter 
+void m8q_nmea_msg_count_dev(
+    const uint8_t *nmea_msg, 
+    uint16_t *stream_index, 
+    uint16_t stream_len)
+{
+    while ((*stream_index)++ < stream_len)
+    {
+        if (*nmea_msg++ == NL_CHAR)
+        {
+            break; 
+        }
+    }
+}
+
+
+// Incoming UBX message parse 
+void m8q_ubx_msg_parse_dev(
+    const uint8_t *ubx_msg, 
+    uint16_t *stream_index, 
+    uint16_t stream_len)
+{
+    uint16_t counter = BYTE_2; 
+    uint16_t max_count = ((*ubx_msg) | 
+                          (*(ubx_msg + BYTE_1) << SHIFT_8)) + BYTE_4; 
+
+    *stream_index += BYTE_2; 
+
+    while (*stream_index < stream_len)
+    {
+        if (counter++ >= max_count)
+        {
+            break; 
+        }
+        
+        (*stream_index)++; 
+    }
+}
 
 //=======================================================================================
 
