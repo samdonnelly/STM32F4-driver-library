@@ -532,19 +532,106 @@ TEST(m8q_driver, m8q_read_i2c_timeout)
 }
 
 
-// M8Q read - Unknown stream message 
-TEST(m8q_driver, m8q_read_unknown_msg)
+// M8Q read - Unknown stream message - Single message stream 
+TEST(m8q_driver, m8q_read_unknown_single_msg)
+{
+    M8Q_STATUS read_status_0, read_status_1; 
+
+    uint8_t stream_len_0[] = { 0x00, 0x6F }; 
+    uint8_t stream_len_1[] = { 0x00, 0x1C }; 
+    uint16_t msg_len_0 = (stream_len_0[0] << SHIFT_8) | stream_len_0[1]; 
+    uint16_t msg_len_1 = (stream_len_1[0] << SHIFT_8) | stream_len_1[1]; 
+
+    // One NMEA message and one UBX message is checked 
+    const char device_msg_0[] = "$PUBC,00,081350.00,4717.113210,N,00833.915187,E,546.589," 
+                                "G3,2.1,2.0,0.007,77.52,0.007,,0.92,1.19,0.77,9,0,0*5F"; 
+    const uint8_t device_msg_1[] = 
+        {181,98,3,0,20,0,1,0,0,0,192,8,0,0,128,37,0,0,0,0,0,0,0,0,0,0,136,107}; 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data((void *)stream_len_0, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)device_msg_0, msg_len_0, I2C_MOCK_INDEX_1); 
+    read_status_0 = m8q_read_data_dev(); 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data((void *)stream_len_1, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)device_msg_1, msg_len_1, I2C_MOCK_INDEX_1); 
+    read_status_1 = m8q_read_data_dev(); 
+
+    LONGS_EQUAL(M8Q_UNKNOWN_DATA, read_status_0); 
+    LONGS_EQUAL(M8Q_UNKNOWN_DATA, read_status_1); 
+}
+
+
+// M8Q read - Known stream message - Single message stream 
+TEST(m8q_driver, m8q_read_known_single_msg)
+{
+    M8Q_STATUS read_status_0, read_status_1; 
+
+    uint8_t stream_len_0[] = { 0x00, 0x6F }; 
+    uint8_t stream_len_1[] = { 0x00, 0x1C }; 
+    uint16_t msg_len_0 = (stream_len_0[0] << SHIFT_8) | stream_len_0[1]; 
+    uint16_t msg_len_1 = (stream_len_1[0] << SHIFT_8) | stream_len_1[1]; 
+    
+    // One NMEA message and one UBX message is checked 
+    const char device_msg_0[] = "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589," 
+                                "G3,2.1,2.0,0.007,77.52,0.007,,0.92,1.19,0.77,9,0,0*5F\r\n"; 
+    const uint8_t device_msg_1[] = 
+        {181,98,6,0,20,0,1,0,0,0,192,8,0,0,128,37,0,0,0,0,0,0,0,0,0,0,136,107}; 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data((void *)stream_len_0, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)device_msg_0, msg_len_0, I2C_MOCK_INDEX_1); 
+    read_status_0 = m8q_read_data_dev(); 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data((void *)stream_len_1, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)device_msg_1, msg_len_1, I2C_MOCK_INDEX_1); 
+    read_status_1 = m8q_read_data_dev(); 
+
+    LONGS_EQUAL(M8Q_OK, read_status_0); 
+    LONGS_EQUAL(M8Q_OK, read_status_1); 
+}
+
+
+// M8Q read - Unknown stream message - Multiple message stream 
+TEST(m8q_driver, m8q_read_unknown_multi_msg)
 {
     M8Q_STATUS read_status; 
-    uint8_t stream_len[] = { 0x00, 0x6F }; 
-    const char device_msg[] = "$PUBC,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3," 
-                              "2.1,2.0,0.007,77.52,0.007,,0.92,1.19,0.77,9,0,0*5F"; 
 
+    uint8_t msg0_len = 67; 
+    uint8_t msg1_len = 28; 
+    uint8_t msg2_len = 28; 
+    uint8_t msg3_len = 71; 
+    uint8_t msg4_len = 29; 
+    uint8_t stream_len[] = { 0x00, 0xDF }; 
     uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
+
+    uint8_t device_stream[msg_len]; 
+
+    // The stream contains multiple NMEA and UBX messages. The last message is not valid. 
+    const char device_msg0[] = 
+        "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52\r\n"; 
+    const uint8_t device_msg1[] = 
+        {181,98,6,0,20,0,1,0,0,0,192,8,0,0,128,37,0,0,0,0,0,0,0,0,0,0,136,107}; 
+    const uint8_t device_msg2[] = 
+        {181,98,2,0,20,0,1,0,0,0,192,8,0,0,128,37,0,0,0,0,0,0,0,0,0,0,136,107}; 
+    const char device_msg3[] = 
+        "$PUBX,04,073731.00,091202,113851.00,1196,15D,1930035,-2660.664,43,*3C\r\n"; 
+    const char device_msg4[] = 
+        "$PUBX,45,GLL,1,0,0,0,0,0*5D\r\n"; 
+
+    memcpy((void *)&device_stream[0], (void *)device_msg0, msg0_len); 
+    memcpy((void *)&device_stream[msg0_len], (void *)device_msg1, msg1_len); 
+    memcpy((void *)&device_stream[msg0_len + msg1_len], (void *)device_msg2, msg2_len); 
+    memcpy((void *)&device_stream[msg0_len + msg1_len + msg2_len], 
+           (void *)device_msg3, msg3_len); 
+    memcpy((void *)&device_stream[msg0_len + msg1_len + msg2_len + msg3_len], 
+           (void *)device_msg4, msg4_len); 
 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
-    i2c_mock_set_read_data((void *)device_msg, msg_len, I2C_MOCK_INDEX_1); 
+    i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
 
     read_status = m8q_read_data_dev(); 
 
@@ -552,27 +639,31 @@ TEST(m8q_driver, m8q_read_unknown_msg)
 }
 
 
-// M8Q read - multiple message parsing - messages ok and no storing 
-TEST(m8q_driver, m8q_read_unknown_msg_multi_msg)
+// M8Q read - Known stream message - Multiple message stream 
+TEST(m8q_driver, m8q_read_known_multi_msg)
 {
     M8Q_STATUS read_status; 
 
     uint8_t msg0_len = 67; 
     uint8_t msg1_len = 28; 
-    uint8_t msg2_len = 71; 
-    uint8_t msg3_len = 29; 
-    uint8_t stream_len[] = { 0x00, 0xC3 }; 
+    uint8_t msg2_len = 28; 
+    uint8_t msg3_len = 71; 
+    uint8_t msg4_len = 29; 
+    uint8_t stream_len[] = { 0x00, 0xDF }; 
     uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
 
     uint8_t device_stream[msg_len]; 
 
+    // The stream contains multiple NMEA and UBX messages 
     const char device_msg0[] = 
         "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52\r\n"; 
     const uint8_t device_msg1[] = 
         {181,98,6,0,20,0,1,0,0,0,192,8,0,0,128,37,0,0,0,0,0,0,0,0,0,0,136,107}; 
-    const char device_msg2[] = 
-        "$PUBX,04,073731.00,091202,113851.00,1196,15D,1930035,-2660.664,43,*3C\r\n"; 
+    const uint8_t device_msg2[] = 
+        {181,98,2,0,20,0,1,0,0,0,192,8,0,0,128,37,0,0,0,0,0,0,0,0,0,0,136,107}; 
     const char device_msg3[] = 
+        "$PUBX,04,073731.00,091202,113851.00,1196,15D,1930035,-2660.664,43,*3C\r\n"; 
+    const char device_msg4[] = 
         "$PUBX,40,GLL,1,0,0,0,0,0*5D\r\n"; 
 
     memcpy((void *)&device_stream[0], (void *)device_msg0, msg0_len); 
@@ -580,6 +671,8 @@ TEST(m8q_driver, m8q_read_unknown_msg_multi_msg)
     memcpy((void *)&device_stream[msg0_len + msg1_len], (void *)device_msg2, msg2_len); 
     memcpy((void *)&device_stream[msg0_len + msg1_len + msg2_len], 
            (void *)device_msg3, msg3_len); 
+    memcpy((void *)&device_stream[msg0_len + msg1_len + msg2_len + msg3_len], 
+           (void *)device_msg4, msg4_len); 
 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
@@ -591,46 +684,58 @@ TEST(m8q_driver, m8q_read_unknown_msg_multi_msg)
 }
 
 
-// // M8Q read - Unknown stream message - multiple messages 
-// TEST(m8q_driver, m8q_read_unknown_msg_multi_msg)
-// {
-//     M8Q_STATUS read_status; 
-//     uint8_t stream_len[] = { 0x00, 0x6D }; 
-//     const char device_msg[] = "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3," 
-//                               "2.1,2.0,0.007,77.52,0.007,,0.92,1.19,0.77,9,0,0*5FB562,99,0" 
-//                               "0,1400,01,00,0000,C0080000,80250000,0000,0000,0000,0000*"; 
-//     uint16_t msg_len = 109;   // Length of the above message 
+// M8Q read - Known stream message - Multiple message stream 
+TEST(m8q_driver, m8q_read_msg_record_update)
+{
+    M8Q_STATUS read_status; 
 
-//     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
-//     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
-//     i2c_mock_set_read_data((void *)device_msg, msg_len, I2C_MOCK_INDEX_1); 
+    uint8_t msg0_len = 111; 
+    uint8_t msg1_len = 67; 
+    uint8_t msg2_len = 28; 
+    uint8_t msg3_len = 10; 
+    uint8_t msg4_len = 71; 
+    uint8_t stream_len[] = { 0x01, 0x1F }; 
+    uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
 
-//     read_status = m8q_read_data_dev(); 
+    uint8_t device_stream[msg_len]; 
 
-//     LONGS_EQUAL(M8Q_UNKNOWN_DATA, read_status); 
-// }
+    // The stream contains multiple NMEA and UBX messages. Some messages are stored in the 
+    // driver data record and others are discarded. 
+    const char device_msg0[] = 
+        "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3,2.1,2.0,0.007,77.52," 
+        "0.007,,0.92,1.19,0.77,9,0,0*5F\r\n"; 
+    const char device_msg1[] = 
+        "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52\r\n"; 
+    const uint8_t device_msg2[] = 
+        {181,98,6,0,20,0,1,0,0,0,192,8,0,0,128,37,0,0,0,0,0,0,0,0,0,0,136,107}; 
+    const uint8_t device_msg3[] = 
+        {181,98,5,1,2,0,6,1,15,56}; 
+    const char device_msg4[] = 
+        "$PUBX,04,073731.00,091202,113851.00,1196,15D,1930035,-2660.664,43,*3C\r\n"; 
 
+    memcpy((void *)&device_stream[0], (void *)device_msg0, msg0_len); 
+    memcpy((void *)&device_stream[msg0_len], (void *)device_msg1, msg1_len); 
+    memcpy((void *)&device_stream[msg0_len + msg1_len], (void *)device_msg2, msg2_len); 
+    memcpy((void *)&device_stream[msg0_len + msg1_len + msg2_len], 
+           (void *)device_msg3, msg3_len); 
+    memcpy((void *)&device_stream[msg0_len + msg1_len + msg2_len + msg3_len], 
+           (void *)device_msg4, msg4_len); 
 
-// // M8Q read - test 
-// TEST(m8q_driver, m8q_read_test0)
-// {
-//     uint8_t stream_len[] = { 0x00, 0x6D }; 
-//     const char device_msg[] = "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3," 
-//                               "2.1,2.0,0.007,77.52,0.007,,0.92,1.19,0.77,9,0,0*5F"; 
-//     uint16_t msg_len = 109;   // Length of the above message 
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
 
-//     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
-//     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
-//     i2c_mock_set_read_data((void *)device_msg, msg_len, I2C_MOCK_INDEX_1); 
+    // Read data record - check for no data 
 
-//     m8q_read_data_dev(); 
-// }
+    read_status = m8q_read_data_dev(); 
+
+    // Read data record - check for populated data 
+
+    LONGS_EQUAL(M8Q_OK, read_status); 
+}
 
 
 // Tests 
-// - Single message check - good and bad 
-// - Multiple message check - good and bad 
-// - Storing message test - single and multiple - good and bad 
 // - Data updated in stored messages - check befor and after read 
 // - Read whole stream 
 // - Flush stream - stream full, gets flushed, then check for no data status 

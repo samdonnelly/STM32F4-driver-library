@@ -822,7 +822,12 @@ M8Q_STATUS m8q_read_data_dev(void)
 // // Look for a UBX acknowledgment message 
 // M8Q_STATUS m8q_read_ack_dev(void)
 // {
-//     // 
+//     // When this function is called, read the current ACK status or set a new local status. 
+//     // Read the data stream (if there is any data - also include a timeout). 
+//     // - The UBX parsing function should set/increment an ACK status when it sees an ACK 
+//     //   message. 
+//     // Read the updated ACK status and if it has changed then return a status that indicates 
+//     // an ACK message has been seen. 
 
 //     return M8Q_OK; 
 // }
@@ -893,22 +898,216 @@ void m8q_clear_low_pwr_dev(void)
 }
 
 
-// Get latitude 
+// Latitude coordinate getter 
+double m8q_get_lat(void)
+{    
+    // Local variables 
+    int32_t deg_int = CLEAR; 
+    int32_t deg_frac = CLEAR; 
+    uint8_t dec_pos = M8Q_LAT_LEN - (M8Q_MIN_FRAC_LEN + BYTE_1); 
 
-// Get North/South 
+    // Parse the integer and fractional parts of the degree 
+    for (uint8_t i = CLEAR, j = M8Q_MIN_DIGIT_INDEX; i < M8Q_LAT_LEN; i++)
+    {
+        if (i < M8Q_LAT_DEG_INT_LEN)
+        {
+            // Integer portion of degrees 
+            deg_int += (int32_t)char_to_int(position[M8Q_POS_LAT][i], 1-i); 
+        }
+        else if (i == dec_pos)
+        {
+            // Decimal point character - in the middle of the fractional parts 
+            continue; 
+        }
+        else 
+        {
+            // Fractional portion of degrees 
+            deg_frac += (int32_t)char_to_int(position[M8Q_POS_LAT][i], j--); 
+        }
+    }
 
-// Get longitude 
+    // Adjust the sign of the degree depending on Northern or Southern hemisphere 
+    if (m8q_get_NS() == M8Q_DIR_SOUTH) 
+    {
+        deg_int = ~deg_int + 1; 
+        deg_frac = ~deg_frac + 1; 
+    }
 
-// Get East/West 
+    // Calculate and return the final degree value 
+    return ((double)deg_int) + 
+           (((double)deg_frac) / (pow(SCALE_10, M8Q_MIN_FRAC_LEN)*M8Q_MIN_TO_DEG)); 
+}
+
+
+// Latitude string getter 
+void m8q_get_lat_str(
+    uint8_t *deg_min, 
+    uint8_t *min_frac)
+{
+    // Integer part length 
+    uint8_t int_len = M8Q_LAT_LEN - M8Q_COO_LEN; 
+
+    // Copy the latitude into integer and fractional parts 
+    for (uint8_t i = CLEAR; i <= M8Q_LAT_LEN; i++) 
+    {
+        if (i < int_len) 
+        {
+            *deg_min++ = position[M8Q_POS_LAT][i]; 
+        }
+        else if (i == int_len) 
+        {
+            *deg_min = NULL_CHAR; 
+        }
+        else if (i < M8Q_LAT_LEN) 
+        {
+            *min_frac++ = position[M8Q_POS_LAT][i]; 
+        }
+        else 
+        {
+            *min_frac = NULL_CHAR; 
+        }
+    }
+}
+
+
+// Get North/South hemisphere 
+uint8_t m8q_get_NS(void)
+{
+    return *(position[M8Q_POS_NS]); 
+}
+
+
+// Longitude coordinate getter 
+// TODO replace 'position' with a direct call to the struct object 
+double m8q_get_long(void)
+{
+    // Local variables 
+    int32_t deg_int = CLEAR; 
+    int32_t deg_frac = CLEAR; 
+    uint8_t dec_pos = M8Q_LON_LEN - (M8Q_MIN_FRAC_LEN + BYTE_1); 
+
+    // Parse the integer and fractional parts of the degree 
+    for (uint8_t i = CLEAR, j = M8Q_MIN_DIGIT_INDEX; i < M8Q_LON_LEN; i++)
+    {
+        if (i < M8Q_LON_DEG_INT_LEN)
+        {
+            // Integer portion of degrees 
+            deg_int += (int32_t)char_to_int(position[M8Q_POS_LON][i], 2-i); 
+        }
+        else if (i == dec_pos)
+        {
+            // Decimal point character - in the middle of the fractional parts 
+            continue; 
+        }
+        else 
+        {
+            // Fractional portion of degrees 
+            deg_frac += (int32_t)char_to_int(position[M8Q_POS_LON][i], j--); 
+        }
+    }
+
+    // Adjust the sign of the degree depending on Eastern or Western hemisphere 
+    if (m8q_get_EW() == M8Q_DIR_WEST) 
+    {
+        deg_int = ~deg_int + 1; 
+        deg_frac = ~deg_frac + 1; 
+    }
+
+    // Calculate and return the final degree value 
+    return ((double)deg_int) + 
+           (((double)deg_frac) / (pow(SCALE_10, M8Q_MIN_FRAC_LEN)*M8Q_MIN_TO_DEG)); 
+}
+
+
+// Longitude string getter 
+void m8q_get_long_str(
+    uint8_t *deg_min, 
+    uint8_t *min_frac)
+{
+    // Integer part length 
+    uint8_t int_len = M8Q_LON_LEN - M8Q_COO_LEN; 
+
+    // Copy the longitude into integer (degees + minutes) and fractional (minutes) parts 
+    for (uint8_t i = CLEAR; i <= M8Q_LON_LEN; i++) 
+    {
+        if (i < int_len) 
+        {
+            *deg_min++ = position[M8Q_POS_LON][i]; 
+        }
+        else if (i == int_len) 
+        {
+            *deg_min = NULL_CHAR; 
+        }
+        else if (i < M8Q_LON_LEN) 
+        {
+            *min_frac++ = position[M8Q_POS_LON][i]; 
+        }
+        else 
+        {
+            *min_frac = NULL_CHAR; 
+        }
+    }
+}
+
+
+// Get East/West hemisphere 
+uint8_t m8q_get_EW_dev(void)
+{
+    return *(position[M8Q_POS_EW]);
+}
+
 
 // Get raw navigation status - returns the exact navstat value 
 
 // Get accepted navigation status - returns true/false for a valid position lock so the 
 // application doesn't have to determine it. 
 
-// Get time 
+
+// Get navigation status 
+uint16_t m8q_get_navstat_dev(void)
+{
+    return (m8q_driver_data.pos_data.navStat[BYTE_0] << SHIFT_8) | 
+            m8q_driver_data.pos_data.navStat[BYTE_1]; 
+}
+
+
+// Get acceptable navigation status - returns true for valid position lock, false otherwise 
+uint8_t m8q_get_navstat_lock_dev(void)
+{
+    // Get only the lowest byte of the navigation status. Only this is needed to distinguish 
+    // a valid position lock. 
+    uint8_t ns = (uint8_t)m8q_get_navstat_dev() & FILTER_4_MSB; 
+    uint8_t ns_check = M8Q_NAVSTAT_G3 & FILTER_4_MSB; 
+
+    if (ns != ns_check)
+    {
+        return FALSE; 
+    }
+
+    return TRUE; 
+}
+
+
+// Get UTC time 
+void m8q_get_time_dev(
+    uint8_t *utc_time)
+{
+    for (uint8_t i = 0; i < M8Q_TIME_CHAR_LEN; i++)
+    {
+        *utc_time++ = time[M8Q_TIME_TIME][i]; 
+    }
+}
+
 
 // Get date 
+void m8q_get_date_dev(
+    uint8_t *utc_date)
+{
+    for (uint8_t i = 0; i < M8Q_DATE_CHAR_LEN; i++)
+    {
+        *utc_date++ = time[M8Q_TIME_DATE][i]; 
+    }
+}
 
 //=======================================================================================
 
@@ -1310,8 +1509,7 @@ void m8q_ubx_msg_parse_dev(
     uint16_t stream_len)
 {
     uint16_t counter = BYTE_2; 
-    uint16_t max_count = ((*ubx_msg) | 
-                          (*(ubx_msg + BYTE_1) << SHIFT_8)) + BYTE_4; 
+    uint16_t max_count = ((*ubx_msg) | (*(ubx_msg + BYTE_1) << SHIFT_8)) + BYTE_4; 
 
     *stream_index += BYTE_2; 
 
@@ -2306,7 +2504,6 @@ void m8q_nmea_parse(
     arg_len = *(&data[data_index] + 1) - data[data_index];  
 
     // Read and parse the message 
-    // TODO term char exit condition 
     while (TRUE)
     {
         // Check for end of message data 
@@ -2474,7 +2671,6 @@ uint8_t m8q_get_NS(void)
 
 
 // Longitude coordinate getter 
-// TODO replace 'position' with a direct call to the struct object 
 double m8q_get_long(void)
 {
     // Local variables 
