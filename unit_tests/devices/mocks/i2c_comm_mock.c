@@ -26,7 +26,7 @@
 //=======================================================================================
 // Macros 
 
-#define MAX_DATA_OPS 5 
+#define MAX_DATA_OPS 12 
 #define MAX_DATA_SIZE 300 
 
 //=======================================================================================
@@ -39,7 +39,8 @@
 typedef struct i2c_mock_driver_data_s 
 {
     uint8_t i2c_timeout; 
-    uint8_t increment_mode; 
+    uint8_t increment_mode_write; 
+    uint8_t increment_mode_read; 
 
     uint8_t write_data[MAX_DATA_OPS][MAX_DATA_SIZE]; 
     uint8_t write_data_size[MAX_DATA_OPS]; 
@@ -111,7 +112,7 @@ I2C_STATUS i2c_write(
            (void *)data, data_size); 
     mock_driver_data.write_data_size[mock_driver_data.write_index] = data_size; 
 
-    if (mock_driver_data.increment_mode)
+    if (mock_driver_data.increment_mode_write)
     {
         mock_driver_data.write_index++; 
     }
@@ -135,7 +136,7 @@ I2C_STATUS i2c_read(
            (void *)(&mock_driver_data.read_data[mock_driver_data.read_index][0]), 
            data_size); 
 
-    if (mock_driver_data.increment_mode)
+    if (mock_driver_data.increment_mode_read)
     {
         mock_driver_data.read_index++; 
     }
@@ -176,10 +177,12 @@ I2C_STATUS i2c_read_to_len(
 // Mock initialization 
 void i2c_mock_init(
     i2c_mock_timeout_t timeout_status, 
-    i2c_mock_increment_mode_t increment_mode)
+    i2c_mock_increment_mode_t increment_mode_write, 
+    i2c_mock_increment_mode_t increment_mode_read)
 {
     mock_driver_data.i2c_timeout = timeout_status; 
-    mock_driver_data.increment_mode = increment_mode; 
+    mock_driver_data.increment_mode_write = increment_mode_write; 
+    mock_driver_data.increment_mode_read = increment_mode_read; 
 
     memset((void *)mock_driver_data.write_data, CLEAR, sizeof(mock_driver_data.write_data)); 
     memset((void *)mock_driver_data.write_data_size, CLEAR, 

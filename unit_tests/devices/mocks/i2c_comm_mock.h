@@ -34,7 +34,14 @@ typedef enum {
     I2C_MOCK_INDEX_1, 
     I2C_MOCK_INDEX_2, 
     I2C_MOCK_INDEX_3, 
-    I2C_MOCK_INDEX_4 
+    I2C_MOCK_INDEX_4, 
+    I2C_MOCK_INDEX_5, 
+    I2C_MOCK_INDEX_6, 
+    I2C_MOCK_INDEX_7, 
+    I2C_MOCK_INDEX_8, 
+    I2C_MOCK_INDEX_9, 
+    I2C_MOCK_INDEX_10, 
+    I2C_MOCK_INDEX_11 
 } i2c_mock_buff_index_t; 
 
 
@@ -60,7 +67,8 @@ typedef enum {
 // Mock initialization 
 void i2c_mock_init(
     i2c_mock_timeout_t timeout_status, 
-    i2c_mock_increment_mode_t increment_mode); 
+    i2c_mock_increment_mode_t increment_mode_write, 
+    i2c_mock_increment_mode_t increment_mode_read); 
 
 
 // Get write data 

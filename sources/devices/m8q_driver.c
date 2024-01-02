@@ -43,6 +43,10 @@
 
 #define M8Q_EOM_BYTE 1 
 
+#define ACK_ACK 0x0501 
+#define ACK_NAK 0x0500 
+
+#define ACK_TIMEOUT 10 
 
 //==================================================
 // No longer used (to be deleted) 
@@ -80,7 +84,7 @@ typedef enum {
 
 
 /**
- * @brief Number of fields in a message 
+ * @brief Number of fields in an NMEA message 
  */
 typedef enum {
     NMEA_NUM_FIELDS_POSITION = 19, 
@@ -180,6 +184,8 @@ typedef struct m8q_driver_data_s
     // Messages 
     m8q_nmea_pos_t pos_data;      // POSITION message 
     m8q_nmea_time_t time_data;    // TIME message 
+    uint8_t ack_msg_count;        // ACK-ACK message counter 
+    uint8_t nak_msg_count;        // ACK-NAK message counter 
 
     // Communication 
     I2C_TypeDef *i2c; 
@@ -723,6 +729,8 @@ M8Q_STATUS m8q_init_dev(
 
     // Local varaibles 
     M8Q_STATUS init_status = M8Q_OK; 
+    uint16_t ack_status; 
+    uint8_t ack_timeout; 
 
     // Initialize driver data 
     memset((void *)&m8q_driver_data.pos_data, CLEAR, sizeof(m8q_driver_data.pos_data)); 
@@ -731,7 +739,6 @@ M8Q_STATUS m8q_init_dev(
     memset((void *)&m8q_driver_data.pos_data.lon, ZERO_CHAR, 
            sizeof(m8q_driver_data.pos_data.lon)); 
     memset((void *)&m8q_driver_data.time_data, CLEAR, sizeof(m8q_driver_data.time_data)); 
-
     m8q_driver_data.i2c = i2c; 
     m8q_driver_data.data_buff_limit = (!data_buff_limit) ? HIGH_16BIT : data_buff_limit; 
     memset((void *)&nmea_msg_target, CLEAR, sizeof(nmea_msg_data_t)); 
@@ -752,7 +759,27 @@ M8Q_STATUS m8q_init_dev(
         if (*(config_msgs + BYTE_6) == 
             *(ubx_msg_class[M8Q_UBX_CFG_INDEX].ubx_msg_class_str + BYTE_1))
         {
-            // 
+            ack_timeout = ACK_TIMEOUT; 
+
+            do
+            {
+                if (!m8q_read_data_dev())
+                {
+                    ack_status = m8q_get_ack_status_dev(); 
+
+                    if (ack_status && (ack_status <= HIGH_8BIT))
+                    {
+                        break; 
+                    }
+                }
+            }
+            while (--ack_timeout); 
+
+            if (!ack_timeout)
+            {
+                init_status = M8Q_INVALID_CONFIG; 
+                break; 
+            }
         }
 
         config_msgs += max_msg_size; 
@@ -818,6 +845,10 @@ M8Q_STATUS m8q_read_data_dev(void)
     M8Q_STATUS read_status; 
     uint16_t stream_len = CLEAR; 
 
+    // Clear the ACK and NAK counters so they can be checked for by the application. 
+    m8q_driver_data.ack_msg_count = CLEAR; 
+    m8q_driver_data.nak_msg_count = CLEAR; 
+
     // Read the size of the data stream. If it's not zero and the stream isn't greater 
     // than the max buffer size then read the data stream in its entirety and sort all 
     // the read messages. If the data stream size is greater than the max buffer size 
@@ -871,18 +902,13 @@ M8Q_STATUS m8q_read_ds_dev(
 }
 
 
-// // Look for a UBX acknowledgment message 
-// M8Q_STATUS m8q_read_ack_dev(void)
-// {
-//     // When this function is called, read the current ACK status or set a new local status. 
-//     // Read the data stream (if there is any data - also include a timeout). 
-//     // - The UBX parsing function should set/increment an ACK status when it sees an ACK 
-//     //   message. 
-//     // Read the updated ACK status and if it has changed then return a status that indicates 
-//     // an ACK message has been seen. 
-
-//     return M8Q_OK; 
-// }
+// Return the ACK/NAK message counter status 
+uint16_t m8q_get_ack_status_dev(void)
+{
+    uint16_t ack_status = (m8q_driver_data.nak_msg_count << SHIFT_8) | 
+                           m8q_driver_data.ack_msg_count; 
+    return ack_status; 
+}
 
 
 // Send a message to the device 
@@ -929,11 +955,6 @@ GPIO_STATE m8q_get_tx_ready_dev(void)
 {
     return gpio_read(m8q_driver_data.tx_ready_gpio, (SET_BIT << m8q_driver_data.tx_ready)); 
 }
-
-
-// Clear driver fault code 
-
-// Get driver fault code 
 
 
 // Enter low power mode 
@@ -1273,7 +1294,7 @@ M8Q_STATUS m8q_read_sort_ds_dev(
         }
         else if (msg_type == M8Q_MSG_UBX)
         {
-            stream_index += BYTE_4; 
+            stream_index += BYTE_2; 
 
             m8q_ubx_msg_parse_dev(
                 &stream_data[stream_index], 
@@ -1583,9 +1604,26 @@ void m8q_ubx_msg_parse_dev(
     uint16_t stream_len)
 {
     uint16_t counter = BYTE_2; 
-    uint16_t max_count = ((*ubx_msg) | (*(ubx_msg + BYTE_1) << SHIFT_8)) + BYTE_4; 
+    uint16_t max_count; 
+    uint16_t class_ID = (*ubx_msg << SHIFT_8) | *(ubx_msg + BYTE_1); 
 
-    *stream_index += BYTE_2; 
+    // Check for an ACK or NAK message. 
+    // Right now the driver does not utilize received UBX messages other than for 
+    // acknowledging UBX config messages sent to the device so ACK and NAK messages are 
+    // checked for manually. If this changes then the method for checking for UBX 
+    // message types will also change. 
+    if (class_ID == ACK_ACK)
+    {
+        m8q_driver_data.ack_msg_count++; 
+    }
+    else if (class_ID == ACK_NAK)
+    {
+        m8q_driver_data.nak_msg_count++; 
+    }
+
+    ubx_msg += BYTE_2; 
+    *stream_index += BYTE_4; 
+    max_count = ((*ubx_msg) | (*(ubx_msg + BYTE_1) << SHIFT_8)) + BYTE_4; 
 
     while (*stream_index < stream_len)
     {
