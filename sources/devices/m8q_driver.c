@@ -12,7 +12,6 @@
  * 
  */
 
-
 //=======================================================================================
 // Includes 
 
@@ -24,9 +23,6 @@
 //=======================================================================================
 // Macros 
 
-// Message identification 
-#define MSG_ID_CHARS 8          // Number of characters used to identify message types 
-
 // NMEA message format 
 #define NMEA_START 0x24           // '$' --> NMEA protocol start character 
 #define NMEA_PUBX_NUM_MSGS 5      // Number of NMEA PUBX messages 
@@ -36,23 +32,35 @@
 #define NMEA_MSG_FORMAT_LEN 4     // Maximum length of an NMEA message formatter 
 
 // UBX message format 
-#define UBX_SYNC1 0xB5            // 0xB5 --> UBX protocol SYNC CHAR 1 
-#define UBX_SYNC1_HI 0x42         // 'B' --> SYNC CHAR 1 (0xB5) high nibble character 
-#define UBX_SYNC1_LO 0x35         // '5' --> SYNC CHAR 1 (0xB5) low nibble character 
-#define UBX_SYNC2_HI 0x36         // '6' --> SYNC CHAR 2 (0x62) high nibble character 
-#define UBX_SYNC2_LO 0x32         // '2' --> SYNC CHAR 2 (0x62) low nibble character 
 #define UBX_CLASS_NUM 14          // Number of UBX classes 
 #define UBX_CLASS_LEN 3           // Maximum length of a UBX class 
 
 // M8Q messages 
-#define M8Q_NO_DATA     0xff             // Return value for an invalid NMEA data stream 
 #define M8Q_MSG_MAX_LEN 150              // Message buffer that can hold any message
-#define M8Q_PYL_MAX_LEN 100              // Message payload buffer to store any apyload length 
 
 
 #define M8Q_UBX_CFG_INDEX 4 
 
 #define M8Q_EOM_BYTE 1 
+
+
+//==================================================
+// No longer used (to be deleted) 
+
+// M8Q messages 
+#define M8Q_NO_DATA     0xff             // Return value for an invalid NMEA data stream 
+#define M8Q_PYL_MAX_LEN 100              // Message payload buffer to store any apyload length 
+
+// Message identification 
+#define MSG_ID_CHARS 8            // Number of characters used to identify message types 
+
+#define UBX_SYNC1 0xB5            // 0xB5 --> UBX protocol SYNC CHAR 1 
+#define UBX_SYNC1_HI 0x42         // 'B' --> SYNC CHAR 1 (0xB5) high nibble character 
+#define UBX_SYNC1_LO 0x35         // '5' --> SYNC CHAR 1 (0xB5) low nibble character 
+#define UBX_SYNC2_HI 0x36         // '6' --> SYNC CHAR 2 (0x62) high nibble character 
+#define UBX_SYNC2_LO 0x32         // '2' --> SYNC CHAR 2 (0x62) low nibble character 
+
+//==================================================
 
 //=======================================================================================
 
@@ -187,6 +195,9 @@ typedef struct m8q_driver_data_s
 
     //==================================================
     
+    //==================================================
+    // Old (to be deleted) 
+
     // Messages 
     uint8_t ubx_resp[M8Q_MSG_MAX_LEN];        // Buffer to store incoming UBX messages 
     uint8_t nmea_resp[M8Q_MSG_MAX_LEN];       // Buffer to store incoming NMEA messages 
@@ -199,6 +210,8 @@ typedef struct m8q_driver_data_s
     //          --> bits 1-12: driver faults (see status getter) 
     //          --> bits 13-15: not used 
     uint16_t status; 
+    
+    //==================================================
 } 
 m8q_driver_data_t; 
 
@@ -387,6 +400,20 @@ static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] =
  */
 M8Q_STATUS m8q_read_ds_size_dev(
     uint16_t *data_size); 
+
+
+/**
+ * @brief Flush/clear the data stream - no data stored or returned 
+ * 
+ * @details 
+ * 
+ * @param max_buff_len 
+ * @param stream_len 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_flush_ds_dev(
+    uint16_t max_buff_len, 
+    uint16_t stream_len); 
 
 
 /**
@@ -791,22 +818,17 @@ M8Q_STATUS m8q_read_data_dev(void)
     M8Q_STATUS read_status; 
     uint16_t stream_len = CLEAR; 
 
-    // Read the size of the stream. If it's not zero then read the data stream in its 
-    // entirety and sort all the read messages. 
+    // Read the size of the data stream. If it's not zero and the stream isn't greater 
+    // than the max buffer size then read the data stream in its entirety and sort all 
+    // the read messages. If the data stream size is greater than the max buffer size 
+    // then clear the stream data and return a buffer overflow status. 
     read_status = m8q_read_ds_size_dev(&stream_len); 
 
     if (!read_status)
     {
-        if (stream_len > m8q_driver_data.data_buff_limit)
-        {
-            read_status = M8Q_DATA_BUFF_OVERFLOW; 
-
-            // Flush the data buffer 
-        }
-        else 
-        {
-            read_status = m8q_read_sort_ds_dev(stream_len); 
-        }
+        read_status = (stream_len > m8q_driver_data.data_buff_limit) ? 
+                      m8q_flush_ds_dev(m8q_driver_data.data_buff_limit, stream_len) : 
+                      m8q_read_sort_ds_dev(stream_len); 
     }
 
     return read_status; 
@@ -822,21 +844,20 @@ M8Q_STATUS m8q_read_ds_dev(
     I2C_STATUS i2c_status; 
     uint16_t stream_len = CLEAR; 
 
-    // Read the size of the stream. If it's not zero then read the data stream in its 
-    // entirety and sort all the read messages. 
+    // Read the size of the data stream. If it's not zero and the stream isn't greater 
+    // than the max buffer size then read the data stream in its entirety and copy it 
+    // to the buffer passed to the function. If the data stream size is greater than the 
+    // max buffer size then clear the stream data and return a buffer overflow status. 
     read_status = m8q_read_ds_size_dev(&stream_len); 
 
     if (!read_status)
     {
         if (stream_len > buff_size)
         {
-            read_status = M8Q_DATA_BUFF_OVERFLOW; 
-
-            // Flush the data buffer 
+            read_status = m8q_flush_ds_dev(buff_size, stream_len); 
         }
         else 
         {
-            // Read the data stream 
             i2c_status = m8q_read_dev(data_buff, stream_len); 
 
             if (i2c_status)
@@ -1151,14 +1172,6 @@ M8Q_STATUS m8q_get_time_utc_date_dev(
 //=======================================================================================
 // Read and write functions (private) 
 
-// Flush the device data buffer 
-// - Messages will pile up in the data buffer if they're not read and once the buffer is 
-//   full, new messages will get rejected. If this happens then reading the data buffer 
-//   will provide old data. This function would read all the data buffer contents so 
-//   new messages could start to be read. 
-// - Would this just be integrated into the read function? 
-
-
 // Read the data stream size 
 M8Q_STATUS m8q_read_ds_size_dev(
     uint16_t *data_size)
@@ -1187,6 +1200,39 @@ M8Q_STATUS m8q_read_ds_size_dev(
     }
 
     return M8Q_OK; 
+}
+
+
+// Flush/clear the data stream - no data stored or returned 
+M8Q_STATUS m8q_flush_ds_dev(
+    uint16_t max_buff_len, 
+    uint16_t stream_len)
+{
+    I2C_STATUS i2c_status; 
+    uint8_t stream_data[max_buff_len]; 
+    uint16_t stream_index = CLEAR; 
+    uint16_t buff_len = max_buff_len; 
+
+    // Read the data stream up until the buffer length and do this repeatedly until 
+    // the entire stream has been read. 
+    while (stream_index < stream_len)
+    {
+        if ((stream_len - stream_index) < max_buff_len)
+        {
+            buff_len = stream_len - stream_index; 
+        }
+
+        i2c_status = m8q_read_dev(stream_data, buff_len); 
+
+        if (i2c_status)
+        {
+            return M8Q_READ_FAULT; 
+        }
+
+        stream_index += max_buff_len; 
+    }
+
+    return M8Q_DATA_BUFF_OVERFLOW; 
 }
 
 

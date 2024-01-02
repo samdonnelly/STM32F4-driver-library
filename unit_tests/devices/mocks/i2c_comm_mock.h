@@ -31,22 +31,25 @@
 // Index for I2C mock driver data buffers 
 typedef enum {
     I2C_MOCK_INDEX_0, 
-    I2C_MOCK_INDEX_1 
- } i2c_mock_buff_index_t; 
+    I2C_MOCK_INDEX_1, 
+    I2C_MOCK_INDEX_2, 
+    I2C_MOCK_INDEX_3, 
+    I2C_MOCK_INDEX_4 
+} i2c_mock_buff_index_t; 
 
 
 // I2C mock driver timeout behavior selection 
 typedef enum {
     I2C_MOCK_TIMEOUT_DISABLE, 
     I2C_MOCK_TIMEOUT_ENABLE 
- } i2c_mock_timeout_t; 
+} i2c_mock_timeout_t; 
 
 
 // I2C mock driver increment mode selection 
 typedef enum {
     I2C_MOCK_INC_MODE_DISABLE, 
     I2C_MOCK_INC_MODE_ENABLE 
- } i2c_mock_increment_mode_t; 
+} i2c_mock_increment_mode_t; 
 
 //=======================================================================================
 

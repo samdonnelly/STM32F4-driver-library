@@ -317,6 +317,8 @@ TEST(m8q_driver, m8q_init_std_nmea_config_valid_msg_check)
 // M8Q device initialization - invalid and valid UBX config message check 
 TEST(m8q_driver, m8q_init_ubx_config_invalid_msg_check)
 {
+    // TODO still have to ass ACK and NAK checking 
+
     M8Q_STATUS init_checks[NUM_UBX_TEST_MSGS]; 
 
     // All of the below sample config messages are invalid except for the last one. 
@@ -496,18 +498,14 @@ TEST(m8q_driver, m8q_read_stream_length_zero)
 // M8Q read - data in the stream is larger than the threshold 
 TEST(m8q_driver, m8q_read_stream_too_large)
 {
-    // TODO still have to implement flushing of data 
-
     M8Q_STATUS read_status; 
     uint8_t stream_len[] = { 0x01, 0x04 }; 
-    // Stream data to set 
 
     // Set the data buffer threshold 
     m8q_init_dev(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, 200); 
 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data(stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
-    // Set the stream data to read 
 
     read_status = m8q_read_data_dev(); 
 
@@ -786,10 +784,10 @@ TEST(m8q_driver, m8q_read_msg_record_update)
 // M8Q read - Get whole data stream 
 TEST(m8q_driver, m8q_read_get_data_stream)
 {
-    // Read the data stream from the device - no driver data record is updated 
+    // Read and get the whole data stream from the device. No driver data record is 
+    // updated. 
 
-    M8Q_STATUS read_status_0; 
-    M8Q_STATUS read_status_1; 
+    M8Q_STATUS read_status; 
 
     uint8_t msg0_len = 111, msg1_len = 71; 
     uint8_t stream_len[] = { 0x00, 0xB6 }; 
@@ -809,21 +807,63 @@ TEST(m8q_driver, m8q_read_get_data_stream)
     // Check that a buffer that is too small won't be used 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
-    read_status_0 = m8q_read_ds_dev(stream_buffer, msg_len - BYTE_1); 
-    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, read_status_0); 
+    read_status = m8q_read_ds_dev(stream_buffer, msg_len - BYTE_1); 
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, read_status); 
 
+    // Check that the stream was read 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
-    read_status_1 = m8q_read_ds_dev(stream_buffer, msg_len); 
-    LONGS_EQUAL(M8Q_OK, read_status_1); 
+    read_status = m8q_read_ds_dev(stream_buffer, msg_len); 
+    LONGS_EQUAL(M8Q_OK, read_status); 
     STRCMP_EQUAL((char *)device_stream, (char *)stream_buffer); 
 }
 
 
-// Tests 
-// - Read whole stream 
-// - Flush stream - stream full, gets flushed, then check for no data status 
+// M8Q read - Flush data stream when it's larger than the buffer size 
+TEST(m8q_driver, m8q_read_flush_stream)
+{
+    M8Q_STATUS read_status_0, read_status_1; 
+
+    uint8_t msg0_len = 111; 
+    uint8_t msg1_len = 71; 
+    uint8_t max_buff_size = 80; 
+    uint8_t stream_len_0[] = { 0x00, 0xB6 }; 
+    uint8_t stream_len_1[] = { 0x00, 0x00 }; 
+
+    // These segments are capped at a length of 'max_buff_size' but together they make two 
+    // complete messages that would be received in the stream. 
+    const char stream_segment_0[] = 
+        "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3,2.1,2.0,0.007,77.52,0"; 
+    const char stream_segment_1[] = 
+        ".007,,0.92,1.19,0.77,9,0,0*5F\r\n$PUBX,04,073731.00,091202,113851.00,1196,15D,1930"; 
+    const char stream_segment_2[] = 
+        "035,-2660.664,43,*3C\r\n"; 
+
+    // Set the data buffer threshold 
+    m8q_init_dev(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, max_buff_size); 
+
+    // The stream will only be read to 'max_buff_size' on each read when being flushed so 
+    // the whole stream has to be spread out over multiple calls to the i2c (mock) driver. 
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data((void *)stream_len_0, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)stream_segment_0, max_buff_size, I2C_MOCK_INDEX_1); 
+    i2c_mock_set_read_data((void *)stream_segment_1, max_buff_size, I2C_MOCK_INDEX_2); 
+    i2c_mock_set_read_data((void *)stream_segment_2, msg0_len + msg1_len - 2*max_buff_size, 
+                            I2C_MOCK_INDEX_3); 
+    i2c_mock_set_read_data((void *)stream_len_1, BYTE_2, I2C_MOCK_INDEX_4); 
+
+    read_status_0 = m8q_read_data_dev(); 
+    read_status_1 = m8q_read_data_dev(); 
+
+    // Getting M8Q_NO_DATA_AVAILABLE as the status of the second read attempt confirms that 
+    // the data stream flush/clear function works. An M8Q_READ_FAULT status would indicate 
+    // the mock i2c driver was read too many times and not getting this or an 
+    // M8Q_NO_DATA_AVAILABLE status would mean the mock i2c driver was not read enough time. 
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, read_status_0); 
+    LONGS_EQUAL(M8Q_NO_DATA_AVAILABLE, read_status_1); 
+
+}
 
 //==================================================
 
