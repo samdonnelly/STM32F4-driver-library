@@ -783,6 +783,44 @@ TEST(m8q_driver, m8q_read_msg_record_update)
 }
 
 
+// M8Q read - Get whole data stream 
+TEST(m8q_driver, m8q_read_get_data_stream)
+{
+    // Read the data stream from the device - no driver data record is updated 
+
+    M8Q_STATUS read_status_0; 
+    M8Q_STATUS read_status_1; 
+
+    uint8_t msg0_len = 111, msg1_len = 71; 
+    uint8_t stream_len[] = { 0x00, 0xB6 }; 
+    uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
+    uint8_t device_stream[msg_len]; 
+    uint8_t stream_buffer[msg_len]; 
+
+    const char device_msg0[] = 
+        "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3,2.1,2.0,0.007,77.52," 
+        "0.007,,0.92,1.19,0.77,9,0,0*5F\r\n"; 
+    const char device_msg1[] = 
+        "$PUBX,04,073731.00,091202,113851.00,1196,15D,1930035,-2660.664,43,*3C\r\n"; 
+
+    memcpy((void *)&device_stream[0], (void *)device_msg0, msg0_len); 
+    memcpy((void *)&device_stream[msg0_len], (void *)device_msg1, msg1_len); 
+
+    // Check that a buffer that is too small won't be used 
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    read_status_0 = m8q_read_ds_dev(stream_buffer, msg_len - BYTE_1); 
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, read_status_0); 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
+    read_status_1 = m8q_read_ds_dev(stream_buffer, msg_len); 
+    LONGS_EQUAL(M8Q_OK, read_status_1); 
+    STRCMP_EQUAL((char *)device_stream, (char *)stream_buffer); 
+}
+
+
 // Tests 
 // - Read whole stream 
 // - Flush stream - stream full, gets flushed, then check for no data status 

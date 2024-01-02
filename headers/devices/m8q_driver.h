@@ -213,18 +213,18 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 M8Q_STATUS m8q_read_data_dev(void); 
 
 
-// /**
-//  * @brief Read and return the data stream contents 
-//  * 
-//  * @details 
-//  * 
-//  * @param data_buff 
-//  * @param buff_size 
-//  * @return M8Q_STATUS 
-//  */
-// M8Q_STATUS m8q_read_ds_dev(
-//     uint8_t *data_buff, 
-//     uint16_t buff_size); 
+/**
+ * @brief Read and return the data stream contents 
+ * 
+ * @details 
+ * 
+ * @param data_buff 
+ * @param buff_size 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_read_ds_dev(
+    uint8_t *data_buff, 
+    uint16_t buff_size); 
 
 
 // /**

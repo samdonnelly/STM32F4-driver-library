@@ -378,18 +378,6 @@ static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] =
 // Prototypes 
 
 /**
- * @brief Read the whole data stream and store the data 
- * 
- * @details 
- * 
- * @param stream_len 
- * @return M8Q_STATUS 
- */
-M8Q_STATUS m8q_read_sort_ds_dev(
-    uint16_t stream_len); 
-
-
-/**
  * @brief Read the data stream size 
  * 
  * @details 
@@ -399,6 +387,18 @@ M8Q_STATUS m8q_read_sort_ds_dev(
  */
 M8Q_STATUS m8q_read_ds_size_dev(
     uint16_t *data_size); 
+
+
+/**
+ * @brief Read the whole data stream and store the data 
+ * 
+ * @details 
+ * 
+ * @param stream_len 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_read_sort_ds_dev(
+    uint16_t stream_len); 
 
 
 /**
@@ -797,31 +797,57 @@ M8Q_STATUS m8q_read_data_dev(void)
 
     if (!read_status)
     {
-        read_status = m8q_read_sort_ds_dev(stream_len); 
-    }
-    else if (read_status == M8Q_DATA_BUFF_OVERFLOW)
-    {
-        // Flush the data buffer 
+        if (stream_len > m8q_driver_data.data_buff_limit)
+        {
+            read_status = M8Q_DATA_BUFF_OVERFLOW; 
+
+            // Flush the data buffer 
+        }
+        else 
+        {
+            read_status = m8q_read_sort_ds_dev(stream_len); 
+        }
     }
 
     return read_status; 
 }
 
 
-// // Read and return the data stream contents 
-// M8Q_STATUS m8q_read_ds_dev(
-//     uint8_t *data_buff, 
-//     uint16_t buff_size)
-// {
-//     // - Read the data stream size 
-//     // - Compare the size to the buff size 
-//     // - If the buff size is smaller than the stream then read the stream and return an 
-//     //   overflow error 
-//     // - Otherwise, set the read size to the stream size and read the whole stream into 
-//     //   the data buffer 
+// Read and return the data stream contents 
+M8Q_STATUS m8q_read_ds_dev(
+    uint8_t *data_buff, 
+    uint16_t buff_size)
+{
+    M8Q_STATUS read_status; 
+    I2C_STATUS i2c_status; 
+    uint16_t stream_len = CLEAR; 
 
-//     return M8Q_OK; 
-// }
+    // Read the size of the stream. If it's not zero then read the data stream in its 
+    // entirety and sort all the read messages. 
+    read_status = m8q_read_ds_size_dev(&stream_len); 
+
+    if (!read_status)
+    {
+        if (stream_len > buff_size)
+        {
+            read_status = M8Q_DATA_BUFF_OVERFLOW; 
+
+            // Flush the data buffer 
+        }
+        else 
+        {
+            // Read the data stream 
+            i2c_status = m8q_read_dev(data_buff, stream_len); 
+
+            if (i2c_status)
+            {
+                read_status = M8Q_READ_FAULT; 
+            }
+        }
+    }
+
+    return read_status; 
+}
 
 
 // // Look for a UBX acknowledgment message 
@@ -1133,64 +1159,6 @@ M8Q_STATUS m8q_get_time_utc_date_dev(
 // - Would this just be integrated into the read function? 
 
 
-// Read the whole data stream and sort/store the data 
-M8Q_STATUS m8q_read_sort_ds_dev(
-    uint16_t stream_len)
-{
-    I2C_STATUS i2c_status; 
-    uint8_t stream_data[stream_len]; 
-    M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
-    uint16_t stream_index = CLEAR; 
-    uint8_t msg_offset = CLEAR; 
-
-    // Read the whole data stream 
-    i2c_status = m8q_read_dev(stream_data, stream_len); 
-
-    if (i2c_status)
-    {
-        return M8Q_READ_FAULT; 
-    }
-
-    while (stream_index < stream_len)
-    {
-        // Identify the message type 
-        msg_type = m8q_msg_id_dev((char *)&stream_data[stream_index], &msg_offset); 
-
-        // Sort the message data as needed 
-        if (msg_type == M8Q_MSG_NMEA)
-        {
-            // printf("\r\nNMEA\r\n"); 
-            
-            stream_index += msg_offset + BYTE_1; 
-
-            m8q_nmea_msg_parse_dev(
-                &stream_data[stream_index], 
-                &stream_index, 
-                stream_len, 
-                nmea_msg_target.num_param, 
-                nmea_msg_target.msg_data); 
-        }
-        else if (msg_type == M8Q_MSG_UBX)
-        {
-            // printf("\r\nUBX\r\n"); 
-
-            stream_index += BYTE_4; 
-
-            m8q_ubx_msg_parse_dev(
-                &stream_data[stream_index], 
-                &stream_index, 
-                stream_len); 
-        }
-        else 
-        {
-            return M8Q_UNKNOWN_DATA; 
-        }
-    }
-
-    return M8Q_OK; 
-}
-
-
 // Read the data stream size 
 M8Q_STATUS m8q_read_ds_size_dev(
     uint16_t *data_size)
@@ -1218,9 +1186,58 @@ M8Q_STATUS m8q_read_ds_size_dev(
         return M8Q_NO_DATA_AVAILABLE; 
     }
 
-    if (*data_size > m8q_driver_data.data_buff_limit)
+    return M8Q_OK; 
+}
+
+
+// Read the whole data stream and sort/store the data 
+M8Q_STATUS m8q_read_sort_ds_dev(
+    uint16_t stream_len)
+{
+    I2C_STATUS i2c_status; 
+    uint8_t stream_data[stream_len]; 
+    M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
+    uint16_t stream_index = CLEAR; 
+    uint8_t msg_offset = CLEAR; 
+
+    // Read the whole data stream 
+    i2c_status = m8q_read_dev(stream_data, stream_len); 
+
+    if (i2c_status)
     {
-        return M8Q_DATA_BUFF_OVERFLOW; 
+        return M8Q_READ_FAULT; 
+    }
+
+    while (stream_index < stream_len)
+    {
+        // Identify the message type 
+        msg_type = m8q_msg_id_dev((char *)&stream_data[stream_index], &msg_offset); 
+
+        // Sort the message data as needed 
+        if (msg_type == M8Q_MSG_NMEA)
+        {
+            stream_index += msg_offset + BYTE_1; 
+
+            m8q_nmea_msg_parse_dev(
+                &stream_data[stream_index], 
+                &stream_index, 
+                stream_len, 
+                nmea_msg_target.num_param, 
+                nmea_msg_target.msg_data); 
+        }
+        else if (msg_type == M8Q_MSG_UBX)
+        {
+            stream_index += BYTE_4; 
+
+            m8q_ubx_msg_parse_dev(
+                &stream_data[stream_index], 
+                &stream_index, 
+                stream_len); 
+        }
+        else 
+        {
+            return M8Q_UNKNOWN_DATA; 
+        }
     }
 
     return M8Q_OK; 
