@@ -91,20 +91,24 @@
 // Characters 
 
 // String formatting 
-#define NULL_CHAR   0    // '\0' == 0
-#define NL_CHAR     10   // '\n' == 10
-#define CR_CHAR     13   // '\r' == 13
-#define AST_CHAR    42   // '*'  == 42
-#define COMMA_CHAR  44   // ','  == 44
-#define MINUS_CHAR  45   // '-'  == 45 
-#define PERIOD_CHAR 46   // '.'  == 46 
-#define ZERO_CHAR   48   // '0'  == 48
-#define NINE_CHAR   57   // '9'  == 57 
-#define A_UP_CHAR   65   // 'A'  == 65
-#define F_UP_CHAR   70   // 'F'  == 70 
-#define Z_UP_CHAR   90   // 'Z'  == 90
-#define A_LO_CHAR   97   // 'a'  == 97
-#define Z_LO_CHAR   122  // 'z'  == 122 
+#define NULL_CHAR   0    // '\0' 
+#define NL_CHAR     10   // '\n' 
+#define CR_CHAR     13   // '\r' 
+#define AST_CHAR    42   // '*' 
+#define COMMA_CHAR  44   // ',' 
+#define MINUS_CHAR  45   // '-' 
+#define PERIOD_CHAR 46   // '.' 
+#define ZERO_CHAR   48   // '0' 
+#define NINE_CHAR   57   // '9' 
+#define A_UP_CHAR   65   // 'A' 
+#define E_UP_CHAR   69   // 'E' 
+#define F_UP_CHAR   70   // 'F' 
+#define N_UP_CHAR   78   // 'N' 
+#define S_UP_CHAR   83   // 'S' 
+#define W_UP_CHAR   87   // 'W' 
+#define Z_UP_CHAR   90   // 'Z' 
+#define A_LO_CHAR   97   // 'a' 
+#define Z_LO_CHAR   122  // 'z' 
 
 // ASCII formatters 
 #define MAX_CHAR_DIGIT 0x09      // Max single digit 
@@ -147,6 +151,7 @@
 // Physics 
 
 #define KM_TO_M 1000    // kilometers to meters 
+#define MIN_TO_DEG 60   // Coordinate minutes to degrees conversion 
 
 //==================================================
 

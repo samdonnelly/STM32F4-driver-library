@@ -109,7 +109,7 @@ void m8q_test_config_compare(
 // Tests 
 
 //==================================================
-// Device init 
+// Device init / write test 
 
 // M8Q device initialization - invalid pointer 
 TEST(m8q_driver, m8q_init_invalid_ptr)
@@ -443,7 +443,7 @@ TEST(m8q_driver, m8q_init_valid_config)
 //==================================================
 
 //==================================================
-// Pin init 
+// Pin init test 
 
 // These init functions contain calls to the GPIO driver. That driver is not in the 
 // scope of this test group so it is not tested in detail. 
@@ -476,7 +476,7 @@ TEST(m8q_driver, m8q_pin_init_init_ok)
 //==================================================
 
 //==================================================
-// Read test 
+// Read / user function test 
 
 // M8Q read - stream length is zero (no data available) 
 TEST(m8q_driver, m8q_read_stream_length_zero)
@@ -684,19 +684,18 @@ TEST(m8q_driver, m8q_read_known_multi_msg)
 }
 
 
-// M8Q read - Known stream message - Multiple message stream 
+// M8Q read - Message data record update 
 TEST(m8q_driver, m8q_read_msg_record_update)
 {
     M8Q_STATUS read_status; 
+    uint8_t lat_str[BYTE_11]; 
+    uint8_t lon_str[BYTE_12]; 
+    uint8_t utc_time[BYTE_10]; 
+    uint8_t utc_date[BYTE_7]; 
 
-    uint8_t msg0_len = 111; 
-    uint8_t msg1_len = 67; 
-    uint8_t msg2_len = 28; 
-    uint8_t msg3_len = 10; 
-    uint8_t msg4_len = 71; 
+    uint8_t msg0_len = 111, msg1_len = 67, msg2_len = 28, msg3_len = 10, msg4_len = 71; 
     uint8_t stream_len[] = { 0x01, 0x1F }; 
     uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
-
     uint8_t device_stream[msg_len]; 
 
     // The stream contains multiple NMEA and UBX messages. Some messages are stored in the 
@@ -725,25 +724,69 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
 
+    //==================================================
     // Read data record - check for no data 
 
+    DOUBLES_EQUAL(CLEAR, m8q_get_position_lat_dev(), 0.000001); 
+    DOUBLES_EQUAL(CLEAR, m8q_get_position_lon_dev(), 0.000001); 
+
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_position_lat_str_dev(lat_str, BYTE_5)); 
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_position_lon_str_dev(lon_str, BYTE_5)); 
+    LONGS_EQUAL(M8Q_OK, m8q_get_position_lat_str_dev(lat_str, BYTE_11)); 
+    LONGS_EQUAL(M8Q_OK, m8q_get_position_lon_str_dev(lon_str, BYTE_12)); 
+    STRCMP_EQUAL("0000000000", (char *)lat_str); 
+    STRCMP_EQUAL("00000000000", (char *)lon_str); 
+
+    LONGS_EQUAL(CLEAR, m8q_get_position_NS_dev()); 
+    LONGS_EQUAL(CLEAR, m8q_get_position_EW_dev()); 
+    
+    LONGS_EQUAL(CLEAR, m8q_get_position_navstat_dev()); 
+    LONGS_EQUAL(FALSE, m8q_get_position_navstat_lock_dev()); 
+
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_time_utc_time_dev(utc_time, BYTE_5)); 
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_time_utc_date_dev(utc_date, BYTE_5)); 
+    LONGS_EQUAL(M8Q_OK, m8q_get_time_utc_time_dev(utc_time, BYTE_10)); 
+    LONGS_EQUAL(M8Q_OK, m8q_get_time_utc_date_dev(utc_date, BYTE_7)); 
+    STRCMP_EQUAL("", (char *)utc_time); 
+    STRCMP_EQUAL("", (char *)utc_date); 
+    
+    //==================================================
+
+    // Read data from the device so the data record gets updated 
     read_status = m8q_read_data_dev(); 
 
+    //==================================================
     // Read data record - check for populated data 
 
     LONGS_EQUAL(M8Q_OK, read_status); 
+
+    DOUBLES_EQUAL(47.285220, m8q_get_position_lat_dev(), 0.000001); 
+    DOUBLES_EQUAL(8.565253, m8q_get_position_lon_dev(), 0.000001); 
+
+    m8q_get_position_lat_str_dev(lat_str, BYTE_11); 
+    m8q_get_position_lon_str_dev(lon_str, BYTE_12); 
+    STRCMP_EQUAL("4717.11321", (char *)lat_str); 
+    STRCMP_EQUAL("00833.91518", (char *)lon_str); 
+
+    LONGS_EQUAL(N_UP_CHAR, m8q_get_position_NS_dev()); 
+    LONGS_EQUAL(E_UP_CHAR, m8q_get_position_EW_dev()); 
+    
+    LONGS_EQUAL(M8Q_NAVSTAT_G3, m8q_get_position_navstat_dev()); 
+    LONGS_EQUAL(TRUE, m8q_get_position_navstat_lock_dev()); 
+
+    m8q_get_time_utc_time_dev(utc_time, BYTE_10); 
+    m8q_get_time_utc_date_dev(utc_date, BYTE_7); 
+    STRCMP_EQUAL("073731.00", (char *)utc_time); 
+    STRCMP_EQUAL("091202", (char *)utc_date); 
+    
+    //==================================================
 }
 
 
 // Tests 
-// - Data updated in stored messages - check befor and after read 
 // - Read whole stream 
 // - Flush stream - stream full, gets flushed, then check for no data status 
 
-//==================================================
-
-//==================================================
-// User functions test 
 //==================================================
 
 //=======================================================================================

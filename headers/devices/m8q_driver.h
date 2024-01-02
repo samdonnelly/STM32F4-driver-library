@@ -251,14 +251,14 @@ M8Q_STATUS m8q_send_msg_dev(
     uint8_t max_msg_size); 
 
 
-// /**
-//  * @brief Get TX-Ready status 
-//  * 
-//  * @details 
-//  * 
-//  * @return GPIO_STATE 
-//  */
-// GPIO_STATE m8q_get_tx_ready_dev(void); 
+/**
+ * @brief Get TX-Ready status 
+ * 
+ * @details 
+ * 
+ * @return GPIO_STATE 
+ */
+GPIO_STATE m8q_get_tx_ready_dev(void); 
 
 
 // Clear driver fault code 
@@ -266,12 +266,12 @@ M8Q_STATUS m8q_send_msg_dev(
 // Get driver fault code 
 
 
-// /**
-//  * @brief Enter low power mode 
-//  * 
-//  * @details 
-//  */
-// void m8q_set_low_pwr_dev(void); 
+/**
+ * @brief Enter low power mode 
+ * 
+ * @details 
+ */
+void m8q_set_low_pwr_dev(void); 
 
 
 /**
@@ -282,19 +282,119 @@ M8Q_STATUS m8q_send_msg_dev(
 void m8q_clear_low_pwr_dev(void); 
 
 
-// Get latitude 
+/**
+ * @brief Get latitude coordinate 
+ * 
+ * @details 
+ * 
+ * @return double 
+ */
+double m8q_get_position_lat_dev(void); 
 
-// Get North/South 
 
-// Get longitude 
+/**
+ * @brief Get latitude coordinate string 
+ * 
+ * @details 
+ * 
+ * @param lat_str 
+ * @param lat_str_len 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_get_position_lat_str_dev(
+    uint8_t *lat_str, 
+    uint8_t lat_str_len); 
 
-// Get East/West 
 
-// Get navigation status 
+/**
+ * @brief Get North/South hemisphere 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t m8q_get_position_NS_dev(void); 
 
-// Get time 
 
-// Get date 
+/**
+ * @brief Get longitude coordinate 
+ * 
+ * @details 
+ * 
+ * @return double 
+ */
+double m8q_get_position_lon_dev(void); 
+
+
+/**
+ * @brief Get longitude coordinate string 
+ * 
+ * @details 
+ * 
+ * @param lon_str 
+ * @param lon_str_len 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_get_position_lon_str_dev(
+    uint8_t *lon_str, 
+    uint8_t lon_str_len); 
+
+
+/**
+ * @brief Get East/West hemisphere 
+ * 
+ * @details 
+ * 
+ * @return uint8_t 
+ */
+uint8_t m8q_get_position_EW_dev(void); 
+
+
+/**
+ * @brief Get navigation status 
+ * 
+ * @details 
+ * 
+ * @return uint16_t 
+ */
+uint16_t m8q_get_position_navstat_dev(void); 
+
+
+/**
+ * @brief Get acceptable navigation status 
+ * 
+ * @details 
+ *          Returns true for valid position lock, false otherwise. 
+ * 
+ * @return uint8_t 
+ */
+uint8_t m8q_get_position_navstat_lock_dev(void); 
+
+
+/**
+ * @brief Get UTC time 
+ * 
+ * @details 
+ * 
+ * @param utc_time 
+ * @param utc_time_len 
+ */
+M8Q_STATUS m8q_get_time_utc_time_dev(
+    uint8_t *utc_time, 
+    uint8_t utc_time_len); 
+
+
+/**
+ * @brief Get UTC date 
+ * 
+ * @details 
+ * 
+ * @param utc_date 
+ * @param utc_date_len 
+ */
+M8Q_STATUS m8q_get_time_utc_date_dev(
+    uint8_t *utc_date, 
+    uint8_t utc_date_len); 
 
 //=======================================================================================
 

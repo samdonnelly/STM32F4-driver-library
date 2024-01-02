@@ -699,7 +699,12 @@ M8Q_STATUS m8q_init_dev(
 
     // Initialize driver data 
     memset((void *)&m8q_driver_data.pos_data, CLEAR, sizeof(m8q_driver_data.pos_data)); 
+    memset((void *)&m8q_driver_data.pos_data.lat, ZERO_CHAR, 
+           sizeof(m8q_driver_data.pos_data.lat)); 
+    memset((void *)&m8q_driver_data.pos_data.lon, ZERO_CHAR, 
+           sizeof(m8q_driver_data.pos_data.lon)); 
     memset((void *)&m8q_driver_data.time_data, CLEAR, sizeof(m8q_driver_data.time_data)); 
+
     m8q_driver_data.i2c = i2c; 
     m8q_driver_data.data_buff_limit = (!data_buff_limit) ? HIGH_16BIT : data_buff_limit; 
     memset((void *)&nmea_msg_target, CLEAR, sizeof(nmea_msg_data_t)); 
@@ -873,10 +878,10 @@ M8Q_STATUS m8q_send_msg_dev(
 
 
 // Get TX-Ready status 
-// GPIO_STATE m8q_get_tx_ready_dev(void)
-// {
-//     return gpio_read(m8q_driver_data.tx_ready_gpio, (SET_BIT << m8q_driver_data.tx_ready)); 
-// }
+GPIO_STATE m8q_get_tx_ready_dev(void)
+{
+    return gpio_read(m8q_driver_data.tx_ready_gpio, (SET_BIT << m8q_driver_data.tx_ready)); 
+}
 
 
 // Clear driver fault code 
@@ -885,10 +890,10 @@ M8Q_STATUS m8q_send_msg_dev(
 
 
 // Enter low power mode 
-// void m8q_set_low_pwr_dev(void)
-// {
-//     gpio_write(m8q_driver_data.pwr_save_gpio, (SET_BIT << m8q_driver_data.pwr_save), GPIO_LOW); 
-// }
+void m8q_set_low_pwr_dev(void)
+{
+    gpio_write(m8q_driver_data.pwr_save_gpio, (SET_BIT << m8q_driver_data.pwr_save), GPIO_LOW); 
+}
 
 
 // Exit low power mode 
@@ -898,173 +903,168 @@ void m8q_clear_low_pwr_dev(void)
 }
 
 
-// Latitude coordinate getter 
-double m8q_get_lat(void)
-{    
-    // Local variables 
+// Get latitude coordinate 
+double m8q_get_position_lat_dev(void)
+{
+    // Latitude is formatted as a string with the following characters: DDMM.MMMMM - where 
+    // 'D' is a degrees digit and 'M' is a minutes digit. This function converts the string 
+    // to a double in degrees only. The below conversion is based on the number of digits 
+    // for each part of the coordinate. Based on the format above, there are two digits each 
+    // for the integer portion of degrees and minutes, a decimal point, and five digits for 
+    // the fractional part of the minutes. Since the final product is a double expressed 
+    // in degrees, 'deg_int' holds the conversion of the first two digits and 'deg_frac' 
+    // holds the conversion of the minutes which makes up the fractional/decimal part of 
+    // the degrees. 
+
     int32_t deg_int = CLEAR; 
     int32_t deg_frac = CLEAR; 
-    uint8_t dec_pos = M8Q_LAT_LEN - (M8Q_MIN_FRAC_LEN + BYTE_1); 
+    uint8_t lat_index = CLEAR; 
 
-    // Parse the integer and fractional parts of the degree 
-    for (uint8_t i = CLEAR, j = M8Q_MIN_DIGIT_INDEX; i < M8Q_LAT_LEN; i++)
+    // Convert the integer portion of the degrees and minutes, both of which are two 
+    // digit/characters in length. The minutes get converted to a scaled value to 
+    // prepare for adding the fractional/decimal part of the minute. 
+    do
     {
-        if (i < M8Q_LAT_DEG_INT_LEN)
-        {
-            // Integer portion of degrees 
-            deg_int += (int32_t)char_to_int(position[M8Q_POS_LAT][i], 1-i); 
-        }
-        else if (i == dec_pos)
-        {
-            // Decimal point character - in the middle of the fractional parts 
-            continue; 
-        }
-        else 
-        {
-            // Fractional portion of degrees 
-            deg_frac += (int32_t)char_to_int(position[M8Q_POS_LAT][i], j--); 
-        }
+        deg_int += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index], 
+                                        BYTE_1 - lat_index); 
+        deg_frac += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index + BYTE_2], 
+                                         BYTE_6 - lat_index); 
     }
+    while (++lat_index < BYTE_2); 
 
-    // Adjust the sign of the degree depending on Northern or Southern hemisphere 
-    if (m8q_get_NS() == M8Q_DIR_SOUTH) 
+    // Bypass the decimal point character 
+    lat_index += BYTE_3; 
+
+    // Convert the fractional part of the minute and add it to the scaled value of minutes. 
+    // The latitude string contains 10 bytes so that is where the conversion stops. The 
+    // fractional part of the minute is 5 characters in length. 
+    do
+    {
+        deg_frac += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index], 
+                                         BYTE_9 - lat_index); 
+    }
+    while (++lat_index < BYTE_10); 
+
+    // If the latitude coordinate is in the southern hemisphere then change the sign on the 
+    // value. The returned value is meant to be interpretted without needing the N/S 
+    // indicator. 
+    if (m8q_get_position_NS_dev() == S_UP_CHAR) 
     {
         deg_int = ~deg_int + 1; 
         deg_frac = ~deg_frac + 1; 
     }
 
-    // Calculate and return the final degree value 
-    return ((double)deg_int) + 
-           (((double)deg_frac) / (pow(SCALE_10, M8Q_MIN_FRAC_LEN)*M8Q_MIN_TO_DEG)); 
+    // Calculate and return the final degree value. This requires changing the scaled 
+    // minutes value into a fractional/decimal degrees value. 
+    return ((double)deg_int) + (((double)deg_frac) / (pow(SCALE_10, BYTE_5)*MIN_TO_DEG)); 
 }
 
 
-// Latitude string getter 
-void m8q_get_lat_str(
-    uint8_t *deg_min, 
-    uint8_t *min_frac)
+// Get latitude coordinate string 
+M8Q_STATUS m8q_get_position_lat_str_dev(
+    uint8_t *lat_str, 
+    uint8_t lat_str_len)
 {
-    // Integer part length 
-    uint8_t int_len = M8Q_LAT_LEN - M8Q_COO_LEN; 
-
-    // Copy the latitude into integer and fractional parts 
-    for (uint8_t i = CLEAR; i <= M8Q_LAT_LEN; i++) 
+    if (lat_str_len < BYTE_10)
     {
-        if (i < int_len) 
-        {
-            *deg_min++ = position[M8Q_POS_LAT][i]; 
-        }
-        else if (i == int_len) 
-        {
-            *deg_min = NULL_CHAR; 
-        }
-        else if (i < M8Q_LAT_LEN) 
-        {
-            *min_frac++ = position[M8Q_POS_LAT][i]; 
-        }
-        else 
-        {
-            *min_frac = NULL_CHAR; 
-        }
+        return M8Q_DATA_BUFF_OVERFLOW; 
     }
+
+    memcpy((void *)lat_str, (void *)m8q_driver_data.pos_data.lat, BYTE_10); 
+    return M8Q_OK; 
 }
 
 
 // Get North/South hemisphere 
-uint8_t m8q_get_NS(void)
+uint8_t m8q_get_position_NS_dev(void)
 {
-    return *(position[M8Q_POS_NS]); 
+    return m8q_driver_data.pos_data.NS[BYTE_0]; 
 }
 
 
-// Longitude coordinate getter 
-// TODO replace 'position' with a direct call to the struct object 
-double m8q_get_long(void)
+// Get longitude coordinate 
+double m8q_get_position_lon_dev(void)
 {
-    // Local variables 
+    // Longitude is formatted as a string with the following characters: DDDMM.MMMMM - where 
+    // 'D' is a degrees digit and 'M' is a minutes digit. This function converts the string 
+    // to a double in degrees only. The below conversion is based on the number of digits 
+    // for each part of the coordinate. Based on the format above, there are three digits 
+    // each for the integer portion of degrees and two for minutes, a decimal point, and 
+    // five digits for the fractional part of the minutes. Since the final product is a 
+    // double expressed in degrees, 'deg_int' holds the conversion of the first three digits 
+    // and 'deg_frac' holds the conversion of the minutes which makes up the 
+    // fractional/decimal part of the degrees. 
+    
     int32_t deg_int = CLEAR; 
     int32_t deg_frac = CLEAR; 
-    uint8_t dec_pos = M8Q_LON_LEN - (M8Q_MIN_FRAC_LEN + BYTE_1); 
+    uint8_t lon_index = CLEAR; 
 
-    // Parse the integer and fractional parts of the degree 
-    for (uint8_t i = CLEAR, j = M8Q_MIN_DIGIT_INDEX; i < M8Q_LON_LEN; i++)
+    // Convert the integer portion of the degrees and minutes, both of which are two 
+    // digit/characters in length. The minutes get converted to a scaled value to 
+    // prepare for adding the fractional/decimal part of the minute. 
+    deg_int += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
+                                    BYTE_1 - lon_index); 
+    
+    while (++lon_index < BYTE_3)
     {
-        if (i < M8Q_LON_DEG_INT_LEN)
-        {
-            // Integer portion of degrees 
-            deg_int += (int32_t)char_to_int(position[M8Q_POS_LON][i], 2-i); 
-        }
-        else if (i == dec_pos)
-        {
-            // Decimal point character - in the middle of the fractional parts 
-            continue; 
-        }
-        else 
-        {
-            // Fractional portion of degrees 
-            deg_frac += (int32_t)char_to_int(position[M8Q_POS_LON][i], j--); 
-        }
+        deg_int += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
+                                        BYTE_2 - lon_index); 
+        deg_frac += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index + BYTE_2], 
+                                         BYTE_7 - lon_index); 
     }
 
-    // Adjust the sign of the degree depending on Eastern or Western hemisphere 
-    if (m8q_get_EW() == M8Q_DIR_WEST) 
+    // Bypass the decimal point character 
+    lon_index += BYTE_3; 
+
+    // Convert the fractional part of the minute and add it to the scaled value of minutes. 
+    // The latitude string contains 10 bytes so that is where the conversion stops. The 
+    // fractional part of the minute is 5 characters in length. 
+    do
+    {
+        deg_frac += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
+                                         BYTE_10 - lon_index); 
+    }
+    while (++lon_index < BYTE_11); 
+
+    // If the longitude coordinate is in the western hemisphere then change the sign on the 
+    // value. The returned value is meant to be interpretted without needing the E/W 
+    // indicator. 
+    if (m8q_get_position_EW_dev() == W_UP_CHAR) 
     {
         deg_int = ~deg_int + 1; 
         deg_frac = ~deg_frac + 1; 
     }
 
-    // Calculate and return the final degree value 
-    return ((double)deg_int) + 
-           (((double)deg_frac) / (pow(SCALE_10, M8Q_MIN_FRAC_LEN)*M8Q_MIN_TO_DEG)); 
+    // Calculate and return the final degree value. This requires changing the scaled 
+    // minutes value into a fractional/decimal degrees value. 
+    return ((double)deg_int) + (((double)deg_frac) / (pow(SCALE_10, BYTE_5)*MIN_TO_DEG)); 
 }
 
 
-// Longitude string getter 
-void m8q_get_long_str(
-    uint8_t *deg_min, 
-    uint8_t *min_frac)
+// Get longitude coordinate string 
+M8Q_STATUS m8q_get_position_lon_str_dev(
+    uint8_t *lon_str, 
+    uint8_t lon_str_len)
 {
-    // Integer part length 
-    uint8_t int_len = M8Q_LON_LEN - M8Q_COO_LEN; 
-
-    // Copy the longitude into integer (degees + minutes) and fractional (minutes) parts 
-    for (uint8_t i = CLEAR; i <= M8Q_LON_LEN; i++) 
+    if (lon_str_len < BYTE_11)
     {
-        if (i < int_len) 
-        {
-            *deg_min++ = position[M8Q_POS_LON][i]; 
-        }
-        else if (i == int_len) 
-        {
-            *deg_min = NULL_CHAR; 
-        }
-        else if (i < M8Q_LON_LEN) 
-        {
-            *min_frac++ = position[M8Q_POS_LON][i]; 
-        }
-        else 
-        {
-            *min_frac = NULL_CHAR; 
-        }
+        return M8Q_DATA_BUFF_OVERFLOW; 
     }
+
+    memcpy((void *)lon_str, (void *)m8q_driver_data.pos_data.lon, BYTE_11); 
+    return M8Q_OK; 
 }
 
 
 // Get East/West hemisphere 
-uint8_t m8q_get_EW_dev(void)
+uint8_t m8q_get_position_EW_dev(void)
 {
-    return *(position[M8Q_POS_EW]);
+    return m8q_driver_data.pos_data.EW[BYTE_0]; 
 }
 
 
-// Get raw navigation status - returns the exact navstat value 
-
-// Get accepted navigation status - returns true/false for a valid position lock so the 
-// application doesn't have to determine it. 
-
-
 // Get navigation status 
-uint16_t m8q_get_navstat_dev(void)
+uint16_t m8q_get_position_navstat_dev(void)
 {
     return (m8q_driver_data.pos_data.navStat[BYTE_0] << SHIFT_8) | 
             m8q_driver_data.pos_data.navStat[BYTE_1]; 
@@ -1072,11 +1072,13 @@ uint16_t m8q_get_navstat_dev(void)
 
 
 // Get acceptable navigation status - returns true for valid position lock, false otherwise 
-uint8_t m8q_get_navstat_lock_dev(void)
+uint8_t m8q_get_position_navstat_lock_dev(void)
 {
-    // Get only the lowest byte of the navigation status. Only this is needed to distinguish 
-    // a valid position lock. 
-    uint8_t ns = (uint8_t)m8q_get_navstat_dev() & FILTER_4_MSB; 
+    // A valid position lock is indicated by navigation statuses: G2, G3, D2, D3. The status 
+    // is a 16-bit value and the 4 most significant bits of the lowest byte is unique to 
+    // these valid statuses (0xXX3X). These bits can be checked instead of each status 
+    // individually. 
+    uint8_t ns = (uint8_t)m8q_get_position_navstat_dev() & FILTER_4_MSB; 
     uint8_t ns_check = M8Q_NAVSTAT_G3 & FILTER_4_MSB; 
 
     if (ns != ns_check)
@@ -1089,24 +1091,32 @@ uint8_t m8q_get_navstat_lock_dev(void)
 
 
 // Get UTC time 
-void m8q_get_time_dev(
-    uint8_t *utc_time)
+M8Q_STATUS m8q_get_time_utc_time_dev(
+    uint8_t *utc_time, 
+    uint8_t utc_time_len)
 {
-    for (uint8_t i = 0; i < M8Q_TIME_CHAR_LEN; i++)
+    if (utc_time_len < BYTE_9)
     {
-        *utc_time++ = time[M8Q_TIME_TIME][i]; 
+        return M8Q_DATA_BUFF_OVERFLOW; 
     }
+
+    memcpy((void *)utc_time, (void *)m8q_driver_data.time_data.time, BYTE_9); 
+    return M8Q_OK; 
 }
 
 
-// Get date 
-void m8q_get_date_dev(
-    uint8_t *utc_date)
+// Get UTC date 
+M8Q_STATUS m8q_get_time_utc_date_dev(
+    uint8_t *utc_date, 
+    uint8_t utc_date_len)
 {
-    for (uint8_t i = 0; i < M8Q_DATE_CHAR_LEN; i++)
+    if (utc_date_len < BYTE_6)
     {
-        *utc_date++ = time[M8Q_TIME_DATE][i]; 
+        return M8Q_DATA_BUFF_OVERFLOW; 
     }
+
+    memcpy((void *)utc_date, (void *)m8q_driver_data.time_data.date, BYTE_6); 
+    return M8Q_OK; 
 }
 
 //=======================================================================================
@@ -1149,7 +1159,7 @@ M8Q_STATUS m8q_read_sort_ds_dev(
         // Sort the message data as needed 
         if (msg_type == M8Q_MSG_NMEA)
         {
-            printf("\r\nNMEA\r\n"); 
+            // printf("\r\nNMEA\r\n"); 
             
             stream_index += msg_offset + BYTE_1; 
 
@@ -1162,7 +1172,7 @@ M8Q_STATUS m8q_read_sort_ds_dev(
         }
         else if (msg_type == M8Q_MSG_UBX)
         {
-            printf("\r\nUBX\r\n"); 
+            // printf("\r\nUBX\r\n"); 
 
             stream_index += BYTE_4; 
 
@@ -1453,11 +1463,12 @@ void m8q_nmea_msg_parse_dev(
                 // in. Proceed to check of there are any remainding parameters to fill. 
                 if (param_index < param_len)
                 {
-                    data[data_index++][param_index] = NULL_CHAR; 
+                    data[data_index][param_index] = NULL_CHAR; 
                 }
 
-                if (data_index >= arg_num)
+                if (++data_index >= arg_num)
                 {
+                    m8q_nmea_msg_count_dev(++nmea_msg, stream_index, stream_len); 
                     break; 
                 }
 
