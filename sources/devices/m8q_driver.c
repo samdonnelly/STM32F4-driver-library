@@ -23,6 +23,12 @@
 //=======================================================================================
 // Macros 
 
+// Device parameters 
+#define M8Q_I2C_8_BIT_ADDR 0x84   // Receiver I2C address (default : 0x42 << 1) 
+
+// Register addresses 
+#define M8Q_REG_0XFD 0xFD         // Available data bytes (high byte) register 
+
 // NMEA message format 
 #define NMEA_START 0x24           // '$' --> NMEA protocol start character 
 #define NMEA_PUBX_NUM_MSGS 5      // Number of NMEA PUBX messages 
@@ -30,39 +36,34 @@
 #define NMEA_STD_ID_LEN 3         // Maximum length of a standard NMEA message ID 
 #define NMEA_STD_NUM_MSGS 19      // Number of standard NMEA formatters 
 #define NMEA_MSG_FORMAT_LEN 4     // Maximum length of an NMEA message formatter 
+#define M8Q_NMEA_END_MSG 6        // Length of string to append to NMEA message after payload 
 
 // UBX message format 
 #define UBX_CLASS_NUM 14          // Number of UBX classes 
 #define UBX_CLASS_LEN 3           // Maximum length of a UBX class 
+#define UBX_CFG_INDEX 4           // 
+
+// UBX ACK class message 
+#define ACK_ACK 0x0501            // 
+#define ACK_NAK 0x0500            // 
+#define ACK_TIMEOUT 10            // 
+
+// Other 
+#define EOM_BYTE 1                // 
+
+//==================================================
+// No longer used (to be deleted) 
+
+// Device configuration 
+#define M8Q_USER_CONFIG 0                // Sets the code to user config mode 
 
 // M8Q messages 
 #define M8Q_MSG_MAX_LEN 150              // Message buffer that can hold any message
-
-
-#define M8Q_UBX_CFG_INDEX 4 
-
-#define M8Q_EOM_BYTE 1 
-
-#define ACK_ACK 0x0501 
-#define ACK_NAK 0x0500 
-
-#define ACK_TIMEOUT 10 
-
-//==================================================
-// Checking if needed 
-
-// Device parameters 
-#define M8Q_I2C_8_BIT_ADDR 0x84          // Receiver I2C address (default : 0x42 << 1) 
-
-// M8Q registers 
-#define M8Q_REG_0XFD 0xFD                // Available data bytes (high byte) register 
-#define M8Q_REG_0XFE 0xFE                // Available data bytes (low byte) register 
-#define M8Q_REG_0XFF 0xFF                // Data stream register 
+#define M8Q_NO_DATA     0xff             // Return value for an invalid NMEA data stream 
+#define M8Q_PYL_MAX_LEN 100              // Message payload buffer to store any apyload length 
 
 // NMEA message format 
-#define M8Q_NMEA_MSG_MAX_LEN 150         // NMEA message buffer that can hold any received message
 #define M8Q_NMEA_END_PAY     0x2A        // 0x2A == '*' --> indicates end of NMEA message payload 
-#define M8Q_NMEA_END_MSG     6           // Length of string to append to NMEA message after payload 
 #define M8Q_NMEA_CS_LEN      2           // Number of characters in NMEA message checksum 
 #define M8Q_PUBX_ID_OFST     6           // Starting position of PUBX message ID in message string 
 
@@ -71,12 +72,10 @@
 #define M8Q_NMEA_CONFIG_ARGS   5         // Number of data fields in CONFIG 
 #define M8Q_NMEA_POS_ARGS      19        // Number of data fields in POSITION 
 #define M8Q_NMEA_POS_ID        48        // "0" == 48 --> Message ID for POSITION 
-#define M8Q_NMEA_SV_ARGS       7         // Number of data fields in SVSTATUS 
 #define M8Q_NMEA_SV_ID         51        // "3" == 51 --> Message ID for SVSTATUS 
 #define M8Q_NMEA_TIME_ARGS     8         // Number of data fields in TIME 
 #define M8Q_NMEA_TIME_ID       52        // "4" == 52 --> Message ID for TIME 
 #define M8Q_NMEA_PUBX_ARG_OFST 9         // First data field offset for PUBX messages 
-#define M8Q_NMEA_STRD_ARG_OFST 7         // First data field offset for standard messages 
 
 // NMEA POSITION coordinate calculation 
 #define M8Q_LAT_LEN 10                   // Latitude message length 
@@ -96,8 +95,6 @@
 #define M8Q_UBX_HEADER_LEN  6            // Number of bytes before the payload 
 #define M8Q_UBX_CS_LEN      2            // Number of bytes in a UBC message checksum 
 
-#define M8Q_UBX_SYNC1_OFST  0            // First sync character offset 
-#define M8Q_UBX_SYNC2_OFST  1            // Second sync character offset 
 #define M8Q_UBX_CLASS_OFST  2            // Class character offset 
 #define M8Q_UBX_ID_OFST     3            // Message ID character offset 
 #define M8Q_UBX_LENGTH_OFST 4            // LENGTH field offset from start of UBX message frame 
@@ -108,23 +105,8 @@
 #define M8Q_TIME_CHAR_LEN 9              // Number of characters for the time in NMEA messages 
 #define M8Q_DATE_CHAR_LEN 6              // Number of characters for the date in NMEA messages 
 
-//==================================================
-
-//==================================================
-// No longer used (to be deleted) 
-
-// M8Q messages 
-#define M8Q_NO_DATA     0xff             // Return value for an invalid NMEA data stream 
-#define M8Q_PYL_MAX_LEN 100              // Message payload buffer to store any apyload length 
-
-// Message identification 
-#define MSG_ID_CHARS 8            // Number of characters used to identify message types 
-
-#define UBX_SYNC1 0xB5            // 0xB5 --> UBX protocol SYNC CHAR 1 
-#define UBX_SYNC1_HI 0x42         // 'B' --> SYNC CHAR 1 (0xB5) high nibble character 
-#define UBX_SYNC1_LO 0x35         // '5' --> SYNC CHAR 1 (0xB5) low nibble character 
-#define UBX_SYNC2_HI 0x36         // '6' --> SYNC CHAR 2 (0x62) high nibble character 
-#define UBX_SYNC2_LO 0x32         // '2' --> SYNC CHAR 2 (0x62) low nibble character 
+#define UBX_SYNC1 0xB5                   // 0xB5 --> UBX protocol SYNC CHAR 1 
+#define UBX_SYNC1_HI 0x42                // 'B' --> SYNC CHAR 1 (0xB5) high nibble character 
 
 //==================================================
 
@@ -297,7 +279,7 @@ static m8q_driver_data_t m8q_driver_data;
 // Indexing 
 
 // NMEA POSITION message 
-static uint8_t *position[NMEA_NUM_FIELDS_POSITION + M8Q_EOM_BYTE] = 
+static uint8_t *position[NMEA_NUM_FIELDS_POSITION + EOM_BYTE] = 
 { 
     m8q_driver_data.pos_data.time, 
     m8q_driver_data.pos_data.lat, 
@@ -322,7 +304,7 @@ static uint8_t *position[NMEA_NUM_FIELDS_POSITION + M8Q_EOM_BYTE] =
 }; 
 
 // NMEA TIME message 
-static uint8_t *time[NMEA_NUM_FIELDS_TIME + M8Q_EOM_BYTE] = 
+static uint8_t *time[NMEA_NUM_FIELDS_TIME + EOM_BYTE] = 
 { 
     m8q_driver_data.time_data.time, 
     m8q_driver_data.time_data.date, 
@@ -819,7 +801,7 @@ M8Q_STATUS m8q_init_dev(
         }
 
         if (*(config_msgs + BYTE_6) == 
-            *(ubx_msg_class[M8Q_UBX_CFG_INDEX].ubx_msg_class_str + BYTE_1))
+            *(ubx_msg_class[UBX_CFG_INDEX].ubx_msg_class_str + BYTE_1))
         {
             ack_timeout = ACK_TIMEOUT; 
 
@@ -2954,104 +2936,6 @@ void m8q_get_date(
         *utc_date++ = time[M8Q_TIME_DATE][i]; 
     }
 }
-
-//=======================================================================================
-
-
-//=======================================================================================
-// User Configuration Mode 
-
-#if M8Q_USER_CONFIG
-
-// 
-void m8q_user_config_init(
-    I2C_TypeDef *i2c) 
-{
-    // Initialize I2C pointer 
-    m8q_driver_data.i2c = i2c; 
-
-    // Prompt the user for the first message 
-    m8q_user_config_prompt();
-}
-
-
-// M8Q user configuration 
-void m8q_user_config(void)
-{
-    // Local variables 
-    uint16_t error_code = 0; 
-    uint8_t config_msg[M8Q_MSG_MAX_LEN]; 
-    uint8_t ubx_pl_len = 0; 
-    uint8_t ubx_ack_clear_counter = 0; 
-
-    // Check if there is user input waiting 
-    if (uart_data_ready(USART2))
-    {
-        // Read the input 
-        uart_getstr(USART2, (char *)config_msg, M8Q_MSG_MAX_LEN, UART_STR_TERM_CARRIAGE); 
-
-        uart_send_new_line(USART2); 
-
-        // Identify the message type 
-        switch (config_msg[0])
-        {
-            case NMEA_START:  // NMEA message 
-                error_code = m8q_nmea_config(config_msg); 
-                break;
-
-            case UBX_SYNC1:  // UBX message 
-                error_code = m8q_ubx_config(config_msg); 
-
-                // Communicate the results 
-                if (!error_code)
-                { 
-                    ubx_pl_len = (m8q_driver_data.ubx_resp[M8Q_UBX_LENGTH_OFST+1] << SHIFT_8) | 
-                                  m8q_driver_data.ubx_resp[M8Q_UBX_LENGTH_OFST]; 
-                    
-                    for (uint8_t i = 0; i < (M8Q_UBX_HEADER_LEN+ubx_pl_len+M8Q_UBX_CS_LEN); i++)
-                    {
-                        uart_send_integer(USART2, (int16_t)m8q_driver_data.ubx_resp[i]); 
-                        uart_send_new_line(USART2);
-                    }
-
-                    // Clear the ACK message? 
-                    while (ubx_ack_clear_counter < 10)
-                    {
-                        if (m8q_read() == M8Q_READ_UBX) break; 
-                        ubx_ack_clear_counter++; 
-                    }
-                    // while(m8q_read() != M8Q_READ_UBX); 
-                }
-                break;
-            
-            default:  // Unknown input 
-                uart_send_new_line(USART2); 
-                uart_sendstring(USART2, "Unknown message type\r\n"); 
-                break;
-        }
-
-        // Print any error codes 
-        if (error_code)
-        {
-            uart_sendstring(USART2, "Error code: "); 
-            uart_send_integer(USART2, (int16_t)error_code); 
-            uart_send_new_line(USART2); 
-        }
-
-        // Prompt the user for the next message 
-        m8q_user_config_prompt();
-    }
-}
-
-
-// M8Q NMEA config user interface 
-void m8q_user_config_prompt(void)
-{
-    uart_send_new_line(USART2); 
-    uart_sendstring(USART2, ">>> Config message: "); 
-}
-
-#endif   // M8Q_USER_CONFIG
 
 //=======================================================================================
 

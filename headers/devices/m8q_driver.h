@@ -15,8 +15,8 @@
 //=======================================================================================
 // Notes 
 
-// This driver currently only support writing of UBX messages to the device. It does not 
-// support reading UBX messages. 
+// This driver currently does not support the interpretation of received UBX messages 
+// aside from checking for ACK/NAK messages in response to UBX CFG messages. 
 
 //=======================================================================================
 
@@ -39,20 +39,6 @@
 
 //=======================================================================================
 // Macros 
-
-// Device configuration 
-#define M8Q_USER_CONFIG 0                // Sets the code to user config mode 
-
-// NAVSTAT states - read as a two byte character string from the device 
-#define M8Q_NAVSTAT_NF 0x4E46            // No Fix 
-#define M8Q_NAVSTAT_DR 0x4452            // Dead reckoning only solution 
-#define M8Q_NAVSTAT_G2 0x4732            // Stand alone 2D solution 
-#define M8Q_NAVSTAT_G3 0x4733            // Stand alone 3D solution 
-#define M8Q_NAVSTAT_D2 0x4432            // Differential 2D solution 
-#define M8Q_NAVSTAT_D3 0x4433            // Differential 3D solution 
-#define M8Q_NAVSTAT_RK 0x524B            // Combined GPS and DR solution 
-#define M8Q_NAVSTAT_TT 0x5454            // Time only solution 
-
 //=======================================================================================
 
 
@@ -71,9 +57,26 @@ typedef enum {
     M8Q_NO_DATA_AVAILABLE,    // The data stream is empty or does not have the needed info 
     M8Q_DATA_BUFF_OVERFLOW,   // Device data buffer (stream size) exceeds driver threshold 
     M8Q_UNKNOWN_DATA,         // Unknown message stream data 
+
+    // To be deleted 
     M8Q_UBX_MSG_CONV_FAIL,    // UBX message failed to convert to receiver format 
     M8Q_UBX_MSG_CONV_SUCC     // UBX message successfully converted to receiver format 
 } m8q_status_t; 
+
+
+/**
+ * @brief M8Q navigation statuses 
+ */
+typedef enum {
+    M8Q_NAVSTAT_NF = 0x4E46,   // No Fix 
+    M8Q_NAVSTAT_DR = 0x4452,   // Dead reckoning only solution 
+    M8Q_NAVSTAT_G2 = 0x4732,   // Stand alone 2D solution 
+    M8Q_NAVSTAT_G3 = 0x4733,   // Stand alone 3D solution 
+    M8Q_NAVSTAT_D2 = 0x4432,   // Differential 2D solution 
+    M8Q_NAVSTAT_D3 = 0x4433,   // Differential 3D solution 
+    M8Q_NAVSTAT_RK = 0x524B,   // Combined GPS and DR solution 
+    M8Q_NAVSTAT_TT = 0x5454    // Time only solution 
+} m8q_navstats_t; 
 
 //=======================================================================================
 
@@ -627,38 +630,6 @@ void m8q_get_time(
  */
 void m8q_get_date(
     uint8_t *utc_date); 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// User Configuration 
-
-/**
- * @brief User configuration initialization 
- * 
- * @details Initializes user config mode. This function is called once during the setup/init 
- *          procedure. Note that this function is only valid during user config mode which can 
- *          be set by setting M8Q_USER_CONFIG to 1. 
- * 
- * @param i2c : pointer to the I2C port used 
- */
-void m8q_user_config_init(
-    I2C_TypeDef *i2c); 
-
-
-/**
- * @brief User configuration 
- * 
- * @details User config mode allows the user to change the settings of the receiver using a 
- *          serial terminal interface. Users input NMEA or UBX messages which get converted 
- *          to proper message strings and then sent to the receiver. Is message formatting is 
- *          not correct then error codes will be displayed on the terminal indicating the 
- *          problem with the input message. This is done to help ensure garbage data is not 
- *          sent to the reciever. Note that this function is only valid during user config mode
- *          which can be set by setting M8Q_USER_CONFIG to 1. 
- */
-void m8q_user_config(void); 
 
 //=======================================================================================
 

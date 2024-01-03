@@ -144,7 +144,7 @@ typedef enum {
  *          features. These features include: 
  *          
  *          End of Conversion (EOC) 
- *          - 0 --> EOC bit set after each sequence of regular conversions 
+ *          - 0 --> EOC bit set after a sequence of regular conversions 
  *          - 1 --> EOC bit set after each regular conversion 
  *          
  *          End of Conversion (EOC) interrupt 
