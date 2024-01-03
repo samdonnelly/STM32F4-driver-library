@@ -49,6 +49,68 @@
 #define ACK_TIMEOUT 10 
 
 //==================================================
+// Checking if needed 
+
+// Device parameters 
+#define M8Q_I2C_8_BIT_ADDR 0x84          // Receiver I2C address (default : 0x42 << 1) 
+
+// M8Q registers 
+#define M8Q_REG_0XFD 0xFD                // Available data bytes (high byte) register 
+#define M8Q_REG_0XFE 0xFE                // Available data bytes (low byte) register 
+#define M8Q_REG_0XFF 0xFF                // Data stream register 
+
+// NMEA message format 
+#define M8Q_NMEA_MSG_MAX_LEN 150         // NMEA message buffer that can hold any received message
+#define M8Q_NMEA_END_PAY     0x2A        // 0x2A == '*' --> indicates end of NMEA message payload 
+#define M8Q_NMEA_END_MSG     6           // Length of string to append to NMEA message after payload 
+#define M8Q_NMEA_CS_LEN      2           // Number of characters in NMEA message checksum 
+#define M8Q_PUBX_ID_OFST     6           // Starting position of PUBX message ID in message string 
+
+// NMEA messages 
+#define M8Q_NMEA_RATE_ARGS     7         // Number of data fields in RATE 
+#define M8Q_NMEA_CONFIG_ARGS   5         // Number of data fields in CONFIG 
+#define M8Q_NMEA_POS_ARGS      19        // Number of data fields in POSITION 
+#define M8Q_NMEA_POS_ID        48        // "0" == 48 --> Message ID for POSITION 
+#define M8Q_NMEA_SV_ARGS       7         // Number of data fields in SVSTATUS 
+#define M8Q_NMEA_SV_ID         51        // "3" == 51 --> Message ID for SVSTATUS 
+#define M8Q_NMEA_TIME_ARGS     8         // Number of data fields in TIME 
+#define M8Q_NMEA_TIME_ID       52        // "4" == 52 --> Message ID for TIME 
+#define M8Q_NMEA_PUBX_ARG_OFST 9         // First data field offset for PUBX messages 
+#define M8Q_NMEA_STRD_ARG_OFST 7         // First data field offset for standard messages 
+
+// NMEA POSITION coordinate calculation 
+#define M8Q_LAT_LEN 10                   // Latitude message length 
+#define M8Q_LON_LEN 11                   // Longitude message length 
+#define M8Q_LAT_DEG_INT_LEN 2            // Number of digits for integer portion of latitude 
+#define M8Q_LON_DEG_INT_LEN 3            // Number of digits for integer portion of longitude 
+#define M8Q_MIN_DIGIT_INDEX 6            // Index of scaled minute portion of coordinate 
+#define M8Q_MIN_FRAC_LEN 5               // Length of fractional part of minutes 
+#define M8Q_DIR_SOUTH 0x53               // Value of South from the North/South indicator 
+#define M8Q_DIR_WEST 0x57                // Value of West from the East/West indicator 
+#define M8Q_MIN_TO_DEG 60                // Used to convert coordinate minutes to degrees 
+#define M8Q_COO_LEN 6                    // Length of integer and fractional parts of coordinates 
+
+// UBX message format 
+#define M8Q_UBX_MSG_FMT_LEN 4            // Message format length: CLASS + ID + LENGTH 
+#define M8Q_UBX_LENGTH_LEN  2            // LENGTH field length 
+#define M8Q_UBX_HEADER_LEN  6            // Number of bytes before the payload 
+#define M8Q_UBX_CS_LEN      2            // Number of bytes in a UBC message checksum 
+
+#define M8Q_UBX_SYNC1_OFST  0            // First sync character offset 
+#define M8Q_UBX_SYNC2_OFST  1            // Second sync character offset 
+#define M8Q_UBX_CLASS_OFST  2            // Class character offset 
+#define M8Q_UBX_ID_OFST     3            // Message ID character offset 
+#define M8Q_UBX_LENGTH_OFST 4            // LENGTH field offset from start of UBX message frame 
+
+// UBX messages 
+#define M8Q_UBX_ACK_CLASS 0x05           // Class of ACK message 
+#define M8Q_UBX_ACK_ID    0x01           // ID of ACK message 
+#define M8Q_TIME_CHAR_LEN 9              // Number of characters for the time in NMEA messages 
+#define M8Q_DATE_CHAR_LEN 6              // Number of characters for the date in NMEA messages 
+
+//==================================================
+
+//==================================================
 // No longer used (to be deleted) 
 
 // M8Q messages 
