@@ -927,7 +927,7 @@ M8Q_STATUS m8q_read_ds_dev(
 
     if (!read_status)
     {
-        if (stream_len > buff_size)
+        if (stream_len >= buff_size)
         {
             read_status = m8q_flush_ds_dev(buff_size, stream_len); 
         }
@@ -939,6 +939,9 @@ M8Q_STATUS m8q_read_ds_dev(
             {
                 read_status = M8Q_READ_FAULT; 
             }
+
+            data_buff += stream_len; 
+            *data_buff = NULL_CHAR; 
         }
     }
 
