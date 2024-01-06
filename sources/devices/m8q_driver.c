@@ -1509,7 +1509,8 @@ uint8_t m8q_msg_id_check_dev(
 {
     for (uint8_t i = CLEAR; i < num_compare; i++)
     {
-        if (str_compare((char *)(ref_msg + i*max_size), msg, offset))
+        // if (str_compare((char *)(ref_msg + i*max_size), msg, offset))
+        if (str_compare((char *)ref_msg + i*max_size, msg, offset))
         {
             *msg_index = i; 
             return TRUE; 
@@ -1680,7 +1681,7 @@ M8Q_STATUS m8q_nmea_config_dev(
     // Config message formatting variables 
     uint16_t checksum = CLEAR; 
     char msg_str[msg_len + M8Q_NMEA_END_MSG]; 
-    uint8_t msg_str_len = CLEAR; 
+    int16_t msg_str_len = CLEAR; 
 
     // Check that a comma separates the address field from the data fields 
     if (*msg_ptr++ != COMMA_CHAR)
@@ -1735,16 +1736,16 @@ M8Q_STATUS m8q_nmea_config_dev(
     // message contents. Send the formatted message to the device. 
     checksum = m8q_nmea_checksum_dev(config_msg); 
 
-    msg_str_len = (uint8_t)sprintf(msg_str, "%s%c%c\r\n", config_msg, 
-                                                          (char)(checksum >> SHIFT_8), 
-                                                          (char)(checksum)); 
+    msg_str_len = sprintf(msg_str, "%s%c%c\r\n", config_msg, 
+                                                 (char)(checksum >> SHIFT_8), 
+                                                 (char)(checksum)); 
     
     if (msg_str_len < 0)
     {
         return M8Q_INVALID_CONFIG; 
     }
 
-    return m8q_write_msg_dev((void *)msg_str, msg_str_len); 
+    return m8q_write_msg_dev((void *)msg_str, (uint8_t)msg_str_len); 
 }
 
 
