@@ -124,6 +124,8 @@
 #define SCALE_100 100 
 #define SCALE_1000 1000 
 #define SCALE_10000 10000 
+#define SCALE_1E5 100000 
+#define SCALE_1E6 1000000 
 
 // Modulo operator divisors
 #define REMAINDER_10   10

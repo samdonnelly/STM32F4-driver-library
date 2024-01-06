@@ -145,6 +145,25 @@ I2C_STATUS i2c_read(
 }
 
 
+// Clear I2C data 
+I2C_STATUS i2c_clear(
+    I2C_TypeDef *i2c, 
+    uint16_t data_size)
+{
+    if (mock_driver_data.read_index >= MAX_DATA_OPS)
+    {
+        return I2C_NULL_PTR; 
+    }
+
+    if (mock_driver_data.increment_mode_read)
+    {
+        mock_driver_data.read_index++; 
+    }
+
+    return I2C_OK; 
+}
+
+
 // I2C read data until a termination character is seen 
 I2C_STATUS i2c_read_to_term(
     I2C_TypeDef *i2c, 

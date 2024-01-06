@@ -441,18 +441,6 @@ static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] =
 // Prototypes 
 
 /**
- * @brief Read the data stream size 
- * 
- * @details 
- * 
- * @param data_size 
- * @return M8Q_STATUS 
- */
-M8Q_STATUS m8q_read_ds_size_dev(
-    uint16_t *data_size); 
-
-
-/**
  * @brief Flush/clear the data stream - no data stored or returned 
  * 
  * @details 
@@ -949,6 +937,37 @@ M8Q_STATUS m8q_read_ds_dev(
 }
 
 
+// Read the data stream size 
+M8Q_STATUS m8q_read_ds_size_dev(
+    uint16_t *data_size)
+{
+    I2C_STATUS i2c_status = I2C_OK; 
+    uint8_t address = M8Q_REG_0XFD; 
+    uint8_t num_bytes[BYTE_2]; 
+
+    // Send the data size register address to the device then read the data high and 
+    // low bytes of the data size. 
+    i2c_status |= m8q_write_dev(&address, BYTE_1); 
+    i2c_status |= m8q_read_dev(num_bytes, BYTE_2); 
+
+    if (i2c_status)
+    {
+        *data_size = CLEAR; 
+        return M8Q_READ_FAULT; 
+    }
+
+    // Format the data into the data size 
+    *data_size = ((uint16_t)num_bytes[BYTE_0] << SHIFT_8) | (uint16_t)num_bytes[BYTE_1]; 
+
+    if (!(*data_size))
+    {
+        return M8Q_NO_DATA_AVAILABLE; 
+    }
+
+    return M8Q_OK; 
+}
+
+
 // Return the ACK/NAK message counter status 
 uint16_t m8q_get_ack_status_dev(void)
 {
@@ -1240,64 +1259,20 @@ M8Q_STATUS m8q_get_time_utc_date_dev(
 //=======================================================================================
 // Read and write functions (private) 
 
-// Read the data stream size 
-M8Q_STATUS m8q_read_ds_size_dev(
-    uint16_t *data_size)
-{
-    I2C_STATUS i2c_status = I2C_OK; 
-    uint8_t address = M8Q_REG_0XFD; 
-    uint8_t num_bytes[BYTE_2]; 
-
-    // Send the data size register address to the device then read the data high and 
-    // low bytes of the data size. 
-    i2c_status |= m8q_write_dev(&address, BYTE_1); 
-    i2c_status |= m8q_read_dev(num_bytes, BYTE_2); 
-
-    if (i2c_status)
-    {
-        *data_size = CLEAR; 
-        return M8Q_READ_FAULT; 
-    }
-
-    // Format the data into the data size 
-    *data_size = ((uint16_t)num_bytes[BYTE_0] << SHIFT_8) | (uint16_t)num_bytes[BYTE_1]; 
-
-    if (!(*data_size))
-    {
-        return M8Q_NO_DATA_AVAILABLE; 
-    }
-
-    return M8Q_OK; 
-}
-
-
 // Flush/clear the data stream - no data stored or returned 
 M8Q_STATUS m8q_flush_ds_dev(
     uint16_t max_buff_len, 
     uint16_t stream_len)
 {
-    I2C_STATUS i2c_status; 
-    uint8_t stream_data[max_buff_len]; 
-    uint16_t stream_index = CLEAR; 
-    uint16_t buff_len = max_buff_len; 
+    I2C_STATUS i2c_status = I2C_OK; 
 
-    // Read the data stream up until the buffer length and do this repeatedly until 
-    // the entire stream has been read. 
-    while (stream_index < stream_len)
+    // Initiate the transmission then get the data stream without storing any data 
+    i2c_status |= m8q_start_trans_dev(I2C_R_OFFSET); 
+    i2c_status |= i2c_clear(m8q_driver_data.i2c, stream_len); 
+
+    if (i2c_status)
     {
-        if ((stream_len - stream_index) < max_buff_len)
-        {
-            buff_len = stream_len - stream_index; 
-        }
-
-        i2c_status = m8q_read_dev(stream_data, buff_len); 
-
-        if (i2c_status)
-        {
-            return M8Q_READ_FAULT; 
-        }
-
-        stream_index += max_buff_len; 
+        return M8Q_READ_FAULT; 
     }
 
     return M8Q_DATA_BUFF_OVERFLOW; 

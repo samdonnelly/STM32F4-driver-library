@@ -21,6 +21,20 @@
 
 
 //=======================================================================================
+// Enums 
+
+/**
+ * @brief Data buffer increment 
+ */
+typedef enum {
+    I2C_BUFF_NO_INCREMENT, 
+    I2C_BUFF_INCREMENT
+} i2c_buff_increment_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Function Prototypes 
 
 /**
@@ -119,6 +133,22 @@ I2C_STATUS i2c_txe_wait(
  */
 I2C_STATUS i2c_btf_wait(
     I2C_TypeDef *i2c);
+
+
+/**
+ * @brief Get I2C data 
+ * 
+ * @param i2c 
+ * @param data 
+ * @param data_size 
+ * @param increment 
+ * @return I2C_STATUS 
+ */
+I2C_STATUS i2c_get(
+    I2C_TypeDef *i2c, 
+    uint8_t *data, 
+    uint16_t data_size, 
+    uint8_t increment); 
 
 //=======================================================================================
 
@@ -409,6 +439,27 @@ I2C_STATUS i2c_read(
     uint8_t *data, 
     uint16_t data_size)
 {
+    return i2c_get(i2c, data, data_size, I2C_BUFF_INCREMENT); 
+}
+
+
+// Clear I2C data 
+I2C_STATUS i2c_clear(
+    I2C_TypeDef *i2c, 
+    uint16_t data_size)
+{
+    uint8_t data_buff = CLEAR; 
+    return i2c_get(i2c, &data_buff, data_size, I2C_BUFF_NO_INCREMENT); 
+}
+
+
+// Get I2C data 
+I2C_STATUS i2c_get(
+    I2C_TypeDef *i2c, 
+    uint8_t *data, 
+    uint16_t data_size, 
+    uint8_t increment)
+{
     // Local variables 
     I2C_STATUS i2c_status = I2C_OK; 
 
@@ -441,11 +492,12 @@ I2C_STATUS i2c_read(
             i2c_clear_addr(i2c);
 
             // Normal reading 
-            for (uint8_t i = 0; i < (data_size - BYTE_2); i++)
+            for (uint16_t i = 0; i < (data_size - BYTE_2); i++)
             {
                 i2c_status |= i2c_rxne_wait(i2c);  // Indicates when data is ready 
-                *data++ = i2c->DR;                 // Read data
-                i2c_set_ack(i2c);                  // Set the ACK bit 
+                *data = i2c->DR; 
+                data += increment; 
+                i2c_set_ack(i2c); 
             }
 
             // Read the second last data byte 
@@ -459,7 +511,7 @@ I2C_STATUS i2c_read(
             i2c_stop(i2c);
 
             // Read the last data byte
-            data++;
+            data += increment; 
             i2c_status |= i2c_rxne_wait(i2c);
             *data = i2c->DR;
 

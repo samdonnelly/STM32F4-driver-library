@@ -507,7 +507,7 @@ TEST(m8q_driver, m8q_init_valid_config)
     memcpy((void *)device_stream, (void *)device_msg, msg_len); 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
 
-    // There are 6 CFG messages in the config file 
+    // There are 6 CFG messages (not total messages) in the config file 
     for (uint8_t i = CLEAR; i < 6; i++)
     {
         i2c_mock_set_read_data(stream_len, BYTE_2, 2*i); 
@@ -775,6 +775,11 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     uint8_t utc_time[BYTE_10]; 
     uint8_t utc_date[BYTE_7]; 
 
+    memset((void *)lat_str, CLEAR, sizeof(lat_str)); 
+    memset((void *)lon_str, CLEAR, sizeof(lon_str)); 
+    memset((void *)utc_time, CLEAR, sizeof(utc_time)); 
+    memset((void *)utc_date, CLEAR, sizeof(utc_date)); 
+
     uint8_t msg0_len = 111, msg1_len = 67, msg2_len = 28, msg3_len = 10, msg4_len = 71; 
     uint8_t stream_len[] = { 0x01, 0x1F }; 
     uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
@@ -869,7 +874,8 @@ TEST(m8q_driver, m8q_read_msg_record_update)
 TEST(m8q_driver, m8q_read_get_data_stream)
 {
     // Read and get the whole data stream from the device. No driver data record is 
-    // updated. 
+    // updated. The buffer to store the stream must be at least 1 byte larger than the 
+    // stream size so the buffer can be terminated with a null character. 
 
     M8Q_STATUS read_status; 
 
@@ -877,7 +883,7 @@ TEST(m8q_driver, m8q_read_get_data_stream)
     uint8_t stream_len[] = { 0x00, 0xB6 }; 
     uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
     uint8_t device_stream[msg_len]; 
-    uint8_t stream_buffer[msg_len]; 
+    uint8_t stream_buffer[msg_len + BYTE_1]; 
 
     const char device_msg0[] = 
         "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3,2.1,2.0,0.007,77.52," 
@@ -891,14 +897,14 @@ TEST(m8q_driver, m8q_read_get_data_stream)
     // Check that a buffer that is too small won't be used 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
-    read_status = m8q_read_ds_dev(stream_buffer, msg_len - BYTE_1); 
+    read_status = m8q_read_ds_dev(stream_buffer, msg_len); 
     LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, read_status); 
 
     // Check that the stream was read 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
-    read_status = m8q_read_ds_dev(stream_buffer, msg_len); 
+    read_status = m8q_read_ds_dev(stream_buffer, msg_len + BYTE_1); 
     LONGS_EQUAL(M8Q_OK, read_status); 
     STRCMP_EQUAL((char *)device_stream, (char *)stream_buffer); 
 }
@@ -914,15 +920,21 @@ TEST(m8q_driver, m8q_read_flush_stream)
     uint8_t max_buff_size = 80; 
     uint8_t stream_len_0[] = { 0x00, 0xB6 }; 
     uint8_t stream_len_1[] = { 0x00, 0x00 }; 
+    uint16_t msg_len = (stream_len_0[0] << SHIFT_8) | stream_len_0[1]; 
+    uint8_t device_stream[msg_len]; 
 
-    // These segments are capped at a length of 'max_buff_size' but together they make two 
-    // complete messages that would be received in the stream. 
-    const char stream_segment_0[] = 
-        "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3,2.1,2.0,0.007,77.52,0"; 
-    const char stream_segment_1[] = 
-        ".007,,0.92,1.19,0.77,9,0,0*5F\r\n$PUBX,04,073731.00,091202,113851.00,1196,15D,1930"; 
-    const char stream_segment_2[] = 
-        "035,-2660.664,43,*3C\r\n"; 
+    // These messages don't actually get used by the mock i2c driver. They are here for 
+    // consistency with the other tests. When the stream is larger than the buffer size the 
+    // M8Q driver flushes the data stream by reading the whole stream but not storing any 
+    // data to therefore not exceed any buffer limits. 
+    const char device_msg0[] = 
+        "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3,2.1,2.0,0.007,77.52," 
+        "0.007,,0.92,1.19,0.77,9,0,0*5F\r\n"; 
+    const char device_msg1[] = 
+        "$PUBX,04,073731.00,091202,113851.00,1196,15D,1930035,-2660.664,43,*3C\r\n"; 
+
+    memcpy((void *)&device_stream[0], (void *)device_msg0, msg0_len); 
+    memcpy((void *)&device_stream[msg0_len], (void *)device_msg1, msg1_len); 
 
     // Set the data buffer threshold 
     m8q_init_dev(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, max_buff_size); 
@@ -931,22 +943,18 @@ TEST(m8q_driver, m8q_read_flush_stream)
     // the whole stream has to be spread out over multiple calls to the i2c (mock) driver. 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len_0, BYTE_2, I2C_MOCK_INDEX_0); 
-    i2c_mock_set_read_data((void *)stream_segment_0, max_buff_size, I2C_MOCK_INDEX_1); 
-    i2c_mock_set_read_data((void *)stream_segment_1, max_buff_size, I2C_MOCK_INDEX_2); 
-    i2c_mock_set_read_data((void *)stream_segment_2, msg0_len + msg1_len - 2*max_buff_size, 
-                            I2C_MOCK_INDEX_3); 
-    i2c_mock_set_read_data((void *)stream_len_1, BYTE_2, I2C_MOCK_INDEX_4); 
+    i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
+    i2c_mock_set_read_data((void *)stream_len_1, BYTE_2, I2C_MOCK_INDEX_2); 
 
     read_status_0 = m8q_read_data_dev(); 
     read_status_1 = m8q_read_data_dev(); 
 
     // Getting M8Q_NO_DATA_AVAILABLE as the status of the second read attempt confirms that 
     // the data stream flush/clear function works. An M8Q_READ_FAULT status would indicate 
-    // the mock i2c driver was read too many times and not getting this or an 
+    // the mock i2c driver was read too many times, and not getting either this or an 
     // M8Q_NO_DATA_AVAILABLE status would mean the mock i2c driver was not read enough time. 
     LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, read_status_0); 
     LONGS_EQUAL(M8Q_NO_DATA_AVAILABLE, read_status_1); 
-
 }
 
 //==================================================

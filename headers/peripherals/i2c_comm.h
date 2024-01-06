@@ -276,7 +276,7 @@ I2C_STATUS i2c_write(
 // Read data 
 
 /**
- * @brief I2C read data
+ * @brief Read I2C data
  * 
  * @details Read data from a slave device. This function is called after the ADDR bit has 
  *          been cleared. The function takes a pointer where it will store the recieved 
@@ -293,6 +293,18 @@ I2C_STATUS i2c_read(
     I2C_TypeDef *i2c, 
     uint8_t *data, 
     uint16_t data_size);
+
+
+/**
+ * @brief Clear I2C data 
+ * 
+ * @param i2c 
+ * @param data_size 
+ * @return I2C_STATUS 
+ */
+I2C_STATUS i2c_clear(
+    I2C_TypeDef *i2c, 
+    uint16_t data_size); 
 
 
 /**

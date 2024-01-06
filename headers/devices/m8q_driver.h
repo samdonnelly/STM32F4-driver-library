@@ -150,6 +150,18 @@ M8Q_STATUS m8q_txr_pin_init_dev(
 // User functions - dev 
 
 /**
+ * @brief Read the data stream size 
+ * 
+ * @details 
+ * 
+ * @param data_size 
+ * @return M8Q_STATUS 
+ */
+M8Q_STATUS m8q_read_ds_size_dev(
+    uint16_t *data_size); 
+
+
+/**
  * @brief Read the data stream and sort/store relevant message data 
  * 
  * @details 
