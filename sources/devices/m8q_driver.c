@@ -445,12 +445,10 @@ static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] =
  * 
  * @details 
  * 
- * @param max_buff_len 
  * @param stream_len 
  * @return M8Q_STATUS 
  */
 M8Q_STATUS m8q_flush_ds_dev(
-    uint16_t max_buff_len, 
     uint16_t stream_len); 
 
 
@@ -890,8 +888,7 @@ M8Q_STATUS m8q_read_data_dev(void)
     if (!read_status)
     {
         read_status = (stream_len > m8q_driver_data.data_buff_limit) ? 
-                      m8q_flush_ds_dev(m8q_driver_data.data_buff_limit, stream_len) : 
-                      m8q_read_sort_ds_dev(stream_len); 
+                      m8q_flush_ds_dev(stream_len) : m8q_read_sort_ds_dev(stream_len); 
     }
 
     return read_status; 
@@ -917,7 +914,7 @@ M8Q_STATUS m8q_read_ds_dev(
     {
         if (stream_len >= buff_size)
         {
-            read_status = m8q_flush_ds_dev(buff_size, stream_len); 
+            read_status = m8q_flush_ds_dev(stream_len); 
         }
         else 
         {
@@ -1261,7 +1258,6 @@ M8Q_STATUS m8q_get_time_utc_date_dev(
 
 // Flush/clear the data stream - no data stored or returned 
 M8Q_STATUS m8q_flush_ds_dev(
-    uint16_t max_buff_len, 
     uint16_t stream_len)
 {
     I2C_STATUS i2c_status = I2C_OK; 
