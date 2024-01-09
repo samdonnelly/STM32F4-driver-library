@@ -175,9 +175,9 @@ typedef uint8_t M8Q_MSG_TYPE;
 typedef struct m8q_nmea_pos_s 
 {
     uint8_t time    [BYTE_9];     // UTC time 
-    uint8_t lat     [BYTE_10];    // Latitude 
+    uint8_t lat     [BYTE_11];    // Latitude 
     uint8_t NS      [BYTE_1];     // North/South indicator 
-    uint8_t lon     [BYTE_11];    // Longitude 
+    uint8_t lon     [BYTE_12];    // Longitude 
     uint8_t EW      [BYTE_1];     // East/West indicator 
     uint8_t altRef  [BYTE_9];     // Altitude above user datum ellipsoid 
     uint8_t navStat [BYTE_2];     // Navigation status 
@@ -1134,7 +1134,7 @@ double m8q_get_position_lon_dev(void)
     // digit/characters in length. The minutes get converted to a scaled value to 
     // prepare for adding the fractional/decimal part of the minute. 
     deg_int += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
-                                    BYTE_1 - lon_index); 
+                                    BYTE_2 - lon_index); 
     
     while (++lon_index < BYTE_3)
     {

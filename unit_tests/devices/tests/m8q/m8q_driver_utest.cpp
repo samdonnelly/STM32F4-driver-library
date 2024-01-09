@@ -788,7 +788,7 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     // The stream contains multiple NMEA and UBX messages. Some messages are stored in the 
     // driver data record and others are discarded. 
     const char device_msg0[] = 
-        "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3,2.1,2.0,0.007,77.52," 
+        "$PUBX,00,081350.00,4717.113210,N,11433.915187,W,546.589,G3,2.1,2.0,0.007,77.52," 
         "0.007,,0.92,1.19,0.77,9,0,0*5F\r\n"; 
     const char device_msg1[] = 
         "$GNGRS,104148.00,1,2.6,2.2,-1.6,-1.1,-1.7,-1.5,5.8,1.7,,,,,1,1*52\r\n"; 
@@ -848,15 +848,15 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     LONGS_EQUAL(M8Q_OK, read_status); 
 
     DOUBLES_EQUAL(47.285220, m8q_get_position_lat_dev(), 0.000001); 
-    DOUBLES_EQUAL(8.565253, m8q_get_position_lon_dev(), 0.000001); 
+    DOUBLES_EQUAL(-114.565253, m8q_get_position_lon_dev(), 0.000001); 
 
     m8q_get_position_lat_str_dev(lat_str, BYTE_11); 
     m8q_get_position_lon_str_dev(lon_str, BYTE_12); 
     STRCMP_EQUAL("4717.11321", (char *)lat_str); 
-    STRCMP_EQUAL("00833.91518", (char *)lon_str); 
+    STRCMP_EQUAL("11433.91518", (char *)lon_str); 
 
     LONGS_EQUAL(N_UP_CHAR, m8q_get_position_NS_dev()); 
-    LONGS_EQUAL(E_UP_CHAR, m8q_get_position_EW_dev()); 
+    LONGS_EQUAL(W_UP_CHAR, m8q_get_position_EW_dev()); 
     
     LONGS_EQUAL(M8Q_NAVSTAT_G3, m8q_get_position_navstat_dev()); 
     LONGS_EQUAL(TRUE, m8q_get_position_navstat_lock_dev()); 
