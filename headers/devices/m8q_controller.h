@@ -60,6 +60,7 @@ typedef struct m8q_trackers_s
     
     // Device and controller information 
     m8q_states_t state;                        // Controller state 
+    uint16_t device_status;                    // Device status based on m8q_status_t 
     uint16_t fault_code;                       // Fault code for the device/controller 
     uint32_t clk_freq;                         // Timer clock frquency 
     uint32_t time_cnt_total;                   // Time delay counter total count 
@@ -137,7 +138,7 @@ void m8q_set_idle_flag(void);
 
 
 /**
- * @brief M8Q set low power flag 
+ * @brief Enter the low power state 
  * 
  * @details This flag will set the interrupt pin on the receiver low to enable low power 
  *          mode. In this mode the receiver does not send data and consumes very little 
@@ -149,7 +150,7 @@ void m8q_set_low_pwr_flag(void);
 
 
 /**
- * @brief M8Q clear low power flag 
+ * @brief Exit the low power state 
  * 
  * @details This flag is used to set the interrupt pin on the receiver high to bring the 
  *          receiver back to normal mode. When this flag is set the state machine will 

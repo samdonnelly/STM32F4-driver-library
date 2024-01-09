@@ -1,5 +1,16 @@
 //=======================================================================================
 // Notes 
+
+// Test plan 
+// - Init state test 
+// - Read state test 
+// - Idle state test 
+// - Low power state test 
+// - Low power enter state test 
+// - Low power exit state test 
+// - Fault state test 
+// - Reset state test 
+
 //=======================================================================================
 
 
@@ -11,10 +22,14 @@
 extern "C"
 {
 	// Add your C-only include files here 
-    #include "m8q_driver.h" 
-    #include "m8q_config_test.h" 
-    #include "i2c_comm.h" 
+    #include "m8q_driver.h"
+    #include "m8q_controller.h"
+    #include "i2c_comm.h"
     #include "i2c_comm_mock.h"
+    #include "gpio_driver.h"
+    #include "gpio_driver_mock.h"
+    #include "timers.h"
+    #include "timers_mock.h"
 }
 
 //=======================================================================================
@@ -28,23 +43,14 @@ extern "C"
 //=======================================================================================
 // Test group 
 
-TEST_GROUP(m8q_controller)
+TEST_GROUP(m8q_controller_test)
 {
     // Global test group variables 
-    I2C_TypeDef I2C_FAKE; 
 
     // Constructor 
     void setup()
     {
-        // Initialize the mock I2C driver to default settings - no timeout and no data 
-        // buffer increment. 
-        i2c_mock_init(
-            I2C_MOCK_TIMEOUT_DISABLE, 
-            I2C_MOCK_INC_MODE_DISABLE, 
-            I2C_MOCK_INC_MODE_DISABLE); 
-
-        // Initialize driver but don't send/check any messages 
-        m8q_init_dev(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, CLEAR); 
+        // 
     }
 
     // Destructor 
@@ -64,4 +70,11 @@ TEST_GROUP(m8q_controller)
 
 //=======================================================================================
 // Tests 
+
+// 
+TEST(m8q_controller_test, test0)
+{
+    // 
+}
+
 //=======================================================================================

@@ -1,19 +1,19 @@
 /**
- * @file gpio_driver_mock.h
+ * @file timer_mock.h
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Mock GPIO driver interface - for unit testing 
+ * @brief Mock timers driver interface - for unit testing 
  * 
  * @version 0.1
- * @date 2023-12-31
+ * @date 2024-01-09
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2024
  * 
  */
 
-#ifndef _GPIO_DRIVER_MOCK_H_
-#define _GPIO_DRIVER_MOCK_H_
+#ifndef _TIMERS_MOCK_H_
+#define _TIMERS_MOCK_H_
 
 //=======================================================================================
 // Includes 
@@ -35,7 +35,17 @@
 
 
 //=======================================================================================
+// Structures 
+//=======================================================================================
+
+
+//=======================================================================================
+// Datatypes 
+//=======================================================================================
+
+
+//=======================================================================================
 // Mock functions 
 //=======================================================================================
 
-#endif  // _GPIO_DRIVER_MOCK_H_
+#endif   // _TIMERS_MOCK_H_
