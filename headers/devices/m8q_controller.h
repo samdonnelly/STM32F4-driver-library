@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief SAM-M8Q GPS controller 
+ * @brief SAM-M8Q GPS controller interface 
  * 
  * @version 0.1
  * @date 2022-09-26
@@ -22,17 +22,6 @@
 #include "m8q_driver.h"
 #include "timers.h"
 
-// Libraries 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Macros 
-
-#define M8Q_NUM_STATES 8                // Number of controller states 
-#define M8Q_LOW_PWR_EXIT_DELAY 150000   // (us) time to wait when exiting low power mode 
-
 //=======================================================================================
 
 
@@ -44,13 +33,15 @@
  */
 typedef enum {
     M8Q_INIT_STATE,           // Initialization state 
-    M8Q_READ_CONT_STATE,      // Read continuous state 
-    M8Q_READ_READY_STATE,     // Read ready state 
-    M8Q_LOW_PWR_TRANS_STATE,  // Low power transition state 
-    M8Q_LOW_PWR_STATE,        // Low power state 
+    M8Q_READ_STATE,           // Read state 
+    M8Q_IDLE_STATE,           // Idle state 
+    M8Q_LOW_PWR_ENTER_STATE,  // Low power enter state 
     M8Q_LOW_PWR_EXIT_STATE,   // Low power exit state 
     M8Q_FAULT_STATE,          // Fault state 
     M8Q_RESET_STATE           // Reset state 
+    // M8Q_READ_CONT_STATE,      // Read continuous state 
+    // M8Q_READ_READY_STATE,     // Read ready state 
+    // M8Q_LOW_PWR_STATE,        // Low power state 
 } m8q_states_t; 
 
 //=======================================================================================
@@ -76,12 +67,14 @@ typedef struct m8q_trackers_s
     uint8_t  time_start;                       // Time delay counter start flag 
 
     // State flags 
-    uint8_t read_ready   : 1;                  // Triggers read ready state 
-    uint8_t read         : 1;                  // Read flag --> for read ready state 
-    uint8_t low_pwr      : 1;                  // Low power state trigger 
-    uint8_t low_pwr_exit : 1;                  // Low power exit state trigger 
-    uint8_t reset        : 1;                  // Reset state trigger 
-    uint8_t startup      : 1;                  // Ensures the init state is run 
+    uint8_t init          : 1;                 // Ensures the init state is run 
+    uint8_t read          : 1;                 // Read flag --> for read ready state 
+    uint8_t idle          : 1;                 // Idle state trigger 
+    uint8_t low_pwr       : 1;                 // Low power state trigger 
+    uint8_t low_pwr_enter : 1;                 // Low power exit state trigger 
+    uint8_t low_pwr_exit  : 1;                 // Low power exit state trigger 
+    uint8_t reset         : 1;                 // Reset state trigger 
+    // uint8_t read_ready    : 1;                 // Triggers read ready state 
 }
 m8q_trackers_t; 
 
@@ -93,20 +86,6 @@ m8q_trackers_t;
 
 typedef uint16_t M8Q_FAULT_CODE; 
 typedef m8q_states_t M8Q_STATE; 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Function pointers 
-
-/**
- * @brief M8Q state machine function pointer 
- * 
- * @param m8q_device : device tracker that defines controller characteristics 
- */
-typedef void (*m8q_state_functions_t)(
-    m8q_trackers_t *m8q_device); 
 
 //=======================================================================================
 
@@ -142,35 +121,19 @@ void m8q_controller(void);
 // Setters 
 
 /**
- * @brief Set the read ready state flag 
- * 
- * @details 
- */
-void m8q_set_read_ready(void); 
-
-
-/**
- * @brief Clear the read ready state flag 
- * 
- * @details 
- */
-void m8q_clear_read_ready(void); 
-
-
-/**
  * @brief Set the read flag 
  * 
- * @details 
+ * @details Clears the idle flag as well 
  */
 void m8q_set_read_flag(void); 
 
 
 /**
- * @brief Clear the read flag 
+ * @brief Set the idle flag 
  * 
- * @details 
+ * @details Clears the read flag as well 
  */
-void m8q_clear_read_flag(void); 
+void m8q_set_idle_flag(void); 
 
 
 /**
@@ -206,6 +169,30 @@ void m8q_clear_low_pwr_flag(void);
  *          as in the event of a fault that cannot be cleared on its own. 
  */
 void m8q_set_reset_flag(void); 
+
+
+// /**
+//  * @brief Set the read ready state flag 
+//  * 
+//  * @details 
+//  */
+// void m8q_set_read_ready(void); 
+
+
+// /**
+//  * @brief Clear the read ready state flag 
+//  * 
+//  * @details 
+//  */
+// void m8q_clear_read_ready(void); 
+
+
+// /**
+//  * @brief Clear the read flag 
+//  * 
+//  * @details 
+//  */
+// void m8q_clear_read_flag(void); 
 
 //=======================================================================================
 
