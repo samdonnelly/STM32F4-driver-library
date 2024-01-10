@@ -24,6 +24,14 @@
 
 
 //=======================================================================================
+// Global variables 
+
+static GPIO_STATE gpio_pin_state = GPIO_LOW; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Driver functions 
 
 // GPIO communication initialization 
@@ -71,7 +79,7 @@ GPIO_STATE gpio_read(
     GPIO_TypeDef *gpio, 
     gpio_pin_num_t pin_num)
 {
-    return GPIO_LOW; 
+    return gpio_pin_state; 
 }
 
 
@@ -87,4 +95,12 @@ GPIOX_DR gpio_port_read(
 
 //=======================================================================================
 // Mock functions 
+
+// Set the GPIO pin state return value 
+void gpio_mock_set_read_state(
+    GPIO_STATE pin_state)
+{
+    gpio_pin_state = pin_state; 
+}
+
 //=======================================================================================

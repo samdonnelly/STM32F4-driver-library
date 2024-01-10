@@ -272,15 +272,15 @@ void m8q_controller(void)
             }
             else if (m8q_device_trackers.init)
             {
-                m8q_device_trackers.state = M8Q_INIT_STATE; 
+                next_state = M8Q_INIT_STATE; 
             }
             else if (m8q_device_trackers.idle)
             {
-                m8q_device_trackers.state = M8Q_IDLE_STATE; 
+                next_state = M8Q_IDLE_STATE; 
             }
             else
             {
-                m8q_device_trackers.state = M8Q_READ_STATE; 
+                next_state = M8Q_READ_STATE; 
             }
 
             break; 
@@ -493,7 +493,7 @@ void m8q_read_state(
 {
     M8Q_STATUS read_status; 
 
-    while (m8q_get_tx_ready_dev())
+    if (m8q_get_tx_ready_dev())
     {
         read_status = m8q_read_data_dev(); 
         m8q_device_trackers.device_status = (SET_BIT << read_status); 

@@ -36,6 +36,11 @@
 
 //=======================================================================================
 // Mock functions 
+
+// Set the GPIO pin state return value 
+void gpio_mock_set_read_state(
+    GPIO_STATE pin_state); 
+
 //=======================================================================================
 
 #endif  // _GPIO_DRIVER_MOCK_H_
