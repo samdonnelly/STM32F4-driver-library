@@ -219,10 +219,17 @@ static m8q_state_functions_t state_table[M8Q_NUM_STATES] =
 void m8q_controller_init(
     TIM_TypeDef *timer)
 {
+    if (timer == NULL)
+    {
+        m8q_device_trackers.device_status = (SET_BIT << M8Q_INVALID_PTR); 
+        return; 
+    }
+
     // Peripherals 
     m8q_device_trackers.timer = timer;
 
     // Device and controller information 
+    m8q_device_trackers.state = M8Q_INIT_STATE; 
     m8q_device_trackers.device_status = CLEAR; 
     m8q_device_trackers.fault_code = CLEAR; 
     m8q_device_trackers.clk_freq = tim_get_pclk_freq(timer); 
@@ -259,7 +266,11 @@ void m8q_controller(void)
     switch (next_state)
     {
         case M8Q_INIT_STATE: 
-            if (m8q_device_trackers.init)
+            if (m8q_device_trackers.fault_code)
+            {
+                next_state = M8Q_FAULT_STATE; 
+            }
+            else if (m8q_device_trackers.init)
             {
                 m8q_device_trackers.state = M8Q_INIT_STATE; 
             }
@@ -553,7 +564,7 @@ void m8q_low_pwr_exit_state(
         read_status = m8q_read_ds_dev(&dummy_buff, BYTE_1); 
         m8q_device_trackers.device_status = (SET_BIT << read_status); 
 
-        if (read_status = M8Q_DATA_BUFF_OVERFLOW)
+        if (read_status == M8Q_DATA_BUFF_OVERFLOW)
         {
             m8q_device->low_pwr = CLEAR_BIT; 
             m8q_device->low_pwr_exit = CLEAR_BIT; 

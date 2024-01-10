@@ -30,6 +30,7 @@ endif
 
 # M8Q 
 SRC_FILES += ./../../sources/devices/m8q_driver.c          # Production code 
+SRC_FILES += ./../../sources/devices/m8q_controller.c      # Production code 
 SRC_DIRS += tests/m8q                                      # Test doubles 
 
 # ----------------------------------
