@@ -13,6 +13,11 @@
 
 // Trigger different statuses and check faults and states 
 
+// Test state priority --> what happens when multiple flags are set 
+
+// Test that states don't change "over time" --> do multiple things and call the controller 
+// multiple times to see where it goes. 
+
 //=======================================================================================
 
 
@@ -64,6 +69,8 @@ TEST_GROUP(m8q_controller_test)
         // Driver init 
         m8q_pwr_pin_init_dev(&GPIO_LP, PIN_0); 
         m8q_txr_pin_init_dev(&GPIO_TX, PIN_1); 
+
+        gpio_mock_set_read_state(GPIO_LOW); 
     }
 
     // Destructor 
@@ -196,7 +203,67 @@ TEST(m8q_controller_test, m8q_controller_read_state)
 // M8Q controller - idle (and low power) state 
 TEST(m8q_controller_test, m8q_controller_idle_state)
 {
-    // 
+    TIM_TypeDef TIMER_FAKE_LOCAL; 
+    
+    //==================================================
+    // Go to the fault state from the idle state --> currently no operations that could 
+    // put the controller into a fault state while in the idle state. 
+    //==================================================
+
+    //==================================================
+    // Go to the low power exit state from the low power state (idle state) --> have to 
+    // first enter the low power state (same state) 
+
+    m8q_controller_init(&TIMER_FAKE_LOCAL); 
+
+    // Get to the idle state 
+    m8q_set_idle_flag(); 
+    m8q_controller(); 
+    m8q_controller(); 
+
+    // Get to the low power state (same state but passes through the low power enter 
+    // state). 
+    m8q_set_low_pwr_flag(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    LONGS_EQUAL(M8Q_IDLE_STATE, m8q_get_state()); 
+
+    // Go to the low power exit state now that in low power mode. 
+    m8q_clear_low_pwr_flag(); 
+    m8q_controller(); 
+    LONGS_EQUAL(M8Q_LOW_PWR_EXIT_STATE, m8q_get_state()); 
+
+    //==================================================
+
+    //==================================================
+    // Go to the low power enter state from the idle state 
+
+    m8q_controller_init(&TIMER_FAKE_LOCAL); 
+
+    m8q_set_idle_flag(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_set_low_pwr_flag(); 
+    m8q_controller(); 
+    
+    LONGS_EQUAL(M8Q_LOW_PWR_ENTER_STATE, m8q_get_state()); 
+
+    //==================================================
+
+    //==================================================
+    // Go to the read state from the idle state 
+
+    m8q_controller_init(&TIMER_FAKE_LOCAL); 
+
+    m8q_set_idle_flag(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_set_read_flag(); 
+    m8q_controller(); 
+    
+    LONGS_EQUAL(M8Q_READ_STATE, m8q_get_state()); 
+    
+    //==================================================
 }
 
 
