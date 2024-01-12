@@ -24,6 +24,14 @@
 
 
 //=======================================================================================
+// Global variables 
+
+static uint8_t tim_compare_return = FALSE; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // User functions 
 
 // Timer 1 setup 
@@ -126,7 +134,7 @@ uint8_t tim_compare(
     uint32_t *count_compare, 
     uint8_t  *count_start)
 {
-    return 0; 
+    return tim_compare_return; 
 }
 
 
@@ -193,4 +201,12 @@ uint32_t tim_get_pclk_freq(
 
 //=======================================================================================
 // Mock functions 
+
+// Set the timer comparison return value 
+void tim_mock_set_compare_state(
+    uint8_t tim_compare_status)
+{
+    tim_compare_return = tim_compare_status; 
+}
+
 //=======================================================================================

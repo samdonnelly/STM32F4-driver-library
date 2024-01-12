@@ -239,7 +239,7 @@ void m8q_controller_init(
 
     // State flags 
     m8q_device_trackers.init = SET_BIT; 
-    m8q_device_trackers.read = CLEAR_BIT; 
+    m8q_device_trackers.read = SET_BIT; 
     m8q_device_trackers.idle = CLEAR_BIT; 
     m8q_device_trackers.low_pwr = CLEAR_BIT; 
     m8q_device_trackers.low_pwr_enter = CLEAR_BIT; 
@@ -274,13 +274,13 @@ void m8q_controller(void)
             {
                 next_state = M8Q_INIT_STATE; 
             }
+            else if (m8q_device_trackers.read)
+            {
+                next_state = M8Q_READ_STATE; 
+            }
             else if (m8q_device_trackers.idle)
             {
                 next_state = M8Q_IDLE_STATE; 
-            }
-            else
-            {
-                next_state = M8Q_READ_STATE; 
             }
 
             break; 
@@ -333,13 +333,16 @@ void m8q_controller(void)
             {
                 next_state = M8Q_FAULT_STATE; 
             }
-            else if (m8q_device_trackers.read)
+            else if (!m8q_device_trackers.low_pwr)
             {
-                next_state = M8Q_READ_STATE; 
-            }
-            else if (m8q_device_trackers.idle)
-            {
-                next_state = M8Q_IDLE_STATE; 
+                if (m8q_device_trackers.read)
+                {
+                    next_state = M8Q_READ_STATE; 
+                }
+                else
+                {
+                    next_state = M8Q_IDLE_STATE; 
+                }
             }
             
             break; 
@@ -563,15 +566,14 @@ void m8q_low_pwr_exit_state(
     {
         read_status = m8q_read_ds_dev(&dummy_buff, BYTE_1); 
         m8q_device_trackers.device_status = (SET_BIT << read_status); 
+        exit_flag = CLEAR; 
 
         if (read_status == M8Q_DATA_BUFF_OVERFLOW)
         {
             m8q_device->low_pwr = CLEAR_BIT; 
             m8q_device->low_pwr_exit = CLEAR_BIT; 
             m8q_device->time_start = SET_BIT; 
-            exit_flag = CLEAR; 
         }
-
     }
 }
 

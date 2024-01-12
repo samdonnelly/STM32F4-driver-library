@@ -2,21 +2,10 @@
 // Notes 
 
 // Test plan 
-// - Init state test 
-// - Read state test 
-// - Idle state test 
-// - Low power state test 
-// - Low power enter state test 
-// - Low power exit state test 
-// - Fault state test 
-// - Reset state test 
-
-// Trigger different statuses and check faults and states 
-
-// Test state priority --> what happens when multiple flags are set 
-
-// Test that states don't change "over time" --> do multiple things and call the controller 
-// multiple times to see where it goes. 
+// - Trigger different statuses and check faults and states 
+// - Test state priority --> what happens when multiple flags are set 
+// - Test that states don't change "over time" --> do multiple things and call the controller 
+//   multiple times to see where it goes. 
 
 //=======================================================================================
 
@@ -54,22 +43,17 @@ extern "C"
 TEST_GROUP(m8q_controller_test)
 {
     // Global test group variables 
-    // TIM_TypeDef M8Q_TIMER; 
     GPIO_TypeDef GPIO_LP; 
     GPIO_TypeDef GPIO_TX; 
 
     // Constructor 
     void setup()
     {
-        // Set the clock frequency to be read by the M8Q controller init 
-
-        // Controller init 
-        // m8q_controller_init(&M8Q_TIMER); 
-
         // Driver init 
         m8q_pwr_pin_init_dev(&GPIO_LP, PIN_0); 
         m8q_txr_pin_init_dev(&GPIO_TX, PIN_1); 
 
+        // Default the device pin state to low 
         gpio_mock_set_read_state(GPIO_LOW); 
     }
 
@@ -222,7 +206,7 @@ TEST(m8q_controller_test, m8q_controller_idle_state)
     m8q_controller(); 
 
     // Get to the low power state (same state but passes through the low power enter 
-    // state). 
+    // state and sets the low power flag). 
     m8q_set_low_pwr_flag(); 
     m8q_controller(); 
     m8q_controller(); 
@@ -270,30 +254,186 @@ TEST(m8q_controller_test, m8q_controller_idle_state)
 // M8Q controller - low power enter state 
 TEST(m8q_controller_test, m8q_controller_lp_eneter_state)
 {
-    // 
+    TIM_TypeDef TIMER_FAKE_LOCAL; 
+
+    //==================================================
+    // Go to the low power (idle state) from the low power enter state 
+
+    m8q_controller_init(&TIMER_FAKE_LOCAL); 
+
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_set_low_pwr_flag(); 
+    m8q_controller(); 
+    LONGS_EQUAL(M8Q_LOW_PWR_ENTER_STATE, m8q_get_state()); 
+
+    m8q_controller(); 
+    LONGS_EQUAL(M8Q_IDLE_STATE, m8q_get_state()); 
+
+    //==================================================
 }
 
 
 // M8Q controller - low power exit state 
 TEST(m8q_controller_test, m8q_controller_lp_exit_state)
 {
-    // 
-}
+    TIM_TypeDef TIMER_FAKE_LOCAL; 
 
+    uint8_t msg_len = 111; 
+    uint8_t stream_len[] = { 0x00, 0x6F }; 
 
-// M8Q controller - reset state 
-TEST(m8q_controller_test, m8q_controller_reset_state)
-{
-    // 
+    const char device_msg[] = 
+        "$PUBX,00,081350.00,4717.113210,N,00833.915187,E,546.589,G3,2.1,2.0,0.007,77.52," 
+        "0.007,,0.92,1.19,0.77,9,0,0*5F\r\n"; 
+
+    //==================================================
+    // Check that the state is not left if a delay and device read have not happened 
+
+    m8q_controller_init(&TIMER_FAKE_LOCAL); 
+
+    // Get to the low power state (idle state) then proceed to the low power exit state. 
+    m8q_set_low_pwr_flag(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_clear_low_pwr_flag(); 
+    m8q_controller(); 
+
+    // Check that the state doesn't exit if the delay has not happened yet. 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_controller(); 
+
+    LONGS_EQUAL(M8Q_LOW_PWR_EXIT_STATE, m8q_get_state()); 
+
+    //==================================================
+
+    //==================================================
+    // Enter the fault state from the low power exit state 
+
+    // Continuing from the previous scenario above 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_ENABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
+
+    tim_mock_set_compare_state(TRUE); 
+    m8q_controller(); 
+    m8q_controller(); 
+
+    LONGS_EQUAL(M8Q_FAULT_STATE, m8q_get_state()); 
+
+    //==================================================
+
+    //==================================================
+    // Enter the read state from the low power exit state 
+
+    m8q_controller_init(&TIMER_FAKE_LOCAL); 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)device_msg, msg_len, I2C_MOCK_INDEX_1); 
+
+    // Trigger an exit from the low power exit state - read flag set (already set)
+    m8q_set_low_pwr_flag(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_clear_low_pwr_flag(); 
+    m8q_controller(); 
+    tim_mock_set_compare_state(TRUE); 
+    m8q_controller(); 
+    m8q_controller(); 
+
+    LONGS_EQUAL(M8Q_READ_STATE, m8q_get_state()); 
+
+    //==================================================
+
+    //==================================================
+    // Enter the idle state from the low power exit state 
+
+    m8q_controller_init(&TIMER_FAKE_LOCAL); 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)device_msg, msg_len, I2C_MOCK_INDEX_1); 
+
+    // Trigger an exit from the low power exit state - idle flag set 
+    m8q_set_low_pwr_flag(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_controller(); 
+    m8q_clear_low_pwr_flag(); 
+    m8q_controller(); 
+    m8q_set_idle_flag(); 
+    tim_mock_set_compare_state(TRUE); 
+    m8q_controller(); 
+    m8q_controller(); 
+
+    LONGS_EQUAL(M8Q_IDLE_STATE, m8q_get_state()); 
+
+    //==================================================
 }
 
 
 // M8Q controller - fault state 
 TEST(m8q_controller_test, m8q_controller_fault_state)
 {
-    // 
+    TIM_TypeDef TIMER_FAKE_LOCAL; 
 
-    // Read the fault code 
+    //==================================================
+    // Enter the reset state from the fault state 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_ENABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
+    m8q_controller_init(&TIMER_FAKE_LOCAL); 
+    
+    // Go to the fault state and check the fault code 
+    LONGS_EQUAL(CLEAR, m8q_get_fault_code()); 
+    m8q_controller(); 
+    gpio_mock_set_read_state(GPIO_HIGH); 
+    m8q_controller(); 
+    m8q_controller(); 
+    LONGS_EQUAL(0x0010, m8q_get_fault_code()); 
+    
+    // To to the reset state 
+    m8q_set_reset_flag(); 
+    m8q_controller(); 
+    LONGS_EQUAL(M8Q_RESET_STATE, m8q_get_state()); 
+
+    //==================================================
+}
+
+
+// M8Q controller - reset state 
+TEST(m8q_controller_test, m8q_controller_reset_state)
+{
+    TIM_TypeDef TIMER_FAKE_LOCAL; 
+
+    //==================================================
+    // Enter the init state from the reset state 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_ENABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
+    m8q_controller_init(&TIMER_FAKE_LOCAL); 
+    
+    // Go to the reset state 
+    m8q_controller(); 
+    gpio_mock_set_read_state(GPIO_HIGH); 
+    m8q_controller(); 
+    m8q_controller(); 
+    LONGS_EQUAL(0x0010, m8q_get_fault_code()); 
+    m8q_set_reset_flag(); 
+    m8q_controller(); 
+
+    // Go to the init state anch check that the reset state cleared the fault code 
+    LONGS_EQUAL(CLEAR, m8q_get_fault_code()); 
+    m8q_controller(); 
+
+    LONGS_EQUAL(M8Q_INIT_STATE, m8q_get_state()); 
+
+    //==================================================
 }
 
 //=======================================================================================
