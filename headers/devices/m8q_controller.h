@@ -39,9 +39,6 @@ typedef enum {
     M8Q_LOW_PWR_EXIT_STATE,   // Low power exit state 
     M8Q_FAULT_STATE,          // Fault state 
     M8Q_RESET_STATE           // Reset state 
-    // M8Q_READ_CONT_STATE,      // Read continuous state 
-    // M8Q_READ_READY_STATE,     // Read ready state 
-    // M8Q_LOW_PWR_STATE,        // Low power state 
 } m8q_states_t; 
 
 //=======================================================================================
@@ -75,7 +72,6 @@ typedef struct m8q_trackers_s
     uint8_t low_pwr_enter : 1;                 // Low power exit state trigger 
     uint8_t low_pwr_exit  : 1;                 // Low power exit state trigger 
     uint8_t reset         : 1;                 // Reset state trigger 
-    // uint8_t read_ready    : 1;                 // Triggers read ready state 
 }
 m8q_trackers_t; 
 
@@ -119,7 +115,7 @@ void m8q_controller(void);
 
 
 //=======================================================================================
-// Setters 
+// User functions 
 
 /**
  * @brief Set the read flag 
@@ -172,35 +168,6 @@ void m8q_clear_low_pwr_flag(void);
 void m8q_set_reset_flag(void); 
 
 
-// /**
-//  * @brief Set the read ready state flag 
-//  * 
-//  * @details 
-//  */
-// void m8q_set_read_ready(void); 
-
-
-// /**
-//  * @brief Clear the read ready state flag 
-//  * 
-//  * @details 
-//  */
-// void m8q_clear_read_ready(void); 
-
-
-// /**
-//  * @brief Clear the read flag 
-//  * 
-//  * @details 
-//  */
-// void m8q_clear_read_flag(void); 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Getters 
-
 /**
  * @brief M8Q get controller state 
  * 
@@ -212,6 +179,14 @@ void m8q_set_reset_flag(void);
  * @return M8Q_STATE : controller state 
  */
 M8Q_STATE m8q_get_state(void); 
+
+
+/**
+ * @brief Get low power flag state 
+ * 
+ * @return uint8_t 
+ */
+uint8_t m8q_get_lp_flag(void); 
 
 
 /**

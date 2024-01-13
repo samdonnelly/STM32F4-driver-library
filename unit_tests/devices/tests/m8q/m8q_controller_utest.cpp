@@ -204,6 +204,7 @@ TEST(m8q_controller_test, m8q_controller_idle_state)
     m8q_set_idle_flag(); 
     m8q_controller(); 
     m8q_controller(); 
+    LONGS_EQUAL(CLEAR_BIT, m8q_get_lp_flag()); 
 
     // Get to the low power state (same state but passes through the low power enter 
     // state and sets the low power flag). 
@@ -211,6 +212,7 @@ TEST(m8q_controller_test, m8q_controller_idle_state)
     m8q_controller(); 
     m8q_controller(); 
     LONGS_EQUAL(M8Q_IDLE_STATE, m8q_get_state()); 
+    LONGS_EQUAL(SET_BIT, m8q_get_lp_flag()); 
 
     // Go to the low power exit state now that in low power mode. 
     m8q_clear_low_pwr_flag(); 
@@ -308,6 +310,7 @@ TEST(m8q_controller_test, m8q_controller_lp_exit_state)
     m8q_controller(); 
 
     LONGS_EQUAL(M8Q_LOW_PWR_EXIT_STATE, m8q_get_state()); 
+    LONGS_EQUAL(SET_BIT, m8q_get_lp_flag()); 
 
     //==================================================
 
@@ -323,6 +326,7 @@ TEST(m8q_controller_test, m8q_controller_lp_exit_state)
     m8q_controller(); 
 
     LONGS_EQUAL(M8Q_FAULT_STATE, m8q_get_state()); 
+    LONGS_EQUAL(CLEAR_BIT, m8q_get_lp_flag()); 
 
     //==================================================
 
@@ -348,6 +352,7 @@ TEST(m8q_controller_test, m8q_controller_lp_exit_state)
     m8q_controller(); 
 
     LONGS_EQUAL(M8Q_READ_STATE, m8q_get_state()); 
+    LONGS_EQUAL(CLEAR_BIT, m8q_get_lp_flag()); 
 
     //==================================================
 
