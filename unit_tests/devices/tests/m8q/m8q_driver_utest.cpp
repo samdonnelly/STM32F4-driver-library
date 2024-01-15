@@ -50,7 +50,7 @@ TEST_GROUP(m8q_driver)
             I2C_MOCK_INC_MODE_DISABLE); 
 
         // Initialize driver but don't send/check any messages 
-        m8q_init_dev(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, CLEAR); 
+        m8q_init(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, CLEAR); 
     }
 
     // Destructor 
@@ -119,7 +119,7 @@ TEST(m8q_driver, m8q_init_invalid_ptr)
 {
     I2C_TypeDef *I2C_LOCAL_FAKE = nullptr; 
 
-    M8Q_STATUS ptr_status = m8q_init_dev(
+    M8Q_STATUS ptr_status = m8q_init(
         I2C_LOCAL_FAKE, 
         &m8q_config_pkt[0][0], 
         M8Q_CONFIG_NUM_MSG, 
@@ -196,7 +196,7 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_invalid_msg_check)
 
     for (uint8_t i = CLEAR; i < NUM_NMEA_TEST_MSGS; i++)
     {
-        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, 
+        init_checks[i] = m8q_init(&I2C_FAKE, config_msgs[i], 1, 
                                       M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     }
 
@@ -228,7 +228,7 @@ TEST(m8q_driver, m8q_init_pubx_nmea_config_valid_msg_check)
 
     // Run the init and retrieve the driver formatted message that gets sent to the device. 
     // Check that the driver message and its length are correct. 
-    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
+    init_check = m8q_init(&I2C_FAKE, config_msg, 1, 
                               M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len, I2C_MOCK_INDEX_0); 
 
@@ -273,7 +273,7 @@ TEST(m8q_driver, m8q_init_std_nmea_config_invalid_msg_check)
 
     for (uint8_t i = CLEAR; i < NUM_NMEA_TEST_MSGS; i++)
     {
-        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, 
+        init_checks[i] = m8q_init(&I2C_FAKE, config_msgs[i], 1, 
                                       M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     }
 
@@ -307,7 +307,7 @@ TEST(m8q_driver, m8q_init_std_nmea_config_valid_msg_check)
 
     // Run the init and retrieve the driver formatted message that gets sent to the device. 
     // Check that the driver message and its length are correct. 
-    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
+    init_check = m8q_init(&I2C_FAKE, config_msg, 1, 
                               M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len, I2C_MOCK_INDEX_0); 
 
@@ -390,7 +390,7 @@ TEST(m8q_driver, m8q_init_ubx_config_invalid_msg_check)
 
     for (uint8_t i = CLEAR; i < (NUM_UBX_TEST_MSGS - 1); i++)
     {
-        init_checks[i] = m8q_init_dev(&I2C_FAKE, config_msgs[i], 1, 
+        init_checks[i] = m8q_init(&I2C_FAKE, config_msgs[i], 1, 
                                       M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     }
     
@@ -405,7 +405,7 @@ TEST(m8q_driver, m8q_init_ubx_config_invalid_msg_check)
     i2c_mock_set_read_data(stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data(device_stream, msg_len, I2C_MOCK_INDEX_1); 
 
-    init_checks[NUM_UBX_TEST_MSGS - 1] = m8q_init_dev(
+    init_checks[NUM_UBX_TEST_MSGS - 1] = m8q_init(
                                             &I2C_FAKE, config_msgs[NUM_UBX_TEST_MSGS - 1], 
                                             1, 
                                             M8Q_CONFIG_MAX_MSG_LEN, 
@@ -474,7 +474,7 @@ TEST(m8q_driver, m8q_init_ubx_config_valid_msg_check)
 
     // Run the init and retrieve the driver formatted message that gets sent to the device. 
     // Check that the driver message and its length are correct. 
-    init_check = m8q_init_dev(&I2C_FAKE, config_msg, 1, 
+    init_check = m8q_init(&I2C_FAKE, config_msg, 1, 
                               M8Q_CONFIG_MAX_MSG_LEN, NO_DATA_BUFF_LIMIT); 
     i2c_mock_get_write_data((void *)config_msg_check, &config_msg_check_len, I2C_MOCK_INDEX_0); 
 
@@ -516,7 +516,7 @@ TEST(m8q_driver, m8q_init_valid_config)
     
     //==================================================
 
-    M8Q_STATUS init_check = m8q_init_dev(
+    M8Q_STATUS init_check = m8q_init(
         &I2C_FAKE, 
         &m8q_config_pkt[0][0], 
         M8Q_CONFIG_NUM_MSG, 
@@ -539,8 +539,8 @@ TEST(m8q_driver, m8q_pin_init_invalid_ptr)
 {
     GPIO_TypeDef *GPIO_LOCAL_FAKE = nullptr; 
 
-    M8Q_STATUS low_pwr_init_check = m8q_pwr_pin_init_dev(GPIO_LOCAL_FAKE, PIN_0); 
-    M8Q_STATUS txr_init_check = m8q_txr_pin_init_dev(GPIO_LOCAL_FAKE, PIN_1); 
+    M8Q_STATUS low_pwr_init_check = m8q_pwr_pin_init(GPIO_LOCAL_FAKE, PIN_0); 
+    M8Q_STATUS txr_init_check = m8q_txr_pin_init(GPIO_LOCAL_FAKE, PIN_1); 
 
     LONGS_EQUAL(M8Q_INVALID_PTR, low_pwr_init_check); 
     LONGS_EQUAL(M8Q_INVALID_PTR, txr_init_check); 
@@ -552,8 +552,8 @@ TEST(m8q_driver, m8q_pin_init_init_ok)
 {
     GPIO_TypeDef GPIO_LOCAL_FAKE; 
 
-    M8Q_STATUS low_pwr_init_check = m8q_pwr_pin_init_dev(&GPIO_LOCAL_FAKE, PIN_0); 
-    M8Q_STATUS txr_init_check = m8q_txr_pin_init_dev(&GPIO_LOCAL_FAKE, PIN_1); 
+    M8Q_STATUS low_pwr_init_check = m8q_pwr_pin_init(&GPIO_LOCAL_FAKE, PIN_0); 
+    M8Q_STATUS txr_init_check = m8q_txr_pin_init(&GPIO_LOCAL_FAKE, PIN_1); 
 
     LONGS_EQUAL(M8Q_OK, low_pwr_init_check); 
     LONGS_EQUAL(M8Q_OK, txr_init_check); 
@@ -573,7 +573,7 @@ TEST(m8q_driver, m8q_read_stream_length_zero)
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data(stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
 
-    read_status = m8q_read_data_dev(); 
+    read_status = m8q_read_data(); 
 
     LONGS_EQUAL(M8Q_NO_DATA_AVAILABLE, read_status); 
 }
@@ -586,12 +586,12 @@ TEST(m8q_driver, m8q_read_stream_too_large)
     uint8_t stream_len[] = { 0x01, 0x04 }; 
 
     // Set the data buffer threshold 
-    m8q_init_dev(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, 200); 
+    m8q_init(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, 200); 
 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data(stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
 
-    read_status = m8q_read_data_dev(); 
+    read_status = m8q_read_data(); 
 
     LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, read_status); 
 }
@@ -608,7 +608,7 @@ TEST(m8q_driver, m8q_read_i2c_timeout)
     i2c_mock_set_read_data(stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
     // Set the stream data to read 
 
-    read_status = m8q_read_data_dev(); 
+    read_status = m8q_read_data(); 
 
     LONGS_EQUAL(M8Q_READ_FAULT, read_status); 
 }
@@ -633,12 +633,12 @@ TEST(m8q_driver, m8q_read_unknown_single_msg)
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len_0, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_msg_0, msg_len_0, I2C_MOCK_INDEX_1); 
-    read_status_0 = m8q_read_data_dev(); 
+    read_status_0 = m8q_read_data(); 
 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len_1, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_msg_1, msg_len_1, I2C_MOCK_INDEX_1); 
-    read_status_1 = m8q_read_data_dev(); 
+    read_status_1 = m8q_read_data(); 
 
     LONGS_EQUAL(M8Q_UNKNOWN_DATA, read_status_0); 
     LONGS_EQUAL(M8Q_UNKNOWN_DATA, read_status_1); 
@@ -664,12 +664,12 @@ TEST(m8q_driver, m8q_read_known_single_msg)
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len_0, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_msg_0, msg_len_0, I2C_MOCK_INDEX_1); 
-    read_status_0 = m8q_read_data_dev(); 
+    read_status_0 = m8q_read_data(); 
 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len_1, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_msg_1, msg_len_1, I2C_MOCK_INDEX_1); 
-    read_status_1 = m8q_read_data_dev(); 
+    read_status_1 = m8q_read_data(); 
 
     LONGS_EQUAL(M8Q_OK, read_status_0); 
     LONGS_EQUAL(M8Q_OK, read_status_1); 
@@ -715,7 +715,7 @@ TEST(m8q_driver, m8q_read_unknown_multi_msg)
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
 
-    read_status = m8q_read_data_dev(); 
+    read_status = m8q_read_data(); 
 
     LONGS_EQUAL(M8Q_UNKNOWN_DATA, read_status); 
 }
@@ -760,7 +760,7 @@ TEST(m8q_driver, m8q_read_known_multi_msg)
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
 
-    read_status = m8q_read_data_dev(); 
+    read_status = m8q_read_data(); 
 
     LONGS_EQUAL(M8Q_OK, read_status); 
 }
@@ -814,55 +814,55 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     //==================================================
     // Read data record - check for no data 
 
-    DOUBLES_EQUAL(CLEAR, m8q_get_position_lat_dev(), 0.000001); 
-    DOUBLES_EQUAL(CLEAR, m8q_get_position_lon_dev(), 0.000001); 
+    DOUBLES_EQUAL(CLEAR, m8q_get_position_lat(), 0.000001); 
+    DOUBLES_EQUAL(CLEAR, m8q_get_position_lon(), 0.000001); 
 
-    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_position_lat_str_dev(lat_str, BYTE_5)); 
-    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_position_lon_str_dev(lon_str, BYTE_5)); 
-    LONGS_EQUAL(M8Q_OK, m8q_get_position_lat_str_dev(lat_str, BYTE_11)); 
-    LONGS_EQUAL(M8Q_OK, m8q_get_position_lon_str_dev(lon_str, BYTE_12)); 
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_position_lat_str(lat_str, BYTE_5)); 
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_position_lon_str(lon_str, BYTE_5)); 
+    LONGS_EQUAL(M8Q_OK, m8q_get_position_lat_str(lat_str, BYTE_11)); 
+    LONGS_EQUAL(M8Q_OK, m8q_get_position_lon_str(lon_str, BYTE_12)); 
     STRCMP_EQUAL("0000000000", (char *)lat_str); 
     STRCMP_EQUAL("00000000000", (char *)lon_str); 
 
-    LONGS_EQUAL(CLEAR, m8q_get_position_NS_dev()); 
-    LONGS_EQUAL(CLEAR, m8q_get_position_EW_dev()); 
+    LONGS_EQUAL(CLEAR, m8q_get_position_NS()); 
+    LONGS_EQUAL(CLEAR, m8q_get_position_EW()); 
     
-    LONGS_EQUAL(CLEAR, m8q_get_position_navstat_dev()); 
-    LONGS_EQUAL(FALSE, m8q_get_position_navstat_lock_dev()); 
+    LONGS_EQUAL(CLEAR, m8q_get_position_navstat()); 
+    LONGS_EQUAL(FALSE, m8q_get_position_navstat_lock()); 
 
-    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_time_utc_time_dev(utc_time, BYTE_5)); 
-    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_time_utc_date_dev(utc_date, BYTE_5)); 
-    LONGS_EQUAL(M8Q_OK, m8q_get_time_utc_time_dev(utc_time, BYTE_10)); 
-    LONGS_EQUAL(M8Q_OK, m8q_get_time_utc_date_dev(utc_date, BYTE_7)); 
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_time_utc_time(utc_time, BYTE_5)); 
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_time_utc_date(utc_date, BYTE_5)); 
+    LONGS_EQUAL(M8Q_OK, m8q_get_time_utc_time(utc_time, BYTE_10)); 
+    LONGS_EQUAL(M8Q_OK, m8q_get_time_utc_date(utc_date, BYTE_7)); 
     STRCMP_EQUAL("", (char *)utc_time); 
     STRCMP_EQUAL("", (char *)utc_date); 
     
     //==================================================
 
     // Read data from the device so the data record gets updated 
-    read_status = m8q_read_data_dev(); 
+    read_status = m8q_read_data(); 
 
     //==================================================
     // Read data record - check for populated data 
 
     LONGS_EQUAL(M8Q_OK, read_status); 
 
-    DOUBLES_EQUAL(47.285220, m8q_get_position_lat_dev(), 0.000001); 
-    DOUBLES_EQUAL(-114.565253, m8q_get_position_lon_dev(), 0.000001); 
+    DOUBLES_EQUAL(47.285220, m8q_get_position_lat(), 0.000001); 
+    DOUBLES_EQUAL(-114.565253, m8q_get_position_lon(), 0.000001); 
 
-    m8q_get_position_lat_str_dev(lat_str, BYTE_11); 
-    m8q_get_position_lon_str_dev(lon_str, BYTE_12); 
+    m8q_get_position_lat_str(lat_str, BYTE_11); 
+    m8q_get_position_lon_str(lon_str, BYTE_12); 
     STRCMP_EQUAL("4717.11321", (char *)lat_str); 
     STRCMP_EQUAL("11433.91518", (char *)lon_str); 
 
-    LONGS_EQUAL(N_UP_CHAR, m8q_get_position_NS_dev()); 
-    LONGS_EQUAL(W_UP_CHAR, m8q_get_position_EW_dev()); 
+    LONGS_EQUAL(N_UP_CHAR, m8q_get_position_NS()); 
+    LONGS_EQUAL(W_UP_CHAR, m8q_get_position_EW()); 
     
-    LONGS_EQUAL(M8Q_NAVSTAT_G3, m8q_get_position_navstat_dev()); 
-    LONGS_EQUAL(TRUE, m8q_get_position_navstat_lock_dev()); 
+    LONGS_EQUAL(M8Q_NAVSTAT_G3, m8q_get_position_navstat()); 
+    LONGS_EQUAL(TRUE, m8q_get_position_navstat_lock()); 
 
-    m8q_get_time_utc_time_dev(utc_time, BYTE_10); 
-    m8q_get_time_utc_date_dev(utc_date, BYTE_7); 
+    m8q_get_time_utc_time(utc_time, BYTE_10); 
+    m8q_get_time_utc_date(utc_date, BYTE_7); 
     STRCMP_EQUAL("073731.00", (char *)utc_time); 
     STRCMP_EQUAL("091202", (char *)utc_date); 
     
@@ -897,14 +897,14 @@ TEST(m8q_driver, m8q_read_get_data_stream)
     // Check that a buffer that is too small won't be used 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
-    read_status = m8q_read_ds_dev(stream_buffer, msg_len); 
+    read_status = m8q_read_ds(stream_buffer, msg_len); 
     LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, read_status); 
 
     // Check that the stream was read 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
-    read_status = m8q_read_ds_dev(stream_buffer, msg_len + BYTE_1); 
+    read_status = m8q_read_ds(stream_buffer, msg_len + BYTE_1); 
     LONGS_EQUAL(M8Q_OK, read_status); 
     STRCMP_EQUAL((char *)device_stream, (char *)stream_buffer); 
 }
@@ -937,7 +937,7 @@ TEST(m8q_driver, m8q_read_flush_stream)
     memcpy((void *)&device_stream[msg0_len], (void *)device_msg1, msg1_len); 
 
     // Set the data buffer threshold 
-    m8q_init_dev(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, max_buff_size); 
+    m8q_init(&I2C_FAKE, &m8q_config_pkt[0][0], CLEAR, CLEAR, max_buff_size); 
 
     // The stream will only be read to 'max_buff_size' on each read when being flushed so 
     // the whole stream has to be spread out over multiple calls to the i2c (mock) driver. 
@@ -946,8 +946,8 @@ TEST(m8q_driver, m8q_read_flush_stream)
     i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
     i2c_mock_set_read_data((void *)stream_len_1, BYTE_2, I2C_MOCK_INDEX_2); 
 
-    read_status_0 = m8q_read_data_dev(); 
-    read_status_1 = m8q_read_data_dev(); 
+    read_status_0 = m8q_read_data(); 
+    read_status_1 = m8q_read_data(); 
 
     // Getting M8Q_NO_DATA_AVAILABLE as the status of the second read attempt confirms that 
     // the data stream flush/clear function works. An M8Q_READ_FAULT status would indicate 

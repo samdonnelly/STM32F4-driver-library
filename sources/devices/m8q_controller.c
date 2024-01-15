@@ -365,9 +365,9 @@ void m8q_read_state(
 {
     M8Q_STATUS read_status; 
 
-    if (m8q_get_tx_ready_dev())
+    if (m8q_get_tx_ready())
     {
-        read_status = m8q_read_data_dev(); 
+        read_status = m8q_read_data(); 
         m8q_device_trackers.device_status = (SET_BIT << read_status); 
     }
 }
@@ -385,7 +385,7 @@ void m8q_idle_state(
 void m8q_low_pwr_enter_state(
     m8q_trackers_t *m8q_device)
 {
-    m8q_set_low_pwr_dev(); 
+    m8q_set_low_pwr(); 
     m8q_device->low_pwr = SET_BIT; 
     m8q_device->low_pwr_enter = CLEAR_BIT; 
 }
@@ -400,7 +400,7 @@ void m8q_low_pwr_exit_state(
     static uint8_t exit_flag = CLEAR; 
 
     // Set the EXTINT pin high to exit the low power state 
-    m8q_clear_low_pwr_dev(); 
+    m8q_clear_low_pwr(); 
 
     // Give the device some time to wake up before accessing it. 
     if (tim_compare(m8q_device->timer, 
@@ -417,7 +417,7 @@ void m8q_low_pwr_exit_state(
     // the state. 
     if (exit_flag)
     {
-        read_status = m8q_read_ds_dev(&dummy_buff, BYTE_1); 
+        read_status = m8q_read_ds(&dummy_buff, BYTE_1); 
         m8q_device_trackers.device_status = (SET_BIT << read_status); 
         exit_flag = CLEAR; 
 

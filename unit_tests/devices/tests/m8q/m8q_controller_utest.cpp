@@ -50,8 +50,8 @@ TEST_GROUP(m8q_controller_test)
     void setup()
     {
         // Driver init 
-        m8q_pwr_pin_init_dev(&GPIO_LP, PIN_0); 
-        m8q_txr_pin_init_dev(&GPIO_TX, PIN_1); 
+        m8q_pwr_pin_init(&GPIO_LP, PIN_0); 
+        m8q_txr_pin_init(&GPIO_TX, PIN_1); 
 
         // Default the device pin state to low 
         gpio_mock_set_read_state(GPIO_LOW); 
@@ -123,17 +123,17 @@ TEST(m8q_controller_test, m8q_controller_read_state)
     i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
     i2c_mock_set_read_data((void *)device_msg0, msg0_len, I2C_MOCK_INDEX_1); 
 
-    m8q_init_dev(&I2C_FAKE_LOCAL, &m8q_config_pkt[0][0], CLEAR, CLEAR, CLEAR); 
+    m8q_init(&I2C_FAKE_LOCAL, &m8q_config_pkt[0][0], CLEAR, CLEAR, CLEAR); 
     m8q_controller_init(&TIMER_FAKE_LOCAL); 
 
-    DOUBLES_EQUAL(CLEAR, m8q_get_position_lat_dev(), 0.000001); 
+    DOUBLES_EQUAL(CLEAR, m8q_get_position_lat(), 0.000001); 
 
     m8q_controller(); 
     m8q_controller(); 
     gpio_mock_set_read_state(GPIO_HIGH); 
     m8q_controller(); 
 
-    DOUBLES_EQUAL(47.285220, m8q_get_position_lat_dev(), 0.000001); 
+    DOUBLES_EQUAL(47.285220, m8q_get_position_lat(), 0.000001); 
     
     //==================================================
 
