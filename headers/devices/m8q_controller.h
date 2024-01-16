@@ -18,7 +18,6 @@
 //=======================================================================================
 // Includes 
 
-// Drivers 
 #include "m8q_driver.h"
 #include "timers.h"
 
@@ -45,40 +44,6 @@ typedef enum {
 
 
 //=======================================================================================
-// Structures 
-
-/**
- * @brief M8Q controller trackers 
- */
-typedef struct m8q_trackers_s 
-{
-    // Peripherals 
-    TIM_TypeDef *timer;                        // Pointer to timer port used in controller 
-    
-    // Device and controller information 
-    m8q_states_t state;                        // Controller state 
-    uint16_t device_status;                    // Device status based on m8q_status_t 
-    uint16_t fault_code;                       // Fault code for the device/controller 
-    uint32_t clk_freq;                         // Timer clock frquency 
-    uint32_t time_cnt_total;                   // Time delay counter total count 
-    uint32_t time_cnt;                         // Time delay counter instance 
-    uint8_t  time_start;                       // Time delay counter start flag 
-
-    // State flags 
-    uint8_t init          : 1;                 // Ensures the init state is run 
-    uint8_t read          : 1;                 // Read flag --> for read ready state 
-    uint8_t idle          : 1;                 // Idle state trigger 
-    uint8_t low_pwr       : 1;                 // Low power state trigger 
-    uint8_t low_pwr_enter : 1;                 // Low power exit state trigger 
-    uint8_t low_pwr_exit  : 1;                 // Low power exit state trigger 
-    uint8_t reset         : 1;                 // Reset state trigger 
-}
-m8q_trackers_t; 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Data types 
 
 typedef uint16_t M8Q_FAULT_CODE; 
@@ -93,11 +58,17 @@ typedef m8q_states_t M8Q_STATE;
 /**
  * @brief M8Q controller initialization 
  * 
- * @details Initializes device trackers characteristics. Note that the timer passed to 
- *          this function should be a counter timer that can handle any needed 
- *          non-blocking delays of the controller. 
+ * @details Initializes the controller data record. This must be called once before using 
+ *          the main controller function. The timer passed here is used to create a 
+ *          non-blocking delay when exiting low power mode. This means the timer must be 
+ *          compatible with the non-blocking delay function. 
+ *          
+ *          Note that in order to use this controller, the driver must be configured to 
+ *          use the driver data record as well as the low power and TX ready pins. 
  * 
- * @param timer : timer used by the controller for non-blocking state delays 
+ * @see tim_compare 
+ * 
+ * @param timer : timer used for non-blocking delays 
  */
 void m8q_controller_init(
     TIM_TypeDef *timer); 
@@ -107,7 +78,16 @@ void m8q_controller_init(
  * @brief M8Q controller 
  * 
  * @details Main control function. This function contains the controllers state machine 
- *          that dictates the flow of the controller. 
+ *          that dictates the flow of the controller. It also checks for faults that 
+ *          occurred in the driver and controller. 
+ *          
+ *          The state of the controller can be changed using the flag setting functions. 
+ *          This function should be called continuously to make sure the controller can 
+ *          update it's state and keep operating the driver. The controller 
+ *          initialization function must be called before calling this. 
+ *          
+ *          Note that in order to use this controller, the driver must be configured to 
+ *          use the driver data record as well as the low power and TX ready pins. 
  */
 void m8q_controller(void); 
 
@@ -120,7 +100,13 @@ void m8q_controller(void);
 /**
  * @brief Set the read flag 
  * 
- * @details Clears the idle flag as well 
+ * @details Puts the controller into the read state when in the idle state, or when 
+ *          coming from the init and low power exit states. After running the controller 
+ *          initialization function the controller will default to the read state from 
+ *          the init state without needing to set this flag. In the read state the 
+ *          controller checks for the presence of data in the data stream using the TX 
+ *          ready pin. If there is data then it will be read and stored by the driver 
+ *          as needed. 
  */
 void m8q_set_read_flag(void); 
 
@@ -128,25 +114,33 @@ void m8q_set_read_flag(void);
 /**
  * @brief Set the idle flag 
  * 
- * @details Clears the read flag as well 
+ * @details Puts the controller into the idle state when in the read state, or when 
+ *          coming from the init and low power exit states. In the idle state the 
+ *          controller performs no actions. 
  */
 void m8q_set_idle_flag(void); 
 
 
 /**
- * @brief Enter the low power state 
+ * @brief Set low pwoer flag 
  * 
- * @details This flag will set the interrupt pin on the receiver low to enable low power 
- *          mode. In this mode the receiver does not send data and consumes very little 
- *          power. This flag will cause the state machine to enter the low power state. 
- *          Note that in order for this flag to work correctly, the proper pin needs to 
- *          be configires through the device initialization. 
+ * @details Puts the controller into the low power state when in either the read or 
+ *          idle states. Note that when the controller is in the low power state, the 
+ *          state will read as the idle state, the only difference being the low power 
+ *          flag will be set which can be read using the getter. The reason for this 
+ *          is that low power mode and idle mode both perform no action. 
+ *          
+ *          Setting the low power flag will cause the driver to set the device 
+ *          interrupt pin low. When the device is in low power mode it doesn't send 
+ *          data and it consumes small amounts of power. 
+ * 
+ * @see m8q_get_lp_flag
  */
 void m8q_set_low_pwr_flag(void); 
 
 
 /**
- * @brief Exit the low power state 
+ * @brief Clear the low power flag 
  * 
  * @details This flag is used to set the interrupt pin on the receiver high to bring the 
  *          receiver back to normal mode. When this flag is set the state machine will 

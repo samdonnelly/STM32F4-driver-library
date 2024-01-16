@@ -31,6 +31,40 @@
 
 
 //=======================================================================================
+// Structures 
+
+/**
+ * @brief M8Q controller trackers 
+ */
+typedef struct m8q_trackers_s 
+{
+    // Peripherals 
+    TIM_TypeDef *timer;                     // Pointer to timer port used in controller 
+    
+    // Device and controller information 
+    m8q_states_t state;                     // Controller state 
+    uint16_t device_status;                 // Device status based on m8q_status_t 
+    uint16_t fault_code;                    // Fault code for the device/controller 
+    uint32_t clk_freq;                      // Timer clock frquency 
+    uint32_t time_cnt_total;                // Time delay counter total count 
+    uint32_t time_cnt;                      // Time delay counter instance 
+    uint8_t  time_start;                    // Time delay counter start flag 
+
+    // State flags 
+    uint8_t init          : 1;              // Ensures the init state is run 
+    uint8_t read          : 1;              // Read flag --> for read ready state 
+    uint8_t idle          : 1;              // Idle state trigger 
+    uint8_t low_pwr       : 1;              // Low power state trigger 
+    uint8_t low_pwr_enter : 1;              // Low power exit state trigger 
+    uint8_t low_pwr_exit  : 1;              // Low power exit state trigger 
+    uint8_t reset         : 1;              // Reset state trigger 
+}
+m8q_trackers_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Function pointers 
 
 /**
@@ -450,7 +484,6 @@ void m8q_reset_state(
 {
     // Clear the fault codes 
     m8q_device->fault_code = CLEAR; 
-    // m8q_clear_status(); 
 }
 
 //=======================================================================================
