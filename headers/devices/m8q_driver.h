@@ -56,11 +56,7 @@ typedef enum {
     M8Q_READ_FAULT,           // A problem occurred while reading via I2C 
     M8Q_NO_DATA_AVAILABLE,    // The data stream is empty or does not have the needed info 
     M8Q_DATA_BUFF_OVERFLOW,   // Device data buffer (stream size) exceeds driver threshold 
-    M8Q_UNKNOWN_DATA,         // Unknown message stream data 
-
-    // To be deleted 
-    M8Q_UBX_MSG_CONV_FAIL,    // UBX message failed to convert to receiver format 
-    M8Q_UBX_MSG_CONV_SUCC     // UBX message successfully converted to receiver format 
+    M8Q_UNKNOWN_DATA          // Unknown message stream data 
 } m8q_status_t; 
 
 

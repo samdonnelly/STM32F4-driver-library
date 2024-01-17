@@ -84,12 +84,17 @@ typedef void (*m8q_state_functions_t)(
 /**
  * @brief Check for driver and controller faults 
  * 
- * @details 
+ * @details If the driver status is not M8Q_OK then this function is called. Here the 
+ *          status is filtered to find critical faults/statuses which get assigned to 
+ *          the controller fault code. If filtering produces no code then the status is 
+ *          ignored and the controller continues. If the code is set then the controller 
+ *          will eneter the fault state. 
  * 
- * @param m8q_device 
+ * @param m8q_device : controller tracking information 
  */
 void m8q_fault_check(
     m8q_trackers_t *m8q_device); 
+
 
 /**
  * @brief M8Q initialization state 
@@ -99,7 +104,7 @@ void m8q_fault_check(
  *          The init state shouldn't need to delay to allow the device to set up before reading 
  *          because the TX ready pin will be checked before attempting a read. But test this. 
  * 
- * @param m8q_device : device tracker that defines controller characteristics 
+ * @param m8q_device : controller tracking information 
  */
 void m8q_init_state(
     m8q_trackers_t *m8q_device); 
@@ -110,7 +115,7 @@ void m8q_init_state(
  * 
  * @details 
  * 
- * @param m8q_device 
+ * @param m8q_device : controller tracking information 
  */
 void m8q_read_state(
     m8q_trackers_t *m8q_device); 
@@ -121,7 +126,7 @@ void m8q_read_state(
  * 
  * @details 
  * 
- * @param m8q_device 
+ * @param m8q_device : controller tracking information 
  */
 void m8q_idle_state(
     m8q_trackers_t *m8q_device); 
@@ -132,7 +137,7 @@ void m8q_idle_state(
  * 
  * @details 
  * 
- * @param m8q_device 
+ * @param m8q_device : controller tracking information 
  */
 void m8q_low_pwr_enter_state(
     m8q_trackers_t *m8q_device); 
@@ -148,7 +153,7 @@ void m8q_low_pwr_enter_state(
  *          entered from the low power mode state and it can enter either the no fix, fault or 
  *          reset state. 
  * 
- * @param m8q_device : device tracker that defines controller characteristics 
+ * @param m8q_device : controller tracking information 
  */
 void m8q_low_pwr_exit_state(
     m8q_trackers_t *m8q_device); 
@@ -162,7 +167,7 @@ void m8q_low_pwr_exit_state(
  *          in place to set a fault code so this state is a placeholder for when that 
  *          functionaility becomes available. 
  * 
- * @param m8q_device : device tracker that defines controller characteristics 
+ * @param m8q_device : controller tracking information 
  */
 void m8q_fault_state(
     m8q_trackers_t *m8q_device); 
@@ -176,7 +181,7 @@ void m8q_fault_state(
  *          triggered by setting the reset flag and will immediately go to the init state once 
  *          done. A reset can be needed in the event of a fault of any kind. 
  * 
- * @param m8q_device : device tracker that defines controller characteristics 
+ * @param m8q_device : controller tracking information 
  */
 void m8q_reset_state(
     m8q_trackers_t *m8q_device); 
@@ -490,7 +495,7 @@ void m8q_reset_state(
 
 
 //=======================================================================================
-// User functions 
+// Setters and getters 
 
 // Set the read flag 
 void m8q_set_read_flag(void)

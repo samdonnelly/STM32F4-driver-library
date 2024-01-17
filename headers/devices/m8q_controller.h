@@ -95,7 +95,7 @@ void m8q_controller(void);
 
 
 //=======================================================================================
-// User functions 
+// Setters and getters 
 
 /**
  * @brief Set the read flag 
@@ -122,10 +122,10 @@ void m8q_set_idle_flag(void);
 
 
 /**
- * @brief Set low pwoer flag 
+ * @brief Set low power flag 
  * 
  * @details Puts the controller into the low power state when in either the read or 
- *          idle states. Note that when the controller is in the low power state, the 
+ *          idle states. Note that when the controller is in the low power state the 
  *          state will read as the idle state, the only difference being the low power 
  *          flag will be set which can be read using the getter. The reason for this 
  *          is that low power mode and idle mode both perform no action. 
@@ -142,11 +142,12 @@ void m8q_set_low_pwr_flag(void);
 /**
  * @brief Clear the low power flag 
  * 
- * @details This flag is used to set the interrupt pin on the receiver high to bring the 
- *          receiver back to normal mode. When this flag is set the state machine will 
- *          enter the low power exit state then proceed to the no-fix state once done. 
- *          Note that in order for this flag to work correctly, the proper pin needs to 
- *          be configires through the device initialization. 
+ * @details Removes the controller from the low power state. The controller will go to 
+ *          either the read or idle state but first it passes through a low power exit 
+ *          state which gives the device time to wake up and restart its data stream. 
+ * 
+ *          Clearing the low power flag will cause the driver to set the device 
+ *          interrupt pin high which wakes the device up. 
  */
 void m8q_clear_low_pwr_flag(void); 
 
@@ -154,10 +155,8 @@ void m8q_clear_low_pwr_flag(void);
 /**
  * @brief M8Q set reset flag 
  * 
- * @details Triggers the reset state for the controller which will re-initialize the 
- *          device and controller as needed. This flag will cause a reset regardless of 
- *          the controller state. This flag can be used whenever a reset is needed such 
- *          as in the event of a fault that cannot be cleared on its own. 
+ * @details Triggers the reset state if the controller is in the fault state. Resetting 
+ *          the system clears the fault code and starts the controller over again. 
  */
 void m8q_set_reset_flag(void); 
 
@@ -165,8 +164,7 @@ void m8q_set_reset_flag(void);
 /**
  * @brief M8Q get controller state 
  * 
- * @details Returns the state of the M8Q controller in the form of an integer defined by 
- *          the m8q_states_t enum. 
+ * @details Returns the current state of the controller. 
  * 
  * @see m8q_states_t
  * 
@@ -176,9 +174,14 @@ M8Q_STATE m8q_get_state(void);
 
 
 /**
- * @brief Get low power flag state 
+ * @brief Get low power flag 
  * 
- * @return uint8_t 
+ * @details Returns the state of the low power flag. The low power and idle states will 
+ *          both read as the idle state so when this flag is set it means the controller 
+ *          is in the low power state. Both the low power and idle states perform no 
+ *          action so they share a state. 
+ * 
+ * @return uint8_t : low power flag state 
  */
 uint8_t m8q_get_lp_flag(void); 
 
@@ -186,9 +189,16 @@ uint8_t m8q_get_lp_flag(void);
 /**
  * @brief M8Q get fault code 
  * 
- * @details Returns of the fault code of the device/controller. Note that there are 
- *          currently no mechanisms in place to set fault codes. This is here as a 
- *          placeholder for future development. 
+ * @details Returns of the fault code of the device/controller. This code will only be 
+ *          non-zero when in the fault state. The fault code is defined as follows: 
+ *          - Bit 0: Not used 
+ *          - Bit 1: Invalid pointer 
+ *          - Bit 2: Not used 
+ *          - Bit 3: Driver write fault 
+ *          - Bit 4: Driver read fault 
+ *          - Bits 5-15: Not currently used 
+ * 
+ * @see m8q_status_t 
  * 
  * @return M8Q_FAULT_CODE : device/controller fault code 
  */
