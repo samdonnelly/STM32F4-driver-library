@@ -16,6 +16,8 @@
 // Includes 
 
 #include "m8q_driver.h"
+#include "i2c_comm.h"
+#include "tools.h"
 
 //=======================================================================================
 
@@ -41,74 +43,15 @@
 // UBX message format 
 #define UBX_CLASS_NUM 14          // Number of UBX classes 
 #define UBX_CLASS_LEN 3           // Maximum length of a UBX class 
-#define UBX_CFG_INDEX 4           // 
+#define UBX_CFG_INDEX 4           // Location of CFG message info in ubx_msg_class 
 
 // UBX ACK class message 
-#define ACK_ACK 0x0501            // 
-#define ACK_NAK 0x0500            // 
-#define ACK_TIMEOUT 10            // 
+#define ACK_ACK 0x0501            // ACK-ACK message class and ID 
+#define ACK_NAK 0x0500            // ACK-NAK message class and ID 
+#define ACK_TIMEOUT 10            // ACK message check counter before timeout 
 
 // Other 
-#define EOM_BYTE 1                // 
-
-//==================================================
-// No longer used (to be deleted) 
-
-// Device configuration 
-#define M8Q_USER_CONFIG 0                // Sets the code to user config mode 
-
-// M8Q messages 
-#define M8Q_MSG_MAX_LEN 150              // Message buffer that can hold any message
-#define M8Q_NO_DATA     0xff             // Return value for an invalid NMEA data stream 
-#define M8Q_PYL_MAX_LEN 100              // Message payload buffer to store any apyload length 
-
-// NMEA message format 
-#define M8Q_NMEA_END_PAY     0x2A        // 0x2A == '*' --> indicates end of NMEA message payload 
-#define M8Q_NMEA_CS_LEN      2           // Number of characters in NMEA message checksum 
-#define M8Q_PUBX_ID_OFST     6           // Starting position of PUBX message ID in message string 
-
-// NMEA messages 
-#define M8Q_NMEA_RATE_ARGS     7         // Number of data fields in RATE 
-#define M8Q_NMEA_CONFIG_ARGS   5         // Number of data fields in CONFIG 
-#define M8Q_NMEA_POS_ARGS      19        // Number of data fields in POSITION 
-#define M8Q_NMEA_POS_ID        48        // "0" == 48 --> Message ID for POSITION 
-#define M8Q_NMEA_SV_ID         51        // "3" == 51 --> Message ID for SVSTATUS 
-#define M8Q_NMEA_TIME_ARGS     8         // Number of data fields in TIME 
-#define M8Q_NMEA_TIME_ID       52        // "4" == 52 --> Message ID for TIME 
-#define M8Q_NMEA_PUBX_ARG_OFST 9         // First data field offset for PUBX messages 
-
-// NMEA POSITION coordinate calculation 
-#define M8Q_LAT_LEN 10                   // Latitude message length 
-#define M8Q_LON_LEN 11                   // Longitude message length 
-#define M8Q_LAT_DEG_INT_LEN 2            // Number of digits for integer portion of latitude 
-#define M8Q_LON_DEG_INT_LEN 3            // Number of digits for integer portion of longitude 
-#define M8Q_MIN_DIGIT_INDEX 6            // Index of scaled minute portion of coordinate 
-#define M8Q_MIN_FRAC_LEN 5               // Length of fractional part of minutes 
-#define M8Q_DIR_SOUTH 0x53               // Value of South from the North/South indicator 
-#define M8Q_DIR_WEST 0x57                // Value of West from the East/West indicator 
-#define M8Q_MIN_TO_DEG 60                // Used to convert coordinate minutes to degrees 
-#define M8Q_COO_LEN 6                    // Length of integer and fractional parts of coordinates 
-
-// UBX message format 
-#define M8Q_UBX_MSG_FMT_LEN 4            // Message format length: CLASS + ID + LENGTH 
-#define M8Q_UBX_LENGTH_LEN  2            // LENGTH field length 
-#define M8Q_UBX_HEADER_LEN  6            // Number of bytes before the payload 
-#define M8Q_UBX_CS_LEN      2            // Number of bytes in a UBC message checksum 
-
-#define M8Q_UBX_CLASS_OFST  2            // Class character offset 
-#define M8Q_UBX_ID_OFST     3            // Message ID character offset 
-#define M8Q_UBX_LENGTH_OFST 4            // LENGTH field offset from start of UBX message frame 
-
-// UBX messages 
-#define M8Q_UBX_ACK_CLASS 0x05           // Class of ACK message 
-#define M8Q_UBX_ACK_ID    0x01           // ID of ACK message 
-#define M8Q_TIME_CHAR_LEN 9              // Number of characters for the time in NMEA messages 
-#define M8Q_DATE_CHAR_LEN 6              // Number of characters for the date in NMEA messages 
-
-#define UBX_SYNC1 0xB5                   // 0xB5 --> UBX protocol SYNC CHAR 1 
-#define UBX_SYNC1_HI 0x42                // 'B' --> SYNC CHAR 1 (0xB5) high nibble character 
-
-//==================================================
+#define EOM_BYTE 1                // End of memory byte - helps find size of message fields 
 
 //=======================================================================================
 
@@ -116,9 +59,7 @@
 //=======================================================================================
 // Enums 
 
-/**
- * @brief M8Q message type 
- */
+// M8Q message type 
 typedef enum {
     M8Q_MSG_INVALID, 
     M8Q_MSG_NMEA, 
@@ -127,9 +68,7 @@ typedef enum {
 } m8q_msg_type_t; 
 
 
-/**
- * @brief Number of fields in an NMEA message 
- */
+// Number of fields in an NMEA message 
 typedef enum {
     NMEA_NUM_FIELDS_POSITION = 19, 
     NMEA_NUM_FIELDS_SVSTATUS = 7, 
@@ -193,7 +132,7 @@ typedef struct m8q_nmea_pos_s
     uint8_t numSvs  [BYTE_2];     // Number of satellites used in the navigation solution 
     uint8_t res     [BYTE_1];     // Reserved --> 0 
     uint8_t DR      [BYTE_1];     // DR used 
-    uint8_t eom     [BYTE_1];     // End of memory --> used for parsing function only 
+    uint8_t eom     [BYTE_1];     // End of memory --> used for finding field length 
 } 
 m8q_nmea_pos_t;
 
@@ -209,7 +148,7 @@ typedef struct m8q_nmea_time_s
     uint8_t clkBias  [BYTE_8];     // Receiver clock bias 
     uint8_t clkDrift [BYTE_10];    // Receiver clock drift 
     uint8_t tpGran   [BYTE_3];     // Time pulse granularity 
-    uint8_t eom      [BYTE_1];     // End of memory --> used for parsing function only 
+    uint8_t eom      [BYTE_1];     // End of memory --> used for finding field length 
 } 
 m8q_nmea_time_t;
 
@@ -222,46 +161,23 @@ m8q_nmea_time_t;
 // Driver data record 
 typedef struct m8q_driver_data_s
 {
-    //==================================================
-    // New 
-
     // Messages 
-    m8q_nmea_pos_t pos_data;      // POSITION message 
-    m8q_nmea_time_t time_data;    // TIME message 
-    uint8_t ack_msg_count;        // ACK-ACK message counter 
-    uint8_t nak_msg_count;        // ACK-NAK message counter 
+    m8q_nmea_pos_t pos_data;       // POSITION message 
+    m8q_nmea_time_t time_data;     // TIME message 
+    uint8_t ack_msg_count;         // ACK-ACK message counter 
+    uint8_t nak_msg_count;         // ACK-NAK message counter 
 
-    // Communication 
+    // Peripherals 
     I2C_TypeDef *i2c; 
     GPIO_TypeDef *pwr_save_gpio; 
     GPIO_TypeDef *tx_ready_gpio; 
 
     // Pins 
-    pin_selector_t pwr_save;      // Low power mode 
-    pin_selector_t tx_ready;      // TX-Ready 
+    pin_selector_t pwr_save;       // Interrupt pin (for low power mode) 
+    pin_selector_t tx_ready;       // TX-Ready pin 
 
     // Other 
     uint16_t data_buff_limit; 
-
-    //==================================================
-    
-    //==================================================
-    // Old (to be deleted) 
-
-    // Messages 
-    uint8_t ubx_resp[M8Q_MSG_MAX_LEN];        // Buffer to store incoming UBX messages 
-    uint8_t nmea_resp[M8Q_MSG_MAX_LEN];       // Buffer to store incoming NMEA messages 
-
-    // Communications 
-    GPIO_TypeDef *gpio; 
-
-    // Status info 
-    // 'status' --> bit 0: i2c status (see i2c_status_t) 
-    //          --> bits 1-12: driver faults (see status getter) 
-    //          --> bits 13-15: not used 
-    uint16_t status; 
-    
-    //==================================================
 } 
 m8q_driver_data_t; 
 
@@ -441,12 +357,25 @@ static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] =
 // Prototypes 
 
 /**
- * @brief Flush/clear the data stream - no data stored or returned 
+ * @brief Flush/clear the M8Q data stream - no data stored or returned 
  * 
- * @details 
+ * @details Reads all the data in the device stream but doesn't store any of it. This 
+ *          function is used when the data stream size is larger than the maximum 
+ *          specified buffer size. The data stream size that can be read from the device 
+ *          indicates the combined size of all messages, not the number or length of 
+ *          individual messages, meaning you can't choose to read individual messages 
+ *          using the data stream length alone. Because of this, you must read the whole 
+ *          data stream, and if the available buffer is too small then it's likely 
+ *          message data will be lost reading to the length of the buffer. Instead, 
+ *          the data stream is purposely flushed or cleared so it will be zero and 
+ *          reading can continue. 
+ *          
+ *          Note that if this function successfully reads the data stream then an 
+ *          overflow status will be returned. This is for use by the parent function 
+ *          to indicate to a user that data was flushed. 
  * 
- * @param stream_len 
- * @return M8Q_STATUS 
+ * @param stream_len : length of the data stream 
+ * @return M8Q_STATUS : status of the read operation 
  */
 M8Q_STATUS m8q_flush_ds(
     uint16_t stream_len); 
@@ -742,7 +671,7 @@ uint8_t ubx_config_byte_convert(
 
 
 //=======================================================================================
-// Initialization (public) - dev 
+// Initialization 
 
 // Device initialization 
 M8Q_STATUS m8q_init(
@@ -867,7 +796,7 @@ M8Q_STATUS m8q_txr_pin_init(
 
 
 //=======================================================================================
-// User functions (public) 
+// User functions 
 
 // Read the data stream and sort/store relevant message data 
 M8Q_STATUS m8q_read_data(void)
@@ -1254,9 +1183,9 @@ M8Q_STATUS m8q_get_time_utc_date(
 
 
 //=======================================================================================
-// Read and write functions (private) 
+// Read and write functions 
 
-// Flush/clear the data stream - no data stored or returned 
+// Flush/clear the data stream 
 M8Q_STATUS m8q_flush_ds(
     uint16_t stream_len)
 {
@@ -1398,7 +1327,7 @@ I2C_STATUS m8q_start_trans(
 
 
 //=======================================================================================
-// Message processing (private) 
+// Message processing 
 
 // Message identification 
 M8Q_MSG_TYPE m8q_msg_id(
@@ -1659,7 +1588,7 @@ void m8q_ubx_msg_parse(
 
 
 //=======================================================================================
-// Device configuration - config message formatting and writing (private) 
+// Device configuration - config message formatting and writing 
 
 // Send NMEA configuration messages 
 M8Q_STATUS m8q_nmea_config(

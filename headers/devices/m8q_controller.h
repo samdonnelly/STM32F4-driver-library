@@ -84,7 +84,7 @@ void m8q_controller_init(
  *          The state of the controller can be changed using the flag setting functions. 
  *          This function should be called continuously to make sure the controller can 
  *          update it's state and keep operating the driver. The controller 
- *          initialization function must be called before calling this. 
+ *          initialization function must be called before starting to use this. 
  *          
  *          Note that in order to use this controller, the driver must be configured to 
  *          use the driver data record as well as the low power and TX ready pins. 
@@ -98,7 +98,7 @@ void m8q_controller(void);
 // Setters and getters 
 
 /**
- * @brief Set the read flag 
+ * @brief Set M8Q controller the read flag 
  * 
  * @details Puts the controller into the read state when in the idle state, or when 
  *          coming from the init and low power exit states. After running the controller 
@@ -112,7 +112,7 @@ void m8q_set_read_flag(void);
 
 
 /**
- * @brief Set the idle flag 
+ * @brief Set M8Q controller the idle flag 
  * 
  * @details Puts the controller into the idle state when in the read state, or when 
  *          coming from the init and low power exit states. In the idle state the 
@@ -122,7 +122,7 @@ void m8q_set_idle_flag(void);
 
 
 /**
- * @brief Set low power flag 
+ * @brief Set M8Q controller low power flag 
  * 
  * @details Puts the controller into the low power state when in either the read or 
  *          idle states. Note that when the controller is in the low power state the 
@@ -140,7 +140,7 @@ void m8q_set_low_pwr_flag(void);
 
 
 /**
- * @brief Clear the low power flag 
+ * @brief Clear M8Q controller the low power flag 
  * 
  * @details Removes the controller from the low power state. The controller will go to 
  *          either the read or idle state but first it passes through a low power exit 
@@ -153,7 +153,7 @@ void m8q_clear_low_pwr_flag(void);
 
 
 /**
- * @brief M8Q set reset flag 
+ * @brief Set M8Q controller reset flag 
  * 
  * @details Triggers the reset state if the controller is in the fault state. Resetting 
  *          the system clears the fault code and starts the controller over again. 
@@ -162,7 +162,7 @@ void m8q_set_reset_flag(void);
 
 
 /**
- * @brief M8Q get controller state 
+ * @brief Get M8Q controller controller state 
  * 
  * @details Returns the current state of the controller. 
  * 
@@ -174,7 +174,7 @@ M8Q_STATE m8q_get_state(void);
 
 
 /**
- * @brief Get low power flag 
+ * @brief Get M8Q controller low power flag 
  * 
  * @details Returns the state of the low power flag. The low power and idle states will 
  *          both read as the idle state so when this flag is set it means the controller 
@@ -187,7 +187,7 @@ uint8_t m8q_get_lp_flag(void);
 
 
 /**
- * @brief M8Q get fault code 
+ * @brief Get M8Q controller fault code 
  * 
  * @details Returns of the fault code of the device/controller. This code will only be 
  *          non-zero when in the fault state. The fault code is defined as follows: 

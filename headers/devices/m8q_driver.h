@@ -26,28 +26,16 @@
 //=======================================================================================
 // Includes
 
-// Toolkit 
 #include "stm32f411xe.h"
-#include "tools.h"
-
-// Communication drivers 
-#include "i2c_comm.h"
 #include "gpio_driver.h"
 
 //=======================================================================================
 
 
 //=======================================================================================
-// Macros 
-//=======================================================================================
-
-
-//=======================================================================================
 // Enums 
 
-/**
- * @brief M8Q driver status 
- */
+// M8Q driver status 
 typedef enum {
     M8Q_OK,                   // No problems with the M8Q operation 
     M8Q_INVALID_PTR,          // Invalid pointer provided to function 
@@ -60,9 +48,7 @@ typedef enum {
 } m8q_status_t; 
 
 
-/**
- * @brief M8Q navigation statuses 
- */
+// M8Q navigation statuses 
 typedef enum {
     M8Q_NAVSTAT_NF = 0x4E46,   // No Fix 
     M8Q_NAVSTAT_DR = 0x4452,   // Dead reckoning only solution 
@@ -86,7 +72,7 @@ typedef uint8_t M8Q_STATUS;
 
 
 //=======================================================================================
-// Initialization - dev 
+// Initialization 
 
 /**
  * @brief 
@@ -143,7 +129,7 @@ M8Q_STATUS m8q_txr_pin_init(
 
 
 //=======================================================================================
-// User functions - dev 
+// User functions 
 
 /**
  * @brief Read the data stream size 
