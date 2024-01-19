@@ -382,12 +382,27 @@ M8Q_STATUS m8q_flush_ds(
 
 
 /**
- * @brief Read the whole data stream and store the data 
+ * @brief Read the M8Q data stream and store the data 
  * 
- * @details 
+ * @details This function reads the whole data stream from the device, then identifies 
+ *          each message in the stream and calls the appropriate message parsing function 
+ *          as needed. If the message does not match any known message types then the 
+ *          function returns an unknown data status. This function is called by 
+ *          m8q_read_data if the data stream size is within the maximum allowed buffer 
+ *          size. 
+ *          
+ *          This function is separate from m8q_read_data because a stack allocated buffer 
+ *          the size of the data stream needs to be created but can only be done once the 
+ *          data stream size is known. m8q_read_data reads the stream size and passes it 
+ *          to this function which can then create the buffer. 
  * 
- * @param stream_len 
- * @return M8Q_STATUS 
+ * @see m8q_read_data 
+ * @see m8q_msg_id 
+ * @see m8q_nmea_msg_parse 
+ * @see m8q_ubx_msg_parse 
+ * 
+ * @param stream_len : length of the data stream 
+ * @return M8Q_STATUS : status of the read operation 
  */
 M8Q_STATUS m8q_read_sort_ds(
     uint16_t stream_len); 
@@ -396,11 +411,13 @@ M8Q_STATUS m8q_read_sort_ds(
 /**
  * @brief Read data from the device 
  * 
- * @details 
+ * @details Reads data of a given size from the device using the I2C driver functions 
+ *          and stores it in the buffer. Called by numerous functions that require 
+ *          data from the device. 
  * 
- * @param data_buff 
- * @param data_size 
- * @return I2C_STATUS 
+ * @param data_buff : buffer to store the read data 
+ * @param data_size : data size to be read from the device 
+ * @return I2C_STATUS : status of the I2C read operation 
  */
 I2C_STATUS m8q_read(
     uint8_t *data_buff, 
@@ -410,11 +427,15 @@ I2C_STATUS m8q_read(
 /**
  * @brief Send a formatted message to the device 
  * 
- * @details 
+ * @details Used specifically for sending messages to the device. Stops the I2C 
+ *          transmission after sending the data. Uses the m8q_write function to 
+ *          send the message. 
  * 
- * @param msg 
- * @param msg_size 
- * @return M8Q_STATUS 
+ * @see m8q_write 
+ * 
+ * @param msg : buffer that contains the formatted message to send 
+ * @param msg_size : size of the message being sent 
+ * @return M8Q_STATUS : status of the write operation 
  */
 M8Q_STATUS m8q_write_msg(
     const void *msg, 
@@ -424,11 +445,13 @@ M8Q_STATUS m8q_write_msg(
 /**
  * @brief Send messages to the device 
  * 
- * @details 
+ * @details Writes data of a given size from the buffer to the device using the I2C 
+ *          driver functions. Called when needing to specify the device register 
+ *          address or when sending a message to the device. 
  * 
- * @param data 
- * @param data_size 
- * @return I2C_STATUS 
+ * @param data : buffer that contains the data to send 
+ * @param data_size : size of the data to send 
+ * @return I2C_STATUS : status of the I2C write operation 
  */
 I2C_STATUS m8q_write(
     const uint8_t *data, 
@@ -438,10 +461,14 @@ I2C_STATUS m8q_write(
 /**
  * @brief Start an I2C transmission 
  * 
- * @details 
+ * @details Starts an I2C transmission which is used by both read and write operations. 
+ *          The offset is used in the I2C address used to set up either a read or write 
+ *          operation. 
  * 
- * @param offset 
- * @return I2C_STATUS 
+ * @see i2c_rw_offset_t 
+ * 
+ * @param offset : read or write offset to be used with the device I2C address 
+ * @return I2C_STATUS : status of the I2C operations 
  */
 I2C_STATUS m8q_start_trans(
     i2c_rw_offset_t offset); 
