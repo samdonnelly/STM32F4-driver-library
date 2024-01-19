@@ -357,7 +357,7 @@ static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] =
 // Prototypes 
 
 /**
- * @brief Flush/clear the M8Q data stream - no data stored or returned 
+ * @brief Flush/clear the M8Q data stream 
  * 
  * @details Reads all the data in the device stream but doesn't store any of it. This 
  *          function is used when the data stream size is larger than the maximum 
@@ -443,7 +443,7 @@ M8Q_STATUS m8q_write_msg(
 
 
 /**
- * @brief Send messages to the device 
+ * @brief Write data to the device 
  * 
  * @details Writes data of a given size from the buffer to the device using the I2C 
  *          driver functions. Called when needing to specify the device register 
@@ -462,7 +462,7 @@ I2C_STATUS m8q_write(
  * @brief Start an I2C transmission 
  * 
  * @details Starts an I2C transmission which is used by both read and write operations. 
- *          The offset is used in the I2C address used to set up either a read or write 
+ *          The offset is used in the I2C address to set up either a read or write 
  *          operation. 
  * 
  * @see i2c_rw_offset_t 
@@ -477,11 +477,21 @@ I2C_STATUS m8q_start_trans(
 /**
  * @brief Message identification 
  * 
- * @details 
+ * @details Takes in either an incoming or outgoing message and attempts to identify 
+ *          the type of message based on the message processing information above. 
+ *          This helps to determine if a message is valid before using it but also 
+ *          provides message information if there is a match. For example, for 
+ *          incoming NMEA messages, if the message has a data record in the driver 
+ *          then a pointer to the data record is set. 
+ *          
+ *          For NMEA messages, the byte at which the message payload starts changes 
+ *          depending on if it's a PUBX or standard message. This offset is set in 
+ *          msg_offset if the message type is NMEA. 
+ *          
  * 
- * @param msg 
- * @param msg_offset 
- * @return M8Q_MSG_TYPE 
+ * @param msg : buffer that stores the message 
+ * @param msg_offset : Byte at which to start processing a valid message 
+ * @return M8Q_MSG_TYPE : returns the message type - see m8q_msg_type_t 
  */
 M8Q_MSG_TYPE m8q_msg_id(
     const char *msg, 
@@ -491,15 +501,18 @@ M8Q_MSG_TYPE m8q_msg_id(
 /**
  * @brief Message identification helper function 
  * 
- * @details 
+ * @details Used exclusively by m8q_msg_id to help compare a message against message 
+ *          types. If a match is found then this function returns true. 
  * 
- * @param msg 
- * @param ref_msg 
- * @param num_compare 
- * @param max_size 
- * @param offset 
- * @param msg_index 
- * @return uint8_t 
+ * @see m8q_msg_id 
+ * 
+ * @param msg : buffer that contains the messages 
+ * @param ref_msg : buffer that stores the message type to check the message against 
+ * @param num_compare : number of message types to check 
+ * @param max_size : size of the data type that stores ref_msg - used for incrementing 
+ * @param offset : point in the message at which to start the comparison (bytes) 
+ * @param msg_index : index of the reference message where a match was found 
+ * @return uint8_t : returns true for match, false otherwise 
  */
 uint8_t m8q_msg_id_check(
     const char *msg, 
@@ -513,13 +526,21 @@ uint8_t m8q_msg_id_check(
 /**
  * @brief Incoming NMEA message parse 
  * 
- * @details 
+ * @details If an incoming NMEA message is identified in the data stream then this 
+ *          function is called to process the message. If the message does not have a 
+ *          data record within the driver then no processing is done but the message 
+ *          length is counted to update the data stream index. If there is a data 
+ *          record then the message payload is sorted and stored in the record 
+ *          so it can be used by the driver getter functions. 
  * 
- * @param nmea_msg 
- * @param msg_index 
- * @param stream_len 
- * @param arg_num 
- * @param data 
+ * @see m8q_read_sort_ds 
+ * @see m8q_nmea_msg_count 
+ * 
+ * @param nmea_msg : buffer for the data stream that points to the NMEA message 
+ * @param msg_index : data stream index - gets updated with processing 
+ * @param stream_len : max length of the data stream 
+ * @param arg_num : number of message payload parameters 
+ * @param data : pointer to the data record buffer that can store message data 
  */
 void m8q_nmea_msg_parse(
     const uint8_t *nmea_msg, 
@@ -532,11 +553,16 @@ void m8q_nmea_msg_parse(
 /**
  * @brief Incoming NMEA message counter 
  * 
- * @details 
+ * @details Counts the remaining length of the NMEA message being processed so the 
+ *          data stream index can be updated to the next message. Used only by 
+ *          m8q_nmea_msg_parse to count a message with no data record or count 
+ *          the remaining bytes after the payload of a message with a data record. 
  * 
- * @param nmea_msg 
- * @param stream_index 
- * @param stream_len 
+ * @see m8q_nmea_msg_parse 
+ * 
+ * @param nmea_msg : buffer for the data stream that points to the NMEA message 
+ * @param stream_index : data stream index 
+ * @param stream_len : max length of the data stream 
  */
 void m8q_nmea_msg_count(
     const uint8_t *nmea_msg, 
@@ -547,11 +573,15 @@ void m8q_nmea_msg_count(
 /**
  * @brief Incoming UBX message parse 
  * 
- * @details 
+ * @details If an incoming UBX message is identified in the data stream then this 
+ *          function is called to process the message. Right now the only processing 
+ *          done by this function is checking if the message is an ACK or NAK message 
+ *          as a confirmation of CFG messages sent to the device. All UBX messages 
+ *          have their length counted so the data stream index can be updated. 
  * 
- * @param ubx_msg 
- * @param stream_index 
- * @param stream_len 
+ * @param ubx_msg : buffer for the data stream that points to the UBX message 
+ * @param stream_index : data stream index 
+ * @param stream_len : max length of the data stream 
  */
 void m8q_ubx_msg_parse(
     const uint8_t *ubx_msg, 
@@ -562,27 +592,43 @@ void m8q_ubx_msg_parse(
 /**
  * @brief Send NMEA configuration messages 
  * 
- * @details 
+ * @details Takes in an NMEA configuration message from the application level, checks 
+ *          the formatting of the message, then finds the checksum and terminates the 
+ *          message before sending it to the device. If the message is not formatted 
+ *          correctly then the function will abort and the message will not be sent. 
+ *          The purpose of this function is to ensure the device is not set up 
+ *          incorrectly due to an inproper message format. See m8q_send_msg for more 
+ *          info on formatted messages. 
+ *          
+ *          Note: In this context "configuration message" is not referring to CFG 
+ *                messages specifically. It's simply referring to messages from the 
+ *                user that get sent to the device that set up the device as needed, 
+ *                which could include CFG messages. 
  * 
- * @param msg 
- * @param num_args 
- * @param field_offset 
- * @param msg_len 
+ * @see m8q_send_msg 
+ * 
+ * @param config_msg : buffer that contains the message 
+ * @param num_args : number of parameters in the message payload 
+ * @param field_offset : message payload offset from beginning of message 
+ * @param max_msg_len : max possible length of the message 
  */
 M8Q_STATUS m8q_nmea_config(
     const char *config_msg, 
     uint8_t num_args, 
     uint8_t field_offset, 
-    uint8_t msg_len); 
+    uint8_t max_msg_len); 
 
 
 /**
  * @brief NMEA message checksum calculation 
  * 
- * @details 
+ * @details Calculates and returns the NMEA message checksum for m8q_nmea_config. Refer 
+ *          to the device interface manual for details on how the checksum is determined. 
  * 
- * @param msg 
- * @return uint16_t 
+ * @see m8q_nmea_config 
+ * 
+ * @param msg : buffer that contains the NMEA message 
+ * @return uint16_t : 2-byte checksum 
  */
 uint16_t m8q_nmea_checksum(
     const char *msg); 
@@ -591,10 +637,27 @@ uint16_t m8q_nmea_checksum(
 /**
  * @brief Send UBX configuration messages 
  * 
- * @details 
+ * @details Takes in a UBX configuration message from the application level, checks the 
+ *          formatting of the message, converts the message data then finds the checksum 
+ *          and terminates the message before sending it to the device. If the message 
+ *          is not formatted correctly then the function will abort and the message will 
+ *          not be sent. The purpose of this function is to ensure the device is not set 
+ *          up incorrectly due to an inproper message format. 
  * 
- * @param input_msg 
- * @param max_msg_len 
+ *          Note that NMEA messages use ASCII representation but UBX messages do not. UBX 
+ *          configuration messages are formatted in ASCII form so they're easier for the 
+ *          user to read and write. Before sending the message, the message must be 
+ *          converted from ASCII. See m8q_send_msg for more info on formatted messages. 
+ *          
+ *          Note: In this context "configuration message" is not referring to CFG 
+ *                messages specifically. It's simply referring to messages from the 
+ *                user that get sent to the device that set up the device as needed, 
+ *                which could include CFG messages. 
+ * 
+ * @see m8q_send_msg 
+ * 
+ * @param config_msg : buffer that contains the message 
+ * @param max_msg_len : max possible length of the message 
  */
 M8Q_STATUS m8q_ubx_config(
     const char *config_msg, 
@@ -602,25 +665,33 @@ M8Q_STATUS m8q_ubx_config(
 
 
 /**
- * @brief Check for a correctly formatted message ID input 
+ * @brief UBX message ID check 
  * 
- * @details 
+ * @details Checks that the UBX message ID is formatted correctly. Returns true if it is. 
  * 
- * @param msg_id 
- * @return uint8_t 
+ * @see m8q_ubx_config 
+ * @see ubx_config_field_check 
+ * 
+ * @param msg_id : buffer that contains the message ID 
+ * @return uint8_t : status of the check - true if the ID is correctly formatted 
  */
 uint8_t ubx_config_id_check(
     const char *msg_id); 
 
 
 /**
- * @brief Check for a correctly formatted message length input and get the length value 
+ * @brief UBX message payload length check 
  * 
- * @details 
+ * @details Checks that the UBX message payload length field is formatted correctly then 
+ *          converts the string to a length value and stores it in 'pl_len'. Returns 
+ *          true if the format is correct. 
  * 
- * @param msg_pl_len 
- * @param pl_len 
- * @return uint8_t 
+ * @see m8q_ubx_config 
+ * @see ubx_config_field_check 
+ * 
+ * @param msg_pl_len : buffer that contains the payload length 
+ * @param pl_len : buffer to store the converted length value 
+ * @return uint8_t : status of the check - true if the length is correctly formatted 
  */
 uint8_t ubx_config_len_check(
     const char *msg_pl_len, 
@@ -628,13 +699,19 @@ uint8_t ubx_config_len_check(
 
 
 /**
- * @brief Check that the payload is of correct length and format 
+ * @brief UBX message payload check 
  * 
- * @details 
+ * @details Checks that the UBX message payload is formatted correctly and that the 
+ *          amount of data matches the payload length found by ubx_config_len_check. 
+ *          Returns true if the format is correct. 
  * 
- * @param msg_payload 
- * @param pl_len 
- * @return uint8_t 
+ * @see m8q_ubx_config 
+ * @see ubx_config_len_check 
+ * @see ubx_config_field_check 
+ * 
+ * @param msg_payload : buffer that contains the message payload 
+ * @param pl_len : message payload length 
+ * @return uint8_t : status of the check - true if the payload is correctly formatted 
  */
 uint8_t ubx_config_payload_check(
     const char *msg_payload, 
@@ -642,13 +719,23 @@ uint8_t ubx_config_payload_check(
 
 
 /**
- * @brief Convert the message string into a sendable message 
+ * @brief UBX message convert 
  * 
- * @details 
+ * @details If this function is called it means the config message is correctly formatted. 
+ *          This function converts the UBX message to its proper format and calculates the 
+ *          message checksum. After this, the complete formatted message gets sent to the 
+ *          device. 
+ *          
+ *          Note that NMEA messages use ASCII representation but UBX messages do not. UBX 
+ *          configuration messages are formatted in ASCII form so they're easier for the 
+ *          user to read and write. Before sending the message, the message must be 
+ *          converted from ASCII. See m8q_send_msg for more info on formatted messages. 
  * 
- * @param msg_str 
- * @param msg_data 
- * @param msg_len 
+ * @see m8q_ubx_config 
+ * 
+ * @param msg_str : buffer that contains the config message 
+ * @param msg_data : buffer that stores the formatted message 
+ * @param msg_len : buffer that stores the formatted message length 
  */
 void ubx_config_msg_convert(
     const char *msg_str, 
@@ -657,13 +744,18 @@ void ubx_config_msg_convert(
 
 
 /**
- * @brief Check the size and format of a message field 
+ * @brief UBX message field check 
  * 
- * @details 
+ * @details Used by various message field check functions to checks for valid UBX 
+ *          configuration message characters and counts the length of the message field. 
+ *          UBX config messages only contain hexidecimal characters (i.e. 
+ *          "0123456789ABCDF") for data, commas to separate message fields, and an 
+ *          asterisks to signify the end of a message. Fields must be terminated with 
+ *          either a comma (",") or an asterisks ("*"). 
  * 
- * @param msg_field 
- * @param byte_count 
- * @param term_char 
+ * @param msg_field : buffer that contains the message field to check 
+ * @param byte_count : counter that keeps track of the field length 
+ * @param term_char : gets set to the termination character seen 
  */
 void ubx_config_field_check(
     const char *msg_field, 
@@ -672,24 +764,33 @@ void ubx_config_field_check(
 
 
 /**
- * @brief Check for a valid UBX message character input 
+ * @brief UBX message data character check 
  * 
- * @details 
+ * @details Used by ubx_config_field_check to check if a message data character is within 
+ *          "A"-"F", or "0"-"9". The function will return true if the data character is 
+ *          within bounds. 
  * 
- * @param msg_char 
- * @return uint8_t 
+ * @see ubx_config_field_check 
+ * 
+ * @param msg_char : UBX message character/byte 
+ * @return uint8_t : Status of the check - true if character is within bounds 
  */
 uint8_t ubx_config_valid_char(
     char msg_char); 
 
 
 /**
- * @brief Convert two hex string characters to a value 
+ * @brief UBX message byte conversion 
  * 
- * @details 
+ * @details Converts ASCII represented hexidecimal numbers into their byte value. UBX 
+ *          config messages are formatted in ASCII to allow the user to better read 
+ *          and write out messages. However, actualy UBX messages are not ASCII 
+ *          formatted and must be converted to a usable value. This function takes in 
+ *          two characters that represent the low and high nibbles of a hexidecimal 
+ *          number and converts them to their number form (ex. "A8" --> 0xA8). 
  * 
- * @param msg_bytes 
- * @return uint8_t 
+ * @param msg_bytes : buffer that stores two characters that represent a number 
+ * @return uint8_t : converted value 
  */
 uint8_t ubx_config_byte_convert(
     const char *msg_bytes); 
@@ -713,7 +814,6 @@ M8Q_STATUS m8q_init(
         return M8Q_INVALID_PTR; 
     }
 
-    // Local varaibles 
     M8Q_STATUS init_status = M8Q_OK; 
     uint16_t ack_status; 
     uint8_t ack_timeout; 
@@ -940,7 +1040,6 @@ M8Q_STATUS m8q_send_msg(
         return M8Q_INVALID_PTR; 
     }
 
-    // Local varaibles 
     M8Q_MSG_TYPE msg_type = M8Q_MSG_INVALID; 
     M8Q_STATUS init_status = M8Q_OK; 
     uint8_t msg_offset = CLEAR; 
@@ -952,9 +1051,9 @@ M8Q_STATUS m8q_send_msg(
     if (msg_type == M8Q_MSG_NMEA)
     {
         init_status = m8q_nmea_config(write_msg, 
-                                          nmea_msg_target.num_param, 
-                                          msg_offset, 
-                                          max_msg_size); 
+                                      nmea_msg_target.num_param, 
+                                      msg_offset, 
+                                      max_msg_size); 
     }
     else if (msg_type == M8Q_MSG_UBX)
     {
@@ -1212,7 +1311,7 @@ M8Q_STATUS m8q_get_time_utc_date(
 //=======================================================================================
 // Read and write functions 
 
-// Flush/clear the data stream 
+// Flush/clear the M8Q data stream 
 M8Q_STATUS m8q_flush_ds(
     uint16_t stream_len)
 {
@@ -1231,7 +1330,7 @@ M8Q_STATUS m8q_flush_ds(
 }
 
 
-// Read the whole data stream and sort/store the data 
+// Read the M8Q data stream and store the data 
 M8Q_STATUS m8q_read_sort_ds(
     uint16_t stream_len)
 {
@@ -1372,11 +1471,11 @@ M8Q_MSG_TYPE m8q_msg_id(
         {
             // Check for a valid PUBX message format 
             id_check_status = m8q_msg_id_check(msg, 
-                                                   (void *)nmea_pubx_msgs, 
-                                                   NMEA_PUBX_NUM_MSGS, 
-                                                   sizeof(nmea_msg_format_t), 
-                                                   BYTE_6, 
-                                                   &msg_index); 
+                                               (void *)nmea_pubx_msgs, 
+                                               NMEA_PUBX_NUM_MSGS, 
+                                               sizeof(nmea_msg_format_t), 
+                                               BYTE_6, 
+                                               &msg_index); 
             if (id_check_status)
             {
                 *msg_offset = BYTE_8; 
@@ -1390,20 +1489,20 @@ M8Q_MSG_TYPE m8q_msg_id(
         {
             // Check for a standard NMEA message ID 
             id_check_status = m8q_msg_id_check(msg, 
-                                                   (void *)&nmea_std_msg_id[0][0], 
-                                                   NMEA_STD_ID_NUM, 
-                                                   NMEA_STD_ID_LEN, 
-                                                   BYTE_1, 
-                                                   &msg_index); 
+                                               (void *)&nmea_std_msg_id[0][0], 
+                                               NMEA_STD_ID_NUM, 
+                                               NMEA_STD_ID_LEN, 
+                                               BYTE_1, 
+                                               &msg_index); 
             if (id_check_status)
             {
                 // Check for a valid standard NMEA message format 
                 id_check_status = m8q_msg_id_check(msg, 
-                                                       (void *)nmea_std_msgs, 
-                                                       NMEA_STD_NUM_MSGS, 
-                                                       sizeof(nmea_msg_format_t), 
-                                                       BYTE_3, 
-                                                       &msg_index); 
+                                                   (void *)nmea_std_msgs, 
+                                                   NMEA_STD_NUM_MSGS, 
+                                                   sizeof(nmea_msg_format_t), 
+                                                   BYTE_3, 
+                                                   &msg_index); 
                 if (id_check_status)
                 {
                     *msg_offset = BYTE_6; 
@@ -1420,11 +1519,11 @@ M8Q_MSG_TYPE m8q_msg_id(
     {
         // Check for a valid UBX class string 
         id_check_status = m8q_msg_id_check(msg, 
-                                               (void *)ubx_msg_class[0].ubx_msg_class_str, 
-                                               UBX_CLASS_NUM, 
-                                               sizeof(ubx_msg_class_t), 
-                                               BYTE_5, 
-                                               &msg_index); 
+                                           (void *)ubx_msg_class[0].ubx_msg_class_str, 
+                                           UBX_CLASS_NUM, 
+                                           sizeof(ubx_msg_class_t), 
+                                           BYTE_5, 
+                                           &msg_index); 
         if (id_check_status)
         {
             return M8Q_MSG_UBX; 
@@ -1435,11 +1534,11 @@ M8Q_MSG_TYPE m8q_msg_id(
     {
         // Check for a valid UBX class byte 
         id_check_status = m8q_msg_id_check(msg, 
-                                               (void *)&ubx_msg_class[0].ubc_msg_class_data, 
-                                               UBX_CLASS_NUM, 
-                                               sizeof(ubx_msg_class_t), 
-                                               BYTE_2, 
-                                               &msg_index); 
+                                           (void *)&ubx_msg_class[0].ubc_msg_class_data, 
+                                           UBX_CLASS_NUM, 
+                                           sizeof(ubx_msg_class_t), 
+                                           BYTE_2, 
+                                           &msg_index); 
         if (id_check_status)
         {
             return M8Q_MSG_UBX; 
@@ -1461,7 +1560,6 @@ uint8_t m8q_msg_id_check(
 {
     for (uint8_t i = CLEAR; i < num_compare; i++)
     {
-        // if (str_compare((char *)(ref_msg + i*max_size), msg, offset))
         if (str_compare((char *)ref_msg + i*max_size, msg, offset))
         {
             *msg_index = i; 
@@ -1622,7 +1720,7 @@ M8Q_STATUS m8q_nmea_config(
     const char *config_msg, 
     uint8_t num_args, 
     uint8_t field_offset, 
-    uint8_t msg_len)
+    uint8_t max_msg_len)
 {
     // Config message validation variables 
     const char *msg_ptr = config_msg + field_offset; 
@@ -1632,7 +1730,7 @@ M8Q_STATUS m8q_nmea_config(
 
     // Config message formatting variables 
     uint16_t checksum = CLEAR; 
-    char msg_str[msg_len + M8Q_NMEA_END_MSG]; 
+    char msg_str[max_msg_len + M8Q_NMEA_END_MSG]; 
     int16_t msg_str_len = CLEAR; 
 
     // Check that a comma separates the address field from the data fields 
@@ -1787,7 +1885,7 @@ M8Q_STATUS m8q_ubx_config(
 }
 
 
-// Check for a correctly formatted message ID input 
+// UBX message ID check 
 uint8_t ubx_config_id_check(
     const char *msg_id)
 {
@@ -1805,7 +1903,7 @@ uint8_t ubx_config_id_check(
 }
 
 
-// Check for a correctly formatted message length input and get the length value 
+// UBX message payload length check 
 uint8_t ubx_config_len_check(
     const char *msg_pl_len, 
     uint16_t *pl_len)
@@ -1832,7 +1930,7 @@ uint8_t ubx_config_len_check(
 }
 
 
-// Check that the payload is of correct length and format 
+// UBX message payload check 
 uint8_t ubx_config_payload_check(
     const char *msg_payload, 
     uint16_t pl_len)
@@ -1882,7 +1980,7 @@ uint8_t ubx_config_payload_check(
                 break; 
             }
             
-            // 'char_count' will account of the message data field and the +1 moves the 
+            // 'char_count' will account for the message data field and the +1 moves the 
             // message pointer past the termination character. 
             msg_payload += char_count + 1; 
             char_count = CLEAR; 
@@ -1899,7 +1997,7 @@ uint8_t ubx_config_payload_check(
 }
 
 
-// Convert the message string into a sendable message 
+// UBX message convert 
 void ubx_config_msg_convert(
     const char *msg_str, 
     uint8_t *msg_data, 
@@ -1946,7 +2044,7 @@ void ubx_config_msg_convert(
 }
 
 
-// Check the size and format of a message field 
+// UBX message field check 
 void ubx_config_field_check(
     const char *msg_field, 
     uint8_t *byte_count, 
@@ -1977,7 +2075,7 @@ void ubx_config_field_check(
 }
 
 
-// Check for a valid UBX message character input 
+// UBX message data character check 
 uint8_t ubx_config_valid_char(
     char msg_char)
 {
@@ -1998,7 +2096,7 @@ uint8_t ubx_config_valid_char(
 }
 
 
-// Convert two hex string characters to a value 
+// UBX message byte conversion 
 uint8_t ubx_config_byte_convert(
     const char *msg_bytes)
 {
