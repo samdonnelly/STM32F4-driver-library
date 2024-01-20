@@ -875,7 +875,7 @@ M8Q_STATUS m8q_init(
 }
 
 
-// Low power mode pin initialization 
+// Low power pin initialization 
 M8Q_STATUS m8q_pwr_pin_init(
     GPIO_TypeDef *gpio, 
     pin_selector_t pwr_save_pin)
@@ -990,7 +990,7 @@ M8Q_STATUS m8q_read_ds(
 }
 
 
-// Read the data stream size 
+// Read data stream size 
 M8Q_STATUS m8q_read_ds_size(
     uint16_t *data_size)
 {
@@ -1068,7 +1068,7 @@ M8Q_STATUS m8q_send_msg(
 }
 
 
-// Get TX-Ready status 
+// Get TX ready status 
 GPIO_STATE m8q_get_tx_ready(void)
 {
     return gpio_read(m8q_driver_data.tx_ready_gpio, (SET_BIT << m8q_driver_data.tx_ready)); 
