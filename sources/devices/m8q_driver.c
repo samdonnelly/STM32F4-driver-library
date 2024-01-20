@@ -925,7 +925,7 @@ M8Q_STATUS m8q_txr_pin_init(
 //=======================================================================================
 // User functions 
 
-// Read the data stream and sort/store relevant message data 
+// Read and store relevant message data 
 M8Q_STATUS m8q_read_data(void)
 {
     M8Q_STATUS read_status; 
@@ -1257,7 +1257,7 @@ uint16_t m8q_get_position_navstat(void)
 }
 
 
-// Get acceptable navigation status - returns true for valid position lock, false otherwise 
+// Get acceptable navigation status 
 uint8_t m8q_get_position_navstat_lock(void)
 {
     // A valid position lock is indicated by navigation statuses: G2, G3, D2, D3. The status 

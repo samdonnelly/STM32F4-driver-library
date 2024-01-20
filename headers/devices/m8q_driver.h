@@ -12,14 +12,6 @@
  * 
  */
 
-//=======================================================================================
-// Notes 
-
-// This driver currently does not support the interpretation of received UBX messages 
-// aside from checking for ACK/NAK messages in response to UBX CFG messages. 
-
-//=======================================================================================
-
 #ifndef _M8Q_DRIVER_H_
 #define _M8Q_DRIVER_H_
 
@@ -167,11 +159,26 @@ M8Q_STATUS m8q_txr_pin_init(
 // User functions 
 
 /**
- * @brief Read the data stream and sort/store relevant message data 
+ * @brief Read and store relevant message data 
  * 
- * @details 
+ * @details Reads the data stream and stores message data if the driver has a data record 
+ *          for the message. Messages with a data record currently include: 
+ *           - NMEA messages: 
+ *             - Standard: None 
+ *             - PUBX : POSITION, TIME 
+ *           - UBX messages: None 
+ *          
+ *          This function first reads the size of the data stream. If it's not zero and 
+ *          the stream isn't greater than the max buffer size then the data stream is read 
+ *          in its entirety. The messages read get either stored in the driver or 
+ *          discarded, and if they're stored, their data can be accessed through the 
+ *          getter functions. If the data stream size is greater than the max buffer size 
+ *          then the stream gets cleared without storing data and an overflow status is 
+ *          returned. If there is no data then a no data status is returned. 
  * 
- * @return M8Q_STATUS 
+ * @see m8q_init 
+ * 
+ * @return M8Q_STATUS : status of read attempt 
  */
 M8Q_STATUS m8q_read_data(void); 
 
@@ -179,11 +186,15 @@ M8Q_STATUS m8q_read_data(void);
 /**
  * @brief Read and return the data stream contents 
  * 
- * @details 
+ * @details Reads the raw data stream in its entirety and stores it in 'data_buff' for 
+ *          use by the application. If the data stream size is greater than 'buff_size' 
+ *          then the stream gets cleared without storing it in 'data_buff' and an 
+ *          overflow status is returned. If there is no data then a no data status is 
+ *          returned. 
  * 
- * @param data_buff 
- * @param buff_size 
- * @return M8Q_STATUS 
+ * @param data_buff : buffer to store the data stream 
+ * @param buff_size : size of data_buff 
+ * @return M8Q_STATUS : status of the read attempt 
  */
 M8Q_STATUS m8q_read_ds(
     uint8_t *data_buff, 
@@ -205,11 +216,23 @@ M8Q_STATUS m8q_read_ds_size(
 
 
 /**
- * @brief Return the ACK/NAK message counter status 
+ * @brief ACK/NAK message counter status 
  * 
- * @details 
+ * @details Returns the ACK and NAK message counter status in the form of a 16-bit integer 
+ *          where the least significant byte is the ACK counter and the most significant 
+ *          byte is the NAK counter. This function can be used to check for confirmation 
+ *          that the device has received CFG messages sent to it. CFG messages can be sent 
+ *          using m8q_send_msg and responses can be checked for using m8q_read_data, after 
+ *          which this function can then be called. This function will not update without 
+ *          calling m8q_read_data. 
+ *          
+ *          Note that when CFG messages are sent during initialization, m8q_init 
+ *          automatically performs this check. 
  * 
- * @return uint16_t 
+ * @see m8q_read_data 
+ * @see m8q_send_msg 
+ * 
+ * @return uint16_t : ACK/NAK counter statuses 
  */
 uint16_t m8q_get_ack_status(void); 
 
@@ -217,11 +240,41 @@ uint16_t m8q_get_ack_status(void);
 /**
  * @brief Write a message to the device 
  * 
- * @details 
+ * @details Sends a single user / application level message to the device. The message is 
+ *          first checked for formatting before being sent, and if the format is invalid 
+ *          then no message is sent and the function returns an invalid config status. 
+ *          
+ *          This driver will only send messages to the device that are formatted a 
+ *          specific way and all messages get defined at the application level (none are 
+ *          stored in the driver). NMEA messages are ASCII formatted and UBX message are 
+ *          not, however all messages passed to the driver must be ASCII formatted to 
+ *          make definition easier to read by the user. An example user defined NMEA 
+ *          message that disables GGA messages is as follows: 
+ *          
+ *          "$PUBX,40,GGA,0,0,0,0,0,0*" 
+ *          
+ *          Note that this message string is the exact NMEA message format but it's 
+ *          missing the checksum and end sequence. The checksum and end sequence do not 
+ *          need to be added to user defined messages as they're added by the driver after 
+ *          the message format is checked. An example of a user defined UBX CFG message 
+ *          that enables the POSITION PUBX NMEA message is as follows: 
+ *          
+ *          "B562,06,01,0800,F1,00,01,00,00,00,00,00*" 
+ *          
+ *          A UBX message does not contain commas to separate message fields, an asterisks 
+ *          at the end of (or anywhere within) the message, and it's not in ASCII 
+ *          representation. This is all done to make writing them easier for the user and 
+ *          processing easier for the driver. The driver will take this message and check 
+ *          it's format before eventually converting it to the format it needs to be in 
+ *          to be sent to the device. Note that the above user message contains all UBX 
+ *          message fields except the checksum at the end which will be added by the 
+ *          driver. 
+ *          
+ *          See the device interface manual for more details on message formats and fields. 
  * 
- * @param write_msg 
- * @param max_msg_size 
- * @return M8Q_STATUS 
+ * @param write_msg : buffer that contains the message to be sent to the device 
+ * @param max_msg_size : size of the message being sent 
+ * @return M8Q_STATUS : status of the write attempt 
  */
 M8Q_STATUS m8q_send_msg(
     const char *write_msg, 
@@ -231,7 +284,7 @@ M8Q_STATUS m8q_send_msg(
 /**
  * @brief Get TX ready status 
  * 
- * @details Read that state of the TX ready pin. If it's high then it means there is 
+ * @details Read the state of the TX ready pin. If it's high then it means there is 
  *          data in the device data stream that can be read. 
  * 
  * @return GPIO_STATE : state of the TX ready pin 
@@ -332,10 +385,8 @@ double m8q_get_position_lon(void);
  * 
  * @details Get the longitude string read from the POSITION PUBX NMEA message. This 
  *          string is exactly what is read from the device. See the device interface 
- *          manual for formatting of data in the POSITION message. In order for this 
- *          value to be updated, m8q_read_data must be called when new data is available. 
- *          If the buffer used to store this string is too small then an overflow status 
- *          will be returned. 
+ *          manual for formatting of data in the POSITION message. If the buffer used 
+ *          to store this string is too small then an overflow status will be returned. 
  *          
  *          This value is only updated if new POSITION messages are read. 
  * 
@@ -366,9 +417,17 @@ uint8_t m8q_get_position_EW(void);
 /**
  * @brief Get navigation status 
  * 
- * @details 
+ * @details Returns the navStat field of the POSITION PUBX NMEA message in the form of a 
+ *          16-bit integer. m8q_navstats_t contains all the possible navigation status 
+ *          codes that can be returned. A valid position lock is indicated by codes G2, 
+ *          G3, D2 and D3, which means the status must be one of these in order to be  
+ *          receiving reliable coordinate information. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
  * 
- * @return uint16_t 
+ * @see m8q_navstats_t 
+ * 
+ * @return uint16_t : navigation status code 
  */
 uint16_t m8q_get_position_navstat(void); 
 
@@ -376,10 +435,16 @@ uint16_t m8q_get_position_navstat(void);
 /**
  * @brief Get acceptable navigation status 
  * 
- * @details 
- *          Returns true for valid position lock, false otherwise. 
+ * @details Takes the navigation status from m8q_get_position_navstat and returns true 
+ *          if there is a valid position lock (i.e. statuses G2, G3, D2, D3). Returns 
+ *          false otherwise. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
  * 
- * @return uint8_t 
+ * @see m8q_navstats_t 
+ * @see m8q_get_position_navstat 
+ * 
+ * @return uint8_t : valid position lock status 
  */
 uint8_t m8q_get_position_navstat_lock(void); 
 
@@ -387,10 +452,15 @@ uint8_t m8q_get_position_navstat_lock(void);
 /**
  * @brief Get UTC time 
  * 
- * @details 
+ * @details Get the UTC time string read from the TIME PUBX NMEA message. This string is 
+ *          exactly what is read from the device. See the device interface manual for 
+ *          formatting of data in the TIME message. If the buffer used to store this 
+ *          string is too small then an overflow status will be returned. 
+ *          
+ *          This value is only updated if new TIME messages are read. 
  * 
- * @param utc_time 
- * @param utc_time_len 
+ * @param utc_time : buffer to store the UTC time string 
+ * @param utc_time_len : length of the utc_time buffer 
  */
 M8Q_STATUS m8q_get_time_utc_time(
     uint8_t *utc_time, 
@@ -400,10 +470,15 @@ M8Q_STATUS m8q_get_time_utc_time(
 /**
  * @brief Get UTC date 
  * 
- * @details 
+ * @details Get the UTC date string read from the TIME PUBX NMEA message. This string is 
+ *          exactly what is read from the device. See the device interface manual for 
+ *          formatting of data in the TIME message. If the buffer used to store this 
+ *          string is too small then an overflow status will be returned. 
+ *          
+ *          This value is only updated if new TIME messages are read. 
  * 
- * @param utc_date 
- * @param utc_date_len 
+ * @param utc_date : buffer to store the UTC date string 
+ * @param utc_date_len : length of utc_date buffer 
  */
 M8Q_STATUS m8q_get_time_utc_date(
     uint8_t *utc_date, 
