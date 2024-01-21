@@ -12,7 +12,7 @@ Tools: <a href="https://github.com/samdonnelly/STM32F4-driver-library/tree/main/
 
 ## Tests 
 
-Application test code for this library: <a href="https://github.com/samdonnelly/STM32F4-driver-test">STM32-driver-test</a> \
+Application test code for this library: <a href="https://github.com/samdonnelly/STM32F4-driver-test">STM32F4-driver-test</a> \
 Unit tests: <a href="https://github.com/samdonnelly/STM32F4-driver-library/tree/main/unit_tests">folder</a> 
 
 ## Generated Code 
