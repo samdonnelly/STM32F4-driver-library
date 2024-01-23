@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief LSM303AGR magnetometer driver 
+ * @brief LSM303AGR 6-axis magnetometer and accelerometer driver implementation 
  * 
  * @version 0.1
  * @date 2023-06-07
@@ -136,8 +136,8 @@ typedef struct lsm303agr_driver_data_s
     uint8_t status; 
 
     // Magnetometer heading 
-    lsm303agr_m_head_offset_t offset_eqn[8];        // Error/offset correction equations 
-    int16_t heading;                                // Filtered heading 
+    lsm303agr_m_head_offset_t offset_eqn[LSM303AGR_M_NUM_DIR];   // Error correction equations 
+    int16_t heading;                                             // Filtered heading 
 
     // Magnetometer parameters 
     lsm303agr_m_data_t m_data; 
@@ -259,7 +259,7 @@ void lsm303agr_m_status_read(void);
 // Initialization 
 void lsm303agr_init(
     I2C_TypeDef *i2c, 
-    int16_t *offsets, 
+    const int16_t *offsets, 
     lsm303agr_m_odr_cfg_t m_odr, 
     lsm303agr_m_sys_mode_t m_mode, 
     lsm303agr_cfg_t m_off_canc, 
@@ -268,8 +268,8 @@ void lsm303agr_init(
     lsm303agr_cfg_t m_int_mag)
 {
     // Local variables 
-    int16_t *offset1 = offsets;           // Copy of offsets array 
-    int16_t *offset2 = offsets + 1;       // Copy of offsets array at next address 
+    const int16_t *offset1 = offsets;           // Copy of offsets array 
+    const int16_t *offset2 = offsets + 1;       // Copy of offsets array at next address 
 
     //===================================================
     // Initialize data record 

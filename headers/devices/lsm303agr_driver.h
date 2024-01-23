@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief LSM303AGR magnetometer driver header 
+ * @brief LSM303AGR 6-axis magnetometer and accelerometer driver interface 
  * 
  * @version 0.1
  * @date 2023-06-07
@@ -70,6 +70,9 @@
 #define LSM303AGR_M_W 2700                    // West direction heading - scaled 
 #define LSM303AGR_M_NW 3150                   // North-West direction heading - scaled 
 #define LSM303AGR_M_GAIN 0.1                  // Magnetometer filter gain 
+
+// Calculation 
+#define LSM303AGR_M_NUM_DIR 8   // Number of directions used for error correction 
 
 //=======================================================================================
 
@@ -152,7 +155,7 @@ typedef uint8_t LSM303AGR_I2C_ADDR;
  */
 void lsm303agr_init(
     I2C_TypeDef *i2c, 
-    int16_t *offsets, 
+    const int16_t *offsets, 
     lsm303agr_m_odr_cfg_t m_odr, 
     lsm303agr_m_sys_mode_t m_mode, 
     lsm303agr_cfg_t m_off_canc, 

@@ -1,9 +1,9 @@
 /**
- * @file gps_calc.h
+ * @file nav_calcs.h
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief GPS calculations interface 
+ * @brief Navigation calculations interface 
  * 
  * @version 0.1
  * @date 2023-12-01
@@ -12,8 +12,8 @@
  * 
  */
 
-#ifndef _GPS_CALC_H_ 
-#define _GPS_CALC_H_ 
+#ifndef _NAV_CALCs_H_ 
+#define _NAV_CALCs_H_ 
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,7 +22,7 @@ extern "C" {
 //=======================================================================================
 // Includes 
 
-#include "tools.h" 
+#include "stm32f411xe.h" 
 
 //=======================================================================================
 
@@ -149,8 +149,7 @@ public:   // Calculations
      * @param heading : current compass heading 
      * @return int16_t : True North heading 
      */
-    int16_t true_north_heading(
-        int16_t heading); 
+    int16_t true_north_heading(int16_t heading); 
 
 
     /**
@@ -176,8 +175,7 @@ public:
      * 
      * @param tn_offset : True North offset 
      */
-    void set_tn_offset(
-        int16_t tn_offset); 
+    void set_tn_offset(int16_t tn_offset); 
 }; 
 
 //=======================================================================================
@@ -186,4 +184,4 @@ public:
 }
 #endif
 
-#endif   // _GPS_CALC_H_ 
+#endif   // _NAV_CALCs_H_ 

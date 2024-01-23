@@ -1,9 +1,9 @@
 /**
- * @file gps_calc.cpp
+ * @file nav_calcs.cpp
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief GPS calculations implementation 
+ * @brief Navigation calculations implementation 
  * 
  * @version 0.1
  * @date 2023-12-01
@@ -16,6 +16,7 @@
 // Includes 
 
 #include "nav_calcs.h" 
+#include "tools.h" 
 
 //=======================================================================================
 
@@ -46,10 +47,9 @@ const double pi_over_2 = PI_OVER_2;
 nav_calculations::nav_calculations(
     double radius_lpf_gain, 
     double heading_lpf_gain) 
-    : radius_gain(radius_lpf_gain), heading_gain(heading_lpf_gain) 
-{
-    true_north_offset = CLEAR; 
-} 
+    : radius_gain(radius_lpf_gain), 
+      heading_gain(heading_lpf_gain), 
+      true_north_offset(CLEAR) {} 
 
 
 // Destructor 
@@ -140,8 +140,7 @@ int16_t nav_calculations::gps_heading(
 
 
 // True North heading 
-int16_t nav_calculations::true_north_heading(
-    int16_t heading)
+int16_t nav_calculations::true_north_heading(int16_t heading)
 {
     int16_t tn_heading = CLEAR; 
 
@@ -198,10 +197,6 @@ int16_t nav_calculations::heading_error(
 // Setters 
 
 // Set the True North offset 
-void nav_calculations::set_tn_offset(
-    int16_t tn_offset)
-{
-    true_north_offset = tn_offset; 
-}
+void nav_calculations::set_tn_offset(int16_t tn_offset) { true_north_offset = tn_offset; }
 
 //=======================================================================================
