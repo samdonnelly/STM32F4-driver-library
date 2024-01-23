@@ -45,20 +45,24 @@ gps_waypoints_t;
 // Classes 
 
 // GPS calculations 
-class gps_calcs 
+class nav_calculations 
 {
 private:   // Private variables 
-    double radius_gain;     // Low pass filter gain of the radius calculation 
-    double heading_gain;    // Low pass filter gain of the heading calculation 
+    double radius_gain;          // Low pass filter gain of the radius calculation 
+    double heading_gain;         // Low pass filter gain of the heading calculation 
+    int16_t true_north_offset;   // True North offset from magnetic North 
 
-public: 
+public:   // Setup and teardown 
+
     // Constructor 
-    gps_calcs(
+    nav_calculations(
         double radius_lpf_gain, 
         double heading_lpf_gain); 
 
     // Destructor 
-    ~gps_calcs(); 
+    ~nav_calculations(); 
+
+public:   // Calculations 
 
     /**
      * @brief GPS radius calculation 
@@ -131,6 +135,49 @@ public:
         double lon_cur, 
         double lat_tar, 
         double lon_tar); 
+
+
+    /**
+     * @brief True North heading 
+     * 
+     * @details Reads the heading from the magnetometer and adds the true North heading offset 
+     *          stored in 'mag_tn_correction' (global variable below). After the offset is 
+     *          added the heading is checked to see if it is outside the acceptable heading 
+     *          range (0-359.9 degrees) and if it is then it's corrected to be withing range 
+     *          (ex. 365 degrees gets corrected to 5 degrees which is the same thing). 
+     * 
+     * @param heading : current compass heading 
+     * @return int16_t : True North heading 
+     */
+    int16_t true_north_heading(
+        int16_t heading); 
+
+
+    /**
+     * @brief Heading error 
+     * 
+     * @details Difference between the current and target heading. If the 0/360deg 
+     *          heading point is between the two headings then the error is adjusted. 
+     *          Returned error is within +/-180deg. 
+     * 
+     * @param heading_desired 
+     * @param heading_current 
+     * @return int16_t 
+     */
+    int16_t heading_error(
+        int16_t current_heading, 
+        int16_t target_heading); 
+
+
+public: 
+
+    /**
+     * @brief Set the True North offset 
+     * 
+     * @param tn_offset : True North offset 
+     */
+    void set_tn_offset(
+        int16_t tn_offset); 
 }; 
 
 //=======================================================================================

@@ -15,7 +15,7 @@
 //=======================================================================================
 // Includes 
 
-#include "gps_calc.h" 
+#include "nav_calcs.h" 
 
 //=======================================================================================
 
@@ -40,21 +40,29 @@ const double pi_over_2 = PI_OVER_2;
 
 
 //=======================================================================================
-// GPS calculations 
+// Setup and teardown 
 
 // Constructor 
-gps_calcs::gps_calcs(
+nav_calculations::nav_calculations(
     double radius_lpf_gain, 
     double heading_lpf_gain) 
-    : radius_gain(radius_lpf_gain), heading_gain(heading_lpf_gain) {} 
+    : radius_gain(radius_lpf_gain), heading_gain(heading_lpf_gain) 
+{
+    true_north_offset = CLEAR; 
+} 
 
 
 // Destructor 
-gps_calcs::~gps_calcs() {} 
+nav_calculations::~nav_calculations() {} 
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Calculations 
 
 // GPS radius calculation 
-int32_t gps_calcs::gps_radius(
+int32_t nav_calculations::gps_radius(
     double lat_cur, 
     double lon_cur, 
     double lat_tar, 
@@ -87,7 +95,7 @@ int32_t gps_calcs::gps_radius(
 
 
 // GPS heading calculation 
-int16_t gps_calcs::gps_heading(
+int16_t nav_calculations::gps_heading(
     double lat_cur, 
     double lon_cur, 
     double lat_tar, 
@@ -128,6 +136,72 @@ int16_t gps_calcs::gps_heading(
     }
 
     return heading; 
+}
+
+
+// True North heading 
+int16_t nav_calculations::true_north_heading(
+    int16_t heading)
+{
+    int16_t tn_heading = CLEAR; 
+
+    // Get the magnetometer heading and add the true North correction 
+    tn_heading = heading + true_north_offset; 
+
+    // Adjust the true North heading if the corrected headed exceeds heading bounds 
+    if (true_north_offset >= 0)
+    {
+        if (tn_heading >= HEADING_FULL_RANGE)
+        {
+            tn_heading -= HEADING_FULL_RANGE; 
+        }
+    }
+    else 
+    {
+        if (tn_heading < 0)
+        {
+            tn_heading += HEADING_FULL_RANGE; 
+        }
+    }
+
+    return tn_heading; 
+}
+
+
+// Heading error 
+int16_t nav_calculations::heading_error(
+    int16_t current_heading, 
+    int16_t target_heading)
+{
+    int16_t heading_error = CLEAR; 
+
+    // Calculate the heading error 
+    heading_error = target_heading - current_heading; 
+
+    // Correct the error for when the heading crosses the 0/360 degree boundary 
+    if (heading_error > MAX_HEADING_DIFF)
+    {
+        heading_error -= HEADING_FULL_RANGE; 
+    }
+    else if (heading_error < -MAX_HEADING_DIFF)
+    {
+        heading_error += HEADING_FULL_RANGE; 
+    }
+
+    return heading_error; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Setters 
+
+// Set the True North offset 
+void nav_calculations::set_tn_offset(
+    int16_t tn_offset)
+{
+    true_north_offset = tn_offset; 
 }
 
 //=======================================================================================
