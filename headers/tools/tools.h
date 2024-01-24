@@ -143,9 +143,9 @@
 //==================================================
 // Math 
 
-#define RAD_TO_DEG 180.0 / 3.141592    // Radians to degrees conversion 
-#define DEG_TO_RAD 3.141592 / 180.0    // Radians to degrees conversion 
-#define PI_OVER_2 1.570796             // PI/2 
+#define PI 3.141592                    // PI 
+#define RAD_TO_DEG 180.0 / PI          // Radians to degrees conversion 
+#define DEG_TO_RAD PI / 180.0          // Degrees to radians conversion 
 
 //==================================================
 

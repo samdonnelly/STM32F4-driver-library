@@ -28,9 +28,19 @@ endif
 
 # ------------- TOOLS --------------
 
+# Navigation calculations 
+SRC_FILES += ./../../sources/tools/nav_calcs.cpp           # Production code 
+SRC_DIRS += tests/nav_calcs                                # Test doubles 
+
+# PID controller 
+SRC_FILES += ./../../sources/tools/pid_control.cpp         # Production code 
+SRC_DIRS += tests/pid_control                              # Test doubles 
+
+# Switch debounce 
 SRC_FILES += ./../../sources/tools/switch_debounce.c       # Production code 
 SRC_DIRS += tests/switch_debounce                          # Test doubles 
 
+# Tools 
 SRC_FILES += ./../../sources/tools/tools.c                 # Production code 
 
 # ----------------------------------
@@ -53,8 +63,16 @@ TEST_SRC_FILES +=
 
 # ------------- TOOLS --------------
 
+# Navigation calculations 
+TEST_SRC_DIRS += tests/nav_calcs          # Unit tests 
+TEST_SRC_FILES += 
+
+# PID controller 
+TEST_SRC_DIRS += tests/pid_control        # Unit tests 
+TEST_SRC_FILES += 
+
 # Switch debounce 
-TEST_SRC_DIRS += tests/switch_debounce                     # Unit tests 
+TEST_SRC_DIRS += tests/switch_debounce    # Unit tests 
 TEST_SRC_FILES += 
 
 # ----------------------------------
@@ -87,6 +105,8 @@ INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Device/ST/STM32F4xx/Include
 INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Core/Include
 
 INCLUDE_DIRS += ./../../headers/tools           # Production code 
+INCLUDE_DIRS += tests/nav_calcs                 # Test doubles 
+INCLUDE_DIRS += tests/pid_control               # Test doubles 
 INCLUDE_DIRS += tests/switch_debounce           # Test doubles 
 
 # --------------------------------------------------------------------

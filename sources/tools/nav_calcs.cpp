@@ -35,7 +35,7 @@
 // Global variables 
 
 const double deg_to_rad = DEG_TO_RAD; 
-const double pi_over_2 = PI_OVER_2; 
+const double pi_over_2 = PI / 2.0; 
 
 //=======================================================================================
 
@@ -45,10 +45,12 @@ const double pi_over_2 = PI_OVER_2;
 
 // Constructor 
 nav_calculations::nav_calculations(
-    double radius_lpf_gain, 
-    double heading_lpf_gain) 
-    : radius_gain(radius_lpf_gain), 
-      heading_gain(heading_lpf_gain), 
+    // double radius_lpf_gain, 
+    // double heading_lpf_gain, 
+    double coordinate_lpf_gain) 
+    // : radius_lpf_gain(radius_lpf_gain), 
+    //   heading_lpf_gain(heading_lpf_gain), 
+    : coordinate_lpf_gain(coordinate_lpf_gain), 
       true_north_offset(CLEAR) {} 
 
 
@@ -60,6 +62,17 @@ nav_calculations::~nav_calculations() {}
 
 //=======================================================================================
 // Calculations 
+
+// Coordinate filter 
+void nav_calculations::coordinate_filter(
+    gps_waypoints_t& coordinates, 
+    double new_lat, 
+    double new_lon)
+{
+    coordinates.lat += (new_lat - coordinates.lat)*coordinate_lpf_gain; 
+    coordinates.lon += (new_lon - coordinates.lon)*coordinate_lpf_gain; 
+}
+
 
 // GPS radius calculation 
 int32_t nav_calculations::gps_radius(
@@ -87,9 +100,12 @@ int32_t nav_calculations::gps_radius(
     // atan2 is used because it produces an angle between +/-180 (pi). The central angle 
     // should always be positive and never greater than 180. 
     // Calculate the radius using a low pass filter to smooth the data. 
-    surf_dist += ((atan2(sqrt((eq2 - eq3)*(eq2 - eq3) + (eq1*eq1)), (eq4 + eq5)) * 
-                 EARTH_RADIUS*KM_TO_M) - surf_dist)*radius_gain; 
+    // surf_dist += ((atan2(sqrt((eq2 - eq3)*(eq2 - eq3) + (eq1*eq1)), (eq4 + eq5)) * 
+    //              EARTH_RADIUS*KM_TO_M) - surf_dist)*radius_lpf_gain; 
+    surf_dist = (atan2(sqrt((eq2 - eq3)*(eq2 - eq3) + (eq1*eq1)), (eq4 + eq5)) * 
+                EARTH_RADIUS*KM_TO_M); 
 
+    // Return value units: meters*10 
     return (int32_t)(surf_dist*SCALE_10); 
 }
 
@@ -118,7 +134,8 @@ int16_t nav_calculations::gps_heading(
 
     // Calculate the initial heading between coordinates. This calculation comes from the 
     // great-circle navigation equations. A low pass filter is added to smooth the data. 
-    heading_temp += (atan(num/den) - heading_temp)*heading_gain; 
+    // heading_temp += (atan(num/den) - heading_temp)*heading_lpf_gain; 
+    heading_temp = atan(num/den); 
 
     // Convert the calculated heading to degrees*10. 
     heading = (int16_t)(heading_temp*SCALE_10/deg_to_rad); 
@@ -195,6 +212,11 @@ int16_t nav_calculations::heading_error(
 
 //=======================================================================================
 // Setters 
+
+// Set the coordinate low pass filter gain 
+void nav_calculations::set_coordinate_lpf_gain(double lpf_gain) 
+    { coordinate_lpf_gain = lpf_gain; }
+
 
 // Set the True North offset 
 void nav_calculations::set_tn_offset(int16_t tn_offset) { true_north_offset = tn_offset; }

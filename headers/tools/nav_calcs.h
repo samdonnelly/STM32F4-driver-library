@@ -48,21 +48,36 @@ gps_waypoints_t;
 class nav_calculations 
 {
 private:   // Private variables 
-    double radius_gain;          // Low pass filter gain of the radius calculation 
-    double heading_gain;         // Low pass filter gain of the heading calculation 
+    // double radius_lpf_gain;      // Low pass filter gain of the radius calculation 
+    // double heading_lpf_gain;     // Low pass filter gain of the heading calculation 
+    double coordinate_lpf_gain;  // Low pass filter gain for GPS coordinates 
     int16_t true_north_offset;   // True North offset from magnetic North 
 
 public:   // Setup and teardown 
 
     // Constructor 
     nav_calculations(
-        double radius_lpf_gain, 
-        double heading_lpf_gain); 
+        // double radius_lpf_gain, 
+        // double heading_lpf_gain, 
+        double coordinate_lpf_gain); 
 
     // Destructor 
     ~nav_calculations(); 
 
 public:   // Calculations 
+
+    /**
+     * @brief Coordinate filter 
+     * 
+     * @param coordinates : coordinates to filter 
+     * @param new_lat 
+     * @param new_lon 
+     */
+    void nav_calculations::coordinate_filter(
+        gps_waypoints_t& coordinates, 
+        double new_lat, 
+        double new_lon); 
+
 
     /**
      * @brief GPS radius calculation 
@@ -169,6 +184,14 @@ public:   // Calculations
 
 
 public: 
+
+    /**
+     * @brief Set the coordinate low pass filter gain 
+     * 
+     * @param lpf_gain 
+     */
+    void set_coordinate_lpf_gain(double lpf_gain); 
+
 
     /**
      * @brief Set the True North offset 
