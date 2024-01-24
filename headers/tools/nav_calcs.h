@@ -44,22 +44,17 @@ gps_waypoints_t;
 //=======================================================================================
 // Classes 
 
-// GPS calculations 
+// Navigation calculations 
 class nav_calculations 
 {
 private:   // Private variables 
-    // double radius_lpf_gain;      // Low pass filter gain of the radius calculation 
-    // double heading_lpf_gain;     // Low pass filter gain of the heading calculation 
     double coordinate_lpf_gain;  // Low pass filter gain for GPS coordinates 
-    int16_t true_north_offset;   // True North offset from magnetic North 
+    int16_t true_north_offset;   // True north offset from magnetic north 
 
 public:   // Setup and teardown 
 
     // Constructor 
-    nav_calculations(
-        // double radius_lpf_gain, 
-        // double heading_lpf_gain, 
-        double coordinate_lpf_gain); 
+    nav_calculations(double coordinate_lpf_gain); 
 
     // Destructor 
     ~nav_calculations(); 
@@ -73,7 +68,7 @@ public:   // Calculations
      * @param new_lat 
      * @param new_lon 
      */
-    void nav_calculations::coordinate_filter(
+    void coordinate_filter(
         gps_waypoints_t& coordinates, 
         double new_lat, 
         double new_lon); 
@@ -105,17 +100,13 @@ public:   // Calculations
      *          but requires more calls to this function to reach the "true" value. If the 
      *          gain is 1 then no filtering takes place. 
      * 
-     * @param lat_cur : current device latitude 
-     * @param lon_cur : current device longitude 
-     * @param lat_tar : target waypoint latitude 
-     * @param lon_tar : target waypoint longitude 
+     * @param current : current location 
+     * @param target : target location 
      * @return int32_t : GPS radius (meters*10) 
      */
     int32_t gps_radius(
-        double lat_cur, 
-        double lon_cur, 
-        double lat_tar, 
-        double lon_tar); 
+        gps_waypoints_t current, 
+        gps_waypoints_t target); 
 
 
     /**
@@ -155,14 +146,14 @@ public:   // Calculations
     /**
      * @brief True North heading 
      * 
-     * @details Reads the heading from the magnetometer and adds the true North heading offset 
+     * @details Reads the heading from the magnetometer and adds the true north heading offset 
      *          stored in 'mag_tn_correction' (global variable below). After the offset is 
      *          added the heading is checked to see if it is outside the acceptable heading 
      *          range (0-359.9 degrees) and if it is then it's corrected to be withing range 
-     *          (ex. 365 degrees gets corrected to 5 degrees which is the same thing). 
+     *          (ex. 365 degrees gets corrected to 5 degrees which is the same direction). 
      * 
-     * @param heading : current compass heading 
-     * @return int16_t : True North heading 
+     * @param heading : current compass heading (degrees*10) 
+     * @return int16_t : true north heading (degrees*10) 
      */
     int16_t true_north_heading(int16_t heading); 
 
@@ -182,21 +173,24 @@ public:   // Calculations
         int16_t current_heading, 
         int16_t target_heading); 
 
-
-public: 
+public:   // Setters 
 
     /**
-     * @brief Set the coordinate low pass filter gain 
+     * @brief Set the GPS coordinate low pass filter gain 
      * 
-     * @param lpf_gain 
+     * @details Show equation for the low pass filter 
+     * 
+     * @param coordinate_gain : coordinate low pass filter gain 
      */
-    void set_coordinate_lpf_gain(double lpf_gain); 
+    void set_coordinate_lpf_gain(double coordinate_gain); 
 
 
     /**
-     * @brief Set the True North offset 
+     * @brief Set the true north correction offset 
      * 
-     * @param tn_offset : True North offset 
+     * @see true_north_heading 
+     * 
+     * @param tn_offset : true north offset 
      */
     void set_tn_offset(int16_t tn_offset); 
 }; 

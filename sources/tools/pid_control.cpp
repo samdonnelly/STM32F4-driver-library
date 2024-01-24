@@ -84,11 +84,9 @@ int16_t pid_controller::pid_calc(int16_t error)
     // Derivative 
 
     derivative = KD*(error - error_prev); 
+    error_prev = error; 
     
     //==================================================
-
-    // Record the most recent error 
-    error_prev = error; 
 
     return proportional + integral + derivative; 
 }
