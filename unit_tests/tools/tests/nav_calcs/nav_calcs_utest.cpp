@@ -13,6 +13,7 @@
 #include "CppUTest/TestHarness.h"
 
 #include "nav_calcs.h" 
+#include "tools.h" 
 #include "gps_coordinates_test.h" 
 
 #include <iostream> 
@@ -31,6 +32,7 @@ extern "C"
 #define DEFAULT_GAIN 0.1 
 #define DEFAULT_TN_OFFSET 120 
 #define MAX_RADIUS_ERROR 50     // 5 meters (or 50 meters*10 - scaled value) 
+#define MAX_HEADING_ERROR 5     // 0.5 degrees (or 5 degrees*10 - scaled value) 
 
 //=======================================================================================
 
@@ -54,6 +56,55 @@ TEST_GROUP(nav_calcs_test)
         // 
     }
 }; 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Helper functions 
+
+// Update the indexing used to navigation the test coordinate info 
+void nav_calcs_test_coordinate_info_indexing(
+    uint8_t& i0, 
+    uint8_t& i1)
+{
+    // Global and local waypoints require different indexing beacuse they're not 
+    // evaluated together. 
+
+    // Global waypoints 
+    if (i0 < NUM_GLOBAL_TEST_WAYPOINTS)
+    {
+        if (i1 >= NUM_GLOBAL_TEST_WAYPOINTS)
+        {
+            if (++i0 < NUM_GLOBAL_TEST_WAYPOINTS)
+            {
+                i1 = CLEAR; 
+            }
+        }
+        
+        if ((i0 == (NUM_GLOBAL_TEST_WAYPOINTS - 1)) && (i0 == i1))
+        {
+            i0++; 
+            i1++; 
+        }
+    }
+    // Localized waypoints 
+    else 
+    {
+        if (i1 >= NUM_TEST_WAYPOINTS)
+        {
+            if (++i0 < NUM_TEST_WAYPOINTS)
+            {
+                i1 = NUM_GLOBAL_TEST_WAYPOINTS; 
+            }
+        }
+    }
+
+    if (i0 == i1)
+    {
+        i1++; 
+    }
+}
 
 //=======================================================================================
 
@@ -89,23 +140,43 @@ TEST(nav_calcs_test, nav_calcs_coordinate_filter_gain_update)
 TEST(nav_calcs_test, nav_calcs_gps_radius_calculation)
 {
     nav_calculations nav_local; 
-    int32_t radii[9]; 
+    int32_t radii[NUM_TEST_INFO]; 
+    uint8_t i0 = CLEAR, i1 = CLEAR; 
 
-    radii[0] = nav_local.gps_radius(waypoints_test[0], waypoints_test[1]); 
-    radii[1] = nav_local.gps_radius(waypoints_test[0], waypoints_test[2]); 
-    radii[2] = nav_local.gps_radius(waypoints_test[0], waypoints_test[3]); 
-    radii[3] = nav_local.gps_radius(waypoints_test[0], waypoints_test[4]); 
-    radii[4] = nav_local.gps_radius(waypoints_test[0], waypoints_test[5]); 
-    radii[5] = nav_local.gps_radius(waypoints_test[6], waypoints_test[7]); 
-    radii[6] = nav_local.gps_radius(waypoints_test[7], waypoints_test[8]); 
-    radii[7] = nav_local.gps_radius(waypoints_test[8], waypoints_test[9]); 
-    radii[8] = nav_local.gps_radius(waypoints_test[9], waypoints_test[6]); 
+    // Calculate the radius/distance between each combination of waypoints. 
+    for (uint8_t i = CLEAR; i < NUM_TEST_INFO; i++)
+    {
+        nav_calcs_test_coordinate_info_indexing(i0, i1); 
+        radii[i] = nav_local.gps_radius(waypoints_test[i0], waypoints_test[i1++]); 
+    }
 
-    // The first 6 coordinates are spaced very far apart and the results are compared to 
-    // values calculated external to this code which means some error is expected. For 
-    // these coordinates specifically, the result of the calculation in this code is 
-    // checked to be within a maximum error of the external value. 
-    LONGS_EQUAL(true, abs(110004589 - radii[0]) < MAX_RADIUS_ERROR); 
+    // // Evaluate the radius/distance calculations. Global and local values require 
+    // // different evalution (see the notes below). 
+    // for (uint8_t i = CLEAR; i < NUM_TEST_INFO; i++)
+    // {
+    //     // Global waypoints 
+    //     if (i < NUM_GLOBAL_TEST_INFO)
+    //     {
+    //         // The global coordinates are spaced very far apart and the results are compared to 
+    //         // values calculated external to this code which means some error is expected. For 
+    //         // these coordinates specifically, the result of the calculation in this code is 
+    //         // checked to be within a maximum error of the external value. 
+    //         LONGS_EQUAL(true, abs(waypoint_info_test[i].radius - radii[i]) < MAX_RADIUS_ERROR); 
+    //     }
+    //     // Localized waypoints 
+    //     else 
+    //     {
+    //         // The local coordinates are close enough together that error is minimal so the 
+    //         // excat value can be checked. 
+    //         LONGS_EQUAL(waypoint_info_test[i].radius, radii[i]); 
+    //     }
+    // }
+
+    LONGS_EQUAL(true, abs(waypoint_info_test[0].radius - radii[0]) < MAX_RADIUS_ERROR); 
+    LONGS_EQUAL(true, abs(waypoint_info_test[1].radius - radii[1]) < MAX_RADIUS_ERROR); 
+    LONGS_EQUAL(true, abs(waypoint_info_test[2].radius - radii[2]) < MAX_RADIUS_ERROR); 
+    LONGS_EQUAL(true, abs(waypoint_info_test[3].radius - radii[3]) < MAX_RADIUS_ERROR); 
+    LONGS_EQUAL(true, abs(waypoint_info_test[4].radius - radii[4]) < MAX_RADIUS_ERROR); 
 }
 
 //==================================================
@@ -117,12 +188,18 @@ TEST(nav_calcs_test, nav_calcs_gps_radius_calculation)
 // GPS heading calculated correctly 
 TEST(nav_calcs_test, nav_calcs_gps_heading_calculation)
 {
-    nav_calculations nav_local(DEFAULT_GAIN); 
-    nav_local.set_tn_offset(DEFAULT_TN_OFFSET); 
+    nav_calculations nav_local; 
+    int16_t headings[NUM_TEST_INFO]; 
+    uint8_t i0 = CLEAR, i1 = CLEAR; 
 
-    int32_t heading = nav_local.gps_heading(waypoints_test[0], waypoints_test[1]); 
+    // Calculate the heading between each combination of waypoints. 
+    for (uint8_t i = CLEAR; i < NUM_TEST_INFO; i++)
+    {
+        nav_calcs_test_coordinate_info_indexing(i0, i1); 
+        headings[i] = nav_local.gps_heading(waypoints_test[i0], waypoints_test[i1++]); 
+    }
 
-    LONGS_EQUAL(true, abs(1437 - heading) < 5); 
+    LONGS_EQUAL(true, abs(waypoint_info_test[0].heading - headings[0]) < MAX_HEADING_ERROR); 
 }
 
 //==================================================
