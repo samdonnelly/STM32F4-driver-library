@@ -53,7 +53,10 @@ private:   // Private variables
 
 public:   // Setup and teardown 
 
-    // Constructor 
+    // Constructor - Default 
+    nav_calculations(); 
+
+    // Constructor - Specify filter gain 
     nav_calculations(double coordinate_lpf_gain); 
 
     // Destructor 
@@ -130,17 +133,13 @@ public:   // Calculations
      *          but requires more calls to this function to reach the "true" value. If the 
      *          gain is 1 then no filtering takes place. 
      * 
-     * @param lat_cur : current device latitude 
-     * @param lon_cur : current device longitude 
-     * @param lat_tar : target waypoint latitude 
-     * @param lon_tar : target waypoint longitude 
-     * @return int16_t : GPS True North heading heading (degrees*10) 
+     * @param current : current location 
+     * @param target : target location 
+     * @return int16_t : GPS heading (degrees*10) 
      */
     int16_t gps_heading(
-        double lat_cur, 
-        double lon_cur, 
-        double lat_tar, 
-        double lon_tar); 
+        gps_waypoints_t current, 
+        gps_waypoints_t target); 
 
 
     /**

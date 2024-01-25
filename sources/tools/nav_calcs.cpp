@@ -45,7 +45,11 @@ const double rad_to_scaled_deg = RAD_TO_DEG*SCALE_10;
 //=======================================================================================
 // Setup and teardown 
 
-// Constructor 
+// Constructor - Default
+nav_calculations::nav_calculations() {} 
+
+
+// Constructor - Specify filter gain 
 nav_calculations::nav_calculations(double coordinate_gain) 
     : coordinate_lpf_gain(coordinate_gain), 
       true_north_offset(CLEAR) {} 
@@ -76,7 +80,7 @@ int32_t nav_calculations::gps_radius(
     gps_waypoints_t current, 
     gps_waypoints_t target)
 {
-    double trig0, trig1, trig2, trig3, trig4, eq0, eq1, eq2, eq3, eq4, eq5, eq6, surf_dist; 
+    double eq0, eq1, eq2, eq3, eq4, eq5, eq6, eq7, eq8, eq9, eq10, eq11, surf_dist; 
 
     // Convert the coordinates to radians so they're compatible with the math library. 
     current.lat *= deg_to_rad; 
@@ -91,20 +95,19 @@ int32_t nav_calculations::gps_radius(
     // by 10 (units: meters*10) so its integer representation can hold one decimal place 
     // of accuracy. Equations are structured to not have repeated calculations. 
     eq0 = target.lon - current.lon; 
-    trig0 = cos(target.lat); 
-    trig1 = cos(current.lat); 
-    trig2 = sin(target.lat); 
-    trig3 = sin(current.lat); 
-    trig4 = cos(eq0); 
-    eq1 = trig0*sin(eq0); 
-    eq2 = trig1*trig2; 
-    eq3 = trig3*trig0*trig4; 
-    eq4 = trig3*trig2; 
-    eq5 = trig1*trig0*trig4; 
-    eq6 = eq2 - eq3; 
+    eq1 = cos(target.lat); 
+    eq2 = cos(current.lat); 
+    eq3 = sin(target.lat); 
+    eq4 = sin(current.lat); 
+    eq5 = cos(eq0); 
+    eq6 = eq1*sin(eq0); 
+    eq7 = eq2*eq3; 
+    eq8 = eq4*eq1*eq5; 
+    eq9 = eq4*eq3; 
+    eq10 = eq2*eq1*eq5; 
+    eq11 = eq7 - eq8; 
 
-    surf_dist = atan2(sqrt((eq6*eq6) + (eq1*eq1)), (eq4 + eq5)) * 
-                EARTH_RADIUS*KM_TO_M; 
+    surf_dist = atan2(sqrt((eq11*eq11) + (eq6*eq6)), (eq9 + eq10))*EARTH_RADIUS*KM_TO_M; 
     
     return (int32_t)(surf_dist*SCALE_10); 
 }
@@ -112,22 +115,17 @@ int32_t nav_calculations::gps_radius(
 
 // GPS heading calculation 
 int16_t nav_calculations::gps_heading(
-    double lat_cur, 
-    double lon_cur, 
-    double lat_tar, 
-    double lon_tar)
+    gps_waypoints_t current, 
+    gps_waypoints_t target)
 {
     int16_t heading; 
-    double num, den; 
-
-    // Convert coordinates to radians in the correct reference frame. 
-    // coordinate_conversion(lat_cur, lon_cur, lat_tar, lon_tar); 
+    double eq0, eq1, num, den; 
 
     // Convert the coordinates to radians so they're compatible with the math library. 
-    lat_cur *= deg_to_rad; 
-    lon_cur *= deg_to_rad; 
-    lat_tar *= deg_to_rad; 
-    lon_tar *= deg_to_rad; 
+    current.lat *= deg_to_rad; 
+    current.lon *= deg_to_rad; 
+    target.lat *= deg_to_rad; 
+    target.lon *= deg_to_rad; 
 
     // Calculate the initial heading in radians between coordinates relative to true north. 
     // As you move along the path that's the shortest distance between two points on the 
@@ -136,8 +134,10 @@ int16_t nav_calculations::gps_heading(
     // equations. Once the heading is found it's converted from radians to degrees and 
     // scaled by 10 (units: degrees*10) so its integer representation can hold one decimal 
     // place of accuracy. 
-    num = cos(lat_tar)*sin(lon_tar-lon_cur); 
-    den = cos(lat_cur)*sin(lat_tar) - sin(lat_cur)*cos(lat_tar)*cos(lon_tar-lon_cur); 
+    eq0 = cos(target.lat); 
+    eq1 = target.lon - current.lon; 
+    num = eq0*sin(eq1); 
+    den = cos(current.lat)*sin(target.lat) - sin(current.lat)*eq0*cos(eq1); 
 
     heading = (int16_t)(atan(num/den)*rad_to_scaled_deg); 
 
