@@ -80,12 +80,11 @@ nav_calculations::~nav_calculations() {}
 
 // Coordinate filter 
 void nav_calculations::coordinate_filter(
-    gps_waypoints_t& coordinates, 
-    double new_lat, 
-    double new_lon)
+    gps_waypoints_t current, 
+    gps_waypoints_t& filtered)
 {
-    coordinates.lat += (new_lat - coordinates.lat)*coordinate_lpf_gain; 
-    coordinates.lon += (new_lon - coordinates.lon)*coordinate_lpf_gain; 
+    filtered.lat += (current.lat - filtered.lat)*coordinate_lpf_gain; 
+    filtered.lon += (current.lon - filtered.lon)*coordinate_lpf_gain; 
 }
 
 
@@ -94,7 +93,7 @@ int32_t nav_calculations::gps_radius(
     gps_waypoints_t current, 
     gps_waypoints_t target)
 {
-    double eq0, eq1, eq2, eq3, eq4, eq5, eq6, eq7, eq8, eq9, eq10, eq11, surf_dist; 
+    double eq0, eq1, eq2, eq3, eq4, eq5, eq6, eq7, surf_dist; 
 
     // Convert the coordinates to radians so they're compatible with the math library. 
     current.lat *= deg_to_rad; 
@@ -113,15 +112,11 @@ int32_t nav_calculations::gps_radius(
     eq2 = cos(current.lat); 
     eq3 = sin(target.lat); 
     eq4 = sin(current.lat); 
-    eq5 = cos(eq0); 
-    eq6 = eq1*sin(eq0); 
-    eq7 = eq2*eq3; 
-    eq8 = eq4*eq1*eq5; 
-    eq9 = eq4*eq3; 
-    eq10 = eq2*eq1*eq5; 
-    eq11 = eq7 - eq8; 
+    eq5 = eq1*sin(eq0); 
+    eq6 = eq1*cos(eq0); 
+    eq7 = eq2*eq3 - eq4*eq6; 
 
-    surf_dist = atan2(sqrt((eq11*eq11) + (eq6*eq6)), (eq9 + eq10))*EARTH_RADIUS*KM_TO_M; 
+    surf_dist = atan2(sqrt((eq7*eq7) + (eq5*eq5)), (eq4*eq3 + eq2*eq6))*EARTH_RADIUS*KM_TO_M; 
     
     return (int32_t)(surf_dist*SCALE_10); 
 }
@@ -212,8 +207,8 @@ int16_t nav_calculations::heading_error(
     // degrees (-(10 + (360-345))) because that is the smaller angle between the two 
     // headings and the negative sign indicates in what direction this smaller error 
     // happens. So instead of turning 335 degrees clockwise, you can turn 25 degrees 
-    // counter clockwise to correct for the error. The inflection point for this 
-    // correction is 180 degrees (or 1800 in degrees*10). 
+    // counter clockwise to correct for the error. The inflection point of the error 
+    // for this correction is 180 degrees (or 1800 in degrees*10). 
 
     int16_t heading_error = target_heading - current_heading; 
 
@@ -221,7 +216,7 @@ int16_t nav_calculations::heading_error(
     {
         heading_error -= HEADING_FULL_RANGE; 
     }
-    else if (heading_error < -MAX_HEADING_DIFF)
+    else if (heading_error <= -MAX_HEADING_DIFF)
     {
         heading_error += HEADING_FULL_RANGE; 
     }

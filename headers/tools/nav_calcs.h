@@ -56,13 +56,13 @@ public:   // Setup and teardown
     // Constructor - Default 
     nav_calculations(); 
 
-    // Constructor - Specify filter gain 
+    // Constructor - Specify coordinate filter gain 
     nav_calculations(double coordinate_gain); 
 
     // Constructor - Specify true north correction offset 
     nav_calculations(int16_t tn_offset); 
 
-    // Constructor - Specify filter gain and true north correction offset 
+    // Constructor - Specify coordinate filter gain and true north correction offset 
     nav_calculations(
         double coordinate_gain, 
         int16_t tn_offset); 
@@ -75,45 +75,50 @@ public:   // Calculations
     /**
      * @brief Coordinate filter 
      * 
-     * @param coordinates : coordinates to filter 
-     * @param new_lat 
-     * @param new_lon 
+     * @details Uses a low pass filter to reduce noise in GPS coordinate readings. The 
+     *          low pass filter equation is as follows: 
+     *          
+     *          filtered_gps_new = filtered_gps_old + (current_gps - filtered_gps_old)*gain 
+     *          
+     *          where 'gain' is 'coordinate_lpf_gain'. A smaller gain will filter more noise 
+     *          but require more calculations/updates to converge on the current value. 
+     *          The opposite is true for a larger gain. For this filter to work as intended, 
+     *          the gain must be between 0 and 1. The needed gain will depend on the 
+     *          application. 
+     *          
+     *          Coordinates passed to this function must be expressed entirely in degrees 
+     *          (i.e. no minutes or seconds representation). They must also be within the 
+     *          following range: 
+     *                            -90deg <= latitude  <= +90deg 
+     *                           -180deg <  longitude <= +180deg 
+     * 
+     * @see set_coordinate_lpf_gain 
+     * 
+     * @param current : current location - most recent coordinates read from GPS 
+     * @param filtered : filtered coordinates - managed by the application 
      */
     void coordinate_filter(
-        gps_waypoints_t& coordinates, 
-        double new_lat, 
-        double new_lon); 
+        gps_waypoints_t current, 
+        gps_waypoints_t& filtered); 
 
 
     /**
-     * @brief GPS radius calculation 
+     * @brief GPS coordinate radius calculation 
      * 
-     * @details Calculates the Earths surface distance (arc distance) between the current 
-     *          GPS location and the target GPS location and returns the distance expressed 
-     *          as meters*10. The great-circle navigation equations are used in this 
-     *          function to determine the distance between the points. 
+     * @details Calculates the surface distance (or radius because it's direction 
+     *          independent) between two coordinates. This distance can also be described 
+     *          as the length of the arc along the great circle that connects these two 
+     *          points. The two coordinates are the current and target locations and the 
+     *          returned distance is expressed in meters*10 to provide one decimal place 
+     *          of accuracy while still being an integer. 
      *          
-     *          An example use case for this information is knowing when an object has "hit" 
-     *          its desired location, meaning the calculated distance is below some 
-     *          threshold. Note that this function does not compare the distance against a 
-     *          threshold, that is left to the application to interpret. 
-     *          
-     *          This distance is referred to as a radius because even though coordinates are 
-     *          used to find the distance, the result has no directional significance. If 
-     *          the target location is assumed to be the center of a circle, all the 
-     *          locations in a circle around the target have the same calculated distance, 
-     *          or radius. 
-     *          
-     *          The radius is calculated using a low pass filter to smooth out GPS noise 
-     *          and inaccuracy. The amount of filtering depends on the gain chosen (argument 
-     *          in the constructor). The gain must be greater than 0 but less than or equal 
-     *          to 1 (0 < gain <= 1). As the gain approaches 0, the filtering is stronger 
-     *          but requires more calls to this function to reach the "true" value. If the 
-     *          gain is 1 then no filtering takes place. 
-     *          
-     *          *Add range and format of coordinates. 
+     *          Coordinates passed to this function must be expressed entirely in degrees 
+     *          (i.e. no minutes or seconds representation). They must also be within the 
+     *          following range: 
+     *                            -90deg <= latitude  <= +90deg 
+     *                           -180deg <  longitude <= +180deg 
      * 
-     * @param current : current location 
+     * @param current : current location (read from a GPS device) 
      * @param target : target location 
      * @return int32_t : GPS radius (meters*10) 
      */
@@ -125,26 +130,26 @@ public:   // Calculations
     /**
      * @brief GPS heading calculation 
      * 
-     * @details Calculates the initial heading between the current location and the target 
-     *          location. The heading is an angle between 0-359.9 degrees clockwise relative 
-     *          to True North and the returned heading is expressed as degrees*10. The 
-     *          great-circle navigation equations are used in this function to find the 
-     *          initial heading. 
+     * @details Calculates the initial heading between two GPS coordinates relative to 
+     *          true north. The heading is an angle from 0 to 359.9 degrees rotating 
+     *          clockwise starting from the true north direction. The two coordinates 
+     *          are the current and target locations and the returned heading is 
+     *          expressed in degrees*10 to provide one decimal place of accuracy while 
+     *          still being an integer. 
      *          
-     *          This information identifies the direction the object must travel at that 
-     *          given moment in time in order to go directly towards the target location. 
-     *          This can be compared to an objects current heading to know the error 
-     *          between the current and target heading. 
+     *          As you move along the great circle path between two coordinates (i.e. 
+     *          the most direct path), your heading relative to true north changes 
+     *          which is why this function calculates the instantaneous heading. This 
+     *          function must be called repeatedly to keep the heading up to date. 
      *          
-     *          The heading is calculated using a low pass filter to smooth out GPS noise 
-     *          and inaccuracy. The amount of filtering depends on the gain chosen (argument 
-     *          in the constructor). The gain must be greater than 0 but less than or equal 
-     *          to 1 (0 < gain <= 1). As the gain approaches 0, the filtering is stronger 
-     *          but requires more calls to this function to reach the "true" value. If the 
-     *          gain is 1 then no filtering takes place. 
+     *          Coordinates passed to this function must be expressed entirely in degrees 
+     *          (i.e. no minutes or seconds representation). They must also be within the 
+     *          following range: 
+     *                            -90deg <= latitude  <= +90deg 
+     *                           -180deg <  longitude <= +180deg 
      * 
-     * @param current : current location 
-     * @param target : target location 
+     * @param current : current location (read from a GPS device) 
+     * @param target : target/desired location 
      * @return int16_t : GPS heading (degrees*10) 
      */
     int16_t gps_heading(
@@ -153,15 +158,24 @@ public:   // Calculations
 
 
     /**
-     * @brief True North heading 
+     * @brief True north heading 
      * 
-     * @details Reads the heading from the magnetometer and adds the true north heading offset 
-     *          stored in 'mag_tn_correction' (global variable below). After the offset is 
-     *          added the heading is checked to see if it is outside the acceptable heading 
-     *          range (0-359.9 degrees) and if it is then it's corrected to be withing range 
-     *          (ex. 365 degrees gets corrected to 5 degrees which is the same direction). 
+     * @details Takes a heading relative to magnetic north and determines the heading 
+     *          relative to true north. The returned heading is an angle from 0 to 359.9 
+     *          degrees rotating clockwise starting from the true north direction, and 
+     *          it's expressed in degrees*10 to provide a decimal place of accuracy. A 
+     *          heading relative to magnetic north typically comes from a digital compass. 
+     *          
+     *          This function uses 'true_north_offset' to get the true north heading. 
+     *          It can be either positive or negative and its value is how many degrees 
+     *          you must rotate from true north to get to magnetic north where clockwise 
+     *          rotation is positive. The offset between magnetic and true north changes 
+     *          depending on your location on Earth which means this value must be updated 
+     *          accordingly. 
      * 
-     * @param heading : current compass heading (degrees*10) 
+     * @see set_tn_offset 
+     * 
+     * @param heading : current compass heading relative to magnetic north (degrees*10) 
      * @return int16_t : true north heading (degrees*10) 
      */
     int16_t true_north_heading(int16_t heading); 
@@ -170,13 +184,18 @@ public:   // Calculations
     /**
      * @brief Heading error 
      * 
-     * @details Difference between the current and target heading. If the 0/360deg 
-     *          heading point is between the two headings then the error is adjusted. 
-     *          Returned error is within +/-180deg. 
+     * @details Determines the error between the current and desired headings. The 
+     *          returned error is an angle from -179.9 to +180 degrees relative to the 
+     *          current heading and expressed in degrees*10 to provide one decimal 
+     *          place of accuracy. 
+     *          
+     *          The error will always be the shortest angle between the two headings. 
+     *          A positive error indicates a clockwise rotation to get from the current 
+     *          to the desired heading. A negative error is a counter clockwise rotation. 
      * 
-     * @param heading_desired 
-     * @param heading_current 
-     * @return int16_t 
+     * @param current_heading : current heading (degrees*10) 
+     * @param target_heading : target/desired heading (degrees*10) 
+     * @return int16_t : signed error between headings (degrees*10) 
      */
     int16_t heading_error(
         int16_t current_heading, 
@@ -187,7 +206,7 @@ public:   // Setters
     /**
      * @brief Set the GPS coordinate low pass filter gain 
      * 
-     * @details Show equation for the low pass filter 
+     * @see coordinate_filter 
      * 
      * @param coordinate_gain : coordinate low pass filter gain 
      */
@@ -199,7 +218,7 @@ public:   // Setters
      * 
      * @see true_north_heading 
      * 
-     * @param tn_offset : true north offset 
+     * @param tn_offset : offset between magnetic and true north (degrees*10) 
      */
     void set_tn_offset(int16_t tn_offset); 
 }; 

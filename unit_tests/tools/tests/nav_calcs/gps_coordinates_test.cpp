@@ -94,7 +94,7 @@ const inter_coordinate_info_t waypoint_info_test[NUM_TEST_INFO] =
 // Headings 
 const int16_t headings[NUM_HEADINGS] = 
 {
-    0, 50, 150, 3450, 3550, 3600 
+    0, 50, 150, 1750, 3450, 3550, 3600 
 }; 
 
 //=======================================================================================

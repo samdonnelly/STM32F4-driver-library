@@ -39,7 +39,7 @@ extern "C" {
 #define NUM_GLOBAL_TEST_INFO 30 
 
 // Compass headings 
-#define NUM_HEADINGS 6 
+#define NUM_HEADINGS 7 
 
 //=======================================================================================
 

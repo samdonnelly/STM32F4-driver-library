@@ -29,10 +29,20 @@ extern "C"
 //=======================================================================================
 // Macros 
 
-#define DEFAULT_GAIN 0.1        // Low pass filter gain 
-#define DEFAULT_TN_OFFSET 120   // 12 degrees (or 120 degrees*10 - scaled value) 
-#define MAX_RADIUS_ERROR 50     // 5 meters (or 50 meters*10 - scaled value) 
-#define MAX_HEADING_ERROR 2     // 0.2 degrees (or 2 degrees*10 - scaled value) 
+// Driver parameters 
+#define LPF_GAIN_0 0.1           // Low pass filter gain 
+#define LPF_GAIN_1 0.5           // Low pass filter gain 
+#define DEFAULT_TN_OFFSET 120    // 12 degrees (or 120 degrees*10 - scaled value) 
+
+// Calculation allowable errors 
+#define MAX_GPS_ERROR 0.0001     // Max difference between coordinates when filtering 
+#define MAX_RADIUS_ERROR 50      // 5 meters (or 50 meters*10 - scaled value) 
+#define MAX_HEADING_ERROR 2      // 0.2 degrees (or 2 degrees*10 - scaled value) 
+
+// Data 
+#define LPF0_FILTER_ATTEMPT 45   // Number of filter attempts needed for LPF_GAIN_0 
+#define LPF1_FILTER_ATTEMPT 7    // Number of filter attempts needed for LPF_GAIN_1 
+#define HEADING_RANGE 3600       // 360 degrees (or 3600 degrees*10 - scaled value) 
 
 //=======================================================================================
 
@@ -118,16 +128,35 @@ void nav_calcs_test_coordinate_info_indexing(
 // Coordinate filtering works as expected 
 TEST(nav_calcs_test, nav_calcs_coordinate_filter_works)
 {
-    double coordinate_filter_gain = DEFAULT_GAIN; 
-    nav_calculations nav_local(coordinate_filter_gain); 
-}
+    // This test shows that the coordinate filter function needs to be called less 
+    // times for a larger gain. A caveat to a larger gain is that it will filter less 
+    // noise. Noise depends on the system and can't be tested here. 
 
-
-// Coordinate filter gain updated successfully 
-TEST(nav_calcs_test, nav_calcs_coordinate_filter_gain_update)
-{
-    double coordinate_filter_gain = DEFAULT_GAIN; 
+    double coordinate_filter_gain = LPF_GAIN_0; 
     nav_calculations nav_local(coordinate_filter_gain); 
+    gps_waypoints_t gps_current = { waypoints_test[8].lat, waypoints_test[8].lon }; 
+    gps_waypoints_t gps_filtered = { waypoints_test[7].lat, waypoints_test[7].lon }; 
+
+    // Call the coordinate filter function until the filtered coordinate is within 
+    // an acceptable error of the current location. 
+    for (uint8_t i = CLEAR; i < LPF0_FILTER_ATTEMPT; i++)
+    {
+        nav_local.coordinate_filter(gps_current, gps_filtered); 
+    }
+    LONGS_EQUAL(true, abs(gps_current.lat - gps_filtered.lat) < MAX_GPS_ERROR); 
+    LONGS_EQUAL(true, abs(gps_current.lon - gps_filtered.lon) < MAX_GPS_ERROR); 
+
+    // Retest the filter with a larger gain. The increased gain will allow for the 
+    // filtered coordinates to update more quickly. 
+    gps_filtered = { waypoints_test[7].lat, waypoints_test[7].lon }; 
+    nav_local.set_coordinate_lpf_gain(LPF_GAIN_1); 
+
+    for (uint8_t i = CLEAR; i < LPF1_FILTER_ATTEMPT; i++)
+    {
+        nav_local.coordinate_filter(gps_current, gps_filtered); 
+    }
+    LONGS_EQUAL(true, abs(gps_current.lat - gps_filtered.lat) < MAX_GPS_ERROR); 
+    LONGS_EQUAL(true, abs(gps_current.lon - gps_filtered.lon) < MAX_GPS_ERROR); 
 }
 
 //==================================================
@@ -224,18 +253,21 @@ TEST(nav_calcs_test, nav_calcs_tn_heading_calculation)
     nav_calculations nav_local(tn_offset); 
 
     // Start with a positive true north offset (set in the constructor). 
-    LONGS_EQUAL(headings[3] + tn_offset, nav_local.true_north_heading(headings[3])); 
-    LONGS_EQUAL(headings[4] + tn_offset - 3600, nav_local.true_north_heading(headings[4])); 
+    LONGS_EQUAL(headings[4] + tn_offset, nav_local.true_north_heading(headings[4])); 
+    LONGS_EQUAL(headings[5] + tn_offset - HEADING_RANGE, 
+                nav_local.true_north_heading(headings[5])); 
 
     // Rerun the tests with the true north offset equal to zero. 
     nav_local.set_tn_offset(CLEAR); 
     LONGS_EQUAL(headings[0], nav_local.true_north_heading(headings[0])); 
-    LONGS_EQUAL(headings[5] - 3600, nav_local.true_north_heading(headings[5])); 
+    LONGS_EQUAL(headings[6] - HEADING_RANGE, 
+                nav_local.true_north_heading(headings[6])); 
 
     // Rerun the tests with the true north offset as a negative value. 
     nav_local.set_tn_offset(-tn_offset); 
     LONGS_EQUAL(headings[2] - tn_offset, nav_local.true_north_heading(headings[2])); 
-    LONGS_EQUAL(headings[1] - tn_offset + 3600, nav_local.true_north_heading(headings[1])); 
+    LONGS_EQUAL(headings[1] - tn_offset + HEADING_RANGE, 
+                nav_local.true_north_heading(headings[1])); 
 }
 
 //==================================================
@@ -247,7 +279,32 @@ TEST(nav_calcs_test, nav_calcs_tn_heading_calculation)
 // Heading error calculated and adjusted correctly 
 TEST(nav_calcs_test, nav_calcs_heading_error_calculation)
 {
+    // Heading error can be either positive or negative. Positive indicates that the 
+    // shortest angle between the current and target headings is in the clockwise 
+    // direction. Negative indicates the shortest angle is in the counter clockwise 
+    // direction. 
+
     nav_calculations nav_local; 
+
+    // Negative error. The target and current headings produce a positive error greater 
+    // than 180deg so it's changed to be a negative error that is less than 180deg. 
+    LONGS_EQUAL(headings[5] - headings[2] - HEADING_RANGE, 
+                nav_local.heading_error(headings[2], headings[5])); 
+    
+    // Positive error. The target and current headings produce a negative error greater 
+    // than 180deg so it's changed to be a positive error that is less than 180deg. 
+    LONGS_EQUAL(headings[2] - headings[4] + HEADING_RANGE, 
+                nav_local.heading_error(headings[4], headings[2])); 
+    
+    // Negative error. The target and current headings produce a negative error less 
+    // than 180deg. 
+    LONGS_EQUAL(headings[3] - headings[0], 
+                nav_local.heading_error(headings[0], headings[3])); 
+    
+    // Positive error. The target and current headings produce a positive error less 
+    // than 180deg. 
+    LONGS_EQUAL(headings[5] - headings[3], 
+                nav_local.heading_error(headings[3], headings[5])); 
 }
 
 //==================================================
