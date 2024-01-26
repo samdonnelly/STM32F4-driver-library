@@ -38,6 +38,9 @@ extern "C" {
 #define NUM_TEST_INFO 42 
 #define NUM_GLOBAL_TEST_INFO 30 
 
+// Compass headings 
+#define NUM_HEADINGS 6 
+
 //=======================================================================================
 
 
@@ -56,17 +59,16 @@ inter_coordinate_info_t;
 
 
 //=======================================================================================
-// Coordinates 
+// Data 
 
+// Coordinates 
 extern const gps_waypoints_t waypoints_test[NUM_TEST_WAYPOINTS]; 
 
-//=======================================================================================
-
-
-//=======================================================================================
 // Coordinate info 
-
 extern const inter_coordinate_info_t waypoint_info_test[NUM_TEST_INFO]; 
+
+// Headings 
+extern const int16_t headings[NUM_HEADINGS]; 
 
 //=======================================================================================
 

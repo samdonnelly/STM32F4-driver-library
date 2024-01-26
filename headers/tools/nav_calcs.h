@@ -57,7 +57,15 @@ public:   // Setup and teardown
     nav_calculations(); 
 
     // Constructor - Specify filter gain 
-    nav_calculations(double coordinate_lpf_gain); 
+    nav_calculations(double coordinate_gain); 
+
+    // Constructor - Specify true north correction offset 
+    nav_calculations(int16_t tn_offset); 
+
+    // Constructor - Specify filter gain and true north correction offset 
+    nav_calculations(
+        double coordinate_gain, 
+        int16_t tn_offset); 
 
     // Destructor 
     ~nav_calculations(); 
@@ -102,6 +110,8 @@ public:   // Calculations
      *          to 1 (0 < gain <= 1). As the gain approaches 0, the filtering is stronger 
      *          but requires more calls to this function to reach the "true" value. If the 
      *          gain is 1 then no filtering takes place. 
+     *          
+     *          *Add range and format of coordinates. 
      * 
      * @param current : current location 
      * @param target : target location 

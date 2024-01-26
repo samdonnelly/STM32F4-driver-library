@@ -18,8 +18,6 @@
 #include "nav_calcs.h" 
 #include "tools.h" 
 
-#include <iostream>
-
 //=======================================================================================
 
 
@@ -46,13 +44,29 @@ const double rad_to_scaled_deg = RAD_TO_DEG*SCALE_10;
 // Setup and teardown 
 
 // Constructor - Default
-nav_calculations::nav_calculations() {} 
+nav_calculations::nav_calculations() 
+    : coordinate_lpf_gain(CLEAR), 
+      true_north_offset(CLEAR) {} 
 
 
 // Constructor - Specify filter gain 
 nav_calculations::nav_calculations(double coordinate_gain) 
     : coordinate_lpf_gain(coordinate_gain), 
       true_north_offset(CLEAR) {} 
+
+
+// Constructor - Specify true north correction offset 
+nav_calculations::nav_calculations(int16_t tn_offset)
+    : coordinate_lpf_gain(CLEAR), 
+      true_north_offset(tn_offset) {} 
+
+
+// Constructor - Specify filter gain and true north correction offset 
+nav_calculations::nav_calculations(
+    double coordinate_gain, 
+    int16_t tn_offset)
+    : coordinate_lpf_gain(coordinate_gain), 
+      true_north_offset(tn_offset) {} 
 
 
 // Destructor 

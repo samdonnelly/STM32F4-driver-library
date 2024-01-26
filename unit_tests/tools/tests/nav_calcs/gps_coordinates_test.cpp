@@ -21,8 +21,9 @@
 
 
 //=======================================================================================
-// Coordinates 
+// Data 
 
+// Coordinates 
 const gps_waypoints_t waypoints_test[NUM_TEST_WAYPOINTS] = 
 {
     // Global waypoints 
@@ -39,13 +40,8 @@ const gps_waypoints_t waypoints_test[NUM_TEST_WAYPOINTS] =
     {  47.683368, -122.337168 }    // 9 
 }; 
 
-//=======================================================================================
 
-
-//=======================================================================================
-// Coordinate info 
-
-// The numbers beside each entry indicate the coordinates used (see above) 
+// Coordinate info. The numbers beside each entry indicate the coordinates used (see above). 
 const inter_coordinate_info_t waypoint_info_test[NUM_TEST_INFO] = 
 {
     // Global waypoint info 
@@ -80,18 +76,25 @@ const inter_coordinate_info_t waypoint_info_test[NUM_TEST_INFO] =
     {  89594212, 3133 },   // 5-3 
     {  40490721, 3464 },   // 5-4 
     // Localized waypoint info 
-    { 0, 0 },   // 6-7 
-    { 0, 0 },   // 6-8 
-    { 0, 0 },   // 6-9 
-    { 0, 0 },   // 7-6 
-    { 0, 0 },   // 7-8 
-    { 0, 0 },   // 7-9 
-    { 0, 0 },   // 8-6 
-    { 0, 0 },   // 8-7 
-    { 0, 0 },   // 8-9 
-    { 0, 0 },   // 9-6 
-    { 0, 0 },   // 9-7 
-    { 0, 0 },   // 9-8 
+    {  7236, 1679 },       // 6-7 
+    {  9722,  833 },       // 6-8 
+    {  6690,  479 },       // 6-9 
+    {  7236, 3479 },       // 7-6 
+    { 11563,  448 },       // 7-8 
+    { 12067,  166 },       // 7-9 
+    {  9722, 2633 },       // 8-6 
+    { 11563, 2248 },       // 8-7 
+    {  5768, 3056 },       // 8-9 
+    {  6690, 2279 },       // 9-6 
+    { 12067, 1966 },       // 9-7 
+    {  5768, 1256 }        // 9-8 
+}; 
+
+
+// Headings 
+const int16_t headings[NUM_HEADINGS] = 
+{
+    0, 50, 150, 3450, 3550, 3600 
 }; 
 
 //=======================================================================================
