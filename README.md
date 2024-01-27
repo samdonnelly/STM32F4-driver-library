@@ -1,6 +1,6 @@
 # STM32F4 Driver Library
 
-Drivers for the STM32F4 written using a NUCLEO-F411RE development board. This library contains drivers for devices, peripherals and general software tools that can be applied to any application written on the same platform. The library is written in C to provide compatibility with both C and C++ applications. Drivers are continuously added and improved upon as needed. 
+Drivers for the STM32F4 written using a NUCLEO-F411RE development board. This library contains drivers for devices, peripherals and general software tools that can be applied to any application written on the same platform. The library is written primarily in C to provide compatibility with both C and C++ applications. Drivers are continuously added and improved upon as needed. 
 
 ## Drivers 
 

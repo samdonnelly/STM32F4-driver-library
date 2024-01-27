@@ -109,15 +109,15 @@ void pid_controller::set_ki(int16_t ki) { KI = ki; }
 void pid_controller::set_kd(int16_t kd) { KD = kd; }
 
 
-// Set maximum error sum 
+// Cap the accumulated error to this upper bound 
 void pid_controller::set_max_error_sum(int16_t max_error) { error_max = max_error; }
 
 
-// Set minimum error sum 
+// Cap the accumulated error to this lower bound 
 void pid_controller::set_min_error_sum(int16_t min_error) { error_min = min_error; }
 
 
-// Reset the PID controller error 
+// Reset the PID controller error history 
 void pid_controller::clear_error(void) 
 {
     error_prev = CLEAR; 

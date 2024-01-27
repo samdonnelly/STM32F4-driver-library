@@ -56,8 +56,10 @@ public:   // Controller
      * @brief PID error response calculation 
      * 
      * @details Uses system error, error history and controller gains (KP, KI, KD) to 
-     *          calculate a PID controller output. The output can be applied to the 
-     *          control system using this function. 
+     *          calculate a PID controller output. Individual parts of the controller 
+     *          (K, I or D) can be ignored by setting the respective gain to zero. 
+     *          For example, to have only a PI controller, set KD to zero. Gains, error 
+     *          and controller output are all integers to avoid floating point math. 
      * 
      * @param error : current control system error 
      * @return int16_t : PID controller output 
@@ -91,7 +93,7 @@ public:   // Setters
 
 
     /**
-     * @brief Set maximum error sum 
+     * @brief Cap the accumulated error to this upper bound 
      * 
      * @param max_error : new maximum error sum 
      */
@@ -99,7 +101,7 @@ public:   // Setters
 
 
     /**
-     * @brief Set minimum error sum 
+     * @brief Cap the accumulated error to this lower bound 
      * 
      * @param min_error : new minimum error sum 
      */
@@ -107,7 +109,7 @@ public:   // Setters
 
 
     /**
-     * @brief Reset the PID controller error 
+     * @brief Reset the PID controller error history 
      */
     void clear_error(void); 
 }; 

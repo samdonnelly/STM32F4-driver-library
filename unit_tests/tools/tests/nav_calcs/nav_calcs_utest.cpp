@@ -1,9 +1,7 @@
 //=======================================================================================
 // Notes 
-
 // - The comparison values used for checking the result of the calculations were 
 //   determined externally. 
-
 //=======================================================================================
 
 
@@ -15,8 +13,6 @@
 #include "nav_calcs.h" 
 #include "tools.h" 
 #include "gps_coordinates_test.h" 
-
-#include <iostream> 
 
 extern "C"
 {
