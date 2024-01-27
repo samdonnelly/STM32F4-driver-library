@@ -34,7 +34,8 @@ extern "C" {
 class pid_controller 
 {
 private:   // Private variables 
-    int16_t KP, KI, KD, error_prev, error_sum, error_max, error_min; 
+    int16_t KP, KI, KD;                                    // Controller gains 
+    int16_t error_sum, error_max, error_min, error_prev;   // Error tracking 
 
 public:   // Setup and teardown 
 
@@ -54,9 +55,9 @@ public:   // Controller
     /**
      * @brief PID error response calculation 
      * 
-     * @details Takes an error and calculates the PID output based on PID gains (KP, KI, 
-     *          KD) and previous errors. The PID output can be used to dictate the output 
-     *          of the control system using this function (such as motor RPM). 
+     * @details Uses system error, error history and controller gains (KP, KI, KD) to 
+     *          calculate a PID controller output. The output can be applied to the 
+     *          control system using this function. 
      * 
      * @param error : current control system error 
      * @return int16_t : PID controller output 

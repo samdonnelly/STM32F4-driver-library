@@ -34,10 +34,10 @@ pid_controller::pid_controller(
     : KP(kp), 
       KI(ki), 
       KD(kd), 
-      error_prev(CLEAR), 
       error_sum(CLEAR), 
       error_max(max_error), 
-      error_min(min_error) {} 
+      error_min(min_error), 
+      error_prev(CLEAR) {} 
 
 
 // Destructor 
