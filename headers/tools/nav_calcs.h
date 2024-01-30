@@ -78,7 +78,7 @@ public:   // Calculations
      * @details Uses a low pass filter to reduce noise in GPS coordinate readings. The 
      *          low pass filter equation is as follows: 
      *          
-     *          filtered_gps_new = filtered_gps_old + (current_gps - filtered_gps_old)*gain 
+     *          filtered_gps_new = filtered_gps_old + (new_gps - filtered_gps_old)*gain 
      *          
      *          where 'gain' is 'coordinate_lpf_gain'. A smaller gain will filter more noise 
      *          but require more calculations/updates to converge on the current value. 
@@ -94,12 +94,12 @@ public:   // Calculations
      * 
      * @see set_coordinate_lpf_gain 
      * 
-     * @param current : current location - most recent coordinates read from GPS 
-     * @param filtered : filtered coordinates - managed by the application 
+     * @param new_data : new location data - most recent coordinates read from GPS 
+     * @param filtered_data : filtered coordinates - managed by the application 
      */
     void coordinate_filter(
-        gps_waypoints_t current, 
-        gps_waypoints_t& filtered); 
+        gps_waypoints_t new_data, 
+        gps_waypoints_t& filtered_data); 
 
 
     /**

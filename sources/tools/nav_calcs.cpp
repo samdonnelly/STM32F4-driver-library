@@ -80,11 +80,11 @@ nav_calculations::~nav_calculations() {}
 
 // Coordinate filter 
 void nav_calculations::coordinate_filter(
-    gps_waypoints_t current, 
-    gps_waypoints_t& filtered)
+    gps_waypoints_t new_data, 
+    gps_waypoints_t& filtered_data)
 {
-    filtered.lat += (current.lat - filtered.lat)*coordinate_lpf_gain; 
-    filtered.lon += (current.lon - filtered.lon)*coordinate_lpf_gain; 
+    filtered_data.lat += (new_data.lat - filtered_data.lat)*coordinate_lpf_gain; 
+    filtered_data.lon += (new_data.lon - filtered_data.lon)*coordinate_lpf_gain; 
 }
 
 
