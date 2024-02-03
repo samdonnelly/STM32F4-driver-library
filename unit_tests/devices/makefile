@@ -28,16 +28,20 @@ endif
 
 # ------------ DEVICES -------------
 
+# LSM303AGR 
+SRC_FILES += ./../../sources/devices/lsm303agr_driver.c       # Production code 
+SRC_DIRS += tests/lsm303agr                                   # Test doubles 
+
 # M8Q 
-SRC_FILES += ./../../sources/devices/m8q_driver.c          # Production code 
-SRC_FILES += ./../../sources/devices/m8q_controller.c      # Production code 
-SRC_DIRS += tests/m8q                                      # Test doubles 
+SRC_FILES += ./../../sources/devices/m8q_driver.c             # Production code 
+SRC_FILES += ./../../sources/devices/m8q_controller.c         # Production code 
+SRC_DIRS += tests/m8q                                         # Test doubles 
 
 # ----------------------------------
 
 # ------------- TOOLS --------------
 
-SRC_FILES += ./../../sources/tools/tools.c                 # Production code 
+SRC_FILES += ./../../sources/tools/tools.c                    # Production code 
 
 # ----------------------------------
 
@@ -59,8 +63,12 @@ TEST_SRC_FILES +=
 
 # ------------ DEVICES -------------
 
+# LSM303AGR 
+TEST_SRC_DIRS += tests/lsm303agr                         # Unit tests 
+TEST_SRC_FILES += 
+
 # M8Q 
-TEST_SRC_DIRS += tests/m8q                         # Unit tests 
+TEST_SRC_DIRS += tests/m8q                               # Unit tests 
 TEST_SRC_FILES += 
 
 # ----------------------------------
@@ -101,6 +109,7 @@ INCLUDE_DIRS += ./../../headers/devices            # Production code
 INCLUDE_DIRS += ./../../headers/peripherals        # Production code 
 INCLUDE_DIRS += ./../../headers/tools              # Production code 
 INCLUDE_DIRS += mocks                              # Mocks 
+INCLUDE_DIRS += tests/lsm303agr                    # Test doubles 
 INCLUDE_DIRS += tests/m8q                          # Test doubles 
 
 # --------------------------------------------------------------------

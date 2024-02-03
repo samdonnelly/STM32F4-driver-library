@@ -157,7 +157,7 @@ void esc_readytosky_send(
     }
     else if (throttle_cmd < 0)
     {
-        // Cap the throttle if the request is more than -100% 
+        // Cap the throttle if the request is below -100% 
         if (throttle_cmd < -ESC_MAX_THROTTLE)
         {
             throttle_cmd = -ESC_MAX_THROTTLE; 

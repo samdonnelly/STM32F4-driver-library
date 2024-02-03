@@ -48,6 +48,15 @@ typedef struct lsm303agr_m_data_s
 lsm303agr_m_data_t; 
 
 
+// // Magnetometer data 
+// typedef union lsm303agr_m_data_s 
+// {
+//     uint8_t m_axis_bytes[2]; 
+//     int16_t m_axis; 
+// }
+// lsm303agr_m_data_t; 
+
+
 // Magnetometer configuration register A 
 typedef struct lsm303agr_m_cfga_s 
 {
