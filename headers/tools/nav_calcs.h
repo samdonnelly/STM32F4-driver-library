@@ -99,7 +99,7 @@ public:   // Calculations
      */
     void coordinate_filter(
         gps_waypoints_t new_data, 
-        gps_waypoints_t& filtered_data); 
+        gps_waypoints_t& filtered_data) const; 
 
 
     /**
@@ -178,7 +178,7 @@ public:   // Calculations
      * @param heading : current compass heading relative to magnetic north (degrees*10) 
      * @return int16_t : true north heading (degrees*10) 
      */
-    int16_t true_north_heading(int16_t heading); 
+    int16_t true_north_heading(int16_t heading) const; 
 
 
     /**

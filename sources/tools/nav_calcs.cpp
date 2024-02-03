@@ -34,8 +34,8 @@
 //=======================================================================================
 // Global variables 
 
-const double deg_to_rad = DEG_TO_RAD; 
-const double rad_to_scaled_deg = RAD_TO_DEG*SCALE_10; 
+constexpr double deg_to_rad = DEG_TO_RAD; 
+constexpr double rad_to_scaled_deg = RAD_TO_DEG*SCALE_10; 
 
 //=======================================================================================
 
@@ -81,7 +81,7 @@ nav_calculations::~nav_calculations() {}
 // Coordinate filter 
 void nav_calculations::coordinate_filter(
     gps_waypoints_t new_data, 
-    gps_waypoints_t& filtered_data)
+    gps_waypoints_t& filtered_data) const
 {
     filtered_data.lat += (new_data.lat - filtered_data.lat)*coordinate_lpf_gain; 
     filtered_data.lon += (new_data.lon - filtered_data.lon)*coordinate_lpf_gain; 
@@ -166,7 +166,7 @@ int16_t nav_calculations::gps_heading(
 
 
 // True north heading 
-int16_t nav_calculations::true_north_heading(int16_t heading)
+int16_t nav_calculations::true_north_heading(int16_t heading) const
 {
     // Use the current heading and true north correction offset to get the true north 
     // heading. If the true north heading exceeds acceptable heading bounds (0-359.9deg 
