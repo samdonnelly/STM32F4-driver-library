@@ -100,14 +100,6 @@ typedef enum {
 
 
 //=======================================================================================
-// Datatypes 
-
-typedef uint8_t M8Q_MSG_TYPE; 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Stored messages 
 
 // NMEA POSITION message fields  
@@ -161,12 +153,6 @@ m8q_nmea_time_t;
 // Driver data record 
 typedef struct m8q_driver_data_s
 {
-    // Messages 
-    m8q_nmea_pos_t pos_data;       // POSITION message 
-    m8q_nmea_time_t time_data;     // TIME message 
-    uint8_t ack_msg_count;         // ACK-ACK message counter 
-    uint8_t nak_msg_count;         // ACK-NAK message counter 
-
     // Peripherals 
     I2C_TypeDef *i2c; 
     GPIO_TypeDef *pwr_save_gpio; 
@@ -175,6 +161,12 @@ typedef struct m8q_driver_data_s
     // Pins 
     pin_selector_t pwr_save;       // Interrupt pin (for low power mode) 
     pin_selector_t tx_ready;       // TX-Ready pin 
+    
+    // Messages 
+    m8q_nmea_pos_t pos_data;       // POSITION message 
+    m8q_nmea_time_t time_data;     // TIME message 
+    uint8_t ack_msg_count;         // ACK-ACK message counter 
+    uint8_t nak_msg_count;         // ACK-NAK message counter 
 
     // Other 
     uint16_t data_buff_limit; 
@@ -349,6 +341,14 @@ static const ubx_msg_class_t ubx_msg_class[UBX_CLASS_NUM] =
 }; 
 
 //==================================================
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Datatypes 
+
+typedef uint8_t M8Q_MSG_TYPE; 
 
 //=======================================================================================
 

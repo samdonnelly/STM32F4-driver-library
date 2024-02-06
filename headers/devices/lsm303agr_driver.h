@@ -1,5 +1,5 @@
 /**
- * @file lsm303agr.h
+ * @file lsm303agr_driver.h
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
@@ -31,45 +31,6 @@
 
 //=======================================================================================
 // Macros 
-
-// Data tools 
-#define LSM303AGR_BIT_MASK 0x01               // Mask to filter out status bits 
-#define LSM303AGR_ADDR_INC 0x80               // Register address increment bit 
-
-// Accelerometer I2C addresses 
-#define LSM303AGR_A_7BIT_ADDR 0x19            // Accelerometer 7-bit I2C address - no R/W bit 
-#define LSM303AGR_A_ADDR 0x32                 // Accelerometer I2C address - with default W bit 
-
-// Magnetometer I2C addresses (datasheet page 39) 
-#define LSM303AGR_M_7BIT_ADDR 0x1E            // Magnetometer 7-bit I2C address - no R/W bit 
-#define LSM303AGR_M_ADDR 0x3C                 // Magnetometer I2C address - with default W bit 
-
-// Magnetometer configuration 
-#define LSM303AGR_M_ID 0x40                   // Value returned from the WHO AM I register 
-
-// Magnetometer register addresses 
-#define LSM303AGR_M_WHO_AM_I 0x4F             // WHO AM I 
-#define LSM303AGR_M_CFG_A 0x60                // Configuration register A 
-#define LSM303AGR_M_CFG_B 0x61                // Configuration register B 
-#define LSM303AGR_M_CFG_C 0x62                // Configuration register C 
-#define LSM303AGR_M_STATUS 0x67               // Status register 
-#define LSM303AGR_M_X_L 0x68                  // X component of magnetic field (first data reg) 
-
-// Magnetometer data 
-#define LSM303AGR_M_SENS 3                    // Magnetometer sensitivity numerator (3/2 == 1.5) 
-#define LSM303AGR_M_HEAD_SCALE 10             // Heading scaling factor (to remove decimals) 
-#define LSM303AGR_M_DIR_OFFSET 450            // 45deg (*10) - heading sections (ex. N-->NE) 
-#define LSM303AGR_M_HEAD_MAX 3600             // Max heading value - scaled (360deg * 10)
-#define LSM303AGR_M_HEAD_DIFF 1800            // Heading different threshold for filtering 
-#define LSM303AGR_M_N 0                       // North direction heading - scaled 
-#define LSM303AGR_M_NE 450                    // North-East direction heading - scaled 
-#define LSM303AGR_M_E 900                     // East direction heading - scaled 
-#define LSM303AGR_M_SE 1350                   // South-East direction heading - scaled 
-#define LSM303AGR_M_S 1800                    // South direction heading - scaled 
-#define LSM303AGR_M_SW 2250                   // South-West direction heading - scaled 
-#define LSM303AGR_M_W 2700                    // West direction heading - scaled 
-#define LSM303AGR_M_NW 3150                   // North-West direction heading - scaled 
-#define LSM303AGR_M_GAIN 0.1                  // Magnetometer filter gain 
 
 // Calculation 
 #define LSM303AGR_M_NUM_DIR 8   // Number of directions used for error correction 
