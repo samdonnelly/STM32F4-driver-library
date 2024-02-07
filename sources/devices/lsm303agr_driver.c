@@ -73,6 +73,14 @@
 #define LSM303AGR_M_NW 3150                   // North-West direction heading - scaled 
 #define LSM303AGR_M_GAIN 0.1                  // Magnetometer filter gain 
 
+
+//==================================================
+// Dev 
+
+#define LSM303AGR_M_DIR_ANGLE 45 
+
+//==================================================
+
 //=======================================================================================
 
 
@@ -447,23 +455,27 @@ void lsm303agr_m_heading_offset_equations(
     lsm303agr_m_heading_offset_t *offset_eqn, 
     const int16_t *offsets)
 {
-    const double direction_spacing = 45.0*SCALE_10; 
-    double heading = CLEAR; 
+    double delta1, delta2, heading = CLEAR; 
+    const double dir_spacing = LSM303AGR_M_DIR_ANGLE*SCALE_10; 
     uint8_t last = LSM303AGR_M_NUM_DIR - 1; 
 
     // Calculate the slope and intercept of the linear equation used to correct calculated 
     // magnetometer headings between two directions. 
     for (uint8_t i = CLEAR; i < last; i++)
     {
-        offset_eqn[i].slope = (double)(offsets[i + 1] - offsets[i]) / direction_spacing; 
-        offset_eqn[i].intercept = (double)offsets[i] - offset_eqn[i].slope*heading; 
-        heading += direction_spacing; 
+        delta1 = offsets[i]; 
+        delta2 = offsets[i + 1]; 
+        
+        offset_eqn[i].slope = dir_spacing / (dir_spacing + delta1 - delta2); 
+        offset_eqn[i].intercept = heading - offset_eqn[i].slope*(heading - delta1); 
+
+        heading += dir_spacing; 
     }
 
     // The heading loops back to 0/360 degrees so the final offset direction is also the 
     // first (index 0). 
-    offset_eqn[last].slope = (double)(offsets[0] - offsets[last]) / direction_spacing; 
-    offset_eqn[last].intercept = (double)offsets[last] - offset_eqn[last].slope*heading; 
+    offset_eqn[last].slope = dir_spacing / (dir_spacing + delta2 - offsets[BYTE_0]); 
+    offset_eqn[last].intercept = heading - offset_eqn[last].slope*(heading - delta2); 
 }
 
 //==================================================
