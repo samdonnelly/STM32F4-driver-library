@@ -34,10 +34,6 @@
 //=======================================================================================
 // Macros 
 
-// Data tools 
-#define LSM303AGR_BIT_MASK 0x01               // Mask to filter out status bits 
-#define LSM303AGR_ADDR_INC 0x80               // Register address increment bit 
-
 // Accelerometer I2C addresses 
 #define LSM303AGR_A_7BIT_ADDR 0x19            // Accelerometer 7-bit I2C address - no R/W bit 
 #define LSM303AGR_A_ADDR 0x32                 // Accelerometer I2C address - with default W bit 
@@ -77,6 +73,10 @@
 //==================================================
 // Dev 
 
+// Data tools 
+#define LSM303AGR_BIT_MASK 0x01               // Mask to filter out status bits 
+#define LSM303AGR_ADDR_INC 0x80               // Register address increment mask for r/w 
+
 #define LSM303AGR_M_DIR_ANGLE 45 
 
 //==================================================
@@ -86,6 +86,15 @@
 
 //=======================================================================================
 // Enums 
+
+// Device axis index 
+typedef enum {
+    X_AXIS, 
+    Y_AXIS, 
+    Z_AXIS, 
+    NUM_AXES 
+} lsm303agr_axis_t; 
+
 //=======================================================================================
 
 
@@ -98,7 +107,8 @@
 // Magnetometer data 
 typedef union lsm303agr_m_data_s_dev 
 {
-    uint8_t m_axis_bytes[2]; 
+    // Axis data is a 16-bit value but broken down into low and high byte registers. 
+    uint8_t m_axis_bytes[BYTE_2]; 
     int16_t m_axis; 
 }
 lsm303agr_m_data_t_dev; 
@@ -198,7 +208,8 @@ typedef struct lsm303agr_driver_data_s
     I2C_TypeDef *i2c; 
 
     // Magnetometer register data 
-    lsm303agr_m_data_t m_data; 
+    lsm303agr_m_data_t_dev m_data_dev[NUM_AXES]; 
+
     lsm303agr_m_cfga_t m_cfga; 
     lsm303agr_m_cfgb_t m_cfgb; 
     lsm303agr_m_cfgc_t m_cfgc; 
@@ -211,6 +222,9 @@ typedef struct lsm303agr_driver_data_s
 
     // Device info 
     uint8_t m_addr; 
+
+    // Magnetometer register data 
+    lsm303agr_m_data_t m_data; 
 
     // Magnetometer heading 
     int16_t heading;                                             // Filtered heading 
@@ -356,15 +370,11 @@ void lsm303agr_init(
     const int16_t *offset1 = offsets;           // Copy of offsets array 
     const int16_t *offset2 = offsets + 1;       // Copy of offsets array at next address 
 
-    //===================================================
     // Initialize data record 
-
     // Peripherals 
     lsm303agr_driver_data.i2c = i2c; 
-
     // Device info 
     lsm303agr_driver_data.m_addr = LSM303AGR_M_ADDR; 
-
     // Status info 
     lsm303agr_driver_data.status = CLEAR;  
 
@@ -397,12 +407,14 @@ void lsm303agr_init(
     lsm303agr_driver_data.m_cfga.odr1 = ((uint8_t)m_odr >> SHIFT_1) & LSM303AGR_BIT_MASK; 
     lsm303agr_driver_data.m_cfga.md0 = (uint8_t)m_mode & LSM303AGR_BIT_MASK; 
     lsm303agr_driver_data.m_cfga.md1 = ((uint8_t)m_mode >> SHIFT_1) & LSM303AGR_BIT_MASK; 
+
     lsm303agr_driver_data.m_cfgb.unused_1 = CLEAR; 
     lsm303agr_driver_data.m_cfgb.off_canc_one_shot = CLEAR_BIT; 
     lsm303agr_driver_data.m_cfgb.int_on_dataoff = CLEAR_BIT; 
     lsm303agr_driver_data.m_cfgb.set_freq = CLEAR_BIT; 
     lsm303agr_driver_data.m_cfgb.off_canc = (uint8_t)m_off_canc; 
     lsm303agr_driver_data.m_cfgb.lpf = (uint8_t)m_lpf; 
+
     lsm303agr_driver_data.m_cfgc.unused_1 = CLEAR_BIT; 
     lsm303agr_driver_data.m_cfgc.int_mag_pin = (uint8_t)m_int_mag_pin; 
     lsm303agr_driver_data.m_cfgc.i2c_dis = CLEAR_BIT; 
@@ -412,11 +424,7 @@ void lsm303agr_init(
     lsm303agr_driver_data.m_cfgc.self_test = CLEAR_BIT; 
     lsm303agr_driver_data.m_cfgc.int_mag = (uint8_t)m_int_mag; 
     
-    //===================================================
-
-    //===================================================
     // Check ID and configure device 
-
     // Check WHO AM I 
     if (lsm303agr_m_whoami_read() != LSM303AGR_M_ID)
     {
@@ -428,8 +436,6 @@ void lsm303agr_init(
     lsm303agr_m_cfga_write(); 
     lsm303agr_m_cfgb_write(); 
     lsm303agr_m_cfgc_write(); 
-    
-    //===================================================
 }
 
 
@@ -450,11 +456,19 @@ void lsm303agr_m_head_offset_eqn(
 //==================================================
 // Dev 
 
-// Magnetometer heading offset equation generation 
-void lsm303agr_m_heading_offset_equations(
-    lsm303agr_m_heading_offset_t *offset_eqn, 
+// Magnetometer initialization 
+void lsm303agr_m_init(
+    I2C_TypeDef *i2c, 
     const int16_t *offsets)
 {
+    lsm303agr_m_heading_calibration(offsets); 
+}
+
+
+// Calibrate the magnetometer heading - generate heading offset equations 
+void lsm303agr_m_heading_calibration(const int16_t *offsets)
+{
+    lsm303agr_m_heading_offset_t *offset_eqn = lsm303agr_driver_data.heading_offsets; 
     double delta1, delta2, heading = CLEAR; 
     const double dir_spacing = LSM303AGR_M_DIR_ANGLE*SCALE_10; 
     uint8_t last = LSM303AGR_M_NUM_DIR - 1; 
@@ -479,86 +493,6 @@ void lsm303agr_m_heading_offset_equations(
 }
 
 //==================================================
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Read and write 
-
-// Read from register 
-void lsm303agr_read(
-    LSM303AGR_I2C_ADDR i2c_addr, 
-    LSM303AGR_REG_ADDR reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_data_size)
-{
-    // Local variables 
-    uint8_t i2c_status = I2C_OK; 
-
-    // Generate a start condition 
-    i2c_status |= (uint8_t)i2c_start(lsm303agr_driver_data.i2c); 
-
-    // Send the slave address with a write bit 
-    i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
-                                          i2c_addr + LSM303AGR_W_OFFSET); 
-    i2c_clear_addr(lsm303agr_driver_data.i2c); 
-
-    // Send the register address that is going to be read 
-    i2c_status |= (uint8_t)i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1);
-
-    // Create another start signal 
-    i2c_status |= (uint8_t)i2c_start(lsm303agr_driver_data.i2c); 
-
-    // Send the LSM303AGR address with a read offset 
-    i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
-                                          i2c_addr + LSM303AGR_R_OFFSET);
-    
-    // Read the data sent by the MPU6050 
-    i2c_status |= (uint8_t)i2c_read(lsm303agr_driver_data.i2c, 
-                                    lsm303agr_reg_value, 
-                                    lsm303agr_data_size);
-
-    // Generate a stop condition 
-    i2c_stop(lsm303agr_driver_data.i2c); 
-
-    // Update the driver status 
-    lsm303agr_driver_data.status |= i2c_status; 
-}
-
-
-// Write to register 
-void lsm303agr_write(
-    LSM303AGR_I2C_ADDR i2c_addr, 
-    LSM303AGR_REG_ADDR reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_data_size)
-{
-    // Local variables 
-    uint8_t i2c_status = I2C_OK; 
-    
-    // Create start condition to initiate master mode 
-    i2c_status |= (uint8_t)i2c_start(lsm303agr_driver_data.i2c); 
-
-    // Send the MPU6050 address with a write offset
-    i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
-                                          i2c_addr + LSM303AGR_W_OFFSET);
-    i2c_clear_addr(lsm303agr_driver_data.i2c);
-
-    // Send the register address that is going to be written to 
-    i2c_status |= (uint8_t)i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1);
-
-    // Write the data to the MPU6050 
-    i2c_status |= (uint8_t)i2c_write(lsm303agr_driver_data.i2c, 
-                                     lsm303agr_reg_value, 
-                                     lsm303agr_data_size);
-
-    // Create a stop condition
-    i2c_stop(lsm303agr_driver_data.i2c); 
-
-    // Update the driver status 
-    lsm303agr_driver_data.status |= i2c_status; 
-}
 
 //=======================================================================================
 
@@ -602,9 +536,7 @@ void lsm303agr_m_get_data(
 int16_t lsm303agr_m_get_heading(void)
 {
     // Local variables 
-    int16_t m_x_data; 
-    int16_t m_y_data; 
-    int16_t m_z_data; 
+    int16_t m_x_data, m_y_data, m_z_data; 
     int16_t heading = CLEAR; 
     double heading_temp = CLEAR; 
     int16_t *heading_ptr = NULL; 
@@ -700,6 +632,225 @@ int16_t lsm303agr_m_get_heading(void)
     }
 
     return lsm303agr_driver_data.heading; 
+}
+
+
+//==================================================
+// Dev 
+
+// Get the most recent magnetometer data 
+void lsm303agr_m_update(void)
+{
+    lsm303agr_m_data_t_dev *m_data = lsm303agr_driver_data.m_data_dev; 
+    const int16_t sensitivity = LSM303AGR_M_SENS; 
+
+    // Read the magnetometer axis data (units: milli-gauss). The LSM303AGR_ADDR_INC mask 
+    // is used to increment to the next register address after each byte read. 
+    lsm303agr_read(
+        LSM303AGR_M_ADDR, 
+        LSM303AGR_M_X_L | LSM303AGR_ADDR_INC, 
+        m_data[X_AXIS].m_axis_bytes, 
+        BYTE_6); 
+
+    // Scale the axis data by the magnetometer sensitivity. Per the datasheet, the magnetic 
+    // sensitivity after factory calibration test and trim is 1.5 +/-7% mgauss/LSB. No 
+    // decimal place is used in this scaling so the data types line up. See the datasheet 
+    // for further details on sensitivity. 
+    m_data[X_AXIS].m_axis = (m_data[X_AXIS].m_axis * sensitivity) >> SHIFT_1; 
+    m_data[Y_AXIS].m_axis = (m_data[Y_AXIS].m_axis * sensitivity) >> SHIFT_1; 
+    m_data[Z_AXIS].m_axis = (m_data[Z_AXIS].m_axis * sensitivity) >> SHIFT_1; 
+}
+
+
+// Get magnetometer axis data 
+void lsm303agr_m_get_axis_data(int16_t *m_axis_data)
+{
+    memcpy((void *)m_axis_data, (void *)lsm303agr_driver_data.m_data_dev, BYTE_6); 
+}
+
+
+// Get magnetometer (compass) heading 
+int16_t lsm303agr_m_get_heading_dev(void)
+{
+    // Local variables 
+    int16_t m_axis_data[NUM_AXES]; 
+    int16_t heading = CLEAR; 
+    double heading_temp = CLEAR; 
+    int16_t *heading_ptr = NULL; 
+    int16_t inflection = CLEAR; 
+    uint8_t eqn_index = CLEAR; 
+    int16_t eqn_check = CLEAR; 
+
+    // Get the magnetometer data 
+    lsm303agr_m_get_axis_data(m_axis_data); 
+
+    // Check for potential divide by zero errors. 
+    // If an axis is zero we don't want to assume a direction and return the result because 
+    // the device data is not 100% accurate. 
+    if (!m_axis_data[X_AXIS])
+    {
+        m_axis_data[X_AXIS]++; 
+    }
+
+    // Calculate the heading based on the Y and X components read from the magnetometer. For 
+    // this to work properly, the X-axis (long edge of the lsm303agr board) must be oriented 
+    // in the forward direction. The heading is calculated using atan2 which is the inverse 
+    // tangent of Y/X. atan2 accounts of Y and X signs so the proper quadrant is used and 
+    // therefore the proper angle us returned. The returned angle us between +/-pi but this 
+    // gets converted to degrees and scaled to eliminate decimal place values. 
+    heading = (int16_t)((atan2((double)m_axis_data[Y_AXIS], 
+                               (double)m_axis_data[X_AXIS]) * RAD_TO_DEG) * SCALE_10); 
+
+    // atan2 produces an angle that is positive in the counter clockwise direction (starts 
+    // counting up from 0 degrees / forward axis counter clockwise). However, in this 
+    // scenario (typical compass headings), the angle is positive in the clockwise 
+    // direction so to correct this we invert the sign on the calculated heading. 
+    heading = ~heading + 1; 
+
+    // For navigation we want a 0-360 degree heading as opposed to a +/-180 degree 
+    // heading so if the calculated heading is negative then we correct it to be positive. 
+    if (heading < 0)
+    {
+        heading += LSM303AGR_M_HEAD_MAX; 
+    }
+
+    // Correct the calculated heading to align with the true magnetic heading. The number of 
+    // times 45 degrees goes into the heading is found to know which correction equation to 
+    // use. 
+    while (eqn_check < heading)
+    {
+        eqn_index++; 
+        eqn_check += LSM303AGR_M_DIR_OFFSET; 
+    }
+
+    heading_temp = (double)heading; 
+    heading += (int16_t)(lsm303agr_driver_data.heading_offsets[eqn_index-1].slope*heading_temp + 
+                         lsm303agr_driver_data.heading_offsets[eqn_index-1].intercept); 
+
+    // After the heading has been corrected for offsets there is again a possibility the 
+    // heading is negative so we must correct it to make sure the range is 0-360 degrees. 
+    // If the heading corrections were set up around +/-180 degrees then this step would 
+    // only have to be run once here and not before the correction as well. 
+    if (heading < 0)
+    {
+        heading += LSM303AGR_M_HEAD_MAX; 
+    }
+
+    // Low pass filter the heading signal 
+    // The heading provides circular data meaning it goes from 0 up to 359.9 then back to 
+    // 0 again. Going directly from 0 to 359.9 (counter clockwise rotation) or vice versa 
+    // will make a filter think there was a spike in the data which is not desired. To 
+    // correct for this, the difference between the new sample and old filtered sample is 
+    // checked. If it's magnitude is greater than 1800 (180 degrees) then we add 3600 
+    // (360 degrees) before filtering (this assumes the device will not properly rotate 
+    // more than 180 degrees between two consecutive samples). Adding 3600 tricks the 
+    // filter into adjusting the heading in the correct direction. After filtering the 3600 
+    // is removed if the filtered heading is above the 360 degree limit. 
+    
+    inflection = heading - lsm303agr_driver_data.heading; 
+
+    if ((inflection > LSM303AGR_M_HEAD_DIFF) || (inflection < -LSM303AGR_M_HEAD_DIFF))
+    {
+        // Adjust the appropriate heading (new or old filtered) 
+        heading_ptr = (heading < lsm303agr_driver_data.heading) ? 
+                       &heading : &lsm303agr_driver_data.heading; 
+        *heading_ptr += LSM303AGR_M_HEAD_MAX; 
+    }
+
+    // Find the new filtered heading 
+    lsm303agr_driver_data.heading += 
+        (int16_t)(((double)(heading - lsm303agr_driver_data.heading))*LSM303AGR_M_GAIN); 
+
+    // If the filtered heading is outside the acceptable heading range then revert 
+    // the adjustment 
+    if (lsm303agr_driver_data.heading >= LSM303AGR_M_HEAD_MAX)
+    {
+        lsm303agr_driver_data.heading -= LSM303AGR_M_HEAD_MAX; 
+    }
+
+    return lsm303agr_driver_data.heading; 
+}
+
+//==================================================
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and write 
+
+// Read from register 
+void lsm303agr_read(
+    LSM303AGR_I2C_ADDR i2c_addr, 
+    LSM303AGR_REG_ADDR reg_addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_data_size)
+{
+    // Local variables 
+    uint8_t i2c_status = I2C_OK; 
+
+    // Generate a start condition 
+    i2c_status |= (uint8_t)i2c_start(lsm303agr_driver_data.i2c); 
+
+    // Send the slave address with a write bit 
+    i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
+                                          i2c_addr + LSM303AGR_W_OFFSET); 
+    i2c_clear_addr(lsm303agr_driver_data.i2c); 
+
+    // Send the register address that is going to be read 
+    i2c_status |= (uint8_t)i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1);
+
+    // Create another start signal 
+    i2c_status |= (uint8_t)i2c_start(lsm303agr_driver_data.i2c); 
+
+    // Send the LSM303AGR address with a read offset 
+    i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
+                                          i2c_addr + LSM303AGR_R_OFFSET);
+    
+    // Read the data sent by the MPU6050 
+    i2c_status |= (uint8_t)i2c_read(lsm303agr_driver_data.i2c, 
+                                    lsm303agr_reg_value, 
+                                    lsm303agr_data_size);
+
+    // Generate a stop condition 
+    i2c_stop(lsm303agr_driver_data.i2c); 
+
+    // Update the driver status 
+    lsm303agr_driver_data.status |= i2c_status; 
+}
+
+
+// Write to register 
+void lsm303agr_write(
+    LSM303AGR_I2C_ADDR i2c_addr, 
+    LSM303AGR_REG_ADDR reg_addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_data_size)
+{
+    // Local variables 
+    uint8_t i2c_status = I2C_OK; 
+    
+    // Create start condition to initiate master mode 
+    i2c_status |= (uint8_t)i2c_start(lsm303agr_driver_data.i2c); 
+
+    // Send the MPU6050 address with a write offset
+    i2c_status |= (uint8_t)i2c_write_addr(lsm303agr_driver_data.i2c, 
+                                          i2c_addr + LSM303AGR_W_OFFSET);
+    i2c_clear_addr(lsm303agr_driver_data.i2c);
+
+    // Send the register address that is going to be written to 
+    i2c_status |= (uint8_t)i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1);
+
+    // Write the data to the MPU6050 
+    i2c_status |= (uint8_t)i2c_write(lsm303agr_driver_data.i2c, 
+                                     lsm303agr_reg_value, 
+                                     lsm303agr_data_size);
+
+    // Create a stop condition
+    i2c_stop(lsm303agr_driver_data.i2c); 
+
+    // Update the driver status 
+    lsm303agr_driver_data.status |= i2c_status; 
 }
 
 //=======================================================================================

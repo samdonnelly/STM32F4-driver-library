@@ -124,6 +124,38 @@ void lsm303agr_init(
     lsm303agr_cfg_t m_int_mag_pin, 
     lsm303agr_cfg_t m_int_mag); 
 
+
+//==================================================
+// Dev 
+
+/**
+ * @brief Magnetometer initialization 
+ * 
+ * @details 
+ * 
+ * @param i2c 
+ * @param offsets 
+ */
+void lsm303agr_m_init(
+    I2C_TypeDef *i2c, 
+    const int16_t *offsets); 
+
+
+/**
+ * @brief Calibrate the magnetometer heading 
+ * 
+ * @details Generate heading offset equations. 
+ *          
+ *          // TODO procedure to get the offsets 
+ * 
+ * @see lsm303agr_m_get_heading 
+ * 
+ * @param offsets : error between magnetometer heading and true heading in each direction 
+ */
+void lsm303agr_m_heading_calibration(const int16_t *offsets); 
+
+//==================================================
+
 //=======================================================================================
 
 
@@ -161,6 +193,39 @@ void lsm303agr_m_get_data(
  * @return int16_t : 
  */
 int16_t lsm303agr_m_get_heading(void); 
+
+
+//==================================================
+// Dev 
+
+/**
+ * @brief Get the most recent magnetometer data 
+ * 
+ * @details 
+ */
+void lsm303agr_m_update(void); 
+
+
+/**
+ * @brief Get magnetometer axis data 
+ * 
+ * @details 
+ * 
+ * @param m_axis_data 
+ */
+void lsm303agr_m_get_axis_data(int16_t *m_axis_data); 
+
+
+/**
+ * @brief Get magnetometer (compass) heading 
+ * 
+ * @details 
+ * 
+ * @return int16_t 
+ */
+int16_t lsm303agr_m_get_heading_dev(void); 
+
+//==================================================
 
 //=======================================================================================
 
