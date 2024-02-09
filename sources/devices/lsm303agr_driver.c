@@ -56,7 +56,6 @@
 // Magnetometer data 
 #define LSM303AGR_M_SENS 3                    // Magnetometer sensitivity numerator (3/2 == 1.5) 
 #define LSM303AGR_M_HEAD_SCALE 10             // Heading scaling factor (to remove decimals) 
-#define LSM303AGR_M_DIR_OFFSET 450            // 45deg (*10) - heading sections (ex. N-->NE) 
 #define LSM303AGR_M_HEAD_MAX 3600             // Max heading value - scaled (360deg * 10)
 #define LSM303AGR_M_HEAD_DIFF 1800            // Heading different threshold for filtering 
 #define LSM303AGR_M_N 0                       // North direction heading - scaled 
@@ -77,7 +76,8 @@
 #define LSM303AGR_BIT_MASK 0x01               // Mask to filter out status bits 
 #define LSM303AGR_ADDR_INC 0x80               // Register address increment mask for r/w 
 
-#define LSM303AGR_M_DIR_ANGLE 45 
+// Magnetometer data 
+#define LSM303AGR_M_DIR_OFFSET 450            // 45deg (*10) - heading sections (ex. N-->NE) 
 
 //==================================================
 
@@ -207,6 +207,9 @@ typedef struct lsm303agr_driver_data_s
     // Peripherals 
     I2C_TypeDef *i2c; 
 
+    // Device info 
+    uint8_t m_addr; 
+
     // Magnetometer register data 
     lsm303agr_m_data_t_dev m_data_dev[NUM_AXES]; 
 
@@ -216,12 +219,10 @@ typedef struct lsm303agr_driver_data_s
     lsm303agr_m_status_t m_status; 
 
     // Calculation info 
-    lsm303agr_m_heading_offset_t heading_offsets[LSM303AGR_M_NUM_DIR]; 
+    lsm303agr_m_heading_offset_t heading_offset_eqns[LSM303AGR_M_NUM_DIR]; 
+    int16_t heading_offsets[LSM303AGR_M_NUM_DIR]; 
     
     //==================================================
-
-    // Device info 
-    uint8_t m_addr; 
 
     // Magnetometer register data 
     lsm303agr_m_data_t m_data; 
@@ -380,21 +381,21 @@ void lsm303agr_init(
 
     // Generate magnetometer heading correction equations 
     lsm303agr_m_head_offset_eqn(
-        &lsm303agr_driver_data.heading_offsets[0], *offset1++, *offset2++, LSM303AGR_M_N); 
+        &lsm303agr_driver_data.heading_offset_eqns[0], *offset1++, *offset2++, LSM303AGR_M_N); 
     lsm303agr_m_head_offset_eqn(
-        &lsm303agr_driver_data.heading_offsets[1], *offset1++, *offset2++, LSM303AGR_M_NE); 
+        &lsm303agr_driver_data.heading_offset_eqns[1], *offset1++, *offset2++, LSM303AGR_M_NE); 
     lsm303agr_m_head_offset_eqn(
-        &lsm303agr_driver_data.heading_offsets[2], *offset1++, *offset2++, LSM303AGR_M_E); 
+        &lsm303agr_driver_data.heading_offset_eqns[2], *offset1++, *offset2++, LSM303AGR_M_E); 
     lsm303agr_m_head_offset_eqn(
-        &lsm303agr_driver_data.heading_offsets[3], *offset1++, *offset2++, LSM303AGR_M_SE); 
+        &lsm303agr_driver_data.heading_offset_eqns[3], *offset1++, *offset2++, LSM303AGR_M_SE); 
     lsm303agr_m_head_offset_eqn(
-        &lsm303agr_driver_data.heading_offsets[4], *offset1++, *offset2++, LSM303AGR_M_S); 
+        &lsm303agr_driver_data.heading_offset_eqns[4], *offset1++, *offset2++, LSM303AGR_M_S); 
     lsm303agr_m_head_offset_eqn(
-        &lsm303agr_driver_data.heading_offsets[5], *offset1++, *offset2++, LSM303AGR_M_SW); 
+        &lsm303agr_driver_data.heading_offset_eqns[5], *offset1++, *offset2++, LSM303AGR_M_SW); 
     lsm303agr_m_head_offset_eqn(
-        &lsm303agr_driver_data.heading_offsets[6], *offset1++, *offset2++, LSM303AGR_M_W); 
+        &lsm303agr_driver_data.heading_offset_eqns[6], *offset1++, *offset2++, LSM303AGR_M_W); 
     lsm303agr_m_head_offset_eqn(
-        &lsm303agr_driver_data.heading_offsets[7], *offset1, *offsets, LSM303AGR_M_NW); 
+        &lsm303agr_driver_data.heading_offset_eqns[7], *offset1, *offsets, LSM303AGR_M_NW); 
 
     lsm303agr_driver_data.heading = CLEAR; 
 
@@ -461,17 +462,64 @@ void lsm303agr_m_init(
     I2C_TypeDef *i2c, 
     const int16_t *offsets)
 {
+    // Initialize data 
+    lsm303agr_driver_data.i2c = i2c; 
+    lsm303agr_driver_data.m_addr = LSM303AGR_M_ADDR; 
+
+    // lsm303agr_driver_data.m_cfga.comp_temp_en = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfga.reboot = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfga.soft_rst = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfga.lp = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfga.odr0 = (uint8_t)m_odr & LSM303AGR_BIT_MASK; 
+    // lsm303agr_driver_data.m_cfga.odr1 = ((uint8_t)m_odr >> SHIFT_1) & LSM303AGR_BIT_MASK; 
+    // lsm303agr_driver_data.m_cfga.md0 = (uint8_t)m_mode & LSM303AGR_BIT_MASK; 
+    // lsm303agr_driver_data.m_cfga.md1 = ((uint8_t)m_mode >> SHIFT_1) & LSM303AGR_BIT_MASK; 
+
+    // lsm303agr_driver_data.m_cfgb.unused_1 = CLEAR; 
+    // lsm303agr_driver_data.m_cfgb.off_canc_one_shot = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfgb.int_on_dataoff = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfgb.set_freq = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfgb.off_canc = (uint8_t)m_off_canc; 
+    // lsm303agr_driver_data.m_cfgb.lpf = (uint8_t)m_lpf; 
+
+    // lsm303agr_driver_data.m_cfgc.unused_1 = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfgc.int_mag_pin = (uint8_t)m_int_mag_pin; 
+    // lsm303agr_driver_data.m_cfgc.i2c_dis = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfgc.bdu = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfgc.ble = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfgc.unused_2 = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfgc.self_test = CLEAR_BIT; 
+    // lsm303agr_driver_data.m_cfgc.int_mag = (uint8_t)m_int_mag; 
+
+    // Generate heading offset equations 
     lsm303agr_m_heading_calibration(offsets); 
+    
+    // Check WHO AM I 
+    if (lsm303agr_m_whoami_read() != LSM303AGR_M_ID)
+    {
+        lsm303agr_driver_data.status |= (SET_BIT << SHIFT_1); 
+        return; 
+    }
+
+    // Config magnetometer 
+    lsm303agr_m_cfga_write(); 
+    lsm303agr_m_cfgb_write(); 
+    lsm303agr_m_cfgc_write(); 
 }
 
 
 // Calibrate the magnetometer heading - generate heading offset equations 
 void lsm303agr_m_heading_calibration(const int16_t *offsets)
 {
-    lsm303agr_m_heading_offset_t *offset_eqn = lsm303agr_driver_data.heading_offsets; 
+    lsm303agr_m_heading_offset_t *offset_eqn = lsm303agr_driver_data.heading_offset_eqns; 
     double delta1, delta2, heading = CLEAR; 
-    const double dir_spacing = LSM303AGR_M_DIR_ANGLE*SCALE_10; 
+    const double dir_spacing = LSM303AGR_M_DIR_OFFSET; 
     uint8_t last = LSM303AGR_M_NUM_DIR - 1; 
+
+    // Save the calibration data 
+    memcpy((void *)lsm303agr_driver_data.heading_offsets, 
+           (const void *)offsets, 
+           2*LSM303AGR_M_NUM_DIR); 
 
     // Calculate the slope and intercept of the linear equation used to correct calculated 
     // magnetometer headings between two directions. 
@@ -509,7 +557,7 @@ void lsm303agr_m_read(void)
     // Read the magnetometer data 
     // The MSB of the register address is set to 1 so the register address will 
     // automatically be incremented between each byte read 
-    lsm303agr_read(LSM303AGR_M_ADDR, LSM303AGR_M_X_L | LSM303AGR_ADDR_INC, mag_data, BYTE_6); 
+    lsm303agr_read(lsm303agr_driver_data.m_addr, LSM303AGR_M_X_L | LSM303AGR_ADDR_INC, mag_data, BYTE_6); 
 
     // Combine the return values into signed integers 
     // These values are raw magnetometer axis readings and have units of milli-gauss 
@@ -587,8 +635,8 @@ int16_t lsm303agr_m_get_heading(void)
     }
 
     heading_temp = (double)heading; 
-    heading += (int16_t)(lsm303agr_driver_data.heading_offsets[eqn_index-1].slope*heading_temp + 
-                         lsm303agr_driver_data.heading_offsets[eqn_index-1].intercept); 
+    heading += (int16_t)(lsm303agr_driver_data.heading_offset_eqns[eqn_index-1].slope*heading_temp + 
+                         lsm303agr_driver_data.heading_offset_eqns[eqn_index-1].intercept); 
 
     // After the heading has been corrected for offsets there is again a possibility the 
     // heading is negative so we must correct it to make sure the range is 0-360 degrees. 
@@ -647,7 +695,7 @@ void lsm303agr_m_update(void)
     // Read the magnetometer axis data (units: milli-gauss). The LSM303AGR_ADDR_INC mask 
     // is used to increment to the next register address after each byte read. 
     lsm303agr_read(
-        LSM303AGR_M_ADDR, 
+        lsm303agr_driver_data.m_addr, 
         LSM303AGR_M_X_L | LSM303AGR_ADDR_INC, 
         m_data[X_AXIS].m_axis_bytes, 
         BYTE_6); 
@@ -672,24 +720,18 @@ void lsm303agr_m_get_axis_data(int16_t *m_axis_data)
 // Get magnetometer (compass) heading 
 int16_t lsm303agr_m_get_heading_dev(void)
 {
-    // Local variables 
-    int16_t m_axis_data[NUM_AXES]; 
-    int16_t heading = CLEAR; 
-    double heading_temp = CLEAR; 
+    double atan2_calc, heading_temp = CLEAR; 
+    int16_t heading, inflection;   //  eqn_check = CLEAR 
     int16_t *heading_ptr = NULL; 
-    int16_t inflection = CLEAR; 
-    uint8_t eqn_index = CLEAR; 
-    int16_t eqn_check = CLEAR; 
-
-    // Get the magnetometer data 
-    lsm303agr_m_get_axis_data(m_axis_data); 
+    // uint8_t eqn_index = CLEAR; 
+    uint8_t eqn_index = 7; 
 
     // Check for potential divide by zero errors. 
     // If an axis is zero we don't want to assume a direction and return the result because 
     // the device data is not 100% accurate. 
-    if (!m_axis_data[X_AXIS])
+    if (!lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis)
     {
-        m_axis_data[X_AXIS]++; 
+        lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis++; 
     }
 
     // Calculate the heading based on the Y and X components read from the magnetometer. For 
@@ -698,14 +740,13 @@ int16_t lsm303agr_m_get_heading_dev(void)
     // tangent of Y/X. atan2 accounts of Y and X signs so the proper quadrant is used and 
     // therefore the proper angle us returned. The returned angle us between +/-pi but this 
     // gets converted to degrees and scaled to eliminate decimal place values. 
-    heading = (int16_t)((atan2((double)m_axis_data[Y_AXIS], 
-                               (double)m_axis_data[X_AXIS]) * RAD_TO_DEG) * SCALE_10); 
-
     // atan2 produces an angle that is positive in the counter clockwise direction (starts 
     // counting up from 0 degrees / forward axis counter clockwise). However, in this 
     // scenario (typical compass headings), the angle is positive in the clockwise 
     // direction so to correct this we invert the sign on the calculated heading. 
-    heading = ~heading + 1; 
+    atan2_calc = atan2((double)lsm303agr_driver_data.m_data_dev[Y_AXIS].m_axis, 
+                       (double)lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis); 
+    heading = -(int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
 
     // For navigation we want a 0-360 degree heading as opposed to a +/-180 degree 
     // heading so if the calculated heading is negative then we correct it to be positive. 
@@ -717,15 +758,27 @@ int16_t lsm303agr_m_get_heading_dev(void)
     // Correct the calculated heading to align with the true magnetic heading. The number of 
     // times 45 degrees goes into the heading is found to know which correction equation to 
     // use. 
-    while (eqn_check < heading)
+    // TODO equation 0 (index 0) can only be used if 'heading' is 0. 'heading' will be in 
+    //      the range 0-359.9 and 'eqn_check' is initialized to 0. 
+    // while (eqn_check < heading)
+    // {
+    //     eqn_index++; 
+    //     eqn_check += LSM303AGR_M_DIR_OFFSET; 
+    // }
+    // TODO the below still won't work 
+    for (uint8_t i = CLEAR; i <= LSM303AGR_M_NUM_DIR; i++)
     {
+        if (heading < lsm303agr_driver_data.heading_offsets[i])
+        {
+            break; 
+        }
         eqn_index++; 
-        eqn_check += LSM303AGR_M_DIR_OFFSET; 
+        eqn_index &= 0x07; 
     }
 
     heading_temp = (double)heading; 
-    heading += (int16_t)(lsm303agr_driver_data.heading_offsets[eqn_index-1].slope*heading_temp + 
-                         lsm303agr_driver_data.heading_offsets[eqn_index-1].intercept); 
+    heading += (int16_t)(lsm303agr_driver_data.heading_offset_eqns[eqn_index-1].slope*heading_temp + 
+                         lsm303agr_driver_data.heading_offset_eqns[eqn_index-1].intercept); 
 
     // After the heading has been corrected for offsets there is again a possibility the 
     // heading is negative so we must correct it to make sure the range is 0-360 degrees. 
@@ -735,6 +788,7 @@ int16_t lsm303agr_m_get_heading_dev(void)
     {
         heading += LSM303AGR_M_HEAD_MAX; 
     }
+    // TODO check if the heading is greater than 359.9? 
 
     // Low pass filter the heading signal 
     // The heading provides circular data meaning it goes from 0 up to 359.9 then back to 
@@ -866,7 +920,7 @@ uint8_t lsm303agr_m_whoami_read(void)
     uint8_t who_am_i; 
 
     // Read and return the value of the WHO AM I register 
-    lsm303agr_read(LSM303AGR_M_ADDR, LSM303AGR_M_WHO_AM_I, &who_am_i, BYTE_1); 
+    lsm303agr_read(lsm303agr_driver_data.m_addr, LSM303AGR_M_WHO_AM_I, &who_am_i, BYTE_1); 
 
     return who_am_i; 
 }
@@ -886,7 +940,7 @@ void lsm303agr_m_cfga_write(void)
                    (lsm303agr_driver_data.m_cfga.md0); 
 
     // Write the formatted data to the device 
-    lsm303agr_write(LSM303AGR_M_ADDR, LSM303AGR_M_CFG_A, &cfga, BYTE_1); 
+    lsm303agr_write(lsm303agr_driver_data.m_addr, LSM303AGR_M_CFG_A, &cfga, BYTE_1); 
 }
 
 
@@ -902,7 +956,7 @@ void lsm303agr_m_cfgb_write(void)
                    (lsm303agr_driver_data.m_cfgb.lpf); 
 
     // Write the formatted data to the device 
-    lsm303agr_write(LSM303AGR_M_ADDR, LSM303AGR_M_CFG_B, &cfgb, BYTE_1); 
+    lsm303agr_write(lsm303agr_driver_data.m_addr, LSM303AGR_M_CFG_B, &cfgb, BYTE_1); 
 }
 
 
@@ -920,7 +974,7 @@ void lsm303agr_m_cfgc_write(void)
                    (lsm303agr_driver_data.m_cfgc.int_mag); 
 
     // Write the formatted data to the device 
-    lsm303agr_write(LSM303AGR_M_ADDR, LSM303AGR_M_CFG_C, &cfgc, BYTE_1); 
+    lsm303agr_write(lsm303agr_driver_data.m_addr, LSM303AGR_M_CFG_C, &cfgc, BYTE_1); 
 }
 
 
@@ -931,7 +985,7 @@ void lsm303agr_m_status_read(void)
     uint8_t status; 
 
     // Read the magnetometer status 
-    lsm303agr_read(LSM303AGR_M_ADDR, LSM303AGR_M_STATUS, &status, BYTE_1); 
+    lsm303agr_read(lsm303agr_driver_data.m_addr, LSM303AGR_M_STATUS, &status, BYTE_1); 
 
     // Parse the data 
     lsm303agr_driver_data.m_status.zyx_or = (status >> SHIFT_7) & LSM303AGR_BIT_MASK; 
