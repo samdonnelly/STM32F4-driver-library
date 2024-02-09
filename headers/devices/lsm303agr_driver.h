@@ -133,12 +133,14 @@ void lsm303agr_init(
  * 
  * @details 
  * 
- * @param i2c 
- * @param offsets 
+ * @param i2c : 
+ * @param offsets : 
+ * @param heading_lpf_gain : 
  */
 void lsm303agr_m_init(
     I2C_TypeDef *i2c, 
-    const int16_t *offsets); 
+    const int16_t *offsets, 
+    double heading_lpf_gain); 
 
 
 /**

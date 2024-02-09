@@ -36,11 +36,9 @@
 
 // Accelerometer I2C addresses 
 #define LSM303AGR_A_7BIT_ADDR 0x19            // Accelerometer 7-bit I2C address - no R/W bit 
-#define LSM303AGR_A_ADDR 0x32                 // Accelerometer I2C address - with default W bit 
 
 // Magnetometer I2C addresses (datasheet page 39) 
 #define LSM303AGR_M_7BIT_ADDR 0x1E            // Magnetometer 7-bit I2C address - no R/W bit 
-#define LSM303AGR_M_ADDR 0x3C                 // Magnetometer I2C address - with default W bit 
 
 // Magnetometer configuration 
 #define LSM303AGR_M_ID 0x40                   // Value returned from the WHO AM I register 
@@ -56,8 +54,6 @@
 // Magnetometer data 
 #define LSM303AGR_M_SENS 3                    // Magnetometer sensitivity numerator (3/2 == 1.5) 
 #define LSM303AGR_M_HEAD_SCALE 10             // Heading scaling factor (to remove decimals) 
-#define LSM303AGR_M_HEAD_MAX 3600             // Max heading value - scaled (360deg * 10)
-#define LSM303AGR_M_HEAD_DIFF 1800            // Heading different threshold for filtering 
 #define LSM303AGR_M_N 0                       // North direction heading - scaled 
 #define LSM303AGR_M_NE 450                    // North-East direction heading - scaled 
 #define LSM303AGR_M_E 900                     // East direction heading - scaled 
@@ -72,12 +68,18 @@
 //==================================================
 // Dev 
 
+// I2C addresses (datasheet page 39) 
+#define LSM303AGR_A_ADDR 0x32           // Accelerometer (7-bit addr + Write bit) 
+#define LSM303AGR_M_ADDR 0x3C           // Magnetometer (7-bit addr + Write bit) 
+
 // Data tools 
-#define LSM303AGR_BIT_MASK 0x01               // Mask to filter out status bits 
-#define LSM303AGR_ADDR_INC 0x80               // Register address increment mask for r/w 
+#define LSM303AGR_BIT_MASK 0x01         // Mask to filter out status bits 
+#define LSM303AGR_ADDR_INC 0x80         // Register address increment mask for r/w 
 
 // Magnetometer data 
-#define LSM303AGR_M_DIR_OFFSET 450            // 45deg (*10) - heading sections (ex. N-->NE) 
+#define LSM303AGR_M_HEAD_MAX 3600       // Max heading value - scaled (360deg * 10)
+#define LSM303AGR_M_HEAD_DIFF 1800      // Heading different threshold for filtering 
+#define LSM303AGR_M_DIR_OFFSET 450      // 45deg (*10) - heading sections (ex. N-->NE) 
 
 //==================================================
 
@@ -209,6 +211,7 @@ typedef struct lsm303agr_driver_data_s
 
     // Device info 
     uint8_t m_addr; 
+    uint8_t a_addr; 
 
     // Magnetometer register data 
     lsm303agr_m_data_t_dev m_data_dev[NUM_AXES]; 
@@ -218,9 +221,11 @@ typedef struct lsm303agr_driver_data_s
     lsm303agr_m_cfgc_t m_cfgc; 
     lsm303agr_m_status_t m_status; 
 
-    // Calculation info 
+    // Magnetometer calculation info 
     lsm303agr_m_heading_offset_t heading_offset_eqns[LSM303AGR_M_NUM_DIR]; 
-    int16_t heading_offsets[LSM303AGR_M_NUM_DIR]; 
+    double heading_gain; 
+
+    // Accelerometer register data 
     
     //==================================================
 
@@ -228,7 +233,7 @@ typedef struct lsm303agr_driver_data_s
     lsm303agr_m_data_t m_data; 
 
     // Magnetometer heading 
-    int16_t heading;                                             // Filtered heading 
+    int16_t heading;   // Filtered heading 
 
     // Status info 
     // 'status' --> bit 0: i2c status (see i2c_status_t) 
@@ -460,11 +465,13 @@ void lsm303agr_m_head_offset_eqn(
 // Magnetometer initialization 
 void lsm303agr_m_init(
     I2C_TypeDef *i2c, 
-    const int16_t *offsets)
+    const int16_t *offsets, 
+    double heading_lpf_gain)
 {
     // Initialize data 
     lsm303agr_driver_data.i2c = i2c; 
     lsm303agr_driver_data.m_addr = LSM303AGR_M_ADDR; 
+    lsm303agr_driver_data.heading_gain = heading_lpf_gain; 
 
     // lsm303agr_driver_data.m_cfga.comp_temp_en = CLEAR_BIT; 
     // lsm303agr_driver_data.m_cfga.reboot = CLEAR_BIT; 
@@ -512,14 +519,9 @@ void lsm303agr_m_init(
 void lsm303agr_m_heading_calibration(const int16_t *offsets)
 {
     lsm303agr_m_heading_offset_t *offset_eqn = lsm303agr_driver_data.heading_offset_eqns; 
-    double delta1, delta2, heading = CLEAR; 
+    double delta1, delta2, heading = LSM303AGR_M_N; 
     const double dir_spacing = LSM303AGR_M_DIR_OFFSET; 
     uint8_t last = LSM303AGR_M_NUM_DIR - 1; 
-
-    // Save the calibration data 
-    memcpy((void *)lsm303agr_driver_data.heading_offsets, 
-           (const void *)offsets, 
-           2*LSM303AGR_M_NUM_DIR); 
 
     // Calculate the slope and intercept of the linear equation used to correct calculated 
     // magnetometer headings between two directions. 
@@ -720,109 +722,89 @@ void lsm303agr_m_get_axis_data(int16_t *m_axis_data)
 // Get magnetometer (compass) heading 
 int16_t lsm303agr_m_get_heading_dev(void)
 {
-    double atan2_calc, heading_temp = CLEAR; 
-    int16_t heading, inflection;   //  eqn_check = CLEAR 
-    int16_t *heading_ptr = NULL; 
-    // uint8_t eqn_index = CLEAR; 
-    uint8_t eqn_index = 7; 
+    static int16_t heading_stored = CLEAR; 
+    int16_t heading, heading_check = CLEAR, heading_diff; 
+    double atan2_calc, slope = CLEAR, intercept = CLEAR; 
 
-    // Check for potential divide by zero errors. 
-    // If an axis is zero we don't want to assume a direction and return the result because 
-    // the device data is not 100% accurate. 
+    // If the x-axis is zero then it's adjusted by 0.1 degrees to prevent a divide by zero 
+    // error and the heading calculation is done anyway. This adjustment is considered 
+    // negligible and this way the filtered heading is still updated. 
     if (!lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis)
     {
         lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis++; 
     }
 
-    // Calculate the heading based on the Y and X components read from the magnetometer. For 
-    // this to work properly, the X-axis (long edge of the lsm303agr board) must be oriented 
-    // in the forward direction. The heading is calculated using atan2 which is the inverse 
-    // tangent of Y/X. atan2 accounts of Y and X signs so the proper quadrant is used and 
-    // therefore the proper angle us returned. The returned angle us between +/-pi but this 
-    // gets converted to degrees and scaled to eliminate decimal place values. 
-    // atan2 produces an angle that is positive in the counter clockwise direction (starts 
-    // counting up from 0 degrees / forward axis counter clockwise). However, in this 
-    // scenario (typical compass headings), the angle is positive in the clockwise 
-    // direction so to correct this we invert the sign on the calculated heading. 
+    // Using the Y and X axis data read from the magnetometer, the heading relative to 
+    // magnetic north is calculated. For this to work properly, the X-axis must be 
+    // oriented in the forward direction and the Z-axis must be vertical. The heading is 
+    // calculated using atan2 which is the inverse tangent that accounts for the sign of 
+    // Y and X. The returned angle is a double in the range +/-pi but 0-359.9 degrees is 
+    // required so it gets converted to degrees, scaled by 10 to maintain one decimal 
+    // place of accuracy and shifted to be a positive value if less than zero. The 
+    // returned angle is also positive in the counter clockwise direction, however the 
+    // opposite is needed so the sign is inverted. 
     atan2_calc = atan2((double)lsm303agr_driver_data.m_data_dev[Y_AXIS].m_axis, 
                        (double)lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis); 
     heading = -(int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
 
-    // For navigation we want a 0-360 degree heading as opposed to a +/-180 degree 
-    // heading so if the calculated heading is negative then we correct it to be positive. 
     if (heading < 0)
     {
         heading += LSM303AGR_M_HEAD_MAX; 
     }
 
-    // Correct the calculated heading to align with the true magnetic heading. The number of 
-    // times 45 degrees goes into the heading is found to know which correction equation to 
-    // use. 
-    // TODO equation 0 (index 0) can only be used if 'heading' is 0. 'heading' will be in 
-    //      the range 0-359.9 and 'eqn_check' is initialized to 0. 
-    // while (eqn_check < heading)
-    // {
-    //     eqn_index++; 
-    //     eqn_check += LSM303AGR_M_DIR_OFFSET; 
-    // }
-    // TODO the below still won't work 
-    for (uint8_t i = CLEAR; i <= LSM303AGR_M_NUM_DIR; i++)
+    // To account for errors in the data read from the device, an offset is added to the 
+    // calculated heading based on the direction it's pointing (see the 
+    // lsm303agr_m_heading_calibration function). The offset is a linear interpolation 
+    // between each 45 degree heading interval (ex. 0, 45, 90, etc.). To find the region 
+    // the calculated heading is in, the number of times 45 degrees goes into the heading 
+    // if found which then provides the index of the equation to use. 
+    for (uint8_t i = CLEAR; i < LSM303AGR_M_NUM_DIR; i++)
     {
-        if (heading < lsm303agr_driver_data.heading_offsets[i])
+        heading_check += LSM303AGR_M_DIR_OFFSET; 
+
+        if (heading < heading_check)
         {
+            slope = lsm303agr_driver_data.heading_offset_eqns[i].slope; 
+            intercept = lsm303agr_driver_data.heading_offset_eqns[i].intercept; 
             break; 
         }
-        eqn_index++; 
-        eqn_index &= 0x07; 
     }
 
-    heading_temp = (double)heading; 
-    heading += (int16_t)(lsm303agr_driver_data.heading_offset_eqns[eqn_index-1].slope*heading_temp + 
-                         lsm303agr_driver_data.heading_offset_eqns[eqn_index-1].intercept); 
+    heading += (int16_t)(slope*(double)heading + intercept); 
 
-    // After the heading has been corrected for offsets there is again a possibility the 
-    // heading is negative so we must correct it to make sure the range is 0-360 degrees. 
-    // If the heading corrections were set up around +/-180 degrees then this step would 
-    // only have to be run once here and not before the correction as well. 
-    if (heading < 0)
+    // The calculated heading is put through a low pass filter because the data read 
+    // from the device has lots of noise (the gain of the filter can be set during init). 
+    // The heading data is circular meaning it increments from 359.9 to 0 degrees after 
+    // one full rotation. This jump in data will make the filter think there was a sudden 
+    // change in direction which is not true so this must be addressed before filtering 
+    // the heading. To correct for this, the difference between the new and previously 
+    // calculated headings is checked. If the magnitude exceeds +/-180 degrees then 
+    // -/+360 degrees is added to find the true heading change. After the heading is 
+    // filtered/updated, if it falls outside of the acceptable range then it's moved 
+    // back within range (while still maintaining the same heading). 
+    heading_diff = heading - heading_stored; 
+
+    if (heading_diff > LSM303AGR_M_HEAD_DIFF)
     {
-        heading += LSM303AGR_M_HEAD_MAX; 
+        heading_diff -= LSM303AGR_M_HEAD_MAX; 
     }
-    // TODO check if the heading is greater than 359.9? 
-
-    // Low pass filter the heading signal 
-    // The heading provides circular data meaning it goes from 0 up to 359.9 then back to 
-    // 0 again. Going directly from 0 to 359.9 (counter clockwise rotation) or vice versa 
-    // will make a filter think there was a spike in the data which is not desired. To 
-    // correct for this, the difference between the new sample and old filtered sample is 
-    // checked. If it's magnitude is greater than 1800 (180 degrees) then we add 3600 
-    // (360 degrees) before filtering (this assumes the device will not properly rotate 
-    // more than 180 degrees between two consecutive samples). Adding 3600 tricks the 
-    // filter into adjusting the heading in the correct direction. After filtering the 3600 
-    // is removed if the filtered heading is above the 360 degree limit. 
-    
-    inflection = heading - lsm303agr_driver_data.heading; 
-
-    if ((inflection > LSM303AGR_M_HEAD_DIFF) || (inflection < -LSM303AGR_M_HEAD_DIFF))
+    else if (heading_diff < -LSM303AGR_M_HEAD_DIFF)
     {
-        // Adjust the appropriate heading (new or old filtered) 
-        heading_ptr = (heading < lsm303agr_driver_data.heading) ? 
-                       &heading : &lsm303agr_driver_data.heading; 
-        *heading_ptr += LSM303AGR_M_HEAD_MAX; 
+        heading_diff += LSM303AGR_M_HEAD_MAX; 
     }
 
-    // Find the new filtered heading 
-    lsm303agr_driver_data.heading += 
-        (int16_t)(((double)(heading - lsm303agr_driver_data.heading))*LSM303AGR_M_GAIN); 
+    heading_stored += (int16_t)((double)heading_diff*lsm303agr_driver_data.heading_gain); 
 
-    // If the filtered heading is outside the acceptable heading range then revert 
-    // the adjustment 
-    if (lsm303agr_driver_data.heading >= LSM303AGR_M_HEAD_MAX)
+    if (heading_stored >= LSM303AGR_M_HEAD_MAX)
     {
-        lsm303agr_driver_data.heading -= LSM303AGR_M_HEAD_MAX; 
+        heading_stored -= LSM303AGR_M_HEAD_MAX; 
+    }
+    else if (heading_stored < 0)
+    {
+        heading_stored += LSM303AGR_M_HEAD_MAX; 
     }
 
-    return lsm303agr_driver_data.heading; 
+    return heading_stored; 
 }
 
 //==================================================
