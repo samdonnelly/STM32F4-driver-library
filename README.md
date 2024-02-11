@@ -1,10 +1,10 @@
 # STM32F4 Driver Library
 
-Drivers for the STM32F4 written using a NUCLEO-F411RE development board. This library contains drivers for devices, peripherals and general software tools that can be applied to any application written on the same platform. The library is written primarily in C to provide compatibility with both C and C++ applications. Drivers are continuously added and improved upon as needed. 
+Drivers for the STM32F4 written using a NUCLEO-F411RE development board. This library contains drivers for devices, protocols, hardware features and general software tools that can be applied to any application written on the same platform. The library is written primarily in C to provide compatibility with both C and C++ applications, however some software tools are wittne in C++. Drivers are continuously added and improved upon as needed. 
 
 ## Drivers 
 
-Drivers are written for three main categories: devices, peripherals and tools. Devices are external hardware that interface with the controller. Peripherals are used for handling data both internal and external to the controller such as timers and I2C. Tools are general purpose software for performing calculations and interpreting data. 
+Drivers are written for three main categories: devices, peripherals and tools. Devices are external hardware that interface with the controller. Peripherals is a blanket term referring to protocols and hardware features (such as I2C and interrupts) used for handling communication and signal processing. And lastly, tools are general software tasks that can be used by any application that needs it. 
 
 Devices: <a href="https://github.com/samdonnelly/STM32F4-driver-library/tree/main/sources/devices">src</a>, <a href="https://github.com/samdonnelly/STM32F4-driver-library/tree/main/headers/devices">inc</a> \
 Peripherals: <a href="https://github.com/samdonnelly/STM32F4-driver-library/tree/main/sources/peripherals">src</a>, <a href="https://github.com/samdonnelly/STM32F4-driver-library/tree/main/headers/peripherals">inc</a> \
