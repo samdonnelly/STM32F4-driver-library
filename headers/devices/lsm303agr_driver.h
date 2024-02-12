@@ -41,14 +41,19 @@
 //=======================================================================================
 // Enums 
 
-/**
- * @brief I2C write and read bits 
- */
-typedef enum {
-    LSM303AGR_W_OFFSET, 
-    LSM303AGR_R_OFFSET 
-} lsm303agr_rw_offset_t; 
+//==================================================
+// Dev 
 
+// LSM303AGR driver status 
+typedef enum {
+    LSM303AGR_OK,            // No problem with the LSM303AGR device 
+    LSM303AGR_INVALID_PTR,   // Invalid pointer provided to function 
+    LSM303AGR_WHOAMI,        // WHO AM I register doesn't match 
+    LSM303AGR_WRITE_FAULT,   // A problem occurred while writing via I2C 
+    LSM303AGR_READ_FAULT     // A problem occurred while reading via I2C 
+} lsm303agr_status_t; 
+
+//==================================================
 
 /**
  * @brief Device setting disable/enable 
@@ -91,8 +96,7 @@ typedef enum {
 //=======================================================================================
 // Datatypes 
 
-typedef uint8_t LSM303AGR_REG_ADDR; 
-typedef uint8_t LSM303AGR_I2C_ADDR; 
+typedef uint8_t LSM303AGR_STATUS; 
 
 //=======================================================================================
 
@@ -136,11 +140,24 @@ void lsm303agr_init(
  * @param i2c : 
  * @param offsets : 
  * @param heading_lpf_gain : 
+ * @param m_odr : 
+ * @param m_mode : 
+ * @param m_off_canc : 
+ * @param m_lpf : 
+ * @param m_int_mag_pin : 
+ * @param m_int_mag : 
+ * @return LSM303AGR_STATUS : 
  */
-void lsm303agr_m_init(
+LSM303AGR_STATUS lsm303agr_m_init_dev(
     I2C_TypeDef *i2c, 
     const int16_t *offsets, 
-    double heading_lpf_gain); 
+    double heading_lpf_gain, 
+    lsm303agr_m_odr_cfg_t m_odr, 
+    lsm303agr_m_sys_mode_t m_mode, 
+    lsm303agr_cfg_t m_off_canc, 
+    lsm303agr_cfg_t m_lpf, 
+    lsm303agr_cfg_t m_int_mag_pin, 
+    lsm303agr_cfg_t m_int_mag); 
 
 
 /**
@@ -154,7 +171,7 @@ void lsm303agr_m_init(
  * 
  * @param offsets : error between magnetometer heading and true heading in each direction 
  */
-void lsm303agr_m_heading_calibration(const int16_t *offsets); 
+void lsm303agr_m_heading_calibration_dev(const int16_t *offsets); 
 
 //==================================================
 
@@ -205,7 +222,7 @@ int16_t lsm303agr_m_get_heading(void);
  * 
  * @details 
  */
-void lsm303agr_m_update(void); 
+void lsm303agr_m_update_dev(void); 
 
 
 /**
@@ -215,7 +232,7 @@ void lsm303agr_m_update(void);
  * 
  * @param m_axis_data 
  */
-void lsm303agr_m_get_axis_data(int16_t *m_axis_data); 
+void lsm303agr_m_get_axis_data_dev(int16_t *m_axis_data); 
 
 
 /**
