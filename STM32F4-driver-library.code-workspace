@@ -84,7 +84,8 @@
 			"typeinfo": "cpp",
 			"optional": "cpp",
 			"ranges": "cpp",
-			"lsm303agr_driver.h": "c"
+			"lsm303agr_driver.h": "c",
+			"lsm303agr_config_test.h": "c"
 		}
 	}
 }

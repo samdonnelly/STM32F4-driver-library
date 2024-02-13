@@ -34,12 +34,6 @@
 //=======================================================================================
 // Macros 
 
-// Accelerometer I2C addresses 
-#define LSM303AGR_A_7BIT_ADDR 0x19            // Accelerometer 7-bit I2C address - no R/W bit 
-
-// Magnetometer I2C addresses (datasheet page 39) 
-#define LSM303AGR_M_7BIT_ADDR 0x1E            // Magnetometer 7-bit I2C address - no R/W bit 
-
 // Magnetometer data 
 #define LSM303AGR_M_SENS 3                    // Magnetometer sensitivity numerator (3/2 == 1.5) 
 #define LSM303AGR_M_HEAD_SCALE 10             // Heading scaling factor (to remove decimals) 
@@ -58,15 +52,12 @@
 // Dev 
 
 // I2C addresses (datasheet page 39) 
-#define LSM303AGR_A_ADDR 0x32           // Accelerometer (7-bit addr + Write bit) 
-#define LSM303AGR_M_ADDR 0x3C           // Magnetometer (7-bit addr + Write bit) 
+#define LSM303AGR_A_ADDR 0x32           // Accelerometer (7-bit addr (0x19<<1) + Write bit) 
+#define LSM303AGR_M_ADDR 0x3C           // Magnetometer (7-bit addr (0x1E<<1) + Write bit) 
 
 // Data tools 
 #define LSM303AGR_BIT_MASK 0x01         // Mask to filter out status bits 
 #define LSM303AGR_ADDR_INC 0x80         // Register address increment mask for r/w 
-
-// Magnetometer configuration 
-#define LSM303AGR_M_ID 0x40             // Value returned from the WHO AM I register 
 
 // Magnetometer register addresses 
 #define LSM303AGR_M_WHO_AM_I 0x4F       // WHO AM I 
@@ -77,6 +68,7 @@
 #define LSM303AGR_M_X_L 0x68            // X component of magnetic field (first data reg) 
 
 // Magnetometer data 
+#define LSM303AGR_M_ID 0x40             // Value returned from the WHO_AM_I register 
 #define LSM303AGR_M_HEAD_MAX 3600       // Max heading value - scaled (360deg * 10)
 #define LSM303AGR_M_HEAD_DIFF 1800      // Heading different threshold for filtering 
 #define LSM303AGR_M_DIR_OFFSET 450      // 45deg (*10) - heading sections (ex. N-->NE) 
@@ -660,7 +652,7 @@ LSM303AGR_STATUS lsm303agr_m_init_dev(
         init_status = LSM303AGR_WHOAMI; 
     }
     
-    // Config magnetometer 
+    // Configure magnetometer 
     init_status |= lsm303agr_m_reg_write_dev(
                         LSM303AGR_M_CFG_A, &lsm303agr_driver_data.m_cfga_dev.cfga_reg); 
     init_status |= lsm303agr_m_reg_write_dev(
@@ -675,6 +667,11 @@ LSM303AGR_STATUS lsm303agr_m_init_dev(
 // Calibrate the magnetometer heading - generate heading offset equations 
 void lsm303agr_m_heading_calibration_dev(const int16_t *offsets)
 {
+    if (offsets == NULL)
+    {
+        return; 
+    }
+
     lsm303agr_m_heading_offset_t *offset_eqn = lsm303agr_driver_data.heading_offset_eqns; 
     double delta1, delta2, heading = LSM303AGR_M_N; 
     const double dir_spacing = LSM303AGR_M_DIR_OFFSET; 
@@ -853,7 +850,7 @@ void lsm303agr_m_update_dev(void)
 
     // Read the magnetometer axis data (units: milli-gauss). The LSM303AGR_ADDR_INC mask 
     // is used to increment to the next register address after each byte read. 
-    lsm303agr_read(
+    lsm303agr_read_dev(
         lsm303agr_driver_data.m_addr, 
         LSM303AGR_M_X_L | LSM303AGR_ADDR_INC, 
         m_data[X_AXIS].m_axis_bytes, 
@@ -872,6 +869,11 @@ void lsm303agr_m_update_dev(void)
 // Get magnetometer axis data 
 void lsm303agr_m_get_axis_data_dev(int16_t *m_axis_data)
 {
+    if (m_axis_data == NULL)
+    {
+        return; 
+    }
+
     memcpy((void *)m_axis_data, (void *)lsm303agr_driver_data.m_data_dev, BYTE_6); 
 }
 

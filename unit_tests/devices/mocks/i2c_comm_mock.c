@@ -163,30 +163,6 @@ I2C_STATUS i2c_clear(
     return I2C_OK; 
 }
 
-
-// I2C read data until a termination character is seen 
-I2C_STATUS i2c_read_to_term(
-    I2C_TypeDef *i2c, 
-    uint8_t *data,  
-    uint8_t term_char, 
-    uint16_t bytes_remain)
-{
-    return I2C_OK; 
-}
-
-
-// I2C read data of a certain length that is defined within the message 
-I2C_STATUS i2c_read_to_len(
-    I2C_TypeDef *i2c, 
-    uint8_t address, 
-    uint8_t *data, 
-    uint8_t len_location, 
-    uint8_t len_bytes, 
-    uint8_t add_bytes)
-{
-    return I2C_OK; 
-}
-
 //=======================================================================================
 
 
