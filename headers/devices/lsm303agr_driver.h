@@ -221,8 +221,10 @@ int16_t lsm303agr_m_get_heading(void);
  * @brief Get the most recent magnetometer data 
  * 
  * @details 
+ * 
+ * @return LSM303AGR_STATUS : 
  */
-void lsm303agr_m_update_dev(void); 
+LSM303AGR_STATUS lsm303agr_m_update_dev(void); 
 
 
 /**
@@ -233,6 +235,16 @@ void lsm303agr_m_update_dev(void);
  * @param m_axis_data 
  */
 void lsm303agr_m_get_axis_data_dev(int16_t *m_axis_data); 
+
+
+/**
+ * @brief Get magnetometer applied magnetic field reading for each axis 
+ * 
+ * @details 
+ * 
+ * @param m_field_data 
+ */
+void lsm303agr_m_get_field_dev(int32_t *m_field_data); 
 
 
 /**

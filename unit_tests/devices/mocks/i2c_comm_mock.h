@@ -31,7 +31,10 @@
 typedef enum {
     I2C_MOCK_INDEX_0, 
     I2C_MOCK_INDEX_1, 
-    I2C_MOCK_INDEX_2 
+    I2C_MOCK_INDEX_2, 
+    I2C_MOCK_INDEX_3, 
+    I2C_MOCK_INDEX_4, 
+    I2C_MOCK_INDEX_5 
 } i2c_mock_buff_index_t; 
 
 

@@ -35,7 +35,7 @@
 // Macros 
 
 // Magnetometer data 
-#define LSM303AGR_M_SENS 3                    // Magnetometer sensitivity numerator (3/2 == 1.5) 
+#define LSM303AGR_M_SENS 3              // Magnetometer sensitivity numerator (3/2 == 1.5) 
 #define LSM303AGR_M_HEAD_SCALE 10             // Heading scaling factor (to remove decimals) 
 #define LSM303AGR_M_N 0                       // North direction heading - scaled 
 #define LSM303AGR_M_NE 450                    // North-East direction heading - scaled 
@@ -69,6 +69,8 @@
 
 // Magnetometer data 
 #define LSM303AGR_M_ID 0x40             // Value returned from the WHO_AM_I register 
+#define LSM303AGR_M_SENS_NUM 3          // Magnetometer sensitivity numerator (3/2) 
+#define LSM303AGR_M_SENS_DEN 2          // Magnetometer sensitivity denominator (3/2) 
 #define LSM303AGR_M_HEAD_MAX 3600       // Max heading value - scaled (360deg * 10)
 #define LSM303AGR_M_HEAD_DIFF 1800      // Heading different threshold for filtering 
 #define LSM303AGR_M_DIR_OFFSET 450      // 45deg (*10) - heading sections (ex. N-->NE) 
@@ -474,11 +476,13 @@ LSM303AGR_STATUS lsm303agr_m_reg_write_dev(
  * 
  * @param reg_addr 
  * @param reg_buff 
+ * @param data_size : 
  * @return LSM303AGR_STATUS 
  */
 LSM303AGR_STATUS lsm303agr_m_reg_read_dev(
     uint8_t reg_addr, 
-    uint8_t *reg_buff); 
+    uint8_t *reg_buff, 
+    byte_num_t data_size); 
 
 //==================================================
 
@@ -645,7 +649,7 @@ LSM303AGR_STATUS lsm303agr_m_init_dev(
     lsm303agr_m_heading_calibration_dev(offsets); 
     
     // Identify the device 
-    init_status |= lsm303agr_m_reg_read_dev(LSM303AGR_M_WHO_AM_I, &whoami_status); 
+    init_status |= lsm303agr_m_reg_read_dev(LSM303AGR_M_WHO_AM_I, &whoami_status, BYTE_1); 
     
     if (whoami_status != LSM303AGR_M_ID)
     {
@@ -843,26 +847,13 @@ int16_t lsm303agr_m_get_heading(void)
 // Dev 
 
 // Get the most recent magnetometer data 
-void lsm303agr_m_update_dev(void)
+LSM303AGR_STATUS lsm303agr_m_update_dev(void)
 {
-    lsm303agr_m_data_t_dev *m_data = lsm303agr_driver_data.m_data_dev; 
-    const int16_t sensitivity = LSM303AGR_M_SENS; 
-
     // Read the magnetometer axis data (units: milli-gauss). The LSM303AGR_ADDR_INC mask 
     // is used to increment to the next register address after each byte read. 
-    lsm303agr_read_dev(
-        lsm303agr_driver_data.m_addr, 
-        LSM303AGR_M_X_L | LSM303AGR_ADDR_INC, 
-        m_data[X_AXIS].m_axis_bytes, 
-        BYTE_6); 
-
-    // Scale the axis data by the magnetometer sensitivity. Per the datasheet, the magnetic 
-    // sensitivity after factory calibration test and trim is 1.5 +/-7% mgauss/LSB. No 
-    // decimal place is used in this scaling so the data types line up. See the datasheet 
-    // for further details on sensitivity. 
-    m_data[X_AXIS].m_axis = (m_data[X_AXIS].m_axis * sensitivity) >> SHIFT_1; 
-    m_data[Y_AXIS].m_axis = (m_data[Y_AXIS].m_axis * sensitivity) >> SHIFT_1; 
-    m_data[Z_AXIS].m_axis = (m_data[Z_AXIS].m_axis * sensitivity) >> SHIFT_1; 
+    return lsm303agr_m_reg_read_dev(LSM303AGR_M_X_L | LSM303AGR_ADDR_INC, 
+                                    lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis_bytes, 
+                                    BYTE_6); 
 }
 
 
@@ -875,6 +866,28 @@ void lsm303agr_m_get_axis_data_dev(int16_t *m_axis_data)
     }
 
     memcpy((void *)m_axis_data, (void *)lsm303agr_driver_data.m_data_dev, BYTE_6); 
+}
+
+
+// Get magnetometer applied magnetic field reading for each axis 
+void lsm303agr_m_get_field_dev(int32_t *m_field_data)
+{
+    if (m_field_data == NULL)
+    {
+        return; 
+    }
+
+    lsm303agr_m_data_t_dev *m_data = lsm303agr_driver_data.m_data_dev; 
+    const int32_t sens_num = LSM303AGR_M_SENS_NUM; 
+    const int32_t sens_den = LSM303AGR_M_SENS_DEN; 
+
+    // Divide the axis data by the magnetometer sensitivity to get the applied magnetic 
+    // field on each axis. Per the datasheet, the magnetic sensitivity after factory 
+    // calibration test and trim is 1.5 +/-7% mgauss/LSB. See the datasheet for further 
+    // details on sensitivity. 
+    m_field_data[X_AXIS] = ((int32_t)m_data[X_AXIS].m_axis * sens_num) / sens_den; 
+    m_field_data[Y_AXIS] = ((int32_t)m_data[Y_AXIS].m_axis * sens_num) / sens_den; 
+    m_field_data[Z_AXIS] = ((int32_t)m_data[Z_AXIS].m_axis * sens_num) / sens_den; 
 }
 
 
@@ -1218,10 +1231,11 @@ LSM303AGR_STATUS lsm303agr_m_reg_write_dev(
 // Magnetometer register read 
 LSM303AGR_STATUS lsm303agr_m_reg_read_dev(
     uint8_t reg_addr, 
-    uint8_t *reg_buff)
+    uint8_t *reg_buff, 
+    byte_num_t data_size)
 {
     I2C_STATUS i2c_status = lsm303agr_read_dev(lsm303agr_driver_data.m_addr, 
-                                               reg_addr, reg_buff, BYTE_1); 
+                                               reg_addr, reg_buff, data_size); 
     if (i2c_status)
     {
         return LSM303AGR_READ_FAULT; 
