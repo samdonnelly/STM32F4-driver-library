@@ -113,16 +113,14 @@ lsm303agr_m_data_t_dev;
 // Magnetometer configuration register A 
 typedef union lsm303agr_m_cfga_s_dev 
 {
-    uint8_t comp_temp_en : 1;      // Temperature compensation 
-    uint8_t reboot       : 1;      // Reboot memory contents 
-    uint8_t soft_rst     : 1;      // Config and user register reset 
-    uint8_t lp           : 1;      // Low-power mode enable 
-    uint8_t odr          : 2;      // Output data rate 
-    uint8_t md           : 2;      // Mode select 
-    // uint8_t odr1         : 1;      // Output data rate - high bit 
-    // uint8_t odr0         : 1;      // Output data rate - low bit 
-    // uint8_t md1          : 1;      // Mode select - high bit 
-    // uint8_t md0          : 1;      // Mode select - low bit 
+    struct {
+        uint8_t md           : 2;      // Mode select 
+        uint8_t odr          : 2;      // Output data rate 
+        uint8_t lp           : 1;      // Low-power mode enable 
+        uint8_t soft_rst     : 1;      // Config and user register reset 
+        uint8_t reboot       : 1;      // Reboot memory contents 
+        uint8_t comp_temp_en : 1;      // Temperature compensation 
+    }; 
 
     uint8_t cfga_reg;              // CFG-A register byte 
 }
@@ -618,16 +616,12 @@ LSM303AGR_STATUS lsm303agr_m_init_dev(
     lsm303agr_driver_data.m_addr = LSM303AGR_M_ADDR; 
     lsm303agr_driver_data.heading_gain = heading_lpf_gain; 
 
-    lsm303agr_driver_data.m_cfga_dev.comp_temp_en = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfga_dev.reboot = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfga_dev.soft_rst = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfga_dev.lp = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfga_dev.odr = m_odr; 
     lsm303agr_driver_data.m_cfga_dev.md = m_mode; 
-    // lsm303agr_driver_data.m_cfga_dev.odr0 = m_odr; 
-    // lsm303agr_driver_data.m_cfga_dev.odr1 = (m_odr >> SHIFT_1); 
-    // lsm303agr_driver_data.m_cfga_dev.md0 = m_mode; 
-    // lsm303agr_driver_data.m_cfga_dev.md1 = (m_mode >> SHIFT_1); 
+    lsm303agr_driver_data.m_cfga_dev.odr = m_odr; 
+    lsm303agr_driver_data.m_cfga_dev.lp = CLEAR_BIT; 
+    lsm303agr_driver_data.m_cfga_dev.soft_rst = CLEAR_BIT; 
+    lsm303agr_driver_data.m_cfga_dev.reboot = CLEAR_BIT; 
+    lsm303agr_driver_data.m_cfga_dev.comp_temp_en = CLEAR_BIT; 
 
     lsm303agr_driver_data.m_cfgb_dev.unused_1 = CLEAR; 
     lsm303agr_driver_data.m_cfgb_dev.off_canc_one_shot = CLEAR_BIT; 
@@ -1079,7 +1073,7 @@ I2C_STATUS lsm303agr_read_dev(
     i2c_status |= i2c_start(lsm303agr_driver_data.i2c); 
     i2c_status |= i2c_write_addr(lsm303agr_driver_data.i2c, i2c_addr + I2C_W_OFFSET); 
     i2c_clear_addr(lsm303agr_driver_data.i2c); 
-    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1);
+    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1); 
 
     // Generate another start condition, send the slave address with a read offset and 
     // finally read the device data before stopping the transaction. 
@@ -1106,7 +1100,7 @@ I2C_STATUS lsm303agr_write_dev(
     i2c_status |= i2c_start(lsm303agr_driver_data.i2c); 
     i2c_status |= i2c_write_addr(lsm303agr_driver_data.i2c, i2c_addr + I2C_W_OFFSET);
     i2c_clear_addr(lsm303agr_driver_data.i2c);
-    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1);
+    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1); 
 
     // Write the data to the device then stop the transaction. 
     i2c_status |= i2c_write(lsm303agr_driver_data.i2c, lsm303agr_reg_value, lsm303agr_data_size);

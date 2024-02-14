@@ -105,7 +105,7 @@ void lsm303agr_driver_test_axis_check_format(
 // Initialization 
 
 // Magnetometer init - WHO_AM_I incorrect 
-TEST(lsm303agr_driver_test, lsm303agr_m_init)
+TEST(lsm303agr_driver_test, lsm303agr_m_init_fail)
 {
     LSM303AGR_STATUS init_check; 
     uint8_t whoami_reg_value = WHOAMI_REG_ID + 1; 
@@ -133,31 +133,41 @@ TEST(lsm303agr_driver_test, lsm303agr_m_init)
 }
 
 
-// // Magnetometer init - WHO_AM_I correct, check data written to registers 
-// TEST(lsm303agr_driver_test, lsm303agr_m_init)
-// {
-//     LSM303AGR_STATUS init_check; 
-//     uint8_t whoami_reg_value = 0x40; 
+// Magnetometer init - WHO_AM_I correct, check data written to registers 
+TEST(lsm303agr_driver_test, lsm303agr_m_init_success)
+{
+    LSM303AGR_STATUS init_check; 
+    uint8_t whoami_reg_value = WHOAMI_REG_ID; 
+    uint8_t cfga_reg = CLEAR, cfgb_reg = CLEAR, cfgc_reg = CLEAR, data_size; 
 
-//     i2c_mock_init(
-//         I2C_MOCK_TIMEOUT_DISABLE, 
-//         I2C_MOCK_INC_MODE_ENABLE, 
-//         I2C_MOCK_INC_MODE_ENABLE); 
+    i2c_mock_init(
+        I2C_MOCK_TIMEOUT_DISABLE, 
+        I2C_MOCK_INC_MODE_ENABLE, 
+        I2C_MOCK_INC_MODE_ENABLE); 
 
-//     // Set the WHO_AM_I register data to be read 
-//     i2c_mock_set_read_data(&whoami_reg_value, BYTE_1, I2C_MOCK_INDEX_0); 
+    // Set the WHO_AM_I register data to be read 
+    i2c_mock_set_read_data(&whoami_reg_value, BYTE_1, I2C_MOCK_INDEX_0); 
 
-//     init_check = lsm303agr_m_init_dev(
-//         &I2C_FAKE, 
-//         lsm303agr_calibrate_offsets, 
-//         NO_FILTER_GAIN, 
-//         LSM303AGR_M_ODR_10, 
-//         LSM303AGR_M_MODE_CONT, 
-//         LSM303AGR_CFG_DISABLE, 
-//         LSM303AGR_CFG_DISABLE, 
-//         LSM303AGR_CFG_DISABLE, 
-//         LSM303AGR_CFG_DISABLE); 
-// }
+    init_check = lsm303agr_m_init_dev(
+        &I2C_FAKE, 
+        lsm303agr_calibrate_offsets, 
+        NO_FILTER_GAIN, 
+        LSM303AGR_M_ODR_20, 
+        LSM303AGR_M_MODE_IDLE, 
+        LSM303AGR_CFG_ENABLE, 
+        LSM303AGR_CFG_ENABLE, 
+        LSM303AGR_CFG_ENABLE, 
+        LSM303AGR_CFG_ENABLE); 
+
+    i2c_mock_get_write_data(&cfga_reg, &data_size, I2C_MOCK_INDEX_2); 
+    i2c_mock_get_write_data(&cfgb_reg, &data_size, I2C_MOCK_INDEX_4); 
+    i2c_mock_get_write_data(&cfgc_reg, &data_size, I2C_MOCK_INDEX_6); 
+
+    LONGS_EQUAL(LSM303AGR_OK, init_check); 
+    LONGS_EQUAL(0x06, cfga_reg); 
+    // LONGS_EQUAL(0x03, cfgb_reg); 
+    // LONGS_EQUAL(0x41, cfgc_reg); 
+}
 
 
 // // Magnetometer calibration 
