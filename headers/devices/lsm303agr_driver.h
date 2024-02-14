@@ -136,6 +136,8 @@ void lsm303agr_init(
  * @brief Magnetometer initialization 
  * 
  * @details 
+ *          
+ *          LPF gain must not be zero or else data will not be updated 
  * 
  * @param i2c : 
  * @param offsets : 

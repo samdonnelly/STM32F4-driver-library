@@ -33,7 +33,8 @@ extern "C"
 //=======================================================================================
 // Macros 
 
-#define NO_FILTER_GAIN 1 
+#define NO_LPF_GAIN 1 
+#define LPF_GAIN 0.2 
 #define WHOAMI_REG_ID 0x40 
 
 //=======================================================================================
@@ -104,7 +105,7 @@ void lsm303agr_driver_test_axis_check_format(
 //==================================================
 // Initialization 
 
-// Magnetometer init - WHO_AM_I incorrect 
+// Magnetometer - Initialization - WHO_AM_I incorrect 
 TEST(lsm303agr_driver_test, lsm303agr_m_init_fail)
 {
     LSM303AGR_STATUS init_check; 
@@ -121,7 +122,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_init_fail)
     init_check = lsm303agr_m_init_dev(
         &I2C_FAKE, 
         lsm303agr_calibrate_offsets, 
-        NO_FILTER_GAIN, 
+        NO_LPF_GAIN, 
         LSM303AGR_M_ODR_10, 
         LSM303AGR_M_MODE_CONT, 
         LSM303AGR_CFG_DISABLE, 
@@ -133,7 +134,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_init_fail)
 }
 
 
-// Magnetometer init - WHO_AM_I correct, check data written to registers 
+// Magnetometer - Initialization - WHO_AM_I correct, check data written to registers 
 TEST(lsm303agr_driver_test, lsm303agr_m_init_success)
 {
     LSM303AGR_STATUS init_check; 
@@ -151,7 +152,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_init_success)
     init_check = lsm303agr_m_init_dev(
         &I2C_FAKE, 
         lsm303agr_calibrate_offsets, 
-        NO_FILTER_GAIN, 
+        NO_LPF_GAIN, 
         LSM303AGR_M_ODR_20, 
         LSM303AGR_M_MODE_IDLE, 
         LSM303AGR_CFG_ENABLE, 
@@ -164,24 +165,18 @@ TEST(lsm303agr_driver_test, lsm303agr_m_init_success)
     i2c_mock_get_write_data(&cfgc_reg, &data_size, I2C_MOCK_INDEX_6); 
 
     LONGS_EQUAL(LSM303AGR_OK, init_check); 
+    // The following checks are based on the parameters passed in the init function 
     LONGS_EQUAL(0x06, cfga_reg); 
-    // LONGS_EQUAL(0x03, cfgb_reg); 
-    // LONGS_EQUAL(0x41, cfgc_reg); 
+    LONGS_EQUAL(0x03, cfgb_reg); 
+    LONGS_EQUAL(0x41, cfgc_reg); 
 }
-
-
-// // Magnetometer calibration 
-// TEST(lsm303agr_driver_test, lsm303agr_m_calibration)
-// {
-//     // 
-// }
 
 //==================================================
 
 //==================================================
 // Data update and read 
 
-// Magnetometer data update successful and not successful 
+// Magnetometer - Data update successful and not successful 
 TEST(lsm303agr_driver_test, lsm303agr_m_data_update_success)
 {
     // Initialize the mock I2C driver to not time out, set the data to be read, update 
@@ -198,7 +193,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_data_update_success)
 }
 
 
-// Magnetometer data update and axis read 
+// Magnetometer - Data update and axis read 
 TEST(lsm303agr_driver_test, lsm303agr_m_data_update_axis_read)
 {
     int16_t axis_checks[NUM_AXES], axis_data[NUM_AXES]; 
@@ -211,10 +206,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_data_update_axis_read)
         I2C_MOCK_INC_MODE_DISABLE); 
 
     // Set the data to be read by the driver 
-    i2c_mock_set_read_data(
-        axis_bytes_0, 
-        BYTE_6, 
-        I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data(axis_bytes_0, BYTE_6, I2C_MOCK_INDEX_0); 
 
     // Update and read the data 
     lsm303agr_m_update_dev(); 
@@ -226,7 +218,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_data_update_axis_read)
 }
 
 
-// Magnetometer data update and applied magnetic field per axis read 
+// Magnetometer - Data update and applied magnetic field per axis read 
 TEST(lsm303agr_driver_test, lsm303agr_m_data_update_field_read)
 {
     int32_t field_checks[NUM_AXES], field_data[NUM_AXES]; 
@@ -248,10 +240,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_data_update_field_read)
         I2C_MOCK_INC_MODE_DISABLE); 
 
     // Set the data to be read by the driver 
-    i2c_mock_set_read_data(
-        axis_bytes_0, 
-        BYTE_6, 
-        I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data(axis_bytes_0, BYTE_6, I2C_MOCK_INDEX_0); 
 
     // Update and read the data 
     lsm303agr_m_update_dev(); 
@@ -262,9 +251,90 @@ TEST(lsm303agr_driver_test, lsm303agr_m_data_update_field_read)
     LONGS_EQUAL(field_checks[Z_AXIS], field_data[Z_AXIS]); 
 }
 
+//==================================================
 
-// // Magnetometer data update and heading read 
-// TEST(lsm303agr_driver_test, lsm303agr_m_data_update_heading_read)
+
+//==================================================
+// Heading and calibration 
+
+// Magnetometer - No offsets, no filter, heading read 
+TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_no_filter_heading)
+{
+    int16_t heading; 
+    uint8_t whoami_reg_value = WHOAMI_REG_ID; 
+
+    // Initialize the mock I2C driver to not time out 
+    i2c_mock_init(
+        I2C_MOCK_TIMEOUT_DISABLE, 
+        I2C_MOCK_INC_MODE_ENABLE, 
+        I2C_MOCK_INC_MODE_ENABLE); 
+
+    // Set the data to be read by the driver 
+    i2c_mock_set_read_data(&whoami_reg_value, BYTE_1, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data(axis_bytes_11, BYTE_6, I2C_MOCK_INDEX_1); 
+
+    // Note that for unit testing, only offsets and LPF gain matter when calling the 
+    // init function. Other arguments are placeholders and can be ignored. 
+    lsm303agr_m_init_dev(
+        &I2C_FAKE, 
+        lsm303agr_calibrate_offsets, 
+        NO_LPF_GAIN, 
+        LSM303AGR_M_ODR_10, 
+        LSM303AGR_M_MODE_CONT, 
+        LSM303AGR_CFG_DISABLE, 
+        LSM303AGR_CFG_DISABLE, 
+        LSM303AGR_CFG_DISABLE, 
+        LSM303AGR_CFG_DISABLE); 
+
+    // Update the device data and calculate the heading 
+    lsm303agr_m_update_dev(); 
+    heading = lsm303agr_m_get_heading_dev(); 
+
+    LONGS_EQUAL(heading_checks[10], heading); 
+}
+
+
+// // Magnetometer - No offsets, added filter heading read 
+// TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_added_filter_heading)
+// {
+//     // Note that for unit testing, only offsets and LPF gain matter when calling the 
+//     // init function. Other arguments are placeholders and can be ignored. 
+//     lsm303agr_m_init_dev(
+//         &I2C_FAKE, 
+//         lsm303agr_calibrate_offsets, 
+//         LPF_GAIN, 
+//         LSM303AGR_M_ODR_10, 
+//         LSM303AGR_M_MODE_CONT, 
+//         LSM303AGR_CFG_DISABLE, 
+//         LSM303AGR_CFG_DISABLE, 
+//         LSM303AGR_CFG_DISABLE, 
+//         LSM303AGR_CFG_DISABLE); 
+// }
+
+
+// // Magnetometer - Added offsets, added filter heading read 
+// TEST(lsm303agr_driver_test, lsm303agr_m_added_offsets_added_filter_heading)
+// {
+//     // Note that for unit testing, only offsets and LPF gain matter when calling the 
+//     // init function. Other arguments are placeholders and can be ignored. 
+//     lsm303agr_m_init_dev(
+//         &I2C_FAKE, 
+//         lsm303agr_calibrate_offsets, 
+//         LPF_GAIN, 
+//         LSM303AGR_M_ODR_10, 
+//         LSM303AGR_M_MODE_CONT, 
+//         LSM303AGR_CFG_DISABLE, 
+//         LSM303AGR_CFG_DISABLE, 
+//         LSM303AGR_CFG_DISABLE, 
+//         LSM303AGR_CFG_DISABLE); 
+
+//     // 
+//     lsm303agr_m_heading_calibration_dev(lsm303agr_config_dir_offsets); 
+// }
+
+
+// // Magnetometer - Calibration update, data update and heading read 
+// TEST(lsm303agr_driver_test, lsm303agr_m_calibration_and_data_update_heading_read)
 // {
 //     // Initialize the mock I2C driver to not time out and hold multiple data sets 
 //     // for reading. 

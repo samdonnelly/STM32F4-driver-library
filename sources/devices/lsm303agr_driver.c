@@ -113,6 +113,7 @@ lsm303agr_m_data_t_dev;
 // Magnetometer configuration register A 
 typedef union lsm303agr_m_cfga_s_dev 
 {
+    // Configuration register A bits 
     struct {
         uint8_t md           : 2;      // Mode select 
         uint8_t odr          : 2;      // Output data rate 
@@ -122,7 +123,8 @@ typedef union lsm303agr_m_cfga_s_dev
         uint8_t comp_temp_en : 1;      // Temperature compensation 
     }; 
 
-    uint8_t cfga_reg;              // CFG-A register byte 
+    // CFG-A register byte 
+    uint8_t cfga_reg; 
 }
 lsm303agr_m_cfga_t_dev; 
 
@@ -130,14 +132,18 @@ lsm303agr_m_cfga_t_dev;
 // Magnetometer configuration register B 
 typedef union lsm303agr_m_cfgb_s_dev 
 {
-    uint8_t unused_1          : 3;      // Not used 
-    uint8_t off_canc_one_shot : 1;      // Offset cancellation - single measurement mode 
-    uint8_t int_on_dataoff    : 1;      // Interrupt check after hard-ron correction 
-    uint8_t set_freq          : 1;      // Frequency of set pulse 
-    uint8_t off_canc          : 1;      // Enable offset cancellation 
-    uint8_t lpf               : 1;      // Low pass filter enable 
+    // Configuration register C bits 
+    struct {
+        uint8_t lpf               : 1;      // Low pass filter enable 
+        uint8_t off_canc          : 1;      // Enable offset cancellation 
+        uint8_t set_freq          : 1;      // Frequency of set pulse 
+        uint8_t int_on_dataoff    : 1;      // Interrupt check after hard-ron correction 
+        uint8_t off_canc_one_shot : 1;      // Offset cancellation - single measurement mode 
+        uint8_t unused_1          : 3;      // Not used 
+    }; 
 
-    uint8_t cfgb_reg;                   // CFG-B register byte 
+    // CFG-B register byte 
+    uint8_t cfgb_reg; 
 }
 lsm303agr_m_cfgb_t_dev; 
 
@@ -145,16 +151,20 @@ lsm303agr_m_cfgb_t_dev;
 // Magnetometer configuration register C 
 typedef union lsm303agr_m_cfgc_s_dev 
 {
-    uint8_t unused_1    : 1;      // Bit not used 
-    uint8_t int_mag_pin : 1;      // Interrupt on INT_MAG_PIN enable 
-    uint8_t i2c_dis     : 1;      // I2C disable 
-    uint8_t bdu         : 1;      // Asynchronous read data protection 
-    uint8_t ble         : 1;      // High and low data inversion 
-    uint8_t unused_2    : 1;      // Bit not used 
-    uint8_t self_test   : 1;      // Self-test enable 
-    uint8_t int_mag     : 1;      // DRDY pin configured as digital output 
+    // Configuration register C bits 
+    struct {
+        uint8_t int_mag     : 1;      // DRDY pin configured as digital output 
+        uint8_t self_test   : 1;      // Self-test enable 
+        uint8_t unused_2    : 1;      // Bit not used 
+        uint8_t ble         : 1;      // High and low data inversion 
+        uint8_t bdu         : 1;      // Asynchronous read data protection 
+        uint8_t i2c_dis     : 1;      // I2C disable 
+        uint8_t int_mag_pin : 1;      // Interrupt on INT_MAG_PIN enable 
+        uint8_t unused_1    : 1;      // Bit not used 
+    }; 
 
-    uint8_t cfgc_reg;             // CFG-C register byte 
+    // CFG-C register byte 
+    uint8_t cfgc_reg; 
 }
 lsm303agr_m_cfgc_t_dev; 
 
@@ -162,16 +172,20 @@ lsm303agr_m_cfgc_t_dev;
 // Magnetometer status register 
 typedef union lsm303agr_m_status_s_dev 
 {
-    uint8_t zyx_or : 1;      // XYZ-axis data overrun 
-    uint8_t z_or   : 1;      // Z-axis data overrun 
-    uint8_t y_or   : 1;      // Y-axis data overrun 
-    uint8_t x_or   : 1;      // X-axis data overrun 
-    uint8_t zyx_da : 1;      // XYZ-axis new data available 
-    uint8_t z_da   : 1;      // Z-axis new data available 
-    uint8_t y_da   : 1;      // Y-axis new data available 
-    uint8_t x_da   : 1;      // X-axis new data available 
+    // Status register bits 
+    struct {
+        uint8_t x_da   : 1;      // X-axis new data available 
+        uint8_t y_da   : 1;      // Y-axis new data available 
+        uint8_t z_da   : 1;      // Z-axis new data available 
+        uint8_t zyx_da : 1;      // XYZ-axis new data available 
+        uint8_t x_or   : 1;      // X-axis data overrun 
+        uint8_t y_or   : 1;      // Y-axis data overrun 
+        uint8_t z_or   : 1;      // Z-axis data overrun 
+        uint8_t zyx_or : 1;      // XYZ-axis data overrun 
+    }; 
 
-    uint8_t status_reg;      // Status register byte 
+    // Status register byte 
+    uint8_t status_reg; 
 }
 lsm303agr_m_status_t_dev; 
 
@@ -615,29 +629,18 @@ LSM303AGR_STATUS lsm303agr_m_init_dev(
     lsm303agr_driver_data.i2c = i2c; 
     lsm303agr_driver_data.m_addr = LSM303AGR_M_ADDR; 
     lsm303agr_driver_data.heading_gain = heading_lpf_gain; 
-
+    // Configuration register A 
+    lsm303agr_driver_data.m_cfga_dev.cfga_reg = CLEAR; 
     lsm303agr_driver_data.m_cfga_dev.md = m_mode; 
     lsm303agr_driver_data.m_cfga_dev.odr = m_odr; 
-    lsm303agr_driver_data.m_cfga_dev.lp = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfga_dev.soft_rst = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfga_dev.reboot = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfga_dev.comp_temp_en = CLEAR_BIT; 
-
-    lsm303agr_driver_data.m_cfgb_dev.unused_1 = CLEAR; 
-    lsm303agr_driver_data.m_cfgb_dev.off_canc_one_shot = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfgb_dev.int_on_dataoff = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfgb_dev.set_freq = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfgb_dev.off_canc = m_off_canc; 
+    // Configuration register B 
+    lsm303agr_driver_data.m_cfgb_dev.cfgb_reg = CLEAR; 
     lsm303agr_driver_data.m_cfgb_dev.lpf = m_lpf; 
-
-    lsm303agr_driver_data.m_cfgc_dev.unused_1 = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfgc_dev.int_mag_pin = m_int_mag_pin; 
-    lsm303agr_driver_data.m_cfgc_dev.i2c_dis = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfgc_dev.bdu = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfgc_dev.ble = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfgc_dev.unused_2 = CLEAR_BIT; 
-    lsm303agr_driver_data.m_cfgc_dev.self_test = CLEAR_BIT; 
+    lsm303agr_driver_data.m_cfgb_dev.off_canc = m_off_canc; 
+    // Configuration register C 
+    lsm303agr_driver_data.m_cfgc_dev.cfgc_reg = CLEAR; 
     lsm303agr_driver_data.m_cfgc_dev.int_mag = m_int_mag; 
+    lsm303agr_driver_data.m_cfgc_dev.int_mag_pin = m_int_mag_pin; 
 
     // Generate heading offset equations 
     lsm303agr_m_heading_calibration_dev(offsets); 
@@ -675,7 +678,7 @@ void lsm303agr_m_heading_calibration_dev(const int16_t *offsets)
     const double dir_spacing = LSM303AGR_M_DIR_OFFSET; 
     uint8_t last = LSM303AGR_M_NUM_DIR - 1; 
 
-    // Calculate the slope and intercept of the linear equation used to correct calculated 
+    // Calculate the slope and intercept of the linear equation used to adjust calculated 
     // magnetometer headings between two directions. 
     for (uint8_t i = CLEAR; i < last; i++)
     {
@@ -900,6 +903,9 @@ int16_t lsm303agr_m_get_heading_dev(void)
         lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis++; 
     }
 
+    // printf("\r\nY-axis: %d", lsm303agr_driver_data.m_data_dev[Y_AXIS].m_axis); 
+    // printf("\r\nX-axis: %d\r\n", lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis); 
+
     // Using the Y and X axis data read from the magnetometer, the heading relative to 
     // magnetic north is calculated. For this to work properly, the X-axis must be 
     // oriented in the forward direction and the Z-axis must be vertical. The heading is 
@@ -911,12 +917,20 @@ int16_t lsm303agr_m_get_heading_dev(void)
     // opposite is needed so the sign is inverted. 
     atan2_calc = atan2((double)lsm303agr_driver_data.m_data_dev[Y_AXIS].m_axis, 
                        (double)lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis); 
-    heading = -(int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
+    
+    // printf("\r\natan2: %f\r\n", atan2_calc); 
+
+    // heading = -(int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
+    heading = (int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
+    
+    // printf("\r\nheading: %d\r\n", heading); 
 
     if (heading < 0)
     {
         heading += LSM303AGR_M_HEAD_MAX; 
     }
+
+    // printf("\r\nheading: %d\r\n", heading); 
 
     // To account for errors in the data read from the device, an offset is added to the 
     // calculated heading based on the direction it's pointing (see the 
@@ -936,7 +950,12 @@ int16_t lsm303agr_m_get_heading_dev(void)
         }
     }
 
-    heading += (int16_t)(slope*(double)heading + intercept); 
+    // heading += (int16_t)(slope*(double)heading + intercept); 
+    heading = (int16_t)(slope*(double)heading + intercept); 
+
+    // printf("\r\nslope: %f", slope); 
+    // printf("\r\nintercept: %f", intercept); 
+    // printf("\r\nheading: %d\r\n", heading); 
 
     // The calculated heading is put through a low pass filter because the data read 
     // from the device has lots of noise (the gain of the filter can be set during init). 
