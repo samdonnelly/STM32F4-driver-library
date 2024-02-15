@@ -260,7 +260,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_data_update_field_read)
 // Magnetometer - No offsets, no filter, heading read 
 TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_no_filter_heading)
 {
-    int16_t heading; 
+    // int16_t heading; 
     uint8_t whoami_reg_value = WHOAMI_REG_ID; 
 
     // Initialize the mock I2C driver to not time out 
@@ -271,7 +271,14 @@ TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_no_filter_heading)
 
     // Set the data to be read by the driver 
     i2c_mock_set_read_data(&whoami_reg_value, BYTE_1, I2C_MOCK_INDEX_0); 
-    i2c_mock_set_read_data(axis_bytes_11, BYTE_6, I2C_MOCK_INDEX_1); 
+    i2c_mock_set_read_data(axis_bytes_1, BYTE_6, I2C_MOCK_INDEX_1); 
+    i2c_mock_set_read_data(axis_bytes_2, BYTE_6, I2C_MOCK_INDEX_2); 
+    i2c_mock_set_read_data(axis_bytes_5, BYTE_6, I2C_MOCK_INDEX_3); 
+    i2c_mock_set_read_data(axis_bytes_6, BYTE_6, I2C_MOCK_INDEX_4); 
+    i2c_mock_set_read_data(axis_bytes_9, BYTE_6, I2C_MOCK_INDEX_5); 
+    i2c_mock_set_read_data(axis_bytes_10, BYTE_6, I2C_MOCK_INDEX_6); 
+    i2c_mock_set_read_data(axis_bytes_13, BYTE_6, I2C_MOCK_INDEX_7); 
+    i2c_mock_set_read_data(axis_bytes_14, BYTE_6, I2C_MOCK_INDEX_8); 
 
     // Note that for unit testing, only offsets and LPF gain matter when calling the 
     // init function. Other arguments are placeholders and can be ignored. 
@@ -288,9 +295,28 @@ TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_no_filter_heading)
 
     // Update the device data and calculate the heading 
     lsm303agr_m_update_dev(); 
-    heading = lsm303agr_m_get_heading_dev(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[0] - lsm303agr_m_get_heading_dev()) <= 1); 
 
-    LONGS_EQUAL(heading_checks[10], heading); 
+    lsm303agr_m_update_dev(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[1] -lsm303agr_m_get_heading_dev()) <= 1); 
+
+    lsm303agr_m_update_dev(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[4] -lsm303agr_m_get_heading_dev()) <= 1); 
+
+    lsm303agr_m_update_dev(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[5] -lsm303agr_m_get_heading_dev()) <= 1); 
+
+    lsm303agr_m_update_dev(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[8] -lsm303agr_m_get_heading_dev()) <= 1); 
+
+    lsm303agr_m_update_dev(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[9] - lsm303agr_m_get_heading_dev()) <= 1); 
+
+    lsm303agr_m_update_dev(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[12] - lsm303agr_m_get_heading_dev()) <= 1); 
+
+    lsm303agr_m_update_dev(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[13] - lsm303agr_m_get_heading_dev()) <= 1); 
 }
 
 

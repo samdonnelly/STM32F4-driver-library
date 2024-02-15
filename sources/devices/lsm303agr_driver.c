@@ -950,7 +950,6 @@ int16_t lsm303agr_m_get_heading_dev(void)
         }
     }
 
-    // heading += (int16_t)(slope*(double)heading + intercept); 
     heading = (int16_t)(slope*(double)heading + intercept); 
 
     // printf("\r\nslope: %f", slope); 
@@ -969,6 +968,8 @@ int16_t lsm303agr_m_get_heading_dev(void)
     // back within range (while still maintaining the same heading). 
     heading_diff = heading - heading_stored; 
 
+    // printf("\r\nheading_diff: %d\r\n", heading_diff); 
+
     if (heading_diff > LSM303AGR_M_HEAD_DIFF)
     {
         heading_diff -= LSM303AGR_M_HEAD_MAX; 
@@ -978,7 +979,11 @@ int16_t lsm303agr_m_get_heading_dev(void)
         heading_diff += LSM303AGR_M_HEAD_MAX; 
     }
 
+    // printf("\r\nheading_diff: %d\r\n", heading_diff); 
+
     heading_stored += (int16_t)((double)heading_diff*lsm303agr_driver_data.heading_gain); 
+
+    // printf("\r\nheading_stored: %d\r\n", heading_stored); 
 
     if (heading_stored >= LSM303AGR_M_HEAD_MAX)
     {
@@ -988,6 +993,8 @@ int16_t lsm303agr_m_get_heading_dev(void)
     {
         heading_stored += LSM303AGR_M_HEAD_MAX; 
     }
+
+    // printf("\r\nheading_stored: %d\r\n", heading_stored); 
 
     return heading_stored; 
 }
