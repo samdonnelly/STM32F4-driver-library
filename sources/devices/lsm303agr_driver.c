@@ -764,7 +764,7 @@ int16_t lsm303agr_m_get_heading(void)
     // this to work properly, the X-axis (long edge of the lsm303agr board) must be oriented 
     // in the forward direction. The heading is calculated using atan2 which is the inverse 
     // tangent of Y/X. atan2 accounts of Y and X signs so the proper quadrant is used and 
-    // therefore the proper angle us returned. The returned angle us between +/-pi but this 
+    // therefore the proper angle is returned. The returned angle is between +/-pi but this 
     // gets converted to degrees and scaled to eliminate decimal place values. 
     heading = (int16_t)((atan2((double)m_y_data, 
                                (double)m_x_data) * RAD_TO_DEG) * LSM303AGR_M_HEAD_SCALE); 
@@ -903,9 +903,6 @@ int16_t lsm303agr_m_get_heading_dev(void)
         lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis++; 
     }
 
-    // printf("\r\nY-axis: %d", lsm303agr_driver_data.m_data_dev[Y_AXIS].m_axis); 
-    // printf("\r\nX-axis: %d\r\n", lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis); 
-
     // Using the Y and X axis data read from the magnetometer, the heading relative to 
     // magnetic north is calculated. For this to work properly, the X-axis must be 
     // oriented in the forward direction and the Z-axis must be vertical. The heading is 
@@ -917,20 +914,13 @@ int16_t lsm303agr_m_get_heading_dev(void)
     // opposite is needed so the sign is inverted. 
     atan2_calc = atan2((double)lsm303agr_driver_data.m_data_dev[Y_AXIS].m_axis, 
                        (double)lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis); 
-    
-    // printf("\r\natan2: %f\r\n", atan2_calc); 
-
-    // heading = -(int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
-    heading = (int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
-    
-    // printf("\r\nheading: %d\r\n", heading); 
+    heading = -(int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
+    // heading = (int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
 
     if (heading < 0)
     {
         heading += LSM303AGR_M_HEAD_MAX; 
     }
-
-    // printf("\r\nheading: %d\r\n", heading); 
 
     // To account for errors in the data read from the device, an offset is added to the 
     // calculated heading based on the direction it's pointing (see the 
@@ -952,10 +942,6 @@ int16_t lsm303agr_m_get_heading_dev(void)
 
     heading = (int16_t)(slope*(double)heading + intercept); 
 
-    // printf("\r\nslope: %f", slope); 
-    // printf("\r\nintercept: %f", intercept); 
-    // printf("\r\nheading: %d\r\n", heading); 
-
     // The calculated heading is put through a low pass filter because the data read 
     // from the device has lots of noise (the gain of the filter can be set during init). 
     // The heading data is circular meaning it increments from 359.9 to 0 degrees after 
@@ -968,8 +954,6 @@ int16_t lsm303agr_m_get_heading_dev(void)
     // back within range (while still maintaining the same heading). 
     heading_diff = heading - heading_stored; 
 
-    // printf("\r\nheading_diff: %d\r\n", heading_diff); 
-
     if (heading_diff > LSM303AGR_M_HEAD_DIFF)
     {
         heading_diff -= LSM303AGR_M_HEAD_MAX; 
@@ -979,11 +963,7 @@ int16_t lsm303agr_m_get_heading_dev(void)
         heading_diff += LSM303AGR_M_HEAD_MAX; 
     }
 
-    // printf("\r\nheading_diff: %d\r\n", heading_diff); 
-
     heading_stored += (int16_t)((double)heading_diff*lsm303agr_driver_data.heading_gain); 
-
-    // printf("\r\nheading_stored: %d\r\n", heading_stored); 
 
     if (heading_stored >= LSM303AGR_M_HEAD_MAX)
     {
@@ -993,8 +973,6 @@ int16_t lsm303agr_m_get_heading_dev(void)
     {
         heading_stored += LSM303AGR_M_HEAD_MAX; 
     }
-
-    // printf("\r\nheading_stored: %d\r\n", heading_stored); 
 
     return heading_stored; 
 }

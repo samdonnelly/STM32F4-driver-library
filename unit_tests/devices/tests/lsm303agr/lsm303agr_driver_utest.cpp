@@ -296,25 +296,18 @@ TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_no_filter_heading)
     // Update the device data and calculate the heading 
     lsm303agr_m_update_dev(); 
     LONGS_EQUAL(TRUE, abs(heading_checks[0] - lsm303agr_m_get_heading_dev()) <= 1); 
-
     lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[1] -lsm303agr_m_get_heading_dev()) <= 1); 
-
+    LONGS_EQUAL(TRUE, abs(heading_checks[1] - lsm303agr_m_get_heading_dev()) <= 1); 
     lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[4] -lsm303agr_m_get_heading_dev()) <= 1); 
-
+    LONGS_EQUAL(TRUE, abs(heading_checks[4] - lsm303agr_m_get_heading_dev()) <= 1); 
     lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[5] -lsm303agr_m_get_heading_dev()) <= 1); 
-
+    LONGS_EQUAL(TRUE, abs(heading_checks[5] - lsm303agr_m_get_heading_dev()) <= 1); 
     lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[8] -lsm303agr_m_get_heading_dev()) <= 1); 
-
+    LONGS_EQUAL(TRUE, abs(heading_checks[8] - lsm303agr_m_get_heading_dev()) <= 1); 
     lsm303agr_m_update_dev(); 
     LONGS_EQUAL(TRUE, abs(heading_checks[9] - lsm303agr_m_get_heading_dev()) <= 1); 
-
     lsm303agr_m_update_dev(); 
     LONGS_EQUAL(TRUE, abs(heading_checks[12] - lsm303agr_m_get_heading_dev()) <= 1); 
-
     lsm303agr_m_update_dev(); 
     LONGS_EQUAL(TRUE, abs(heading_checks[13] - lsm303agr_m_get_heading_dev()) <= 1); 
 }
@@ -338,8 +331,8 @@ TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_no_filter_heading)
 // }
 
 
-// // Magnetometer - Added offsets, added filter heading read 
-// TEST(lsm303agr_driver_test, lsm303agr_m_added_offsets_added_filter_heading)
+// // Magnetometer - Added offsets, no filter heading read 
+// TEST(lsm303agr_driver_test, lsm303agr_m_added_offsets_no_filter_heading)
 // {
 //     // Note that for unit testing, only offsets and LPF gain matter when calling the 
 //     // init function. Other arguments are placeholders and can be ignored. 
