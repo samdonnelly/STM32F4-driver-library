@@ -32,24 +32,7 @@
 
 
 //=======================================================================================
-// Macros 
-
-// Magnetometer data 
-#define LSM303AGR_M_SENS 3              // Magnetometer sensitivity numerator (3/2 == 1.5) 
-#define LSM303AGR_M_HEAD_SCALE 10             // Heading scaling factor (to remove decimals) 
-#define LSM303AGR_M_N 0                       // North direction heading - scaled 
-#define LSM303AGR_M_NE 450                    // North-East direction heading - scaled 
-#define LSM303AGR_M_E 900                     // East direction heading - scaled 
-#define LSM303AGR_M_SE 1350                   // South-East direction heading - scaled 
-#define LSM303AGR_M_S 1800                    // South direction heading - scaled 
-#define LSM303AGR_M_SW 2250                   // South-West direction heading - scaled 
-#define LSM303AGR_M_W 2700                    // West direction heading - scaled 
-#define LSM303AGR_M_NW 3150                   // North-West direction heading - scaled 
-#define LSM303AGR_M_GAIN 0.1                  // Magnetometer filter gain 
-
-
-//==================================================
-// Dev 
+// Macros - dev 
 
 // I2C addresses (datasheet page 39) 
 #define LSM303AGR_A_ADDR 0x32           // Accelerometer (7-bit addr (0x19<<1) + Write bit) 
@@ -74,8 +57,6 @@
 #define LSM303AGR_M_HEAD_MAX 3600       // Max heading value - scaled (360deg * 10)
 #define LSM303AGR_M_HEAD_DIFF 1800      // Heading different threshold for filtering 
 #define LSM303AGR_M_DIR_OFFSET 450      // 45deg (*10) - heading sections (ex. N-->NE) 
-
-//==================================================
 
 //=======================================================================================
 
@@ -297,6 +278,7 @@ typedef struct lsm303agr_driver_data_s
     // Magnetometer calculation info 
     lsm303agr_m_heading_offset_t heading_offset_eqns[LSM303AGR_M_NUM_DIR]; 
     double heading_gain; 
+    int16_t heading_offsets[LSM303AGR_M_NUM_DIR]; 
 
     // Accelerometer register data 
     
@@ -329,6 +311,466 @@ static lsm303agr_driver_data_t lsm303agr_driver_data;
 
 //=======================================================================================
 // Datatypes 
+//=======================================================================================
+
+
+//=======================================================================================
+// Prototypes - dev 
+
+/**
+ * @brief Read from register 
+ * 
+ * @details 
+ * 
+ * @param i2c_addr 
+ * @param reg_addr 
+ * @param lsm303agr_reg_value 
+ * @param lsm303agr_data_size 
+ * @return I2C_STATUS 
+ */
+I2C_STATUS lsm303agr_read_dev(
+    uint8_t i2c_addr, 
+    uint8_t reg_addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_data_size); 
+
+
+/**
+ * @brief Write to register 
+ * 
+ * @details 
+ * 
+ * @param i2c_addr 
+ * @param reg_addr 
+ * @param lsm303agr_reg_value 
+ * @param lsm303agr_data_size 
+ * @return I2C_STATUS 
+ */
+I2C_STATUS lsm303agr_write_dev(
+    uint8_t i2c_addr, 
+    uint8_t reg_addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_data_size); 
+
+
+/**
+ * @brief Magnetometer register write 
+ * 
+ * @details 
+ * 
+ * @param reg_addr 
+ * @param reg_data 
+ * @return LSM303AGR_STATUS 
+ */
+LSM303AGR_STATUS lsm303agr_m_reg_write_dev(
+    uint8_t reg_addr, 
+    uint8_t *reg_data); 
+
+
+/**
+ * @brief Magnetometer register read 
+ * 
+ * @details 
+ * 
+ * @param reg_addr 
+ * @param reg_buff 
+ * @param data_size : 
+ * @return LSM303AGR_STATUS 
+ */
+LSM303AGR_STATUS lsm303agr_m_reg_read_dev(
+    uint8_t reg_addr, 
+    uint8_t *reg_buff, 
+    byte_num_t data_size); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Initialization - dev 
+
+// Magnetometer initialization 
+LSM303AGR_STATUS lsm303agr_m_init_dev(
+    I2C_TypeDef *i2c, 
+    const int16_t *offsets, 
+    double heading_lpf_gain, 
+    lsm303agr_m_odr_cfg_t m_odr, 
+    lsm303agr_m_sys_mode_t m_mode, 
+    lsm303agr_cfg_t m_off_canc, 
+    lsm303agr_cfg_t m_lpf, 
+    lsm303agr_cfg_t m_int_mag_pin, 
+    lsm303agr_cfg_t m_int_mag)
+{
+    if ((i2c == NULL) || (offsets == NULL))
+    {
+        return LSM303AGR_INVALID_PTR; 
+    }
+
+    LSM303AGR_STATUS init_status = LSM303AGR_OK; 
+    uint8_t whoami_status = CLEAR; 
+
+    // Initialize driver data 
+    lsm303agr_driver_data.i2c = i2c; 
+    lsm303agr_driver_data.m_addr = LSM303AGR_M_ADDR; 
+    lsm303agr_driver_data.heading_gain = heading_lpf_gain; 
+    // Configuration register A 
+    lsm303agr_driver_data.m_cfga_dev.cfga_reg = CLEAR; 
+    lsm303agr_driver_data.m_cfga_dev.md = m_mode; 
+    lsm303agr_driver_data.m_cfga_dev.odr = m_odr; 
+    // Configuration register B 
+    lsm303agr_driver_data.m_cfgb_dev.cfgb_reg = CLEAR; 
+    lsm303agr_driver_data.m_cfgb_dev.lpf = m_lpf; 
+    lsm303agr_driver_data.m_cfgb_dev.off_canc = m_off_canc; 
+    // Configuration register C 
+    lsm303agr_driver_data.m_cfgc_dev.cfgc_reg = CLEAR; 
+    lsm303agr_driver_data.m_cfgc_dev.int_mag = m_int_mag; 
+    lsm303agr_driver_data.m_cfgc_dev.int_mag_pin = m_int_mag_pin; 
+
+    // Generate heading offset equations 
+    lsm303agr_m_heading_calibration_dev(offsets); 
+    
+    // Identify the device 
+    init_status |= lsm303agr_m_reg_read_dev(LSM303AGR_M_WHO_AM_I, &whoami_status, BYTE_1); 
+    
+    if (whoami_status != LSM303AGR_M_ID)
+    {
+        init_status = LSM303AGR_WHOAMI; 
+    }
+    
+    // Configure magnetometer 
+    init_status |= lsm303agr_m_reg_write_dev(
+                        LSM303AGR_M_CFG_A, &lsm303agr_driver_data.m_cfga_dev.cfga_reg); 
+    init_status |= lsm303agr_m_reg_write_dev(
+                        LSM303AGR_M_CFG_B, &lsm303agr_driver_data.m_cfgb_dev.cfgb_reg); 
+    init_status |= lsm303agr_m_reg_write_dev(
+                        LSM303AGR_M_CFG_C, &lsm303agr_driver_data.m_cfgc_dev.cfgc_reg); 
+
+    return init_status; 
+}
+
+
+// Calibrate the magnetometer heading - generate heading offset equations 
+void lsm303agr_m_heading_calibration_dev(const int16_t *offsets)
+{
+    if (offsets == NULL)
+    {
+        return; 
+    }
+
+    lsm303agr_m_heading_offset_t *offset_eqn = lsm303agr_driver_data.heading_offset_eqns; 
+    double delta1, delta2, heading = CLEAR; 
+    const double dir_spacing = LSM303AGR_M_DIR_OFFSET; 
+    uint8_t last = LSM303AGR_M_NUM_DIR - 1; 
+
+    // Calculate the slope and intercept of the linear equation used to adjust calculated 
+    // magnetometer headings between two directions. 
+    for (uint8_t i = CLEAR; i < last; i++)
+    {
+        delta1 = offsets[i]; 
+        delta2 = offsets[i + 1]; 
+        
+        offset_eqn[i].slope = dir_spacing / (dir_spacing + delta1 - delta2); 
+        offset_eqn[i].intercept = heading - offset_eqn[i].slope*(heading - delta1); 
+
+        heading += dir_spacing; 
+        lsm303agr_driver_data.heading_offsets[i] = delta1; 
+    }
+
+    // The heading loops back to 0/360 degrees so the final offset direction is also the 
+    // first (index 0). 
+    offset_eqn[last].slope = dir_spacing / (dir_spacing + delta2 - offsets[BYTE_0]); 
+    offset_eqn[last].intercept = heading - offset_eqn[last].slope*(heading - delta2); 
+    lsm303agr_driver_data.heading_offsets[last] = delta2; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// User functions - dev 
+
+// Get the most recent magnetometer data 
+LSM303AGR_STATUS lsm303agr_m_update_dev(void)
+{
+    // Read the magnetometer axis data (units: milli-gauss). The LSM303AGR_ADDR_INC mask 
+    // is used to increment to the next register address after each byte read. 
+    return lsm303agr_m_reg_read_dev(LSM303AGR_M_X_L | LSM303AGR_ADDR_INC, 
+                                    lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis_bytes, 
+                                    BYTE_6); 
+}
+
+
+// Get magnetometer axis data 
+void lsm303agr_m_get_axis_data_dev(int16_t *m_axis_data)
+{
+    if (m_axis_data == NULL)
+    {
+        return; 
+    }
+
+    memcpy((void *)m_axis_data, (void *)lsm303agr_driver_data.m_data_dev, BYTE_6); 
+}
+
+
+// Get magnetometer applied magnetic field reading for each axis 
+void lsm303agr_m_get_field_dev(int32_t *m_field_data)
+{
+    if (m_field_data == NULL)
+    {
+        return; 
+    }
+
+    lsm303agr_m_data_t_dev *m_data = lsm303agr_driver_data.m_data_dev; 
+    const int32_t sens_num = LSM303AGR_M_SENS_NUM; 
+    const int32_t sens_den = LSM303AGR_M_SENS_DEN; 
+
+    // Divide the axis data by the magnetometer sensitivity to get the applied magnetic 
+    // field on each axis. Per the datasheet, the magnetic sensitivity after factory 
+    // calibration test and trim is 1.5 +/-7% mgauss/LSB. See the datasheet for further 
+    // details on sensitivity. 
+    m_field_data[X_AXIS] = ((int32_t)m_data[X_AXIS].m_axis * sens_num) / sens_den; 
+    m_field_data[Y_AXIS] = ((int32_t)m_data[Y_AXIS].m_axis * sens_num) / sens_den; 
+    m_field_data[Z_AXIS] = ((int32_t)m_data[Z_AXIS].m_axis * sens_num) / sens_den; 
+}
+
+
+// Get magnetometer (compass) heading 
+int16_t lsm303agr_m_get_heading_dev(void)
+{
+    static int16_t heading_stored = CLEAR; 
+    int16_t heading, heading_check = CLEAR, heading_diff; 
+    double atan2_calc, slope = CLEAR, intercept = CLEAR; 
+    uint8_t last_offset_index = LSM303AGR_M_NUM_DIR - 1, offset_index = last_offset_index; 
+
+    // If the x-axis is zero then it's adjusted by 0.1 degrees to prevent a divide by zero 
+    // error and the heading calculation is done anyway. This adjustment is considered 
+    // negligible and this way the filtered heading is still updated. 
+    if (!lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis)
+    {
+        lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis++; 
+    }
+
+    // Using the Y and X axis data read from the magnetometer, the heading relative to 
+    // magnetic north is calculated. For this to work properly, the X-axis must be 
+    // oriented in the forward direction and the Z-axis must be vertical. The heading is 
+    // calculated using atan2 which is the inverse tangent that accounts for the sign of 
+    // Y and X. The returned angle is a double in the range +/-pi but 0-359.9 degrees is 
+    // required so it gets converted to degrees, scaled by 10 to maintain one decimal 
+    // place of accuracy and shifted to be a positive value if less than zero. The 
+    // returned angle is also positive in the counter clockwise direction, however the 
+    // opposite is needed so the sign is inverted. 
+    atan2_calc = atan2((double)lsm303agr_driver_data.m_data_dev[Y_AXIS].m_axis, 
+                       (double)lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis); 
+    heading = -(int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
+    // heading = (int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
+
+    if (heading < 0)
+    {
+        heading += LSM303AGR_M_HEAD_MAX; 
+    }
+
+    // To account for errors in the data read from the device, an offset is added to the 
+    // calculated heading based on the direction the device is pointing (see the 
+    // lsm303agr_m_heading_calibration function). The correction is a linear interpolation 
+    // between each (45*i - offset[i]) degree heading interval. To find the right 
+    // equation, the calculated heading is checked against each interval. Once the 
+    // interval where the heading resides is found then the index of that interval is 
+    // used to apply the needed offset equation that adjusts the heading. Since the 
+    // heading goes from 359.9 degrees back to 0, it's possible the final equation 
+    // interval crosses this boundary, and therefore it needs it's own check before 
+    // checking the other equations. 
+    if (heading < (heading_check - lsm303agr_driver_data.heading_offsets[0]))
+    {
+        heading += LSM303AGR_M_HEAD_MAX; 
+    }
+    else if (heading < (LSM303AGR_M_HEAD_MAX - LSM303AGR_M_DIR_OFFSET - 
+                        lsm303agr_driver_data.heading_offsets[last_offset_index]))
+    {
+        offset_index--; 
+
+        for (uint8_t i = 1; i < last_offset_index; i++)
+        {
+            heading_check += LSM303AGR_M_DIR_OFFSET; 
+
+            if (heading < (heading_check - lsm303agr_driver_data.heading_offsets[i]))
+            {
+                offset_index = i - 1; 
+                break; 
+            }
+        }
+    }
+
+    slope = lsm303agr_driver_data.heading_offset_eqns[offset_index].slope; 
+    intercept = lsm303agr_driver_data.heading_offset_eqns[offset_index].intercept; 
+    heading = (int16_t)(slope*(double)heading + intercept); 
+
+    // The calculated heading is put through a low pass filter because the data read 
+    // from the device has lots of noise (the gain of the filter can be set during init). 
+    // The heading data is circular meaning it increments from 359.9 to 0 degrees after 
+    // one full rotation. This jump in data will make the filter think there was a sudden 
+    // change in direction which is not true so this must be addressed before filtering 
+    // the heading. To correct for this, the difference between the new and previously 
+    // calculated headings is checked. If the magnitude exceeds +/-180 degrees then 
+    // -/+360 degrees is added to find the true heading change. After the heading is 
+    // filtered/updated, if it falls outside of the acceptable range then it's moved 
+    // back within range (while still maintaining the same heading). 
+    heading_diff = heading - heading_stored; 
+
+    if (heading_diff > LSM303AGR_M_HEAD_DIFF)
+    {
+        heading_diff -= LSM303AGR_M_HEAD_MAX; 
+    }
+    else if (heading_diff < -LSM303AGR_M_HEAD_DIFF)
+    {
+        heading_diff += LSM303AGR_M_HEAD_MAX; 
+    }
+
+    heading_stored += (int16_t)((double)heading_diff*lsm303agr_driver_data.heading_gain); 
+
+    if (heading_stored >= LSM303AGR_M_HEAD_MAX)
+    {
+        heading_stored -= LSM303AGR_M_HEAD_MAX; 
+    }
+    else if (heading_stored < 0)
+    {
+        heading_stored += LSM303AGR_M_HEAD_MAX; 
+    }
+
+    return heading_stored; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and write - dev 
+
+// Read from register 
+I2C_STATUS lsm303agr_read_dev(
+    uint8_t i2c_addr, 
+    uint8_t reg_addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_data_size)
+{
+    I2C_STATUS i2c_status = I2C_OK; 
+
+    // Generate a start condition, send the slave address with a write offset, then sned 
+    // the slave's register address to read. 
+    i2c_status |= i2c_start(lsm303agr_driver_data.i2c); 
+    i2c_status |= i2c_write_addr(lsm303agr_driver_data.i2c, i2c_addr + I2C_W_OFFSET); 
+    i2c_clear_addr(lsm303agr_driver_data.i2c); 
+    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1); 
+
+    // Generate another start condition, send the slave address with a read offset and 
+    // finally read the device data before stopping the transaction. 
+    i2c_status |= i2c_start(lsm303agr_driver_data.i2c); 
+    i2c_status |= i2c_write_addr(lsm303agr_driver_data.i2c, i2c_addr + I2C_R_OFFSET);
+    i2c_status |= i2c_read(lsm303agr_driver_data.i2c, lsm303agr_reg_value, lsm303agr_data_size); 
+    i2c_stop(lsm303agr_driver_data.i2c); 
+
+    return i2c_status; 
+}
+
+
+// Write to register 
+I2C_STATUS lsm303agr_write_dev(
+    uint8_t i2c_addr, 
+    uint8_t reg_addr, 
+    uint8_t *lsm303agr_reg_value, 
+    byte_num_t lsm303agr_data_size)
+{
+    I2C_STATUS i2c_status = I2C_OK; 
+    
+    // Generate a start condition, send the slave address with a write offset, then sned 
+    // the slave's register address to write to. 
+    i2c_status |= i2c_start(lsm303agr_driver_data.i2c); 
+    i2c_status |= i2c_write_addr(lsm303agr_driver_data.i2c, i2c_addr + I2C_W_OFFSET);
+    i2c_clear_addr(lsm303agr_driver_data.i2c);
+    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1); 
+
+    // Write the data to the device then stop the transaction. 
+    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, lsm303agr_reg_value, lsm303agr_data_size);
+    i2c_stop(lsm303agr_driver_data.i2c); 
+
+    return i2c_status; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Register functions - dev 
+
+// Magnetometer register write 
+LSM303AGR_STATUS lsm303agr_m_reg_write_dev(
+    uint8_t reg_addr, 
+    uint8_t *reg_data)
+{
+    I2C_STATUS i2c_status = lsm303agr_write_dev(lsm303agr_driver_data.m_addr, 
+                                                reg_addr, reg_data, BYTE_1); 
+    if (i2c_status)
+    {
+        return LSM303AGR_WRITE_FAULT; 
+    }
+
+    return LSM303AGR_OK; 
+}
+
+
+// Magnetometer register read 
+LSM303AGR_STATUS lsm303agr_m_reg_read_dev(
+    uint8_t reg_addr, 
+    uint8_t *reg_buff, 
+    byte_num_t data_size)
+{
+    I2C_STATUS i2c_status = lsm303agr_read_dev(lsm303agr_driver_data.m_addr, 
+                                               reg_addr, reg_buff, data_size); 
+    if (i2c_status)
+    {
+        return LSM303AGR_READ_FAULT; 
+    }
+
+    return LSM303AGR_OK; 
+}
+
+//=======================================================================================
+
+
+
+
+
+
+
+
+
+
+
+// Old Code 
+
+
+
+
+
+
+
+
+
+
+//=======================================================================================
+// Macros 
+
+// Magnetometer data 
+#define LSM303AGR_M_SENS 3              // Magnetometer sensitivity numerator (3/2 == 1.5) 
+#define LSM303AGR_M_HEAD_SCALE 10             // Heading scaling factor (to remove decimals) 
+#define LSM303AGR_M_N 0                       // North direction heading - scaled 
+#define LSM303AGR_M_NE 450                    // North-East direction heading - scaled 
+#define LSM303AGR_M_E 900                     // East direction heading - scaled 
+#define LSM303AGR_M_SE 1350                   // South-East direction heading - scaled 
+#define LSM303AGR_M_S 1800                    // South direction heading - scaled 
+#define LSM303AGR_M_SW 2250                   // South-West direction heading - scaled 
+#define LSM303AGR_M_W 2700                    // West direction heading - scaled 
+#define LSM303AGR_M_NW 3150                   // North-West direction heading - scaled 
+#define LSM303AGR_M_GAIN 0.1                  // Magnetometer filter gain 
+
 //=======================================================================================
 
 
@@ -426,77 +868,6 @@ void lsm303agr_m_cfgc_write(void);
  * @details 
  */
 void lsm303agr_m_status_read(void); 
-
-
-//==================================================
-// Dev 
-
-/**
- * @brief Read from register 
- * 
- * @details 
- * 
- * @param i2c_addr 
- * @param reg_addr 
- * @param lsm303agr_reg_value 
- * @param lsm303agr_data_size 
- * @return I2C_STATUS 
- */
-I2C_STATUS lsm303agr_read_dev(
-    uint8_t i2c_addr, 
-    uint8_t reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_data_size); 
-
-
-/**
- * @brief Write to register 
- * 
- * @details 
- * 
- * @param i2c_addr 
- * @param reg_addr 
- * @param lsm303agr_reg_value 
- * @param lsm303agr_data_size 
- * @return I2C_STATUS 
- */
-I2C_STATUS lsm303agr_write_dev(
-    uint8_t i2c_addr, 
-    uint8_t reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_data_size); 
-
-
-/**
- * @brief Magnetometer register write 
- * 
- * @details 
- * 
- * @param reg_addr 
- * @param reg_data 
- * @return LSM303AGR_STATUS 
- */
-LSM303AGR_STATUS lsm303agr_m_reg_write_dev(
-    uint8_t reg_addr, 
-    uint8_t *reg_data); 
-
-
-/**
- * @brief Magnetometer register read 
- * 
- * @details 
- * 
- * @param reg_addr 
- * @param reg_buff 
- * @param data_size : 
- * @return LSM303AGR_STATUS 
- */
-LSM303AGR_STATUS lsm303agr_m_reg_read_dev(
-    uint8_t reg_addr, 
-    uint8_t *reg_buff, 
-    byte_num_t data_size); 
-
-//==================================================
 
 //=======================================================================================
 
@@ -600,104 +971,6 @@ void lsm303agr_m_head_offset_eqn(
     offset_eqn->slope = (double)(dir2_offset - dir1_offset) / LSM303AGR_M_DIR_OFFSET; 
     offset_eqn->intercept = (double)dir1_offset - (offset_eqn->slope * (double)dir1_heading); 
 }
-
-
-//==================================================
-// Dev 
-
-// Magnetometer initialization 
-LSM303AGR_STATUS lsm303agr_m_init_dev(
-    I2C_TypeDef *i2c, 
-    const int16_t *offsets, 
-    double heading_lpf_gain, 
-    lsm303agr_m_odr_cfg_t m_odr, 
-    lsm303agr_m_sys_mode_t m_mode, 
-    lsm303agr_cfg_t m_off_canc, 
-    lsm303agr_cfg_t m_lpf, 
-    lsm303agr_cfg_t m_int_mag_pin, 
-    lsm303agr_cfg_t m_int_mag)
-{
-    if ((i2c == NULL) || (offsets == NULL))
-    {
-        return LSM303AGR_INVALID_PTR; 
-    }
-
-    LSM303AGR_STATUS init_status = LSM303AGR_OK; 
-    uint8_t whoami_status = CLEAR; 
-
-    // Initialize driver data 
-    lsm303agr_driver_data.i2c = i2c; 
-    lsm303agr_driver_data.m_addr = LSM303AGR_M_ADDR; 
-    lsm303agr_driver_data.heading_gain = heading_lpf_gain; 
-    // Configuration register A 
-    lsm303agr_driver_data.m_cfga_dev.cfga_reg = CLEAR; 
-    lsm303agr_driver_data.m_cfga_dev.md = m_mode; 
-    lsm303agr_driver_data.m_cfga_dev.odr = m_odr; 
-    // Configuration register B 
-    lsm303agr_driver_data.m_cfgb_dev.cfgb_reg = CLEAR; 
-    lsm303agr_driver_data.m_cfgb_dev.lpf = m_lpf; 
-    lsm303agr_driver_data.m_cfgb_dev.off_canc = m_off_canc; 
-    // Configuration register C 
-    lsm303agr_driver_data.m_cfgc_dev.cfgc_reg = CLEAR; 
-    lsm303agr_driver_data.m_cfgc_dev.int_mag = m_int_mag; 
-    lsm303agr_driver_data.m_cfgc_dev.int_mag_pin = m_int_mag_pin; 
-
-    // Generate heading offset equations 
-    lsm303agr_m_heading_calibration_dev(offsets); 
-    
-    // Identify the device 
-    init_status |= lsm303agr_m_reg_read_dev(LSM303AGR_M_WHO_AM_I, &whoami_status, BYTE_1); 
-    
-    if (whoami_status != LSM303AGR_M_ID)
-    {
-        init_status = LSM303AGR_WHOAMI; 
-    }
-    
-    // Configure magnetometer 
-    init_status |= lsm303agr_m_reg_write_dev(
-                        LSM303AGR_M_CFG_A, &lsm303agr_driver_data.m_cfga_dev.cfga_reg); 
-    init_status |= lsm303agr_m_reg_write_dev(
-                        LSM303AGR_M_CFG_B, &lsm303agr_driver_data.m_cfgb_dev.cfgb_reg); 
-    init_status |= lsm303agr_m_reg_write_dev(
-                        LSM303AGR_M_CFG_C, &lsm303agr_driver_data.m_cfgc_dev.cfgc_reg); 
-
-    return init_status; 
-}
-
-
-// Calibrate the magnetometer heading - generate heading offset equations 
-void lsm303agr_m_heading_calibration_dev(const int16_t *offsets)
-{
-    if (offsets == NULL)
-    {
-        return; 
-    }
-
-    lsm303agr_m_heading_offset_t *offset_eqn = lsm303agr_driver_data.heading_offset_eqns; 
-    double delta1, delta2, heading = LSM303AGR_M_N; 
-    const double dir_spacing = LSM303AGR_M_DIR_OFFSET; 
-    uint8_t last = LSM303AGR_M_NUM_DIR - 1; 
-
-    // Calculate the slope and intercept of the linear equation used to adjust calculated 
-    // magnetometer headings between two directions. 
-    for (uint8_t i = CLEAR; i < last; i++)
-    {
-        delta1 = offsets[i]; 
-        delta2 = offsets[i + 1]; 
-        
-        offset_eqn[i].slope = dir_spacing / (dir_spacing + delta1 - delta2); 
-        offset_eqn[i].intercept = heading - offset_eqn[i].slope*(heading - delta1); 
-
-        heading += dir_spacing; 
-    }
-
-    // The heading loops back to 0/360 degrees so the final offset direction is also the 
-    // first (index 0). 
-    offset_eqn[last].slope = dir_spacing / (dir_spacing + delta2 - offsets[BYTE_0]); 
-    offset_eqn[last].intercept = heading - offset_eqn[last].slope*(heading - delta2); 
-}
-
-//==================================================
 
 //=======================================================================================
 
@@ -839,146 +1112,6 @@ int16_t lsm303agr_m_get_heading(void)
     return lsm303agr_driver_data.heading; 
 }
 
-
-//==================================================
-// Dev 
-
-// Get the most recent magnetometer data 
-LSM303AGR_STATUS lsm303agr_m_update_dev(void)
-{
-    // Read the magnetometer axis data (units: milli-gauss). The LSM303AGR_ADDR_INC mask 
-    // is used to increment to the next register address after each byte read. 
-    return lsm303agr_m_reg_read_dev(LSM303AGR_M_X_L | LSM303AGR_ADDR_INC, 
-                                    lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis_bytes, 
-                                    BYTE_6); 
-}
-
-
-// Get magnetometer axis data 
-void lsm303agr_m_get_axis_data_dev(int16_t *m_axis_data)
-{
-    if (m_axis_data == NULL)
-    {
-        return; 
-    }
-
-    memcpy((void *)m_axis_data, (void *)lsm303agr_driver_data.m_data_dev, BYTE_6); 
-}
-
-
-// Get magnetometer applied magnetic field reading for each axis 
-void lsm303agr_m_get_field_dev(int32_t *m_field_data)
-{
-    if (m_field_data == NULL)
-    {
-        return; 
-    }
-
-    lsm303agr_m_data_t_dev *m_data = lsm303agr_driver_data.m_data_dev; 
-    const int32_t sens_num = LSM303AGR_M_SENS_NUM; 
-    const int32_t sens_den = LSM303AGR_M_SENS_DEN; 
-
-    // Divide the axis data by the magnetometer sensitivity to get the applied magnetic 
-    // field on each axis. Per the datasheet, the magnetic sensitivity after factory 
-    // calibration test and trim is 1.5 +/-7% mgauss/LSB. See the datasheet for further 
-    // details on sensitivity. 
-    m_field_data[X_AXIS] = ((int32_t)m_data[X_AXIS].m_axis * sens_num) / sens_den; 
-    m_field_data[Y_AXIS] = ((int32_t)m_data[Y_AXIS].m_axis * sens_num) / sens_den; 
-    m_field_data[Z_AXIS] = ((int32_t)m_data[Z_AXIS].m_axis * sens_num) / sens_den; 
-}
-
-
-// Get magnetometer (compass) heading 
-int16_t lsm303agr_m_get_heading_dev(void)
-{
-    static int16_t heading_stored = CLEAR; 
-    int16_t heading, heading_check = CLEAR, heading_diff; 
-    double atan2_calc, slope = CLEAR, intercept = CLEAR; 
-
-    // If the x-axis is zero then it's adjusted by 0.1 degrees to prevent a divide by zero 
-    // error and the heading calculation is done anyway. This adjustment is considered 
-    // negligible and this way the filtered heading is still updated. 
-    if (!lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis)
-    {
-        lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis++; 
-    }
-
-    // Using the Y and X axis data read from the magnetometer, the heading relative to 
-    // magnetic north is calculated. For this to work properly, the X-axis must be 
-    // oriented in the forward direction and the Z-axis must be vertical. The heading is 
-    // calculated using atan2 which is the inverse tangent that accounts for the sign of 
-    // Y and X. The returned angle is a double in the range +/-pi but 0-359.9 degrees is 
-    // required so it gets converted to degrees, scaled by 10 to maintain one decimal 
-    // place of accuracy and shifted to be a positive value if less than zero. The 
-    // returned angle is also positive in the counter clockwise direction, however the 
-    // opposite is needed so the sign is inverted. 
-    atan2_calc = atan2((double)lsm303agr_driver_data.m_data_dev[Y_AXIS].m_axis, 
-                       (double)lsm303agr_driver_data.m_data_dev[X_AXIS].m_axis); 
-    heading = -(int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
-    // heading = (int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
-
-    if (heading < 0)
-    {
-        heading += LSM303AGR_M_HEAD_MAX; 
-    }
-
-    // To account for errors in the data read from the device, an offset is added to the 
-    // calculated heading based on the direction it's pointing (see the 
-    // lsm303agr_m_heading_calibration function). The offset is a linear interpolation 
-    // between each 45 degree heading interval (ex. 0, 45, 90, etc.). To find the region 
-    // the calculated heading is in, the number of times 45 degrees goes into the heading 
-    // if found which then provides the index of the equation to use. 
-    for (uint8_t i = CLEAR; i < LSM303AGR_M_NUM_DIR; i++)
-    {
-        heading_check += LSM303AGR_M_DIR_OFFSET; 
-
-        if (heading < heading_check)
-        {
-            slope = lsm303agr_driver_data.heading_offset_eqns[i].slope; 
-            intercept = lsm303agr_driver_data.heading_offset_eqns[i].intercept; 
-            break; 
-        }
-    }
-
-    heading = (int16_t)(slope*(double)heading + intercept); 
-
-    // The calculated heading is put through a low pass filter because the data read 
-    // from the device has lots of noise (the gain of the filter can be set during init). 
-    // The heading data is circular meaning it increments from 359.9 to 0 degrees after 
-    // one full rotation. This jump in data will make the filter think there was a sudden 
-    // change in direction which is not true so this must be addressed before filtering 
-    // the heading. To correct for this, the difference between the new and previously 
-    // calculated headings is checked. If the magnitude exceeds +/-180 degrees then 
-    // -/+360 degrees is added to find the true heading change. After the heading is 
-    // filtered/updated, if it falls outside of the acceptable range then it's moved 
-    // back within range (while still maintaining the same heading). 
-    heading_diff = heading - heading_stored; 
-
-    if (heading_diff > LSM303AGR_M_HEAD_DIFF)
-    {
-        heading_diff -= LSM303AGR_M_HEAD_MAX; 
-    }
-    else if (heading_diff < -LSM303AGR_M_HEAD_DIFF)
-    {
-        heading_diff += LSM303AGR_M_HEAD_MAX; 
-    }
-
-    heading_stored += (int16_t)((double)heading_diff*lsm303agr_driver_data.heading_gain); 
-
-    if (heading_stored >= LSM303AGR_M_HEAD_MAX)
-    {
-        heading_stored -= LSM303AGR_M_HEAD_MAX; 
-    }
-    else if (heading_stored < 0)
-    {
-        heading_stored += LSM303AGR_M_HEAD_MAX; 
-    }
-
-    return heading_stored; 
-}
-
-//==================================================
-
 //=======================================================================================
 
 
@@ -1058,62 +1191,6 @@ void lsm303agr_write(
     // Update the driver status 
     lsm303agr_driver_data.status |= i2c_status; 
 }
-
-
-//==================================================
-// Dev 
-
-// Read from register 
-I2C_STATUS lsm303agr_read_dev(
-    uint8_t i2c_addr, 
-    uint8_t reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_data_size)
-{
-    I2C_STATUS i2c_status = I2C_OK; 
-
-    // Generate a start condition, send the slave address with a write offset, then sned 
-    // the slave's register address to read. 
-    i2c_status |= i2c_start(lsm303agr_driver_data.i2c); 
-    i2c_status |= i2c_write_addr(lsm303agr_driver_data.i2c, i2c_addr + I2C_W_OFFSET); 
-    i2c_clear_addr(lsm303agr_driver_data.i2c); 
-    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1); 
-
-    // Generate another start condition, send the slave address with a read offset and 
-    // finally read the device data before stopping the transaction. 
-    i2c_status |= i2c_start(lsm303agr_driver_data.i2c); 
-    i2c_status |= i2c_write_addr(lsm303agr_driver_data.i2c, i2c_addr + I2C_R_OFFSET);
-    i2c_status |= i2c_read(lsm303agr_driver_data.i2c, lsm303agr_reg_value, lsm303agr_data_size); 
-    i2c_stop(lsm303agr_driver_data.i2c); 
-
-    return i2c_status; 
-}
-
-
-// Write to register 
-I2C_STATUS lsm303agr_write_dev(
-    uint8_t i2c_addr, 
-    uint8_t reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_data_size)
-{
-    I2C_STATUS i2c_status = I2C_OK; 
-    
-    // Generate a start condition, send the slave address with a write offset, then sned 
-    // the slave's register address to write to. 
-    i2c_status |= i2c_start(lsm303agr_driver_data.i2c); 
-    i2c_status |= i2c_write_addr(lsm303agr_driver_data.i2c, i2c_addr + I2C_W_OFFSET);
-    i2c_clear_addr(lsm303agr_driver_data.i2c);
-    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1); 
-
-    // Write the data to the device then stop the transaction. 
-    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, lsm303agr_reg_value, lsm303agr_data_size);
-    i2c_stop(lsm303agr_driver_data.i2c); 
-
-    return i2c_status; 
-}
-
-//==================================================
 
 //=======================================================================================
 
@@ -1205,44 +1282,6 @@ void lsm303agr_m_status_read(void)
     lsm303agr_driver_data.m_status.y_da   = (status >> SHIFT_1) & LSM303AGR_BIT_MASK; 
     lsm303agr_driver_data.m_status.x_da   = (status) & LSM303AGR_BIT_MASK; 
 }
-
-
-//==================================================
-// Dev 
-
-// Magnetometer register write 
-LSM303AGR_STATUS lsm303agr_m_reg_write_dev(
-    uint8_t reg_addr, 
-    uint8_t *reg_data)
-{
-    I2C_STATUS i2c_status = lsm303agr_write_dev(lsm303agr_driver_data.m_addr, 
-                                                reg_addr, reg_data, BYTE_1); 
-    if (i2c_status)
-    {
-        return LSM303AGR_WRITE_FAULT; 
-    }
-
-    return LSM303AGR_OK; 
-}
-
-
-// Magnetometer register read 
-LSM303AGR_STATUS lsm303agr_m_reg_read_dev(
-    uint8_t reg_addr, 
-    uint8_t *reg_buff, 
-    byte_num_t data_size)
-{
-    I2C_STATUS i2c_status = lsm303agr_read_dev(lsm303agr_driver_data.m_addr, 
-                                               reg_addr, reg_buff, data_size); 
-    if (i2c_status)
-    {
-        return LSM303AGR_READ_FAULT; 
-    }
-
-    return LSM303AGR_OK; 
-}
-
-//==================================================
 
 //=======================================================================================
 
