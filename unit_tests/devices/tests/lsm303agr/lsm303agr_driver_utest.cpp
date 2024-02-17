@@ -8,8 +8,6 @@
 
 #include "CppUTest/TestHarness.h"
 
-#include <iostream> 
-
 extern "C"
 {
 	// Add your C-only include files here 
@@ -486,7 +484,6 @@ TEST(lsm303agr_driver_test, lsm303agr_m_added_offsets_added_filter_heading)
     // scaled integer value to some accuracy gets truncated. All of this means the 
     // threshold for comparing the desired heading to the filtered heading is larger 
     // to account for this error. 
-    // std::cout << "heading: " << heading << std::endl; 
     LONGS_EQUAL(TRUE, abs(heading_checks[10] - heading) <= LPF_TOL); 
 }
 

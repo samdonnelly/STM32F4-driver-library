@@ -41,9 +41,6 @@
 //=======================================================================================
 // Enums 
 
-//==================================================
-// Dev 
-
 // LSM303AGR driver status 
 typedef enum {
     LSM303AGR_OK,            // No problem with the LSM303AGR device 
@@ -53,7 +50,6 @@ typedef enum {
     LSM303AGR_READ_FAULT     // A problem occurred while reading via I2C 
 } lsm303agr_status_t; 
 
-//==================================================
 
 /**
  * @brief Device setting disable/enable 
@@ -105,34 +101,6 @@ typedef uint8_t LSM303AGR_STATUS;
 // Initialization 
 
 /**
- * @brief Initialization 
- * 
- * @details 
- * 
- * @param i2c 
- * @param offsets : 
- * @param m_odr 
- * @param m_mode 
- * @param m_off_canc 
- * @param m_lpf 
- * @param m_int_mag_pin 
- * @param m_int_mag 
- */
-void lsm303agr_init(
-    I2C_TypeDef *i2c, 
-    const int16_t *offsets, 
-    lsm303agr_m_odr_cfg_t m_odr, 
-    lsm303agr_m_sys_mode_t m_mode, 
-    lsm303agr_cfg_t m_off_canc, 
-    lsm303agr_cfg_t m_lpf, 
-    lsm303agr_cfg_t m_int_mag_pin, 
-    lsm303agr_cfg_t m_int_mag); 
-
-
-//==================================================
-// Dev 
-
-/**
  * @brief Magnetometer initialization 
  * 
  * @details 
@@ -150,7 +118,7 @@ void lsm303agr_init(
  * @param m_int_mag : 
  * @return LSM303AGR_STATUS : 
  */
-LSM303AGR_STATUS lsm303agr_m_init_dev(
+LSM303AGR_STATUS lsm303agr_m_init(
     I2C_TypeDef *i2c, 
     const int16_t *offsets, 
     double heading_lpf_gain, 
@@ -168,14 +136,37 @@ LSM303AGR_STATUS lsm303agr_m_init_dev(
  * @details Generate heading offset equations. 
  *          
  *          // TODO procedure to get the offsets 
+ *          
+ *          Set offsets. These are used to correct for errors in the magnetometer readings. This 
+ *          is application/device dependent so it is part of the device init and not integrated 
+ *          into the driver/library. For a given application/device, these values should not change 
+ *          so it is ok to have them hard coded into the application code. 
+ *          
+ *          Calibration steps: 
+ *          1. Set the below values to zero. 
+ *          2. Make sure LSM303AGR_TEST_HEADING is enabled and build the project. 
+ *          3. Connect the LSM303AGR to the STM32, connect the STM32F4 to your machine, open PuTTy 
+ *             so you can see the output and flash the code. 
+ *          4. Using a trusted compasss (such as the one on your phone), align it in the North 
+ *             direction, then align the long edge of the LSM303AGR (X-axis) with the compass so 
+ *             they're both pointing North. 
+ *          5. Observe the output of the magnetometer via Putty (Note that depending on the compass 
+ *             you use you may have to move it away from the magnetometer once it's aligned or else 
+ *             else you could get magnetometer interference - this happens with phone compasses). 
+ *             Note the difference between the magnetometer output and the compass heading and 
+ *             record it in offsets[0] below. If the magnetometer reading is clockwise of the compass 
+ *             heading then the value recorded will be negative. Recorded offsets are scaled by 10. 
+ *             Compass and magnetometer heading are from 0-359 degrees. For example, if the compass 
+ *             reads 0 degrees (Magnetic North) and the magnetometer output reads +105 (10.5 degrees) 
+ *             then the offset recorded is -105. 
+ *          6. Repeat steps 4 and 5 for all directions in 45 degree increments (NE, E, SE, etc.) and 
+ *             record each subsequent direction in the next 'offsets' element. 
  * 
  * @see lsm303agr_m_get_heading 
  * 
  * @param offsets : error between magnetometer heading and true heading in each direction 
  */
-void lsm303agr_m_heading_calibration_dev(const int16_t *offsets); 
-
-//==================================================
+void lsm303agr_m_heading_calibration(const int16_t *offsets); 
 
 //=======================================================================================
 
@@ -184,49 +175,13 @@ void lsm303agr_m_heading_calibration_dev(const int16_t *offsets);
 // User functions 
 
 /**
- * @brief Magnetometer data read 
- * 
- * @details 
- */
-void lsm303agr_m_read(void); 
-
-
-/**
- * @brief Get magnetometer data 
- * 
- * @details 
- * 
- * @param m_x_data 
- * @param m_y_data 
- * @param m_z_data 
- */
-void lsm303agr_m_get_data(
-    int16_t *m_x_data, 
-    int16_t *m_y_data, 
-    int16_t *m_z_data); 
-
-
-/**
- * @brief 
- * 
- * @details 
- * 
- * @return int16_t : 
- */
-int16_t lsm303agr_m_get_heading(void); 
-
-
-//==================================================
-// Dev 
-
-/**
  * @brief Get the most recent magnetometer data 
  * 
  * @details 
  * 
  * @return LSM303AGR_STATUS : 
  */
-LSM303AGR_STATUS lsm303agr_m_update_dev(void); 
+LSM303AGR_STATUS lsm303agr_m_update(void); 
 
 
 /**
@@ -236,7 +191,7 @@ LSM303AGR_STATUS lsm303agr_m_update_dev(void);
  * 
  * @param m_axis_data 
  */
-void lsm303agr_m_get_axis_data_dev(int16_t *m_axis_data); 
+void lsm303agr_m_get_axis_data(int16_t *m_axis_data); 
 
 
 /**
@@ -246,7 +201,7 @@ void lsm303agr_m_get_axis_data_dev(int16_t *m_axis_data);
  * 
  * @param m_field_data 
  */
-void lsm303agr_m_get_field_dev(int32_t *m_field_data); 
+void lsm303agr_m_get_field(int32_t *m_field_data); 
 
 
 /**
@@ -256,32 +211,7 @@ void lsm303agr_m_get_field_dev(int32_t *m_field_data);
  * 
  * @return int16_t 
  */
-int16_t lsm303agr_m_get_heading_dev(void); 
-
-//==================================================
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Status 
-
-/**
- * @brief LSM303AGR clear device driver fault flag 
- * 
- * @details 
- */
-void lsm303agr_clear_status(void); 
-
-
-/**
- * @brief LSM303AGR get device driver fault code 
- * 
- * @details 
- * 
- * @return uint8_t 
- */
-uint8_t lsm303agr_get_status(void); 
+int16_t lsm303agr_m_get_heading(void); 
 
 //=======================================================================================
 
