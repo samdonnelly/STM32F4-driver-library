@@ -111,7 +111,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_init_fail)
     // Set the WHO_AM_I register data to be read 
     i2c_mock_set_read_data(&whoami_reg_value, BYTE_1, I2C_MOCK_INDEX_0); 
 
-    init_check = lsm303agr_m_init_dev(
+    init_check = lsm303agr_m_init(
         &I2C_FAKE, 
         lsm303agr_calibrate_offsets, 
         NO_LPF_GAIN, 
@@ -141,7 +141,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_init_success)
     // Set the WHO_AM_I register data to be read 
     i2c_mock_set_read_data(&whoami_reg_value, BYTE_1, I2C_MOCK_INDEX_0); 
 
-    init_check = lsm303agr_m_init_dev(
+    init_check = lsm303agr_m_init(
         &I2C_FAKE, 
         lsm303agr_calibrate_offsets, 
         NO_LPF_GAIN, 
@@ -175,13 +175,13 @@ TEST(lsm303agr_driver_test, lsm303agr_m_data_update_success)
     // the driver data and check that the update went ok. 
     i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
     i2c_mock_set_read_data(axis_bytes_0, BYTE_6, I2C_MOCK_INDEX_0); 
-    LONGS_EQUAL(LSM303AGR_OK, lsm303agr_m_update_dev()); 
+    LONGS_EQUAL(LSM303AGR_OK, lsm303agr_m_update()); 
 
     // Do the same as before but initialize the the mock I2C driver to time out and check 
     // that the update failed. 
     i2c_mock_init(I2C_MOCK_TIMEOUT_ENABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_DISABLE); 
     i2c_mock_set_read_data(axis_bytes_0, BYTE_6, I2C_MOCK_INDEX_0); 
-    LONGS_EQUAL(LSM303AGR_READ_FAULT, lsm303agr_m_update_dev()); 
+    LONGS_EQUAL(LSM303AGR_READ_FAULT, lsm303agr_m_update()); 
 }
 
 
@@ -201,8 +201,8 @@ TEST(lsm303agr_driver_test, lsm303agr_m_data_update_axis_read)
     i2c_mock_set_read_data(axis_bytes_0, BYTE_6, I2C_MOCK_INDEX_0); 
 
     // Update and read the data 
-    lsm303agr_m_update_dev(); 
-    lsm303agr_m_get_axis_data_dev(axis_data); 
+    lsm303agr_m_update(); 
+    lsm303agr_m_get_axis_data(axis_data); 
 
     LONGS_EQUAL(axis_checks[X_AXIS], axis_data[X_AXIS]); 
     LONGS_EQUAL(axis_checks[Y_AXIS], axis_data[Y_AXIS]); 
@@ -235,8 +235,8 @@ TEST(lsm303agr_driver_test, lsm303agr_m_data_update_field_read)
     i2c_mock_set_read_data(axis_bytes_0, BYTE_6, I2C_MOCK_INDEX_0); 
 
     // Update and read the data 
-    lsm303agr_m_update_dev(); 
-    lsm303agr_m_get_field_dev(field_data); 
+    lsm303agr_m_update(); 
+    lsm303agr_m_get_field(field_data); 
 
     LONGS_EQUAL(field_checks[X_AXIS], field_data[X_AXIS]); 
     LONGS_EQUAL(field_checks[Y_AXIS], field_data[Y_AXIS]); 
@@ -273,7 +273,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_no_filter_heading)
 
     // Note that for unit testing, only offsets and LPF gain matter when calling the 
     // init function. Other arguments are placeholders and can be ignored. 
-    lsm303agr_m_init_dev(
+    lsm303agr_m_init(
         &I2C_FAKE, 
         lsm303agr_calibrate_offsets, 
         NO_LPF_GAIN, 
@@ -285,22 +285,22 @@ TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_no_filter_heading)
         LSM303AGR_CFG_DISABLE); 
 
     // Update the device data and calculate the heading 
-    lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[0] - lsm303agr_m_get_heading_dev()) <= NO_LPF_TOL); 
-    lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[1] - lsm303agr_m_get_heading_dev()) <= NO_LPF_TOL); 
-    lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[4] - lsm303agr_m_get_heading_dev()) <= NO_LPF_TOL); 
-    lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[5] - lsm303agr_m_get_heading_dev()) <= NO_LPF_TOL); 
-    lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[8] - lsm303agr_m_get_heading_dev()) <= NO_LPF_TOL); 
-    lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[9] - lsm303agr_m_get_heading_dev()) <= NO_LPF_TOL); 
-    lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[12] - lsm303agr_m_get_heading_dev()) <= NO_LPF_TOL); 
-    lsm303agr_m_update_dev(); 
-    LONGS_EQUAL(TRUE, abs(heading_checks[13] - lsm303agr_m_get_heading_dev()) <= NO_LPF_TOL); 
+    lsm303agr_m_update(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[0] - lsm303agr_m_get_heading()) <= NO_LPF_TOL); 
+    lsm303agr_m_update(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[1] - lsm303agr_m_get_heading()) <= NO_LPF_TOL); 
+    lsm303agr_m_update(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[4] - lsm303agr_m_get_heading()) <= NO_LPF_TOL); 
+    lsm303agr_m_update(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[5] - lsm303agr_m_get_heading()) <= NO_LPF_TOL); 
+    lsm303agr_m_update(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[8] - lsm303agr_m_get_heading()) <= NO_LPF_TOL); 
+    lsm303agr_m_update(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[9] - lsm303agr_m_get_heading()) <= NO_LPF_TOL); 
+    lsm303agr_m_update(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[12] - lsm303agr_m_get_heading()) <= NO_LPF_TOL); 
+    lsm303agr_m_update(); 
+    LONGS_EQUAL(TRUE, abs(heading_checks[13] - lsm303agr_m_get_heading()) <= NO_LPF_TOL); 
 }
 
 
@@ -322,7 +322,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_added_filter_heading)
 
     // Note that for unit testing, only offsets and LPF gain matter when calling the 
     // init function. Other arguments are placeholders and can be ignored. 
-    lsm303agr_m_init_dev(
+    lsm303agr_m_init(
         &I2C_FAKE, 
         lsm303agr_calibrate_offsets, 
         LPF_GAIN, 
@@ -337,13 +337,13 @@ TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_added_filter_heading)
     // being used, the returned heading will not be the exact calculated heading after 
     // a single call to the heading getter. Instead, the getter must be called repeatedly 
     // to provide a chance for the filtered value to catch up to the real value. 
-    lsm303agr_m_update_dev(); 
-    heading = lsm303agr_m_get_heading_dev(); 
+    lsm303agr_m_update(); 
+    heading = lsm303agr_m_get_heading(); 
     LONGS_EQUAL(FALSE, abs(heading_checks[10] - heading) <= NO_LPF_TOL); 
 
     for (uint8_t i = CLEAR; i < 100; i++)
     {
-        heading = lsm303agr_m_get_heading_dev(); 
+        heading = lsm303agr_m_get_heading(); 
     }
 
     // The low pass filter uses the specified gain (init function) along with the 
@@ -383,7 +383,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_added_offsets_no_filter_heading)
 
     // Note that for unit testing, only offsets and LPF gain matter when calling the 
     // init function. Other arguments are placeholders and can be ignored. 
-    lsm303agr_m_init_dev(
+    lsm303agr_m_init(
         &I2C_FAKE, 
         lsm303agr_calibrate_offsets, 
         NO_LPF_GAIN, 
@@ -396,40 +396,40 @@ TEST(lsm303agr_driver_test, lsm303agr_m_added_offsets_no_filter_heading)
 
     // Use the calibration function (not the init function) to set the directional 
     // error offsets. 
-    lsm303agr_m_heading_calibration_dev(lsm303agr_config_dir_offsets); 
+    lsm303agr_m_heading_calibration(lsm303agr_config_dir_offsets); 
 
     // Update the device data and calculate the heading 
-    lsm303agr_m_update_dev(); 
-    heading = lsm303agr_m_get_heading_dev(); 
+    lsm303agr_m_update(); 
+    heading = lsm303agr_m_get_heading(); 
     LONGS_EQUAL(TRUE, (abs(heading_checks[0] - heading) <= NO_LPF_TOL) || 
                       (abs(heading_checks[0] + 3600 - heading) <= NO_LPF_TOL)); 
     
-    lsm303agr_m_update_dev(); 
-    heading = lsm303agr_m_get_heading_dev(); 
+    lsm303agr_m_update(); 
+    heading = lsm303agr_m_get_heading(); 
     LONGS_EQUAL(TRUE, abs(heading_checks[3] - heading) <= NO_LPF_TOL); 
     
-    lsm303agr_m_update_dev(); 
-    heading = lsm303agr_m_get_heading_dev(); 
+    lsm303agr_m_update(); 
+    heading = lsm303agr_m_get_heading(); 
     LONGS_EQUAL(TRUE, abs(heading_checks[4] - heading) <= NO_LPF_TOL); 
     
-    lsm303agr_m_update_dev(); 
-    heading = lsm303agr_m_get_heading_dev(); 
+    lsm303agr_m_update(); 
+    heading = lsm303agr_m_get_heading(); 
     LONGS_EQUAL(TRUE, abs(heading_checks[7] - heading) <= NO_LPF_TOL); 
     
-    lsm303agr_m_update_dev(); 
-    heading = lsm303agr_m_get_heading_dev(); 
+    lsm303agr_m_update(); 
+    heading = lsm303agr_m_get_heading(); 
     LONGS_EQUAL(TRUE, abs(heading_checks[8] - heading) <= NO_LPF_TOL); 
     
-    lsm303agr_m_update_dev(); 
-    heading = lsm303agr_m_get_heading_dev(); 
+    lsm303agr_m_update(); 
+    heading = lsm303agr_m_get_heading(); 
     LONGS_EQUAL(TRUE, abs(heading_checks[11] - heading) <= NO_LPF_TOL); 
     
-    lsm303agr_m_update_dev(); 
-    heading = lsm303agr_m_get_heading_dev(); 
+    lsm303agr_m_update(); 
+    heading = lsm303agr_m_get_heading(); 
     LONGS_EQUAL(TRUE, abs(heading_checks[12] - heading) <= NO_LPF_TOL); 
     
-    lsm303agr_m_update_dev(); 
-    heading = lsm303agr_m_get_heading_dev(); 
+    lsm303agr_m_update(); 
+    heading = lsm303agr_m_get_heading(); 
     LONGS_EQUAL(TRUE, abs(heading_checks[15] - heading) <= NO_LPF_TOL); 
 }
 
@@ -452,7 +452,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_added_offsets_added_filter_heading)
 
     // Note that for unit testing, only offsets and LPF gain matter when calling the 
     // init function. Other arguments are placeholders and can be ignored. 
-    lsm303agr_m_init_dev(
+    lsm303agr_m_init(
         &I2C_FAKE, 
         lsm303agr_config_dir_offsets, 
         LPF_GAIN, 
@@ -467,13 +467,13 @@ TEST(lsm303agr_driver_test, lsm303agr_m_added_offsets_added_filter_heading)
     // being used, the returned heading will not be the exact calculated heading after 
     // a single call to the heading getter. Instead, the getter must be called repeatedly 
     // to provide a chance for the filtered value to catch up to the real value. 
-    lsm303agr_m_update_dev(); 
-    heading = lsm303agr_m_get_heading_dev(); 
+    lsm303agr_m_update(); 
+    heading = lsm303agr_m_get_heading(); 
     LONGS_EQUAL(FALSE, abs(heading_checks[10] - heading) <= NO_LPF_TOL); 
 
     for (uint8_t i = CLEAR; i < 100; i++)
     {
-        heading = lsm303agr_m_get_heading_dev(); 
+        heading = lsm303agr_m_get_heading(); 
     }
 
     // The low pass filter uses the specified gain (init function) along with the 
