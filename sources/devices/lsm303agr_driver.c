@@ -22,12 +22,10 @@
 
 //=======================================================================================
 // Notes: 
-// - Procedures start on page 38 of the datasheet 
-// - Low power mode can achieved by setting the low power bit but also putting the device 
-//   into idle mode as well 
-// - The magnetometer works best in the XY plane (board orientation is level with the 
-//   ground). For this reason, for the magnetometer driver to work correctly, the board 
-//   must be oriented in the XY plane. 
+// - Procedures start on page 38 of the datasheet. 
+// - The magnetometer works best with its XY plane parallel to the ground. The magnetometer 
+//   features of this driver work under the assumption that the device is oriented this 
+//   way with the x-axis pointing forward. There are X and Y marking on the device. 
 //=======================================================================================
 
 
@@ -57,20 +55,6 @@
 #define LSM303AGR_M_HEAD_MAX 3600       // Max heading value - scaled (360deg * 10)
 #define LSM303AGR_M_HEAD_DIFF 1800      // Heading different threshold for filtering 
 #define LSM303AGR_M_DIR_OFFSET 450      // 45deg (*10) - heading sections (ex. N-->NE) 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Enums 
-
-// Device axis index 
-typedef enum {
-    X_AXIS, 
-    Y_AXIS, 
-    Z_AXIS, 
-    NUM_AXES 
-} lsm303agr_axis_t; 
 
 //=======================================================================================
 
@@ -203,8 +187,6 @@ typedef struct lsm303agr_driver_data_s
     lsm303agr_m_heading_offset_t heading_offset_eqns[LSM303AGR_M_NUM_DIR]; 
     double heading_gain; 
     int16_t heading_offsets[LSM303AGR_M_NUM_DIR]; 
-
-    // Accelerometer register data 
 }
 lsm303agr_driver_data_t; 
 
@@ -219,9 +201,13 @@ static lsm303agr_driver_data_t lsm303agr_driver_data;
 // Prototypes 
 
 /**
- * @brief Read from register 
+ * @brief Read from device register(s) 
  * 
- * @details 
+ * @details I2C read sequence used to 
+ *          
+ *          Reads data of a given size from the device using the I2C driver functions 
+ *          and stores it in the buffer. Called by numerous functions that require 
+ *          data from the device. 
  * 
  * @param i2c_addr 
  * @param reg_addr 
@@ -237,7 +223,7 @@ I2C_STATUS lsm303agr_read(
 
 
 /**
- * @brief Write to register 
+ * @brief Write to device register(s) 
  * 
  * @details 
  * 
@@ -606,7 +592,7 @@ LSM303AGR_STATUS lsm303agr_m_reg_write(
     uint8_t *reg_data)
 {
     I2C_STATUS i2c_status = lsm303agr_write(lsm303agr_driver_data.m_addr, 
-                                                reg_addr, reg_data, BYTE_1); 
+                                            reg_addr, reg_data, BYTE_1); 
     if (i2c_status)
     {
         return LSM303AGR_WRITE_FAULT; 
@@ -623,7 +609,7 @@ LSM303AGR_STATUS lsm303agr_m_reg_read(
     byte_num_t data_size)
 {
     I2C_STATUS i2c_status = lsm303agr_read(lsm303agr_driver_data.m_addr, 
-                                               reg_addr, reg_buff, data_size); 
+                                           reg_addr, reg_buff, data_size); 
     if (i2c_status)
     {
         return LSM303AGR_READ_FAULT; 

@@ -41,6 +41,15 @@
 //=======================================================================================
 // Enums 
 
+// Device axis index 
+typedef enum {
+    X_AXIS, 
+    Y_AXIS, 
+    Z_AXIS, 
+    NUM_AXES 
+} lsm303agr_axis_t; 
+
+
 // LSM303AGR driver status 
 typedef enum {
     LSM303AGR_OK,            // No problem with the LSM303AGR device 
@@ -51,22 +60,14 @@ typedef enum {
 } lsm303agr_status_t; 
 
 
-/**
- * @brief Device setting disable/enable 
- * 
- * @details 
- */
+// Device setting disable/enable 
 typedef enum {
     LSM303AGR_CFG_DISABLE, 
     LSM303AGR_CFG_ENABLE 
 } lsm303agr_cfg_t; 
 
 
-/**
- * @brief Magnetometer output data rate 
- * 
- * @details 
- */
+// Magnetometer output data rate 
 typedef enum {
     LSM303AGR_M_ODR_10, 
     LSM303AGR_M_ODR_20, 
@@ -75,11 +76,7 @@ typedef enum {
 } lsm303agr_m_odr_cfg_t; 
 
 
-/**
- * @brief Magnetometer system mode 
- * 
- * @details 
- */
+// Magnetometer system mode 
 typedef enum {
     LSM303AGR_M_MODE_CONT, 
     LSM303AGR_M_MODE_SINGLE, 
