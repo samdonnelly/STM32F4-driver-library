@@ -33,28 +33,25 @@
 // Macros 
 
 // I2C addresses (datasheet page 39) 
-#define LSM303AGR_A_ADDR 0x32           // Accelerometer (7-bit addr (0x19<<1) + Write bit) 
-#define LSM303AGR_M_ADDR 0x3C           // Magnetometer (7-bit addr (0x1E<<1) + Write bit) 
-
-// Data tools 
-#define LSM303AGR_BIT_MASK 0x01         // Mask to filter out status bits 
-#define LSM303AGR_ADDR_INC 0x80         // Register address increment mask for r/w 
+#define LSM303AGR_A_ADDR 0x32         // Accelerometer (7-bit addr (0x19<<1) + Write bit) 
+#define LSM303AGR_M_ADDR 0x3C         // Magnetometer (7-bit addr (0x1E<<1) + Write bit) 
 
 // Magnetometer register addresses 
-#define LSM303AGR_M_WHO_AM_I 0x4F       // WHO AM I 
-#define LSM303AGR_M_CFG_A 0x60          // Configuration register A 
-#define LSM303AGR_M_CFG_B 0x61          // Configuration register B 
-#define LSM303AGR_M_CFG_C 0x62          // Configuration register C 
-#define LSM303AGR_M_STATUS 0x67         // Status register 
-#define LSM303AGR_M_X_L 0x68            // X component of magnetic field (first data reg) 
+#define LSM303AGR_ADDR_INC 0x80       // Register address increment mask for r/w 
+#define LSM303AGR_M_WHO_AM_I 0x4F     // WHO AM I 
+#define LSM303AGR_M_CFG_A 0x60        // Configuration register A 
+#define LSM303AGR_M_CFG_B 0x61        // Configuration register B 
+#define LSM303AGR_M_CFG_C 0x62        // Configuration register C 
+#define LSM303AGR_M_STATUS 0x67       // Status register 
+#define LSM303AGR_M_X_L 0x68          // X component of magnetic field (first data reg) 
 
 // Magnetometer data 
-#define LSM303AGR_M_ID 0x40             // Value returned from the WHO_AM_I register 
-#define LSM303AGR_M_SENS_NUM 3          // Magnetometer sensitivity numerator (3/2) 
-#define LSM303AGR_M_SENS_DEN 2          // Magnetometer sensitivity denominator (3/2) 
-#define LSM303AGR_M_HEAD_MAX 3600       // Max heading value - scaled (360deg * 10)
-#define LSM303AGR_M_HEAD_DIFF 1800      // Heading different threshold for filtering 
-#define LSM303AGR_M_DIR_OFFSET 450      // 45deg (*10) - heading sections (ex. N-->NE) 
+#define LSM303AGR_M_ID 0x40           // Value returned from the WHO_AM_I register 
+#define LSM303AGR_M_SENS_NUM 3        // Magnetometer sensitivity numerator (3/2) 
+#define LSM303AGR_M_SENS_DEN 2        // Magnetometer sensitivity denominator (3/2) 
+#define LSM303AGR_M_HEAD_MAX 3600     // Max heading value - scaled (360deg * 10)
+#define LSM303AGR_M_HEAD_DIFF 1800    // Heading different threshold for filtering 
+#define LSM303AGR_M_DIR_OFFSET 450    // 45 degrees*10 - heading sections (ex. N-->NE) 
 
 //=======================================================================================
 
@@ -77,12 +74,12 @@ typedef union lsm303agr_m_cfga_s
 {
     // Configuration register A bits 
     struct {
-        uint8_t md           : 2;      // Mode select 
-        uint8_t odr          : 2;      // Output data rate 
-        uint8_t lp           : 1;      // Low-power mode enable 
-        uint8_t soft_rst     : 1;      // Config and user register reset 
-        uint8_t reboot       : 1;      // Reboot memory contents 
-        uint8_t comp_temp_en : 1;      // Temperature compensation 
+        uint8_t md           : 2;   // Mode select 
+        uint8_t odr          : 2;   // Output data rate 
+        uint8_t lp           : 1;   // Low-power mode enable 
+        uint8_t soft_rst     : 1;   // Config and user register reset 
+        uint8_t reboot       : 1;   // Reboot memory contents 
+        uint8_t comp_temp_en : 1;   // Temperature compensation 
     }; 
 
     // CFG-A register byte 
@@ -96,12 +93,12 @@ typedef union lsm303agr_m_cfgb_s
 {
     // Configuration register C bits 
     struct {
-        uint8_t lpf               : 1;      // Low pass filter enable 
-        uint8_t off_canc          : 1;      // Enable offset cancellation 
-        uint8_t set_freq          : 1;      // Frequency of set pulse 
-        uint8_t int_on_dataoff    : 1;      // Interrupt check after hard-ron correction 
-        uint8_t off_canc_one_shot : 1;      // Offset cancellation - single measurement mode 
-        uint8_t unused_1          : 3;      // Not used 
+        uint8_t lpf               : 1;   // Low pass filter enable 
+        uint8_t off_canc          : 1;   // Enable offset cancellation 
+        uint8_t set_freq          : 1;   // Frequency of set pulse 
+        uint8_t int_on_dataoff    : 1;   // Interrupt check after hard-ron correction 
+        uint8_t off_canc_one_shot : 1;   // Offset cancellation - single measurement mode 
+        uint8_t unused_1          : 3;   // Not used 
     }; 
 
     // CFG-B register byte 
@@ -115,14 +112,14 @@ typedef union lsm303agr_m_cfgc_s
 {
     // Configuration register C bits 
     struct {
-        uint8_t int_mag     : 1;      // DRDY pin configured as digital output 
-        uint8_t self_test   : 1;      // Self-test enable 
-        uint8_t unused_2    : 1;      // Bit not used 
-        uint8_t ble         : 1;      // High and low data inversion 
-        uint8_t bdu         : 1;      // Asynchronous read data protection 
-        uint8_t i2c_dis     : 1;      // I2C disable 
-        uint8_t int_mag_pin : 1;      // Interrupt on INT_MAG_PIN enable 
-        uint8_t unused_1    : 1;      // Bit not used 
+        uint8_t int_mag     : 1;   // DRDY pin configured as digital output 
+        uint8_t self_test   : 1;   // Self-test enable 
+        uint8_t unused_2    : 1;   // Bit not used 
+        uint8_t ble         : 1;   // High and low data inversion 
+        uint8_t bdu         : 1;   // Asynchronous read data protection 
+        uint8_t i2c_dis     : 1;   // I2C disable 
+        uint8_t int_mag_pin : 1;   // Interrupt on INT_MAG_PIN enable 
+        uint8_t unused_1    : 1;   // Bit not used 
     }; 
 
     // CFG-C register byte 
@@ -136,14 +133,14 @@ typedef union lsm303agr_m_status_s
 {
     // Status register bits 
     struct {
-        uint8_t x_da   : 1;      // X-axis new data available 
-        uint8_t y_da   : 1;      // Y-axis new data available 
-        uint8_t z_da   : 1;      // Z-axis new data available 
-        uint8_t zyx_da : 1;      // XYZ-axis new data available 
-        uint8_t x_or   : 1;      // X-axis data overrun 
-        uint8_t y_or   : 1;      // Y-axis data overrun 
-        uint8_t z_or   : 1;      // Z-axis data overrun 
-        uint8_t zyx_or : 1;      // XYZ-axis data overrun 
+        uint8_t x_da   : 1;   // X-axis new data available 
+        uint8_t y_da   : 1;   // Y-axis new data available 
+        uint8_t z_da   : 1;   // Z-axis new data available 
+        uint8_t zyx_da : 1;   // XYZ-axis new data available 
+        uint8_t x_or   : 1;   // X-axis data overrun 
+        uint8_t y_or   : 1;   // Y-axis data overrun 
+        uint8_t z_or   : 1;   // Z-axis data overrun 
+        uint8_t zyx_or : 1;   // XYZ-axis data overrun 
     }; 
 
     // Status register byte 
@@ -157,7 +154,7 @@ lsm303agr_m_status_t;
 //=======================================================================================
 // Data record 
 
-// Magnetometer calculated heading correction equation components 
+// Magnetometer heading correction equation components 
 typedef struct lsm303agr_m_heading_offset_s
 {
     double slope;            // Slope of linear offset equation 
@@ -166,7 +163,7 @@ typedef struct lsm303agr_m_heading_offset_s
 lsm303agr_m_heading_offset_t; 
 
 
-// Data record structure 
+// Driver data record 
 typedef struct lsm303agr_driver_data_s 
 {
     // Peripherals 
@@ -174,7 +171,6 @@ typedef struct lsm303agr_driver_data_s
 
     // Device info 
     uint8_t m_addr; 
-    uint8_t a_addr; 
 
     // Magnetometer register data 
     lsm303agr_m_data_t m_data[NUM_AXES]; 
@@ -203,71 +199,79 @@ static lsm303agr_driver_data_t lsm303agr_driver_data;
 /**
  * @brief Read from device register(s) 
  * 
- * @details I2C read sequence used to 
- *          
- *          Reads data of a given size from the device using the I2C driver functions 
- *          and stores it in the buffer. Called by numerous functions that require 
- *          data from the device. 
+ * @details Reads data of a given size from the device using the I2C driver functions 
+ *          and stores the data in a buffer. The magnetometer and accelerometer have 
+ *          different I2C addresses which must be specified. 
  * 
- * @param i2c_addr 
- * @param reg_addr 
- * @param lsm303agr_reg_value 
- * @param lsm303agr_data_size 
- * @return I2C_STATUS 
+ * @param i2c_addr : I2C address to use (magnetometer or accelerometer) 
+ * @param reg_addr : address of the first register to read from 
+ * @param reg_buff : buffer to store the register contents 
+ * @param data_size : size of the data to be read 
+ * @return I2C_STATUS : I2C status of the read operation 
  */
 I2C_STATUS lsm303agr_read(
     uint8_t i2c_addr, 
     uint8_t reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_data_size); 
+    uint8_t *reg_buff, 
+    byte_num_t data_size); 
 
 
 /**
  * @brief Write to device register(s) 
  * 
- * @details 
+ * @details Writes data of a given size to the device using the I2C driver functions. 
+ *          The magnetometer and accelerometer have different I2C addresses which must 
+ *          be specified. 
  * 
- * @param i2c_addr 
- * @param reg_addr 
- * @param lsm303agr_reg_value 
- * @param lsm303agr_data_size 
- * @return I2C_STATUS 
+ * @param i2c_addr : I2C address to use (magnetometer or accelerometer) 
+ * @param reg_addr : address of the first register to write to 
+ * @param reg_value : buffer that contains the data to write 
+ * @param data_size : size of the data to write 
+ * @return I2C_STATUS : I2C status of the write operation 
  */
 I2C_STATUS lsm303agr_write(
     uint8_t i2c_addr, 
     uint8_t reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_data_size); 
-
-
-/**
- * @brief Magnetometer register write 
- * 
- * @details 
- * 
- * @param reg_addr 
- * @param reg_data 
- * @return LSM303AGR_STATUS 
- */
-LSM303AGR_STATUS lsm303agr_m_reg_write(
-    uint8_t reg_addr, 
-    uint8_t *reg_data); 
+    uint8_t *reg_value, 
+    byte_num_t data_size); 
 
 
 /**
  * @brief Magnetometer register read 
  * 
- * @details 
+ * @details Reads register data of a specific size from the magnetometer and stores the 
+ *          data in a buffer. Returns the status of the operation. 
+ *          
+ *          Note that LSM303AGR_ADDR_INC must be included with the register address in 
+ *          order to read multiple different register bytes. 
  * 
- * @param reg_addr 
- * @param reg_buff 
- * @param data_size : 
- * @return LSM303AGR_STATUS 
+ * @param reg_addr : address of the first register to read from 
+ * @param reg_buff : buffer to store the register contents 
+ * @param data_size : size of the data to be read 
+ * @return LSM303AGR_STATUS : driver status of the read operation 
  */
 LSM303AGR_STATUS lsm303agr_m_reg_read(
     uint8_t reg_addr, 
     uint8_t *reg_buff, 
     byte_num_t data_size); 
+
+
+/**
+ * @brief Magnetometer register write 
+ * 
+ * @details Writes 1-byte register data to the magnetometer. Returns the status of the 
+ *          operation. 
+ *          
+ *          Note that LSM303AGR_ADDR_INC must be included with the register address in 
+ *          order to write multiple different register bytes. 
+ * 
+ * @param reg_addr : address of the register to write to 
+ * @param reg_data : buffer that contains the data to write 
+ * @return LSM303AGR_STATUS : driver status of the write operation 
+ */
+LSM303AGR_STATUS lsm303agr_m_reg_write(
+    uint8_t reg_addr, 
+    uint8_t *reg_data); 
 
 //=======================================================================================
 
@@ -375,14 +379,14 @@ void lsm303agr_m_heading_calibration(const int16_t *offsets)
 //=======================================================================================
 // User functions 
 
-// Get the most recent magnetometer data 
+// Read the most recent magnetometer data 
 LSM303AGR_STATUS lsm303agr_m_update(void)
 {
     // Read the magnetometer axis data (units: milli-gauss). The LSM303AGR_ADDR_INC mask 
     // is used to increment to the next register address after each byte read. 
     return lsm303agr_m_reg_read(LSM303AGR_M_X_L | LSM303AGR_ADDR_INC, 
-                                    lsm303agr_driver_data.m_data[X_AXIS].m_axis_bytes, 
-                                    BYTE_6); 
+                                lsm303agr_driver_data.m_data[X_AXIS].m_axis_bytes, 
+                                BYTE_6); 
 }
 
 
@@ -534,8 +538,8 @@ int16_t lsm303agr_m_get_heading(void)
 I2C_STATUS lsm303agr_read(
     uint8_t i2c_addr, 
     uint8_t reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_data_size)
+    uint8_t *reg_buff, 
+    byte_num_t data_size)
 {
     I2C_STATUS i2c_status = I2C_OK; 
 
@@ -550,7 +554,7 @@ I2C_STATUS lsm303agr_read(
     // finally read the device data before stopping the transaction. 
     i2c_status |= i2c_start(lsm303agr_driver_data.i2c); 
     i2c_status |= i2c_write_addr(lsm303agr_driver_data.i2c, i2c_addr + I2C_R_OFFSET);
-    i2c_status |= i2c_read(lsm303agr_driver_data.i2c, lsm303agr_reg_value, lsm303agr_data_size); 
+    i2c_status |= i2c_read(lsm303agr_driver_data.i2c, reg_buff, data_size); 
     i2c_stop(lsm303agr_driver_data.i2c); 
 
     return i2c_status; 
@@ -561,8 +565,8 @@ I2C_STATUS lsm303agr_read(
 I2C_STATUS lsm303agr_write(
     uint8_t i2c_addr, 
     uint8_t reg_addr, 
-    uint8_t *lsm303agr_reg_value, 
-    byte_num_t lsm303agr_data_size)
+    uint8_t *reg_value, 
+    byte_num_t data_size)
 {
     I2C_STATUS i2c_status = I2C_OK; 
     
@@ -574,7 +578,7 @@ I2C_STATUS lsm303agr_write(
     i2c_status |= i2c_write(lsm303agr_driver_data.i2c, &reg_addr, BYTE_1); 
 
     // Write the data to the device then stop the transaction. 
-    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, lsm303agr_reg_value, lsm303agr_data_size);
+    i2c_status |= i2c_write(lsm303agr_driver_data.i2c, reg_value, data_size);
     i2c_stop(lsm303agr_driver_data.i2c); 
 
     return i2c_status; 
@@ -585,22 +589,6 @@ I2C_STATUS lsm303agr_write(
 
 //=======================================================================================
 // Register functions 
-
-// Magnetometer register write 
-LSM303AGR_STATUS lsm303agr_m_reg_write(
-    uint8_t reg_addr, 
-    uint8_t *reg_data)
-{
-    I2C_STATUS i2c_status = lsm303agr_write(lsm303agr_driver_data.m_addr, 
-                                            reg_addr, reg_data, BYTE_1); 
-    if (i2c_status)
-    {
-        return LSM303AGR_WRITE_FAULT; 
-    }
-
-    return LSM303AGR_OK; 
-}
-
 
 // Magnetometer register read 
 LSM303AGR_STATUS lsm303agr_m_reg_read(
@@ -613,6 +601,22 @@ LSM303AGR_STATUS lsm303agr_m_reg_read(
     if (i2c_status)
     {
         return LSM303AGR_READ_FAULT; 
+    }
+
+    return LSM303AGR_OK; 
+}
+
+
+// Magnetometer register write 
+LSM303AGR_STATUS lsm303agr_m_reg_write(
+    uint8_t reg_addr, 
+    uint8_t *reg_data)
+{
+    I2C_STATUS i2c_status = lsm303agr_write(lsm303agr_driver_data.m_addr, 
+                                            reg_addr, reg_data, BYTE_1); 
+    if (i2c_status)
+    {
+        return LSM303AGR_WRITE_FAULT; 
     }
 
     return LSM303AGR_OK; 
