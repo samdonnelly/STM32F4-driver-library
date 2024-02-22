@@ -27,7 +27,7 @@
 #include "gpio_driver.h"
 
 // Other drivers 
-#include "timers.h"
+#include "timers_driver.h"
 
 // Libraries 
 #include <stdio.h>

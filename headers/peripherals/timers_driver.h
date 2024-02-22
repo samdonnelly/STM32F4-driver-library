@@ -1,5 +1,5 @@
 /**
- * @file timers.h
+ * @file timers_driver.h
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
@@ -12,8 +12,8 @@
  * 
  */
 
-#ifndef _TIMERS_H_
-#define _TIMERS_H_
+#ifndef _TIMERS_DRIVER_H_
+#define _TIMERS_DRIVER_H_
 
 //=======================================================================================
 // Includes 
@@ -37,7 +37,6 @@
 #define PREFIX_SCALAR 1000           // Scalar to convert between us and ms 
 
 // TIM9 delays 
-// TODO delete these when they've been replaced 
 #define TIM9_1MS    1                // 1 ms delay 
 #define TIM9_10MS   10               // 10 ms delay 
 #define TIM9_100MS  100              // 100 ms delay 
@@ -609,4 +608,4 @@ uint32_t tim_get_pclk_freq(
 
 //=======================================================================================
 
-#endif   // _TIMERS_H_
+#endif   // _TIMERS_DRIVER_H_

@@ -25,7 +25,7 @@ extern "C"
     #include "i2c_comm_mock.h"
     #include "gpio_driver.h"
     #include "gpio_driver_mock.h"
-    #include "timers.h"
+    #include "timers_driver.h"
     #include "timers_mock.h"
 }
 

@@ -19,7 +19,7 @@
 #include "hw125_driver.h"
 
 // Drivers 
-#include "timers.h"
+#include "timers_driver.h"
 #include "spi_comm.h"
 #include "uart_comm.h"
 

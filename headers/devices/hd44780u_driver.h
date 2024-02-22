@@ -23,7 +23,7 @@
 #include "tools.h"
 
 // Drivers 
-#include "timers.h"
+#include "timers_driver.h"
 #include "i2c_comm.h"
 
 //=======================================================================================

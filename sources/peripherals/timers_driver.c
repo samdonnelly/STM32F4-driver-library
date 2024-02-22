@@ -1,5 +1,5 @@
 /**
- * @file timers.c
+ * @file timers_driver.c
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
@@ -15,7 +15,7 @@
 //=======================================================================================
 // Includes 
 
-#include "timers.h"
+#include "timers_driver.h"
 
 //=======================================================================================
 

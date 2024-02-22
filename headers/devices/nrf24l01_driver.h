@@ -25,7 +25,7 @@
 // Communication drivers 
 #include "spi_comm.h"
 #include "gpio_driver.h"
-#include "timers.h" 
+#include "timers_driver.h" 
 
 //=======================================================================================
 
