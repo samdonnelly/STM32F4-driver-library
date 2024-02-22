@@ -55,7 +55,8 @@ task.h is included from an application file. */
 
 /*-----------------------------------------------------------*/
 
-void *pvPortMalloc( size_t xWantedSize )
+// void *pvPortMalloc( size_t xWantedSize )
+void *pvPortMalloc_heap3( size_t xWantedSize )
 {
 void *pvReturn;
 
@@ -80,7 +81,8 @@ void *pvReturn;
 }
 /*-----------------------------------------------------------*/
 
-void vPortFree( void *pv )
+// void vPortFree( void *pv )
+void vPortFree_heap3( void *pv )
 {
 	if( pv )
 	{

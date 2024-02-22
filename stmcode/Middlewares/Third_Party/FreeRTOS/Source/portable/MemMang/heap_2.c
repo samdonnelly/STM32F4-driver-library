@@ -56,7 +56,8 @@ task.h is included from an application file. */
 /*
  * Initialises the heap structures before their first use.
  */
-static void prvHeapInit( void );
+// static void prvHeapInit( void );
+static void prvHeapInit_heap2( void );
 
 /* Allocate the memory for the heap. */
 #if( configAPPLICATION_ALLOCATED_HEAP == 1 )
@@ -115,7 +116,8 @@ size_t xBlockSize;																	\
 }
 /*-----------------------------------------------------------*/
 
-void *pvPortMalloc( size_t xWantedSize )
+// void *pvPortMalloc( size_t xWantedSize )
+void *pvPortMalloc_heap2( size_t xWantedSize )
 {
 BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
 static BaseType_t xHeapHasBeenInitialised = pdFALSE;
@@ -127,7 +129,8 @@ void *pvReturn = NULL;
 		initialisation to setup the list of free blocks. */
 		if( xHeapHasBeenInitialised == pdFALSE )
 		{
-			prvHeapInit();
+			// prvHeapInit();
+			prvHeapInit_heap2();
 			xHeapHasBeenInitialised = pdTRUE;
 		}
 
@@ -207,7 +210,8 @@ void *pvReturn = NULL;
 }
 /*-----------------------------------------------------------*/
 
-void vPortFree( void *pv )
+// void vPortFree( void *pv )
+void vPortFreec_heap2( void *pv )
 {
 uint8_t *puc = ( uint8_t * ) pv;
 BlockLink_t *pxLink;
@@ -234,19 +238,22 @@ BlockLink_t *pxLink;
 }
 /*-----------------------------------------------------------*/
 
-size_t xPortGetFreeHeapSize( void )
+// size_t xPortGetFreeHeapSize( void )
+size_t xPortGetFreeHeapSizec_heap2( void )
 {
 	return xFreeBytesRemaining;
 }
 /*-----------------------------------------------------------*/
 
-void vPortInitialiseBlocks( void )
+// void vPortInitialiseBlocks( void )
+void vPortInitialiseBlocksc_heap2( void )
 {
 	/* This just exists to keep the linker quiet. */
 }
 /*-----------------------------------------------------------*/
 
-static void prvHeapInit( void )
+// static void prvHeapInit( void )
+static void prvHeapInit_heap2( void )
 {
 BlockLink_t *pxFirstFreeBlock;
 uint8_t *pucAlignedHeap;

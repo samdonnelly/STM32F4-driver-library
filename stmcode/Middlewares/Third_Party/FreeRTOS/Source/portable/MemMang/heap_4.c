@@ -80,13 +80,15 @@ typedef struct A_BLOCK_LINK
  * the block in front it and/or the block behind it if the memory blocks are
  * adjacent to each other.
  */
-static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert );
+// static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert );
+static void prvInsertBlockIntoFreeList_heap4( BlockLink_t *pxBlockToInsert );
 
 /*
  * Called automatically to setup the required heap structures the first time
  * pvPortMalloc() is called.
  */
-static void prvHeapInit( void );
+// static void prvHeapInit( void );
+static void prvHeapInit_heap4( void );
 
 /*-----------------------------------------------------------*/
 
@@ -112,7 +114,8 @@ static size_t xBlockAllocatedBit = 0;
 
 /*-----------------------------------------------------------*/
 
-void *pvPortMalloc( size_t xWantedSize )
+// void *pvPortMalloc( size_t xWantedSize )
+void *pvPortMalloc_heap4( size_t xWantedSize )
 {
 BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
 void *pvReturn = NULL;
@@ -123,7 +126,7 @@ void *pvReturn = NULL;
 		initialisation to setup the list of free blocks. */
 		if( pxEnd == NULL )
 		{
-			prvHeapInit();
+			prvHeapInit_heap4();
 		}
 		else
 		{
@@ -201,7 +204,7 @@ void *pvReturn = NULL;
 						pxBlock->xBlockSize = xWantedSize;
 
 						/* Insert the new block into the list of free blocks. */
-						prvInsertBlockIntoFreeList( pxNewBlockLink );
+						prvInsertBlockIntoFreeList_heap4( pxNewBlockLink );
 					}
 					else
 					{
@@ -263,7 +266,8 @@ void *pvReturn = NULL;
 }
 /*-----------------------------------------------------------*/
 
-void vPortFree( void *pv )
+// void vPortFree( void *pv )
+void vPortFree_heap4( void *pv )
 {
 uint8_t *puc = ( uint8_t * ) pv;
 BlockLink_t *pxLink;
@@ -294,7 +298,7 @@ BlockLink_t *pxLink;
 					/* Add this block to the list of free blocks. */
 					xFreeBytesRemaining += pxLink->xBlockSize;
 					traceFREE( pv, pxLink->xBlockSize );
-					prvInsertBlockIntoFreeList( ( ( BlockLink_t * ) pxLink ) );
+					prvInsertBlockIntoFreeList_heap4( ( ( BlockLink_t * ) pxLink ) );
 					xNumberOfSuccessfulFrees++;
 				}
 				( void ) xTaskResumeAll();
@@ -312,25 +316,29 @@ BlockLink_t *pxLink;
 }
 /*-----------------------------------------------------------*/
 
-size_t xPortGetFreeHeapSize( void )
+// size_t xPortGetFreeHeapSize( void )
+size_t xPortGetFreeHeapSize_heap4( void )
 {
 	return xFreeBytesRemaining;
 }
 /*-----------------------------------------------------------*/
 
-size_t xPortGetMinimumEverFreeHeapSize( void )
+// size_t xPortGetMinimumEverFreeHeapSize( void )
+size_t xPortGetMinimumEverFreeHeapSize_heap4( void )
 {
 	return xMinimumEverFreeBytesRemaining;
 }
 /*-----------------------------------------------------------*/
 
-void vPortInitialiseBlocks( void )
+// void vPortInitialiseBlocks( void )
+void vPortInitialiseBlocks_heap4( void )
 {
 	/* This just exists to keep the linker quiet. */
 }
 /*-----------------------------------------------------------*/
 
-static void prvHeapInit( void )
+// static void prvHeapInit( void )
+static void prvHeapInit_heap4( void )
 {
 BlockLink_t *pxFirstFreeBlock;
 uint8_t *pucAlignedHeap;
@@ -378,7 +386,8 @@ size_t xTotalHeapSize = configTOTAL_HEAP_SIZE;
 }
 /*-----------------------------------------------------------*/
 
-static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert )
+// static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert )
+static void prvInsertBlockIntoFreeList_heap4( BlockLink_t *pxBlockToInsert )
 {
 BlockLink_t *pxIterator;
 uint8_t *puc;
@@ -439,7 +448,8 @@ uint8_t *puc;
 }
 /*-----------------------------------------------------------*/
 
-void vPortGetHeapStats( HeapStats_t *pxHeapStats )
+// void vPortGetHeapStats( HeapStats_t *pxHeapStats )
+void vPortGetHeapStats_heap4( HeapStats_t *pxHeapStats )
 {
 BlockLink_t *pxBlock;
 size_t xBlocks = 0, xMaxSize = 0, xMinSize = portMAX_DELAY; /* portMAX_DELAY used as a portable way of getting the maximum value. */
