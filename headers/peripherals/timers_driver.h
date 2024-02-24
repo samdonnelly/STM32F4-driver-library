@@ -79,10 +79,10 @@
  * @brief Timer channel 
  */
 typedef enum {
-    TIM_CHANNEL_1, 
-    TIM_CHANNEL_2, 
-    TIM_CHANNEL_3, 
-    TIM_CHANNEL_4 
+    TIMER_CH1, 
+    TIMER_CH2, 
+    TIMER_CH3, 
+    TIMER_CH4 
 } tim_channel_t; 
 
 

@@ -614,15 +614,15 @@ void tim_ocm(
     tim_ocm_t ocm, 
     tim_channel_t channel)
 {
-    if (channel < TIM_CHANNEL_3)
+    if (channel < TIMER_CH3)
     {
         timer->CCMR1 &= ~(SET_7 << (SHIFT_4 + SHIFT_8*channel)); 
         timer->CCMR1 |= (ocm << (SHIFT_4 + SHIFT_8*channel)); 
     }
     else 
     {
-        timer->CCMR2 &= ~(SET_7 << (SHIFT_4 + SHIFT_8*(channel-TIM_CHANNEL_3))); 
-        timer->CCMR2 |= (ocm << (SHIFT_4 + SHIFT_8*(channel-TIM_CHANNEL_3))); 
+        timer->CCMR2 &= ~(SET_7 << (SHIFT_4 + SHIFT_8*(channel-TIMER_CH3))); 
+        timer->CCMR2 |= (ocm << (SHIFT_4 + SHIFT_8*(channel-TIMER_CH3))); 
     }
 }
 
@@ -633,15 +633,15 @@ void tim_ocpe(
     tim_ocpe_t ocpe, 
     tim_channel_t channel)
 {
-    if (channel < TIM_CHANNEL_3)
+    if (channel < TIMER_CH3)
     {
         timer->CCMR1 &= ~(SET_BIT << (SHIFT_3 + SHIFT_8*channel)); 
         timer->CCMR1 |= (ocpe << (SHIFT_3 + SHIFT_8*channel)); 
     }
     else 
     {
-        timer->CCMR2 &= ~(SET_BIT << (SHIFT_3 + SHIFT_8*(channel-TIM_CHANNEL_3))); 
-        timer->CCMR2 |= (ocpe << (SHIFT_3 + SHIFT_8*(channel-TIM_CHANNEL_3))); 
+        timer->CCMR2 &= ~(SET_BIT << (SHIFT_3 + SHIFT_8*(channel-TIMER_CH3))); 
+        timer->CCMR2 |= (ocpe << (SHIFT_3 + SHIFT_8*(channel-TIMER_CH3))); 
     }
 }
 
@@ -736,19 +736,19 @@ void tim_ccr(
 {
     switch (channel)
     {
-        case TIM_CHANNEL_1:
+        case TIMER_CH1:
             timer->CCR1 = ccr; 
             break;
         
-        case TIM_CHANNEL_2:
+        case TIMER_CH2:
             timer->CCR2 = ccr; 
             break;
 
-        case TIM_CHANNEL_3:
+        case TIMER_CH3:
             timer->CCR3 = ccr; 
             break;
 
-        case TIM_CHANNEL_4:
+        case TIMER_CH4:
             timer->CCR4 = ccr; 
             break;
         

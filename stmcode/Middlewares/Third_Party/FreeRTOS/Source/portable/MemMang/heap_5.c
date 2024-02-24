@@ -131,7 +131,8 @@ static size_t xBlockAllocatedBit = 0;
 
 /*-----------------------------------------------------------*/
 
-void *pvPortMalloc( size_t xWantedSize )
+// void *pvPortMalloc( size_t xWantedSize )
+void *pvPortMalloc_heap5( size_t xWantedSize )
 {
 BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
 void *pvReturn = NULL;
@@ -272,7 +273,8 @@ void *pvReturn = NULL;
 }
 /*-----------------------------------------------------------*/
 
-void vPortFree( void *pv )
+// void vPortFree( void *pv )
+void vPortFree_heap5( void *pv )
 {
 uint8_t *puc = ( uint8_t * ) pv;
 BlockLink_t *pxLink;
@@ -321,13 +323,15 @@ BlockLink_t *pxLink;
 }
 /*-----------------------------------------------------------*/
 
-size_t xPortGetFreeHeapSize( void )
+// size_t xPortGetFreeHeapSize( void )
+size_t xPortGetFreeHeapSize_heap5( void )
 {
 	return xFreeBytesRemaining;
 }
 /*-----------------------------------------------------------*/
 
-size_t xPortGetMinimumEverFreeHeapSize( void )
+// size_t xPortGetMinimumEverFreeHeapSize( void )
+size_t xPortGetMinimumEverFreeHeapSize_heap5( void )
 {
 	return xMinimumEverFreeBytesRemaining;
 }
@@ -394,7 +398,8 @@ uint8_t *puc;
 }
 /*-----------------------------------------------------------*/
 
-void vPortDefineHeapRegions( const HeapRegion_t * const pxHeapRegions )
+// void vPortDefineHeapRegions( const HeapRegion_t * const pxHeapRegions )
+void vPortDefineHeapRegions_heap5( const HeapRegion_t * const pxHeapRegions )
 {
 BlockLink_t *pxFirstFreeBlockInRegion = NULL, *pxPreviousFreeBlock;
 size_t xAlignedHeap;
@@ -488,7 +493,8 @@ const HeapRegion_t *pxHeapRegion;
 }
 /*-----------------------------------------------------------*/
 
-void vPortGetHeapStats( HeapStats_t *pxHeapStats )
+// void vPortGetHeapStats( HeapStats_t *pxHeapStats )
+void vPortGetHeapStats_heap5( HeapStats_t *pxHeapStats )
 {
 BlockLink_t *pxBlock;
 size_t xBlocks = 0, xMaxSize = 0, xMinSize = portMAX_DELAY; /* portMAX_DELAY used as a portable way of getting the maximum value. */

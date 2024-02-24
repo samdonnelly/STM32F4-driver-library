@@ -56,8 +56,7 @@ task.h is included from an application file. */
 /*
  * Initialises the heap structures before their first use.
  */
-// static void prvHeapInit( void );
-static void prvHeapInit_heap2( void );
+static void prvHeapInit( void );
 
 /* Allocate the memory for the heap. */
 #if( configAPPLICATION_ALLOCATED_HEAP == 1 )
@@ -129,8 +128,7 @@ void *pvReturn = NULL;
 		initialisation to setup the list of free blocks. */
 		if( xHeapHasBeenInitialised == pdFALSE )
 		{
-			// prvHeapInit();
-			prvHeapInit_heap2();
+			prvHeapInit();
 			xHeapHasBeenInitialised = pdTRUE;
 		}
 
@@ -252,8 +250,7 @@ void vPortInitialiseBlocksc_heap2( void )
 }
 /*-----------------------------------------------------------*/
 
-// static void prvHeapInit( void )
-static void prvHeapInit_heap2( void )
+static void prvHeapInit( void )
 {
 BlockLink_t *pxFirstFreeBlock;
 uint8_t *pucAlignedHeap;

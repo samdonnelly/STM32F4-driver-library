@@ -80,15 +80,13 @@ typedef struct A_BLOCK_LINK
  * the block in front it and/or the block behind it if the memory blocks are
  * adjacent to each other.
  */
-// static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert );
-static void prvInsertBlockIntoFreeList_heap4( BlockLink_t *pxBlockToInsert );
+static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert );
 
 /*
  * Called automatically to setup the required heap structures the first time
  * pvPortMalloc() is called.
  */
-// static void prvHeapInit( void );
-static void prvHeapInit_heap4( void );
+static void prvHeapInit( void );
 
 /*-----------------------------------------------------------*/
 
@@ -126,7 +124,7 @@ void *pvReturn = NULL;
 		initialisation to setup the list of free blocks. */
 		if( pxEnd == NULL )
 		{
-			prvHeapInit_heap4();
+			prvHeapInit();
 		}
 		else
 		{
@@ -204,7 +202,7 @@ void *pvReturn = NULL;
 						pxBlock->xBlockSize = xWantedSize;
 
 						/* Insert the new block into the list of free blocks. */
-						prvInsertBlockIntoFreeList_heap4( pxNewBlockLink );
+						prvInsertBlockIntoFreeList( pxNewBlockLink );
 					}
 					else
 					{
@@ -298,7 +296,7 @@ BlockLink_t *pxLink;
 					/* Add this block to the list of free blocks. */
 					xFreeBytesRemaining += pxLink->xBlockSize;
 					traceFREE( pv, pxLink->xBlockSize );
-					prvInsertBlockIntoFreeList_heap4( ( ( BlockLink_t * ) pxLink ) );
+					prvInsertBlockIntoFreeList( ( ( BlockLink_t * ) pxLink ) );
 					xNumberOfSuccessfulFrees++;
 				}
 				( void ) xTaskResumeAll();
@@ -337,8 +335,7 @@ void vPortInitialiseBlocks_heap4( void )
 }
 /*-----------------------------------------------------------*/
 
-// static void prvHeapInit( void )
-static void prvHeapInit_heap4( void )
+static void prvHeapInit( void )
 {
 BlockLink_t *pxFirstFreeBlock;
 uint8_t *pucAlignedHeap;
@@ -386,8 +383,7 @@ size_t xTotalHeapSize = configTOTAL_HEAP_SIZE;
 }
 /*-----------------------------------------------------------*/
 
-// static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert )
-static void prvInsertBlockIntoFreeList_heap4( BlockLink_t *pxBlockToInsert )
+static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert )
 {
 BlockLink_t *pxIterator;
 uint8_t *puc;
