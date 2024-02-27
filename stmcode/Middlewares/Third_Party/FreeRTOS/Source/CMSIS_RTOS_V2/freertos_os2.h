@@ -28,7 +28,8 @@
 
 #include "FreeRTOS.h"                   // ARM.FreeRTOS::RTOS:Core
 
-#include CMSIS_device_header
+// #include CMSIS_device_header
+#include "stm32f4xx.h" 
 
 /*
   CMSIS-RTOS2 FreeRTOS image size optimization definitions.

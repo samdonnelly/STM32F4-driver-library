@@ -66,8 +66,8 @@ static size_t xNextFreeByte = ( size_t ) 0;
 
 /*-----------------------------------------------------------*/
 
-void *pvPortMalloc( size_t xWantedSize )
-// void *pvPortMalloc_heap1( size_t xWantedSize )
+// void *pvPortMalloc( size_t xWantedSize )
+void *pvPortMalloc_heap1( size_t xWantedSize )
 {
 void *pvReturn = NULL;
 static uint8_t *pucAlignedHeap = NULL;
@@ -119,8 +119,8 @@ static uint8_t *pucAlignedHeap = NULL;
 }
 /*-----------------------------------------------------------*/
 
-void vPortFree( void *pv )
-// void vPortFree_heap1( void *pv )
+// void vPortFree( void *pv )
+void vPortFree_heap1( void *pv )
 {
 	/* Memory cannot be freed using this scheme.  See heap_2.c, heap_3.c and
 	heap_4.c for alternative implementations, and the memory management pages of
@@ -132,16 +132,16 @@ void vPortFree( void *pv )
 }
 /*-----------------------------------------------------------*/
 
-void vPortInitialiseBlocks( void )
-// void vPortInitialiseBlocks_heap1( void )
+// void vPortInitialiseBlocks( void )
+void vPortInitialiseBlocks_heap1( void )
 {
 	/* Only required when static memory is not cleared. */
 	xNextFreeByte = ( size_t ) 0;
 }
 /*-----------------------------------------------------------*/
 
-size_t xPortGetFreeHeapSize( void )
-// size_t xPortGetFreeHeapSize_heap1( void )
+// size_t xPortGetFreeHeapSize( void )
+size_t xPortGetFreeHeapSize_heap1( void )
 {
 	return ( configADJUSTED_HEAP_SIZE - xNextFreeByte );
 }

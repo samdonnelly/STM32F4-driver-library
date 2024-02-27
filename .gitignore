@@ -7,6 +7,9 @@
 .DS_Store
 unit_tests/devices/.DS_Store
 
+# File copies 
+.include_path/
+
 # unit_tests folder 
 unit_tests/.DS_Store
 unit_tests/*.swp

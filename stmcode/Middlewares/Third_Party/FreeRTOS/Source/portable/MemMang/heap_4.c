@@ -112,8 +112,7 @@ static size_t xBlockAllocatedBit = 0;
 
 /*-----------------------------------------------------------*/
 
-// void *pvPortMalloc( size_t xWantedSize )
-void *pvPortMalloc_heap4( size_t xWantedSize )
+void *pvPortMalloc( size_t xWantedSize )
 {
 BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
 void *pvReturn = NULL;
@@ -264,8 +263,7 @@ void *pvReturn = NULL;
 }
 /*-----------------------------------------------------------*/
 
-// void vPortFree( void *pv )
-void vPortFree_heap4( void *pv )
+void vPortFree( void *pv )
 {
 uint8_t *puc = ( uint8_t * ) pv;
 BlockLink_t *pxLink;
@@ -314,22 +312,19 @@ BlockLink_t *pxLink;
 }
 /*-----------------------------------------------------------*/
 
-// size_t xPortGetFreeHeapSize( void )
-size_t xPortGetFreeHeapSize_heap4( void )
+size_t xPortGetFreeHeapSize( void )
 {
 	return xFreeBytesRemaining;
 }
 /*-----------------------------------------------------------*/
 
-// size_t xPortGetMinimumEverFreeHeapSize( void )
-size_t xPortGetMinimumEverFreeHeapSize_heap4( void )
+size_t xPortGetMinimumEverFreeHeapSize( void )
 {
 	return xMinimumEverFreeBytesRemaining;
 }
 /*-----------------------------------------------------------*/
 
-// void vPortInitialiseBlocks( void )
-void vPortInitialiseBlocks_heap4( void )
+void vPortInitialiseBlocks( void )
 {
 	/* This just exists to keep the linker quiet. */
 }
@@ -444,8 +439,7 @@ uint8_t *puc;
 }
 /*-----------------------------------------------------------*/
 
-// void vPortGetHeapStats( HeapStats_t *pxHeapStats )
-void vPortGetHeapStats_heap4( HeapStats_t *pxHeapStats )
+void vPortGetHeapStats( HeapStats_t *pxHeapStats )
 {
 BlockLink_t *pxBlock;
 size_t xBlocks = 0, xMaxSize = 0, xMinSize = portMAX_DELAY; /* portMAX_DELAY used as a portable way of getting the maximum value. */
