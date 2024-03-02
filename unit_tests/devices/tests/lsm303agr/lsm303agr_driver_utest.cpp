@@ -99,7 +99,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_init_fail)
 
     init_check = lsm303agr_m_init(
         &I2C_FAKE, 
-        lsm303agr_calibrate_offsets, 
+        lsm303agr_calibrate_offsets_test, 
         NO_LPF_GAIN, 
         LSM303AGR_M_ODR_10, 
         LSM303AGR_M_MODE_CONT, 
@@ -129,7 +129,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_init_success)
 
     init_check = lsm303agr_m_init(
         &I2C_FAKE, 
-        lsm303agr_calibrate_offsets, 
+        lsm303agr_calibrate_offsets_test, 
         NO_LPF_GAIN, 
         LSM303AGR_M_ODR_20, 
         LSM303AGR_M_MODE_IDLE, 
@@ -261,7 +261,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_no_filter_heading)
     // init function. Other arguments are placeholders and can be ignored. 
     lsm303agr_m_init(
         &I2C_FAKE, 
-        lsm303agr_calibrate_offsets, 
+        lsm303agr_calibrate_offsets_test, 
         NO_LPF_GAIN, 
         LSM303AGR_M_ODR_10, 
         LSM303AGR_M_MODE_CONT, 
@@ -310,7 +310,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_no_offsets_added_filter_heading)
     // init function. Other arguments are placeholders and can be ignored. 
     lsm303agr_m_init(
         &I2C_FAKE, 
-        lsm303agr_calibrate_offsets, 
+        lsm303agr_calibrate_offsets_test, 
         LPF_GAIN, 
         LSM303AGR_M_ODR_10, 
         LSM303AGR_M_MODE_CONT, 
@@ -371,7 +371,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_added_offsets_no_filter_heading)
     // init function. Other arguments are placeholders and can be ignored. 
     lsm303agr_m_init(
         &I2C_FAKE, 
-        lsm303agr_calibrate_offsets, 
+        lsm303agr_calibrate_offsets_test, 
         NO_LPF_GAIN, 
         LSM303AGR_M_ODR_10, 
         LSM303AGR_M_MODE_CONT, 
@@ -382,7 +382,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_added_offsets_no_filter_heading)
 
     // Use the calibration function (not the init function) to set the directional 
     // error offsets. 
-    lsm303agr_m_heading_calibration(lsm303agr_config_dir_offsets); 
+    lsm303agr_m_heading_calibration(lsm303agr_config_dir_offsets_test); 
 
     // Update the device data and calculate the heading 
     lsm303agr_m_update(); 
@@ -440,7 +440,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_added_offsets_added_filter_heading)
     // init function. Other arguments are placeholders and can be ignored. 
     lsm303agr_m_init(
         &I2C_FAKE, 
-        lsm303agr_config_dir_offsets, 
+        lsm303agr_config_dir_offsets_test, 
         LPF_GAIN, 
         LSM303AGR_M_ODR_10, 
         LSM303AGR_M_MODE_CONT, 
