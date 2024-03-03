@@ -52,6 +52,7 @@ typedef enum {
     UART_TIMEOUT 
 } uart_status_t;
 
+
 /**
  * @brief Fractional portion of UART baud rate setup 
  * 
@@ -83,6 +84,7 @@ typedef enum {
  * @see uart_mantissa_baud_t 
  */
 typedef enum {
+    UART_FRAC_42_1200 = 0x08, 
     UART_FRAC_42_9600 = 0x07,
     UART_FRAC_84_9600 = 0x0E,
     UART_FRAC_84_38400 = 0x0B, 
@@ -121,6 +123,7 @@ typedef enum {
  * @see uart_fractional_baud_t
  */
 typedef enum {
+    UART_MANT_42_1200 = 0x88B, 
     UART_MANT_42_9600 = 0x111,
     UART_MANT_84_9600 = 0x222, 
     UART_MANT_84_38400 = 0x88, 
@@ -226,14 +229,14 @@ typedef uart_status_t UART_STATUS;
  *          Currently this function is set up to support UART1 and UART2. UART6 is not yet 
  *          supported. 
  * 
- * @param uart : pointer to the UART port 
- * @param gpio 
- * @param rx_pin 
- * @param tx_pin 
- * @param baud_frac 
- * @param baud_mant 
- * @param tx_dma 
- * @param rx_dma 
+ * @param uart : UART port to initialize 
+ * @param gpio : GPIO port of UART pins 
+ * @param rx_pin : RX pin 
+ * @param tx_pin : TX pin 
+ * @param baud_frac : baud rate fractional part 
+ * @param baud_mant : baud rate mantissa part 
+ * @param tx_dma : TX DMA enable 
+ * @param rx_dma : RX DMA enable 
  */
 void uart_init(
     USART_TypeDef *uart, 
@@ -253,8 +256,8 @@ void uart_init(
  *          function but can also be called independently if the rate needs to change. 
  * 
  * @param uart : pointer to the UART port 
- * @param baud_frac 
- * @param baud_mant 
+ * @param baud_frac : baud rate fractional part 
+ * @param baud_mant : baud rate mantissa part 
  */
 void uart_set_baud_rate(
     USART_TypeDef *uart, 
