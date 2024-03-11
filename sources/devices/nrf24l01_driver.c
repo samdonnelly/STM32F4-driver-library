@@ -26,16 +26,26 @@
 /**
  * @brief Set active mode (TX/RX) 
  * 
- * @details 
+ * @details Sets the PRIM_RX parameter in the device config register to choose between 
+ *          PTX or PRX mode. When the device is not sending data it stays in PRX mode. 
+ *          When there is a payload to be sent, this function is called to change the 
+ *          device to PTX mode and send the payload, then again to revert to PRX mode. 
+ * 
+ * @see nrf24l01_mode_select_t 
+ * 
+ * @param mode : PTX or PRX mode 
  */
-void nrf24l01_set_data_mode(
-    nrf24l01_mode_select_t mode); 
+void nrf24l01_set_data_mode(nrf24l01_mode_select_t mode); 
 
 
 /**
  * @brief CONFIG register write 
  * 
- * @details 
+ * @details Writes the config register data held in the driver data record to the device' 
+ *          CONFIG register. This function is called when the config register needs to be 
+ *          updated like when changing modes or powering up/down. 
+ * 
+ * @see nrf24l01_config_reg_t 
  */
 void nrf24l01_config_reg_write(void); 
 
@@ -492,9 +502,6 @@ void nrf24l01_prx_config(
         nrf24l01_reg_read(NRF24L01_REG_EN_RXADDR) | (SET_BIT << (uint8_t)pipe_num)); 
 
     // RX_ADDR_PX - set the chosen data pipe address 
-    // TODO this will only work for pipes 0 and 1 --> 2-5 are one byte 
-    //      Could have another function that gets called from here but only for 2-5 and if 2-5 is 
-    //      requested then the first 4 bytes of 1 are also updated. 
     nrf24l01_write(
         NRF24L01_CMD_W_REG | (NRF24L01_REG_RX_ADDR_P0 + (uint8_t)pipe_num), 
         rx_addr, 
@@ -761,9 +768,8 @@ uint8_t nrf24l01_send_payload(
 //=======================================================================================
 // Configuration functions 
 
-// Set mode 
-void nrf24l01_set_data_mode(
-    nrf24l01_mode_select_t mode)
+// Set active mode 
+void nrf24l01_set_data_mode(nrf24l01_mode_select_t mode)
 {
     // Write PRIM_RX=mode to the device 
     nrf24l01_driver_data.config.prim_rx = (uint8_t)mode; 

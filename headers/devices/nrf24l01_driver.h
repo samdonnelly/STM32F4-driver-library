@@ -149,8 +149,6 @@ typedef enum {
 
 /**
  * @brief TX/RX mode setter 
- * 
- * @details Used to set the PRIM_RX bit to choose between TX and RX mode. 
  */
 typedef enum {
     NRF24L01_TX_MODE, 
