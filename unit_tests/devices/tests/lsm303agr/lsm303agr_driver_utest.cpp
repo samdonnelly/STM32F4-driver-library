@@ -1,3 +1,17 @@
+/**
+ * @file lsm303agr_driver_utest.cpp
+ * 
+ * @author Sam Donnelly (samueldonnelly11@gmail.com)
+ * 
+ * @brief LSM303AGR driver unit tests 
+ * 
+ * @version 0.1
+ * @date 2024-03-13
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
 //=======================================================================================
 // Notes 
 //=======================================================================================

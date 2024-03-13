@@ -73,7 +73,8 @@ lsm303agr_m_data_t;
 typedef union lsm303agr_m_cfga_s 
 {
     // Configuration register A bits 
-    struct {
+    struct 
+    {
         uint8_t md           : 2;   // Mode select 
         uint8_t odr          : 2;   // Output data rate 
         uint8_t lp           : 1;   // Low-power mode enable 
@@ -92,7 +93,8 @@ lsm303agr_m_cfga_t;
 typedef union lsm303agr_m_cfgb_s 
 {
     // Configuration register C bits 
-    struct {
+    struct 
+    {
         uint8_t lpf               : 1;   // Low pass filter enable 
         uint8_t off_canc          : 1;   // Enable offset cancellation 
         uint8_t set_freq          : 1;   // Frequency of set pulse 
@@ -111,7 +113,8 @@ lsm303agr_m_cfgb_t;
 typedef union lsm303agr_m_cfgc_s 
 {
     // Configuration register C bits 
-    struct {
+    struct 
+    {
         uint8_t int_mag     : 1;   // DRDY pin configured as digital output 
         uint8_t self_test   : 1;   // Self-test enable 
         uint8_t unused_2    : 1;   // Bit not used 
@@ -132,7 +135,8 @@ lsm303agr_m_cfgc_t;
 typedef union lsm303agr_m_status_s 
 {
     // Status register bits 
-    struct {
+    struct 
+    {
         uint8_t x_da   : 1;   // X-axis new data available 
         uint8_t y_da   : 1;   // Y-axis new data available 
         uint8_t z_da   : 1;   // Z-axis new data available 

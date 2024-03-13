@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief I2C communication driver implementation - mock 
+ * @brief Mock I2C communication driver implementation - for unit testing 
  * 
  * @version 0.1
  * @date 2023-13-12

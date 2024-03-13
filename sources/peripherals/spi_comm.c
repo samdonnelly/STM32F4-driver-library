@@ -30,8 +30,7 @@
  * 
  * @param spi : pointer to spi port 
  */
-void spi_enable(
-    SPI_TypeDef *spi);
+void spi_enable(SPI_TypeDef *spi);
 
 
 /**
@@ -41,8 +40,7 @@ void spi_enable(
  * 
  * @param spi : pointer to spi port 
  */
-void spi_disable(
-    SPI_TypeDef *spi);
+void spi_disable(SPI_TypeDef *spi);
 
 
 /**
@@ -55,8 +53,7 @@ void spi_disable(
  * 
  * @param spi : pointer to spi port 
  */
-void spi_txe_wait(
-    SPI_TypeDef *spi);
+void spi_txe_wait(SPI_TypeDef *spi);
 
 
 /**
@@ -69,8 +66,7 @@ void spi_txe_wait(
  * 
  * @param spi : pointer to spi port 
  */
-void spi_rxne_wait(
-    SPI_TypeDef *spi);
+void spi_rxne_wait(SPI_TypeDef *spi);
 
 
 /**
@@ -82,8 +78,7 @@ void spi_rxne_wait(
  * 
  * @param spi : pointer to spi port 
  */
-void spi_bsy_wait(
-    SPI_TypeDef *spi);
+void spi_bsy_wait(SPI_TypeDef *spi);
 
 //=======================================================================================
 
@@ -142,7 +137,6 @@ void spi_init(
     spi->CR1 = CLEAR;
 
     // Set the BR bits in the SPI_CR1 register to define the serial clock baud rate. 
-    // TODO create pre-defined rates based on clock speed and SPI speed 
     spi->CR1 |= (baud_rate_ctrl << SHIFT_3);
 
     // Select CPOL and CPHA bits to define data transfer and serial clock relationship.
@@ -194,43 +188,35 @@ void spi_ss_init(
 // SPI register functions 
 
 // Set the SPE bit to enable SPI 
-void spi_enable(
-    SPI_TypeDef *spi)
+void spi_enable(SPI_TypeDef *spi)
 {
     spi->CR1 |= (SET_BIT << SHIFT_6);
 }
 
 
 // Clear the SPE bit to disable SPI 
-void spi_disable(
-    SPI_TypeDef *spi)
+void spi_disable(SPI_TypeDef *spi)
 {
     spi->CR1 &= ~(SET_BIT << SHIFT_6);
 }
 
 
 // Wait for TXE bit to set 
-void spi_txe_wait(
-    SPI_TypeDef *spi)
+void spi_txe_wait(SPI_TypeDef *spi)
 {
-    // TODO add timeout & status return 
     while(!(spi->SR & (SET_BIT << SHIFT_1))); 
 }
 
 // Wait for RXNE bit to set 
-void spi_rxne_wait(
-    SPI_TypeDef *spi)
+void spi_rxne_wait(SPI_TypeDef *spi)
 {
-    // TODO add timeout & status return 
     while(!(spi->SR & (SET_BIT << SHIFT_0)));
 }
 
 
 // Wait for BSY bit to clear
-void spi_bsy_wait(
-    SPI_TypeDef *spi)
+void spi_bsy_wait(SPI_TypeDef *spi)
 {
-    // TODO add timeout & status return 
     while(spi->SR & (SET_BIT << SHIFT_7));
 }
 
@@ -259,7 +245,6 @@ void spi_slave_deselect(
 // Read and write 
 
 // SPI write 
-// TODO add timeouts 
 SPI_STATUS spi_write(
     SPI_TypeDef *spi, 
     const uint8_t *write_data, 
@@ -269,7 +254,10 @@ SPI_STATUS spi_write(
     SPI_STATUS spi_status = SPI_OK; 
 
     // Argument check - NULL pointers and zero length 
-    if (spi == NULL || write_data == NULL || !data_len) return spi_status; 
+    if (spi == NULL || write_data == NULL || !data_len) 
+    {
+        return spi_status; 
+    }
 
     // Iterate through all data to be sent 
     for (uint32_t i = 0; i < data_len; i++)
@@ -293,7 +281,6 @@ SPI_STATUS spi_write(
 
 
 // SPI write then read 
-// TODO add timeouts 
 SPI_STATUS spi_write_read(
     SPI_TypeDef *spi, 
     uint8_t write_data, 
@@ -304,7 +291,10 @@ SPI_STATUS spi_write_read(
     SPI_STATUS spi_status = SPI_OK; 
 
     // Argument check - NULL pointers and zero length 
-    if (spi == NULL || read_data == NULL || !data_len) return spi_status; 
+    if (spi == NULL || read_data == NULL || !data_len) 
+    {
+        return spi_status; 
+    }
 
     // Write the first piece of data 
     spi_txe_wait(spi); 

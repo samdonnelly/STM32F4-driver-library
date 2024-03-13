@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief LSM303AGR  configuration file test implementation 
+ * @brief LSM303AGR configuration file test implementation 
  * 
  * @version 0.1
  * @date 2024-02-02
