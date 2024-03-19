@@ -3,6 +3,9 @@
 # VS Code files 
 .vscode/
 
+# build files 
+build
+
 # Other files and folder 
 .DS_Store
 unit_tests/devices/.DS_Store
