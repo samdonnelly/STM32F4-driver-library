@@ -15,6 +15,10 @@
 #ifndef _TOOLS_H_
 #define _TOOLS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -356,10 +360,10 @@ uint8_t str_compare(
  *          another buffer starting an index 0 up until the end of the data segment in the 
  *          circular buffer. 
  * 
- * @param circ_buff 
- * @param msg_buff 
- * @param buff_index 
- * @param max_buff_size 
+ * @param circ_buff : circular buffer that contains the most recent data 
+ * @param msg_buff : buffer to store the parsed message into 
+ * @param buff_index : index of circular buffer to start parsing from 
+ * @param max_buff_size : buffer size 
  */
 void cb_parse(
     uint8_t *circ_buff, 
@@ -371,16 +375,21 @@ void cb_parse(
 /**
  * @brief Character to scaled integer 
  * 
- * @details 
+ * @details Takes a single character ('0' to '9') and converts it to its equivalent 
+ *          integer value at whatever digit place the character is in. 
  * 
- * @param num_char 
- * @param place 
- * @return uint32_t 
+ * @param num_char : character that represents a number 
+ * @param place : digit place of of character 
+ * @return uint32_t : converted integer 
  */
 uint32_t char_to_int(
     uint8_t num_char, 
     uint8_t place); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _TOOL_H_

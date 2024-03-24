@@ -633,7 +633,7 @@ void dma_ndt(
 }
 
 
-// 
+// NDT register read 
 uint16_t dma_ndt_read(
     DMA_Stream_TypeDef *dma_stream)
 {

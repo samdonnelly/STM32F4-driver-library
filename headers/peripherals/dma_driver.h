@@ -15,6 +15,10 @@
 #ifndef _DMA_DRIVER_H_ 
 #define _DMA_DRIVER_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //================================================================================
 // Includes 
 
@@ -334,8 +338,6 @@ void dma_int_config(
  *          all the streams. This function is needed by interrupt handlers in order to exit 
  *          the handler. 
  * 
- * // TODO is a more granular interrupt flag clear method needed? 
- * 
  * @param dma : pointer to DMA port of which to clear flags 
  */
 void dma_clear_int_flags(
@@ -414,6 +416,21 @@ uint8_t dma_stream_status(
 //================================================================================
 
 
+//=======================================================================================
+// DMA Stream x Number of Data Register 
+
+/**
+ * @brief NDT register read 
+ * 
+ * @param dma_stream : DMA port to read from 
+ * @return uint16_t : NDT register contents 
+ */
+uint16_t dma_ndt_read(
+    DMA_Stream_TypeDef *dma_stream); 
+
+//=======================================================================================
+
+
 //================================================================================
 // DMA Stream x FIFO Control Register 
 
@@ -433,7 +450,8 @@ FIFO_STATUS dma_fs(
 
 //================================================================================
 
-uint16_t dma_ndt_read(
-    DMA_Stream_TypeDef *dma_stream); 
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _DMA_DRIVER_H_

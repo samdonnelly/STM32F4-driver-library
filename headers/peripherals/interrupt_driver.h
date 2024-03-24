@@ -15,6 +15,10 @@
 #ifndef _INTERRUPT_DRIVER_H_
 #define _INTERRUPT_DRIVER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //================================================================================
 // Includes 
 
@@ -212,5 +216,9 @@ void exti_pr_clear(
     uint32_t pr); 
 
 //================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _INTERRUPT_DRIVER_H_
