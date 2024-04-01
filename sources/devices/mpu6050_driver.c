@@ -59,7 +59,6 @@ typedef struct mpu6050_driver_data_s
 {
     // Linked list tracking 
     struct mpu6050_driver_data_s *next_ptr; 
-    device_number_t device_num; 
 
     // Peripherals 
     I2C_TypeDef *i2c;                // I2C port connected to the device 

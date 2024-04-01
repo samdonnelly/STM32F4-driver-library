@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief WS2812 (Neopixel) driver 
+ * @brief WS2812 (Neopixel) driver interface 
  * 
  * @version 0.1
  * @date 2023-03-09
@@ -33,16 +33,7 @@
 // Macros 
 
 // Device information 
-#define WS2812_BITS_PER_LED 24         // Data bits per LED - 1 byte per colour 
-#define WS2812_COLOUR_PER_LED 3        // Colours in each LED - Green, Red, Blue 
 #define WS2812_LED_NUM 8               // Max number of LEDs available 
-#define WS2812_MIN_SEND_DELAY 50       // Minimum delay between sends (microseconds) 
-
-// PWM data 
-#define WS2812_84MHZ_PWM_ARR 105       // PWM ARR to hit 1.25us period at 84MHz clock 
-#define WS2812_PWM_BIT_MASK 0x01       // Masks colour data to get bit 0 for the PWM setpoint 
-#define WS2812_0_CODE_DUTY 32          // Duty cycle to send 0 - max of WS2812_84MHZ_PWM_ARR 
-#define WS2812_1_CODE_DUTY 64          // Duty cycle to send 1 - max of WS2812_84MHZ_PWM_ARR 
 
 //=======================================================================================
 
