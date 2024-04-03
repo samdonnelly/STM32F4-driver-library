@@ -46,16 +46,6 @@ private:   // Private members
     uint8_t strobe_period;       // Number of counts between strobes 
     uint32_t strobe_colour;      // Colour of the strobe LEDs (settable) 
 
-private:   // Private member functions 
-
-    // Update strobe LEDs to the specified colour 
-    void StrobeColourUpdate(uint32_t led_colour); 
-
-    // Update specified LEDs to the specified colour 
-    void LEDColourUpdate(
-        uint32_t led_colour, 
-        uint8_t mask); 
-
 public:   // Public member functions 
     
     // Constructor(s) 
@@ -69,7 +59,10 @@ public:   // Public member functions
     ~WS2812_Controller() {} 
 
     //==================================================
-    // On/off user functions 
+    // Setters 
+
+    // Set strobe colour 
+    void SetStrobeColour(uint32_t led_colour); 
 
     // Set LED to the specified colour 
     void SetLEDColour(
@@ -80,22 +73,32 @@ public:   // Public member functions
     void SetLEDsColour(
         uint8_t led_nums, 
         uint32_t led_colour); 
+
+    //==================================================
+
+    //==================================================
+    // Write/update functions 
     
-    //==================================================
-
-    //==================================================
-    // Strobe user functions 
-
-    // Set strobe colour 
-    void SetStrobeColour(uint32_t led_colour); 
-
     // Strobe control 
     void Strobe(void); 
     
     // Turns strobe light off 
     void StrobeOff(void); 
+
+    // Write the current values to the device 
+    void LEDWrite(void);   
     
     //==================================================
+
+private:   // Private member functions 
+
+    // Update strobe LEDs to the specified colour 
+    void StrobeColourUpdateWrite(uint32_t led_colour); 
+
+    // Update specified LEDs to the specified colour 
+    void LEDColourUpdate(
+        uint32_t led_colour, 
+        uint8_t mask); 
 }; 
 
 //=======================================================================================
