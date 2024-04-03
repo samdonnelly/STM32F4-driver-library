@@ -15,6 +15,10 @@
 #ifndef _TIMERS_DRIVER_H_
 #define _TIMERS_DRIVER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -607,5 +611,9 @@ uint32_t tim_get_pclk_freq(
     TIM_TypeDef *timer); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _TIMERS_DRIVER_H_

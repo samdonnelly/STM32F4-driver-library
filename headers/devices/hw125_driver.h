@@ -15,6 +15,10 @@
 #ifndef _HW125_DRIVER_H_
 #define _HW125_DRIVER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes
 
@@ -513,5 +517,8 @@ DISK_RESULT hw125_ioctl(
 
 //=======================================================================================
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _HW125_DRIVER_H_

@@ -15,6 +15,10 @@
 #ifndef _HD44780U_CONTROLLER_H_ 
 #define _HD44780U_CONTROLLER_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -307,5 +311,9 @@ HD44780U_STATE hd44780u_get_state(void);
 HD44780U_FAULT_CODE hd44780u_get_fault_code(void); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _HD44780U_CONTROLLER_H_ 

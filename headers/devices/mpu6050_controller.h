@@ -15,6 +15,10 @@
 #ifndef _MPU6050_CONTROLLER_H_ 
 #define _MPU6050_CONTROLLER_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -136,8 +140,7 @@ mpu6050_cntrl_data_t;
  * 
  * @param mpu6050_device : pointer to device data record 
  */
-typedef void (*mpu6050_state_functions_t)(
-    mpu6050_cntrl_data_t *mpu6050_device); 
+typedef void (*mpu6050_state_functions_t)(mpu6050_cntrl_data_t *mpu6050_device); 
 
 
 /**
@@ -147,8 +150,7 @@ typedef void (*mpu6050_state_functions_t)(
  * 
  * @param device_num : 
  */
-typedef void (*mpu6050_read_functions_t)(
-    device_number_t device_num); 
+typedef void (*mpu6050_read_functions_t)(device_number_t device_num); 
 
 //=======================================================================================
 
@@ -323,5 +325,9 @@ MPU6050_FAULT_CODE mpu6050_get_fault_code(
     device_number_t device_num); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _MPU6050_CONTROLLER_H_ 

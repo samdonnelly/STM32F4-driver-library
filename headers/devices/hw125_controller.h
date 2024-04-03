@@ -15,6 +15,10 @@
 #ifndef _HW125_CONTROLLER_H_ 
 #define _HW125_CONTROLLER_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -565,5 +569,9 @@ TCHAR* hw125_gets(
 HW125_EOF hw125_eof(void); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _HW125_CONTROLLER_H_

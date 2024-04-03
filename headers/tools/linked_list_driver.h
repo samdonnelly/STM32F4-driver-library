@@ -15,6 +15,10 @@
 #ifndef _LINKED_LIST_DRIVER_H_ 
 #define _LINKED_LIST_DRIVER_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -129,5 +133,9 @@ void *get_linked_list_entry(
     void *list_ptr); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _LINKED_LIST_DRIVER_H_ 

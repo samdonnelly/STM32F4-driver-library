@@ -20,6 +20,10 @@
 #ifndef _STM32F411XE_CUSTOM_H_ 
 #define _STM32F411XE_CUSTOM_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -134,5 +138,9 @@ uint32_t rcc_get_pclk1_frq(void);
 uint32_t rcc_get_pclk2_frq(void);
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _STM32F411XE_CUSTOM_H_

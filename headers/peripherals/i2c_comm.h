@@ -15,6 +15,10 @@
 #ifndef _I2C_COMM_H_
 #define _I2C_COMM_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -364,5 +368,9 @@ I2C_STATUS i2c_read_to_len(
     uint8_t add_bytes); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _I2C_COMM_H_ 

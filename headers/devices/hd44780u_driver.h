@@ -15,6 +15,10 @@
 #ifndef _HD44780U_DRIVER_H_
 #define _HD44780U_DRIVER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -492,5 +496,9 @@ void hd44780u_backlight_on(void);
 void hd44780u_backlight_off(void); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _HD44780U_DRIVER_H_

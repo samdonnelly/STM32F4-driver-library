@@ -15,6 +15,10 @@
 #ifndef _WS2812_DRIVER_H_ 
 #define _WS2812_DRIVER_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -122,5 +126,9 @@ void ws2812_send(
     const uint32_t *colour_data); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _WS2812_DRIVER_H_ 

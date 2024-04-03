@@ -15,6 +15,10 @@
 #ifndef _SPI_COMM_H_ 
 #define _SPI_COMM_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -225,5 +229,9 @@ SPI_STATUS spi_write_read(
     uint32_t data_len);
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _SPI_COMM_H_ 

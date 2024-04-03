@@ -15,6 +15,10 @@
 #ifndef _MPU6050_DRIVER_H_
 #define _MPU6050_DRIVER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -523,8 +527,7 @@ void mpu6050_low_pwr_config(
  * 
  * @param device_num : data record address of device 
  */
-void mpu6050_accel_read(
-    device_number_t device_num);
+void mpu6050_accel_read(device_number_t device_num);
 
 
 /**
@@ -551,8 +554,7 @@ void mpu6050_accel_read(
  * 
  * @param device_num : data record address of device 
  */
-void mpu6050_gyro_read(
-    device_number_t device_num);
+void mpu6050_gyro_read(device_number_t device_num);
 
 
 /**
@@ -577,8 +579,7 @@ void mpu6050_gyro_read(
  * 
  * @param device_num : data record address of device 
  */
-void mpu6050_temp_read(
-    device_number_t device_num); 
+void mpu6050_temp_read(device_number_t device_num); 
 
 
 /**
@@ -595,8 +596,7 @@ void mpu6050_temp_read(
  * 
  * @param device_num : data record address of device 
  */
-void mpu6050_read_all(
-    device_number_t device_num); 
+void mpu6050_read_all(device_number_t device_num); 
 
 //=======================================================================================
 
@@ -643,20 +643,15 @@ MPU6050_ST_RESULT mpu6050_self_test(
 /**
  * @brief MPU6050 clear device driver fault flag 
  * 
- * @details 
- * 
  * @param device_num : data record address of device 
  */
-void mpu6050_clear_status(
-    device_number_t device_num); 
+void mpu6050_clear_status(device_number_t device_num); 
 
 
 /**
  * @brief MPU6050 get device driver fault code 
  * 
- * @details 
- *          
- *          Status info / fault code: 
+ * @details Status info / fault code: 
  *            --> bit 0: i2c status (see i2c_status_t) 
  *            --> bit 1: init status (WHO_AM_I) 
  *            --> bits 2-7: self test results 
@@ -664,16 +659,15 @@ void mpu6050_clear_status(
  * @param device_num : data record address of device 
  * @return uint8_t : driver status code for a given device number 
  */
-uint8_t mpu6050_get_status(
-    device_number_t device_num); 
+uint8_t mpu6050_get_status(device_number_t device_num); 
 
 
 /**
  * @brief MPU6050 INT pin status 
  * 
- * @details Returns the INT pin status of the device. This is done by reading the GPIO input 
- *          pin configured during INT pin initialization. If the pin is high then the INT pin 
- *          is set indicating there is data available for reading. 
+ * @details Returns the INT pin status of the device. This is done by reading the GPIO 
+ *          input pin configured during INT pin initialization. If the pin is high then 
+ *          the INT pin is set indicating there is data available for reading. 
  *          
  *          NOTE: this function is only useful if the interrupt pin has been configured. 
  * 
@@ -682,19 +676,23 @@ uint8_t mpu6050_get_status(
  * @param device_num : data record address of device 
  * @return MPU6050_INT_STATUS : INT pin status 
  */
-MPU6050_INT_STATUS mpu6050_int_status(
-    device_number_t device_num); 
+MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num); 
 
 
 /**
- * @brief Accelerometer raw values 
+ * @brief Get raw acceleration values 
  * 
- * @details 
+ * @details Stores the most recently read unformatted acceleration values in the buffers 
+ *          passed as arguments. Note that the data is updated using one of the read 
+ *          functions, this function only returns the read value. 
  * 
- * @param device_num 
- * @param accel_x 
- * @param accel_y 
- * @param accel_z 
+ * @see mpu6050_accel_read 
+ * @see mpu6050_read_all 
+ * 
+ * @param device_num : number of device data record to access 
+ * @param accel_x : buffer to store the unformatted x-axis acceleration 
+ * @param accel_y : buffer to store the unformatted y-axis acceleration 
+ * @param accel_z : buffer to store the unformatted z-axis acceleration 
  */
 void mpu6050_get_accel_raw(
     device_number_t device_num, 
@@ -704,14 +702,19 @@ void mpu6050_get_accel_raw(
 
 
 /**
- * @brief Accelerometer calculation 
+ * @brief Get formatted acceleration 
  * 
- * @details 
+ * @details Formats and stores the most recently read acceleration values in the buffers 
+ *          passed as arguments. Note that the data is updated using one of the read 
+ *          functions, this function only returns the read value. 
  * 
- * @param device_num 
- * @param accel_x 
- * @param accel_y 
- * @param accel_z 
+ * @see mpu6050_accel_read 
+ * @see mpu6050_read_all 
+ * 
+ * @param device_num : number of device data record to access 
+ * @param accel_x : buffer to store the formatted x-axis acceleration 
+ * @param accel_y : buffer to store the formatted y-axis acceleration 
+ * @param accel_z : buffer to store the formatted z-axis acceleration 
  */
 void mpu6050_get_accel(
     device_number_t device_num, 
@@ -721,14 +724,19 @@ void mpu6050_get_accel(
 
 
 /**
- * @brief Gyroscope raw values 
+ * @brief Get raw angular velocity values 
  * 
- * @details 
+ * @details Stores the most recently read unformatted angular velocity values in the 
+ *          buffers passed as arguments. Note that the data is updated using one of the 
+ *          read functions, this function only returns the read value. 
  * 
- * @param device_num 
- * @param gyro_x_raw 
- * @param gyro_y_raw 
- * @param gyro_z_raw 
+ * @see mpu6050_gyro_read 
+ * @see mpu6050_read_all 
+ * 
+ * @param device_num : number of device data record to access 
+ * @param gyro_x_raw : buffer to store the unformatted x-axis angular velocity 
+ * @param gyro_y_raw : buffer to store the unformatted x-axis angular velocity 
+ * @param gyro_z_raw : buffer to store the unformatted x-axis angular velocity 
  */
 void mpu6050_get_gyro_raw(
     device_number_t device_num, 
@@ -738,14 +746,19 @@ void mpu6050_get_gyro_raw(
 
 
 /**
- * @brief Gyroscopic value calculation 
+ * @brief Get formatted angular velocity 
  * 
- * @details 
+ * @details Formats and stores the most recently read angular velocity values in the 
+ *          buffers passed as arguments. Note that the data is updated using one of the 
+ *          read functions, this function only returns the read value. 
  * 
- * @param device_num 
- * @param gyro_x 
- * @param gyro_y 
- * @param gyro_z 
+ * @see mpu6050_gyro_read 
+ * @see mpu6050_read_all 
+ * 
+ * @param device_num : number of device data record to access 
+ * @param gyro_x : buffer to store the formatted x-axis angular velocity 
+ * @param gyro_y : buffer to store the formatted y-axis angular velocity 
+ * @param gyro_z : buffer to store the formatted z-axis angular velocity 
  */
 void mpu6050_get_gyro(
     device_number_t device_num, 
@@ -757,13 +770,17 @@ void mpu6050_get_gyro(
 /**
  * @brief MPU6050 temperature sensor raw value 
  * 
- * @details Returns the unformatted temperature sensor data. 
+ * @details Returns the unformatted temperature sensor data. Note that the data is 
+ *          updated using one of the read functions, this function only returns the read 
+ *          value. 
  * 
- * @param device_num : data record address of device 
+ * @see mpu6050_temp_read 
+ * @see mpu6050_read_all 
+ * 
+ * @param device_num : number of device data record to access 
  * @return int16_t : unformatted temperature reading 
  */
-int16_t mpu6050_get_temp_raw(
-    device_number_t device_num); 
+int16_t mpu6050_get_temp_raw(device_number_t device_num); 
 
 
 /**
@@ -773,14 +790,23 @@ int16_t mpu6050_get_temp_raw(
  *          temperature sensor data. This value is calculated using the following equation 
  *          from the register map documentation: 
  *          
- *          Temperature (degC) = (16-bit register value) / 340 + 36.53
+ *          Temperature (degC) = (16-bit register value) / 340 + 36.53 
+ *          
+ *          Note that the data is updated using one of the read functions, this function 
+ *          only returns the read value. 
  * 
- * @param device_num : data record address of device 
+ * @see mpu6050_temp_read 
+ * @see mpu6050_read_all 
+ * 
+ * @param device_num : number of device data record to access 
  * @return float : true temperature value (degC) 
  */
-float mpu6050_get_temp(
-    device_number_t device_num);
+float mpu6050_get_temp(device_number_t device_num);
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _MPU6050_DRIVER_H_

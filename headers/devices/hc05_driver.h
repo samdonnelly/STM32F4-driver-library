@@ -15,6 +15,10 @@
 #ifndef _HC05_DRIVER_H_
 #define _HC05_DRIVER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes
 
@@ -355,5 +359,9 @@ void hc05_at_command(
     uint8_t resp_len); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _HC05_DRIVER_H_ 

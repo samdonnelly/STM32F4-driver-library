@@ -15,6 +15,10 @@
 #ifndef _M8Q_CONTROLLER_H_ 
 #define _M8Q_CONTROLLER_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -205,5 +209,9 @@ uint8_t m8q_get_lp_flag(void);
 M8Q_FAULT_CODE m8q_get_fault_code(void); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _M8Q_CONTROLLER_H_ 

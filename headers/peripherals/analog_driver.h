@@ -15,6 +15,10 @@
 #ifndef _ANALOG_DRIVER_H_
 #define _ANALOG_DRIVER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -482,5 +486,9 @@ ADC_STATUS adc_scan_seq(
     uint16_t *adc_data); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _ANALOG_DRIVER_H_

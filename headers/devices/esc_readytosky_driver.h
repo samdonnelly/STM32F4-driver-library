@@ -15,6 +15,10 @@
 #ifndef ESC_READYTOSKY_DRIVER_H_ 
 #define ESC_READYTOSKY_DRIVER_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -134,5 +138,9 @@ void esc_readytosky_send(
     int16_t throttle_cmd); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // ESC_READYTOSKY_DRIVER_H_ 

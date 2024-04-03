@@ -15,6 +15,10 @@
 #ifndef _HC05_CONTROLLER_H_ 
 #define _HC05_CONTROLLER_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //================================================================================
 // Includes 
 
@@ -274,5 +278,9 @@ void hc05_get_read_data(
     uint8_t buff_size); 
 
 //================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _HC05_CONTROLLER_H_ 

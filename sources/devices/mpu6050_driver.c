@@ -247,8 +247,7 @@ void mpu6050_gyro_config_write(
  * @param device_ptr : pointer to device data record 
  * @return uint8_t : returns the unparsed self-test and full scale range setpoints 
  */
-uint8_t mpu6050_gyro_config_read(
-    mpu6050_driver_data_t *device_ptr);
+uint8_t mpu6050_gyro_config_read(mpu6050_driver_data_t *device_ptr);
 
 
 /**
@@ -306,8 +305,7 @@ void mpu6050_accel_config_write(
  * @param device_ptr : pointer to device data record 
  * @return uint8_t : returns the unparsed self-test and full scale range setpoints 
  */
-uint8_t mpu6050_accel_config_read(
-    mpu6050_driver_data_t *device_ptr);
+uint8_t mpu6050_accel_config_read(mpu6050_driver_data_t *device_ptr);
 
 
 /**
@@ -459,8 +457,7 @@ void mpu6050_pwr_mgmt_2_write(
  * @param device_ptr : pointer to device data record 
  * @return uint8_t : device i@c address (will return 0x68 if correct) 
  */
-uint8_t mpu6050_who_am_i_read(
-    mpu6050_driver_data_t *device_ptr);
+uint8_t mpu6050_who_am_i_read(mpu6050_driver_data_t *device_ptr);
 
 
 /**
@@ -596,8 +593,7 @@ void mpu6050_gyro_ft(
  * @param device_ptr : pointer to device data record 
  * @return float : returns the scalar used to convert raw acceleromeeter data to g's
  */
-float mpu6050_accel_scalar(
-    mpu6050_driver_data_t *device_ptr);
+float mpu6050_accel_scalar(mpu6050_driver_data_t *device_ptr);
 
 
 /**
@@ -624,8 +620,7 @@ float mpu6050_accel_scalar(
  * @param device_ptr : pointer to device data record 
  * @return float : returns the scalar used to convert raw gyroscope data to deg/s
  */
-float mpu6050_gyro_scalar(
-    mpu6050_driver_data_t *device_ptr);
+float mpu6050_gyro_scalar(mpu6050_driver_data_t *device_ptr);
 
 //=======================================================================================
 
@@ -833,8 +828,7 @@ void mpu6050_read(
 // Configuration functions 
 
 // MPU6050 reference point set 
-void mpu6050_calibrate(
-    device_number_t device_num)
+void mpu6050_calibrate(device_number_t device_num)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 
@@ -874,8 +868,7 @@ void mpu6050_low_pwr_config(
 
 
 // MPU6050 accelerometer scalar
-float mpu6050_accel_scalar(
-    mpu6050_driver_data_t *device_ptr)
+float mpu6050_accel_scalar(mpu6050_driver_data_t *device_ptr)
 {
     // Get AFS_SEL 
     mpu6050_afs_sel_set_t afs_sel = ((mpu6050_accel_config_read(device_ptr) & 
@@ -886,8 +879,7 @@ float mpu6050_accel_scalar(
 
 
 // MPU6050 gyroscope scalar 
-float mpu6050_gyro_scalar(
-    mpu6050_driver_data_t *device_ptr)
+float mpu6050_gyro_scalar(mpu6050_driver_data_t *device_ptr)
 {
     // Get FS_SEL 
     mpu6050_fs_sel_set_t fs_sel = ((mpu6050_gyro_config_read(device_ptr) & 
@@ -905,8 +897,7 @@ float mpu6050_gyro_scalar(
 // Register Functions
 
 // MPU6050 Accelerometer Measurements registers read
-void mpu6050_accel_read(
-    device_number_t device_num)
+void mpu6050_accel_read(device_number_t device_num)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 
@@ -938,8 +929,7 @@ void mpu6050_accel_read(
 
 
 // MPU6050 Gyroscope Measurements registers read
-void mpu6050_gyro_read(
-    device_number_t device_num)
+void mpu6050_gyro_read(device_number_t device_num)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 
@@ -971,8 +961,7 @@ void mpu6050_gyro_read(
 
 
 // MPU6050 Temperature Measurements registers read 
-void mpu6050_temp_read(
-    device_number_t device_num)
+void mpu6050_temp_read(device_number_t device_num)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 
@@ -997,8 +986,7 @@ void mpu6050_temp_read(
 
 
 // MPU6050 read all 
-void mpu6050_read_all(
-    device_number_t device_num)
+void mpu6050_read_all(device_number_t device_num)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 
@@ -1085,8 +1073,7 @@ void mpu6050_gyro_config_write(
 
 
 // MPU6050 Gyroscope Configuration register read
-uint8_t mpu6050_gyro_config_read(
-    mpu6050_driver_data_t *device_ptr)
+uint8_t mpu6050_gyro_config_read(mpu6050_driver_data_t *device_ptr)
 {
     // Place to store the value of GYRO_CONFIG
     uint8_t mpu6050_gyro_config;
@@ -1122,8 +1109,7 @@ void mpu6050_accel_config_write(
 
 
 // MPU6050 Accelerometer Configuration register read 
-uint8_t mpu6050_accel_config_read(
-    mpu6050_driver_data_t *device_ptr)
+uint8_t mpu6050_accel_config_read(mpu6050_driver_data_t *device_ptr)
 {
     // Place to store the value of ACCEL_CONFIG
     uint8_t mpu6050_accel_config;
@@ -1220,8 +1206,7 @@ void mpu6050_pwr_mgmt_2_write(
 
 
 // MPU6050 Who Am I register read
-uint8_t mpu6050_who_am_i_read(
-    mpu6050_driver_data_t *device_ptr)
+uint8_t mpu6050_who_am_i_read(mpu6050_driver_data_t *device_ptr)
 {
     // Place to store the value WHO_AM_I
     uint8_t mpu6050_who_am_i;
@@ -1243,8 +1228,7 @@ uint8_t mpu6050_who_am_i_read(
 // Self-test 
 
 // MPU6050 self-test
-MPU6050_ST_RESULT mpu6050_self_test(
-    device_number_t device_num)
+MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 
@@ -1521,8 +1505,7 @@ void mpu6050_self_test_result(
 // Setters and getters 
 
 // Clear status flag 
-void mpu6050_clear_status(
-    device_number_t device_num)
+void mpu6050_clear_status(device_number_t device_num)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 
@@ -1536,8 +1519,7 @@ void mpu6050_clear_status(
 
 
 // Get status flag 
-uint8_t mpu6050_get_status(
-    device_number_t device_num)
+uint8_t mpu6050_get_status(device_number_t device_num)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 
@@ -1551,8 +1533,7 @@ uint8_t mpu6050_get_status(
 
 
 // INT pin status 
-MPU6050_INT_STATUS mpu6050_int_status(
-    device_number_t device_num)
+MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 
@@ -1649,8 +1630,7 @@ void mpu6050_get_gyro(
 
 
 // Temperature sensor raw value 
-int16_t mpu6050_get_temp_raw(
-    device_number_t device_num)
+int16_t mpu6050_get_temp_raw(device_number_t device_num)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 
@@ -1664,8 +1644,7 @@ int16_t mpu6050_get_temp_raw(
 
 
 // Temperature sensor calculation 
-float mpu6050_get_temp(
-    device_number_t device_num)
+float mpu6050_get_temp(device_number_t device_num)
 {
     // Get the device data record 
     mpu6050_driver_data_t *device_data_ptr = 

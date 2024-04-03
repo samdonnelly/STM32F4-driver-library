@@ -15,6 +15,10 @@
 #ifndef _SWITCH_DEBOUNCE_H_ 
 #define _SWITCH_DEBOUNCE_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes 
 
@@ -136,5 +140,9 @@ uint8_t debounce_released(
     uint8_t button_select); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   // _SWITCH_DEBOUNCE_H_ 

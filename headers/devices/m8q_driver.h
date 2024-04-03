@@ -15,6 +15,10 @@
 #ifndef _M8Q_DRIVER_H_
 #define _M8Q_DRIVER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //=======================================================================================
 // Includes
 
@@ -485,5 +489,9 @@ M8Q_STATUS m8q_get_time_utc_date(
     uint8_t utc_date_len); 
 
 //=======================================================================================
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _M8Q_DRIVER_H_ 
