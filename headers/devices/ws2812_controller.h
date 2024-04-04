@@ -86,7 +86,7 @@ public:   // Public member functions
     void StrobeOff(void); 
 
     // Write the current values to the device 
-    void LEDWrite(void);   
+    void LEDWrite(void); 
     
     //==================================================
 
