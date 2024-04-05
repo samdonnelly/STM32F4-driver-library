@@ -77,7 +77,7 @@ public:   // Public member functions
     //==================================================
 
     //==================================================
-    // Write/update functions 
+    // Write/update user functions 
     
     // Strobe control 
     void Strobe(void); 
