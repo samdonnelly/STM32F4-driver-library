@@ -1,3 +1,17 @@
+/**
+ * @file m8q_controller_utest.cpp
+ * 
+ * @author Sam Donnelly (samueldonnelly11@gmail.com)
+ * 
+ * @brief M8Q controller unit tests 
+ * 
+ * @version 0.1
+ * @date 2024-04-04
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
 //=======================================================================================
 // Notes 
 
