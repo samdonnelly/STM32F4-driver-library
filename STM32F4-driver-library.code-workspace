@@ -87,7 +87,9 @@
 			"lsm303agr_driver.h": "c",
 			"lsm303agr_config_test.h": "c",
 			"i2c_comm_mock.h": "c",
-			"nrf24l01_driver.h": "c"
+			"nrf24l01_driver.h": "c",
+			"freertos.h": "c",
+			"freertosconfig.h": "c"
 		}
 	}
 }

@@ -15,10 +15,6 @@
 #ifndef _WS2812_CONTROLLER_H_ 
 #define _WS2812_CONTROLLER_H_ 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 //=======================================================================================
 // Includes 
 
@@ -102,9 +98,5 @@ private:   // Private member functions
 }; 
 
 //=======================================================================================
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif   // _WS2812_CONTROLLER_H_ 

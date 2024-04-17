@@ -15,10 +15,6 @@
 #ifndef _NAV_CALCs_H_ 
 #define _NAV_CALCs_H_ 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 //=======================================================================================
 // Includes 
 
@@ -224,9 +220,5 @@ public:   // Setters
 }; 
 
 //=======================================================================================
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif   // _NAV_CALCs_H_ 

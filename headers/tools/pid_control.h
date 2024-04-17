@@ -15,10 +15,6 @@
 #ifndef _PID_CONTROL_H_ 
 #define _PID_CONTROL_H_ 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 //=======================================================================================
 // Includes 
 
@@ -115,9 +111,5 @@ public:   // Setters
 }; 
 
 //=======================================================================================
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif   // _PID_CONTROL_H_ 
