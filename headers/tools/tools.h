@@ -98,6 +98,7 @@ extern "C" {
 #define NULL_CHAR   0    // '\0' 
 #define NL_CHAR     10   // '\n' 
 #define CR_CHAR     13   // '\r' 
+#define SPACE_CHAR  32   // ' ' 
 #define AST_CHAR    42   // '*' 
 #define COMMA_CHAR  44   // ',' 
 #define MINUS_CHAR  45   // '-' 
