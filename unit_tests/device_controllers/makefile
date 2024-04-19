@@ -121,6 +121,7 @@ INCLUDE_DIRS += tests/ws2812
 # This is kind of a kludge, but it causes the
 # .o and .d files to be put under objs.
 CPPUTEST_OBJS_DIR = test-obj
+CPPUTEST_OBJS_DIR = test-obj/1/2
 
 CPPUTEST_LIB_DIR = test-lib
 
