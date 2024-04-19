@@ -22,7 +22,6 @@ extern "C" {
 //=======================================================================================
 // Includes 
 
-#include "stm32f411xe.h"
 #include "tools.h"
 
 //=======================================================================================
@@ -41,6 +40,16 @@ extern "C" {
 
 //=======================================================================================
 // Enums 
+
+// nRF24L01 driver status 
+typedef enum {
+    NRF24L01_OK,            // No problem with the nRF24L01 device 
+    NRF24L01_INVALID_PTR,   // Invalid pointer provided to function 
+    NRF24L01_WRITE_FAULT,   // A problem occurred while writing via SPI 
+    NRF24L01_READ_FAULT     // A problem occurred while reading via SPI 
+} nrf24l01_status_t; 
+
+
 /**
  * @brief Data rate to use 
  * 
@@ -102,6 +111,14 @@ typedef enum {
 
 
 //=======================================================================================
+// Datatypes 
+
+typedef uint8_t NRF24L01_STATUS; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 /**
@@ -124,6 +141,9 @@ typedef enum {
  * @param gpio_en : GPIO port used for the enable pin 
  * @param en_pin : enable pin number 
  * @param timer : timer port used for the driver 
+ * @param rf_ch_freq : initial RF channel 
+ * @param data_rate : initial data rate to use 
+ * @param rf_pwr : initial power output level 
  */
 void nrf24l01_init(
     SPI_TypeDef *spi, 
@@ -131,13 +151,11 @@ void nrf24l01_init(
     pin_selector_t ss_pin, 
     GPIO_TypeDef *gpio_en, 
     pin_selector_t en_pin, 
-    TIM_TypeDef *timer); 
+    TIM_TypeDef *timer, 
+    uint8_t rf_ch_freq, 
+    nrf24l01_data_rate_t data_rate, 
+    nrf24l01_rf_pwr_t rf_pwr); 
 
-//=======================================================================================
-
-
-//=======================================================================================
-// User configuration functions 
 
 /**
  * @brief Configure a devices PTX settings 
@@ -163,65 +181,11 @@ void nrf24l01_prx_config(
     const uint8_t *rx_addr, 
     nrf24l01_data_pipe_t pipe_num); 
 
-
-/**
- * @brief Set frequency channel 
- * 
- * @details Removes the device from any active mode and updates the RF channel before 
- *          putting it back into an active mode. Note that the PTX and PRX devices must 
- *          be on the same channel in order to communicate. The channel set will be: 
- *          --> 2400 MHz + 'rf_ch_freq' 
- * 
- * @param rf_ch_freq : RF channel 
- */
-void nrf24l01_set_rf_channel(uint8_t rf_ch_freq); 
-
-
-/**
- * @brief RF data rate set 
- * 
- * @details Removes the device from any active mode and updates the data rate before 
- *          putting it back into an active mode. 
- * 
- * @param rate : data rate to use 
- */
-void nrf24l01_set_rf_dr(nrf24l01_data_rate_t rate); 
-
-
-/**
- * @brief Set power output 
- * 
- * @details Removes the device from any active mode and updates the power output before 
- *          putting it back into an active mode. 
- * 
- * @param rf_pwr : power output level 
- */
-void nrf24l01_set_rf_pwr(nrf24l01_rf_pwr_t rf_pwr); 
-
-
-/**
- * @brief Enter low power mode - power down 
- * 
- * @details Removes the device from any active mode and sets the PWR_UP bit low to go to 
- *          the power down state. 
- */
-void nrf24l01_pwr_down(void); 
-
-
-/**
- * @brief Exit low power mode - power up 
- * 
- * @details Sets the PWR_UP bit high to exit the power down state and puts the device 
- *          back into an active mode. Note that this function has a short, blocking 
- *          delay (~1.5ms) to allow the device' startup state to pass. 
- */
-void nrf24l01_pwr_up(void); 
-
 //=======================================================================================
 
 
 //=======================================================================================
-// User getters 
+// User functions 
 
 /**
  * @brief Data ready status 
@@ -238,62 +202,6 @@ void nrf24l01_pwr_up(void);
  */
 uint8_t nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num); 
 
-
-/**
- * @brief Get power mode 
- * 
- * @details Reads and returns the current power mode of the device. 
- * 
- * @return nrf24l01_pwr_mode_t : current power mode 
- */
-nrf24l01_pwr_mode_t nrf24l01_get_pwr_mode(void); 
-
-
-/**
- * @brief Get active mode 
- * 
- * @details Reads and returns the active mode of the device. 
- * 
- * @return nrf24l01_mode_select_t : current active mode 
- */
-nrf24l01_mode_select_t nrf24l01_get_mode(void); 
-
-
-/**
- * @brief Get RF channel 
- * 
- * @details Reads and returns the RF channel of the device. Note that the returned value 
- *          is in MHz and it should be added to 2400 MHz to get the true channel number. 
- * 
- * @return uint8_t : RF channel (MHz) before adding 2400 MHz 
- */
-uint8_t nrf24l01_get_rf_ch(void); 
-
-
-/**
- * @brief Get RF data rate 
- * 
- * @details Reads, formats and returns the data rate of the device. 
- * 
- * @return nrf24l01_data_rate_t : current data rate 
- */
-nrf24l01_data_rate_t nrf24l01_get_rf_dr(void); 
-
-
-/**
- * @brief Get power output 
- * 
- * @details Reads and returns the power output level of the device. 
- * 
- * @return nrf24l01_rf_pwr_t : current power output level 
- */
-nrf24l01_rf_pwr_t nrf24l01_get_rf_pwr(void); 
-
-//=======================================================================================
-
-
-//=======================================================================================
-// User data functions 
 
 /**
  * @brief Receive payload 
@@ -348,24 +256,114 @@ void nrf24l01_receive_payload(
  */
 uint8_t nrf24l01_send_payload(const uint8_t *data_buff); 
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Status 
 
 /**
- * @brief nrF24L01 clear device driver status code 
- */
-void nrf24l01_clear_status(void); 
-
-
-/**
- * @brief nrF24L01 get device driver status code 
+ * @brief Set frequency channel 
  * 
- * @return uint8_t : driver status 
+ * @details Removes the device from any active mode and updates the RF channel before 
+ *          putting it back into an active mode. Note that the PTX and PRX devices must 
+ *          be on the same channel in order to communicate. The channel set will be: 
+ *          --> 2400 MHz + 'rf_ch_freq' 
+ * 
+ * @param rf_ch_freq : RF channel 
  */
-uint8_t nrf24l01_get_status(void); 
+void nrf24l01_set_rf_channel(uint8_t rf_ch_freq); 
+
+
+/**
+ * @brief Get RF channel 
+ * 
+ * @details Reads and returns the RF channel of the device. Note that the returned value 
+ *          is in MHz and it should be added to 2400 MHz to get the true channel number. 
+ * 
+ * @return uint8_t : RF channel (MHz) before adding 2400 MHz 
+ */
+uint8_t nrf24l01_get_rf_ch(void); 
+
+
+/**
+ * @brief RF data rate set 
+ * 
+ * @details Removes the device from any active mode and updates the data rate before 
+ *          putting it back into an active mode. 
+ * 
+ * @param rate : data rate to use 
+ */
+void nrf24l01_set_rf_dr(nrf24l01_data_rate_t rate); 
+
+
+/**
+ * @brief Get RF data rate 
+ * 
+ * @details Reads, formats and returns the data rate of the device. 
+ * 
+ * @return nrf24l01_data_rate_t : current data rate 
+ */
+nrf24l01_data_rate_t nrf24l01_get_rf_dr(void); 
+
+
+/**
+ * @brief Set power output 
+ * 
+ * @details Removes the device from any active mode and updates the power output before 
+ *          putting it back into an active mode. 
+ * 
+ * @param rf_pwr : power output level 
+ */
+void nrf24l01_set_rf_pwr(nrf24l01_rf_pwr_t rf_pwr); 
+
+
+/**
+ * @brief Get power output 
+ * 
+ * @details Reads and returns the power output level of the device. 
+ * 
+ * @return nrf24l01_rf_pwr_t : current power output level 
+ */
+nrf24l01_rf_pwr_t nrf24l01_get_rf_pwr(void); 
+
+
+/**
+ * @brief Get power mode 
+ * 
+ * @details Reads and returns the current power mode of the device. 
+ * 
+ * @return nrf24l01_pwr_mode_t : current power mode 
+ */
+nrf24l01_pwr_mode_t nrf24l01_get_pwr_mode(void); 
+
+
+/**
+ * @brief Get active mode 
+ * 
+ * @details Reads and returns the active mode of the device. 
+ * 
+ * @return nrf24l01_mode_select_t : current active mode 
+ */
+nrf24l01_mode_select_t nrf24l01_get_mode(void); 
+
+
+/**
+ * @brief Enter low power mode - power down 
+ * 
+ * @details Removes the device from any active mode and sets the PWR_UP bit low to go to 
+ *          the power down state. 
+ * 
+ * @return NRF24L01_STATUS : write operation status 
+ */
+NRF24L01_STATUS nrf24l01_pwr_down(void); 
+
+
+/**
+ * @brief Exit low power mode - power up 
+ * 
+ * @details Sets the PWR_UP bit high to exit the power down state and puts the device 
+ *          back into an active mode. Note that this function has a short, blocking 
+ *          delay (~1.5ms) to allow the device' startup state to pass. 
+ * 
+ * @return NRF24L01_STATUS : write operation status 
+ */
+NRF24L01_STATUS nrf24l01_pwr_up(void); 
 
 //=======================================================================================
 

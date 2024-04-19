@@ -22,11 +22,7 @@ extern "C" {
 //=======================================================================================
 // Includes 
 
-// Tools 
-#include "stm32f411xe.h"
 #include "tools.h"
-
-// Drivers 
 #include "gpio_driver.h" 
 
 //=======================================================================================
@@ -37,6 +33,9 @@ extern "C" {
 
 // Timers 
 #define SPI_COM_TIMEOUT 0x03FF     // Timer for SPI communication sequence timeouts 
+
+// Data 
+#define SPI_DUMMY 0xFF             // Dummy write data for write-read operations 
 
 //=======================================================================================
 

@@ -15,9 +15,6 @@
 //=======================================================================================
 // Includes 
 
-#include "i2c_comm.h"
-
-// Unit testing 
 #include "i2c_comm_mock.h"
 
 //=======================================================================================
@@ -57,7 +54,7 @@ static i2c_mock_driver_data_t mock_driver_data;
 
 
 //=======================================================================================
-// User functions 
+// Driver functions 
 
 // I2C generate start condition 
 I2C_STATUS i2c_start(
@@ -167,7 +164,7 @@ I2C_STATUS i2c_clear(
 
 
 //=======================================================================================
-// Mocks 
+// Mock functions 
 
 // Mock initialization 
 void i2c_mock_init(
