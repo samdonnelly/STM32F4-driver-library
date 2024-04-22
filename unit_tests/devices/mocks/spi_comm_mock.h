@@ -40,17 +40,27 @@
 
 
 //=======================================================================================
-// Datatypes 
-
-// 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Mock functions 
 
-// 
+// // Mock initialization 
+// void spi_mock_init(
+//     i2c_mock_timeout_t timeout_status, 
+//     i2c_mock_increment_mode_t increment_mode_write, 
+//     i2c_mock_increment_mode_t increment_mode_read); 
+
+
+// Get write data 
+void spi_mock_get_write_data(
+    void *data_buff, 
+    uint8_t *data_size, 
+    uint8_t write_index); 
+
+
+// Set read data 
+void spi_mock_set_read_data(
+    const void *read_data, 
+    uint16_t data_size, 
+    uint8_t read_index); 
 
 //=======================================================================================
 

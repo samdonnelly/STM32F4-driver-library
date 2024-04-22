@@ -808,7 +808,8 @@ uint8_t nrf24l01_send_payload(const uint8_t *data_buff)
     uint8_t pack_buff[NRF24L01_MAX_PAYLOAD_LEN]; 
     uint8_t data_len = CLEAR; 
     uint8_t index = NRF24L01_DATA_SIZE_LEN; 
-    uint8_t tx_status = CLEAR; 
+    // uint8_t tx_status = CLEAR; 
+    uint8_t tx_status = NRF24L01_OK; 
     uint16_t time_out = NRF24L01_TX_TIMEOUT; 
     uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
 
@@ -824,45 +825,6 @@ uint8_t nrf24l01_send_payload(const uint8_t *data_buff)
     // Write the payload to the TX FIFO 
     nrf24l01_write(NRF24L01_CMD_W_TX_PL, pack_buff, data_len); 
 
-    //==================================================
-
-
-    // Fill the packet buffer with the data to be sent. The packet will be capped at a max of 
-    // 30 data bytes with one byte always being saved at the beginning and end of the packet for 
-    // the data length and a NULL termination, respectfully. The following loop counts the data 
-    // length and saves the data/payload into the packet buffer. If the data length is less than 
-    // 30 bytes then the loop ends early. 
-    while (index <= NRF24L01_MAX_DATA_LEN)
-    {
-        data_len++; 
-
-        if (*data_buff == NULL_CHAR)
-        {
-            break; 
-        }
-
-        pack_buff[index++] = *data_buff++; 
-    }
-
-    // Write the data size to the first position of the packet buffer and terminate the payload 
-    pack_buff[0] = data_len; 
-    pack_buff[index] = NULL_CHAR; 
-    
-    // Set CE low to exit RX mode 
-    nrf24l01_set_ce(GPIO_LOW); 
-
-    // Set as a PTX device 
-    nrf24l01_set_data_mode(NRF24L01_TX_MODE); 
-
-    // Write the payload to the TX FIFO 
-    nrf24l01_write(NRF24L01_CMD_W_TX_PL, pack_buff, data_len); 
-
-    // Set CE high to enter TX mode and start the transmission. Delay to ensure CE is high long 
-    // enough then set CE low so the device goes back to Standby-1 when done sending. 
-    nrf24l01_set_ce(GPIO_HIGH); 
-    tim_delay_us(nrf24l01_data.timer, NRF24L01_CE_TX_DELAY); 
-    nrf24l01_set_ce(GPIO_LOW); 
-
     // Check to see if the TX FIFO is empty - means data was transmitted. 
     // If data has not been transferred before timeout then it's considered to have failed. 
     do 
@@ -871,22 +833,80 @@ uint8_t nrf24l01_send_payload(const uint8_t *data_buff)
     }
     while(!(nrf24l01_data.fifo_status.tx_empty) && (--time_out)); 
 
-    if (time_out)
+    if (!time_out)
     {
         // Time left on the timer so data has successfully been set. 
-        tx_status = SET_BIT; 
+        tx_status = NRF24L01_WRITE_FAULT; 
     }
-    
+
     // Flush the TX FIFO 
     nrf24l01_write(NRF24L01_CMD_FLUSH_TX, &buff, BYTE_0); 
 
-    // Set to a PRX device 
-    nrf24l01_set_data_mode(NRF24L01_RX_MODE); 
-
-    // Set CE back high to enter RX mode 
-    nrf24l01_set_ce(GPIO_HIGH); 
-
     return tx_status; 
+
+    //==================================================
+
+
+    // // Fill the packet buffer with the data to be sent. The packet will be capped at a max of 
+    // // 30 data bytes with one byte always being saved at the beginning and end of the packet for 
+    // // the data length and a NULL termination, respectfully. The following loop counts the data 
+    // // length and saves the data/payload into the packet buffer. If the data length is less than 
+    // // 30 bytes then the loop ends early. 
+    // while (index <= NRF24L01_MAX_DATA_LEN)
+    // {
+    //     data_len++; 
+
+    //     if (*data_buff == NULL_CHAR)
+    //     {
+    //         break; 
+    //     }
+
+    //     pack_buff[index++] = *data_buff++; 
+    // }
+
+    // // Write the data size to the first position of the packet buffer and terminate the payload 
+    // pack_buff[0] = data_len; 
+    // pack_buff[index] = NULL_CHAR; 
+    
+    // // Set CE low to exit RX mode 
+    // nrf24l01_set_ce(GPIO_LOW); 
+
+    // // Set as a PTX device 
+    // nrf24l01_set_data_mode(NRF24L01_TX_MODE); 
+
+    // // Write the payload to the TX FIFO 
+    // nrf24l01_write(NRF24L01_CMD_W_TX_PL, pack_buff, data_len); 
+
+    // // Set CE high to enter TX mode and start the transmission. Delay to ensure CE is high long 
+    // // enough then set CE low so the device goes back to Standby-1 when done sending. 
+    // nrf24l01_set_ce(GPIO_HIGH); 
+    // tim_delay_us(nrf24l01_data.timer, NRF24L01_CE_TX_DELAY); 
+    // nrf24l01_set_ce(GPIO_LOW); 
+
+    // // Check to see if the TX FIFO is empty - means data was transmitted. 
+    // // If data has not been transferred before timeout then it's considered to have failed. 
+    // do 
+    // {
+    //     nrf24l01_fifo_status_reg_read(); 
+    // }
+    // while(!(nrf24l01_data.fifo_status.tx_empty) && (--time_out)); 
+
+    // if (time_out)
+    // {
+    //     // Time left on the timer so data has successfully been set. 
+    //     tx_status = SET_BIT; 
+    // }
+    
+    // // Flush the TX FIFO 
+    // nrf24l01_write(NRF24L01_CMD_FLUSH_TX, &buff, BYTE_0); 
+
+    // // Set to a PRX device 
+    // nrf24l01_set_data_mode(NRF24L01_RX_MODE); 
+
+    // // Set CE back high to enter RX mode 
+    // nrf24l01_set_ce(GPIO_HIGH); 
+
+    // return tx_status; 
 }
 
 
@@ -1305,7 +1325,7 @@ NRF24L01_STATUS nrf24l01_fifo_status_reg_read(void)
     // return fifo_status; 
 
     return nrf24l01_reg_read(NRF24L01_REG_FIFO, 
-                                 &nrf24l01_data.fifo_status.fifo_status_reg); 
+                             &nrf24l01_data.fifo_status.fifo_status_reg); 
 }
 
 

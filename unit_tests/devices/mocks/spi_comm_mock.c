@@ -22,11 +22,34 @@
 
 //=======================================================================================
 // Macros 
+
+#define MAX_DATA_OPS 12 
+#define MAX_DATA_SIZE 100 
+
 //=======================================================================================
 
 
 //=======================================================================================
 // Global variables 
+
+// Mock driver data record 
+typedef struct spi_mock_driver_data_s 
+{
+    uint8_t spi_timeout; 
+    uint8_t increment_mode_write; 
+    uint8_t increment_mode_read; 
+
+    uint8_t write_data[MAX_DATA_OPS][MAX_DATA_SIZE]; 
+    uint8_t write_data_size[MAX_DATA_OPS]; 
+    uint8_t write_index; 
+
+    uint8_t read_data[MAX_DATA_OPS][MAX_DATA_SIZE]; 
+    uint8_t read_index; 
+}
+spi_mock_driver_data_t; 
+
+static spi_mock_driver_data_t mock_driver_data; 
+
 //=======================================================================================
 
 
@@ -160,4 +183,56 @@ SPI_STATUS spi_write_read(
 
 //=======================================================================================
 // Mock functions 
+
+// // Mock initialization 
+// void spi_mock_init(
+//     i2c_mock_timeout_t timeout_status, 
+//     i2c_mock_increment_mode_t increment_mode_write, 
+//     i2c_mock_increment_mode_t increment_mode_read)
+// {
+//     mock_driver_data.i2c_timeout = timeout_status; 
+//     mock_driver_data.increment_mode_write = increment_mode_write; 
+//     mock_driver_data.increment_mode_read = increment_mode_read; 
+
+//     memset((void *)mock_driver_data.write_data, CLEAR, sizeof(mock_driver_data.write_data)); 
+//     memset((void *)mock_driver_data.write_data_size, CLEAR, 
+//             sizeof(mock_driver_data.write_data_size)); 
+//     mock_driver_data.write_index = CLEAR; 
+
+//     memset((void *)mock_driver_data.read_data, CLEAR, sizeof(mock_driver_data.read_data)); 
+//     mock_driver_data.read_index = CLEAR; 
+// }
+
+
+// Get write data 
+void spi_mock_get_write_data(
+    void *write_buff, 
+    uint8_t *write_data_size, 
+    uint8_t write_index)
+{
+    if ((write_buff == NULL) || (write_data_size == NULL) || (write_index >= MAX_DATA_OPS))
+    {
+        return; 
+    }
+
+    memcpy(write_buff, (void *)(&mock_driver_data.write_data[write_index][0]), 
+           mock_driver_data.write_data_size[write_index]); 
+    *write_data_size = mock_driver_data.write_data_size[write_index]; 
+}
+
+
+// Set read data 
+void spi_mock_set_read_data(
+    const void *read_data, 
+    uint16_t read_data_size, 
+    uint8_t read_index)
+{
+    if ((read_data == NULL) || (read_index >= MAX_DATA_OPS))
+    {
+        return; 
+    }
+
+    memcpy((void *)(&mock_driver_data.read_data[read_index][0]), read_data, read_data_size); 
+}
+
 //=======================================================================================
