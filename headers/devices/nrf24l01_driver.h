@@ -257,17 +257,15 @@ void nrf24l01_receive_payload(
 uint8_t nrf24l01_send_payload(const uint8_t *data_buff); 
 
 
+//==================================================
+// RF_CH register 
+
 /**
- * @brief Set frequency channel 
+ * @brief RF_CH register update 
  * 
- * @details Removes the device from any active mode and updates the RF channel before 
- *          putting it back into an active mode. Note that the PTX and PRX devices must 
- *          be on the same channel in order to communicate. The channel set will be: 
- *          --> 2400 MHz + 'rf_ch_freq' 
- * 
- * @param rf_ch_freq : RF channel 
+ * @return NRF24L01_STATUS 
  */
-void nrf24l01_set_rf_channel(uint8_t rf_ch_freq); 
+NRF24L01_STATUS nrf24l01_rf_ch_read(void); 
 
 
 /**
@@ -282,14 +280,37 @@ uint8_t nrf24l01_get_rf_ch(void);
 
 
 /**
- * @brief RF data rate set 
+ * @brief Set frequency channel 
  * 
- * @details Removes the device from any active mode and updates the data rate before 
- *          putting it back into an active mode. 
+ * @details Removes the device from any active mode and updates the RF channel before 
+ *          putting it back into an active mode. Note that the PTX and PRX devices must 
+ *          be on the same channel in order to communicate. The channel set will be: 
+ *          --> 2400 MHz + 'rf_ch_freq' 
  * 
- * @param rate : data rate to use 
+ * @param rf_ch_freq : RF channel 
  */
-void nrf24l01_set_rf_dr(nrf24l01_data_rate_t rate); 
+void nrf24l01_set_rf_ch(uint8_t rf_ch_freq); 
+
+
+/**
+ * @brief RF_CH register write 
+ * 
+ * @return NRF24L01_STATUS 
+ */
+NRF24L01_STATUS nrf24l01_rf_ch_write(void); 
+
+//==================================================
+
+
+//==================================================
+// RF_SETUP register 
+
+/**
+ * @brief RF_SETUP register read 
+ * 
+ * @return NRF24L01_STATUS : status of the read operation 
+ */
+NRF24L01_STATUS nrf24l01_rf_setup_read(void); 
 
 
 /**
@@ -299,7 +320,28 @@ void nrf24l01_set_rf_dr(nrf24l01_data_rate_t rate);
  * 
  * @return nrf24l01_data_rate_t : current data rate 
  */
-nrf24l01_data_rate_t nrf24l01_get_rf_dr(void); 
+nrf24l01_data_rate_t nrf24l01_get_rf_setup_dr(void); 
+
+
+/**
+ * @brief Get power output 
+ * 
+ * @details Reads and returns the power output level of the device. 
+ * 
+ * @return nrf24l01_rf_pwr_t : current power output level 
+ */
+nrf24l01_rf_pwr_t nrf24l01_get_rf_setup_pwr(void); 
+
+
+/**
+ * @brief RF data rate set 
+ * 
+ * @details Removes the device from any active mode and updates the data rate before 
+ *          putting it back into an active mode. 
+ * 
+ * @param rate : data rate to use 
+ */
+void nrf24l01_set_rf_setup_dr(nrf24l01_data_rate_t rate); 
 
 
 /**
@@ -310,17 +352,28 @@ nrf24l01_data_rate_t nrf24l01_get_rf_dr(void);
  * 
  * @param rf_pwr : power output level 
  */
-void nrf24l01_set_rf_pwr(nrf24l01_rf_pwr_t rf_pwr); 
+void nrf24l01_set_rf_setup_pwr(nrf24l01_rf_pwr_t rf_pwr); 
 
 
 /**
- * @brief Get power output 
+ * @brief RF_SETUP register write 
  * 
- * @details Reads and returns the power output level of the device. 
- * 
- * @return nrf24l01_rf_pwr_t : current power output level 
+ * @return NRF24L01_STATUS 
  */
-nrf24l01_rf_pwr_t nrf24l01_get_rf_pwr(void); 
+NRF24L01_STATUS nrf24l01_rf_setup_write(void); 
+
+//==================================================
+
+
+//==================================================
+// CONFIG register 
+
+/**
+ * @brief CONFIG register read 
+ * 
+ * @return NRF24L01_STATUS 
+ */
+NRF24L01_STATUS nrf24l01_config_read(void); 
 
 
 /**
@@ -330,7 +383,7 @@ nrf24l01_rf_pwr_t nrf24l01_get_rf_pwr(void);
  * 
  * @return nrf24l01_pwr_mode_t : current power mode 
  */
-nrf24l01_pwr_mode_t nrf24l01_get_pwr_mode(void); 
+nrf24l01_pwr_mode_t nrf24l01_get_config_pwr_mode(void); 
 
 
 /**
@@ -340,7 +393,7 @@ nrf24l01_pwr_mode_t nrf24l01_get_pwr_mode(void);
  * 
  * @return nrf24l01_mode_select_t : current active mode 
  */
-nrf24l01_mode_select_t nrf24l01_get_mode(void); 
+nrf24l01_mode_select_t nrf24l01_get_config_mode(void); 
 
 
 /**
@@ -364,6 +417,16 @@ NRF24L01_STATUS nrf24l01_pwr_down(void);
  * @return NRF24L01_STATUS : write operation status 
  */
 NRF24L01_STATUS nrf24l01_pwr_up(void); 
+
+
+/**
+ * @brief CONFIG register write 
+ * 
+ * @return NRF24L01_STATUS 
+ */
+NRF24L01_STATUS nrf24l01_config_write(void); 
+
+//==================================================
 
 //=======================================================================================
 

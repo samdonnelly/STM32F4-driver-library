@@ -75,12 +75,12 @@ typedef union lsm303agr_m_cfga_s
     // Configuration register A bits 
     struct 
     {
-        uint8_t md           : 2;   // Mode select 
-        uint8_t odr          : 2;   // Output data rate 
-        uint8_t lp           : 1;   // Low-power mode enable 
-        uint8_t soft_rst     : 1;   // Config and user register reset 
-        uint8_t reboot       : 1;   // Reboot memory contents 
-        uint8_t comp_temp_en : 1;   // Temperature compensation 
+        uint8_t md           : 2;   // Bits 0-1: Mode select 
+        uint8_t odr          : 2;   // Bits 2-3: Output data rate 
+        uint8_t lp           : 1;   // Bit 4: Low-power mode enable 
+        uint8_t soft_rst     : 1;   // Bit 5: Config and user register reset 
+        uint8_t reboot       : 1;   // Bit 6: Reboot memory contents 
+        uint8_t comp_temp_en : 1;   // Bit 7: Temperature compensation 
     }; 
 
     // CFG-A register byte 
@@ -95,12 +95,12 @@ typedef union lsm303agr_m_cfgb_s
     // Configuration register C bits 
     struct 
     {
-        uint8_t lpf               : 1;   // Low pass filter enable 
-        uint8_t off_canc          : 1;   // Enable offset cancellation 
-        uint8_t set_freq          : 1;   // Frequency of set pulse 
-        uint8_t int_on_dataoff    : 1;   // Interrupt check after hard-ron correction 
-        uint8_t off_canc_one_shot : 1;   // Offset cancellation - single measurement mode 
-        uint8_t unused_1          : 3;   // Not used 
+        uint8_t lpf               : 1;   // Bit 0: Low pass filter enable 
+        uint8_t off_canc          : 1;   // Bit 1: Enable offset cancellation 
+        uint8_t set_freq          : 1;   // Bit 2: Frequency of set pulse 
+        uint8_t int_on_dataoff    : 1;   // Bit 3: Interrupt check after hard-ron correction 
+        uint8_t off_canc_one_shot : 1;   // Bit 4: Offset cancellation - single measurement mode 
+        uint8_t unused_1          : 3;   // Bits 5-7: Not used 
     }; 
 
     // CFG-B register byte 
@@ -115,14 +115,14 @@ typedef union lsm303agr_m_cfgc_s
     // Configuration register C bits 
     struct 
     {
-        uint8_t int_mag     : 1;   // DRDY pin configured as digital output 
-        uint8_t self_test   : 1;   // Self-test enable 
-        uint8_t unused_2    : 1;   // Bit not used 
-        uint8_t ble         : 1;   // High and low data inversion 
-        uint8_t bdu         : 1;   // Asynchronous read data protection 
-        uint8_t i2c_dis     : 1;   // I2C disable 
-        uint8_t int_mag_pin : 1;   // Interrupt on INT_MAG_PIN enable 
-        uint8_t unused_1    : 1;   // Bit not used 
+        uint8_t int_mag     : 1;   // Bit 0: DRDY pin configured as digital output 
+        uint8_t self_test   : 1;   // Bit 1: Self-test enable 
+        uint8_t unused_2    : 1;   // Bit 2: Bit not used 
+        uint8_t ble         : 1;   // Bit 3: High and low data inversion 
+        uint8_t bdu         : 1;   // Bit 4: Asynchronous read data protection 
+        uint8_t i2c_dis     : 1;   // Bit 5: I2C disable 
+        uint8_t int_mag_pin : 1;   // Bit 6: Interrupt on INT_MAG_PIN enable 
+        uint8_t unused_1    : 1;   // Bit 7: Bit not used 
     }; 
 
     // CFG-C register byte 
@@ -137,14 +137,14 @@ typedef union lsm303agr_m_status_s
     // Status register bits 
     struct 
     {
-        uint8_t x_da   : 1;   // X-axis new data available 
-        uint8_t y_da   : 1;   // Y-axis new data available 
-        uint8_t z_da   : 1;   // Z-axis new data available 
-        uint8_t zyx_da : 1;   // XYZ-axis new data available 
-        uint8_t x_or   : 1;   // X-axis data overrun 
-        uint8_t y_or   : 1;   // Y-axis data overrun 
-        uint8_t z_or   : 1;   // Z-axis data overrun 
-        uint8_t zyx_or : 1;   // XYZ-axis data overrun 
+        uint8_t x_da   : 1;   // Bit 0: X-axis new data available 
+        uint8_t y_da   : 1;   // Bit 1: Y-axis new data available 
+        uint8_t z_da   : 1;   // Bit 2: Z-axis new data available 
+        uint8_t zyx_da : 1;   // Bit 3: XYZ-axis new data available 
+        uint8_t x_or   : 1;   // Bit 4: X-axis data overrun 
+        uint8_t y_or   : 1;   // Bit 5: Y-axis data overrun 
+        uint8_t z_or   : 1;   // Bit 6: Z-axis data overrun 
+        uint8_t zyx_or : 1;   // Bit 7: XYZ-axis data overrun 
     }; 
 
     // Status register byte 

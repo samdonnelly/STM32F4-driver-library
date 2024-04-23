@@ -39,7 +39,11 @@ extern "C"
 //=======================================================================================
 // Macros 
 
+#define RF_SETUP_GET_DATA_0 0x26   // 250kbps and 0dbm 
+#define RF_SETUP_GET_DATA_1 0x08   // 2Mbps and 18dbm 
 
+#define RF_SETUP_SET_DATA_0 0x24   // 250kbps and 6dbm 
+#define RF_SETUP_SET_DATA_1 0x02   // 1Mbps and 12dbm 
 
 //=======================================================================================
 
@@ -55,7 +59,11 @@ TEST_GROUP(nrf24l01_driver_test)
     // Constructor 
     void setup()
     {
-        // 
+        // Initialize mock data 
+        spi_mock_init(
+            SPI_MOCK_TIMEOUT_DISABLE, 
+            SPI_MOCK_INC_MODE_ENABLE, 
+            SPI_MOCK_INC_MODE_ENABLE); 
     }
 
     // Destructor 
@@ -70,32 +78,98 @@ TEST_GROUP(nrf24l01_driver_test)
 
 //=======================================================================================
 // Helper functions 
-
-
-
 //=======================================================================================
 
 
 //=======================================================================================
-// Tests 
+// Initialization 
+//=======================================================================================
 
-// RF_SETUP 
-TEST(nrf24l01_driver_test, rf_setup)
+
+//=======================================================================================
+// Send and Receive payload 
+//=======================================================================================
+
+
+//=======================================================================================
+// RF_CH register test 
+//=======================================================================================
+
+
+//=======================================================================================
+// RF_SETUP register test 
+
+// RF_SETUP register bits 
+// Bit 0:    unused_2 ----> Obsolete - value doesn't matter 
+// Bits 1-2: rf_pwr ------> Set RF output power in TX mode 
+// Bit 3:    rf_dr_high --> Sets 2Mbps if RF_DR_LOW not set 
+// Bit 4:    pll_lock ----> Force PLL lock signal. Only used in test. 
+// Bit 5:    rf_dr_low ---> Set RF Data Rate to 250kbps 
+// Bit 6:    unused_1 ----> Reserved - must be low/0 
+// Bit 7:    cont_wave ---> Enables continuous carrier transmit 
+
+// RF_SETUP - read and get data 
+TEST(nrf24l01_driver_test, rf_setup_get_data)
 {
-    uint8_t mock_data = 32; 
-    // uint8_t mock_data_size = CLEAR; 
+    // See the bit legend above and the getter checks below to see where these numbers 
+    // come from. 
+    uint8_t rf_setup_mock_0 = RF_SETUP_GET_DATA_0; 
+    uint8_t rf_setup_mock_1 = RF_SETUP_GET_DATA_1; 
 
-    // Set up mock 
-    spi_mock_init(SPI_MOCK_TIMEOUT_DISABLE, SPI_MOCK_INC_MODE_ENABLE, SPI_MOCK_INC_MODE_ENABLE); 
-    spi_mock_set_read_data((void *)&mock_data, BYTE_1, SPI_MOCK_INDEX_1); 
+    nrf24l01_data_rate_t data_rate; 
+    nrf24l01_rf_pwr_t power_output; 
 
-    nrf24l01_data_rate_t data_rate = nrf24l01_get_rf_dr(); 
+    // Set up mock data. Reading from the device involves two operations: writing the 
+    // command / reading the status back, then reading the data requested. We only care 
+    // about the data so we set indexes 1 and 3 to skip the command part. 
+    spi_mock_set_read_data((void *)&rf_setup_mock_0, BYTE_1, SPI_MOCK_INDEX_1); 
+    spi_mock_set_read_data((void *)&rf_setup_mock_1, BYTE_1, SPI_MOCK_INDEX_3); 
 
-    // nrf24l01_set_rf_dr(NRF24L01_DR_250KBPS); 
-    // spi_mock_get_write_data((void *)&mock_data, &mock_data_size, SPI_MOCK_INDEX_0); 
+    // Read the mock data and check the register contents. 
+    nrf24l01_rf_setup_read(); 
+    data_rate = nrf24l01_get_rf_setup_dr(); 
+    power_output = nrf24l01_get_rf_setup_pwr(); 
 
-    std::cout << std::endl << (size_t)data_rate << std::endl; 
-    // std::cout << std::endl << (size_t)mock_data << std::endl; 
+    LONGS_EQUAL(NRF24L01_DR_250KBPS, data_rate); 
+    LONGS_EQUAL(NRF24L01_RF_PWR_0DBM, power_output); 
+
+    nrf24l01_rf_setup_read(); 
+    data_rate = nrf24l01_get_rf_setup_dr(); 
+    power_output = nrf24l01_get_rf_setup_pwr(); 
+
+    LONGS_EQUAL(NRF24L01_DR_2MBPS, data_rate); 
+    LONGS_EQUAL(NRF24L01_RF_PWR_18DBM, power_output); 
 }
 
+
+// RF_SETUP - set and write data 
+TEST(nrf24l01_driver_test, rf_setup_set_data)
+{
+    uint8_t rf_setup_mock = CLEAR; 
+    uint8_t rf_setup_mock_size = CLEAR; 
+
+    nrf24l01_set_rf_setup_dr(NRF24L01_DR_250KBPS); 
+    nrf24l01_set_rf_setup_pwr(NRF24L01_RF_PWR_6DBM); 
+    nrf24l01_rf_setup_write(); 
+
+    // See the bit legend and setters above to see where the data check value come from 
+    spi_mock_get_write_data((void *)&rf_setup_mock, &rf_setup_mock_size, SPI_MOCK_INDEX_0); 
+    LONGS_EQUAL(RF_SETUP_SET_DATA_0, rf_setup_mock); 
+    LONGS_EQUAL(BYTE_1, rf_setup_mock_size); 
+
+    nrf24l01_set_rf_setup_dr(NRF24L01_DR_1MBPS); 
+    nrf24l01_set_rf_setup_pwr(NRF24L01_RF_PWR_12DBM); 
+    nrf24l01_rf_setup_write(); 
+
+    // See the bit legend and setters above to see where the data check value come from 
+    spi_mock_get_write_data((void *)&rf_setup_mock, &rf_setup_mock_size, SPI_MOCK_INDEX_1); 
+    LONGS_EQUAL(RF_SETUP_SET_DATA_1, rf_setup_mock); 
+    LONGS_EQUAL(BYTE_1, rf_setup_mock_size); 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// CONFIG register test 
 //=======================================================================================

@@ -123,20 +123,14 @@ typedef enum {
 //=======================================================================================
 // Register data 
 
+// The order of each register data bitfield is important for the union to work as intended. 
+
 // CONFIG register 
 typedef union nrf24l01_config_reg_s 
 {
     // CONFIG register bits 
     struct 
     {
-        // uint8_t unused_1    : 1;     // Bit 7: Reserved - must be low/0 
-        // uint8_t mask_rx_dr  : 1;     // Bit 6: Mask interrupt caused by RX_DR 
-        // uint8_t mask_tx_ds  : 1;     // Bit 5: Mask interrupt caused by TX_DS 
-        // uint8_t mask_max_rt : 1;     // Bit 4: Mask interrupt caused by MAX_RT 
-        // uint8_t en_crc      : 1;     // Bit 3: Enable CRC 
-        // uint8_t crco        : 1;     // Bit 2: CRC encoding scheme 
-        // uint8_t pwr_up      : 1;     // Bit 1: Power up / power down 
-        // uint8_t prim_rx     : 1;     // Bit 0: RX/TX control 
         uint8_t prim_rx     : 1;     // Bit 0: RX/TX control 
         uint8_t pwr_up      : 1;     // Bit 1: Power up / power down 
         uint8_t crco        : 1;     // Bit 2: CRC encoding scheme 
@@ -159,8 +153,6 @@ typedef union nrf24l01_rf_ch_reg_s
     // RF_CH register bits 
     struct 
     {
-        // uint8_t unused_1 : 1;        // Bit 7: Reserved - must be low/0 
-        // uint8_t rf_ch    : 7;        // Bits 0-6: Frequency channel operated on 
         uint8_t rf_ch    : 7;        // Bits 0-6: Frequency channel operated on 
         uint8_t unused_1 : 1;        // Bit 7: Reserved - must be low/0 
     }; 
@@ -177,13 +169,6 @@ typedef union nrf24l01_rf_set_reg_s
     // RF_SET register bits 
     struct 
     {
-        // uint8_t cont_wave  : 1;     // Bit 7: Enables continuous carrier transmit 
-        // uint8_t unused_1   : 1;     // Bit 6: Reserved - must be low/0 
-        // uint8_t rf_dr_low  : 1;     // Bit 5: Set RF Data Rate to 250kbps 
-        // uint8_t pll_lock   : 1;     // Bit 4: Force PLL lock signal. Only used in test. 
-        // uint8_t rf_dr_high : 1;     // Bit 3: Sets 2Mbps if RF_DR_LOW not set 
-        // uint8_t rf_pwr     : 2;     // Bits 1-2: Set RF output power in TX mode 
-        // uint8_t unused_2   : 1;     // Bit 0: Obsolete - value doesn't matter 
         uint8_t unused_2   : 1;     // Bit 0: Obsolete - value doesn't matter 
         uint8_t rf_pwr     : 2;     // Bits 1-2: Set RF output power in TX mode 
         uint8_t rf_dr_high : 1;     // Bit 3: Sets 2Mbps if RF_DR_LOW not set 
@@ -205,12 +190,6 @@ typedef union nrf24l01_status_reg_s
     // STATUS register bits 
     struct 
     {
-        // uint8_t unused_1 : 1;       // Bit 7: Reserved - must be low/0 
-        // uint8_t rx_dr    : 1;       // Bit 6: Data Ready RX FIFO interrupt 
-        // uint8_t tx_ds    : 1;       // Bit 5: Data Sent TX FIFO interrupt 
-        // uint8_t max_rt   : 1;       // Bit 4: Maximum number of TX retransmits interrupt 
-        // uint8_t rx_p_no  : 3;       // Bits 1-3: Data pipe number for the payload available 
-        // uint8_t tx_full  : 1;       // Bit 0: TX FIFO full flag 
         uint8_t tx_full  : 1;       // Bit 0: TX FIFO full flag 
         uint8_t rx_p_no  : 3;       // Bits 1-3: Data pipe number for the payload available 
         uint8_t max_rt   : 1;       // Bit 4: Maximum number of TX retransmits interrupt 
@@ -231,13 +210,6 @@ typedef union nrf24l01_fifo_status_reg_s
     // FIFO_STATUS register bits 
     struct 
     {
-        // uint8_t unused_1 : 1;       // Bit 7: Reserved - must be low/0 
-        // uint8_t tx_reuse : 1;       // Bit 6: For reusing last transmitted payload 
-        // uint8_t tx_full  : 1;       // Bit 5: TX FIFO full flag 
-        // uint8_t tx_empty : 1;       // Bit 4: TX FIFO empty flag 
-        // uint8_t unused_2 : 2;       // Bits 2-3: Reserved - must be low/0 
-        // uint8_t rx_full  : 1;       // Bit 1: RX FIFO full flag 
-        // uint8_t rx_empty : 1;       // Bit 0: RX FIFO empty flag 
         uint8_t rx_empty : 1;       // Bit 0: RX FIFO empty flag 
         uint8_t rx_full  : 1;       // Bit 1: RX FIFO full flag 
         uint8_t unused_2 : 2;       // Bits 2-3: Reserved - must be low/0 
@@ -326,69 +298,69 @@ NRF24L01_STATUS nrf24l01_set_data_mode(nrf24l01_mode_select_t mode);
 NRF24L01_STATUS nrf24l01_config_reg_write(void); 
 
 
-/**
- * @brief CONFIG register read 
- * 
- * @details Reads the CONFIG register from the device and stores the contents in the data 
- *          record. This function is called when retrieving device info for user getters. 
- * 
- * @see nrf24l01_config_reg_t 
- * 
- * @return NRF24L01_STATUS : read operation status 
- */
-NRF24L01_STATUS nrf24l01_config_reg_read(void); 
+// /**
+//  * @brief CONFIG register read 
+//  * 
+//  * @details Reads the CONFIG register from the device and stores the contents in the data 
+//  *          record. This function is called when retrieving device info for user getters. 
+//  * 
+//  * @see nrf24l01_config_reg_t 
+//  * 
+//  * @return NRF24L01_STATUS : read operation status 
+//  */
+// NRF24L01_STATUS nrf24l01_config_reg_read(void); 
 
 
-/**
- * @brief RF_CH register write 
- * 
- * @details Writes the RF_CH data from the data record to the RF_CH register in the 
- *          device. This function is used when the user updates the RF channel. 
- * 
- * @see nrf24l01_rf_ch_reg_t 
- * 
- * @return NRF24L01_STATUS : write operation status 
- */
-NRF24L01_STATUS nrf24l01_rf_ch_reg_write(void); 
+// /**
+//  * @brief RF_CH register write 
+//  * 
+//  * @details Writes the RF_CH data from the data record to the RF_CH register in the 
+//  *          device. This function is used when the user updates the RF channel. 
+//  * 
+//  * @see nrf24l01_rf_ch_reg_t 
+//  * 
+//  * @return NRF24L01_STATUS : write operation status 
+//  */
+// NRF24L01_STATUS nrf24l01_rf_ch_reg_write(void); 
 
 
-/**
- * @brief RF_CH register read 
- * 
- * @details Reads the RF_CH register from the device and stores the contents in the data 
- *          record. This function is called when retrieving the RF channel for the user. 
- * 
- * @see nrf24l01_rf_ch_reg_t 
- * 
- * @return NRF24L01_STATUS : read operation status 
- */
-NRF24L01_STATUS nrf24l01_rf_ch_reg_read(void); 
+// /**
+//  * @brief RF_CH register read 
+//  * 
+//  * @details Reads the RF_CH register from the device and stores the contents in the data 
+//  *          record. This function is called when retrieving the RF channel for the user. 
+//  * 
+//  * @see nrf24l01_rf_ch_reg_t 
+//  * 
+//  * @return NRF24L01_STATUS : read operation status 
+//  */
+// NRF24L01_STATUS nrf24l01_rf_ch_reg_read(void); 
 
 
-/**
- * @brief RF_SETUP register write 
- * 
- * @details Writes the RF_SETUP data from the data record to the RF_SETUP register in the 
- *          device. This function is used when the user updates the RF settings. 
- * 
- * @see nrf24l01_rf_set_reg_t 
- * 
- * @return NRF24L01_STATUS : write operation status 
- */
-NRF24L01_STATUS nrf24l01_rf_setup_reg_write(void); 
+// /**
+//  * @brief RF_SETUP register write 
+//  * 
+//  * @details Writes the RF_SETUP data from the data record to the RF_SETUP register in the 
+//  *          device. This function is used when the user updates the RF settings. 
+//  * 
+//  * @see nrf24l01_rf_set_reg_t 
+//  * 
+//  * @return NRF24L01_STATUS : write operation status 
+//  */
+// NRF24L01_STATUS nrf24l01_rf_setup_reg_write(void); 
 
 
-/**
- * @brief RF_SETUP register read 
- * 
- * @details Reads the RF_SETUP register from the device and stores the contents in the 
- *          data record. This function is called when retrieving RF settings for the user. 
- * 
- * @see nrf24l01_rf_set_reg_t 
- * 
- * @return NRF24L01_STATUS : read operation status 
- */
-NRF24L01_STATUS nrf24l01_rf_setup_reg_read(void); 
+// /**
+//  * @brief RF_SETUP register read 
+//  * 
+//  * @details Reads the RF_SETUP register from the device and stores the contents in the 
+//  *          data record. This function is called when retrieving RF settings for the user. 
+//  * 
+//  * @see nrf24l01_rf_set_reg_t 
+//  * 
+//  * @return NRF24L01_STATUS : read operation status 
+//  */
+// NRF24L01_STATUS nrf24l01_rf_setup_reg_read(void); 
 
 
 /**
@@ -506,6 +478,18 @@ SPI_STATUS nrf24l01_write(
 NRF24L01_STATUS nrf24l01_reg_read(
     uint8_t reg_addr, 
     uint8_t *reg_data); 
+
+
+/**
+ * @brief 
+ * 
+ * @param reg_addr 
+ * @param reg_data 
+ * @return NRF24L01_STATUS 
+ */
+NRF24L01_STATUS nrf24l01_reg_write_data(
+    uint8_t reg_addr, 
+    uint8_t reg_data); 
 
 
 /**
@@ -726,7 +710,7 @@ void nrf24l01_ptx_config(const uint8_t *tx_addr)
     //==================================================
     // RF_CH 
     // nrf24l01_set_rf_channel(rf_ch_freq); 
-    nrf24l01_set_rf_channel(10); 
+    nrf24l01_set_rf_ch(10); 
     //==================================================
     
 
@@ -736,9 +720,11 @@ void nrf24l01_ptx_config(const uint8_t *tx_addr)
 
     //==================================================
     // CONFIG 
-    nrf24l01_config_reg_read(); 
+    // nrf24l01_config_reg_read(); 
+    nrf24l01_config_read(); 
     nrf24l01_data.config.pwr_up = SET_BIT;   // Set to start up the device 
     nrf24l01_config_reg_write(); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
     //==================================================
 
 
@@ -947,28 +933,39 @@ uint8_t nrf24l01_send_payload(const uint8_t *data_buff)
 // RF_CH register 
 
 // RF_CH register update 
+NRF24L01_STATUS nrf24l01_rf_ch_read(void)
+{
+    return nrf24l01_reg_read(NRF24L01_REG_RF_CH, &nrf24l01_data.rf_ch.rf_ch_reg); 
+}
 
 
-// Get RF channel 
+// Get RF_CH channel 
 uint8_t nrf24l01_get_rf_ch(void)
 {
-    nrf24l01_rf_ch_reg_read(); 
+    // nrf24l01_rf_ch_reg_read(); 
     return nrf24l01_data.rf_ch.rf_ch; 
 }
 
 
-// Set RF channel 
-void nrf24l01_set_rf_channel(uint8_t rf_ch_freq)
+// Set RF_CH channel 
+void nrf24l01_set_rf_ch(uint8_t rf_ch_freq)
 {
-    // Set CE low to exit any active mode 
-    nrf24l01_set_ce(GPIO_LOW); 
+    // // Set CE low to exit any active mode 
+    // nrf24l01_set_ce(GPIO_LOW); 
 
     // Update and write the channel 
     nrf24l01_data.rf_ch.rf_ch = rf_ch_freq & NRF24L01_RF_CH_MASK; 
-    nrf24l01_rf_ch_reg_write(); 
+    // nrf24l01_rf_ch_reg_write(); 
 
-    // Set CE high to enter back into an active mode 
-    nrf24l01_set_ce(GPIO_HIGH); 
+    // // Set CE high to enter back into an active mode 
+    // nrf24l01_set_ce(GPIO_HIGH); 
+}
+
+
+// RF_CH register write 
+NRF24L01_STATUS nrf24l01_rf_ch_write(void)
+{
+    return nrf24l01_reg_write_data(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
 }
 
 //==================================================
@@ -977,54 +974,65 @@ void nrf24l01_set_rf_channel(uint8_t rf_ch_freq)
 //==================================================
 // RF_SETUP register 
 
-// RF_SETUP register update 
-
-
-// Get RF data rate 
-nrf24l01_data_rate_t nrf24l01_get_rf_dr(void)
+// RF_SETUP register read 
+NRF24L01_STATUS nrf24l01_rf_setup_read(void)
 {
-    nrf24l01_rf_setup_reg_read(); 
+    return nrf24l01_reg_read(NRF24L01_REG_RF_SET, &nrf24l01_data.rf_setup.rf_set_reg); 
+}
+
+
+// Get RF_SETUP data rate 
+nrf24l01_data_rate_t nrf24l01_get_rf_setup_dr(void)
+{
+    // nrf24l01_rf_setup_reg_read(); 
     return (nrf24l01_data_rate_t)((nrf24l01_data.rf_setup.rf_dr_low << SHIFT_1) | 
                                    nrf24l01_data.rf_setup.rf_dr_high); 
 }
 
 
-// Get power output 
-nrf24l01_rf_pwr_t nrf24l01_get_rf_pwr(void)
+// Get RF_SETUP power output 
+nrf24l01_rf_pwr_t nrf24l01_get_rf_setup_pwr(void)
 {
-    nrf24l01_rf_setup_reg_read(); 
+    // nrf24l01_rf_setup_reg_read(); 
     return (nrf24l01_rf_pwr_t)(nrf24l01_data.rf_setup.rf_pwr); 
 }
 
 
-// Set data rate 
-void nrf24l01_set_rf_dr(nrf24l01_data_rate_t rate)
+// Set RF_SETUP data rate 
+void nrf24l01_set_rf_setup_dr(nrf24l01_data_rate_t rate)
 {
-    // Set CE low to exit any active mode 
-    nrf24l01_set_ce(GPIO_LOW); 
+    // // Set CE low to exit any active mode 
+    // nrf24l01_set_ce(GPIO_LOW); 
 
     // Update and write the data rate 
     nrf24l01_data.rf_setup.rf_dr_low = (rate >> SHIFT_1) & NRF24L01_RF_DR_MASK; 
     nrf24l01_data.rf_setup.rf_dr_high = rate & NRF24L01_RF_DR_MASK; 
-    nrf24l01_rf_setup_reg_write(); 
+    // nrf24l01_rf_setup_reg_write(); 
 
-    // Set CE high to enter back into an active mode 
-    nrf24l01_set_ce(GPIO_HIGH); 
+    // // Set CE high to enter back into an active mode 
+    // nrf24l01_set_ce(GPIO_HIGH); 
 }
 
 
-// Set power output 
-void nrf24l01_set_rf_pwr(nrf24l01_rf_pwr_t rf_pwr)
+// Set RF_SETUP power output 
+void nrf24l01_set_rf_setup_pwr(nrf24l01_rf_pwr_t rf_pwr)
 {
-    // Set CE low to exit any active mode 
-    nrf24l01_set_ce(GPIO_LOW); 
+    // // Set CE low to exit any active mode 
+    // nrf24l01_set_ce(GPIO_LOW); 
     
     // Update and write the power output 
     nrf24l01_data.rf_setup.rf_pwr = (uint8_t)rf_pwr; 
-    nrf24l01_rf_setup_reg_write(); 
+    // nrf24l01_rf_setup_reg_write(); 
 
-    // Set CE high to enter back into an active mode 
-    nrf24l01_set_ce(GPIO_HIGH); 
+    // // Set CE high to enter back into an active mode 
+    // nrf24l01_set_ce(GPIO_HIGH); 
+}
+
+
+// RF_SETUP register write 
+NRF24L01_STATUS nrf24l01_rf_setup_write(void)
+{
+    return nrf24l01_reg_write_data(NRF24L01_REG_RF_SET, nrf24l01_data.rf_setup.rf_set_reg); 
 }
 
 //==================================================
@@ -1033,21 +1041,25 @@ void nrf24l01_set_rf_pwr(nrf24l01_rf_pwr_t rf_pwr)
 //==================================================
 // CONFIG register 
 
-// CONFIG register update 
+// CONFIG register read 
+NRF24L01_STATUS nrf24l01_config_read(void)
+{
+    return nrf24l01_reg_read(NRF24L01_REG_CONFIG, &nrf24l01_data.config.config_reg); 
+}
 
 
 // Get power mode 
-nrf24l01_pwr_mode_t nrf24l01_get_pwr_mode(void)
+nrf24l01_pwr_mode_t nrf24l01_get_config_pwr_mode(void)
 {
-    nrf24l01_config_reg_read(); 
+    // nrf24l01_config_reg_read(); 
     return (nrf24l01_pwr_mode_t)(nrf24l01_data.config.pwr_up); 
 }
 
 
 // Get active mode 
-nrf24l01_mode_select_t nrf24l01_get_mode(void)
+nrf24l01_mode_select_t nrf24l01_get_config_mode(void)
 {
-    nrf24l01_config_reg_read(); 
+    // nrf24l01_config_reg_read(); 
     return (nrf24l01_mode_select_t)(nrf24l01_data.config.prim_rx); 
 }
 
@@ -1059,20 +1071,22 @@ NRF24L01_STATUS nrf24l01_pwr_down(void)
     // Set CE=0 to enter standby-1 state. 
     // Set PWR_UP=0 to enter power down state 
 
-    // Set CE low to exit any active mode 
-    nrf24l01_set_ce(GPIO_LOW); 
+    // // Set CE low to exit any active mode 
+    // nrf24l01_set_ce(GPIO_LOW); 
 
     // Set PWR_UP low to go to power down state 
     nrf24l01_data.config.pwr_up = (uint8_t)NRF24L01_PWR_DOWN; 
-    NRF24L01_STATUS nrf24l01_status = nrf24l01_config_reg_write(); 
+    // NRF24L01_STATUS status = nrf24l01_config_reg_write(); 
+    NRF24L01_STATUS status = nrf24l01_config_write(); 
+    nrf24l01_set_ce(GPIO_LOW); 
 
-    if (nrf24l01_status != NRF24L01_OK)
+    if (status != NRF24L01_OK)
     {
         // Write operation failed. Set the CE pin back high 
         nrf24l01_set_ce(GPIO_HIGH); 
     }
 
-    return nrf24l01_status; 
+    return status; 
 }
 
 
@@ -1081,9 +1095,11 @@ NRF24L01_STATUS nrf24l01_pwr_up(void)
 {   
     // Set PWR_UP high to exit the power down state 
     nrf24l01_data.config.pwr_up = (uint8_t)NRF24L01_PWR_UP; 
-    NRF24L01_STATUS nrf24l01_status = nrf24l01_config_reg_write(); 
+    // NRF24L01_STATUS status = nrf24l01_config_reg_write(); 
+    NRF24L01_STATUS status = nrf24l01_config_write(); 
+    nrf24l01_set_ce(GPIO_LOW); 
 
-    if (nrf24l01_status == NRF24L01_OK)
+    if (status == NRF24L01_OK)
     {
         // Delay to allow for the startup state to pass (~1.5ms) 
         tim_delay_ms(nrf24l01_data.timer, NRF24L01_START_DELAY); 
@@ -1092,7 +1108,14 @@ NRF24L01_STATUS nrf24l01_pwr_up(void)
         nrf24l01_set_ce(GPIO_HIGH); 
     }
 
-    return nrf24l01_status; 
+    return status; 
+}
+
+
+// CONFIG register write 
+NRF24L01_STATUS nrf24l01_config_write(void)
+{
+    return nrf24l01_reg_write_data(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
 }
 
 //==================================================
@@ -1116,6 +1139,7 @@ NRF24L01_STATUS nrf24l01_set_data_mode(nrf24l01_mode_select_t mode)
     // Write PRIM_RX=mode to the device 
     nrf24l01_data.config.prim_rx = (uint8_t)mode; 
     NRF24L01_STATUS nrf24l01_status = nrf24l01_config_reg_write(); 
+    nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
 
     // Delay to clear the device settling state 
     tim_delay_us(nrf24l01_data.timer, NRF24L01_SETTLE_DELAY); 
@@ -1204,93 +1228,93 @@ NRF24L01_STATUS nrf24l01_config_reg_write(void)
 }
 
 
-// CONFIG register read 
-NRF24L01_STATUS nrf24l01_config_reg_read(void)
-{
-    // // Read the CONFIG register and update the data record 
-    // uint8_t config = nrf24l01_reg_read(NRF24L01_REG_CONFIG); 
+// // CONFIG register read 
+// NRF24L01_STATUS nrf24l01_config_reg_read(void)
+// {
+//     // // Read the CONFIG register and update the data record 
+//     // uint8_t config = nrf24l01_reg_read(NRF24L01_REG_CONFIG); 
 
-    // nrf24l01_data.config.unused_1    = (config & FILTER_BIT_7) >> SHIFT_7; 
-    // nrf24l01_data.config.mask_rx_dr  = (config & FILTER_BIT_6) >> SHIFT_6; 
-    // nrf24l01_data.config.mask_tx_ds  = (config & FILTER_BIT_5) >> SHIFT_5; 
-    // nrf24l01_data.config.mask_max_rt = (config & FILTER_BIT_4) >> SHIFT_4; 
-    // nrf24l01_data.config.en_crc      = (config & FILTER_BIT_3) >> SHIFT_3; 
-    // nrf24l01_data.config.crco        = (config & FILTER_BIT_2) >> SHIFT_2; 
-    // nrf24l01_data.config.pwr_up      = (config & FILTER_BIT_1) >> SHIFT_1; 
-    // nrf24l01_data.config.prim_rx     = (config & FILTER_BIT_0); 
+//     // nrf24l01_data.config.unused_1    = (config & FILTER_BIT_7) >> SHIFT_7; 
+//     // nrf24l01_data.config.mask_rx_dr  = (config & FILTER_BIT_6) >> SHIFT_6; 
+//     // nrf24l01_data.config.mask_tx_ds  = (config & FILTER_BIT_5) >> SHIFT_5; 
+//     // nrf24l01_data.config.mask_max_rt = (config & FILTER_BIT_4) >> SHIFT_4; 
+//     // nrf24l01_data.config.en_crc      = (config & FILTER_BIT_3) >> SHIFT_3; 
+//     // nrf24l01_data.config.crco        = (config & FILTER_BIT_2) >> SHIFT_2; 
+//     // nrf24l01_data.config.pwr_up      = (config & FILTER_BIT_1) >> SHIFT_1; 
+//     // nrf24l01_data.config.prim_rx     = (config & FILTER_BIT_0); 
 
-    // return config; 
+//     // return config; 
 
-    return nrf24l01_reg_read(NRF24L01_REG_CONFIG, &nrf24l01_data.config.config_reg); 
-}
-
-
-// RF_CH register write 
-NRF24L01_STATUS nrf24l01_rf_ch_reg_write(void)
-{
-    // // Format the data to send 
-    // uint8_t rf_ch = (nrf24l01_data.rf_ch.unused_1 << SHIFT_7) | 
-    //                 (nrf24l01_data.rf_ch.rf_ch); 
-
-    // // Send the data to the RF_CH register 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, rf_ch); 
-
-    return nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
-}
+//     return nrf24l01_reg_read(NRF24L01_REG_CONFIG, &nrf24l01_data.config.config_reg); 
+// }
 
 
-// RF_CH register read 
-NRF24L01_STATUS nrf24l01_rf_ch_reg_read(void)
-{
-    // // Read the RF_CH register and update the data record 
-    // uint8_t rf_ch = nrf24l01_reg_read(NRF24L01_REG_RF_CH); 
+// // RF_CH register write 
+// NRF24L01_STATUS nrf24l01_rf_ch_reg_write(void)
+// {
+//     // // Format the data to send 
+//     // uint8_t rf_ch = (nrf24l01_data.rf_ch.unused_1 << SHIFT_7) | 
+//     //                 (nrf24l01_data.rf_ch.rf_ch); 
 
-    // nrf24l01_data.rf_ch.unused_1 = (rf_ch & FILTER_BIT_7) >> SHIFT_7; 
-    // nrf24l01_data.rf_ch.rf_ch    = (rf_ch & FILTER_7_LSB); 
+//     // // Send the data to the RF_CH register 
+//     // nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, rf_ch); 
 
-    // return rf_ch; 
-
-    return nrf24l01_reg_read(NRF24L01_REG_RF_CH, &nrf24l01_data.rf_ch.rf_ch_reg); 
-}
-
-
-// RF_SETUP register write 
-NRF24L01_STATUS nrf24l01_rf_setup_reg_write(void)
-{
-    // // Format the data to send 
-    // uint8_t rf_setup = (nrf24l01_data.rf_setup.cont_wave  << SHIFT_7) | 
-    //                    (nrf24l01_data.rf_setup.unused_1   << SHIFT_6) | 
-    //                    (nrf24l01_data.rf_setup.rf_dr_low  << SHIFT_5) | 
-    //                    (nrf24l01_data.rf_setup.pll_lock   << SHIFT_4) | 
-    //                    (nrf24l01_data.rf_setup.rf_dr_high << SHIFT_3) | 
-    //                    (nrf24l01_data.rf_setup.rf_pwr     << SHIFT_1) | 
-    //                    (nrf24l01_data.rf_setup.unused_2); 
-
-    // // Send the data to the RF_SET register 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, rf_setup); 
-
-    return nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, nrf24l01_data.rf_setup.rf_set_reg); 
-}
+//     return nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
+// }
 
 
-// RF_SETUP register read 
-NRF24L01_STATUS nrf24l01_rf_setup_reg_read(void)
-{
-    // // Read the RF_CH register and update the data record 
-    // uint8_t rf_setup = nrf24l01_reg_read(NRF24L01_REG_RF_SET); 
+// // RF_CH register read 
+// NRF24L01_STATUS nrf24l01_rf_ch_reg_read(void)
+// {
+//     // // Read the RF_CH register and update the data record 
+//     // uint8_t rf_ch = nrf24l01_reg_read(NRF24L01_REG_RF_CH); 
 
-    // nrf24l01_data.rf_setup.cont_wave  = (rf_setup & FILTER_BIT_7) >> SHIFT_7; 
-    // nrf24l01_data.rf_setup.unused_1   = (rf_setup & FILTER_BIT_6) >> SHIFT_6; 
-    // nrf24l01_data.rf_setup.rf_dr_low  = (rf_setup & FILTER_BIT_5) >> SHIFT_5; 
-    // nrf24l01_data.rf_setup.pll_lock   = (rf_setup & FILTER_BIT_4) >> SHIFT_4; 
-    // nrf24l01_data.rf_setup.rf_dr_high = (rf_setup & FILTER_BIT_3) >> SHIFT_3; 
-    // nrf24l01_data.rf_setup.rf_pwr     = (rf_setup & FILTER_3_LSB) >> SHIFT_1; 
-    // nrf24l01_data.rf_setup.unused_2   = (rf_setup & FILTER_BIT_0); 
+//     // nrf24l01_data.rf_ch.unused_1 = (rf_ch & FILTER_BIT_7) >> SHIFT_7; 
+//     // nrf24l01_data.rf_ch.rf_ch    = (rf_ch & FILTER_7_LSB); 
 
-    // return rf_setup; 
+//     // return rf_ch; 
 
-    return nrf24l01_reg_read(NRF24L01_REG_RF_SET, &nrf24l01_data.rf_setup.rf_set_reg); 
-}
+//     return nrf24l01_reg_read(NRF24L01_REG_RF_CH, &nrf24l01_data.rf_ch.rf_ch_reg); 
+// }
+
+
+// // RF_SETUP register write 
+// NRF24L01_STATUS nrf24l01_rf_setup_reg_write(void)
+// {
+//     // // Format the data to send 
+//     // uint8_t rf_setup = (nrf24l01_data.rf_setup.cont_wave  << SHIFT_7) | 
+//     //                    (nrf24l01_data.rf_setup.unused_1   << SHIFT_6) | 
+//     //                    (nrf24l01_data.rf_setup.rf_dr_low  << SHIFT_5) | 
+//     //                    (nrf24l01_data.rf_setup.pll_lock   << SHIFT_4) | 
+//     //                    (nrf24l01_data.rf_setup.rf_dr_high << SHIFT_3) | 
+//     //                    (nrf24l01_data.rf_setup.rf_pwr     << SHIFT_1) | 
+//     //                    (nrf24l01_data.rf_setup.unused_2); 
+
+//     // // Send the data to the RF_SET register 
+//     // nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, rf_setup); 
+
+//     return nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, nrf24l01_data.rf_setup.rf_set_reg); 
+// }
+
+
+// // RF_SETUP register read 
+// NRF24L01_STATUS nrf24l01_rf_setup_reg_read(void)
+// {
+//     // // Read the RF_CH register and update the data record 
+//     // uint8_t rf_setup = nrf24l01_reg_read(NRF24L01_REG_RF_SET); 
+
+//     // nrf24l01_data.rf_setup.cont_wave  = (rf_setup & FILTER_BIT_7) >> SHIFT_7; 
+//     // nrf24l01_data.rf_setup.unused_1   = (rf_setup & FILTER_BIT_6) >> SHIFT_6; 
+//     // nrf24l01_data.rf_setup.rf_dr_low  = (rf_setup & FILTER_BIT_5) >> SHIFT_5; 
+//     // nrf24l01_data.rf_setup.pll_lock   = (rf_setup & FILTER_BIT_4) >> SHIFT_4; 
+//     // nrf24l01_data.rf_setup.rf_dr_high = (rf_setup & FILTER_BIT_3) >> SHIFT_3; 
+//     // nrf24l01_data.rf_setup.rf_pwr     = (rf_setup & FILTER_3_LSB) >> SHIFT_1; 
+//     // nrf24l01_data.rf_setup.unused_2   = (rf_setup & FILTER_BIT_0); 
+
+//     // return rf_setup; 
+
+//     return nrf24l01_reg_read(NRF24L01_REG_RF_SET, &nrf24l01_data.rf_setup.rf_set_reg); 
+// }
 
 
 // STATUS register write 
@@ -1385,6 +1409,21 @@ NRF24L01_STATUS nrf24l01_reg_read(
     }
 
     return NRF24L01_OK; 
+}
+
+
+// 
+NRF24L01_STATUS nrf24l01_reg_write_data(
+    uint8_t reg_addr, 
+    uint8_t reg_data)
+{
+    // Set CE low to exit any active mode, write dta to the register, then set CE high 
+    // enter back into an active mode. 
+    nrf24l01_set_ce(GPIO_LOW); 
+    NRF24L01_STATUS status = nrf24l01_reg_byte_write(reg_addr, reg_data); 
+    nrf24l01_set_ce(GPIO_HIGH); 
+
+    return status; 
 }
 
 
