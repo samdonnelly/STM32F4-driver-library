@@ -164,6 +164,20 @@ SPI_STATUS spi_write(
     const uint8_t *write_data, 
     uint32_t data_len)
 {
+    if ((write_data == NULL) || (mock_driver_data.write_index >= MAX_DATA_OPS))
+    {
+        return SPI_NULL_PTR; 
+    }
+
+    memcpy((void *)(&mock_driver_data.write_data[mock_driver_data.write_index][0]), 
+           (void *)write_data, data_len); 
+    mock_driver_data.write_data_size[mock_driver_data.write_index] = data_len; 
+
+    if (mock_driver_data.increment_mode_write)
+    {
+        mock_driver_data.write_index++; 
+    }
+
     return SPI_OK; 
 }
 
@@ -175,6 +189,20 @@ SPI_STATUS spi_write_read(
     uint8_t *read_data, 
     uint32_t data_len)
 {
+    if ((read_data == NULL) || (mock_driver_data.read_index >= MAX_DATA_OPS))
+    {
+        return SPI_NULL_PTR; 
+    }
+
+    memcpy((void *)read_data, 
+           (void *)(&mock_driver_data.read_data[mock_driver_data.read_index][0]), 
+           data_len); 
+
+    if (mock_driver_data.increment_mode_read)
+    {
+        mock_driver_data.read_index++; 
+    }
+
     return SPI_OK; 
 }
 
@@ -184,24 +212,24 @@ SPI_STATUS spi_write_read(
 //=======================================================================================
 // Mock functions 
 
-// // Mock initialization 
-// void spi_mock_init(
-//     i2c_mock_timeout_t timeout_status, 
-//     i2c_mock_increment_mode_t increment_mode_write, 
-//     i2c_mock_increment_mode_t increment_mode_read)
-// {
-//     mock_driver_data.i2c_timeout = timeout_status; 
-//     mock_driver_data.increment_mode_write = increment_mode_write; 
-//     mock_driver_data.increment_mode_read = increment_mode_read; 
+// Mock initialization 
+void spi_mock_init(
+    spi_mock_timeout_t timeout_status, 
+    spi_mock_increment_mode_t increment_mode_write, 
+    spi_mock_increment_mode_t increment_mode_read)
+{
+    mock_driver_data.spi_timeout = timeout_status; 
+    mock_driver_data.increment_mode_write = increment_mode_write; 
+    mock_driver_data.increment_mode_read = increment_mode_read; 
 
-//     memset((void *)mock_driver_data.write_data, CLEAR, sizeof(mock_driver_data.write_data)); 
-//     memset((void *)mock_driver_data.write_data_size, CLEAR, 
-//             sizeof(mock_driver_data.write_data_size)); 
-//     mock_driver_data.write_index = CLEAR; 
+    memset((void *)mock_driver_data.write_data, CLEAR, sizeof(mock_driver_data.write_data)); 
+    memset((void *)mock_driver_data.write_data_size, CLEAR, 
+            sizeof(mock_driver_data.write_data_size)); 
+    mock_driver_data.write_index = CLEAR; 
 
-//     memset((void *)mock_driver_data.read_data, CLEAR, sizeof(mock_driver_data.read_data)); 
-//     mock_driver_data.read_index = CLEAR; 
-// }
+    memset((void *)mock_driver_data.read_data, CLEAR, sizeof(mock_driver_data.read_data)); 
+    mock_driver_data.read_index = CLEAR; 
+}
 
 
 // Get write data 

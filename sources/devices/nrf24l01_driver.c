@@ -129,14 +129,22 @@ typedef union nrf24l01_config_reg_s
     // CONFIG register bits 
     struct 
     {
-        uint8_t unused_1    : 1;     // Reserved - must be low/0 
-        uint8_t mask_rx_dr  : 1;     // Mask interrupt caused by RX_DR 
-        uint8_t mask_tx_ds  : 1;     // Mask interrupt caused by TX_DS 
-        uint8_t mask_max_rt : 1;     // Mask interrupt caused by MAX_RT 
-        uint8_t en_crc      : 1;     // Enable CRC 
-        uint8_t crco        : 1;     // CRC encoding scheme 
-        uint8_t pwr_up      : 1;     // Power up / power down 
-        uint8_t prim_rx     : 1;     // RX/TX control 
+        // uint8_t unused_1    : 1;     // Bit 7: Reserved - must be low/0 
+        // uint8_t mask_rx_dr  : 1;     // Bit 6: Mask interrupt caused by RX_DR 
+        // uint8_t mask_tx_ds  : 1;     // Bit 5: Mask interrupt caused by TX_DS 
+        // uint8_t mask_max_rt : 1;     // Bit 4: Mask interrupt caused by MAX_RT 
+        // uint8_t en_crc      : 1;     // Bit 3: Enable CRC 
+        // uint8_t crco        : 1;     // Bit 2: CRC encoding scheme 
+        // uint8_t pwr_up      : 1;     // Bit 1: Power up / power down 
+        // uint8_t prim_rx     : 1;     // Bit 0: RX/TX control 
+        uint8_t prim_rx     : 1;     // Bit 0: RX/TX control 
+        uint8_t pwr_up      : 1;     // Bit 1: Power up / power down 
+        uint8_t crco        : 1;     // Bit 2: CRC encoding scheme 
+        uint8_t en_crc      : 1;     // Bit 3: Enable CRC 
+        uint8_t mask_max_rt : 1;     // Bit 4: Mask interrupt caused by MAX_RT 
+        uint8_t mask_tx_ds  : 1;     // Bit 5: Mask interrupt caused by TX_DS 
+        uint8_t mask_rx_dr  : 1;     // Bit 6: Mask interrupt caused by RX_DR 
+        uint8_t unused_1    : 1;     // Bit 7: Reserved - must be low/0 
     }; 
 
     // CONFIG register byte 
@@ -151,8 +159,10 @@ typedef union nrf24l01_rf_ch_reg_s
     // RF_CH register bits 
     struct 
     {
-        uint8_t unused_1 : 1;        // Reserved - must be low/0 
-        uint8_t rf_ch    : 7;        // Sets the frequency channel the device operates on 
+        // uint8_t unused_1 : 1;        // Bit 7: Reserved - must be low/0 
+        // uint8_t rf_ch    : 7;        // Bits 0-6: Frequency channel operated on 
+        uint8_t rf_ch    : 7;        // Bits 0-6: Frequency channel operated on 
+        uint8_t unused_1 : 1;        // Bit 7: Reserved - must be low/0 
     }; 
 
     // RF_CH register bytes 
@@ -167,13 +177,20 @@ typedef union nrf24l01_rf_set_reg_s
     // RF_SET register bits 
     struct 
     {
-        uint8_t cont_wave  : 1;     // Enables continuous carrier transmit when high 
-        uint8_t unused_1   : 1;     // Reserved - must be low/0 
-        uint8_t rf_dr_low  : 1;     // Set RF Data Rate to 250kbps. See RF_DR_HIGH for encoding.
-        uint8_t pll_lock   : 1;     // Force PLL lock signal. Only used in test. 
-        uint8_t rf_dr_high : 1;     // Select high speed data rate. Irrelevant if RF_DR_LOW is set.
-        uint8_t rf_pwr     : 2;     // Set RF output power in TX mode 
-        uint8_t unused_2   : 1;     // Obsolete - value doesn't matter 
+        // uint8_t cont_wave  : 1;     // Bit 7: Enables continuous carrier transmit 
+        // uint8_t unused_1   : 1;     // Bit 6: Reserved - must be low/0 
+        // uint8_t rf_dr_low  : 1;     // Bit 5: Set RF Data Rate to 250kbps 
+        // uint8_t pll_lock   : 1;     // Bit 4: Force PLL lock signal. Only used in test. 
+        // uint8_t rf_dr_high : 1;     // Bit 3: Sets 2Mbps if RF_DR_LOW not set 
+        // uint8_t rf_pwr     : 2;     // Bits 1-2: Set RF output power in TX mode 
+        // uint8_t unused_2   : 1;     // Bit 0: Obsolete - value doesn't matter 
+        uint8_t unused_2   : 1;     // Bit 0: Obsolete - value doesn't matter 
+        uint8_t rf_pwr     : 2;     // Bits 1-2: Set RF output power in TX mode 
+        uint8_t rf_dr_high : 1;     // Bit 3: Sets 2Mbps if RF_DR_LOW not set 
+        uint8_t pll_lock   : 1;     // Bit 4: Force PLL lock signal. Only used in test. 
+        uint8_t rf_dr_low  : 1;     // Bit 5: Set RF Data Rate to 250kbps 
+        uint8_t unused_1   : 1;     // Bit 6: Reserved - must be low/0 
+        uint8_t cont_wave  : 1;     // Bit 7: Enables continuous carrier transmit 
     }; 
 
     // RF_SET register bytes 
@@ -188,12 +205,18 @@ typedef union nrf24l01_status_reg_s
     // STATUS register bits 
     struct 
     {
-        uint8_t unused_1 : 1;       // Reserved - must be low/0 
-        uint8_t rx_dr    : 1;       // Data Ready RX FIFO interrupt 
-        uint8_t tx_ds    : 1;       // Data Sent TX FIFO interrupt 
-        uint8_t max_rt   : 1;       // Maximum number of TX retransmits interrupt 
-        uint8_t rx_p_no  : 3;       // Data pipe number for the payload available 
-        uint8_t tx_full  : 1;       // TX FIFO full flag 
+        // uint8_t unused_1 : 1;       // Bit 7: Reserved - must be low/0 
+        // uint8_t rx_dr    : 1;       // Bit 6: Data Ready RX FIFO interrupt 
+        // uint8_t tx_ds    : 1;       // Bit 5: Data Sent TX FIFO interrupt 
+        // uint8_t max_rt   : 1;       // Bit 4: Maximum number of TX retransmits interrupt 
+        // uint8_t rx_p_no  : 3;       // Bits 1-3: Data pipe number for the payload available 
+        // uint8_t tx_full  : 1;       // Bit 0: TX FIFO full flag 
+        uint8_t tx_full  : 1;       // Bit 0: TX FIFO full flag 
+        uint8_t rx_p_no  : 3;       // Bits 1-3: Data pipe number for the payload available 
+        uint8_t max_rt   : 1;       // Bit 4: Maximum number of TX retransmits interrupt 
+        uint8_t tx_ds    : 1;       // Bit 5: Data Sent TX FIFO interrupt 
+        uint8_t rx_dr    : 1;       // Bit 6: Data Ready RX FIFO interrupt 
+        uint8_t unused_1 : 1;       // Bit 7: Reserved - must be low/0 
     }; 
 
     // STATUS register bytes 
@@ -208,13 +231,20 @@ typedef union nrf24l01_fifo_status_reg_s
     // FIFO_STATUS register bits 
     struct 
     {
-        uint8_t unused_1 : 1;       // Reserved - must be low/0 
-        uint8_t tx_reuse : 1;       // For reusing last transmitted payload 
-        uint8_t tx_full  : 1;       // TX FIFO full flag 
-        uint8_t tx_empty : 1;       // TX FIFO empty flag 
-        uint8_t unused_2 : 2;       // Reserved - must be low/0 
-        uint8_t rx_full  : 1;       // RX FIFO full flag 
-        uint8_t rx_empty : 1;       // RX FIFO empty flag 
+        // uint8_t unused_1 : 1;       // Bit 7: Reserved - must be low/0 
+        // uint8_t tx_reuse : 1;       // Bit 6: For reusing last transmitted payload 
+        // uint8_t tx_full  : 1;       // Bit 5: TX FIFO full flag 
+        // uint8_t tx_empty : 1;       // Bit 4: TX FIFO empty flag 
+        // uint8_t unused_2 : 2;       // Bits 2-3: Reserved - must be low/0 
+        // uint8_t rx_full  : 1;       // Bit 1: RX FIFO full flag 
+        // uint8_t rx_empty : 1;       // Bit 0: RX FIFO empty flag 
+        uint8_t rx_empty : 1;       // Bit 0: RX FIFO empty flag 
+        uint8_t rx_full  : 1;       // Bit 1: RX FIFO full flag 
+        uint8_t unused_2 : 2;       // Bits 2-3: Reserved - must be low/0 
+        uint8_t tx_empty : 1;       // Bit 4: TX FIFO empty flag 
+        uint8_t tx_full  : 1;       // Bit 5: TX FIFO full flag 
+        uint8_t tx_reuse : 1;       // Bit 6: For reusing last transmitted payload 
+        uint8_t unused_1 : 1;       // Bit 7: Reserved - must be low/0 
     }; 
 
     // FIFO_STATUS register bytes 
@@ -529,7 +559,7 @@ void nrf24l01_init(
     nrf24l01_data_rate_t data_rate, 
     nrf24l01_rf_pwr_t rf_pwr)
 {
-    uint8_t reg_buff = CLEAR; 
+    // uint8_t reg_buff = CLEAR; 
     uint8_t p0_addr_buff[NRF24l01_ADDR_WIDTH]; 
     uint8_t p1_addr_buff[NRF24l01_ADDR_WIDTH]; 
 
@@ -805,9 +835,9 @@ void nrf24l01_receive_payload(
 // Send payload 
 uint8_t nrf24l01_send_payload(const uint8_t *data_buff)
 {
-    uint8_t pack_buff[NRF24L01_MAX_PAYLOAD_LEN]; 
+    // uint8_t pack_buff[NRF24L01_MAX_PAYLOAD_LEN]; 
     uint8_t data_len = CLEAR; 
-    uint8_t index = NRF24L01_DATA_SIZE_LEN; 
+    // uint8_t index = NRF24L01_DATA_SIZE_LEN; 
     // uint8_t tx_status = CLEAR; 
     uint8_t tx_status = NRF24L01_OK; 
     uint16_t time_out = NRF24L01_TX_TIMEOUT; 
@@ -822,8 +852,11 @@ uint8_t nrf24l01_send_payload(const uint8_t *data_buff)
     //==================================================
     // dev 
 
+    data_len = NRF24L01_MAX_PAYLOAD_LEN; 
+
     // Write the payload to the TX FIFO 
-    nrf24l01_write(NRF24L01_CMD_W_TX_PL, pack_buff, data_len); 
+    // nrf24l01_write(NRF24L01_CMD_W_TX_PL, pack_buff, data_len); 
+    nrf24l01_write(NRF24L01_CMD_W_TX_PL, data_buff, data_len); 
 
     // Check to see if the TX FIFO is empty - means data was transmitted. 
     // If data has not been transferred before timeout then it's considered to have failed. 

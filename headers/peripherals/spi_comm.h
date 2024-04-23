@@ -89,7 +89,8 @@ typedef enum {
  */
 typedef enum {
     SPI_OK, 
-    SPI_ERROR 
+    SPI_TIMEOUT, 
+    SPI_NULL_PTR 
 } spi_com_status_t; 
 
 //=======================================================================================
@@ -113,11 +114,12 @@ typedef spi_com_status_t SPI_STATUS;
  *          GPIO pins configured as outputs so a slave device can be selected. Currently 
  *          only two slaves can be set up with this function. 
  * 
- * @param spi : pointer to SPI port to initialize 
- * @param gpio : pointer to GPIO port used for the SPI port chosen 
- * @param sck_pin : 
- * @param miso_pin : 
- * @param mosi_pin : 
+ * @param spi : SPI port to use 
+ * @param gpio_sck : GPIO port for the SCK pin 
+ * @param sck_pin : SCK pin number 
+ * @param gpio_data : GPIO port for the MISO and MOSI pins 
+ * @param miso_pin : MISO pin number 
+ * @param mosi_pin : MOSI pin number 
  * @param baud_rate_ctrl : communication speed to use 
  * @param clock_mode : SPI clock mode - polarity and phase 
  */
@@ -134,8 +136,6 @@ void spi_init(
 
 /**
  * @brief SPI slave select pin init 
- * 
- * @details 
  * 
  * @param gpio : GPIO port used for slave select pin 
  * @param ss_pin : pin number for slave select pin 

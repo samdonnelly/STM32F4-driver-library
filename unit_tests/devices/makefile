@@ -37,6 +37,10 @@ SRC_FILES += ./../../sources/devices/m8q_driver.c             # Production code
 SRC_FILES += ./../../sources/devices/m8q_controller.c         # Production code 
 SRC_DIRS += tests/m8q                                         # Test doubles 
 
+# nRF24L01 
+SRC_FILES += ./../../sources/devices/nrf24l01_driver.c        # Production code 
+SRC_DIRS += tests/nRF24L01                                    # Test doubles 
+
 # ----------------------------------
 
 # ------------- TOOLS --------------
@@ -69,6 +73,10 @@ TEST_SRC_FILES +=
 
 # M8Q 
 TEST_SRC_DIRS += tests/m8q                               # Unit tests 
+TEST_SRC_FILES += 
+
+# nRF24L01 
+TEST_SRC_DIRS += tests/nrf24l01                          # Unit tests 
 TEST_SRC_FILES += 
 
 # ----------------------------------
@@ -111,6 +119,7 @@ INCLUDE_DIRS += ./../../headers/tools              # Production code
 INCLUDE_DIRS += mocks                              # Mocks 
 INCLUDE_DIRS += tests/lsm303agr                    # Test doubles 
 INCLUDE_DIRS += tests/m8q                          # Test doubles 
+INCLUDE_DIRS += tests/nrf24l01                     # Test doubles 
 
 # --------------------------------------------------------------------
 

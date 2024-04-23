@@ -34,7 +34,35 @@
 //=======================================================================================
 // Enums 
 
-// 
+// Index for SPI mock driver data buffers 
+typedef enum {
+    SPI_MOCK_INDEX_0, 
+    SPI_MOCK_INDEX_1, 
+    SPI_MOCK_INDEX_2, 
+    SPI_MOCK_INDEX_3, 
+    SPI_MOCK_INDEX_4, 
+    SPI_MOCK_INDEX_5, 
+    SPI_MOCK_INDEX_6, 
+    SPI_MOCK_INDEX_7, 
+    SPI_MOCK_INDEX_8, 
+    SPI_MOCK_INDEX_9, 
+    SPI_MOCK_INDEX_10, 
+    SPI_MOCK_INDEX_11 
+} spi_mock_buff_index_t; 
+
+
+// SPI mock driver timeout behavior selection 
+typedef enum {
+    SPI_MOCK_TIMEOUT_DISABLE, 
+    SPI_MOCK_TIMEOUT_ENABLE 
+} spi_mock_timeout_t; 
+
+
+// SPI mock driver increment mode selection 
+typedef enum {
+    SPI_MOCK_INC_MODE_DISABLE, 
+    SPI_MOCK_INC_MODE_ENABLE 
+} spi_mock_increment_mode_t; 
 
 //=======================================================================================
 
@@ -42,11 +70,11 @@
 //=======================================================================================
 // Mock functions 
 
-// // Mock initialization 
-// void spi_mock_init(
-//     i2c_mock_timeout_t timeout_status, 
-//     i2c_mock_increment_mode_t increment_mode_write, 
-//     i2c_mock_increment_mode_t increment_mode_read); 
+// Mock initialization 
+void spi_mock_init(
+    spi_mock_timeout_t timeout_status, 
+    spi_mock_increment_mode_t increment_mode_write, 
+    spi_mock_increment_mode_t increment_mode_read); 
 
 
 // Get write data 
