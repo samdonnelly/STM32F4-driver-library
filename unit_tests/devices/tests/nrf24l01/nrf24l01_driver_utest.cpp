@@ -93,6 +93,82 @@ TEST_GROUP(nrf24l01_driver_test)
 
 //=======================================================================================
 // RF_CH register test 
+
+// RF_CH register bits 
+// Bits 0-6: rf_ch --> Frequency channel operated on 
+// Bit 7: unused_1 --> Reserved - must be low/0 
+
+// RF_CH - read and get data 
+TEST(nrf24l01_driver_test, rf_ch_get_data)
+{
+    // See the bit legend above and the getter checks below to see where these numbers 
+    // come from. 
+    uint8_t rf_setup_mock_0 = RF_SETUP_GET_DATA_0; 
+    uint8_t rf_setup_mock_1 = RF_SETUP_GET_DATA_1; 
+
+    nrf24l01_data_rate_t data_rate; 
+    nrf24l01_rf_pwr_t power_output; 
+
+    //==================================================
+    // 
+    nrf24l01_rf_ch_read(); 
+    uint8_t rf_ch = nrf24l01_get_rf_ch(); 
+    //==================================================
+
+    // Set up mock data. Reading from the device involves two operations: writing the 
+    // command / reading the status back, then reading the data requested. We only care 
+    // about the data so we set indexes 1 and 3 to skip the command part. 
+    spi_mock_set_read_data((void *)&rf_setup_mock_0, BYTE_1, SPI_MOCK_INDEX_1); 
+    spi_mock_set_read_data((void *)&rf_setup_mock_1, BYTE_1, SPI_MOCK_INDEX_3); 
+
+    // Read the mock data and check the register contents. 
+    nrf24l01_rf_setup_read(); 
+    data_rate = nrf24l01_get_rf_setup_dr(); 
+    power_output = nrf24l01_get_rf_setup_pwr(); 
+
+    LONGS_EQUAL(NRF24L01_DR_250KBPS, data_rate); 
+    LONGS_EQUAL(NRF24L01_RF_PWR_0DBM, power_output); 
+
+    nrf24l01_rf_setup_read(); 
+    data_rate = nrf24l01_get_rf_setup_dr(); 
+    power_output = nrf24l01_get_rf_setup_pwr(); 
+
+    LONGS_EQUAL(NRF24L01_DR_2MBPS, data_rate); 
+    LONGS_EQUAL(NRF24L01_RF_PWR_18DBM, power_output); 
+}
+
+
+// RF_CH - set and write data 
+TEST(nrf24l01_driver_test, rf_ch_set_data)
+{
+    uint8_t rf_setup_mock = CLEAR; 
+    uint8_t rf_setup_mock_size = CLEAR; 
+
+    //==================================================
+    // 
+    nrf24l01_set_rf_ch(11); 
+    nrf24l01_rf_ch_write(); 
+    //==================================================
+
+    nrf24l01_set_rf_setup_dr(NRF24L01_DR_250KBPS); 
+    nrf24l01_set_rf_setup_pwr(NRF24L01_RF_PWR_6DBM); 
+    nrf24l01_rf_setup_write(); 
+
+    // See the bit legend and setters above to see where the data check value come from 
+    spi_mock_get_write_data((void *)&rf_setup_mock, &rf_setup_mock_size, SPI_MOCK_INDEX_0); 
+    LONGS_EQUAL(RF_SETUP_SET_DATA_0, rf_setup_mock); 
+    LONGS_EQUAL(BYTE_1, rf_setup_mock_size); 
+
+    nrf24l01_set_rf_setup_dr(NRF24L01_DR_1MBPS); 
+    nrf24l01_set_rf_setup_pwr(NRF24L01_RF_PWR_12DBM); 
+    nrf24l01_rf_setup_write(); 
+
+    // See the bit legend and setters above to see where the data check value come from 
+    spi_mock_get_write_data((void *)&rf_setup_mock, &rf_setup_mock_size, SPI_MOCK_INDEX_1); 
+    LONGS_EQUAL(RF_SETUP_SET_DATA_1, rf_setup_mock); 
+    LONGS_EQUAL(BYTE_1, rf_setup_mock_size); 
+}
+
 //=======================================================================================
 
 

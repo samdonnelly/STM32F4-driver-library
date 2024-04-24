@@ -547,7 +547,7 @@ I2C_STATUS lsm303agr_read(
 {
     I2C_STATUS i2c_status = I2C_OK; 
 
-    // Generate a start condition, send the slave address with a write offset, then sned 
+    // Generate a start condition, send the slave address with a write offset, then send 
     // the slave's register address to read. 
     i2c_status |= i2c_start(lsm303agr_driver_data.i2c); 
     i2c_status |= i2c_write_addr(lsm303agr_driver_data.i2c, i2c_addr + I2C_W_OFFSET); 
