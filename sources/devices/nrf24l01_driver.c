@@ -261,6 +261,14 @@ static nrf24l01_driver_t nrf24l01_data;
 // Prototypes 
 
 /**
+ * @brief CONFIG register write 
+ * 
+ * @return NRF24L01_STATUS 
+ */
+NRF24L01_STATUS nrf24l01_config_write(void); 
+
+
+/**
  * @brief Set CE pin 
  * 
  * @param state : pin state 
@@ -1071,14 +1079,13 @@ NRF24L01_STATUS nrf24l01_pwr_down(void)
     // Set CE=0 to enter standby-1 state. 
     // Set PWR_UP=0 to enter power down state 
 
-    // // Set CE low to exit any active mode 
-    // nrf24l01_set_ce(GPIO_LOW); 
+    // Set CE low to exit any active mode 
+    nrf24l01_set_ce(GPIO_LOW); 
 
     // Set PWR_UP low to go to power down state 
     nrf24l01_data.config.pwr_up = (uint8_t)NRF24L01_PWR_DOWN; 
     // NRF24L01_STATUS status = nrf24l01_config_reg_write(); 
     NRF24L01_STATUS status = nrf24l01_config_write(); 
-    nrf24l01_set_ce(GPIO_LOW); 
 
     if (status != NRF24L01_OK)
     {
@@ -1092,12 +1099,11 @@ NRF24L01_STATUS nrf24l01_pwr_down(void)
 
 // Power up 
 NRF24L01_STATUS nrf24l01_pwr_up(void)
-{   
+{
     // Set PWR_UP high to exit the power down state 
     nrf24l01_data.config.pwr_up = (uint8_t)NRF24L01_PWR_UP; 
     // NRF24L01_STATUS status = nrf24l01_config_reg_write(); 
     NRF24L01_STATUS status = nrf24l01_config_write(); 
-    nrf24l01_set_ce(GPIO_LOW); 
 
     if (status == NRF24L01_OK)
     {
@@ -1115,7 +1121,7 @@ NRF24L01_STATUS nrf24l01_pwr_up(void)
 // CONFIG register write 
 NRF24L01_STATUS nrf24l01_config_write(void)
 {
-    return nrf24l01_reg_write_data(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
+    return nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
 }
 
 //==================================================

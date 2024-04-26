@@ -418,14 +418,6 @@ NRF24L01_STATUS nrf24l01_pwr_down(void);
  */
 NRF24L01_STATUS nrf24l01_pwr_up(void); 
 
-
-/**
- * @brief CONFIG register write 
- * 
- * @return NRF24L01_STATUS 
- */
-NRF24L01_STATUS nrf24l01_config_write(void); 
-
 //==================================================
 
 //=======================================================================================
