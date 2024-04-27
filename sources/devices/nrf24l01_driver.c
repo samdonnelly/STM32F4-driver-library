@@ -292,18 +292,18 @@ void nrf24l01_set_ce(gpio_pin_state_t state);
 NRF24L01_STATUS nrf24l01_set_data_mode(nrf24l01_mode_select_t mode); 
 
 
-/**
- * @brief CONFIG register write 
- * 
- * @details Writes the config register data held in the driver data record to the device' 
- *          CONFIG register. This function is called when the config register needs to be 
- *          updated like when changing modes or powering up/down. 
- * 
- * @see nrf24l01_config_reg_t 
- * 
- * @return NRF24L01_STATUS : write operation status 
- */
-NRF24L01_STATUS nrf24l01_config_reg_write(void); 
+// /**
+//  * @brief CONFIG register write 
+//  * 
+//  * @details Writes the config register data held in the driver data record to the device' 
+//  *          CONFIG register. This function is called when the config register needs to be 
+//  *          updated like when changing modes or powering up/down. 
+//  * 
+//  * @see nrf24l01_config_reg_t 
+//  * 
+//  * @return NRF24L01_STATUS : write operation status 
+//  */
+// NRF24L01_STATUS nrf24l01_config_reg_write(void); 
 
 
 // /**
@@ -731,8 +731,8 @@ void nrf24l01_ptx_config(const uint8_t *tx_addr)
     // nrf24l01_config_reg_read(); 
     nrf24l01_config_read(); 
     nrf24l01_data.config.pwr_up = SET_BIT;   // Set to start up the device 
-    nrf24l01_config_reg_write(); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
+    nrf24l01_config_write(); 
+    // nrf24l01_config_reg_write(); 
     //==================================================
 
 
@@ -1117,13 +1117,6 @@ NRF24L01_STATUS nrf24l01_pwr_up(void)
     return status; 
 }
 
-
-// CONFIG register write 
-NRF24L01_STATUS nrf24l01_config_write(void)
-{
-    return nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
-}
-
 //==================================================
 
 //=======================================================================================
@@ -1144,8 +1137,7 @@ NRF24L01_STATUS nrf24l01_set_data_mode(nrf24l01_mode_select_t mode)
 {
     // Write PRIM_RX=mode to the device 
     nrf24l01_data.config.prim_rx = (uint8_t)mode; 
-    NRF24L01_STATUS nrf24l01_status = nrf24l01_config_reg_write(); 
-    nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
+    NRF24L01_STATUS nrf24l01_status = nrf24l01_config_write(); 
 
     // Delay to clear the device settling state 
     tim_delay_us(nrf24l01_data.timer, NRF24L01_SETTLE_DELAY); 
@@ -1215,23 +1207,174 @@ SPI_STATUS nrf24l01_write(
 // Register functions 
 
 // CONFIG register write 
-NRF24L01_STATUS nrf24l01_config_reg_write(void)
+NRF24L01_STATUS nrf24l01_config_write(void)
 {
-    // // Format the data to send 
-    // uint8_t config = (nrf24l01_data.config.unused_1    << SHIFT_7) | 
-    //                  (nrf24l01_data.config.mask_rx_dr  << SHIFT_6) | 
-    //                  (nrf24l01_data.config.mask_tx_ds  << SHIFT_5) | 
-    //                  (nrf24l01_data.config.mask_max_rt << SHIFT_4) | 
-    //                  (nrf24l01_data.config.en_crc      << SHIFT_3) | 
-    //                  (nrf24l01_data.config.crco        << SHIFT_2) | 
-    //                  (nrf24l01_data.config.pwr_up      << SHIFT_1) | 
-    //                  (nrf24l01_data.config.prim_rx); 
-
-    // Send the data to the CONFIG register 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, config); 
-    
     return nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
 }
+
+
+// STATUS register write 
+NRF24L01_STATUS nrf24l01_status_reg_write(void)
+{
+    // // Format the data to send 
+    // uint8_t status_reg = (nrf24l01_data.status.unused_1 << SHIFT_7) | 
+    //                      (nrf24l01_data.status.rx_dr    << SHIFT_6) | 
+    //                      (nrf24l01_data.status.tx_ds    << SHIFT_5) | 
+    //                      (nrf24l01_data.status.max_rt   << SHIFT_4) | 
+    //                      (nrf24l01_data.status.rx_p_no  << SHIFT_1) | 
+    //                      (nrf24l01_data.status.tx_full); 
+
+    // // Send the data to the STATUS register 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_STATUS, status_reg); 
+
+    return nrf24l01_reg_byte_write(NRF24L01_REG_STATUS, nrf24l01_data.status.status_reg); 
+}
+
+
+// STATUS register read 
+NRF24L01_STATUS nrf24l01_status_reg_read(void)
+{
+    // Write a no operation command to the device and the status register will be checked 
+    uint8_t buff = CLEAR; 
+    SPI_STATUS spi_status = nrf24l01_receive(NRF24L01_CMD_NOP, &buff, BYTE_0); 
+
+    if (spi_status)
+    {
+        return NRF24L01_READ_FAULT; 
+    }
+
+    return NRF24L01_OK; 
+}
+
+
+// FIFO_STATUS register read 
+NRF24L01_STATUS nrf24l01_fifo_status_reg_read(void)
+{
+    // // Read the FIFO_STATUS register and update the data record 
+    // uint8_t fifo_status = nrf24l01_reg_read(NRF24L01_REG_FIFO); 
+
+    // // Store the FIFO status register byte into the data record 
+    // nrf24l01_data.fifo_status.unused_1 = (fifo_status & FILTER_BIT_7) >> SHIFT_7; 
+    // nrf24l01_data.fifo_status.tx_reuse = (fifo_status & FILTER_BIT_6) >> SHIFT_6; 
+    // nrf24l01_data.fifo_status.tx_full  = (fifo_status & FILTER_BIT_5) >> SHIFT_5; 
+    // nrf24l01_data.fifo_status.tx_empty = (fifo_status & FILTER_BIT_4) >> SHIFT_4; 
+    // nrf24l01_data.fifo_status.unused_2 = (fifo_status & FILTER_4_LSB) >> SHIFT_2; 
+    // nrf24l01_data.fifo_status.rx_full  = (fifo_status & FILTER_BIT_1) >> SHIFT_1; 
+    // nrf24l01_data.fifo_status.rx_empty = (fifo_status & FILTER_BIT_0); 
+
+    // return fifo_status; 
+
+    return nrf24l01_reg_read(NRF24L01_REG_FIFO, 
+                             &nrf24l01_data.fifo_status.fifo_status_reg); 
+}
+
+
+// Register read 
+NRF24L01_STATUS nrf24l01_reg_read(
+    uint8_t reg_addr, 
+    uint8_t *reg_data)
+{
+    SPI_STATUS spi_status = nrf24l01_receive(NRF24L01_CMD_R_REG | reg_addr, reg_data, BYTE_1); 
+
+    if (spi_status)
+    {
+        return NRF24L01_READ_FAULT; 
+    }
+
+    return NRF24L01_OK; 
+}
+
+
+// 
+NRF24L01_STATUS nrf24l01_reg_write_data(
+    uint8_t reg_addr, 
+    uint8_t reg_data)
+{
+    // Set CE low to exit any active mode, write dta to the register, then set CE high 
+    // enter back into an active mode. 
+    nrf24l01_set_ce(GPIO_LOW); 
+    NRF24L01_STATUS status = nrf24l01_reg_byte_write(reg_addr, reg_data); 
+    nrf24l01_set_ce(GPIO_HIGH); 
+
+    return status; 
+}
+
+
+// Register byte write 
+NRF24L01_STATUS nrf24l01_reg_byte_write(
+    uint8_t reg_addr, 
+    uint8_t reg_data)
+{
+    return nrf24l01_reg_write(reg_addr, &reg_data, BYTE_1); 
+}
+
+
+// Register write 
+NRF24L01_STATUS nrf24l01_reg_write(
+    uint8_t reg_addr, 
+    const uint8_t *reg_data, 
+    uint8_t reg_size)
+{
+    SPI_STATUS spi_status = nrf24l01_write(NRF24L01_CMD_W_REG | reg_addr, reg_data, reg_size); 
+
+    if (spi_status)
+    {
+        return NRF24L01_WRITE_FAULT; 
+    }
+
+    return NRF24L01_OK; 
+}
+
+//=======================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Old Code 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//=======================================================================================
+// Register functions 
+
+// // CONFIG register write 
+// NRF24L01_STATUS nrf24l01_config_reg_write(void)
+// {
+//     // // Format the data to send 
+//     // uint8_t config = (nrf24l01_data.config.unused_1    << SHIFT_7) | 
+//     //                  (nrf24l01_data.config.mask_rx_dr  << SHIFT_6) | 
+//     //                  (nrf24l01_data.config.mask_tx_ds  << SHIFT_5) | 
+//     //                  (nrf24l01_data.config.mask_max_rt << SHIFT_4) | 
+//     //                  (nrf24l01_data.config.en_crc      << SHIFT_3) | 
+//     //                  (nrf24l01_data.config.crco        << SHIFT_2) | 
+//     //                  (nrf24l01_data.config.pwr_up      << SHIFT_1) | 
+//     //                  (nrf24l01_data.config.prim_rx); 
+
+//     // Send the data to the CONFIG register 
+//     // nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, config); 
+    
+//     return nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
+// }
 
 
 // // CONFIG register read 
@@ -1323,40 +1466,6 @@ NRF24L01_STATUS nrf24l01_config_reg_write(void)
 // }
 
 
-// STATUS register write 
-NRF24L01_STATUS nrf24l01_status_reg_write(void)
-{
-    // // Format the data to send 
-    // uint8_t status_reg = (nrf24l01_data.status.unused_1 << SHIFT_7) | 
-    //                      (nrf24l01_data.status.rx_dr    << SHIFT_6) | 
-    //                      (nrf24l01_data.status.tx_ds    << SHIFT_5) | 
-    //                      (nrf24l01_data.status.max_rt   << SHIFT_4) | 
-    //                      (nrf24l01_data.status.rx_p_no  << SHIFT_1) | 
-    //                      (nrf24l01_data.status.tx_full); 
-
-    // // Send the data to the STATUS register 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_STATUS, status_reg); 
-
-    return nrf24l01_reg_byte_write(NRF24L01_REG_STATUS, nrf24l01_data.status.status_reg); 
-}
-
-
-// STATUS register read 
-NRF24L01_STATUS nrf24l01_status_reg_read(void)
-{
-    // Write a no operation command to the device and the status register will be checked 
-    uint8_t buff = CLEAR; 
-    SPI_STATUS spi_status = nrf24l01_receive(NRF24L01_CMD_NOP, &buff, BYTE_0); 
-
-    if (spi_status)
-    {
-        return NRF24L01_READ_FAULT; 
-    }
-
-    return NRF24L01_OK; 
-}
-
-
 // // STATUS register state update 
 // void nrf24l01_status_reg_update(uint8_t status)
 // {
@@ -1370,28 +1479,6 @@ NRF24L01_STATUS nrf24l01_status_reg_read(void)
 // }
 
 
-// FIFO_STATUS register read 
-NRF24L01_STATUS nrf24l01_fifo_status_reg_read(void)
-{
-    // // Read the FIFO_STATUS register and update the data record 
-    // uint8_t fifo_status = nrf24l01_reg_read(NRF24L01_REG_FIFO); 
-
-    // // Store the FIFO status register byte into the data record 
-    // nrf24l01_data.fifo_status.unused_1 = (fifo_status & FILTER_BIT_7) >> SHIFT_7; 
-    // nrf24l01_data.fifo_status.tx_reuse = (fifo_status & FILTER_BIT_6) >> SHIFT_6; 
-    // nrf24l01_data.fifo_status.tx_full  = (fifo_status & FILTER_BIT_5) >> SHIFT_5; 
-    // nrf24l01_data.fifo_status.tx_empty = (fifo_status & FILTER_BIT_4) >> SHIFT_4; 
-    // nrf24l01_data.fifo_status.unused_2 = (fifo_status & FILTER_4_LSB) >> SHIFT_2; 
-    // nrf24l01_data.fifo_status.rx_full  = (fifo_status & FILTER_BIT_1) >> SHIFT_1; 
-    // nrf24l01_data.fifo_status.rx_empty = (fifo_status & FILTER_BIT_0); 
-
-    // return fifo_status; 
-
-    return nrf24l01_reg_read(NRF24L01_REG_FIFO, 
-                             &nrf24l01_data.fifo_status.fifo_status_reg); 
-}
-
-
 // // Register read 
 // uint8_t nrf24l01_reg_read(uint8_t reg_addr)
 // {
@@ -1400,62 +1487,5 @@ NRF24L01_STATUS nrf24l01_fifo_status_reg_read(void)
 //     nrf24l01_receive(NRF24L01_CMD_R_REG | reg_addr, &reg_read, BYTE_1); 
 //     return reg_read; 
 // }
-
-
-// Register read 
-NRF24L01_STATUS nrf24l01_reg_read(
-    uint8_t reg_addr, 
-    uint8_t *reg_data)
-{
-    SPI_STATUS spi_status = nrf24l01_receive(NRF24L01_CMD_R_REG | reg_addr, reg_data, BYTE_1); 
-
-    if (spi_status)
-    {
-        return NRF24L01_READ_FAULT; 
-    }
-
-    return NRF24L01_OK; 
-}
-
-
-// 
-NRF24L01_STATUS nrf24l01_reg_write_data(
-    uint8_t reg_addr, 
-    uint8_t reg_data)
-{
-    // Set CE low to exit any active mode, write dta to the register, then set CE high 
-    // enter back into an active mode. 
-    nrf24l01_set_ce(GPIO_LOW); 
-    NRF24L01_STATUS status = nrf24l01_reg_byte_write(reg_addr, reg_data); 
-    nrf24l01_set_ce(GPIO_HIGH); 
-
-    return status; 
-}
-
-
-// Register byte write 
-NRF24L01_STATUS nrf24l01_reg_byte_write(
-    uint8_t reg_addr, 
-    uint8_t reg_data)
-{
-    return nrf24l01_reg_write(reg_addr, &reg_data, BYTE_1); 
-}
-
-
-// Register write 
-NRF24L01_STATUS nrf24l01_reg_write(
-    uint8_t reg_addr, 
-    const uint8_t *reg_data, 
-    uint8_t reg_size)
-{
-    SPI_STATUS spi_status = nrf24l01_write(NRF24L01_CMD_W_REG | reg_addr, reg_data, reg_size); 
-
-    if (spi_status)
-    {
-        return NRF24L01_WRITE_FAULT; 
-    }
-
-    return NRF24L01_OK; 
-}
 
 //=======================================================================================
