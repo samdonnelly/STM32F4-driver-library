@@ -53,6 +53,8 @@ extern "C"
 
 #define CONFIG_GET_DATA_0 0x03 
 #define CONFIG_GET_DATA_1 0xFC 
+#define CONFIG_GET_DATA_2 0x02 
+#define CONFIG_GET_DATA_3 0x00 
 
 //=======================================================================================
 
@@ -286,29 +288,22 @@ TEST(nrf24l01_driver_test, config_get_data)
 // CONFIG - Power down / power up 
 TEST(nrf24l01_driver_test, config_power_down_power_up)
 {
-    // uint8_t rf_setup_mock = CLEAR; 
-    // uint8_t rf_setup_mock_size = CLEAR; 
+    uint8_t config_mock = CLEAR; 
+    uint8_t config_mock_size = CLEAR; 
 
-    nrf24l01_pwr_down(); 
     nrf24l01_pwr_up(); 
 
-    // nrf24l01_set_rf_setup_dr(NRF24L01_DR_250KBPS); 
-    // nrf24l01_set_rf_setup_pwr(NRF24L01_RF_PWR_6DBM); 
-    // nrf24l01_rf_setup_write(); 
+    // See the bit legend and setters above to see where the data check value come from 
+    spi_mock_get_write_data((void *)&config_mock, &config_mock_size, SPI_MOCK_INDEX_0); 
+    LONGS_EQUAL(CONFIG_GET_DATA_2, config_mock); 
+    LONGS_EQUAL(BYTE_1, config_mock_size); 
 
-    // // See the bit legend and setters above to see where the data check value come from 
-    // spi_mock_get_write_data((void *)&rf_setup_mock, &rf_setup_mock_size, SPI_MOCK_INDEX_0); 
-    // LONGS_EQUAL(RF_SETUP_SET_DATA_0, rf_setup_mock); 
-    // LONGS_EQUAL(BYTE_1, rf_setup_mock_size); 
+    nrf24l01_pwr_down(); 
 
-    // nrf24l01_set_rf_setup_dr(NRF24L01_DR_1MBPS); 
-    // nrf24l01_set_rf_setup_pwr(NRF24L01_RF_PWR_12DBM); 
-    // nrf24l01_rf_setup_write(); 
-
-    // // See the bit legend and setters above to see where the data check value come from 
-    // spi_mock_get_write_data((void *)&rf_setup_mock, &rf_setup_mock_size, SPI_MOCK_INDEX_1); 
-    // LONGS_EQUAL(RF_SETUP_SET_DATA_1, rf_setup_mock); 
-    // LONGS_EQUAL(BYTE_1, rf_setup_mock_size); 
+    // See the bit legend and setters above to see where the data check value come from 
+    spi_mock_get_write_data((void *)&config_mock, &config_mock_size, SPI_MOCK_INDEX_1); 
+    LONGS_EQUAL(CONFIG_GET_DATA_3, config_mock); 
+    LONGS_EQUAL(BYTE_1, config_mock_size); 
 }
 
 //=======================================================================================
