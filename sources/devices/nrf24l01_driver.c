@@ -718,17 +718,24 @@ void nrf24l01_ptx_config(const uint8_t *tx_addr)
     //==================================================
     // RF_CH 
     // nrf24l01_set_rf_channel(rf_ch_freq); 
+
+    // 'nrf24l01_rf_ch_write' is not used here because CE is already set low and must 
+    // remain low until PTX configuration is done. 
     nrf24l01_set_rf_ch(10); 
+    nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
     //==================================================
     
 
-    // Set up TX_ADDR - don't need to match RX_ADDR_P0 as not using auto acknowledge 
+    // Set up TX_ADDR 
+    // Don't need to match RX_ADDR_P0 because auto acknowledge is not being used. 
     nrf24l01_reg_write(NRF24L01_REG_TX_ADDR, tx_addr, NRF24l01_ADDR_WIDTH); 
 
 
     //==================================================
     // CONFIG 
     // nrf24l01_config_reg_read(); 
+
+    // We read first because the config register data record has not been initialized. 
     nrf24l01_config_read(); 
     nrf24l01_data.config.pwr_up = SET_BIT;   // Set to start up the device 
     nrf24l01_config_write(); 
@@ -749,6 +756,16 @@ void nrf24l01_prx_config(
     // Set CE low to exit any active mode 
     nrf24l01_set_ce(GPIO_LOW); 
 
+
+    //==================================================
+    // RF_CH 
+    // 'nrf24l01_rf_ch_write' is not used here because CE is already set low and must 
+    // remain low until PTX configuration is done. 
+    nrf24l01_set_rf_ch(10); 
+    nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
+    //==================================================
+
+
     // EN_RXADDR - set the data pipe to enable 
     uint8_t en_rxaddr = CLEAR; 
     nrf24l01_reg_read(NRF24L01_REG_EN_RXADDR, &en_rxaddr); 
@@ -768,6 +785,20 @@ void nrf24l01_prx_config(
     nrf24l01_reg_byte_write(
         (NRF24L01_REG_RX_PW_P0 + (uint8_t)pipe_num), 
         NRF24L01_MAX_PAYLOAD_LEN); 
+    
+
+    //==================================================
+    // CONFIG 
+    // nrf24l01_config_reg_read(); 
+
+    // We read first because the config register data record has not been initialized. 
+    nrf24l01_config_read(); 
+    nrf24l01_data.config.pwr_up = SET_BIT;   // Set to start up the device 
+    nrf24l01_data.config.prim_rx = SET_BIT;  // Set to RX mode 
+    nrf24l01_config_write(); 
+    // nrf24l01_config_reg_write(); 
+    //==================================================
+
 
     // Set CE high to enter back into an active mode 
     nrf24l01_set_ce(GPIO_HIGH); 
@@ -782,11 +813,31 @@ void nrf24l01_prx_config(
 // Data ready status 
 uint8_t nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num)
 {
-    // Check if there is data in the RX FIFO and if the data belongs to the specified 
-    // pipe number. 
+    uint8_t data_status = CLEAR; 
+
     nrf24l01_status_reg_read(); 
-    return (nrf24l01_data.status.rx_dr && 
-           (nrf24l01_data.status.rx_p_no & (uint8_t)pipe_num)); 
+    // data_status = (nrf24l01_data.status.rx_dr && 
+    //               (nrf24l01_data.status.rx_p_no & (uint8_t)pipe_num)); 
+    // This pipe check only works if you're using one pipe. It may block additional 
+    // pipes. 
+    data_status = (nrf24l01_data.status.rx_dr && 
+                  (nrf24l01_data.status.rx_p_no == (uint8_t)pipe_num)); 
+
+    // // Clear the RX_DR bit in the STATUS register 
+    // if (data_status)
+    // {
+    //     nrf24l01_data.status.rx_dr = CLEAR_BIT; 
+    //     nrf24l01_status_reg_write(); 
+    // }
+
+    return data_status; 
+
+    
+    // // Check if there is data in the RX FIFO and if the data belongs to the specified 
+    // // pipe number. 
+    // nrf24l01_status_reg_read(); 
+    // return (nrf24l01_data.status.rx_dr && 
+    //        (nrf24l01_data.status.rx_p_no & (uint8_t)pipe_num)); 
 }
 
 
@@ -804,24 +855,43 @@ void nrf24l01_receive_payload(
     }
 
     // Check FIFO status before attempting a read 
+    // if (nrf24l01_data.status.rx_dr && 
+    //    (nrf24l01_data.status.rx_p_no & (uint8_t)pipe_num))
     if (nrf24l01_data.status.rx_dr && 
-       (nrf24l01_data.status.rx_p_no & (uint8_t)pipe_num))
+       (nrf24l01_data.status.rx_p_no == (uint8_t)pipe_num))
     {
-        // Read the first byte from the RX FIFO --> This is the data length 
-        nrf24l01_receive(NRF24L01_CMD_R_RX_PL, &data_len, BYTE_1); 
+        data_len = NRF24L01_MAX_PAYLOAD_LEN; 
 
-        // Use the data length number to read the remaining RX FIFO data 
+        // Get data 
         nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, data_len); 
 
-        // // Read the contents from the RX FIFO 
-        // nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, NRF24L01_MAX_PAYLOAD_LEN); 
+        tim_delay_ms(nrf24l01_data.timer, 1); 
 
-        // Flush the RX FIFO to ensure old data is not read later 
+        // Flush RX FIFO 
         nrf24l01_write(NRF24L01_CMD_FLUSH_RX, &buff, BYTE_0); 
 
-        // Clear the RX_DR bit in the STATUS register 
+        tim_delay_ms(nrf24l01_data.timer, 1); 
+
+        // Write RX_DR = 1 to the status register to clear it 
+        // nrf24l01_data.status.rx_dr = CLEAR_BIT; 
         nrf24l01_status_reg_write(); 
-        nrf24l01_status_reg_read(); 
+
+
+        // // Read the first byte from the RX FIFO --> This is the data length 
+        // nrf24l01_receive(NRF24L01_CMD_R_RX_PL, &data_len, BYTE_1); 
+
+        // // Use the data length number to read the remaining RX FIFO data 
+        // nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, data_len); 
+
+        // // // Read the contents from the RX FIFO 
+        // // nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, NRF24L01_MAX_PAYLOAD_LEN); 
+
+        // // Flush the RX FIFO to ensure old data is not read later 
+        // nrf24l01_write(NRF24L01_CMD_FLUSH_RX, &buff, BYTE_0); 
+
+        // // Clear the RX_DR bit in the STATUS register 
+        // nrf24l01_status_reg_write(); 
+        // nrf24l01_status_reg_read(); 
     }
 }
 
@@ -834,7 +904,8 @@ uint8_t nrf24l01_send_payload(const uint8_t *data_buff)
     // uint8_t index = NRF24L01_DATA_SIZE_LEN; 
     // uint8_t tx_status = CLEAR; 
     uint8_t tx_status = NRF24L01_OK; 
-    uint16_t time_out = NRF24L01_TX_TIMEOUT; 
+    // uint16_t time_out = NRF24L01_TX_TIMEOUT; 
+    uint16_t time_out = 2; 
     uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
 
     if (data_buff == NULL)
@@ -852,8 +923,11 @@ uint8_t nrf24l01_send_payload(const uint8_t *data_buff)
     // nrf24l01_write(NRF24L01_CMD_W_TX_PL, pack_buff, data_len); 
     nrf24l01_write(NRF24L01_CMD_W_TX_PL, data_buff, data_len); 
 
-    // Check to see if the TX FIFO is empty - means data was transmitted. 
-    // If data has not been transferred before timeout then it's considered to have failed. 
+    // Check to see if the TX FIFO is empty. If it's empty it means data was transmitted. 
+    // There is a short blocking delay before checking the TX FIFO status to give the 
+    // device time to send the data. If data has not been transferred before timeout then 
+    // the transmission is considered to have failed. 
+    tim_delay_us(nrf24l01_data.timer, 350); 
     do 
     {
         nrf24l01_fifo_status_reg_read(); 
