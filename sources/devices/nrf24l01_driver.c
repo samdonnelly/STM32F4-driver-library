@@ -33,15 +33,27 @@
 #define NRF24L01_DATA_SIZE_LEN 1       // Data size indicator length 
 #define NRF24L01_MAX_DATA_LEN 30       // Max user data length 
 
+//==================================================
 // Timing 
-#define NRF24L01_CE_TX_DELAY 20        // Time CE is held high in TX (us) 
-#define NRF24L01_TX_TIMEOUT 0x0FFF     // Max number of times to check for successful transmission 
+
+// Initialization 
 #define NRF24L01_PWR_ON_DELAY 100      // Device power on reset delay (ms) 
 #define NRF24L01_START_DELAY 2         // Device start up delay (ms) 
-#define NRF24L01_SETTLE_DELAY 130      // Device state settling time delay (us) 
+
+// TX 
+#define NRF24L01_TX_DELAY 500          // Time before checking for successful transmission (us) 
+#define NRF24L01_TX_TIMEOUT 10         // Max times to check for successful transmission 
+
+// General 
+#define NRF24L01_RW_DELAY 1            // Delay between successive writes/reads (ms) 
+// #define NRF24L01_SETTLE_DELAY 130      // Device state settling time delay (us) 
+#define NRF24L01_CE_TX_DELAY 20        // Time CE is held high in TX (us) 
+
+//==================================================
 
 // Control 
 #define NRF24L01_DISABLE_REG 0x00      // Disable settings in a register 
+#define NRF24L01_STATUS_CLEAR 0x70     // STATUS register clear bits 
 
 //=======================================================================================
 
@@ -93,28 +105,29 @@ typedef enum {
 } nrf24l01_reg_addr_t; 
 
 
-// Register reset values (excludes read only bits) 
+// Register reset values 
 typedef enum {
-    NRF24L01_REG_RESET_CONFIG     = 0x08,   // CONFIG register reset value 
-    NRF24L01_REG_RESET_EN_AA      = 0x3F,   // EN_AA register reset value 
-    NRF24L01_REG_RESET_EN_RXADDR  = 0x03,   // EN_RXADDR register reset value 
-    NRF24L01_REG_RESET_SETUP_AW   = 0x03,   // SETUP_AW register reset value 
-    NRF24L01_REG_RESET_SETUP_RETR = 0x03,   // SETUP_RETR register reset value 
-    NRF24L01_REG_RESET_RF_CH      = 0x02,   // RF_CH register reset value 
-    NRF24L01_REG_RESET_RF_SET     = 0x0E,   // RF_SETUP register reset value 
-    NRF24L01_REG_RESET_STATUS     = 0x70,   // STATUS register reset value 
-    NRF24L01_REG_RESET_OBSERVE_TX = 0x00,   // OBSERVE_TX register reset value 
-    NRF24L01_REG_RESET_RPD        = 0x00,   // RPD register reset value 
-    NRF24L01_REG_RESET_RX_ADDR_P0 = 0xE7,   // RX_ADDR_P0 register reset value 
-    NRF24L01_REG_RESET_RX_ADDR_P1 = 0xC2,   // RX_ADDR_P1 register reset value 
-    NRF24L01_REG_RESET_RX_ADDR_P2 = 0xC3,   // RX_ADDR_P2 register reset value 
-    NRF24L01_REG_RESET_RX_ADDR_P3 = 0xC4,   // RX_ADDR_P3 register reset value 
-    NRF24L01_REG_RESET_RX_ADDR_P4 = 0xC5,   // RX_ADDR_P4 register reset value 
-    NRF24L01_REG_RESET_RX_ADDR_P5 = 0xC6,   // RX_ADDR_P5 register reset value 
-    NRF24L01_REG_RESET_TX_ADDR    = 0xE7,   // TX_ADDR register reset value 
-    NRF24L01_REG_RESET_RX_PW_PX   = 0x00,   // RX_PW_PX (X-->0-5) register reset value 
-    NRF24L01_REG_RESET_DYNPD      = 0x00,   // DYNPD register reset value 
-    NRF24L01_REG_RESET_FEATURE    = 0x00    // FEATURE register reset value 
+    NRF24L01_REG_RESET_CONFIG     = 0x08,   // CONFIG 
+    NRF24L01_REG_RESET_EN_AA      = 0x3F,   // EN_AA 
+    NRF24L01_REG_RESET_EN_RXADDR  = 0x03,   // EN_RXADDR 
+    NRF24L01_REG_RESET_SETUP_AW   = 0x03,   // SETUP_AW 
+    NRF24L01_REG_RESET_SETUP_RETR = 0x03,   // SETUP_RETR 
+    NRF24L01_REG_RESET_RF_CH      = 0x02,   // RF_CH 
+    NRF24L01_REG_RESET_RF_SETUP   = 0x0E,   // RF_SETUP 
+    NRF24L01_REG_RESET_STATUS     = 0x0E,   // STATUS 
+    NRF24L01_REG_RESET_OBSERVE_TX = 0x00,   // OBSERVE_TX 
+    NRF24L01_REG_RESET_RPD        = 0x00,   // RPD 
+    NRF24L01_REG_RESET_RX_ADDR_P0 = 0xE7,   // RX_ADDR_P0 
+    NRF24L01_REG_RESET_RX_ADDR_P1 = 0xC2,   // RX_ADDR_P1 
+    NRF24L01_REG_RESET_RX_ADDR_P2 = 0xC3,   // RX_ADDR_P2 
+    NRF24L01_REG_RESET_RX_ADDR_P3 = 0xC4,   // RX_ADDR_P3 
+    NRF24L01_REG_RESET_RX_ADDR_P4 = 0xC5,   // RX_ADDR_P4 
+    NRF24L01_REG_RESET_RX_ADDR_P5 = 0xC6,   // RX_ADDR_P5 
+    NRF24L01_REG_RESET_TX_ADDR    = 0xE7,   // TX_ADDR 
+    NRF24L01_REG_RESET_RX_PW_PX   = 0x00,   // RX_PW_PX (X-->0-5) 
+    NRF24L01_REG_FIFO_STATUS      = 0x11,   // FIFO_STATUS 
+    NRF24L01_REG_RESET_DYNPD      = 0x00,   // DYNPD 
+    NRF24L01_REG_RESET_FEATURE    = 0x00    // FEATURE 
 } nrf24l01_reg_reset_t; 
 
 //=======================================================================================
@@ -268,12 +281,28 @@ static nrf24l01_driver_t nrf24l01_data;
 NRF24L01_STATUS nrf24l01_config_write(void); 
 
 
+// /**
+//  * @brief Set CE pin 
+//  * 
+//  * @param state : pin state 
+//  */
+// void nrf24l01_set_ce(gpio_pin_state_t state); 
+
+
 /**
- * @brief Set CE pin 
+ * @brief CE pin enable 
  * 
- * @param state : pin state 
+ * @details Set CE pin high to enter an active mode 
  */
-void nrf24l01_set_ce(gpio_pin_state_t state); 
+void nrf24l01_ce_enable(void); 
+
+
+/**
+ * @brief CE pin disable 
+ * 
+ * @details Set CE pin low to exit an active mode 
+ */
+void nrf24l01_ce_disable(void); 
 
 
 /**
@@ -425,42 +454,6 @@ NRF24L01_STATUS nrf24l01_status_reg_read(void);
 NRF24L01_STATUS nrf24l01_fifo_status_reg_read(void); 
 
 
-/**
- * @brief Receive data from another transceiver 
- * 
- * @details Takes a command and a data length and reads data from the device into the 
- *          read buffer over SPI. The STATUS register contents are updated in the data 
- *          record and the status of the read operation is returned. Note that the 
- *          device sends the STATUS register contents when a command is written to it. 
- * 
- * @param cmd : device command 
- * @param rec_buff : buffer to store received data 
- * @param data_len : length of data to read (excluding status) 
- */
-SPI_STATUS nrf24l01_receive(
-    uint8_t cmd, 
-    uint8_t *rec_buff, 
-    uint8_t data_len); 
-
-
-/**
- * @brief Send data to another transceiver 
- * 
- * @details Takes a command and a data length and writes data from the send buffer to 
- *          the device over SPI. The STATUS register contents are updated in the data 
- *          record and the status of the write operation is returned. Note that the 
- *          device sends the STATUS register contents when a command is written to it. 
- * 
- * @param cmd : device command 
- * @param send_buff : buffer that stores data to be sent to the device 
- * @param data_len : length of data to send (excluding command) 
- */
-SPI_STATUS nrf24l01_write(
-    uint8_t cmd, 
-    const uint8_t *send_buff, 
-    uint8_t data_len); 
-
-
 // /**
 //  * @brief Register read 
 //  * 
@@ -489,15 +482,33 @@ NRF24L01_STATUS nrf24l01_reg_read(
 
 
 /**
- * @brief 
+ * @brief Receive data from another transceiver 
+ * 
+ * @details Takes a command and a data length and reads data from the device into the 
+ *          read buffer over SPI. The STATUS register contents are updated in the data 
+ *          record and the status of the read operation is returned. Note that the 
+ *          device sends the STATUS register contents when a command is written to it. 
+ * 
+ * @param cmd : device command 
+ * @param rec_buff : buffer to store received data 
+ * @param data_len : length of data to read (excluding status) 
+ * @return NRF24L01_STATUS : read status 
+ */
+NRF24L01_STATUS nrf24l01_receive(
+    uint8_t cmd, 
+    uint8_t *rec_buff, 
+    uint8_t data_len); 
+
+
+/**
+ * @brief FIFO flush 
+ * 
+ * @details 
  * 
  * @param reg_addr 
- * @param reg_data 
  * @return NRF24L01_STATUS 
  */
-NRF24L01_STATUS nrf24l01_reg_write_data(
-    uint8_t reg_addr, 
-    uint8_t reg_data); 
+NRF24L01_STATUS nrf24l01_fifo_flush(uint8_t reg_addr); 
 
 
 /**
@@ -533,6 +544,25 @@ NRF24L01_STATUS nrf24l01_reg_write(
     const uint8_t *reg_data, 
     uint8_t reg_size); 
 
+
+/**
+ * @brief Send data to another transceiver 
+ * 
+ * @details Takes a command and a data length and writes data from the send buffer to 
+ *          the device over SPI. The STATUS register contents are updated in the data 
+ *          record and the status of the write operation is returned. Note that the 
+ *          device sends the STATUS register contents when a command is written to it. 
+ * 
+ * @param cmd : device command 
+ * @param send_buff : buffer that stores data to be sent to the device 
+ * @param data_len : length of data to send (excluding command) 
+ * @return NRF24L01_STATUS : write status 
+ */
+NRF24L01_STATUS nrf24l01_write(
+    uint8_t cmd, 
+    const uint8_t *send_buff, 
+    uint8_t data_len); 
+
 //=======================================================================================
 
 
@@ -540,7 +570,7 @@ NRF24L01_STATUS nrf24l01_reg_write(
 // Initialization 
 
 // nRF24L01 initialization 
-void nrf24l01_init(
+NRF24L01_STATUS nrf24l01_init(
     SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio_ss, 
     pin_selector_t ss_pin, 
@@ -551,19 +581,10 @@ void nrf24l01_init(
     nrf24l01_data_rate_t data_rate, 
     nrf24l01_rf_pwr_t rf_pwr)
 {
-    // uint8_t reg_buff = CLEAR; 
-    uint8_t p0_addr_buff[NRF24l01_ADDR_WIDTH]; 
-    uint8_t p1_addr_buff[NRF24l01_ADDR_WIDTH]; 
+    NRF24L01_STATUS init_status = NRF24L01_OK; 
 
-    //===================================================
+    //==================================================
     // Initialize data 
-
-    // Default addresses 
-    memset((void *)p0_addr_buff, NRF24L01_REG_RESET_RX_ADDR_P0, sizeof(p0_addr_buff)); 
-    memset((void *)p1_addr_buff, NRF24L01_REG_RESET_RX_ADDR_P1, sizeof(p1_addr_buff)); 
-
-    // Reset the data record 
-    memset((void *)&nrf24l01_data, CLEAR, sizeof(nrf24l01_driver_t)); 
 
     // Peripherals 
     nrf24l01_data.spi = spi; 
@@ -572,29 +593,10 @@ void nrf24l01_init(
     nrf24l01_data.ss_pin = (gpio_pin_num_t)(SET_BIT << ss_pin); 
     nrf24l01_data.en_pin = (gpio_pin_num_t)(SET_BIT << en_pin); 
     nrf24l01_data.timer = timer; 
-
-    // // CONFIG register 
-    // nrf24l01_data.config.pwr_up = SET_BIT;   // Set to start up the device 
-    // nrf24l01_data.config.prim_rx = SET_BIT;  // Default to RX mode 
-
-    // // RF_CH register 
-    // nrf24l01_data.rf_ch.rf_ch = NRF24L01_REG_RESET_RF_CH; 
-
-    // // RF_SETUP register (set to default) 
-    // nrf24l01_data.rf_setup.rf_dr_low = 
-    //     ((uint8_t)NRF24L01_DR_2MBPS >> SHIFT_1) & NRF24L01_RF_DR_MASK; 
-    // nrf24l01_data.rf_setup.rf_dr_high = 
-    //     (uint8_t)NRF24L01_DR_2MBPS & NRF24L01_RF_DR_MASK; 
-    // nrf24l01_data.rf_setup.rf_pwr = SET_3; 
-
-    // // STATUS register (write 1 to clear) 
-    // nrf24l01_data.status.rx_dr = SET_BIT; 
-    // nrf24l01_data.status.tx_ds = SET_BIT; 
-    // nrf24l01_data.status.max_rt = SET_BIT; 
     
-    //===================================================
+    //==================================================
 
-    //===================================================
+    //==================================================
     // Configure GPIO pins 
 
     // SPI slave select pin (CSN) 
@@ -606,145 +608,218 @@ void nrf24l01_init(
         en_pin, 
         MODER_GPO, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     
-    //===================================================
+    //==================================================
+    
+    nrf24l01_ce_disable(); 
 
     //==================================================
     // Device initialization 
-    
-    // Set CE low to prevent entering an active (TX/RX) state 
-    nrf24l01_set_ce(GPIO_LOW); 
+
+    // Configure registers to work for this driver. Registers are either reset to their 
+    // default value or diabled. Specific settings for PTX and PRX devices are set 
+    // using the PTX and PRX config functions below. 
 
     // Delay to ensure power on reset state is cleared before accessing the device 
     tim_delay_ms(nrf24l01_data.timer, NRF24L01_PWR_ON_DELAY); 
 
     // // Flush the FIFOs to ensure no leftover data 
-    // nrf24l01_write(NRF24L01_CMD_FLUSH_TX, &reg_buff, BYTE_0); 
-    // nrf24l01_write(NRF24L01_CMD_FLUSH_RX, &reg_buff, BYTE_0); 
+    // init_status |= nrf24l01_fifo_flush(NRF24L01_CMD_FLUSH_TX); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+    // init_status |= nrf24l01_fifo_flush(NRF24L01_CMD_FLUSH_RX); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
 
-    // // Set register values to their reset/default value 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, NRF24L01_REG_RESET_CONFIG); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_EN_AA, NRF24L01_REG_RESET_EN_AA); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_EN_RXADDR, NRF24L01_REG_RESET_EN_RXADDR); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_SETUP_AW, NRF24L01_REG_RESET_SETUP_AW); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_SETUP_RETR, NRF24L01_REG_RESET_SETUP_RETR); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, NRF24L01_REG_RESET_RF_CH); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, NRF24L01_REG_RESET_RF_SET); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_STATUS, NRF24L01_REG_RESET_STATUS); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_OBSERVE_TX, NRF24L01_REG_RESET_OBSERVE_TX); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RPD, NRF24L01_REG_RESET_RPD); 
-    // nrf24l01_reg_write(NRF24L01_REG_RX_ADDR_P0, p0_addr_buff, NRF24l01_ADDR_WIDTH); 
-    // nrf24l01_reg_write(NRF24L01_REG_RX_ADDR_P1, p1_addr_buff, NRF24l01_ADDR_WIDTH); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P2, NRF24L01_REG_RESET_RX_ADDR_P2); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P3, NRF24L01_REG_RESET_RX_ADDR_P3); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P4, NRF24L01_REG_RESET_RX_ADDR_P4); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P5, NRF24L01_REG_RESET_RX_ADDR_P5); 
-    // nrf24l01_reg_write(NRF24L01_REG_TX_ADDR, p0_addr_buff, NRF24l01_ADDR_WIDTH); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P0, NRF24L01_REG_RESET_RX_PW_PX); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P1, NRF24L01_REG_RESET_RX_PW_PX); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P2, NRF24L01_REG_RESET_RX_PW_PX); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P3, NRF24L01_REG_RESET_RX_PW_PX); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P4, NRF24L01_REG_RESET_RX_PW_PX); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P5, NRF24L01_REG_RESET_RX_PW_PX); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_DYNPD, NRF24L01_REG_RESET_DYNPD); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_FEATURE, NRF24L01_REG_RESET_FEATURE); 
-
-    // Configure registers to work for this driver 
-    // The below settings are common between both PRX and PTX devices. Registers not 
-    // changed here remain at their default value or are changed selectively by setters. 
-
-    //==================================================
-    // CONFIG - Power up the device and default to a PRX device. Delay to allow time 
-    // for the start up state to pass. 
-    // nrf24l01_config_reg_write(); 
-    nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, NRF24L01_REG_RESET_CONFIG); 
-    tim_delay_ms(nrf24l01_data.timer, NRF24L01_START_DELAY); 
-    //==================================================
+    // CONFIG - leave the device in power down mode for initialization 
+    nrf24l01_data.config.config_reg = NRF24L01_REG_RESET_CONFIG; 
+    init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, 
+                                           nrf24l01_data.config.config_reg); 
+    tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
     
     // EN_AA - disable auto acknowledgment (Enhanced Shockburst TM not used) 
-    nrf24l01_reg_byte_write(NRF24L01_REG_EN_AA, NRF24L01_DISABLE_REG); 
+    init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_EN_AA, NRF24L01_DISABLE_REG); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_EN_AA, NRF24L01_REG_RESET_EN_AA); 
+    tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
     
     // EN_RXADDR - disable data pipes for now - configured separately 
-    nrf24l01_reg_byte_write(NRF24L01_REG_EN_RXADDR, NRF24L01_DISABLE_REG); 
+    init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_EN_RXADDR, NRF24L01_DISABLE_REG); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_EN_RXADDR, NRF24L01_REG_RESET_EN_RXADDR); 
+    tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
 
-
-    //==================================================
     // SETUP_AW 
-    nrf24l01_reg_byte_write(NRF24L01_REG_SETUP_AW, NRF24L01_REG_RESET_SETUP_AW); 
-    //==================================================
-
+    init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_SETUP_AW, 
+                                           NRF24L01_REG_RESET_SETUP_AW); 
+    tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
     
     // SETUP_RETR - disable retransmission because auto acknowledgement not used 
-    nrf24l01_reg_byte_write(NRF24L01_REG_SETUP_RETR, NRF24L01_DISABLE_REG); 
+    init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_SETUP_RETR, NRF24L01_DISABLE_REG); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_SETUP_RETR, NRF24L01_REG_RESET_SETUP_RETR); 
+    tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
 
+    // // RF_CH 
+    // nrf24l01_data.rf_ch.rf_ch_reg = NRF24L01_REG_RESET_RF_CH; 
+    // init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, 
+    //                                        nrf24l01_data.rf_ch.rf_ch_reg); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
 
-    //==================================================
-    // RF_CH 
-    nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, NRF24L01_REG_RESET_RF_CH); 
-    //==================================================
-
-
-    //==================================================
     // RF_SETUP 
-    nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, NRF24L01_REG_RESET_RF_SET); 
+    nrf24l01_data.rf_setup.rf_set_reg = NRF24L01_REG_RESET_RF_SETUP; 
+    init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, 
+                                           nrf24l01_data.rf_setup.rf_set_reg); 
+    tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // STATUS - clear all the writeable bits - status gets updated with each write/read 
+    // init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_STATUS, 
+    //                                        NRF24L01_REG_RESET_STATUS | NRF24L01_STATUS_CLEAR); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // OBSERVE_TX 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_OBSERVE_TX, NRF24L01_REG_RESET_OBSERVE_TX); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RPD 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RPD, NRF24L01_REG_RESET_RPD); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_ADDR_P0 
+    // nrf24l01_reg_write(NRF24L01_REG_RX_ADDR_P0, p0_addr_buff, NRF24l01_ADDR_WIDTH); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_ADDR_P1 
+    // nrf24l01_reg_write(NRF24L01_REG_RX_ADDR_P1, p1_addr_buff, NRF24l01_ADDR_WIDTH); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_ADDR_P2 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P2, NRF24L01_REG_RESET_RX_ADDR_P2); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_ADDR_P3 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P3, NRF24L01_REG_RESET_RX_ADDR_P3); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_ADDR_P4 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P4, NRF24L01_REG_RESET_RX_ADDR_P4); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_ADDR_P5 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P5, NRF24L01_REG_RESET_RX_ADDR_P5); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // TX_ADDR 
+    // nrf24l01_reg_write(NRF24L01_REG_TX_ADDR, p0_addr_buff, NRF24l01_ADDR_WIDTH); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_PW_P0 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P0, NRF24L01_REG_RESET_RX_PW_PX); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_PW_P1 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P1, NRF24L01_REG_RESET_RX_PW_PX); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_PW_P2 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P2, NRF24L01_REG_RESET_RX_PW_PX); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_PW_P3 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P3, NRF24L01_REG_RESET_RX_PW_PX); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_PW_P4 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P4, NRF24L01_REG_RESET_RX_PW_PX); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // RX_PW_P5 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P5, NRF24L01_REG_RESET_RX_PW_PX); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // FIFO_STATUS - read the FIFO status register to update the driver data record 
+    // init_status |= nrf24l01_fifo_status_reg_read(); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // ACK_PLD 
+
+    // TX_PLD 
+
+    // RX_PLD 
+
+    // DYNPD 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_DYNPD, NRF24L01_REG_RESET_DYNPD); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // FEATURE 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_FEATURE, NRF24L01_REG_RESET_FEATURE); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
     //==================================================
+
+    //==================================================
+    // User initialization 
+
+    // Configure the settings specified by the user. These can be updated later using 
+    // setters if needed. 
+
+    // RF_CH 
+    nrf24l01_set_rf_ch(rf_ch_freq); 
+    init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, 
+                                           nrf24l01_data.rf_ch.rf_ch_reg); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // // RF_SETUP 
+    // nrf24l01_set_rf_setup_dr(data_rate); 
+    // nrf24l01_set_rf_setup_pwr(rf_pwr); 
+    // init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, 
+    //                                        nrf24l01_data.rf_setup.rf_set_reg); 
     
-
-    // // FIFO_STATUS - read the FIFO status register to update the driver data record 
-    // nrf24l01_fifo_status_reg_read(); 
-
-    // Set CE high to enter RX mode 
-    nrf24l01_set_ce(GPIO_HIGH); 
-
     //==================================================
 
-    //==================================================
-    // Communication settings 
+    nrf24l01_ce_enable(); 
 
-    // nrf24l01_set_rf_channel(rf_ch_freq); 
-    // nrf24l01_set_rf_dr(data_rate); 
-    // nrf24l01_set_rf_pwr(rf_pwr); 
-    
-    //==================================================
+    return init_status; 
 }
 
 
 // Configure a devices PTX settings 
 void nrf24l01_ptx_config(const uint8_t *tx_addr)
 {
-    // Set CE low to exit any active mode 
-    nrf24l01_set_ce(GPIO_LOW); 
+    if (tx_addr == NULL)
+    {
+        return; 
+    }
 
+    nrf24l01_ce_disable(); 
 
     //==================================================
-    // RF_CH 
-    // nrf24l01_set_rf_channel(rf_ch_freq); 
+    // Dev 
 
-    // 'nrf24l01_rf_ch_write' is not used here because CE is already set low and must 
-    // remain low until PTX configuration is done. 
-    nrf24l01_set_rf_ch(10); 
-    nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
-    //==================================================
-    
-
-    // Set up TX_ADDR 
+    // Set TX_ADDR 
     // Don't need to match RX_ADDR_P0 because auto acknowledge is not being used. 
     nrf24l01_reg_write(NRF24L01_REG_TX_ADDR, tx_addr, NRF24l01_ADDR_WIDTH); 
 
+    //==================================================
+
 
     //==================================================
-    // CONFIG 
-    // nrf24l01_config_reg_read(); 
+    // Old code 
+    
+    // // RF_CH 
+    // // nrf24l01_set_rf_channel(rf_ch_freq); 
+    // // 'nrf24l01_rf_ch_write' is not used here because CE is already set low and must 
+    // // remain low until PTX configuration is done. 
+    // nrf24l01_set_rf_ch(10); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
 
+    // // Set up TX_ADDR 
+    // // Don't need to match RX_ADDR_P0 because auto acknowledge is not being used. 
+    // nrf24l01_reg_write(NRF24L01_REG_TX_ADDR, tx_addr, NRF24l01_ADDR_WIDTH); 
+
+    // CONFIG 
     // We read first because the config register data record has not been initialized. 
     nrf24l01_config_read(); 
     nrf24l01_data.config.pwr_up = SET_BIT;   // Set to start up the device 
     nrf24l01_config_write(); 
-    // nrf24l01_config_reg_write(); 
+
     //==================================================
 
-
-    // Set CE high to enter back into an active mode 
-    nrf24l01_set_ce(GPIO_HIGH); 
+    nrf24l01_ce_enable(); 
 }
 
 
@@ -753,55 +828,76 @@ void nrf24l01_prx_config(
     const uint8_t *rx_addr, 
     nrf24l01_data_pipe_t pipe_num)
 {
-    // Set CE low to exit any active mode 
-    nrf24l01_set_ce(GPIO_LOW); 
+    uint8_t en_rxaddr; 
 
+    if (rx_addr == NULL)
+    {
+        return; 
+    }
+
+    nrf24l01_ce_disable(); 
 
     //==================================================
-    // RF_CH 
-    // 'nrf24l01_rf_ch_write' is not used here because CE is already set low and must 
-    // remain low until PTX configuration is done. 
-    nrf24l01_set_rf_ch(10); 
-    nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
-    //==================================================
-
+    // Dev 
 
     // EN_RXADDR - set the data pipe to enable 
-    uint8_t en_rxaddr = CLEAR; 
     nrf24l01_reg_read(NRF24L01_REG_EN_RXADDR, &en_rxaddr); 
     nrf24l01_reg_byte_write(NRF24L01_REG_EN_RXADDR, 
                             en_rxaddr | (SET_BIT << (uint8_t)pipe_num)); 
-    // nrf24l01_reg_byte_write(
-    //     NRF24L01_REG_EN_RXADDR, 
-    //     nrf24l01_reg_read(NRF24L01_REG_EN_RXADDR) | (SET_BIT << (uint8_t)pipe_num)); 
+    tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
 
     // RX_ADDR_PX - set the chosen data pipe address 
     nrf24l01_reg_write(
         NRF24L01_REG_RX_ADDR_P0 + (uint8_t)pipe_num, 
         rx_addr, 
         NRF24l01_ADDR_WIDTH); 
+    tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
 
     // RX_PW_PX - set the max number of bytes in RX payload in the chosen data pipe 
     nrf24l01_reg_byte_write(
         (NRF24L01_REG_RX_PW_P0 + (uint8_t)pipe_num), 
         NRF24L01_MAX_PAYLOAD_LEN); 
-    
 
     //==================================================
-    // CONFIG 
-    // nrf24l01_config_reg_read(); 
 
+
+    //==================================================
+    // Old code 
+
+    // // RF_CH 
+    // // 'nrf24l01_rf_ch_write' is not used here because CE is already set low and must 
+    // // remain low until PTX configuration is done. 
+    // nrf24l01_set_rf_ch(10); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
+
+    // // EN_RXADDR - set the data pipe to enable 
+    // uint8_t en_rxaddr = CLEAR; 
+    // nrf24l01_reg_read(NRF24L01_REG_EN_RXADDR, &en_rxaddr); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_EN_RXADDR, 
+    //                         en_rxaddr | (SET_BIT << (uint8_t)pipe_num)); 
+
+    // // RX_ADDR_PX - set the chosen data pipe address 
+    // nrf24l01_reg_write(
+    //     NRF24L01_REG_RX_ADDR_P0 + (uint8_t)pipe_num, 
+    //     rx_addr, 
+    //     NRF24l01_ADDR_WIDTH); 
+
+    // // RX_PW_PX - set the max number of bytes in RX payload in the chosen data pipe 
+    // nrf24l01_reg_byte_write(
+    //     (NRF24L01_REG_RX_PW_P0 + (uint8_t)pipe_num), 
+    //     NRF24L01_MAX_PAYLOAD_LEN); 
+    
+    // CONFIG 
     // We read first because the config register data record has not been initialized. 
     nrf24l01_config_read(); 
     nrf24l01_data.config.pwr_up = SET_BIT;   // Set to start up the device 
+    // prim_rx should be changed depending on the action requested by the device 
     nrf24l01_data.config.prim_rx = SET_BIT;  // Set to RX mode 
     nrf24l01_config_write(); 
-    // nrf24l01_config_reg_write(); 
+
     //==================================================
 
-
-    // Set CE high to enter back into an active mode 
-    nrf24l01_set_ce(GPIO_HIGH); 
+    nrf24l01_ce_enable(); 
 }
 
 //=======================================================================================
@@ -811,8 +907,13 @@ void nrf24l01_prx_config(
 // User functions 
 
 // Data ready status 
+// DATA_PIPE nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num)
 uint8_t nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num)
 {
+    // nrf24l01_status_reg_read(); 
+    // // return (DATA_PIPE)nrf24l01_data.status.rx_p_no; 
+    // return (nrf24l01_data.status.rx_dr && (nrf24l01_data.status.rx_p_no == (uint8_t)pipe_num)); 
+
     uint8_t data_status = CLEAR; 
 
     nrf24l01_status_reg_read(); 
@@ -842,12 +943,10 @@ uint8_t nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num)
 
 
 // Receive payload 
-void nrf24l01_receive_payload(
-    uint8_t *read_buff, 
-    nrf24l01_data_pipe_t pipe_num)
+void nrf24l01_receive_payload(uint8_t *read_buff, nrf24l01_data_pipe_t pipe_num)
 {
-    uint8_t data_len = CLEAR; 
-    uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
+    // uint8_t data_len = CLEAR; 
+    // uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
 
     if (read_buff == NULL)
     {
@@ -859,39 +958,19 @@ void nrf24l01_receive_payload(
     //    (nrf24l01_data.status.rx_p_no & (uint8_t)pipe_num))
     if (nrf24l01_data.status.rx_dr && 
        (nrf24l01_data.status.rx_p_no == (uint8_t)pipe_num))
+    // if (nrf24l01_data.status.rx_dr)
     {
-        data_len = NRF24L01_MAX_PAYLOAD_LEN; 
-
         // Get data 
-        nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, data_len); 
+        nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, NRF24L01_MAX_PAYLOAD_LEN); 
+        tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
 
-        tim_delay_ms(nrf24l01_data.timer, 1); 
-
+        // We don't want to flush in case there is other pipe data still to be read. 
         // Flush RX FIFO 
-        nrf24l01_write(NRF24L01_CMD_FLUSH_RX, &buff, BYTE_0); 
+        nrf24l01_fifo_flush(NRF24L01_CMD_FLUSH_RX); 
+        tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
 
-        tim_delay_ms(nrf24l01_data.timer, 1); 
-
-        // Write RX_DR = 1 to the status register to clear it 
-        // nrf24l01_data.status.rx_dr = CLEAR_BIT; 
+        // Write RX_DR = 1 to the status register to clear it. It is already equal to 1. 
         nrf24l01_status_reg_write(); 
-
-
-        // // Read the first byte from the RX FIFO --> This is the data length 
-        // nrf24l01_receive(NRF24L01_CMD_R_RX_PL, &data_len, BYTE_1); 
-
-        // // Use the data length number to read the remaining RX FIFO data 
-        // nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, data_len); 
-
-        // // // Read the contents from the RX FIFO 
-        // // nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, NRF24L01_MAX_PAYLOAD_LEN); 
-
-        // // Flush the RX FIFO to ensure old data is not read later 
-        // nrf24l01_write(NRF24L01_CMD_FLUSH_RX, &buff, BYTE_0); 
-
-        // // Clear the RX_DR bit in the STATUS register 
-        // nrf24l01_status_reg_write(); 
-        // nrf24l01_status_reg_read(); 
     }
 }
 
@@ -899,49 +978,63 @@ void nrf24l01_receive_payload(
 // Send payload 
 uint8_t nrf24l01_send_payload(const uint8_t *data_buff)
 {
-    // uint8_t pack_buff[NRF24L01_MAX_PAYLOAD_LEN]; 
     uint8_t data_len = CLEAR; 
+    uint8_t tx_status = NRF24L01_OK; 
+    uint8_t time_out = NRF24L01_TX_TIMEOUT; 
+    // uint8_t pack_buff[NRF24L01_MAX_PAYLOAD_LEN]; 
     // uint8_t index = NRF24L01_DATA_SIZE_LEN; 
     // uint8_t tx_status = CLEAR; 
-    uint8_t tx_status = NRF24L01_OK; 
-    // uint16_t time_out = NRF24L01_TX_TIMEOUT; 
-    uint16_t time_out = 2; 
-    uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
+    // uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
 
     if (data_buff == NULL)
     {
         return tx_status; 
     }
 
-
     //==================================================
     // dev 
 
-    data_len = NRF24L01_MAX_PAYLOAD_LEN; 
+    data_len = (uint8_t)sizeof(data_buff); 
 
-    // Write the payload to the TX FIFO 
-    // nrf24l01_write(NRF24L01_CMD_W_TX_PL, pack_buff, data_len); 
+    if (data_len > NRF24L01_MAX_PAYLOAD_LEN)
+    {
+        data_len = NRF24L01_MAX_PAYLOAD_LEN; 
+    }
+
+    // // Set CE low to exit RX mode, set to TX mode and write the payload to the TX FIFO. 
+    // nrf24l01_ce_disable(); 
+    // nrf24l01_set_data_mode(NRF24L01_TX_MODE); 
     nrf24l01_write(NRF24L01_CMD_W_TX_PL, data_buff, data_len); 
+
+    // // Enable CE for more than 10us, then disable it so the device will return to 
+    // // Standy-1 mode when done transmitting. 
+    // nrf24l01_ce_enable(); 
+    // tim_delay_us(nrf24l01_data.timer, NRF24L01_CE_TX_DELAY); 
+    // nrf24l01_ce_disable(); 
 
     // Check to see if the TX FIFO is empty. If it's empty it means data was transmitted. 
     // There is a short blocking delay before checking the TX FIFO status to give the 
     // device time to send the data. If data has not been transferred before timeout then 
     // the transmission is considered to have failed. 
-    tim_delay_us(nrf24l01_data.timer, 350); 
+    tim_delay_us(nrf24l01_data.timer, NRF24L01_TX_DELAY); 
     do 
     {
         nrf24l01_fifo_status_reg_read(); 
+        tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
     }
     while(!(nrf24l01_data.fifo_status.tx_empty) && (--time_out)); 
 
+    // // Flush the TX FIFO, set to RX mode and enable CE to go back to an active state. 
+    // nrf24l01_fifo_flush(NRF24L01_CMD_FLUSH_TX); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+    // nrf24l01_set_data_mode(NRF24L01_RX_MODE); 
+    // nrf24l01_ce_enable(); 
+
     if (!time_out)
     {
-        // Time left on the timer so data has successfully been set. 
+        // No time left on the timer so data failed to send. 
         tx_status = NRF24L01_WRITE_FAULT; 
     }
-
-    // Flush the TX FIFO 
-    nrf24l01_write(NRF24L01_CMD_FLUSH_TX, &buff, BYTE_0); 
 
     return tx_status; 
 
@@ -1047,7 +1140,13 @@ void nrf24l01_set_rf_ch(uint8_t rf_ch_freq)
 // RF_CH register write 
 NRF24L01_STATUS nrf24l01_rf_ch_write(void)
 {
-    return nrf24l01_reg_write_data(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
+    NRF24L01_STATUS status; 
+
+    nrf24l01_ce_disable(); 
+    status = nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
+    nrf24l01_ce_enable(); 
+
+    return status; 
 }
 
 //==================================================
@@ -1114,7 +1213,13 @@ void nrf24l01_set_rf_setup_pwr(nrf24l01_rf_pwr_t rf_pwr)
 // RF_SETUP register write 
 NRF24L01_STATUS nrf24l01_rf_setup_write(void)
 {
-    return nrf24l01_reg_write_data(NRF24L01_REG_RF_SET, nrf24l01_data.rf_setup.rf_set_reg); 
+    NRF24L01_STATUS status; 
+
+    nrf24l01_ce_disable(); 
+    status = nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, nrf24l01_data.rf_setup.rf_set_reg); 
+    nrf24l01_ce_enable(); 
+
+    return status; 
 }
 
 //==================================================
@@ -1153,18 +1258,19 @@ NRF24L01_STATUS nrf24l01_pwr_down(void)
     // Set CE=0 to enter standby-1 state. 
     // Set PWR_UP=0 to enter power down state 
 
-    // Set CE low to exit any active mode 
-    nrf24l01_set_ce(GPIO_LOW); 
+    NRF24L01_STATUS status; 
+
+    nrf24l01_ce_disable(); 
 
     // Set PWR_UP low to go to power down state 
     nrf24l01_data.config.pwr_up = (uint8_t)NRF24L01_PWR_DOWN; 
+    status = nrf24l01_config_write(); 
     // NRF24L01_STATUS status = nrf24l01_config_reg_write(); 
-    NRF24L01_STATUS status = nrf24l01_config_write(); 
 
     if (status != NRF24L01_OK)
     {
         // Write operation failed. Set the CE pin back high 
-        nrf24l01_set_ce(GPIO_HIGH); 
+        nrf24l01_ce_enable(); 
     }
 
     return status; 
@@ -1174,18 +1280,22 @@ NRF24L01_STATUS nrf24l01_pwr_down(void)
 // Power up 
 NRF24L01_STATUS nrf24l01_pwr_up(void)
 {
-    // Set PWR_UP high to exit the power down state 
+    NRF24L01_STATUS status; 
+
+    nrf24l01_ce_disable(); 
+
+    // Set PWR_UP and PRIM_RX high to exit the power down state and default to RX mode 
     nrf24l01_data.config.pwr_up = (uint8_t)NRF24L01_PWR_UP; 
+    nrf24l01_data.config.prim_rx = (uint8_t)NRF24L01_RX_MODE; 
+    status = nrf24l01_config_write(); 
     // NRF24L01_STATUS status = nrf24l01_config_reg_write(); 
-    NRF24L01_STATUS status = nrf24l01_config_write(); 
 
     if (status == NRF24L01_OK)
     {
         // Delay to allow for the startup state to pass (~1.5ms) 
         tim_delay_ms(nrf24l01_data.timer, NRF24L01_START_DELAY); 
 
-        // Set CE high to enter back into an active mode 
-        nrf24l01_set_ce(GPIO_HIGH); 
+        nrf24l01_ce_enable(); 
     }
 
     return status; 
@@ -1199,10 +1309,24 @@ NRF24L01_STATUS nrf24l01_pwr_up(void)
 //=======================================================================================
 // Configuration functions 
 
-// Set CE pin 
-void nrf24l01_set_ce(gpio_pin_state_t state)
+// // Set CE pin 
+// void nrf24l01_set_ce(gpio_pin_state_t state)
+// {
+//     gpio_write(nrf24l01_data.gpio_en, nrf24l01_data.en_pin, state); 
+// }
+
+
+// Set CE pin high to enter an active mode 
+void nrf24l01_ce_enable(void)
 {
-    gpio_write(nrf24l01_data.gpio_en, nrf24l01_data.en_pin, state); 
+    gpio_write(nrf24l01_data.gpio_en, nrf24l01_data.en_pin, GPIO_HIGH); 
+}
+
+
+// Set CE pin low to exit an active mode 
+void nrf24l01_ce_disable(void)
+{
+    gpio_write(nrf24l01_data.gpio_en, nrf24l01_data.en_pin, GPIO_LOW); 
 }
 
 
@@ -1211,12 +1335,48 @@ NRF24L01_STATUS nrf24l01_set_data_mode(nrf24l01_mode_select_t mode)
 {
     // Write PRIM_RX=mode to the device 
     nrf24l01_data.config.prim_rx = (uint8_t)mode; 
-    NRF24L01_STATUS nrf24l01_status = nrf24l01_config_write(); 
+    return nrf24l01_config_write(); 
+    // NRF24L01_STATUS nrf24l01_status = nrf24l01_config_write(); 
 
-    // Delay to clear the device settling state 
-    tim_delay_us(nrf24l01_data.timer, NRF24L01_SETTLE_DELAY); 
+    // // Delay to clear the device settling state 
+    // tim_delay_us(nrf24l01_data.timer, NRF24L01_SETTLE_DELAY); 
 
-    return nrf24l01_status; 
+    // return nrf24l01_status; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Register functions 
+
+// CONFIG register write 
+NRF24L01_STATUS nrf24l01_config_write(void)
+{
+    return nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
+}
+
+
+// STATUS register write 
+NRF24L01_STATUS nrf24l01_status_reg_write(void)
+{
+    return nrf24l01_reg_byte_write(NRF24L01_REG_STATUS, nrf24l01_data.status.status_reg); 
+}
+
+
+// STATUS register read 
+NRF24L01_STATUS nrf24l01_status_reg_read(void)
+{
+    // Write a no operation command to the device and the status register will be checked 
+    uint8_t buff = CLEAR; 
+    return nrf24l01_receive(NRF24L01_CMD_NOP, &buff, BYTE_0); 
+}
+
+
+// FIFO_STATUS register read 
+NRF24L01_STATUS nrf24l01_fifo_status_reg_read(void)
+{
+    return nrf24l01_reg_read(NRF24L01_REG_FIFO, &nrf24l01_data.fifo_status.fifo_status_reg); 
 }
 
 //=======================================================================================
@@ -1225,8 +1385,17 @@ NRF24L01_STATUS nrf24l01_set_data_mode(nrf24l01_mode_select_t mode)
 //=======================================================================================
 // Read and write 
 
+// Register read 
+NRF24L01_STATUS nrf24l01_reg_read(
+    uint8_t reg_addr, 
+    uint8_t *reg_data)
+{
+    return nrf24l01_receive(NRF24L01_CMD_R_REG | reg_addr, reg_data, BYTE_1); 
+}
+
+
 // Receive data from another transceiver 
-SPI_STATUS nrf24l01_receive(
+NRF24L01_STATUS nrf24l01_receive(
     uint8_t cmd, 
     uint8_t *rec_buff, 
     uint8_t data_len)
@@ -1246,131 +1415,20 @@ SPI_STATUS nrf24l01_receive(
     // // Update the status register data record 
     // nrf24l01_status_reg_update(status_reg); 
 
-    return spi_status; 
+    if (spi_status)
+    {
+        return NRF24L01_READ_FAULT; 
+    }
+
+    return NRF24L01_OK; 
 }
 
 
-// Send data to another transceiver 
-SPI_STATUS nrf24l01_write(
-    uint8_t cmd, 
-    const uint8_t *send_buff, 
-    uint8_t data_len)
+// FIFO flush 
+NRF24L01_STATUS nrf24l01_fifo_flush(uint8_t reg_addr)
 {
-    SPI_STATUS spi_status = SPI_OK; 
-    // uint8_t status_reg = CLEAR; 
-
-    // Write the command and read the status back from the slave. Then write the data 
-    // to the device. 
-    spi_slave_select(nrf24l01_data.gpio_ss, nrf24l01_data.ss_pin); 
-    // spi_status |= spi_write_read(nrf24l01_data.spi, cmd, &status_reg, BYTE_1); 
-    spi_status |= spi_write_read(nrf24l01_data.spi, cmd, 
-                                 &nrf24l01_data.status.status_reg, BYTE_1); 
-    spi_status |= spi_write(nrf24l01_data.spi, send_buff, data_len); 
-    spi_slave_deselect(nrf24l01_data.gpio_ss, nrf24l01_data.ss_pin); 
-
-    // // Update the status register data record 
-    // nrf24l01_status_reg_update(status_reg); 
-
-    return spi_status; 
-}
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Register functions 
-
-// CONFIG register write 
-NRF24L01_STATUS nrf24l01_config_write(void)
-{
-    return nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, nrf24l01_data.config.config_reg); 
-}
-
-
-// STATUS register write 
-NRF24L01_STATUS nrf24l01_status_reg_write(void)
-{
-    // // Format the data to send 
-    // uint8_t status_reg = (nrf24l01_data.status.unused_1 << SHIFT_7) | 
-    //                      (nrf24l01_data.status.rx_dr    << SHIFT_6) | 
-    //                      (nrf24l01_data.status.tx_ds    << SHIFT_5) | 
-    //                      (nrf24l01_data.status.max_rt   << SHIFT_4) | 
-    //                      (nrf24l01_data.status.rx_p_no  << SHIFT_1) | 
-    //                      (nrf24l01_data.status.tx_full); 
-
-    // // Send the data to the STATUS register 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_STATUS, status_reg); 
-
-    return nrf24l01_reg_byte_write(NRF24L01_REG_STATUS, nrf24l01_data.status.status_reg); 
-}
-
-
-// STATUS register read 
-NRF24L01_STATUS nrf24l01_status_reg_read(void)
-{
-    // Write a no operation command to the device and the status register will be checked 
     uint8_t buff = CLEAR; 
-    SPI_STATUS spi_status = nrf24l01_receive(NRF24L01_CMD_NOP, &buff, BYTE_0); 
-
-    if (spi_status)
-    {
-        return NRF24L01_READ_FAULT; 
-    }
-
-    return NRF24L01_OK; 
-}
-
-
-// FIFO_STATUS register read 
-NRF24L01_STATUS nrf24l01_fifo_status_reg_read(void)
-{
-    // // Read the FIFO_STATUS register and update the data record 
-    // uint8_t fifo_status = nrf24l01_reg_read(NRF24L01_REG_FIFO); 
-
-    // // Store the FIFO status register byte into the data record 
-    // nrf24l01_data.fifo_status.unused_1 = (fifo_status & FILTER_BIT_7) >> SHIFT_7; 
-    // nrf24l01_data.fifo_status.tx_reuse = (fifo_status & FILTER_BIT_6) >> SHIFT_6; 
-    // nrf24l01_data.fifo_status.tx_full  = (fifo_status & FILTER_BIT_5) >> SHIFT_5; 
-    // nrf24l01_data.fifo_status.tx_empty = (fifo_status & FILTER_BIT_4) >> SHIFT_4; 
-    // nrf24l01_data.fifo_status.unused_2 = (fifo_status & FILTER_4_LSB) >> SHIFT_2; 
-    // nrf24l01_data.fifo_status.rx_full  = (fifo_status & FILTER_BIT_1) >> SHIFT_1; 
-    // nrf24l01_data.fifo_status.rx_empty = (fifo_status & FILTER_BIT_0); 
-
-    // return fifo_status; 
-
-    return nrf24l01_reg_read(NRF24L01_REG_FIFO, 
-                             &nrf24l01_data.fifo_status.fifo_status_reg); 
-}
-
-
-// Register read 
-NRF24L01_STATUS nrf24l01_reg_read(
-    uint8_t reg_addr, 
-    uint8_t *reg_data)
-{
-    SPI_STATUS spi_status = nrf24l01_receive(NRF24L01_CMD_R_REG | reg_addr, reg_data, BYTE_1); 
-
-    if (spi_status)
-    {
-        return NRF24L01_READ_FAULT; 
-    }
-
-    return NRF24L01_OK; 
-}
-
-
-// 
-NRF24L01_STATUS nrf24l01_reg_write_data(
-    uint8_t reg_addr, 
-    uint8_t reg_data)
-{
-    // Set CE low to exit any active mode, write dta to the register, then set CE high 
-    // enter back into an active mode. 
-    nrf24l01_set_ce(GPIO_LOW); 
-    NRF24L01_STATUS status = nrf24l01_reg_byte_write(reg_addr, reg_data); 
-    nrf24l01_set_ce(GPIO_HIGH); 
-
-    return status; 
+    return nrf24l01_write(reg_addr, &buff, BYTE_0); 
 }
 
 
@@ -1389,7 +1447,30 @@ NRF24L01_STATUS nrf24l01_reg_write(
     const uint8_t *reg_data, 
     uint8_t reg_size)
 {
-    SPI_STATUS spi_status = nrf24l01_write(NRF24L01_CMD_W_REG | reg_addr, reg_data, reg_size); 
+    return nrf24l01_write(NRF24L01_CMD_W_REG | reg_addr, reg_data, reg_size); 
+}
+
+
+// Send data to another transceiver 
+NRF24L01_STATUS nrf24l01_write(
+    uint8_t cmd, 
+    const uint8_t *send_buff, 
+    uint8_t data_len)
+{
+    SPI_STATUS spi_status = SPI_OK; 
+    // uint8_t status_reg = CLEAR; 
+
+    // Write the command and read the status back from the slave. Then write the data 
+    // to the device. 
+    spi_slave_select(nrf24l01_data.gpio_ss, nrf24l01_data.ss_pin); 
+    // spi_status |= spi_write_read(nrf24l01_data.spi, cmd, &status_reg, BYTE_1); 
+    spi_status |= spi_write_read(nrf24l01_data.spi, cmd, 
+                                 &nrf24l01_data.status.status_reg, BYTE_1); 
+    spi_status |= spi_write(nrf24l01_data.spi, send_buff, data_len); 
+    spi_slave_deselect(nrf24l01_data.gpio_ss, nrf24l01_data.ss_pin); 
+
+    // // Update the status register data record 
+    // nrf24l01_status_reg_update(status_reg); 
 
     if (spi_status)
     {

@@ -104,7 +104,8 @@ typedef enum {
     NRF24L01_DP_2, 
     NRF24L01_DP_3, 
     NRF24L01_DP_4, 
-    NRF24L01_DP_5 
+    NRF24L01_DP_5, 
+    NRF24L01_RX_FIFO_EMPTY = 7 
 } nrf24l01_data_pipe_t; 
 
 //=======================================================================================
@@ -114,6 +115,7 @@ typedef enum {
 // Datatypes 
 
 typedef uint8_t NRF24L01_STATUS; 
+typedef nrf24l01_data_pipe_t DATA_PIPE; 
 
 //=======================================================================================
 
@@ -134,6 +136,11 @@ typedef uint8_t NRF24L01_STATUS;
  *          
  *          NOTE: the timer must be a timer that increments every 1us so that the timer 
  *                delay functions can be used. 
+ *          
+ *          Init process: 
+ *          - Call this function 
+ *          - Call PTX and/or PRX config depending on the application 
+ *          - Call the power up function to start up the device 
  * 
  * @param spi : SPI port used for the device 
  * @param gpio_ss : GPIO port for the slave aelect pin 
@@ -144,8 +151,9 @@ typedef uint8_t NRF24L01_STATUS;
  * @param rf_ch_freq : initial RF channel 
  * @param data_rate : initial data rate to use 
  * @param rf_pwr : initial power output level 
+ * @return NRF24L01_STATUS : init status 
  */
-void nrf24l01_init(
+NRF24L01_STATUS nrf24l01_init(
     SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio_ss, 
     pin_selector_t ss_pin, 
@@ -198,8 +206,9 @@ void nrf24l01_prx_config(
  *          will be discarded and therefore lost. 
  * 
  * @param pipe_num : pipe number to check 
- * @return uint8_t : RX FIFO data status 
+ * @return DATA_PIPE : data pipe for available payload 
  */
+// DATA_PIPE nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num); 
 uint8_t nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num); 
 
 
@@ -215,7 +224,6 @@ uint8_t nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num);
  *                than this some data could be lost. 
  * 
  * @param read_buff : buffer to store the received payload 
- * @param pipe_num : pipe number to read from 
  */
 void nrf24l01_receive_payload(
     uint8_t *read_buff, 
