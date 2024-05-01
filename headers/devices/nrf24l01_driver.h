@@ -51,7 +51,7 @@ typedef enum {
 
 
 /**
- * @brief Data rate to use 
+ * @brief Data rate 
  * 
  * @details A slower data rate will allow for longer range communication (better receiver 
  *          sensitivity). A higher data rate has lower average current consumption and 
@@ -105,7 +105,7 @@ typedef enum {
     NRF24L01_DP_3, 
     NRF24L01_DP_4, 
     NRF24L01_DP_5, 
-    NRF24L01_RX_FIFO_EMPTY = 7 
+    NRF24L01_RX_FIFO_EMPTY = 7   // Not an actual pipe. Used for matching register values. 
 } nrf24l01_data_pipe_t; 
 
 //=======================================================================================
@@ -124,26 +124,26 @@ typedef nrf24l01_data_pipe_t DATA_PIPE;
 // Initialization 
 
 /**
- * @brief nRF24L01 initialization 
+ * @brief nRF24L01 general initialization 
  * 
- * @details Initialization function for both PTX and PRX devices. Specific PTX/PRX 
- *          configuration is done with the user configuration functions below. This 
- *          function configures the data record and the device registers to their default 
- *          value. This must be called before using the rest of the driver. 
+ * @details Initialization function for both TX and RX devices that configures the driver 
+ *          data record and device registers. This must be called before the device can be 
+ *          used. After this function is called, the PTX and/or the PRX functions should 
+ *          be called depending on the application. After that is done the device must be 
+ *          powered up before it can be used for the first time. 
  *          
  *          NOTE: The device can run onto SPI up to 10Mbps. Ensure the SPI initialized 
  *                has a speed less than or equal to this. 
  *          
  *          NOTE: the timer must be a timer that increments every 1us so that the timer 
  *                delay functions can be used. 
- *          
- *          Init process: 
- *          - Call this function 
- *          - Call PTX and/or PRX config depending on the application 
- *          - Call the power up function to start up the device 
+ * 
+ * @see nrf24l01_ptx_config 
+ * @see nrf24l01_prx_config 
+ * @see nrf24l01_pwr_up 
  * 
  * @param spi : SPI port used for the device 
- * @param gpio_ss : GPIO port for the slave aelect pin 
+ * @param gpio_ss : GPIO port for the slave select pin 
  * @param ss_pin : slave select pin number 
  * @param gpio_en : GPIO port used for the enable pin 
  * @param en_pin : enable pin number 
@@ -151,9 +151,10 @@ typedef nrf24l01_data_pipe_t DATA_PIPE;
  * @param rf_ch_freq : initial RF channel 
  * @param data_rate : initial data rate to use 
  * @param rf_pwr : initial power output level 
- * @return NRF24L01_STATUS : init status 
+ * @return NRF24L01_STATUS : init (write/read operation) status 
  */
-NRF24L01_STATUS nrf24l01_init(
+// NRF24L01_STATUS nrf24l01_init(
+void nrf24l01_init(
     SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio_ss, 
     pin_selector_t ss_pin, 
@@ -168,10 +169,19 @@ NRF24L01_STATUS nrf24l01_init(
 /**
  * @brief Configure a devices PTX settings 
  * 
- * @details Removes the device from any active mode and updates its PTX settings before 
- *          putting it back into an active mode. 
+ * @details Devices that will be sending data can call this function to update TX 
+ *          settings. If the device is operating on default settings then this 
+ *          function may not be needed. Once settings are configured as needed, the 
+ *          device must be powered up (if not already) before it can be used. This 
+ *          function can be called at any point if TX settings need to be changed. 
+ *          
+ *          Settings updated in this function: 
+ *          - TX_ADDR --> TX address. This address must match one of the data pipe 
+ *                        addresses in an RX device for the RX device to receive data. 
  * 
- * @param tx_addr : 5 byte address used by the PTX device 
+ * @see nrf24l01_pwr_up 
+ * 
+ * @param tx_addr : 5 byte data pipe address the TX device sends to 
  */
 void nrf24l01_ptx_config(const uint8_t *tx_addr); 
 
@@ -179,10 +189,28 @@ void nrf24l01_ptx_config(const uint8_t *tx_addr);
 /**
  * @brief Configure a devices PRX settings 
  * 
- * @details Removes the device from any active mode and updates its PRX settings before 
- *          putting it back into an active mode. 
+ * @details Devices that will be receiving data can call this function to update RX 
+ *          settings. If the device is operating on default settings then this 
+ *          function may not be needed. Once settings are configured as needed, the 
+ *          device must be powered up (if not already) before it can be used. This 
+ *          function can be called at any point if RX settings need to be changed. 
+ *          
+ *          Settings updated in this function: 
+ *          - EN_RXADDR ---> Data pipe to enable. Multiple data pipes can be enabled 
+ *                           at a time but this function must be called for each pipe 
+ *                           being configured. 
+ *          - RX_ADDR_PX --> RX data pipe address. The specified data pipe will be 
+ *                           assigned the specified address. A TX device must send data 
+ *                           with a matching address in order for the data pipe to 
+ *                           receive it. Note that the addresses for data pipes 0-1 
+ *                           can be configured up to 5 bytes long whereas only the 
+ *                           least significant byte of the address for pipes 2-5 can 
+ *                           be configured. The other bytes in the addresses of pipes 
+ *                           2-5 will be the same as specified for pipe 1. 
  * 
- * @param rx_addr : 5 byte address used by the PRX device 
+ * @see nrf24l01_pwr_up 
+ * 
+ * @param rx_addr : Data pipe address 
  * @param pipe_num : data pipe number 
  */
 void nrf24l01_prx_config(
@@ -196,14 +224,18 @@ void nrf24l01_prx_config(
 // User functions 
 
 /**
- * @brief Data ready status 
+ * @brief Data available status 
  * 
- * @details Returns that status of the RX FIFO for a given pipe number. If true it means 
- *          there is data available to be read for that pipe. 
+ * @details Returns the data pipe number for the payload available for reading from the 
+ *          RX FIFO. If no data is available then an RX FIFO empty value will be returned. 
+ *          This function will read from the status register to get the return value. This 
+ *          function can be used to check for data before reading the payload. 
  *          
- *          It's important to read data from the RX FIFO when it's available. Data will 
- *          fill up in the RX FIFO and if the FIFO becomes full then new incoming data 
- *          will be discarded and therefore lost. 
+ *          If data is not read or flushed from the RX FIFO then incoming data will 
+ *          accumulate. If the RX FIFO fills up, it will discard new incoming data so it's 
+ *          important to read or flush data when it arrives. 
+ * 
+ * @see nrf24l01_data_pipe_t 
  * 
  * @param pipe_num : pipe number to check 
  * @return DATA_PIPE : data pipe for available payload 
@@ -215,15 +247,17 @@ uint8_t nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num);
 /**
  * @brief Receive payload 
  * 
- * @details If data is available for the specified pipe number, then read the RX FIFO 
- *          contents and store it in the buffer. This function can't be used while in 
- *          in low power mode. 
+ * @details If the RX FIFO has data available in one of the data pipes then the data gets 
+ *          read and stored in the buffer. Data in the RX FIFO means the device received 
+ *          a payload from a TX device. To get data from a TX device, the RX device must 
+ *          have the same frequency channel and data rate as the TX device. 
  *          
- *          NOTE: 'read_buff' must be at least 30 bytes long. This is the longest 
- *                possible data packet that can be received so if 'read_buff' is smaller 
- *                than this some data could be lost. 
+ *          Note that the maximum data size for each RX FIFO slot is 32 bytes. This is the 
+ *          number of bytes read regardless of the received data length so the buffer 
+ *          must be long enough to accomodate this. 
  * 
  * @param read_buff : buffer to store the received payload 
+ * @param pipe_num : pipe number to read from 
  */
 void nrf24l01_receive_payload(
     uint8_t *read_buff, 
@@ -233,45 +267,31 @@ void nrf24l01_receive_payload(
 /**
  * @brief Send payload 
  * 
- * @details Sends the payload stored in the buffer out over the device' RF channel. This 
- *          function can't be used while in low power mode. 
+ * @details Writes the contents of the buffer to the TX FIFO as a payload. This payload 
+ *          gets sent by the device as a radio message at the configured frequency 
+ *          channel, power and data rate. This function checks if the device has sent 
+ *          the message and a fault will be returned if the data was never sent. After 
+ *          sending data, the TX FIFO will be flushed so there no leftover data. 
  *          
- *          This function will put the device into TX mode just long enough to send the 
- *          payload out. The device is not supposed to remain in TX mode for longer than 
- *          4ms so once a single packet has been sent the device is put back into RX mode. 
- *          
- *          The device has 3 separate 32-byte TX FIFOs. This means the data between each 
- *          FIFO is not connected. When sending payloads you can send up to 32 bytes to 
- *          the device at once because that is the capacity of a single FIFO. However, 
- *          this driver caps the data size at 30 bytes to make room for data length and 
- *          NULL termination bytes. 
- *          
- *          This function determines the length of the payload passed in data_buff so 
- *          that it doesn't have to be specified by the application. However, if the 
- *          length of the payload is too large, not all the data will be sent (see note 
- *          below). Determining payload length is handled here and not left to the 
- *          application because if this device is used to send data that doesn't have a 
- *          predefined length then the length of the data would have to be determined 
- *          anyway. 
- *          
- *          NOTE: The max data length that can be sent at one time (one call of this 
- *                function) is 30 bytes. The device FIFO supports 32 bytes but the first 
- *                byte is used to store the data length and the data is terminated with a 
- *                NULL character. 
+ *          Note that the maximum data size for each TX FIFO slot is 32 bytes. Data 
+ *          longer than this will be truncated. 
  * 
  * @param data_buff : buffer that contains data to be sent 
- * @return uint8_t : status of the send operation - a 1 is returned if successful 
+ * @return uint8_t : write operation status 
  */
 uint8_t nrf24l01_send_payload(const uint8_t *data_buff); 
+// NRF24L01_STATUS nrf24l01_send_payload(const uint8_t *data_buff); 
 
 
 //==================================================
 // RF_CH register 
 
 /**
- * @brief RF_CH register update 
+ * @brief RF_CH register read 
  * 
- * @return NRF24L01_STATUS 
+ * @details This must be called to the get the latest RF_CH value from the device. 
+ * 
+ * @return NRF24L01_STATUS : read operation status 
  */
 NRF24L01_STATUS nrf24l01_rf_ch_read(void); 
 
@@ -279,8 +299,13 @@ NRF24L01_STATUS nrf24l01_rf_ch_read(void);
 /**
  * @brief Get RF channel 
  * 
- * @details Reads and returns the RF channel of the device. Note that the returned value 
- *          is in MHz and it should be added to 2400 MHz to get the true channel number. 
+ * @details Returns the RF channel frequency stored in the data record. Unless the 
+ *          frquency is unable to update in the device then the data record value will 
+ *          be the same as the value used by the device. The frequency that the device 
+ *          is using can be updated in the data record by calling the channel read 
+ *          function. This value added to 2400 MHz provides the channel frquency (MHz). 
+ * 
+ * @see nrf24l01_rf_ch_read 
  * 
  * @return uint8_t : RF channel (MHz) before adding 2400 MHz 
  */
@@ -290,12 +315,13 @@ uint8_t nrf24l01_get_rf_ch(void);
 /**
  * @brief Set frequency channel 
  * 
- * @details Removes the device from any active mode and updates the RF channel before 
- *          putting it back into an active mode. Note that the PTX and PRX devices must 
- *          be on the same channel in order to communicate. The channel set will be: 
- *          --> 2400 MHz + 'rf_ch_freq' 
+ * @details Sets the RF channel freuency in the data record. To update the frequency 
+ *          used by the device, the RF channel write function must be called. The 
+ *          frequency channel is the the value passed to this function + 2400 MHz. 
  * 
- * @param rf_ch_freq : RF channel 
+ * @see nrf24l01_rf_ch_write 
+ * 
+ * @param rf_ch_freq : RF channel (MHz) 
  */
 void nrf24l01_set_rf_ch(uint8_t rf_ch_freq); 
 
@@ -303,7 +329,9 @@ void nrf24l01_set_rf_ch(uint8_t rf_ch_freq);
 /**
  * @brief RF_CH register write 
  * 
- * @return NRF24L01_STATUS 
+ * @details This must be called to update the device's frequency channel. 
+ * 
+ * @return NRF24L01_STATUS : write operation status 
  */
 NRF24L01_STATUS nrf24l01_rf_ch_write(void); 
 

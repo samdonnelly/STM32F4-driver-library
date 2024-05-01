@@ -53,8 +53,8 @@ extern "C"
 
 #define CONFIG_GET_DATA_0 0x03 
 #define CONFIG_GET_DATA_1 0xFC 
-#define CONFIG_GET_DATA_2 0x02 
-#define CONFIG_GET_DATA_3 0x00 
+#define CONFIG_GET_DATA_2 0x03 
+#define CONFIG_GET_DATA_3 0x01 
 
 //=======================================================================================
 
