@@ -30,7 +30,6 @@ extern "C" {
 //=======================================================================================
 // Macros 
 
-// Data handling 
 #define NRF24L01_RF_CH_MAX 0x7D        // RF channel frequency max setting 
 #define NRF24L01_MAX_PAYLOAD_LEN 32    // Max data packet size (data size + data) 
 #define NRF24l01_ADDR_WIDTH 5          // Address width 
@@ -289,7 +288,7 @@ uint8_t nrf24l01_send_payload(const uint8_t *data_buff);
 /**
  * @brief RF_CH register read 
  * 
- * @details This must be called to the get the latest RF_CH value from the device. 
+ * @details Must be called to get the latest RF_CH value from the device. 
  * 
  * @return NRF24L01_STATUS : read operation status 
  */
@@ -317,7 +316,7 @@ uint8_t nrf24l01_get_rf_ch(void);
  * 
  * @details Sets the RF channel freuency in the data record. To update the frequency 
  *          used by the device, the RF channel write function must be called. The 
- *          frequency channel is the the value passed to this function + 2400 MHz. 
+ *          frequency channel is the value passed to this function + 2400 MHz. 
  * 
  * @see nrf24l01_rf_ch_write 
  * 
@@ -329,7 +328,7 @@ void nrf24l01_set_rf_ch(uint8_t rf_ch_freq);
 /**
  * @brief RF_CH register write 
  * 
- * @details This must be called to update the device's frequency channel. 
+ * @details Must be called to update the device's frequency channel. 
  * 
  * @return NRF24L01_STATUS : write operation status 
  */
@@ -344,7 +343,9 @@ NRF24L01_STATUS nrf24l01_rf_ch_write(void);
 /**
  * @brief RF_SETUP register read 
  * 
- * @return NRF24L01_STATUS : status of the read operation 
+ * @details Must be called to get the latest RF_SETUP register contents from the device. 
+ * 
+ * @return NRF24L01_STATUS : read operation status 
  */
 NRF24L01_STATUS nrf24l01_rf_setup_read(void); 
 
@@ -352,7 +353,13 @@ NRF24L01_STATUS nrf24l01_rf_setup_read(void);
 /**
  * @brief Get RF data rate 
  * 
- * @details Reads, formats and returns the data rate of the device. 
+ * @details Returns the data rate from the RF_SETUP data record. To get the data rate 
+ *          being used by the device, the RF_SETUP register read function must be called. 
+ *          However, unless the RF_SETUP register fails to update using the RF_SETUP 
+ *          register write function, the value in the data record will match the value 
+ *          used by the device. 
+ * 
+ * @see nrf24l01_rf_setup_read 
  * 
  * @return nrf24l01_data_rate_t : current data rate 
  */
@@ -362,7 +369,13 @@ nrf24l01_data_rate_t nrf24l01_get_rf_setup_dr(void);
 /**
  * @brief Get power output 
  * 
- * @details Reads and returns the power output level of the device. 
+ * @details Returns the power output from the RF_SETUP data record. To get the power 
+ *          output being used by the device, the RF_SETUP register read function must 
+ *          be called. However, unless the RF_SETUP register fails to update using the 
+ *          RF_SETUP register write function, the value in the data record will match 
+ *          the value used by the device. 
+ * 
+ * @see nrf24l01_rf_setup_read 
  * 
  * @return nrf24l01_rf_pwr_t : current power output level 
  */
@@ -372,8 +385,10 @@ nrf24l01_rf_pwr_t nrf24l01_get_rf_setup_pwr(void);
 /**
  * @brief RF data rate set 
  * 
- * @details Removes the device from any active mode and updates the data rate before 
- *          putting it back into an active mode. 
+ * @details Sets the data rate in the data record. To update the data rate used by the 
+ *          device, the RF_SETUP register write function must be called. 
+ * 
+ * @see nrf24l01_rf_setup_write 
  * 
  * @param rate : data rate to use 
  */
@@ -383,8 +398,10 @@ void nrf24l01_set_rf_setup_dr(nrf24l01_data_rate_t rate);
 /**
  * @brief Set power output 
  * 
- * @details Removes the device from any active mode and updates the power output before 
- *          putting it back into an active mode. 
+ * @details Sets the power output in the data record. To update the power output used 
+ *          by the device, the RF_SETUP register write function must be called. 
+ * 
+ * @see nrf24l01_rf_setup_write 
  * 
  * @param rf_pwr : power output level 
  */
@@ -394,7 +411,9 @@ void nrf24l01_set_rf_setup_pwr(nrf24l01_rf_pwr_t rf_pwr);
 /**
  * @brief RF_SETUP register write 
  * 
- * @return NRF24L01_STATUS 
+ * @details Must be called to update the the RF_SETUP register in the device. 
+ * 
+ * @return NRF24L01_STATUS : write operation status 
  */
 NRF24L01_STATUS nrf24l01_rf_setup_write(void); 
 
@@ -407,7 +426,9 @@ NRF24L01_STATUS nrf24l01_rf_setup_write(void);
 /**
  * @brief CONFIG register read 
  * 
- * @return NRF24L01_STATUS 
+ * @details Must be called to get the latest CONFIG register value from the device. 
+ * 
+ * @return NRF24L01_STATUS : read operation status 
  */
 NRF24L01_STATUS nrf24l01_config_read(void); 
 
@@ -415,7 +436,11 @@ NRF24L01_STATUS nrf24l01_config_read(void);
 /**
  * @brief Get power mode 
  * 
- * @details Reads and returns the current power mode of the device. 
+ * @details Returns the power mode from the CONFIG data record. To get the power mode 
+ *          being used by the device, the CONFIG register read function must be called. 
+ *          However, unless the CONFIG register fails to update using the CONFIG 
+ *          register write function, the value in the data record will match the value 
+ *          used by the device. 
  * 
  * @return nrf24l01_pwr_mode_t : current power mode 
  */
@@ -425,7 +450,10 @@ nrf24l01_pwr_mode_t nrf24l01_get_config_pwr_mode(void);
 /**
  * @brief Get active mode 
  * 
- * @details Reads and returns the active mode of the device. 
+ * @details Returns the active mode from the CONFIG data record. To get the active mode 
+ *          of the device, the CONFIG register read function must be called. However, 
+ *          unless the CONFIG register fails to update using the CONFIG register write 
+ *          function, the value in the data record will match the value used by the device. 
  * 
  * @return nrf24l01_mode_select_t : current active mode 
  */
@@ -435,8 +463,8 @@ nrf24l01_mode_select_t nrf24l01_get_config_mode(void);
 /**
  * @brief Enter low power mode - power down 
  * 
- * @details Removes the device from any active mode and sets the PWR_UP bit low to go to 
- *          the power down state. 
+ * @details Removes the device from any active mode then sets and writes the PWR_UP bit 
+ *          low to go to the power down state. 
  * 
  * @return NRF24L01_STATUS : write operation status 
  */
@@ -446,9 +474,9 @@ NRF24L01_STATUS nrf24l01_pwr_down(void);
 /**
  * @brief Exit low power mode - power up 
  * 
- * @details Sets the PWR_UP bit high to exit the power down state and puts the device 
- *          back into an active mode. Note that this function has a short, blocking 
- *          delay (~1.5ms) to allow the device' startup state to pass. 
+ * @details Sets and writes the PWR_UP and PRIM_RX bits high to exit the power down state 
+ *          and enter RX mode. Note that if successfuly, this function will have a short 
+ *          blocking delay (~1.5ms) to allow the device' startup state to pass. 
  * 
  * @return NRF24L01_STATUS : write operation status 
  */

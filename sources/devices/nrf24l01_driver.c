@@ -112,27 +112,27 @@ typedef enum {
 
 // Register reset values 
 typedef enum {
-    NRF24L01_REG_RESET_CONFIG     = 0x08,   // CONFIG 
-    NRF24L01_REG_RESET_EN_AA      = 0x3F,   // EN_AA 
-    NRF24L01_REG_RESET_EN_RXADDR  = 0x03,   // EN_RXADDR 
-    NRF24L01_REG_RESET_SETUP_AW   = 0x03,   // SETUP_AW 
-    NRF24L01_REG_RESET_SETUP_RETR = 0x03,   // SETUP_RETR 
-    NRF24L01_REG_RESET_RF_CH      = 0x02,   // RF_CH 
-    NRF24L01_REG_RESET_RF_SETUP   = 0x0E,   // RF_SETUP 
-    NRF24L01_REG_RESET_STATUS     = 0x0E,   // STATUS 
-    NRF24L01_REG_RESET_OBSERVE_TX = 0x00,   // OBSERVE_TX 
-    NRF24L01_REG_RESET_RPD        = 0x00,   // RPD 
-    NRF24L01_REG_RESET_RX_ADDR_P0 = 0xE7,   // RX_ADDR_P0 
-    NRF24L01_REG_RESET_RX_ADDR_P1 = 0xC2,   // RX_ADDR_P1 
-    NRF24L01_REG_RESET_RX_ADDR_P2 = 0xC3,   // RX_ADDR_P2 
-    NRF24L01_REG_RESET_RX_ADDR_P3 = 0xC4,   // RX_ADDR_P3 
-    NRF24L01_REG_RESET_RX_ADDR_P4 = 0xC5,   // RX_ADDR_P4 
-    NRF24L01_REG_RESET_RX_ADDR_P5 = 0xC6,   // RX_ADDR_P5 
-    NRF24L01_REG_RESET_TX_ADDR    = 0xE7,   // TX_ADDR 
-    NRF24L01_REG_RESET_RX_PW_PX   = 0x00,   // RX_PW_PX (X-->0-5) 
-    NRF24L01_REG_FIFO_STATUS      = 0x11,   // FIFO_STATUS 
-    NRF24L01_REG_RESET_DYNPD      = 0x00,   // DYNPD 
-    NRF24L01_REG_RESET_FEATURE    = 0x00    // FEATURE 
+    NRF24L01_REG_RESET_CONFIG      = 0x08,   // CONFIG 
+    NRF24L01_REG_RESET_EN_AA       = 0x3F,   // EN_AA 
+    NRF24L01_REG_RESET_EN_RXADDR   = 0x03,   // EN_RXADDR 
+    NRF24L01_REG_RESET_SETUP_AW    = 0x03,   // SETUP_AW 
+    NRF24L01_REG_RESET_SETUP_RETR  = 0x03,   // SETUP_RETR 
+    NRF24L01_REG_RESET_RF_CH       = 0x02,   // RF_CH 
+    NRF24L01_REG_RESET_RF_SETUP    = 0x0E,   // RF_SETUP 
+    NRF24L01_REG_RESET_STATUS      = 0x0E,   // STATUS 
+    NRF24L01_REG_RESET_OBSERVE_TX  = 0x00,   // OBSERVE_TX 
+    NRF24L01_REG_RESET_RPD         = 0x00,   // RPD 
+    NRF24L01_REG_RESET_RX_ADDR_P0  = 0xE7,   // RX_ADDR_P0 
+    NRF24L01_REG_RESET_RX_ADDR_P1  = 0xC2,   // RX_ADDR_P1 
+    NRF24L01_REG_RESET_RX_ADDR_P2  = 0xC3,   // RX_ADDR_P2 
+    NRF24L01_REG_RESET_RX_ADDR_P3  = 0xC4,   // RX_ADDR_P3 
+    NRF24L01_REG_RESET_RX_ADDR_P4  = 0xC5,   // RX_ADDR_P4 
+    NRF24L01_REG_RESET_RX_ADDR_P5  = 0xC6,   // RX_ADDR_P5 
+    NRF24L01_REG_RESET_TX_ADDR     = 0xE7,   // TX_ADDR 
+    NRF24L01_REG_RESET_RX_PW_PX    = 0x00,   // RX_PW_PX (X-->0-5) 
+    NRF24L01_REG_RESET_FIFO_STATUS = 0x11,   // FIFO_STATUS 
+    NRF24L01_REG_RESET_DYNPD       = 0x00,   // DYNPD 
+    NRF24L01_REG_RESET_FEATURE     = 0x00    // FEATURE 
 } nrf24l01_reg_reset_t; 
 
 //=======================================================================================
@@ -501,6 +501,13 @@ void nrf24l01_init(
     nrf24l01_data.ss_pin = (gpio_pin_num_t)(SET_BIT << ss_pin); 
     nrf24l01_data.en_pin = (gpio_pin_num_t)(SET_BIT << en_pin); 
     nrf24l01_data.timer = timer; 
+
+    // Register data 
+    nrf24l01_data.config.config_reg = NRF24L01_REG_RESET_CONFIG; 
+    nrf24l01_data.rf_ch.rf_ch_reg = NRF24L01_REG_RESET_RF_CH; 
+    nrf24l01_data.rf_setup.rf_set_reg = NRF24L01_REG_RESET_RF_SETUP; 
+    nrf24l01_data.status.status_reg = NRF24L01_REG_RESET_STATUS; 
+    nrf24l01_data.fifo_status.fifo_status_reg = NRF24L01_REG_RESET_FIFO_STATUS; 
     
     //==================================================
 
@@ -695,18 +702,18 @@ void nrf24l01_init(
     //==================================================
     // Device initialization 
 
+    // The following registers are modified from their reset value so they will work with 
+    // this driver and with how the user needs them set up. Changes here are common 
+    // between TX and RX devices. Further changes to TX and RX specific settings are done 
+    // using the PTX and PRX config functions below. 
+
     // Delay to ensure power on reset state is cleared before accessing the device 
     tim_delay_ms(nrf24l01_data.timer, NRF24L01_PWR_ON_DELAY); 
 
-    // Configure registers to work for this driver 
-    // The below settings are common between both PRX and PTX devices. Registers not 
-    // changed here remain at their default value or are changed selectively by setters. 
-
     // CONFIG - Power up the device and default to a PRX device. Delay to allow time 
     // for the start up state to pass. 
-    // nrf24l01_config_reg_write(); 
-    nrf24l01_reg_byte_write(NRF24L01_REG_CONFIG, NRF24L01_REG_RESET_CONFIG); 
-    tim_delay_ms(nrf24l01_data.timer, NRF24L01_START_DELAY); 
+    // nrf24l01_config_write(); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_START_DELAY); 
     
     // EN_AA - disable auto acknowledgment (Enhanced Shockburst TM not used) 
     nrf24l01_reg_byte_write(NRF24L01_REG_EN_AA, NRF24L01_DISABLE_REG); 
@@ -715,20 +722,18 @@ void nrf24l01_init(
     nrf24l01_reg_byte_write(NRF24L01_REG_EN_RXADDR, NRF24L01_DISABLE_REG); 
 
     // SETUP_AW 
-    nrf24l01_reg_byte_write(NRF24L01_REG_SETUP_AW, NRF24L01_REG_RESET_SETUP_AW); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_SETUP_AW, NRF24L01_REG_RESET_SETUP_AW); 
     
     // SETUP_RETR - disable retransmission because auto acknowledgement not used 
     nrf24l01_reg_byte_write(NRF24L01_REG_SETUP_RETR, NRF24L01_DISABLE_REG); 
 
     // RF_CH 
     nrf24l01_set_rf_ch(rf_ch_freq); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, NRF24L01_REG_RESET_RF_CH); 
     nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
 
     // RF_SETUP 
     nrf24l01_set_rf_setup_dr(data_rate); 
     nrf24l01_set_rf_setup_pwr(rf_pwr); 
-    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, NRF24L01_REG_RESET_RF_SETUP); 
     nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, nrf24l01_data.rf_setup.rf_set_reg); 
 
     //==================================================
