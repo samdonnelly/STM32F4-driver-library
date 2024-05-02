@@ -278,17 +278,6 @@ static nrf24l01_driver_t nrf24l01_data;
 //=======================================================================================
 // Prototypes 
 
-//==================================================
-// 
-/**
- * @brief Set CE pin 
- * 
- * @param state : pin state 
- */
-void nrf24l01_set_ce(gpio_pin_state_t state); 
-//==================================================
-
-
 /**
  * @brief CE pin enable 
  * 
@@ -699,12 +688,12 @@ void nrf24l01_init(
     return init_status; 
 
 #elif WORKING_CODE 
+    
+    // Set CE low to prevent entering an active (TX/RX) state 
+    nrf24l01_ce_disable(); 
 
     //==================================================
     // Device initialization 
-    
-    // Set CE low to prevent entering an active (TX/RX) state 
-    nrf24l01_set_ce(GPIO_LOW); 
 
     // Delay to ensure power on reset state is cleared before accessing the device 
     tim_delay_ms(nrf24l01_data.timer, NRF24L01_PWR_ON_DELAY); 
@@ -732,15 +721,41 @@ void nrf24l01_init(
     nrf24l01_reg_byte_write(NRF24L01_REG_SETUP_RETR, NRF24L01_DISABLE_REG); 
 
     // RF_CH 
-    nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, NRF24L01_REG_RESET_RF_CH); 
+    nrf24l01_set_rf_ch(rf_ch_freq); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, NRF24L01_REG_RESET_RF_CH); 
+    nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
 
     // RF_SETUP 
-    nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, NRF24L01_REG_RESET_RF_SETUP); 
-
-    // Set CE high to enter RX mode 
-    nrf24l01_set_ce(GPIO_HIGH); 
+    nrf24l01_set_rf_setup_dr(data_rate); 
+    nrf24l01_set_rf_setup_pwr(rf_pwr); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, NRF24L01_REG_RESET_RF_SETUP); 
+    nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, nrf24l01_data.rf_setup.rf_set_reg); 
 
     //==================================================
+
+    //==================================================
+    // User initialization 
+
+    // Configure the settings specified by the user. These can be updated later using 
+    // setters if needed. 
+
+    // RF_CH 
+    // nrf24l01_set_rf_ch(rf_ch_freq); 
+    // init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, 
+    //                                        nrf24l01_data.rf_ch.rf_ch_reg); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
+    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
+
+    // // RF_SETUP 
+    // nrf24l01_set_rf_setup_dr(data_rate); 
+    // nrf24l01_set_rf_setup_pwr(rf_pwr); 
+    // init_status |= nrf24l01_reg_byte_write(NRF24L01_REG_RF_SET, 
+    //                                        nrf24l01_data.rf_setup.rf_set_reg); 
+    
+    //==================================================
+
+    // Set CE high to enter RX mode 
+    nrf24l01_ce_enable(); 
 
 #endif 
 }
@@ -767,15 +782,15 @@ void nrf24l01_ptx_config(const uint8_t *tx_addr)
 #elif WORKING_CODE 
 
     // Set CE low to exit any active mode 
-    nrf24l01_set_ce(GPIO_LOW); 
+    nrf24l01_ce_disable(); 
 
-    //==================================================
-    // RF_CH 
-    // 'nrf24l01_rf_ch_write' is not used here because CE is already set low and must 
-    // remain low until PTX configuration is done. 
-    nrf24l01_set_rf_ch(10); 
-    nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
-    //==================================================
+    // //==================================================
+    // // RF_CH 
+    // // 'nrf24l01_rf_ch_write' is not used here because CE is already set low and must 
+    // // remain low until PTX configuration is done. 
+    // nrf24l01_set_rf_ch(10); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
+    // //==================================================
 
     // Set up TX_ADDR 
     // Don't need to match RX_ADDR_P0 because auto acknowledge is not being used. 
@@ -790,7 +805,7 @@ void nrf24l01_ptx_config(const uint8_t *tx_addr)
     //==================================================
 
     // Set CE high to enter back into an active mode 
-    nrf24l01_set_ce(GPIO_HIGH); 
+    nrf24l01_ce_enable(); 
 
 #endif 
 }
@@ -842,15 +857,15 @@ void nrf24l01_prx_config(
 #elif WORKING_CODE 
 
     // Set CE low to exit any active mode 
-    nrf24l01_set_ce(GPIO_LOW); 
+    nrf24l01_ce_disable(); 
 
-    //==================================================
-    // RF_CH 
-    // 'nrf24l01_rf_ch_write' is not used here because CE is already set low and must 
-    // remain low until PTX configuration is done. 
-    nrf24l01_set_rf_ch(10); 
-    nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
-    //==================================================
+    // //==================================================
+    // // RF_CH 
+    // // 'nrf24l01_rf_ch_write' is not used here because CE is already set low and must 
+    // // remain low until PTX configuration is done. 
+    // nrf24l01_set_rf_ch(10); 
+    // nrf24l01_reg_byte_write(NRF24L01_REG_RF_CH, nrf24l01_data.rf_ch.rf_ch_reg); 
+    // //==================================================
 
     // EN_RXADDR - set the data pipe to enable 
     nrf24l01_reg_read(NRF24L01_REG_EN_RXADDR, &en_rxaddr); 
@@ -878,7 +893,7 @@ void nrf24l01_prx_config(
     //==================================================
 
     // Set CE high to enter back into an active mode 
-    nrf24l01_set_ce(GPIO_HIGH); 
+    nrf24l01_ce_enable(); 
 
 #endif 
 }
@@ -1315,13 +1330,6 @@ NRF24L01_STATUS nrf24l01_pwr_up(void)
 
 //=======================================================================================
 // Configuration functions 
-
-// Set CE pin 
-void nrf24l01_set_ce(gpio_pin_state_t state)
-{
-    gpio_write(nrf24l01_data.gpio_en, nrf24l01_data.en_pin, state); 
-}
-
 
 // Set CE pin high to enter an active mode 
 void nrf24l01_ce_enable(void)
