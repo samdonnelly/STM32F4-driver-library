@@ -152,8 +152,7 @@ typedef nrf24l01_data_pipe_t DATA_PIPE;
  * @param rf_pwr : initial power output level 
  * @return NRF24L01_STATUS : init (write/read operation) status 
  */
-// NRF24L01_STATUS nrf24l01_init(
-void nrf24l01_init(
+NRF24L01_STATUS nrf24l01_init(
     SPI_TypeDef *spi, 
     GPIO_TypeDef *gpio_ss, 
     pin_selector_t ss_pin, 
@@ -239,8 +238,7 @@ void nrf24l01_prx_config(
  * @param pipe_num : pipe number to check 
  * @return DATA_PIPE : data pipe for available payload 
  */
-// DATA_PIPE nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num); 
-uint8_t nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num); 
+DATA_PIPE nrf24l01_data_ready_status(void); 
 
 
 /**
@@ -256,11 +254,8 @@ uint8_t nrf24l01_data_ready_status(nrf24l01_data_pipe_t pipe_num);
  *          must be long enough to accomodate this. 
  * 
  * @param read_buff : buffer to store the received payload 
- * @param pipe_num : pipe number to read from 
  */
-void nrf24l01_receive_payload(
-    uint8_t *read_buff, 
-    nrf24l01_data_pipe_t pipe_num); 
+void nrf24l01_receive_payload(uint8_t *read_buff); 
 
 
 /**
@@ -278,8 +273,7 @@ void nrf24l01_receive_payload(
  * @param data_buff : buffer that contains data to be sent 
  * @return uint8_t : write operation status 
  */
-uint8_t nrf24l01_send_payload(const uint8_t *data_buff); 
-// NRF24L01_STATUS nrf24l01_send_payload(const uint8_t *data_buff); 
+NRF24L01_STATUS nrf24l01_send_payload(const uint8_t *data_buff); 
 
 
 //==================================================
