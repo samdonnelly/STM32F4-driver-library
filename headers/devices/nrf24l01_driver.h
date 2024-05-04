@@ -180,8 +180,9 @@ NRF24L01_STATUS nrf24l01_init(
  * @see nrf24l01_pwr_up 
  * 
  * @param tx_addr : 5 byte data pipe address the TX device sends to 
+ * @return NRF24L01_STATUS : PTX init status 
  */
-void nrf24l01_ptx_config(const uint8_t *tx_addr); 
+NRF24L01_STATUS nrf24l01_ptx_config(const uint8_t *tx_addr); 
 
 
 /**
@@ -210,8 +211,9 @@ void nrf24l01_ptx_config(const uint8_t *tx_addr);
  * 
  * @param rx_addr : Data pipe address 
  * @param pipe_num : data pipe number 
+ * @return NRF24L01_STATUS : PRX init status 
  */
-void nrf24l01_prx_config(
+NRF24L01_STATUS nrf24l01_prx_config(
     const uint8_t *rx_addr, 
     nrf24l01_data_pipe_t pipe_num); 
 
@@ -254,8 +256,9 @@ DATA_PIPE nrf24l01_data_ready_status(void);
  *          must be long enough to accomodate this. 
  * 
  * @param read_buff : buffer to store the received payload 
+ * @return NRF24L01_STATUS : read operation status 
  */
-void nrf24l01_receive_payload(uint8_t *read_buff); 
+NRF24L01_STATUS nrf24l01_receive_payload(uint8_t *read_buff); 
 
 
 /**
@@ -267,11 +270,12 @@ void nrf24l01_receive_payload(uint8_t *read_buff);
  *          the message and a fault will be returned if the data was never sent. After 
  *          sending data, the TX FIFO will be flushed so there no leftover data. 
  *          
- *          Note that the maximum data size for each TX FIFO slot is 32 bytes. Data 
- *          longer than this will be truncated. 
+ *          Note that the maximum data size for each TX FIFO slot is 32 bytes. This 
+ *          function sends 32 bytes of data so the data buffer should be this long. If 
+ *          the buffer is longer than this then data may be truncated. 
  * 
  * @param data_buff : buffer that contains data to be sent 
- * @return uint8_t : write operation status 
+ * @return NRF24L01_STATUS : write operation status 
  */
 NRF24L01_STATUS nrf24l01_send_payload(const uint8_t *data_buff); 
 

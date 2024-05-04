@@ -27,34 +27,17 @@
 //=======================================================================================
 // Macros 
 
-
-#define NEW_CODE 0 
-#define WORKING_CODE 1 
-#define ORIGINAL_CODE 0 
-
-
 // Data handling 
 #define NRF24L01_RF_CH_MASK 0x7F       // RF channel frequency mask 
 #define NRF24L01_RF_DR_MASK 0x01       // RF data rate bit mask 
-#define NRF24L01_DATA_SIZE_LEN 1       // Data size indicator length 
-#define NRF24L01_MAX_DATA_LEN 30       // Max user data length 
 
-//==================================================
-// Timing 
-
-// Initialization 
+// Initialization timing 
 #define NRF24L01_PWR_ON_DELAY 100      // Device power on reset delay (ms) 
 #define NRF24L01_START_DELAY 2         // Device start up delay (ms) 
 
-// TX 
+// TX mode timing 
 #define NRF24L01_TX_DELAY 500          // Time before checking for successful transmission (us) 
 #define NRF24L01_TX_TIMEOUT 10         // Max times to check for successful transmission 
-#define NRF24L01_CE_TX_DELAY 20        // Time CE is held high in TX (us) 
-
-// General 
-#define NRF24L01_RW_DELAY 1            // Delay between successive writes/reads (ms) 
-
-//==================================================
 
 // Control 
 #define NRF24L01_DISABLE_REG 0x00      // Disable settings in a register 
@@ -305,10 +288,13 @@ void nrf24l01_ce_disable(void);
  * 
  * @see nrf24l01_mode_select_t 
  * 
+ * @param pwr : power mode 
  * @param mode : TX or RX mode 
  * @return NRF24L01_STATUS : write operation status 
  */
-NRF24L01_STATUS nrf24l01_set_data_mode(nrf24l01_mode_select_t mode); 
+NRF24L01_STATUS nrf24l01_set_config(
+    nrf24l01_pwr_mode_t pwr, 
+    nrf24l01_mode_select_t mode); 
 
 
 /**
@@ -569,131 +555,71 @@ NRF24L01_STATUS nrf24l01_init(
 
 
 // Configure a devices PTX settings 
-void nrf24l01_ptx_config(const uint8_t *tx_addr)
+NRF24L01_STATUS nrf24l01_ptx_config(const uint8_t *tx_addr)
 {
+    NRF24L01_STATUS ptx_status = NRF24L01_OK; 
+
     if (tx_addr == NULL)
     {
-        return; 
+        return NRF24L01_INVALID_PTR; 
     }
-
-#if NEW_CODE 
-
-    nrf24l01_ce_disable(); 
-
-    // Set TX_ADDR 
-    // Don't need to match RX_ADDR_P0 because auto acknowledge is not being used. 
-    nrf24l01_reg_write(NRF24L01_REG_TX_ADDR, tx_addr, NRF24l01_ADDR_WIDTH); 
-
-    nrf24l01_ce_enable(); 
-
-#elif WORKING_CODE 
 
     // Set CE low to exit any active mode 
     nrf24l01_ce_disable(); 
 
     // Set up TX_ADDR 
     // Don't need to match RX_ADDR_P0 because auto acknowledge is not being used. 
-    nrf24l01_reg_write(NRF24L01_REG_TX_ADDR, tx_addr, NRF24l01_ADDR_WIDTH); 
-
-    //==================================================
-    // CONFIG 
-    // We read first because the config register data record has not been initialized. 
-    nrf24l01_config_read(); 
-    nrf24l01_data.config.pwr_up = SET_BIT;   // Set to start up the device 
-    nrf24l01_config_write(); 
-    //==================================================
+    ptx_status |= nrf24l01_reg_write(NRF24L01_REG_TX_ADDR, tx_addr, NRF24l01_ADDR_WIDTH); 
 
     // Set CE high to enter back into an active mode 
     nrf24l01_ce_enable(); 
 
-#endif 
+    return ptx_status; 
 }
 
 
 // Configure a devices PRX settings 
-void nrf24l01_prx_config(
+NRF24L01_STATUS nrf24l01_prx_config(
     const uint8_t *rx_addr, 
     nrf24l01_data_pipe_t pipe_num)
 {
+    NRF24L01_STATUS prx_status = NRF24L01_OK; 
     uint8_t en_rxaddr = CLEAR; 
+    uint8_t pipe = (uint8_t)pipe_num; 
 
     if (rx_addr == NULL)
     {
-        return; 
+        return NRF24L01_INVALID_PTR; 
     }
-
-#if NEW_CODE 
-
-    nrf24l01_ce_disable(); 
-
-    // EN_RXADDR - set the data pipe to enable 
-    nrf24l01_reg_read(NRF24L01_REG_EN_RXADDR, &en_rxaddr); 
-    nrf24l01_reg_byte_write(NRF24L01_REG_EN_RXADDR, 
-                            en_rxaddr | (SET_BIT << (uint8_t)pipe_num)); 
-    tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
-
-    // RX_ADDR_PX - set the chosen data pipe address 
-    if (pipe_num <= NRF24L01_DP_1)
-    {
-        nrf24l01_reg_write(
-            NRF24L01_REG_RX_ADDR_P0 + (uint8_t)pipe_num, 
-            rx_addr, 
-            NRF24l01_ADDR_WIDTH); 
-    }
-    else if (pipe_num <= NRF24L01_DP_5)
-    {
-        nrf24l01_reg_byte_write(NRF24L01_REG_RX_ADDR_P0 + (uint8_t)pipe_num, *rx_addr); 
-    }
-    tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
-
-    // RX_PW_PX - set the max number of bytes in RX payload in the chosen data pipe 
-    nrf24l01_reg_byte_write(
-        (NRF24L01_REG_RX_PW_P0 + (uint8_t)pipe_num), 
-        NRF24L01_MAX_PAYLOAD_LEN); 
-
-    nrf24l01_ce_enable(); 
-
-#elif WORKING_CODE 
 
     // Set CE low to exit any active mode 
     nrf24l01_ce_disable(); 
 
     // EN_RXADDR - set the data pipe to enable 
-    nrf24l01_reg_read(NRF24L01_REG_EN_RXADDR, &en_rxaddr); 
-    nrf24l01_reg_byte_write(NRF24L01_REG_EN_RXADDR, 
-                            en_rxaddr | (SET_BIT << (uint8_t)pipe_num)); 
+    prx_status |= nrf24l01_reg_read(NRF24L01_REG_EN_RXADDR, &en_rxaddr); 
+    prx_status |= nrf24l01_reg_byte_write(NRF24L01_REG_EN_RXADDR, 
+                                          en_rxaddr | (SET_BIT << pipe)); 
 
     // RX_ADDR_PX - set the chosen data pipe address 
     if (pipe_num <= NRF24L01_DP_1)
     {
-        nrf24l01_reg_write(
-            NRF24L01_REG_RX_ADDR_P0 + (uint8_t)pipe_num, 
-            rx_addr, 
-            NRF24l01_ADDR_WIDTH); 
+        prx_status |= nrf24l01_reg_write(NRF24L01_REG_RX_ADDR_P0 + pipe, 
+                                         rx_addr, 
+                                         NRF24l01_ADDR_WIDTH); 
     }
     else if (pipe_num <= NRF24L01_DP_5)
     {
-        nrf24l01_reg_byte_write(NRF24L01_REG_RX_ADDR_P0 + (uint8_t)pipe_num, *rx_addr); 
+        prx_status |= nrf24l01_reg_byte_write(NRF24L01_REG_RX_ADDR_P0 + pipe, *rx_addr); 
     }
 
     // RX_PW_PX - set the max number of bytes in RX payload in the chosen data pipe 
-    nrf24l01_reg_byte_write(
-        (NRF24L01_REG_RX_PW_P0 + (uint8_t)pipe_num), 
-        NRF24L01_MAX_PAYLOAD_LEN); 
-
-    //==================================================
-    // CONFIG 
-    // We read first because the config register data record has not been initialized. 
-    nrf24l01_config_read(); 
-    nrf24l01_data.config.pwr_up = SET_BIT;   // Set to start up the device 
-    nrf24l01_data.config.prim_rx = SET_BIT;  // Set to RX mode 
-    nrf24l01_config_write(); 
-    //==================================================
+    prx_status |= nrf24l01_reg_byte_write(NRF24L01_REG_RX_PW_P0 + pipe, 
+                                          NRF24L01_MAX_PAYLOAD_LEN); 
 
     // Set CE high to enter back into an active mode 
     nrf24l01_ce_enable(); 
 
-#endif 
+    return prx_status; 
 }
 
 //=======================================================================================
@@ -711,59 +637,49 @@ DATA_PIPE nrf24l01_data_ready_status(void)
 
 
 // Receive payload 
-void nrf24l01_receive_payload(uint8_t *read_buff)
+NRF24L01_STATUS nrf24l01_receive_payload(uint8_t *read_buff)
 {
+    NRF24L01_STATUS rx_status = NRF24L01_OK; 
+
     if (read_buff == NULL)
     {
-        return; 
+        return NRF24L01_INVALID_PTR; 
     }
     
     if (nrf24l01_data.status.rx_p_no != NRF24L01_RX_FIFO_EMPTY)
     {
-        nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, NRF24L01_MAX_PAYLOAD_LEN); 
+        rx_status |= nrf24l01_receive(NRF24L01_CMD_R_RX_PL, read_buff, NRF24L01_MAX_PAYLOAD_LEN); 
     }
+
+    return rx_status; 
 }
 
 
 // Send payload 
 NRF24L01_STATUS nrf24l01_send_payload(const uint8_t *data_buff)
 {
+    NRF24L01_STATUS tx_status = NRF24L01_OK; 
+    uint8_t time_out = NRF24L01_TX_TIMEOUT; 
+
     if (data_buff == NULL)
     {
         return NRF24L01_INVALID_PTR; 
     }
 
-#if NEW_CODE 
+    // Change to TX mode 
+    nrf24l01_set_config(NRF24L01_PWR_UP, NRF24L01_TX_MODE); 
 
-    uint8_t tx_status = NRF24L01_OK; 
-    uint8_t data_len = (uint8_t)sizeof(data_buff); 
-    uint8_t time_out = NRF24L01_TX_TIMEOUT; 
-
-    if (data_len > NRF24L01_MAX_PAYLOAD_LEN)
-    {
-        data_len = NRF24L01_MAX_PAYLOAD_LEN; 
-    }
-
-    // Set CE low to exit RX mode, set to TX mode and write the payload to the TX FIFO. 
-    nrf24l01_ce_disable(); 
-    tx_status |= nrf24l01_set_data_mode(NRF24L01_TX_MODE); 
-    tx_status |= nrf24l01_write(NRF24L01_CMD_W_TX_PL, data_buff, data_len); 
-
-    // Enable CE for more than 10us, then disable it so the device will return to 
-    // Standy-1 mode when done transmitting. 
-    nrf24l01_ce_enable(); 
-    tim_delay_us(nrf24l01_data.timer, NRF24L01_CE_TX_DELAY); 
-    nrf24l01_ce_disable(); 
+    // Write the payload to the TX FIFO 
+    nrf24l01_write(NRF24L01_CMD_W_TX_PL, data_buff, NRF24L01_MAX_PAYLOAD_LEN); 
 
     // Check to see if the TX FIFO is empty. If it's empty it means data was transmitted. 
     // There is a short blocking delay before checking the TX FIFO status to give the 
     // device time to send the data. If data has not been transferred before timeout then 
     // the transmission is considered to have failed. 
-    tim_delay_us(nrf24l01_data.timer, NRF24L01_TX_DELAY); 
     do 
     {
+        tim_delay_us(nrf24l01_data.timer, NRF24L01_TX_DELAY); 
         tx_status |= nrf24l01_fifo_status_reg_read(); 
-        tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
     }
     while(!(nrf24l01_data.fifo_status.tx_empty) && (--time_out)); 
 
@@ -773,117 +689,13 @@ NRF24L01_STATUS nrf24l01_send_payload(const uint8_t *data_buff)
         tx_status = NRF24L01_WRITE_FAULT; 
     }
 
-    // Flush the TX FIFO, set to RX mode and enable CE to go back to an active state. 
-    tx_status |= nrf24l01_fifo_flush(NRF24L01_CMD_FLUSH_TX); 
-    // tim_delay_ms(nrf24l01_data.timer, NRF24L01_RW_DELAY); 
-    tx_status |= nrf24l01_set_data_mode(NRF24L01_RX_MODE); 
-    nrf24l01_ce_enable(); 
-
-    return tx_status; 
-    
-#elif WORKING_CODE 
-
-    // uint8_t pack_buff[NRF24L01_MAX_PAYLOAD_LEN]; 
-    uint8_t data_len = NRF24L01_MAX_PAYLOAD_LEN; 
-    uint8_t tx_status = NRF24L01_OK; 
-    uint16_t time_out = 2; 
-    uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
-
-    // Write the payload to the TX FIFO 
-    // nrf24l01_write(NRF24L01_CMD_W_TX_PL, pack_buff, data_len); 
-    nrf24l01_write(NRF24L01_CMD_W_TX_PL, data_buff, data_len); 
-
-    // Check to see if the TX FIFO is empty. If it's empty it means data was transmitted. 
-    // There is a short blocking delay before checking the TX FIFO status to give the 
-    // device time to send the data. If data has not been transferred before timeout then 
-    // the transmission is considered to have failed. 
-    tim_delay_us(nrf24l01_data.timer, 350); 
-    do 
-    {
-        nrf24l01_fifo_status_reg_read(); 
-    }
-    while(!(nrf24l01_data.fifo_status.tx_empty) && (--time_out)); 
-
-    if (!time_out)
-    {
-        // Time left on the timer so data has successfully been set. 
-        tx_status = NRF24L01_WRITE_FAULT; 
-    }
-
     // Flush the TX FIFO 
-    nrf24l01_write(NRF24L01_CMD_FLUSH_TX, &buff, BYTE_0); 
+    tx_status |= nrf24l01_fifo_flush(NRF24L01_CMD_FLUSH_TX); 
+
+    // Set back to RX mode 
+    nrf24l01_set_config(NRF24L01_PWR_UP, NRF24L01_RX_MODE); 
 
     return tx_status; 
-
-#elif ORIGINAL_CODE 
-    
-    // uint8_t pack_buff[NRF24L01_MAX_PAYLOAD_LEN]; 
-    // uint8_t index = NRF24L01_DATA_SIZE_LEN; 
-    // uint8_t tx_status = CLEAR; 
-    // uint8_t buff = CLEAR;   // dummy variable to pass to the send function 
-
-    // // Fill the packet buffer with the data to be sent. The packet will be capped at a max of 
-    // // 30 data bytes with one byte always being saved at the beginning and end of the packet for 
-    // // the data length and a NULL termination, respectfully. The following loop counts the data 
-    // // length and saves the data/payload into the packet buffer. If the data length is less than 
-    // // 30 bytes then the loop ends early. 
-    // while (index <= NRF24L01_MAX_DATA_LEN)
-    // {
-    //     data_len++; 
-
-    //     if (*data_buff == NULL_CHAR)
-    //     {
-    //         break; 
-    //     }
-
-    //     pack_buff[index++] = *data_buff++; 
-    // }
-
-    // // Write the data size to the first position of the packet buffer and terminate the payload 
-    // pack_buff[0] = data_len; 
-    // pack_buff[index] = NULL_CHAR; 
-    
-    // // Set CE low to exit RX mode 
-    // nrf24l01_set_ce(GPIO_LOW); 
-
-    // // Set as a PTX device 
-    // nrf24l01_set_data_mode(NRF24L01_TX_MODE); 
-
-    // // Write the payload to the TX FIFO 
-    // nrf24l01_write(NRF24L01_CMD_W_TX_PL, pack_buff, data_len); 
-
-    // // Set CE high to enter TX mode and start the transmission. Delay to ensure CE is high long 
-    // // enough then set CE low so the device goes back to Standby-1 when done sending. 
-    // nrf24l01_set_ce(GPIO_HIGH); 
-    // tim_delay_us(nrf24l01_data.timer, NRF24L01_CE_TX_DELAY); 
-    // nrf24l01_set_ce(GPIO_LOW); 
-
-    // // Check to see if the TX FIFO is empty - means data was transmitted. 
-    // // If data has not been transferred before timeout then it's considered to have failed. 
-    // do 
-    // {
-    //     nrf24l01_fifo_status_reg_read(); 
-    // }
-    // while(!(nrf24l01_data.fifo_status.tx_empty) && (--time_out)); 
-
-    // if (time_out)
-    // {
-    //     // Time left on the timer so data has successfully been set. 
-    //     tx_status = SET_BIT; 
-    // }
-    
-    // // Flush the TX FIFO 
-    // nrf24l01_write(NRF24L01_CMD_FLUSH_TX, &buff, BYTE_0); 
-
-    // // Set to a PRX device 
-    // nrf24l01_set_data_mode(NRF24L01_RX_MODE); 
-
-    // // Set CE back high to enter RX mode 
-    // nrf24l01_set_ce(GPIO_HIGH); 
-
-    // return tx_status; 
-
-#endif 
 }
 
 
@@ -1008,45 +820,21 @@ nrf24l01_mode_select_t nrf24l01_get_config_mode(void)
 // Power down 
 NRF24L01_STATUS nrf24l01_pwr_down(void)
 {
-    NRF24L01_STATUS status; 
-
-    nrf24l01_ce_disable(); 
-
-    // Set PWR_UP low to go to power down state 
-    nrf24l01_data.config.pwr_up = (uint8_t)NRF24L01_PWR_DOWN; 
-    status = nrf24l01_config_write(); 
-
-    if (status != NRF24L01_OK)
-    {
-        // Write operation failed. Set the CE pin back high 
-        nrf24l01_ce_enable(); 
-    }
-
-    return status; 
+    return nrf24l01_set_config(NRF24L01_PWR_DOWN, NRF24L01_RX_MODE); 
 }
 
 
 // Power up 
 NRF24L01_STATUS nrf24l01_pwr_up(void)
 {
-    NRF24L01_STATUS status; 
+    NRF24L01_STATUS pwr_status = NRF24L01_OK; 
 
-    // Set PWR_UP and PRIM_RX high to exit the power down state and default to RX mode 
-    nrf24l01_ce_disable(); 
-    nrf24l01_data.config.pwr_up = (uint8_t)NRF24L01_PWR_UP; 
-    status = nrf24l01_set_data_mode(NRF24L01_RX_MODE); 
-    // nrf24l01_data.config.prim_rx = (uint8_t)NRF24L01_RX_MODE; 
-    // status = nrf24l01_config_write(); 
+    pwr_status |= nrf24l01_set_config(NRF24L01_PWR_UP, NRF24L01_RX_MODE); 
 
-    if (status == NRF24L01_OK)
-    {
-        // Delay to allow for the startup state to pass (~1.5ms) 
-        tim_delay_ms(nrf24l01_data.timer, NRF24L01_START_DELAY); 
+    // Delay to allow for the startup state to pass (~1.5ms) 
+    tim_delay_ms(nrf24l01_data.timer, NRF24L01_START_DELAY); 
 
-        nrf24l01_ce_enable(); 
-    }
-
-    return status; 
+    return pwr_status; 
 }
 
 //==================================================
@@ -1072,11 +860,22 @@ void nrf24l01_ce_disable(void)
 
 
 // Set active mode 
-NRF24L01_STATUS nrf24l01_set_data_mode(nrf24l01_mode_select_t mode)
+NRF24L01_STATUS nrf24l01_set_config(
+    nrf24l01_pwr_mode_t pwr, 
+    nrf24l01_mode_select_t mode)
 {
-    // Write PRIM_RX=mode to the device 
-    nrf24l01_data.config.prim_rx = (uint8_t)mode; 
-    return nrf24l01_config_write(); 
+    NRF24L01_STATUS mode_status = NRF24L01_OK; 
+
+    nrf24l01_ce_disable(); 
+
+    mode_status |= nrf24l01_config_read(); 
+    nrf24l01_data.config.pwr_up = pwr; 
+    nrf24l01_data.config.prim_rx = mode; 
+    mode_status |= nrf24l01_config_write(); 
+
+    nrf24l01_ce_enable(); 
+
+    return mode_status; 
 }
 
 //=======================================================================================
