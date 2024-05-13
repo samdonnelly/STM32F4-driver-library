@@ -283,19 +283,18 @@ void hc05_clear(void);
 // Setters and getters 
 
 /**
- * @brief Get status flag 
+ * @brief Get driver status flag 
  * 
- * @details 
+ * @details Status flag bits: 
+ *          --> bits 0-8: uart status (see uart_status_t) 
  * 
- * @return uint8_t 
+ * @return uint8_t : driver status flag 
  */
 uint8_t hc05_get_status(void); 
 
 
 /**
- * @brief Clear status flag 
- * 
- * @details 
+ * @brief Clear driver status flag 
  */
 void hc05_clear_status(void); 
 

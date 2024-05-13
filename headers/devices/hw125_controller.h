@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HW125 controller 
+ * @brief HW125 controller interface 
  * 
  * @version 0.1
  * @date 2023-01-12
@@ -241,12 +241,11 @@ void hw125_set_reset_flag(void);
 /**
  * @brief Set directory 
  * 
- * @details 
+ * @details Updated (overwrites) the directry in the data record. 
  * 
  * @param dir : project directory to access 
  */
-void hw125_set_dir(
-    const TCHAR *dir); 
+void hw125_set_dir(const TCHAR *dir); 
 
 
 /**
@@ -273,8 +272,7 @@ void hw125_set_dir(
  * @param dir : sub directory to creae within the project directory 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_mkdir(
-    const TCHAR *dir); 
+FRESULT hw125_mkdir(const TCHAR *dir); 
 
 
 /**
@@ -358,8 +356,7 @@ FRESULT hw125_f_write(
  * @param str : pointer to string to write 
  * @return int8_t : number of character encoding units written to the file 
  */
-int8_t hw125_puts(
-    const TCHAR *str); 
+int8_t hw125_puts(const TCHAR *str); 
 
 
 /**
@@ -371,10 +368,7 @@ int8_t hw125_puts(
  *          the fault code if there's a write issue. If no file is open then no data will be 
  *          written and the fault code will not be updated. The formatted string and data 
  *          type (in this case an unsigned 16-bit integer) must match for this function to 
- *          work as expected. An example of a correctly formatted string to pass to this 
- *          function is as follows: 
- *          
- *          // TODO get an example of a correctly formatted string 
+ *          work as expected. 
  *          
  *          The function returns the number of character encoding units written to the file. 
  *          If the write fails then a negtive number will be returned. 
@@ -421,20 +415,19 @@ int8_t hw125_printf(
  * @param offset : byte position in the file to point to 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_lseek(
-    FSIZE_t offset); 
+FRESULT hw125_lseek(FSIZE_t offset); 
 
 
 /**
  * @brief Delete a file 
  * 
- * @details 
+ * @details Attempt to delete the specified file in the path. The status of the operation 
+ *          is returned. 
  * 
- * @param filename 
- * @return FRESULT 
+ * @param filename : name of file 
+ * @return FRESULT : status of the delete operation 
  */
-FRESULT hw125_unlink(
-    const TCHAR* filename); 
+FRESULT hw125_unlink(const TCHAR* filename); 
 
 //=======================================================================================
 
@@ -507,8 +500,7 @@ HW125_FILE_STATUS hw125_get_file_status(void);
  * @param str : string to file or directory to check for 
  * @return FRESULT 
  */
-FRESULT hw125_get_exists(
-    const TCHAR *str); 
+FRESULT hw125_get_exists(const TCHAR *str); 
 
 
 /**

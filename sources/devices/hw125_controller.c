@@ -239,8 +239,7 @@ static hw125_state_functions_t state_table[HW125_NUM_STATES] =
 // Control functions 
 
 // HW125 controller initialization 
-void hw125_controller_init(
-    const char *path)
+void hw125_controller_init(const char *path)
 {
     // TODO Check that the path length is not too long 
 
@@ -651,8 +650,7 @@ void hw125_set_reset_flag(void)
 
 
 // Set directory 
-void hw125_set_dir(
-    const TCHAR *dir)
+void hw125_set_dir(const TCHAR *dir)
 {
     // Reset the saved directory and set the new directory 
     memset((void *)hw125_device_trackers.dir, CLEAR, HW125_PATH_SIZE); 
@@ -661,8 +659,7 @@ void hw125_set_dir(
 
 
 // Make a new directory in the project directory 
-FRESULT hw125_mkdir(
-    const TCHAR *dir) 
+FRESULT hw125_mkdir(const TCHAR *dir) 
 {
     // Check for NULL pointer 
     if (dir == NULL) return FR_INVALID_OBJECT; 
@@ -806,8 +803,7 @@ FRESULT hw125_f_write(
 
 
 // Write a string to the open file 
-int8_t hw125_puts(
-    const TCHAR *str) 
+int8_t hw125_puts(const TCHAR *str) 
 {
     // Check for void pointer? 
     // Check for open file? 
@@ -851,8 +847,7 @@ int8_t hw125_printf(
 
 
 // Navigate within the open file 
-FRESULT hw125_lseek(
-    FSIZE_t offset) 
+FRESULT hw125_lseek(FSIZE_t offset) 
 {
     // Move to the specified position in the file 
     hw125_device_trackers.fresult = f_lseek(&hw125_device_trackers.file, offset); 
@@ -869,13 +864,14 @@ FRESULT hw125_lseek(
 
 
 // Delete a file 
-FRESULT hw125_unlink(
-    const TCHAR* filename)
+FRESULT hw125_unlink(const TCHAR* filename)
 {
     // Check that path validity 
-    if (filename == NULL) return FR_INVALID_OBJECT; 
+    if (filename == NULL) 
+    {
+        return FR_INVALID_OBJECT; 
+    }
 
-    // Local variables 
     TCHAR file_dir[HW125_PATH_SIZE*3]; 
 
     // Establish 'path' as the root of the file directory 
@@ -939,8 +935,7 @@ HW125_FILE_STATUS hw125_get_file_status(void)
 
 
 // Check for the existance of a file or directory 
-FRESULT hw125_get_exists(
-    const TCHAR *str)
+FRESULT hw125_get_exists(const TCHAR *str)
 {
     // Check for a valid file name 
     if (str == NULL || *str == NULL_CHAR) return FR_INVALID_OBJECT; 
