@@ -46,6 +46,7 @@ typedef struct ws2812_driver_data_s
 {
     // Linked list tracking 
     struct ws2812_driver_data_s *next_ptr; 
+    device_number_t device_num; 
 
     // Peripheral information 
     TIM_TypeDef *timer; 
@@ -94,6 +95,7 @@ void ws2812_init(
         TIM_UP_DMA_DISABLE); 
 
     // Initialize data record 
+    driver_data_ptr->device_num = device_num; 
     driver_data_ptr->timer = timer; 
     driver_data_ptr->tim_channel = tim_channel; 
 }
@@ -114,7 +116,10 @@ void ws2812_send(
         (ws2812_driver_data_t *)get_linked_list_entry(device_num, ws2812_driver_data_ptr); 
 
     // Check for valid data 
-    if (driver_data_ptr == NULL) return; 
+    if (driver_data_ptr == NULL) 
+    {
+        return; 
+    } 
 
     // Local variables 
     uint8_t led_index; 
