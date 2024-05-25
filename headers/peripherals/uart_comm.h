@@ -133,8 +133,6 @@ typedef enum {
 
 /**
  * @brief UART TX/RX DMA configuration 
- * 
- * @details 
  */
 typedef enum 
 {
@@ -145,8 +143,6 @@ typedef enum
 
 /**
  * @brief UART interrupt configuration 
- * 
- * @details 
  */
 typedef enum 
 {
