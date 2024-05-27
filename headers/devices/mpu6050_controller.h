@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief MPU6050 controller 
+ * @brief MPU6050 controller interface 
  * 
  * @version 0.1
  * @date 2023-01-30
@@ -146,9 +146,7 @@ typedef void (*mpu6050_state_functions_t)(mpu6050_cntrl_data_t *mpu6050_device);
 /**
  * @brief Read function pointer 
  * 
- * @details 
- * 
- * @param device_num : 
+ * @param device_num : device number - used for retrieving the correct data record 
  */
 typedef void (*mpu6050_read_functions_t)(device_number_t device_num); 
 
@@ -190,8 +188,7 @@ void mpu6050_controller_init(
  * 
  * @param device_num : device number - used for retrieving the correct data record 
  */
-void mpu6050_controller(
-    device_number_t device_num); 
+void mpu6050_controller(device_number_t device_num); 
 
 //=======================================================================================
 
@@ -209,8 +206,7 @@ void mpu6050_controller(
  * 
  * @param device_num : device number - used for retrieving the correct data record 
  */
-void mpu6050_set_low_power(
-    device_number_t device_num); 
+void mpu6050_set_low_power(device_number_t device_num); 
 
 
 /**
@@ -221,8 +217,7 @@ void mpu6050_set_low_power(
  * 
  * @param device_num : device number - used for retrieving the correct data record 
  */
-void mpu6050_clear_low_power(
-    device_number_t device_num); 
+void mpu6050_clear_low_power(device_number_t device_num); 
 
 
 /**
@@ -233,7 +228,7 @@ void mpu6050_clear_low_power(
  * 
  * @see mpu6050_sample_type_t 
  * 
- * @param device_num : 
+ * @param device_num : device number - used for retrieving the correct data record 
  * @param type : 
  */
 void mpu6050_set_smpl_type(
@@ -244,9 +239,7 @@ void mpu6050_set_smpl_type(
 /**
  * @brief Set the read state 
  * 
- * @details 
- * 
- * @param device_num 
+ * @param device_num : device number - used for retrieving the correct data record 
  * @param read_type 
  */
 void mpu6050_set_read_state(
@@ -257,12 +250,9 @@ void mpu6050_set_read_state(
 /**
  * @brief Set the read flag 
  * 
- * @details 
- * 
- * @param device_num 
+ * @param device_num : device number - used for retrieving the correct data record 
  */
-void mpu6050_set_read_flag(
-    device_number_t device_num); 
+void mpu6050_set_read_flag(device_number_t device_num); 
 
 
 /**
@@ -273,8 +263,7 @@ void mpu6050_set_read_flag(
  * 
  * @param device_num : device number - used for retrieving the correct data record 
  */
-void mpu6050_set_reset_flag(
-    device_number_t device_num); 
+void mpu6050_set_reset_flag(device_number_t device_num); 
 
 //=======================================================================================
 
@@ -292,8 +281,7 @@ void mpu6050_set_reset_flag(
  * @param device_num : device number - used for retrieving the correct data record 
  * @return MPU6050_STATE : state of the controller 
  */
-MPU6050_STATE mpu6050_get_state(
-    device_number_t device_num); 
+MPU6050_STATE mpu6050_get_state(device_number_t device_num); 
 
 
 /**
@@ -321,8 +309,7 @@ MPU6050_STATE mpu6050_get_state(
  * @param device_num : device number - used for retrieving the correct data record 
  * @return MPU6050_FAULT_CODE : controller fault code 
  */
-MPU6050_FAULT_CODE mpu6050_get_fault_code(
-    device_number_t device_num); 
+MPU6050_FAULT_CODE mpu6050_get_fault_code(device_number_t device_num); 
 
 //=======================================================================================
 
