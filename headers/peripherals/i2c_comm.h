@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief I2C initialization, read and write 
+ * @brief I2C driver interface 
  * 
  * @version 0.1
  * @date 2022-03-13
@@ -197,8 +197,7 @@ void i2c_init(
  * @param i2c : pointer to I2C port 
  * @return I2C_STATUS : I2C operation status 
  */
-I2C_STATUS i2c_start(
-    I2C_TypeDef *i2c);
+I2C_STATUS i2c_start(I2C_TypeDef *i2c);
 
 
 /**
@@ -210,8 +209,7 @@ I2C_STATUS i2c_start(
  * 
  * @param i2c : pointer to I2C port 
  */
-void i2c_stop(
-    I2C_TypeDef *i2c);
+void i2c_stop(I2C_TypeDef *i2c);
 
 
 /**
@@ -223,8 +221,7 @@ void i2c_stop(
  * 
  * @param i2c : pointer to I2C port 
  */
-void i2c_clear_addr(
-    I2C_TypeDef *i2c);
+void i2c_clear_addr(I2C_TypeDef *i2c);
 
 //=======================================================================================
 

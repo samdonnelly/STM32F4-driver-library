@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief SAM-M8Q GPS controller implementation 
+ * @brief SAM-M8Q GPS controller 
  * 
  * @version 0.1
  * @date 2022-09-26
@@ -80,8 +80,7 @@ static m8q_trackers_t m8q_device_trackers;
  * 
  * @param m8q_device : controller tracking information 
  */
-void m8q_fault_check(
-    m8q_trackers_t *m8q_device); 
+void m8q_fault_check(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -96,8 +95,7 @@ void m8q_fault_check(
  * 
  * @param m8q_device : controller tracking information 
  */
-void m8q_init_state(
-    m8q_trackers_t *m8q_device); 
+void m8q_init_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -112,8 +110,7 @@ void m8q_init_state(
  * 
  * @param m8q_device : controller tracking information 
  */
-void m8q_read_state(
-    m8q_trackers_t *m8q_device); 
+void m8q_read_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -131,8 +128,7 @@ void m8q_read_state(
  * 
  * @param m8q_device : controller tracking information 
  */
-void m8q_idle_state(
-    m8q_trackers_t *m8q_device); 
+void m8q_idle_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -147,8 +143,7 @@ void m8q_idle_state(
  * 
  * @param m8q_device : controller tracking information 
  */
-void m8q_low_pwr_enter_state(
-    m8q_trackers_t *m8q_device); 
+void m8q_low_pwr_enter_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -166,8 +161,7 @@ void m8q_low_pwr_enter_state(
  * 
  * @param m8q_device : controller tracking information 
  */
-void m8q_low_pwr_exit_state(
-    m8q_trackers_t *m8q_device); 
+void m8q_low_pwr_exit_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -184,8 +178,7 @@ void m8q_low_pwr_exit_state(
  * 
  * @param m8q_device : controller tracking information 
  */
-void m8q_fault_state(
-    m8q_trackers_t *m8q_device); 
+void m8q_fault_state(m8q_trackers_t *m8q_device); 
 
 
 /**
@@ -200,8 +193,7 @@ void m8q_fault_state(
  * 
  * @param m8q_device : controller tracking information 
  */
-void m8q_reset_state(
-    m8q_trackers_t *m8q_device); 
+void m8q_reset_state(m8q_trackers_t *m8q_device); 
 
 //=======================================================================================
 
@@ -214,8 +206,7 @@ void m8q_reset_state(
  * 
  * @param m8q_device : controller tracking information 
  */
-typedef void (*m8q_state_functions_t)(
-    m8q_trackers_t *m8q_device); 
+typedef void (*m8q_state_functions_t)(m8q_trackers_t *m8q_device); 
 
 
 // Function pointers to controller states 
@@ -237,8 +228,7 @@ static m8q_state_functions_t state_table[M8Q_NUM_STATES] =
 // Control functions 
 
 // Initialization 
-void m8q_controller_init(
-    TIM_TypeDef *timer)
+void m8q_controller_init(TIM_TypeDef *timer)
 {
     if (timer == NULL)
     {
@@ -398,8 +388,7 @@ void m8q_controller(void)
 // Controller functions 
 
 // Check for driver and controller faults 
-void m8q_fault_check(
-    m8q_trackers_t *m8q_device)
+void m8q_fault_check(m8q_trackers_t *m8q_device)
 {
     m8q_device->fault_code = m8q_device->device_status & M8Q_STATUS_FAULT_MASK; 
     m8q_device->device_status = CLEAR; 
@@ -412,8 +401,7 @@ void m8q_fault_check(
 // State functions 
 
 // Initialization state 
-void m8q_init_state(
-    m8q_trackers_t *m8q_device)
+void m8q_init_state(m8q_trackers_t *m8q_device)
 {
     m8q_device->init = CLEAR_BIT; 
     m8q_device->reset = CLEAR_BIT; 
@@ -421,8 +409,7 @@ void m8q_init_state(
 
 
 // Read state 
-void m8q_read_state(
-    m8q_trackers_t *m8q_device)
+void m8q_read_state(m8q_trackers_t *m8q_device)
 {
     M8Q_STATUS read_status; 
 
@@ -435,16 +422,14 @@ void m8q_read_state(
 
 
 // Idle state 
-void m8q_idle_state(
-    m8q_trackers_t *m8q_device)
+void m8q_idle_state(m8q_trackers_t *m8q_device)
 {
     // Do nothing - used in idle and low power modes 
 }
 
 
 // Low power enter state 
-void m8q_low_pwr_enter_state(
-    m8q_trackers_t *m8q_device)
+void m8q_low_pwr_enter_state(m8q_trackers_t *m8q_device)
 {
     m8q_set_low_pwr(); 
     m8q_device->low_pwr = SET_BIT; 
@@ -453,8 +438,7 @@ void m8q_low_pwr_enter_state(
 
 
 // Low power exit state 
-void m8q_low_pwr_exit_state(
-    m8q_trackers_t *m8q_device)
+void m8q_low_pwr_exit_state(m8q_trackers_t *m8q_device)
 {
     M8Q_STATUS read_status; 
     uint8_t dummy_buff; 
@@ -493,8 +477,7 @@ void m8q_low_pwr_exit_state(
 
 
 // Fault state 
-void m8q_fault_state(
-    m8q_trackers_t *m8q_device)
+void m8q_fault_state(m8q_trackers_t *m8q_device)
 {
     // Wait for the reset flag to be set or for the fault code to be cleared 
 
@@ -506,8 +489,7 @@ void m8q_fault_state(
 
 
 // Reset state 
-void m8q_reset_state(
-    m8q_trackers_t *m8q_device)
+void m8q_reset_state(m8q_trackers_t *m8q_device)
 {
     // Clear the fault codes 
     m8q_device->fault_code = CLEAR; 

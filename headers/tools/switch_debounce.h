@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Switch debouce code 
+ * @brief Switch debouce interface 
  * 
  * @version 0.1
  * @date 2023-04-11
@@ -58,8 +58,7 @@ extern "C" {
  * 
  * @param pull_mask : mask to specify the configuration of the buttons 
  */
-void debounce_init(
-    uint8_t pull_mask); 
+void debounce_init(uint8_t pull_mask); 
 
 
 /**
@@ -94,8 +93,7 @@ void debounce_init(
  * 
  * @param button_status : GPIO input status of the switches used 
  */
-void debounce(
-    uint8_t button_status); 
+void debounce(uint8_t button_status); 
 
 
 /**
@@ -115,8 +113,7 @@ void debounce(
  * @param button_select : mask to filter the button status you want 
  * @return uint8_t : button status 
  */
-uint8_t debounce_pressed(
-    uint8_t button_select); 
+uint8_t debounce_pressed(uint8_t button_select); 
 
 
 /**
@@ -136,8 +133,7 @@ uint8_t debounce_pressed(
  * @param button_select : mask to filter the button status you want 
  * @return uint8_t : button status 
  */
-uint8_t debounce_released(
-    uint8_t button_select); 
+uint8_t debounce_released(uint8_t button_select); 
 
 //=======================================================================================
 

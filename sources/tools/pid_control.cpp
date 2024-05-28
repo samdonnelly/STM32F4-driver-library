@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief PID controller calculation implementation 
+ * @brief PID controller calculation 
  * 
  * @version 0.1
  * @date 2024-01-23

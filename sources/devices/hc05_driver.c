@@ -129,8 +129,7 @@ void hc05_off(void)
 
 
 // Send a string of data 
-void hc05_send(
-    const char *send_data)
+void hc05_send(const char *send_data)
 {
     uart_sendstring(hc05_data_record.hc05_uart, send_data); 
 }
@@ -239,7 +238,6 @@ void hc05_at_command(
     char *resp, 
     uint8_t resp_len)
 {
-    // Local variables 
     char cmd_str[HC05_AT_CMD_LEN];             // String that holds the AT command 
     char clear_dr[HC05_AT_DR_CLR_LEN];         // String used to clear the DR if needed 
     uint16_t at_timeout = HC05_AT_RESP_COUNT;  // AT cmd response timout counter 

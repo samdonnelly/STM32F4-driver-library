@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief MPU6050 controller interface 
+ * @brief MPU-6050 IMU controller interface 
  * 
  * @version 0.1
  * @date 2023-01-30

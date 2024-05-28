@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Direct Memory Access (DMA) functions 
+ * @brief Direct Memory Access (DMA) driver interface 
  * 
  * @version 0.1
  * @date 2022-10-27

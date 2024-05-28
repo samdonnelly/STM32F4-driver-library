@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Driver for the MPU6050 accelerometer
+ * @brief MPU-6050 IMU driver 
  * 
  * @version 0.1
  * @date 2022-02-11

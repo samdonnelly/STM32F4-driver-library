@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Switch debouce code 
+ * @brief Switch debouce 
  * 
  * @version 0.1
  * @date 2023-04-11
@@ -57,8 +57,7 @@ static switch_debounce_t debouncer;
 // Initialization 
 
 // Switch debounce initialization 
-void debounce_init(
-    uint8_t pull_mask)
+void debounce_init(uint8_t pull_mask)
 {
     // Clear the buffer 
     memset((void *)debouncer.state, CLEAR, sizeof(debouncer.state)); 
@@ -81,8 +80,7 @@ void debounce_init(
 // Debounce 
 
 // Switch debounce calculation 
-void debounce(
-    uint8_t button_status)
+void debounce(uint8_t button_status)
 {
     // Local variables 
     uint8_t press_pull_up = CLEAR; 
@@ -137,16 +135,14 @@ void debounce(
 // Getters 
 
 // Get pressed button status 
-uint8_t debounce_pressed(
-    uint8_t button_select)
+uint8_t debounce_pressed(uint8_t button_select)
 {
     return (debouncer.pressed & button_select); 
 }
 
 
 // Get released button status 
-uint8_t debounce_released(
-    uint8_t button_select)
+uint8_t debounce_released(uint8_t button_select)
 {
     return (debouncer.released & button_select); 
 }

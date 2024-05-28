@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Interrupt functions 
+ * @brief Interrupt driver 
  * 
  * @version 0.1
  * @date 2022-11-04
@@ -120,8 +120,7 @@ void exti_ftsr(
  * 
  * @param swier : EXTI line for software to trigger an event on - use EXTI_LX macros above 
  */
-void exti_swier_set(
-    uint32_t swier); 
+void exti_swier_set(uint32_t swier); 
 
 //================================================================================
 
@@ -273,16 +272,14 @@ void exti_ftsr(
 
 
 // Software interrupt event register set 
-void exti_swier_set(
-    uint32_t swier)
+void exti_swier_set(uint32_t swier)
 {
     EXTI->SWIER |= swier; 
 }
 
 
 // Pending register clear 
-void exti_pr_clear(
-    uint32_t pr)
+void exti_pr_clear(uint32_t pr)
 {
     EXTI->PR |= pr; 
 }

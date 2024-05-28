@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HW125 SD card reader driver
+ * @brief HW125 SD card reader driver interface 
  * 
  * @version 0.1
  * @date 2022-05-18

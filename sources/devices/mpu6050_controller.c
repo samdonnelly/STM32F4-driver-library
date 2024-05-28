@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief MPU6050 controller 
+ * @brief MPU-6050 IMU controller 
  * 
  * @version 0.1
  * @date 2023-01-30
@@ -33,8 +33,7 @@
  * 
  * @param mpu6050_device : pointer to device data record 
  */
-void mpu6050_init_state(
-    mpu6050_cntrl_data_t *mpu6050_device); 
+void mpu6050_init_state(mpu6050_cntrl_data_t *mpu6050_device); 
 
 
 /**
@@ -48,8 +47,7 @@ void mpu6050_init_state(
  * 
  * @param mpu6050_device : pointer to device data record 
  */
-void mpu6050_read_cont_state(
-    mpu6050_cntrl_data_t *mpu6050_device); 
+void mpu6050_read_cont_state(mpu6050_cntrl_data_t *mpu6050_device); 
 
 
 /**
@@ -59,8 +57,7 @@ void mpu6050_read_cont_state(
  * 
  * @param mpu6050_device : pointer to device data record 
  */
-void mpu6050_read_ready_state(
-    mpu6050_cntrl_data_t *mpu6050_device); 
+void mpu6050_read_ready_state(mpu6050_cntrl_data_t *mpu6050_device); 
 
 
 /**
@@ -74,8 +71,7 @@ void mpu6050_read_ready_state(
  * 
  * @param mpu6050_device : pointer to device data record 
  */
-void mpu6050_low_power_state(
-    mpu6050_cntrl_data_t *mpu6050_device); 
+void mpu6050_low_power_state(mpu6050_cntrl_data_t *mpu6050_device); 
 
 
 /**
@@ -88,8 +84,7 @@ void mpu6050_low_power_state(
  * 
  * @param mpu6050_device : pointer to device data record 
  */
-void mpu6050_low_power_trans_state(
-    mpu6050_cntrl_data_t *mpu6050_device); 
+void mpu6050_low_power_trans_state(mpu6050_cntrl_data_t *mpu6050_device); 
 
 
 /**
@@ -102,8 +97,7 @@ void mpu6050_low_power_trans_state(
  * 
  * @param mpu6050_device : pointer to device data record 
  */
-void mpu6050_fault_state(
-    mpu6050_cntrl_data_t *mpu6050_device); 
+void mpu6050_fault_state(mpu6050_cntrl_data_t *mpu6050_device); 
 
 
 /**
@@ -115,19 +109,15 @@ void mpu6050_fault_state(
  * 
  * @param mpu6050_device : pointer to device data record 
  */
-void mpu6050_reset_state(
-    mpu6050_cntrl_data_t *mpu6050_device); 
+void mpu6050_reset_state(mpu6050_cntrl_data_t *mpu6050_device); 
 
 
 /**
  * @brief Check for over temperature 
  * 
- * @details 
- * 
- * @param mpu6050_device 
+ * @param mpu6050_device : pointer to device data record 
  */
-void mpu6050_temp_check(
-    mpu6050_cntrl_data_t *mpu6050_device); 
+void mpu6050_temp_check(mpu6050_cntrl_data_t *mpu6050_device); 
 
 //=======================================================================================
 
@@ -207,8 +197,7 @@ void mpu6050_controller_init(
 
 
 // MPU6050 controller 
-void mpu6050_controller(
-    device_number_t device_num)
+void mpu6050_controller(device_number_t device_num)
 {
     // Get the controller data record 
     mpu6050_cntrl_data_t *cntrl_data_ptr = 
@@ -375,8 +364,7 @@ void mpu6050_controller(
 // State functions 
 
 // MPU6050 initialization state 
-void mpu6050_init_state(
-    mpu6050_cntrl_data_t *mpu6050_device)
+void mpu6050_init_state(mpu6050_cntrl_data_t *mpu6050_device)
 {
     // Clear device trackers 
     mpu6050_device->startup = CLEAR_BIT; 
@@ -394,8 +382,7 @@ void mpu6050_init_state(
 
 
 // Read continuous state 
-void mpu6050_read_cont_state(
-    mpu6050_cntrl_data_t *mpu6050_device)
+void mpu6050_read_cont_state(mpu6050_cntrl_data_t *mpu6050_device)
 {
     // Wait for a specified period of time before reading new data 
     if (tim_compare(mpu6050_device->timer, 
@@ -412,8 +399,7 @@ void mpu6050_read_cont_state(
 
 
 // Read ready state 
-void mpu6050_read_ready_state(
-    mpu6050_cntrl_data_t *mpu6050_device)
+void mpu6050_read_ready_state(mpu6050_cntrl_data_t *mpu6050_device)
 {
     // Read from the device on request 
     if (mpu6050_device->read)
@@ -426,8 +412,7 @@ void mpu6050_read_ready_state(
 
 
 // MPU6050 low power transition state 
-void mpu6050_low_power_trans_state(
-    mpu6050_cntrl_data_t *mpu6050_device)
+void mpu6050_low_power_trans_state(mpu6050_cntrl_data_t *mpu6050_device)
 {
     // Write the low power flag status to the power management register 
     mpu6050_low_pwr_config(
@@ -440,24 +425,21 @@ void mpu6050_low_power_trans_state(
 
 
 // MPU6050 low power state 
-void mpu6050_low_power_state(
-    mpu6050_cntrl_data_t *mpu6050_device)
+void mpu6050_low_power_state(mpu6050_cntrl_data_t *mpu6050_device)
 {
     // Waits for low power flag to be cleared 
 }
 
 
 // MPU6050 fault state 
-void mpu6050_fault_state(
-    mpu6050_cntrl_data_t *mpu6050_device)
+void mpu6050_fault_state(mpu6050_cntrl_data_t *mpu6050_device)
 {
     // Idle until the reset flag is set 
 }
 
 
 // MPU6050 reset state 
-void mpu6050_reset_state(
-    mpu6050_cntrl_data_t *mpu6050_device)
+void mpu6050_reset_state(mpu6050_cntrl_data_t *mpu6050_device)
 {
     // Reset the fault code in both the controller and driver 
     mpu6050_device->fault_code = CLEAR; 
@@ -480,8 +462,7 @@ void mpu6050_reset_state(
 // Data functions 
 
 // Check for over temperature 
-void mpu6050_temp_check(
-    mpu6050_cntrl_data_t *mpu6050_device)
+void mpu6050_temp_check(mpu6050_cntrl_data_t *mpu6050_device)
 {
     if (mpu6050_get_temp_raw(mpu6050_device->device_num) > 
         (MPU6050_RAW_TEMP_MAX-MPU6050_RAW_TEMP_OFST))
@@ -497,8 +478,7 @@ void mpu6050_temp_check(
 // Setters 
 
 // Set low power flag 
-void mpu6050_set_low_power(
-    device_number_t device_num)
+void mpu6050_set_low_power(device_number_t device_num)
 {
     // Get the controller data record 
     mpu6050_cntrl_data_t *cntrl_data_ptr = 
@@ -512,8 +492,7 @@ void mpu6050_set_low_power(
 
 
 // Clear low power flag 
-void mpu6050_clear_low_power(
-    device_number_t device_num)
+void mpu6050_clear_low_power(device_number_t device_num)
 {
     // Get the controller data record 
     mpu6050_cntrl_data_t *cntrl_data_ptr = 
@@ -562,8 +541,7 @@ void mpu6050_set_read_state(
 
 
 // Set the read flag 
-void mpu6050_set_read_flag(
-    device_number_t device_num)
+void mpu6050_set_read_flag(device_number_t device_num)
 {
     // Get the controller data record 
     mpu6050_cntrl_data_t *cntrl_data_ptr = 
@@ -578,8 +556,7 @@ void mpu6050_set_read_flag(
 
 
 // Set reset flag 
-void mpu6050_set_reset_flag(
-    device_number_t device_num)
+void mpu6050_set_reset_flag(device_number_t device_num)
 {
     // Get the controller data record 
     mpu6050_cntrl_data_t *cntrl_data_ptr = 
@@ -598,8 +575,7 @@ void mpu6050_set_reset_flag(
 // Getters 
 
 // Get the controller state 
-MPU6050_STATE mpu6050_get_state(
-    device_number_t device_num)
+MPU6050_STATE mpu6050_get_state(device_number_t device_num)
 {
     // Get the controller data record 
     mpu6050_cntrl_data_t *cntrl_data_ptr = 
@@ -613,8 +589,7 @@ MPU6050_STATE mpu6050_get_state(
 
 
 // Get the controller fault code 
-MPU6050_FAULT_CODE mpu6050_get_fault_code(
-    device_number_t device_num)
+MPU6050_FAULT_CODE mpu6050_get_fault_code(device_number_t device_num)
 {
     // Get the controller data record 
     mpu6050_cntrl_data_t *cntrl_data_ptr = 

@@ -212,8 +212,7 @@ void nvic_config(
  * 
  * @param pr : pending flag to clear for EXTI line - use EXTI_LX macros above 
  */
-void exti_pr_clear(
-    uint32_t pr); 
+void exti_pr_clear(uint32_t pr); 
 
 //================================================================================
 

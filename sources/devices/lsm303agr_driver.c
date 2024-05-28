@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief LSM303AGR 6-axis magnetometer and accelerometer driver implementation 
+ * @brief LSM303AGR IMU driver 
  * 
  * @version 0.1
  * @date 2023-06-07

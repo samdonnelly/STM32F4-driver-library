@@ -36,8 +36,7 @@
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
-void hw125_init_state(
-    hw125_trackers_t *hw125_device); 
+void hw125_init_state(hw125_trackers_t *hw125_device); 
 
 
 /**
@@ -61,19 +60,15 @@ void hw125_init_state(
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
-void hw125_not_ready_state(
-    hw125_trackers_t *hw125_device); 
+void hw125_not_ready_state(hw125_trackers_t *hw125_device); 
 
 
 /**
  * @brief HW125 access state 
  * 
- * @details 
- * 
- * @param hw125_device 
+ * @param hw125_device : data record 
  */
-void hw125_access_state(
-    hw125_trackers_t *hw125_device); 
+void hw125_access_state(hw125_trackers_t *hw125_device); 
 
 
 /**
@@ -88,8 +83,7 @@ void hw125_access_state(
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
-void hw125_access_check_state(
-    hw125_trackers_t *hw125_device); 
+void hw125_access_check_state(hw125_trackers_t *hw125_device); 
 
 
 /**
@@ -107,8 +101,7 @@ void hw125_access_check_state(
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
-void hw125_eject_state(
-    hw125_trackers_t *hw125_device); 
+void hw125_eject_state(hw125_trackers_t *hw125_device); 
 
 
 /**
@@ -125,8 +118,7 @@ void hw125_eject_state(
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
-void hw125_fault_state(
-    hw125_trackers_t *hw125_device); 
+void hw125_fault_state(hw125_trackers_t *hw125_device); 
 
 
 /**
@@ -143,8 +135,7 @@ void hw125_fault_state(
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
-void hw125_reset_state(
-    hw125_trackers_t *hw125_device); 
+void hw125_reset_state(hw125_trackers_t *hw125_device); 
 
 
 /**
@@ -156,8 +147,7 @@ void hw125_reset_state(
  * 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_mount(
-    hw125_trackers_t *hw125_device); 
+FRESULT hw125_mount(hw125_trackers_t *hw125_device); 
 
 
 /**
@@ -176,8 +166,7 @@ FRESULT hw125_mount(
  * 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_unmount(
-    hw125_trackers_t *hw125_device); 
+FRESULT hw125_unmount(hw125_trackers_t *hw125_device); 
 
 
 /**
@@ -188,11 +177,10 @@ FRESULT hw125_unmount(
  *          successful and will update the fault code in the process if something goes wrong 
  *          while reading the label. 
  * 
- * @param hw125_device 
+ * @param hw125_device : data record 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_getlabel(
-    hw125_trackers_t *hw125_device); 
+FRESULT hw125_getlabel(hw125_trackers_t *hw125_device); 
 
 
 /**
@@ -205,8 +193,7 @@ FRESULT hw125_getlabel(
  * 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_getfree(
-    hw125_trackers_t *hw125_device); 
+FRESULT hw125_getfree(hw125_trackers_t *hw125_device); 
 
 //=======================================================================================
 
@@ -241,7 +228,7 @@ static hw125_state_functions_t state_table[HW125_NUM_STATES] =
 // HW125 controller initialization 
 void hw125_controller_init(const char *path)
 {
-    // TODO Check that the path length is not too long 
+    // Check that the path length is not too long 
 
     // Controller information 
     hw125_device_trackers.state = HW125_INIT_STATE; 
@@ -266,7 +253,6 @@ void hw125_controller_init(const char *path)
 // HW125 controller 
 void hw125_controller(void)
 {
-    // Local variables 
     hw125_states_t next_state = hw125_device_trackers.state; 
 
     //==================================================
@@ -420,8 +406,7 @@ void hw125_controller(void)
 // State functions 
 
 // HW125 initialization state 
-void hw125_init_state(
-    hw125_trackers_t *hw125_device) 
+void hw125_init_state(hw125_trackers_t *hw125_device) 
 {
     // Clear startup flag 
     hw125_device->startup = CLEAR_BIT; 
@@ -450,8 +435,7 @@ void hw125_init_state(
 
 
 // HW125 not ready state 
-void hw125_not_ready_state(
-    hw125_trackers_t *hw125_device)
+void hw125_not_ready_state(hw125_trackers_t *hw125_device)
 {
     // Check if the volume is present 
     if (hw125_get_existance() == HW125_RES_OK) 
@@ -463,16 +447,14 @@ void hw125_not_ready_state(
 
 
 // HW125 access state 
-void hw125_access_state(
-    hw125_trackers_t *hw125_device)
+void hw125_access_state(hw125_trackers_t *hw125_device)
 {
     // Do nothing while the volume is accessed 
 }
 
 
 // HW125 access file state 
-void hw125_access_check_state(
-    hw125_trackers_t *hw125_device) 
+void hw125_access_check_state(hw125_trackers_t *hw125_device) 
 {
     // Check for the presence of the volume 
     if (hw125_ready_rec()) 
@@ -484,8 +466,7 @@ void hw125_access_check_state(
 
 
 // HW125 eject state 
-void hw125_eject_state(
-    hw125_trackers_t *hw125_device)
+void hw125_eject_state(hw125_trackers_t *hw125_device)
 {
     // Attempt to close the open file 
     hw125_close(); 
@@ -496,16 +477,14 @@ void hw125_eject_state(
 
 
 // HW125 fault state 
-void hw125_fault_state(
-    hw125_trackers_t *hw125_device) 
+void hw125_fault_state(hw125_trackers_t *hw125_device) 
 {
     // Idle until the reset flag is set 
 }
 
 
 // HW125 reset state 
-void hw125_reset_state(
-    hw125_trackers_t *hw125_device) 
+void hw125_reset_state(hw125_trackers_t *hw125_device) 
 {
     // Attempt to close a file 
     hw125_close(); 
@@ -530,8 +509,7 @@ void hw125_reset_state(
 // Controller volume access functions 
 
 // Mount the volume 
-FRESULT hw125_mount(
-    hw125_trackers_t *hw125_device) 
+FRESULT hw125_mount(hw125_trackers_t *hw125_device) 
 {
     hw125_device->fresult = f_mount(&hw125_device->file_sys, "", HW125_MOUNT_NOW); 
 
@@ -545,8 +523,7 @@ FRESULT hw125_mount(
 
 
 // Unmount the volume 
-FRESULT hw125_unmount(
-    hw125_trackers_t *hw125_device) 
+FRESULT hw125_unmount(hw125_trackers_t *hw125_device) 
 {
     // Unmount, clear the init status so it can be re-mounted, and clear the mount bit 
     f_unmount(""); 
@@ -558,8 +535,7 @@ FRESULT hw125_unmount(
 
 
 // Get the volume label 
-FRESULT hw125_getlabel(
-    hw125_trackers_t *hw125_device) 
+FRESULT hw125_getlabel(hw125_trackers_t *hw125_device) 
 {
     hw125_device->fresult = f_getlabel("", hw125_device->vol_label, &hw125_device->serial_num); 
 
@@ -574,8 +550,7 @@ FRESULT hw125_getlabel(
 
 
 // Get free space 
-FRESULT hw125_getfree(
-    hw125_trackers_t *hw125_device) 
+FRESULT hw125_getfree(hw125_trackers_t *hw125_device) 
 {
     hw125_device->fresult = f_getfree("", &hw125_device->fre_clust, &hw125_device->pfs); 
 

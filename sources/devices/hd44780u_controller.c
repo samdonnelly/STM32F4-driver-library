@@ -35,8 +35,7 @@
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_init_state(
-    hd44780u_trackers_t *hd44780u_device); 
+void hd44780u_init_state(hd44780u_trackers_t *hd44780u_device); 
 
 
 /**
@@ -49,8 +48,7 @@ void hd44780u_init_state(
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_idle_state(
-    hd44780u_trackers_t *hd44780u_device); 
+void hd44780u_idle_state(hd44780u_trackers_t *hd44780u_device); 
 
 
 /**
@@ -76,10 +74,9 @@ void hd44780u_idle_state(
  * @see hd44780u_set_sleep_time 
  * @see hd44780u_wake_up 
  * 
- * @param hd44780u_device 
+ * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_pwr_save_state(
-    hd44780u_trackers_t *hd44780u_device); 
+void hd44780u_pwr_save_state(hd44780u_trackers_t *hd44780u_device); 
 
 
 /**
@@ -98,8 +95,7 @@ void hd44780u_pwr_save_state(
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_write_state(
-    hd44780u_trackers_t *hd44780u_device); 
+void hd44780u_write_state(hd44780u_trackers_t *hd44780u_device); 
 
 
 /**
@@ -112,10 +108,9 @@ void hd44780u_write_state(
  * 
  * @see hd44780u_set_clear_flag 
  * 
- * @param hd44780u_device 
+ * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_clear_state(
-    hd44780u_trackers_t *hd44780u_device); 
+void hd44780u_clear_state(hd44780u_trackers_t *hd44780u_device); 
 
 
 /**
@@ -130,8 +125,7 @@ void hd44780u_clear_state(
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_low_pwr_enter_state(
-    hd44780u_trackers_t *hd44780u_device); 
+void hd44780u_low_pwr_enter_state(hd44780u_trackers_t *hd44780u_device); 
 
 
 /**
@@ -151,8 +145,7 @@ void hd44780u_low_pwr_enter_state(
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_low_pwr_state(
-    hd44780u_trackers_t *hd44780u_device); 
+void hd44780u_low_pwr_state(hd44780u_trackers_t *hd44780u_device); 
 
 
 /**
@@ -168,8 +161,7 @@ void hd44780u_low_pwr_state(
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_low_pwr_exit_state(
-    hd44780u_trackers_t *hd44780u_device); 
+void hd44780u_low_pwr_exit_state(hd44780u_trackers_t *hd44780u_device); 
 
 
 /**
@@ -187,8 +179,7 @@ void hd44780u_low_pwr_exit_state(
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_fault_state(
-    hd44780u_trackers_t *hd44780u_device); 
+void hd44780u_fault_state(hd44780u_trackers_t *hd44780u_device); 
 
 
 /**
@@ -204,8 +195,7 @@ void hd44780u_fault_state(
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
-void hd44780u_reset_state(
-    hd44780u_trackers_t *hd44780u_device); 
+void hd44780u_reset_state(hd44780u_trackers_t *hd44780u_device); 
 
 //=======================================================================================
 
@@ -239,8 +229,7 @@ static hd44780u_state_functions_t state_table[HD44780U_NUM_STATES] =
 // Control Functions 
 
 // Initialization 
-void hd44780u_controller_init(
-    TIM_TypeDef *timer)
+void hd44780u_controller_init(TIM_TypeDef *timer)
 {
     // Device and controller information 
     hd44780u_device_trackers.state = HD44780U_INIT_STATE; 
@@ -499,8 +488,7 @@ void hd44780u_controller(void)
 // State functions 
 
 // Initialization state 
-void hd44780u_init_state(
-    hd44780u_trackers_t *hd44780u_device)
+void hd44780u_init_state(hd44780u_trackers_t *hd44780u_device)
 {
     // Clear reset flag 
     hd44780u_device->reset = CLEAR_BIT; 
@@ -511,16 +499,14 @@ void hd44780u_init_state(
 
 
 // Idle state 
-void hd44780u_idle_state(
-    hd44780u_trackers_t *hd44780u_device)
+void hd44780u_idle_state(hd44780u_trackers_t *hd44780u_device)
 {
     // Do nothing when not needed 
 }
 
 
 // Power save state 
-void hd44780u_pwr_save_state(
-    hd44780u_trackers_t *hd44780u_device)
+void hd44780u_pwr_save_state(hd44780u_trackers_t *hd44780u_device)
 {
     // Put the screen into sleep mode (backlight off) after the specified sleep time 
     if (tim_compare(hd44780u_device->timer, 
@@ -537,10 +523,8 @@ void hd44780u_pwr_save_state(
 
 
 // Write state 
-void hd44780u_write_state(
-    hd44780u_trackers_t *hd44780u_device)
+void hd44780u_write_state(hd44780u_trackers_t *hd44780u_device)
 {
-    // Local variables 
     uint8_t line_update = hd44780u_get_line_update(); 
 
     // Send only the lines with new content 
@@ -557,8 +541,7 @@ void hd44780u_write_state(
 
 
 // Clear screen and line contents state 
-void hd44780u_clear_state(
-    hd44780u_trackers_t *hd44780u_device)
+void hd44780u_clear_state(hd44780u_trackers_t *hd44780u_device)
 {
     // Clear the screen and the line contents 
     hd44780u_clear(); 
@@ -572,8 +555,7 @@ void hd44780u_clear_state(
 
 
 // Enter low power mode 
-void hd44780u_low_pwr_enter_state(
-    hd44780u_trackers_t *hd44780u_device)
+void hd44780u_low_pwr_enter_state(hd44780u_trackers_t *hd44780u_device)
 {
     // Clear the display, turn the backlight off and turn the display off 
     hd44780u_clear(); 
@@ -587,16 +569,14 @@ void hd44780u_low_pwr_enter_state(
 
 
 // Low power mode state 
-void hd44780u_low_pwr_state(
-    hd44780u_trackers_t *hd44780u_device)
+void hd44780u_low_pwr_state(hd44780u_trackers_t *hd44780u_device)
 {
     // Do nothing until the state is left 
 }
 
 
 // Exit low power mode 
-void hd44780u_low_pwr_exit_state(
-    hd44780u_trackers_t *hd44780u_device)
+void hd44780u_low_pwr_exit_state(hd44780u_trackers_t *hd44780u_device)
 {
     // Turn the display on, turn the backlight on and clear the low power flag in the
     // event of a fault or reset 
@@ -607,16 +587,14 @@ void hd44780u_low_pwr_exit_state(
 
 
 // Fault state 
-void hd44780u_fault_state(
-    hd44780u_trackers_t *hd44780u_device)
+void hd44780u_fault_state(hd44780u_trackers_t *hd44780u_device)
 {
     // Waits for the reset state to be called or for the fault code to be cleared 
 }
 
 
 // Reset state 
-void hd44780u_reset_state(
-    hd44780u_trackers_t *hd44780u_device)
+void hd44780u_reset_state(hd44780u_trackers_t *hd44780u_device)
 {
     // Clear the fault and status codes 
     hd44780u_device->fault_code = CLEAR; 
@@ -656,8 +634,7 @@ void hd44780u_wake_up(void)
 
 
 // Set screen sleep time 
-void hd44780u_set_sleep_time(
-    uint32_t sleep_time)
+void hd44780u_set_sleep_time(uint32_t sleep_time)
 {
     hd44780u_device_trackers.sleep_time = sleep_time; 
 }

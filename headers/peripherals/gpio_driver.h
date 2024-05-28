@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief GPIO functions
+ * @brief GPIO driver interface 
  * 
  * @version 0.1
  * @date 2022-05-27
@@ -249,8 +249,7 @@ GPIO_STATE gpio_read(
  * @param gpio : GPIO port to read 
  * @return GPIOX_DR : contents of the GPIO port data input register 
  */
-GPIOX_DR gpio_port_read(
-    GPIO_TypeDef *gpio); 
+GPIOX_DR gpio_port_read(GPIO_TypeDef *gpio); 
 
 //=======================================================================================
 

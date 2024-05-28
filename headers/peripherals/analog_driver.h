@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Analog (ADC) data functions 
+ * @brief Analog (ADC) driver interface 
  * 
  * @version 0.1
  * @date 2022-09-26
@@ -228,8 +228,7 @@ typedef uint8_t ADC_STATUS;
  * @param rcc : RCC port 
  * @return ADC_STATUS : ADC1 clock enable status 
  */
-ADC_STATUS adc1_clock_enable(
-    RCC_TypeDef *rcc); 
+ADC_STATUS adc1_clock_enable(RCC_TypeDef *rcc); 
 
 
 /**
@@ -395,8 +394,7 @@ ADC_STATUS adc_seq_len_set(
  * @param adc : pointer to the ADC port used 
  * @return ADC_STATUS : ADC on status 
  */
-ADC_STATUS adc_on(
-    ADC_TypeDef *adc); 
+ADC_STATUS adc_on(ADC_TypeDef *adc); 
 
 
 /**
@@ -410,8 +408,7 @@ ADC_STATUS adc_on(
  * @param adc : pointer to the ADC port used 
  * @return ADC_STATUS : ADC off status 
  */
-ADC_STATUS adc_off(
-    ADC_TypeDef *adc); 
+ADC_STATUS adc_off(ADC_TypeDef *adc); 
 
 
 /**
@@ -423,18 +420,13 @@ ADC_STATUS adc_off(
  *          function needs to be called every time you want a converison or sequence of 
  *          conversions to happen. Note that this function has no effect (conversion won't 
  *          start) if the ADC is not enabled. 
- *          // TODO 
- *          After triggering the start of an ADC conversion, the hardware will indicate 
- *          when the conversion has started. This function is called immediately after 
- *          adc_start and is used to wait until the conversion has started before proceeding. 
  * 
  * @see adc_on 
  * 
  * @param adc : pointer to the ADC port used 
  * @return ADC_STATUS : ADC start status 
  */
-ADC_STATUS adc_start(
-    ADC_TypeDef *adc); 
+ADC_STATUS adc_start(ADC_TypeDef *adc); 
 
 
 /**

@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief General purpose timers
+ * @brief General purpose timers interface 
  * 
  * @version 0.1
  * @date 2022-03-28
@@ -363,8 +363,7 @@ void tim_9_to_11_counter_init(
  * 
  * @param timer : pointer to timer port to enable 
  */
-void tim_enable(
-    TIM_TypeDef *timer); 
+void tim_enable(TIM_TypeDef *timer); 
 
 
 /**
@@ -375,8 +374,7 @@ void tim_enable(
  * 
  * @param timer : pointer to timer port to disable 
  */
-void tim_disable(
-    TIM_TypeDef *timer); 
+void tim_disable(TIM_TypeDef *timer); 
 
 //=======================================================================================
 
@@ -480,8 +478,7 @@ uint8_t tim_compare(
  * @param timer : pointer to timer that triggered the update event 
  * @return uint8_t : update interrupt status 
  */
-uint8_t tim_uif_read(
-    TIM_TypeDef *timer); 
+uint8_t tim_uif_read(TIM_TypeDef *timer); 
 
 
 /**
@@ -494,8 +491,7 @@ uint8_t tim_uif_read(
  * 
  * @param timer : pointer to timer that triggered the update event 
  */
-void tim_uif_clear(
-    TIM_TypeDef *timer); 
+void tim_uif_clear(TIM_TypeDef *timer); 
 
 //=======================================================================================
 
@@ -513,8 +509,7 @@ void tim_uif_clear(
  * 
  * @param timer : pointer to timer of which to trigger an update event 
  */
-void tim_ug_set(
-    TIM_TypeDef *timer); 
+void tim_ug_set(TIM_TypeDef *timer); 
 
 //=======================================================================================
 
@@ -535,8 +530,7 @@ void tim_ug_set(
  * @param timer : pointer to timer port of which to read its counter 
  * @return TIM_COUNTER : current value of the counter 
  */
-TIM_COUNTER tim_cnt_read(
-    TIM_TypeDef *timer); 
+TIM_COUNTER tim_cnt_read(TIM_TypeDef *timer); 
 
 
 /**
@@ -607,8 +601,7 @@ void tim_ccr(
  * @param timer : timer port to get clock frquency of 
  * @return uint32_t : timer clock frequency (MHz) 
  */
-uint32_t tim_get_pclk_freq(
-    TIM_TypeDef *timer); 
+uint32_t tim_get_pclk_freq(TIM_TypeDef *timer); 
 
 //=======================================================================================
 

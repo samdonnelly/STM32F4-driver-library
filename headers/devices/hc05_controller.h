@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HC05 controller 
+ * @brief HC05 controller interface 
  * 
  * @version 0.1
  * @date 2023-01-03
@@ -109,8 +109,7 @@ typedef uint8_t HC05_READ_STATUS;
 /**
  * @brief HC05 state function pointer 
  */
-typedef void (*hc05_state_functions_t)(
-    hc05_device_trackers_t *hc05_device); 
+typedef void (*hc05_state_functions_t)(hc05_device_trackers_t *hc05_device); 
 
 //================================================================================
 
@@ -130,8 +129,7 @@ typedef void (*hc05_state_functions_t)(
  * 
  * @param timer : timer port used for the driver 
  */
-void hc05_controller_init(
-    TIM_TypeDef *timer); 
+void hc05_controller_init(TIM_TypeDef *timer); 
 
 
 /**

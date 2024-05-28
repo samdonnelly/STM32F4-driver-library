@@ -74,8 +74,7 @@ typedef m8q_states_t M8Q_STATE;
  * 
  * @param timer : timer used for non-blocking delays 
  */
-void m8q_controller_init(
-    TIM_TypeDef *timer); 
+void m8q_controller_init(TIM_TypeDef *timer); 
 
 
 /**

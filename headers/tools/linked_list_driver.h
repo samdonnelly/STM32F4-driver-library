@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Linked list driver 
+ * @brief Linked list driver interface 
  * 
  * @version 0.1
  * @date 2023-02-08

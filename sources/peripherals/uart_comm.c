@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Driver for UART communication 
+ * @brief UART driver 
  * 
  * @version 0.1
  * @date 2022-02-12
@@ -164,8 +164,7 @@ void uart_interrupt_init(
 // Register functions 
 
 // Check if data is available for reading 
-uint8_t uart_data_ready(
-    USART_TypeDef *uart)
+uint8_t uart_data_ready(USART_TypeDef *uart)
 {
     // Check RXNE bit in the status register 
     if (uart->SR & (SET_BIT << SHIFT_5)) 
@@ -283,8 +282,7 @@ void uart_send_new_line(USART_TypeDef *uart)
 // Read Data 
 
 // UART get character 
-uint8_t uart_getchar(
-    USART_TypeDef *uart)
+uint8_t uart_getchar(USART_TypeDef *uart)
 {
     return (uint8_t)(uart->DR);  // Read and return data from data register 
 }
@@ -333,8 +331,7 @@ UART_STATUS uart_getstr(
 
 
 // UART clear data register 
-void uart_clear_dr(
-    USART_TypeDef *uart)
+void uart_clear_dr(USART_TypeDef *uart)
 {
     dummy_read(uart->DR); 
 }

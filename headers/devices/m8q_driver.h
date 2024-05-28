@@ -215,8 +215,7 @@ M8Q_STATUS m8q_read_ds(
  * @param data_size : buffer to store the data stream size (16-bit value) 
  * @return M8Q_STATUS : status of the read operation 
  */
-M8Q_STATUS m8q_read_ds_size(
-    uint16_t *data_size); 
+M8Q_STATUS m8q_read_ds_size(uint16_t *data_size); 
 
 
 /**

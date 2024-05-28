@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HC05 bluetooth driver 
+ * @brief HC05 bluetooth driver interface 
  * 
  * @version 0.1
  * @date 2022-07-25
@@ -227,8 +227,7 @@ void hc05_off(void);
  * 
  * @param send_data : pointer to the data string to send 
  */
-void hc05_send(
-    const char *send_data); 
+void hc05_send(const char *send_data); 
 
 
 /**

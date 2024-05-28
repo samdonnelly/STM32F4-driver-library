@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Direct Memory Access (DMA) functions 
+ * @brief Direct Memory Access (DMA) driver 
  * 
  * @version 0.1
  * @date 2022-10-27
@@ -680,8 +680,7 @@ void dma_feie(
 
 
 // Read the FIFO status 
-FIFO_STATUS dma_fs(
-    DMA_Stream_TypeDef *dma_stream)
+FIFO_STATUS dma_fs(DMA_Stream_TypeDef *dma_stream)
 {
     return ((dma_stream->FCR & (SET_7 << SHIFT_3)) >> SHIFT_3); 
 }

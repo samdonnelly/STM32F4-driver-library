@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HD44780U + PCF8574 20x4 LCD screen controller 
+ * @brief HD44780U + PCF8574 20x4 LCD screen controller interface 
  * 
  * @version 0.1
  * @date 2022-12-01
@@ -118,8 +118,7 @@ typedef hd44780u_states_t HD44780U_STATE;
  * 
  * @param hd44780u_device : device tracker that defines control characteristics 
  */
-typedef void (*hd44780u_state_functions_t)(
-    hd44780u_trackers_t *hd44780u_device); 
+typedef void (*hd44780u_state_functions_t)(hd44780u_trackers_t *hd44780u_device); 
 
 //=======================================================================================
 
@@ -137,8 +136,7 @@ typedef void (*hd44780u_state_functions_t)(
  * 
  * @param timer : timer used screen sleep in power save mode 
  */
-void hd44780u_controller_init(
-    TIM_TypeDef *timer); 
+void hd44780u_controller_init(TIM_TypeDef *timer); 
 
 
 /**
@@ -204,8 +202,7 @@ void hd44780u_wake_up(void);
  * 
  * @param sleep_time : time (us) until screen backlight turns off in power save mode 
  */
-void hd44780u_set_sleep_time(
-    uint32_t sleep_time); 
+void hd44780u_set_sleep_time(uint32_t sleep_time); 
 
 
 /**

@@ -21,7 +21,7 @@
 
 
 //=======================================================================================
-// TODO 
+// To Do 
 // - When about to send data (to Android) look for a prompt message to start 
 // - Have a state that is called at the end of AT command mode state where the baud 
 //   rate is read and used to set the baud rate for data mode 
@@ -42,8 +42,7 @@
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_init_state(
-    hc05_device_trackers_t *hc05_device); 
+void hc05_init_state(hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -57,8 +56,7 @@ void hc05_init_state(
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_not_connected_state(
-    hc05_device_trackers_t *hc05_device); 
+void hc05_not_connected_state(hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -71,8 +69,7 @@ void hc05_not_connected_state(
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_connected_state(
-    hc05_device_trackers_t *hc05_device); 
+void hc05_connected_state(hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -87,8 +84,7 @@ void hc05_connected_state(
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_send_state(
-    hc05_device_trackers_t *hc05_device); 
+void hc05_send_state(hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -113,8 +109,7 @@ void hc05_send_state(
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_read_state(
-    hc05_device_trackers_t *hc05_device); 
+void hc05_read_state(hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -132,8 +127,7 @@ void hc05_read_state(
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_low_power_state(
-    hc05_device_trackers_t *hc05_device); 
+void hc05_low_power_state(hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -149,8 +143,7 @@ void hc05_low_power_state(
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_low_power_exit_state(
-    hc05_device_trackers_t *hc05_device); 
+void hc05_low_power_exit_state(hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -164,8 +157,7 @@ void hc05_low_power_exit_state(
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_fault_state(
-    hc05_device_trackers_t *hc05_device); 
+void hc05_fault_state(hc05_device_trackers_t *hc05_device); 
 
 
 /**
@@ -180,8 +172,7 @@ void hc05_fault_state(
  * 
  * @param hc05_device : pointer to device tracker 
  */
-void hc05_reset_state(
-    hc05_device_trackers_t *hc05_device); 
+void hc05_reset_state(hc05_device_trackers_t *hc05_device); 
 
 //=======================================================================================
 
@@ -213,8 +204,7 @@ static hc05_state_functions_t state_table[HC05_NUM_STATES] =
 // Control Functions 
 
 // HC05 controller initialization 
-void hc05_controller_init(
-    TIM_TypeDef *timer)
+void hc05_controller_init(TIM_TypeDef *timer)
 {
     // Peripherals 
     hc05_device_trackers.timer = timer; 
@@ -403,8 +393,7 @@ void hc05_controller(void)
 // State Functions 
 
 // Initialization state 
-void hc05_init_state
-(hc05_device_trackers_t *hc05_device) 
+void hc05_init_state(hc05_device_trackers_t *hc05_device) 
 {
     // Ensures the init state runs once on startup 
     hc05_device->startup = CLEAR_BIT; 
@@ -424,8 +413,7 @@ void hc05_init_state
 
 
 // Not connected state 
-void hc05_not_connected_state(
-    hc05_device_trackers_t *hc05_device) 
+void hc05_not_connected_state(hc05_device_trackers_t *hc05_device) 
 {
     // Check for a connection 
     hc05_device->connect = hc05_status(); 
@@ -439,8 +427,7 @@ void hc05_not_connected_state(
 
 
 // Connected state 
-void hc05_connected_state(
-    hc05_device_trackers_t *hc05_device) 
+void hc05_connected_state(hc05_device_trackers_t *hc05_device) 
 {
     // Check for a connection 
     hc05_device->connect = hc05_status(); 
@@ -451,8 +438,7 @@ void hc05_connected_state(
 
 
 // Send state 
-void hc05_send_state(
-    hc05_device_trackers_t *hc05_device) 
+void hc05_send_state(hc05_device_trackers_t *hc05_device) 
 {
     // Send data record 
     hc05_send((char *)hc05_device->send_data); 
@@ -464,8 +450,7 @@ void hc05_send_state(
 
 
 // Read state 
-void hc05_read_state(
-    hc05_device_trackers_t *hc05_device) 
+void hc05_read_state(hc05_device_trackers_t *hc05_device) 
 {
     // Pole for data at the UART port 
     if (hc05_data_status())
@@ -481,16 +466,14 @@ void hc05_read_state(
 
 
 // Low power state 
-void hc05_low_power_state(
-    hc05_device_trackers_t *hc05_device) 
+void hc05_low_power_state(hc05_device_trackers_t *hc05_device) 
 {
     hc05_off(); 
 }
 
 
 // Low power exit state 
-void hc05_low_power_exit_state(
-    hc05_device_trackers_t *hc05_device) 
+void hc05_low_power_exit_state(hc05_device_trackers_t *hc05_device) 
 {
     hc05_on(); 
 
@@ -504,16 +487,14 @@ void hc05_low_power_exit_state(
 
 
 // Fault state 
-void hc05_fault_state(
-    hc05_device_trackers_t *hc05_device) 
+void hc05_fault_state(hc05_device_trackers_t *hc05_device) 
 {
     // Wait for fault code to clear or reset flag to set 
 }
 
 
 // Reset state 
-void hc05_reset_state(
-    hc05_device_trackers_t *hc05_device) 
+void hc05_reset_state(hc05_device_trackers_t *hc05_device) 
 {
     hc05_device->fault_code = CLEAR; 
 

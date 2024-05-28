@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief SPI communication driver
+ * @brief SPI communication driver interface 
  * 
  * @version 0.1
  * @date 2022-05-17

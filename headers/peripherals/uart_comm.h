@@ -264,8 +264,6 @@ void uart_set_baud_rate(
 /**
  * @brief UART interrupt initialization 
  * 
- * @details 
- * 
  * @param uart : USART port to configure 
  * @param peie : Parity error (PE) interrupt enable 
  * @param txeie : Transmit data register interrupt enable (TXE) 
@@ -396,8 +394,7 @@ void uart_send_spaces(
  * 
  * @param uart : pointer to the UART port 
  */
-void uart_send_new_line(
-    USART_TypeDef *uart);
+void uart_send_new_line(USART_TypeDef *uart);
 
 //=======================================================================================
 
@@ -417,8 +414,7 @@ void uart_send_new_line(
  * @param uart : pointer to the UART port 
  * @return uint8_t : contents of the data register 
  */
-uint8_t uart_getchar(
-    USART_TypeDef *uart);
+uint8_t uart_getchar(USART_TypeDef *uart);
 
 
 /**
@@ -456,8 +452,7 @@ UART_STATUS uart_getstr(
  * 
  * @param uart : pointer to the UART port 
  */
-void uart_clear_dr(
-    USART_TypeDef *uart); 
+void uart_clear_dr(USART_TypeDef *uart); 
 
 //=======================================================================================
 

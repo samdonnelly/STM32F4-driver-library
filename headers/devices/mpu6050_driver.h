@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Driver for the MPU6050 accelerometer
+ * @brief MPU-6050 IMU driver interface 
  * 
  * @version 0.1
  * @date 2022-02-11
@@ -477,8 +477,7 @@ void mpu6050_int_pin_init(
  * 
  * @param device_num : data record address of device 
  */
-void mpu6050_calibrate(
-    device_number_t device_num); 
+void mpu6050_calibrate(device_number_t device_num); 
 
 
 /**
@@ -631,8 +630,7 @@ void mpu6050_read_all(device_number_t device_num);
  * @param device_num : data record address of device 
  * @return MPU6050_ST_RESULT : self-test results 
  */
-MPU6050_ST_RESULT mpu6050_self_test(
-    device_number_t device_num);
+MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num);
 
 //=======================================================================================
 

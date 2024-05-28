@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief General purpose timers
+ * @brief General purpose timers 
  * 
  * @version 0.1
  * @date 2022-03-28
@@ -403,8 +403,7 @@ void tim_9_to_11_counter_init(
 // Timer enable 
 
 // Enable a timer 
-void tim_enable(
-    TIM_TypeDef *timer)
+void tim_enable(TIM_TypeDef *timer)
 {
     tim_cen(timer, TIM_CEN_ENABLE); 
     
@@ -416,8 +415,7 @@ void tim_enable(
 
 
 // Disable a timer 
-void tim_disable(
-    TIM_TypeDef *timer)
+void tim_disable(TIM_TypeDef *timer)
 {
     tim_cen(timer, TIM_CEN_DISABLE); 
 }
@@ -575,16 +573,14 @@ void tim_uie(
 // Status register 
 
 // Update interrupt flag read 
-uint8_t tim_uif_read(
-    TIM_TypeDef *timer)
+uint8_t tim_uif_read(TIM_TypeDef *timer)
 {
     return (uint8_t)(timer->SR & (SET_BIT << SHIFT_0)); 
 }
 
 
 // Update interrupt flag clear 
-void tim_uif_clear(
-    TIM_TypeDef *timer)
+void tim_uif_clear(TIM_TypeDef *timer)
 {
     timer->SR &= ~(SET_BIT << SHIFT_0); 
 }
@@ -596,8 +592,7 @@ void tim_uif_clear(
 // Event generation register 
 
 // Update generation 
-void tim_ug_set(
-    TIM_TypeDef *timer)
+void tim_ug_set(TIM_TypeDef *timer)
 {
     timer->EGR |= (SET_BIT << SHIFT_0); 
 }
@@ -688,8 +683,7 @@ void tim_cnt_set(
 
 
 // Timer counter read 
-TIM_COUNTER tim_cnt_read(
-    TIM_TypeDef *timer)
+TIM_COUNTER tim_cnt_read(TIM_TypeDef *timer)
 {
     return timer->CNT; 
 }
@@ -764,8 +758,7 @@ void tim_ccr(
 // Getters 
 
 // Get the timer clock frequency 
-uint32_t tim_get_pclk_freq(
-    TIM_TypeDef *timer)
+uint32_t tim_get_pclk_freq(TIM_TypeDef *timer)
 {
     if (((uint32_t)timer & TIM_APB_CLK_FILTER) >> SHIFT_4) 
     {

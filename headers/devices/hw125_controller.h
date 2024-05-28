@@ -146,8 +146,7 @@ typedef int8_t HW125_EOF;
  * 
  * @param hw125_device : device tracker that defines control characteristics 
  */
-typedef void (*hw125_state_functions_t)(
-    hw125_trackers_t *hw125_device); 
+typedef void (*hw125_state_functions_t)(hw125_trackers_t *hw125_device); 
 
 //=======================================================================================
 
@@ -168,8 +167,7 @@ typedef void (*hw125_state_functions_t)(
  * 
  * @param path : path to directory to use on the volume 
  */
-void hw125_controller_init(
-    const char *path); 
+void hw125_controller_init(const char *path); 
 
 
 /**
@@ -489,16 +487,14 @@ HW125_FILE_STATUS hw125_get_file_status(void);
 
 /**
  * @brief Check for the existance of a file or directory 
- * 
- * @details 
- *          
- *          NOTE: The root directory is set during the controller init and the sub-directory 
- *                is set by the hw125_set_dir function. 'str', passed as an argument to this 
- *                function, is concatenated onto the root + sub-directory that is already 
- *                defined so do not include those in 'str'. 
+ *       
+ * NOTE: The root directory is set during the controller init and the sub-directory 
+ *       is set by the hw125_set_dir function. 'str', passed as an argument to this 
+ *       function, is concatenated onto the root + sub-directory that is already 
+ *       defined so do not include those in 'str'. 
  * 
  * @param str : string to file or directory to check for 
- * @return FRESULT 
+ * @return FRESULT : FATFS file function return code 
  */
 FRESULT hw125_get_exists(const TCHAR *str); 
 

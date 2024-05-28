@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HD44780U + PCF8574 20x4 LCD screen driver header 
+ * @brief HD44780U + PCF8574 20x4 LCD screen driver interface 
  * 
  * @version 0.1
  * @date 2022-02-11
@@ -37,13 +37,13 @@ extern "C" {
 // Macros
 
 // Device information 
-
 #define HD44780U_NUM_LINES 4              // Number of lines on the screen 
 #define HD44780U_MSG_PER_CMD 4            // Number of I2C bytes sent per one screen command
 #define HD44780U_NUM_CHAR 80              // Number of character spaces on the screen 
 #define HD44780U_LINE_LEN 20              // Number of characters per line on the screen 
 
 
+//==================================================
 // Message information 
 
 // General 
@@ -88,6 +88,8 @@ extern "C" {
 #define HD44780U_L2_L4_MASK 0x01          // Line 2 and 4 identifier mask 
 #define HD44780U_L3_L4_MASK_1 0x14        // Line 3 and 4 identifer mask 2 
 #define HD44780U_L3_L4_MASK_2 0x02        // Line 3 and 4 identifier mask 2 
+
+//==================================================
 
 //=======================================================================================
 
@@ -246,8 +248,7 @@ void hd44780u_line_set(
  * 
  * @param line : line content to update 
  */
-void hd44780u_line_clear(
-    hd44780u_lines_t line); 
+void hd44780u_line_clear(hd44780u_lines_t line); 
 
 
 /**
@@ -309,8 +310,7 @@ void hd44780u_clear_status(void);
  * 
  * @param line : line of the data record to write to the screen 
  */
-void hd44780u_send_line(
-    hd44780u_lines_t line); 
+void hd44780u_send_line(hd44780u_lines_t line); 
 
 
 /**
@@ -324,8 +324,7 @@ void hd44780u_send_line(
  * 
  * @param print_string : string of data that gets printed to the screen
  */
-void hd44780u_send_string(
-    char *print_string); 
+void hd44780u_send_string(char *print_string); 
 
 //=======================================================================================
 

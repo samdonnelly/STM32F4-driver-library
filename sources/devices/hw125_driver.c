@@ -12,7 +12,6 @@
  * 
  */
 
-
 //=======================================================================================
 // Includes 
 
@@ -78,7 +77,6 @@ uint8_t hw125_initiate_init(
  * 
  * @param hw125_slave_pin : SS pin that the SD card is connected to 
  */
-// void hw125_power_on(uint16_t hw125_slave_pin); 
 DISK_RESULT hw125_power_on(uint16_t hw125_slave_pin); 
 
 
@@ -91,7 +89,6 @@ DISK_RESULT hw125_power_on(uint16_t hw125_slave_pin);
  *          the ioctl function if the FATFS module layer requets it. 
  * 
  * @see hw125_power_status 
- * 
  */
 void hw125_power_off(void);
 
@@ -334,7 +331,6 @@ void hw125_user_init(
 // HW125 initialization 
 DISK_STATUS hw125_init(uint8_t pdrv)
 {
-    // Local variables 
     uint8_t do_resp; 
     uint8_t init_timer_status;
     uint8_t ocr[HW125_TRAILING_BYTES];
@@ -362,7 +358,6 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     // Select the sd card 
     spi_slave_select(sd_card.gpio, sd_card.ss_pin);
 
-    // TODO integrate this with the power_on function 
     // Send CMD0 with no arg and a valid CRC value 
     hw125_send_cmd(HW125_CMD0, HW125_ARG_NONE, HW125_CRC_CMD0, &do_resp);
 
@@ -477,7 +472,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     // Deselect slave 
     spi_slave_deselect(sd_card.gpio, sd_card.ss_pin);
     
-    // TODO Perform a write_read after deselecting the slave --> Why? 
+    // Perform a write_read after deselecting the slave --> Why? 
     spi_write_read(sd_card.spi, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE); 
 
     // Status check 
@@ -500,16 +495,11 @@ DISK_STATUS hw125_init(uint8_t pdrv)
 
 
 // HW125 power on sequence and software reset 
-// void hw125_power_on(uint16_t hw125_slave_pin)
-DISK_RESULT hw125_power_on(
-    uint16_t hw125_slave_pin)
+DISK_RESULT hw125_power_on(uint16_t hw125_slave_pin)
 {
-    // Local variables 
     uint8_t di_cmd; 
     uint8_t do_resp; 
     uint8_t cmd_frame[BYTE_6];
-
-    // TODO test the size of this counter 
     uint16_t num_read = HW125_PWR_ON_RES_CNT; 
 
     //===================================================
@@ -573,7 +563,7 @@ DISK_RESULT hw125_power_on(
 
     //===================================================
 
-    // TODO send a data high byte? 
+    // Send a data high byte --> Why? 
     spi_write(sd_card.spi, &di_cmd, BYTE_1);
 
     // Set the Power Flag status to on 
@@ -644,9 +634,8 @@ DISK_STATUS hw125_status(uint8_t pdrv)
 // HW125 ready to receive commands 
 DISK_RESULT hw125_ready_rec(void)
 {
-    // Local variables 
     uint8_t resp; 
-    uint16_t timer = HW125_PWR_ON_RES_CNT;   // TODO verify/test timer/counter size 
+    uint16_t timer = HW125_PWR_ON_RES_CNT; 
 
     // Read DO/MISO continuously until it is ready to receive commands 
     do 
@@ -678,7 +667,6 @@ CARD_TYPE hw125_get_card_type(void)
 // Get card presence status 
 DISK_RESULT hw125_get_existance(void)
 {
-    // Local variables 
     DISK_RESULT exist; 
 
     // Select the slave device 
@@ -699,11 +687,10 @@ DISK_RESULT hw125_get_existance(void)
 //=======================================================================================
 // Command functions 
 
-// TODO disable spi in an error state if spi comms go wrong. 
+// Disable spi in an error state if spi comms go wrong. 
 // Otherwise SPI will be enabled at all times 
 
-// HW125 send command messages and return response values 
-// TODO Add a status return to account for timeouts 
+// HW125 send command messages and return response values - add a status return for timeouts 
 void hw125_send_cmd(
     uint8_t  cmd,
     uint32_t arg,
@@ -761,7 +748,6 @@ DISK_RESULT hw125_read(
     uint32_t sector,
     uint16_t count)
 {
-    // Local variables 
     DISK_RESULT read_resp;
     uint8_t do_resp = 255;
 
@@ -772,12 +758,10 @@ DISK_RESULT hw125_read(
     if (count == NONE) return HW125_RES_PARERR;
 
     // Check the init status 
-    // TODO sometimes this fails 
     if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
 
     // Convert the sector number to byte address if it's not SDC V2 (byte address)
-    // TODO is this needed for all SDC V2 cards or just block address ones? 
-    // if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
+    // Is this needed for all SDC V2 cards or just block address ones? 
     if (sd_card.card_type & HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
 
     // Select the slave device 
@@ -836,7 +820,7 @@ DISK_RESULT hw125_read(
     // Deselect the slave device 
     spi_slave_deselect(sd_card.gpio, sd_card.ss_pin);
 
-    // TODO dummy read? 
+    // Dummy read 
     spi_write_read(sd_card.spi, HW125_DATA_HIGH, &do_resp, HW125_SINGLE_BYTE); 
 
     // Return the result 
@@ -852,7 +836,7 @@ DISK_RESULT hw125_read_data_packet(
     // Local variables 
     DISK_RESULT read_resp;
     uint8_t do_resp = 200; 
-    uint16_t num_read = HW125_DT_RESP_COUNT;   // TODO verify timer/counter size 
+    uint16_t num_read = HW125_DT_RESP_COUNT; 
 
     // Read the data token 
     do 
@@ -897,7 +881,6 @@ DISK_RESULT hw125_write(
     uint32_t      sector,
     uint16_t      count)
 {
-    // Local variables 
     DISK_RESULT write_resp; 
     uint8_t do_resp; 
     uint8_t stop_trans = HW125_DT_ONE; 
@@ -914,7 +897,6 @@ DISK_RESULT hw125_write(
     // Check write protection 
     if (sd_card.disk_status == HW125_STATUS_PROTECT) return HW125_RES_WRPRT; 
 
-    // TODO see this line of code in the hw125_read function 
     // Convert the sector number to byte address if it's not SDC V2 (byte address) 
     if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
 
@@ -944,8 +926,8 @@ DISK_RESULT hw125_write(
     }
     else  // Send multiple data packets if count > 1
     {
-        // Specify the number of sectors to pre-erase to optimize write performance
-        // TODO No error condition in place. Also unclear if it's only SDCV1. 
+        // Specify the number of sectors to pre-erase to optimize write performance - no 
+        // error condition in place. Also unclear if it's only SDCV1. 
         if (sd_card.card_type == HW125_CT_SDC1)
         {
             hw125_send_cmd(HW125_CMD55, HW125_ARG_NONE, HW125_CRC_CMDX, &do_resp);
@@ -1028,8 +1010,6 @@ DISK_RESULT hw125_write_data_packet(
         // Data rejected duw to write error or CRC error 
         write_resp = HW125_RES_ERROR; 
     }
-
-    // TODO clear the receive buffer? 
 
     // Return the response 
     return write_resp; 
@@ -1139,8 +1119,6 @@ DISK_RESULT hw125_ioctl(
 
     // Deselect the slave card 
     spi_slave_deselect(sd_card.gpio, sd_card.ss_pin); 
-
-    // TODO read a byte? 
 
     return result; 
 }
@@ -1276,7 +1254,6 @@ DISK_RESULT hw125_ioctl_ctrl_pwr(void *buff)
 // HW125 IO Control - Get CSD Register 
 DISK_RESULT hw125_ioctl_get_csd(void *buff)
 {
-    // Local variables 
     DISK_RESULT result; 
     uint8_t do_resp; 
     uint8_t *csd = buff; 
@@ -1303,7 +1280,6 @@ DISK_RESULT hw125_ioctl_get_csd(void *buff)
 // HW125 IO Control - Get CID Register 
 DISK_RESULT hw125_ioctl_get_cid(void *buff)
 {
-    // Local variables 
     DISK_RESULT result; 
     uint8_t do_resp; 
     uint8_t *cid = buff; 
@@ -1330,7 +1306,6 @@ DISK_RESULT hw125_ioctl_get_cid(void *buff)
 // HW125 IO Control - Get OCR Register 
 DISK_RESULT hw125_ioctl_get_ocr(void *buff)
 {
-    // Local variables 
     DISK_RESULT result; 
     uint8_t do_resp; 
     uint8_t *ocr = buff; 

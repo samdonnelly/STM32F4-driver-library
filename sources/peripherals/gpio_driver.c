@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief GPIO functions
+ * @brief GPIO driver 
  * 
  * @version 0.1
  * @date 2022-05-27
@@ -167,8 +167,6 @@ void gpio_afr(
 //=======================================================================================
 // Write and read functions 
 
-// TODO see if the ODR register can be used instead of the BSRR register 
-
 // GPIOA write 
 void gpio_write(
     GPIO_TypeDef *gpio, 
@@ -209,8 +207,7 @@ GPIO_STATE gpio_read(
 
 
 // GPIO port read 
-GPIOX_DR gpio_port_read(
-    GPIO_TypeDef *gpio)
+GPIOX_DR gpio_port_read(GPIO_TypeDef *gpio)
 {
     return (GPIOX_DR)(gpio->IDR); 
 }

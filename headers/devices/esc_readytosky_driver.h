@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Readytosky bidirectional 40A 2-6S ESC driver header 
+ * @brief Readytosky bidirectional 40A 2-6S ESC driver interface 
  * 
  * @version 0.1
  * @date 2023-09-05

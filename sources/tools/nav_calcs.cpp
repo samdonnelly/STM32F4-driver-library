@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Navigation calculations implementation 
+ * @brief Navigation calculations 
  * 
  * @version 0.1
  * @date 2023-12-01
@@ -232,10 +232,15 @@ int16_t nav_calculations::heading_error(
 
 // Set the coordinate low pass filter gain 
 void nav_calculations::set_coordinate_lpf_gain(double coordinate_gain) 
-    { coordinate_lpf_gain = coordinate_gain; }
+{
+    coordinate_lpf_gain = coordinate_gain; 
+}
 
 
 // Set the true north offset 
-void nav_calculations::set_tn_offset(int16_t tn_offset) { true_north_offset = tn_offset; }
+void nav_calculations::set_tn_offset(int16_t tn_offset) 
+{
+    true_north_offset = tn_offset; 
+}
 
 //=======================================================================================

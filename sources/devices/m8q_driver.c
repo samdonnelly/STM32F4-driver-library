@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief SAM-M8Q GPS driver implementation 
+ * @brief SAM-M8Q GPS driver 
  * 
  * @version 0.1
  * @date 2022-07-25
@@ -377,8 +377,7 @@ typedef uint8_t M8Q_MSG_TYPE;
  * @param stream_len : length of the data stream 
  * @return M8Q_STATUS : status of the read operation 
  */
-M8Q_STATUS m8q_flush_ds(
-    uint16_t stream_len); 
+M8Q_STATUS m8q_flush_ds(uint16_t stream_len); 
 
 
 /**
@@ -404,8 +403,7 @@ M8Q_STATUS m8q_flush_ds(
  * @param stream_len : length of the data stream 
  * @return M8Q_STATUS : status of the read operation 
  */
-M8Q_STATUS m8q_read_sort_ds(
-    uint16_t stream_len); 
+M8Q_STATUS m8q_read_sort_ds(uint16_t stream_len); 
 
 
 /**
@@ -470,8 +468,7 @@ I2C_STATUS m8q_write(
  * @param offset : read or write offset to be used with the device I2C address 
  * @return I2C_STATUS : status of the I2C operations 
  */
-I2C_STATUS m8q_start_trans(
-    i2c_rw_offset_t offset); 
+I2C_STATUS m8q_start_trans(i2c_rw_offset_t offset); 
 
 
 /**
@@ -487,7 +484,6 @@ I2C_STATUS m8q_start_trans(
  *          For NMEA messages, the byte at which the message payload starts changes 
  *          depending on if it's a PUBX or standard message. This offset is set in 
  *          msg_offset if the message type is NMEA. 
- *          
  * 
  * @param msg : buffer that stores the message 
  * @param msg_offset : Byte at which to start processing a valid message 
@@ -630,8 +626,7 @@ M8Q_STATUS m8q_nmea_config(
  * @param msg : buffer that contains the NMEA message 
  * @return uint16_t : 2-byte checksum 
  */
-uint16_t m8q_nmea_checksum(
-    const char *msg); 
+uint16_t m8q_nmea_checksum(const char *msg); 
 
 
 /**
@@ -675,8 +670,7 @@ M8Q_STATUS m8q_ubx_config(
  * @param msg_id : buffer that contains the message ID 
  * @return uint8_t : status of the check - true if the ID is correctly formatted 
  */
-uint8_t ubx_config_id_check(
-    const char *msg_id); 
+uint8_t ubx_config_id_check(const char *msg_id); 
 
 
 /**
@@ -775,8 +769,7 @@ void ubx_config_field_check(
  * @param msg_char : UBX message character/byte 
  * @return uint8_t : Status of the check - true if character is within bounds 
  */
-uint8_t ubx_config_valid_char(
-    char msg_char); 
+uint8_t ubx_config_valid_char(char msg_char); 
 
 
 /**
@@ -792,8 +785,7 @@ uint8_t ubx_config_valid_char(
  * @param msg_bytes : buffer that stores two characters that represent a number 
  * @return uint8_t : converted value 
  */
-uint8_t ubx_config_byte_convert(
-    const char *msg_bytes); 
+uint8_t ubx_config_byte_convert(const char *msg_bytes); 
 
 //=======================================================================================
 
@@ -991,8 +983,7 @@ M8Q_STATUS m8q_read_ds(
 
 
 // Read data stream size 
-M8Q_STATUS m8q_read_ds_size(
-    uint16_t *data_size)
+M8Q_STATUS m8q_read_ds_size(uint16_t *data_size)
 {
     I2C_STATUS i2c_status = I2C_OK; 
     uint8_t address = M8Q_REG_0XFD; 
@@ -1312,8 +1303,7 @@ M8Q_STATUS m8q_get_time_utc_date(
 // Read and write functions 
 
 // Flush/clear the M8Q data stream 
-M8Q_STATUS m8q_flush_ds(
-    uint16_t stream_len)
+M8Q_STATUS m8q_flush_ds(uint16_t stream_len)
 {
     I2C_STATUS i2c_status = I2C_OK; 
 
@@ -1331,8 +1321,7 @@ M8Q_STATUS m8q_flush_ds(
 
 
 // Read the M8Q data stream and store the data 
-M8Q_STATUS m8q_read_sort_ds(
-    uint16_t stream_len)
+M8Q_STATUS m8q_read_sort_ds(uint16_t stream_len)
 {
     I2C_STATUS i2c_status; 
     uint8_t stream_data[stream_len]; 
@@ -1435,8 +1424,7 @@ I2C_STATUS m8q_write(
 
 
 // Start an I2C transmission 
-I2C_STATUS m8q_start_trans(
-    i2c_rw_offset_t offset)
+I2C_STATUS m8q_start_trans(i2c_rw_offset_t offset)
 {
     I2C_STATUS i2c_status = I2C_OK; 
 
@@ -1800,8 +1788,7 @@ M8Q_STATUS m8q_nmea_config(
 
 
 // NMEA message checksum calculation 
-uint16_t m8q_nmea_checksum(
-    const char *msg)
+uint16_t m8q_nmea_checksum(const char *msg)
 {
     // Local variables 
     uint16_t xor_result = CLEAR; 
@@ -1886,8 +1873,7 @@ M8Q_STATUS m8q_ubx_config(
 
 
 // UBX message ID check 
-uint8_t ubx_config_id_check(
-    const char *msg_id)
+uint8_t ubx_config_id_check(const char *msg_id)
 {
     uint8_t byte_count = CLEAR; 
     uint8_t comma_term = CLEAR; 
@@ -2076,8 +2062,7 @@ void ubx_config_field_check(
 
 
 // UBX message data character check 
-uint8_t ubx_config_valid_char(
-    char msg_char)
+uint8_t ubx_config_valid_char(char msg_char)
 {
     // UBX configuration messages only contain hexadecimal characters (i.e. 
     // "0123456789ABCDF") because UBX messages are made up of only integer values. 
@@ -2097,8 +2082,7 @@ uint8_t ubx_config_valid_char(
 
 
 // UBX message byte conversion 
-uint8_t ubx_config_byte_convert(
-    const char *msg_bytes)
+uint8_t ubx_config_byte_convert(const char *msg_bytes)
 {
     uint8_t byte0 = *msg_bytes++; 
     uint8_t byte1 = *msg_bytes; 

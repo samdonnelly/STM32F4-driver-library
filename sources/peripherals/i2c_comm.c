@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief I2C initialization, read and write 
+ * @brief I2C driver 
  * 
  * @version 0.1
  * @date 2022-03-13
@@ -49,8 +49,7 @@ typedef enum {
  * @param i2c : pointer to I2C port 
  * @return I2C_STATUS : I2C operation status 
  */
-I2C_STATUS i2c_addr_wait(
-    I2C_TypeDef *i2c);
+I2C_STATUS i2c_addr_wait(I2C_TypeDef *i2c);
 
 
 /**
@@ -63,8 +62,7 @@ I2C_STATUS i2c_addr_wait(
  * 
  * @param i2c : pointer to I2C port 
  */
-void i2c_clear_ack(
-    I2C_TypeDef *i2c);
+void i2c_clear_ack(I2C_TypeDef *i2c);
 
 
 /**
@@ -77,8 +75,7 @@ void i2c_clear_ack(
  * 
  * @param i2c : pointer to I2C port 
  */
-void i2c_set_ack(
-    I2C_TypeDef *i2c);
+void i2c_set_ack(I2C_TypeDef *i2c);
 
 
 /**
@@ -94,8 +91,7 @@ void i2c_set_ack(
  * @param i2c : pointer to I2C port 
  * @return I2C_STATUS : I2C operation status 
  */
-I2C_STATUS i2c_rxne_wait(
-    I2C_TypeDef *i2c);
+I2C_STATUS i2c_rxne_wait(I2C_TypeDef *i2c);
 
 
 /**
@@ -112,8 +108,7 @@ I2C_STATUS i2c_rxne_wait(
  * @param i2c : pointer to I2C port 
  * @return I2C_STATUS : I2C operation status 
  */
-I2C_STATUS i2c_txe_wait(
-    I2C_TypeDef *i2c);
+I2C_STATUS i2c_txe_wait(I2C_TypeDef *i2c);
 
 
 /**
@@ -131,18 +126,20 @@ I2C_STATUS i2c_txe_wait(
  * @param i2c : pointer to I2C port 
  * @return I2C_STATUS : I2C operation status 
  */
-I2C_STATUS i2c_btf_wait(
-    I2C_TypeDef *i2c);
+I2C_STATUS i2c_btf_wait(I2C_TypeDef *i2c);
 
 
 /**
- * @brief Get I2C data 
+ * @brief Reads I2C data - called by i2c_read and i2c_clear 
  * 
- * @param i2c 
- * @param data 
- * @param data_size 
- * @param increment 
- * @return I2C_STATUS 
+ * @see i2c_read 
+ * @see i2c_clear 
+ * 
+ * @param i2c : I2C port to use 
+ * @param data : data buffer to store read data 
+ * @param data_size : size of data to read 
+ * @param increment : data buffer increment 
+ * @return I2C_STATUS : read operation status 
  */
 I2C_STATUS i2c_get(
     I2C_TypeDef *i2c, 
@@ -256,8 +253,7 @@ void i2c_init(
 // I2C register functions
 
 // I2C generate start condition 
-I2C_STATUS i2c_start(
-    I2C_TypeDef *i2c)
+I2C_STATUS i2c_start(I2C_TypeDef *i2c)
 {
     // Local variables 
     uint16_t timeout = I2C_TIMEOUT_COUNT; 
@@ -279,24 +275,21 @@ I2C_STATUS i2c_start(
 
 
 // I2C generate a stop condition by setting the stop generation bit 
-void i2c_stop(
-    I2C_TypeDef *i2c)
+void i2c_stop(I2C_TypeDef *i2c)
 {
     i2c->CR1 |= (SET_BIT << SHIFT_9);
 }
 
 
 // Read the SR1 and SR2 registers to clear ADDR
-void i2c_clear_addr(
-    I2C_TypeDef *i2c)
+void i2c_clear_addr(I2C_TypeDef *i2c)
 {
     dummy_read(((i2c->SR1) | (i2c->SR2))); 
 }
 
 
 // I2C wait for ADDR bit to set
-I2C_STATUS i2c_addr_wait(
-    I2C_TypeDef *i2c)
+I2C_STATUS i2c_addr_wait(I2C_TypeDef *i2c)
 {
     // Local variables 
     uint16_t timeout = I2C_TIMEOUT_COUNT; 
@@ -314,24 +307,21 @@ I2C_STATUS i2c_addr_wait(
 
 
 // I2C clear the ACK bit to send a NACK pulse to slave device 
-void i2c_clear_ack(
-    I2C_TypeDef *i2c)
+void i2c_clear_ack(I2C_TypeDef *i2c)
 {
     i2c->CR1 &= ~(SET_BIT << SHIFT_10);
 }
 
 
 // I2C set the ACK bit to tell the slave that data has been receieved
-void i2c_set_ack(
-    I2C_TypeDef *i2c)
+void i2c_set_ack(I2C_TypeDef *i2c)
 {
     i2c->CR1 |= (SET_BIT << SHIFT_10);
 }
 
 
 // I2C wait for RxNE bit to set indicating data is ready 
-I2C_STATUS i2c_rxne_wait(
-    I2C_TypeDef *i2c)
+I2C_STATUS i2c_rxne_wait(I2C_TypeDef *i2c)
 {
     // Local variables 
     uint16_t timeout = I2C_TIMEOUT_COUNT; 
@@ -349,8 +339,7 @@ I2C_STATUS i2c_rxne_wait(
 
 
 // I2C wait for TxE bit to set 
-I2C_STATUS i2c_txe_wait(
-    I2C_TypeDef *i2c)
+I2C_STATUS i2c_txe_wait(I2C_TypeDef *i2c)
 {
     // Local variables 
     uint16_t timeout = I2C_TIMEOUT_COUNT; 
@@ -368,8 +357,7 @@ I2C_STATUS i2c_txe_wait(
 
 
 // I2C wait for BTF to set
-I2C_STATUS i2c_btf_wait(
-    I2C_TypeDef *i2c)
+I2C_STATUS i2c_btf_wait(I2C_TypeDef *i2c)
 {
     // Local variables 
     uint16_t timeout = I2C_TIMEOUT_COUNT; 

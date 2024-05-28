@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Analog (ADC) data functions 
+ * @brief Analog (ADC) driver 
  * 
  * @version 0.1
  * @date 2022-09-26
@@ -51,8 +51,7 @@
  * @param adc : pointer to the ADC port used 
  * @return uint16_t : converted ADC value 
  */
-uint16_t adc_dr(
-    ADC_TypeDef *adc); 
+uint16_t adc_dr(ADC_TypeDef *adc); 
 
 
 /**
@@ -69,8 +68,7 @@ uint16_t adc_dr(
  * 
  * @param adc : pointer to the ADC port used 
  */
-ADC_STATUS adc_eoc_wait(
-    ADC_TypeDef *adc); 
+ADC_STATUS adc_eoc_wait(ADC_TypeDef *adc); 
 
 
 /**
@@ -85,8 +83,7 @@ ADC_STATUS adc_eoc_wait(
  * @param adc : pointer to the ADC port used 
  * @return uint8_t : overrun status 
  */
-uint8_t adc_overrun_status(
-    ADC_TypeDef *adc); 
+uint8_t adc_overrun_status(ADC_TypeDef *adc); 
 
 
 /**
@@ -98,8 +95,7 @@ uint8_t adc_overrun_status(
  * 
  * @param adc : pointer to the ADC port used 
  */
-void adc_overrun_clear(
-    ADC_TypeDef *adc); 
+void adc_overrun_clear(ADC_TypeDef *adc); 
 
 
 /**
@@ -114,8 +110,7 @@ void adc_overrun_clear(
  * @param adc : pointer to the ADC port used 
  * @return uint8_t : watchdog status 
  */
-uint8_t adc_wd_flag(
-    ADC_TypeDef *adc); 
+uint8_t adc_wd_flag(ADC_TypeDef *adc); 
 
 
 /**
@@ -378,8 +373,7 @@ void adc_wd_thresh(
  * 
  * @param adc : pointer to the ADC port used 
  */
-void adc_seq_clear(
-    ADC_TypeDef *adc); 
+void adc_seq_clear(ADC_TypeDef *adc); 
 
 //=======================================================================================
 
@@ -388,8 +382,7 @@ void adc_seq_clear(
 // Initialization 
 
 // ADC1 clock enable 
-ADC_STATUS adc1_clock_enable(
-    RCC_TypeDef *rcc)
+ADC_STATUS adc1_clock_enable(RCC_TypeDef *rcc)
 {
     if (rcc == NULL)
     {
@@ -567,8 +560,7 @@ ADC_STATUS adc_seq_len_set(
 // User functions 
 
 // Turn ADC on 
-ADC_STATUS adc_on(
-    ADC_TypeDef *adc)
+ADC_STATUS adc_on(ADC_TypeDef *adc)
 {
     if (adc == NULL)
     {
@@ -581,8 +573,7 @@ ADC_STATUS adc_on(
 
 
 // Turn ADC off 
-ADC_STATUS adc_off(
-    ADC_TypeDef *adc)
+ADC_STATUS adc_off(ADC_TypeDef *adc)
 {
     if (adc == NULL)
     {
@@ -595,8 +586,7 @@ ADC_STATUS adc_off(
 
 
 // Start an ADC conversion 
-ADC_STATUS adc_start(
-    ADC_TypeDef *adc)
+ADC_STATUS adc_start(ADC_TypeDef *adc)
 {
     // Clear the status register, set the start bit and wait to see that the start 
     // bit was successfully set. If it does not set (times out) for whatever reason 
@@ -612,7 +602,6 @@ ADC_STATUS adc_start(
     adc->SR = CLEAR; 
     adc->CR2 |= (uint32_t)(SET_BIT << SHIFT_30); 
     while ( (!((adc->SR) & (uint32_t)(SET_BIT << SHIFT_4))) && (--timeout) ); 
-    // return adc_start_wait(adc); 
 
     return timeout ? ADC_OK : ADC_TIMEOUT; 
 }
@@ -697,16 +686,14 @@ ADC_STATUS adc_scan_seq(
 // Register functions 
 
 // ADC data register read 
-uint16_t adc_dr(
-    ADC_TypeDef *adc)
+uint16_t adc_dr(ADC_TypeDef *adc)
 {
     return (uint16_t)(adc->DR); 
 }
 
 
 // Wait for end of ADC conversion 
-ADC_STATUS adc_eoc_wait(
-    ADC_TypeDef *adc)
+ADC_STATUS adc_eoc_wait(ADC_TypeDef *adc)
 {
     uint16_t timeout = ADC_WAIT_TIMEOUT; 
     while( (!((adc->SR) & (uint32_t)(SET_BIT << SHIFT_1))) && (--timeout) ); 
@@ -715,16 +702,14 @@ ADC_STATUS adc_eoc_wait(
 
 
 // Overrun bit status 
-uint8_t adc_overrun_status(
-    ADC_TypeDef *adc)
+uint8_t adc_overrun_status(ADC_TypeDef *adc)
 {
     return (uint8_t)((adc->SR & (uint32_t)(SET_BIT << SHIFT_5)) >> SHIFT_5); 
 }
 
 
 // Clear the overrun bit 
-void adc_overrun_clear(
-    ADC_TypeDef *adc)
+void adc_overrun_clear(ADC_TypeDef *adc)
 {
     adc->SR &= ~((uint32_t)(SET_BIT << SHIFT_5)); 
 }
@@ -908,8 +893,7 @@ void adc_wd_thresh(
 
 
 // ADC sequence clear 
-void adc_seq_clear(
-    ADC_TypeDef *adc)
+void adc_seq_clear(ADC_TypeDef *adc)
 {
     adc->SQR1 = CLEAR; 
     adc->SQR2 = CLEAR; 

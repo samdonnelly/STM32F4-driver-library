@@ -38,8 +38,7 @@
  * 
  * @param hd44780u_cmd : instruction to configure the screen 
  */
-void hd44780u_send_instruc(
-    uint8_t hd44780u_cmd); 
+void hd44780u_send_instruc(uint8_t hd44780u_cmd); 
 
 /**
  * @brief HD44780U send data
@@ -56,8 +55,7 @@ void hd44780u_send_instruc(
  * 
  * @param hd44780u_data : command to be printed to the screen
  */
-void hd44780u_send_data(
-    uint8_t hd44780u_data); 
+void hd44780u_send_data(uint8_t hd44780u_data); 
 
 
 /**
@@ -145,7 +143,6 @@ void hd44780u_init(
     // Status info 
     hd44780u_data_record.status = CLEAR; 
 
-
     // Initialize the screen 
     // The following steps were taken from the HD44780U datsheet. 
     // Note that a number of the delays included here are not specified in the initialization 
@@ -153,9 +150,6 @@ void hd44780u_init(
 
     // Wait for more than 40 ms after Vcc rises to 2.7V 
     tim_delay_ms(hd44780u_data_record.tim, DELAY_50MS); 
-
-    // tim_delay_ms(hd44780u_data_record.tim, DELAY_500MS); 
-
 
     // Put the LCD into 4-bit mode 
     // This requires sending "function set" 4 times where the first 3 times are sent with 8-bit 
@@ -244,8 +238,7 @@ void hd44780u_re_init(void)
 // Bit 0: RS register -> 0 = instruction reg, 1 = data reg 
 
 // Send a byte of instruction information 
-void hd44780u_send_instruc(
-    uint8_t hd44780u_cmd)
+void hd44780u_send_instruc(uint8_t hd44780u_cmd)
 {
     // Local variables 
     uint8_t lcd_instruction[HD44780U_MSG_PER_CMD]; 
@@ -263,8 +256,7 @@ void hd44780u_send_instruc(
 
 
 // Send a byte of printable data 
-void hd44780u_send_data(
-    uint8_t hd44780u_data)
+void hd44780u_send_data(uint8_t hd44780u_data)
 {
     // Local variables 
     uint8_t lcd_display_data[HD44780U_MSG_PER_CMD]; 
@@ -334,8 +326,7 @@ void hd44780u_line_set(
 
 
 // Clear the contents of a line from the data record 
-void hd44780u_line_clear(
-    hd44780u_lines_t line)
+void hd44780u_line_clear(hd44780u_lines_t line)
 {
     // Move to the line data memory address 
     char *line_data = hd44780u_data_record.line1; 
@@ -375,8 +366,7 @@ void hd44780u_clear_status(void)
 // Data functions 
 
 // Send the contents a line from the data record 
-void hd44780u_send_line(
-    hd44780u_lines_t line)
+void hd44780u_send_line(hd44780u_lines_t line)
 {
     // Convert the line index to the lines starting character address 
     uint8_t line_start_addr = HD44780U_LINE_ADDR_COMMON | 
@@ -403,8 +393,7 @@ void hd44780u_send_line(
 
 
 // HD44780U send a string of data 
-void hd44780u_send_string(
-    char *print_string)
+void hd44780u_send_string(char *print_string)
 {
     // Send one string character at a time
     while(*print_string)

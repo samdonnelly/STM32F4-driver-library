@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Adapted STM generated code 
+ * @brief Adapted STM generated code interface 
  * 
  * @details This code is copied from the STM generated code for the STM32F411XE and 
  *          adapted to fit into this library. This is done to prevent recreating code  
