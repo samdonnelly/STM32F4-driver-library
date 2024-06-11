@@ -43,11 +43,12 @@ gps_waypoints_t;
 // Navigation calculations 
 class nav_calculations 
 {
-private:   // Private variables 
+private:   // Private members 
+
     double coordinate_lpf_gain;  // Low pass filter gain for GPS coordinates 
     int16_t true_north_offset;   // True north offset from magnetic north 
 
-public:   // Setup and teardown 
+public:   // Public member functions 
 
     // Constructor - Default 
     nav_calculations(); 
@@ -65,8 +66,6 @@ public:   // Setup and teardown
 
     // Destructor 
     ~nav_calculations(); 
-
-public:   // Calculations 
 
     /**
      * @brief Coordinate filter 
@@ -196,8 +195,7 @@ public:   // Calculations
     int16_t heading_error(
         int16_t current_heading, 
         int16_t target_heading); 
-
-public:   // Setters 
+    
 
     /**
      * @brief Set the GPS coordinate low pass filter gain 
