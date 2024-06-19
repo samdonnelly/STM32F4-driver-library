@@ -101,6 +101,7 @@ extern "C" {
 #define SPACE_CHAR      32   // ' ' 
 #define AST_CHAR        42   // '*' 
 #define COMMA_CHAR      44   // ',' 
+#define PLUS_CHAR       43   // '+' 
 #define MINUS_CHAR      45   // '-' 
 #define PERIOD_CHAR     46   // '.' 
 #define ZERO_CHAR       48   // '0' 

@@ -21,6 +21,14 @@
 
 
 //=======================================================================================
+// Macros 
+
+#define CURSOR_UP_BUFF_SIZE 10 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 //===================================================
@@ -203,8 +211,7 @@ void uart_sendstring(
     // Loop until null character of string is reached. 
     while (*string)
     {
-        uart_sendchar(uart, *string);
-        string++;
+        uart_sendchar(uart, *string++);
     }
 }
 
@@ -215,7 +222,7 @@ void uart_send_digit(
     uint8_t digit)
 {
     // Convert the digit into the ASCII character equivalent 
-    uart_sendchar(uart, digit + UART_CHAR_DIGIT_OFFSET); 
+    uart_sendchar(uart, digit + ZERO_CHAR); 
 }
 
 
@@ -231,12 +238,12 @@ void uart_send_integer(
     if (integer < 0)
     {
         // 2's complememt the integer so the correct value is printed
-        integer = -(integer);
-        uart_sendchar(uart, UART_CHAR_MINUS_OFFSET);
+        integer = -integer;
+        uart_sendchar(uart, MINUS_CHAR);
     }
     else 
     {
-        uart_sendchar(uart, UART_CHAR_PLUS_OFFSET);
+        uart_sendchar(uart, PLUS_CHAR);
     }
 
     // Parse and print each digit
@@ -262,9 +269,9 @@ void uart_send_spaces(
     USART_TypeDef *uart, 
     uint8_t num_spaces)
 {
-    for (uint8_t i = 0; i < num_spaces; i++)
+    for (uint8_t i = CLEAR; i < num_spaces; i++)
     {
-        uart_sendchar(uart, UART_CHAR_SPACE_OFFSET);
+        uart_sendchar(uart, SPACE_CHAR);
     }
 }
 
@@ -273,6 +280,17 @@ void uart_send_spaces(
 void uart_send_new_line(USART_TypeDef *uart)
 {
     uart_sendstring(uart, "\r\n");
+}
+
+
+// Send cursor up the specified number of lines 
+void uart_send_cursor_up(
+    USART_TypeDef *uart, 
+    uint8_t num_lines)
+{
+    char cursor_up_str[CURSOR_UP_BUFF_SIZE]; 
+    snprintf(cursor_up_str, CURSOR_UP_BUFF_SIZE, "\033[%cA", (char)num_lines); 
+    uart_sendstring(uart, cursor_up_str); 
 }
 
 //=======================================================================================

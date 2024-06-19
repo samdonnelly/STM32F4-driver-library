@@ -167,28 +167,6 @@ typedef enum {
 
 
 /**
- * @brief Character offsets to produce numbers on the serial terminal 
- * 
- * @details A byte sent to the serial terminal using UART is interpreted as a 
- *          character by the terminal and not a number. This means to produce a 
- *          number you must send a byte (integer) that corresponds to a number 
- *          character. The following offset numbers convert the byte (integer) that 
- *          is be sent to the terminal into a number character based on the ASCII 
- *          table. 
- * 
- * @see uart_send_digit
- * @see uart_send_integer
- * @see uart_send_spaces
- */
-typedef enum {
-    UART_CHAR_SPACE_OFFSET = 32,
-    UART_CHAR_PLUS_OFFSET  = 43,
-    UART_CHAR_MINUS_OFFSET = 45,
-    UART_CHAR_DIGIT_OFFSET = 48
-} uart_char_offset_t;
-
-
-/**
  * @brief String formatters for UART
  * 
  * @details These are used in uart_getstr for reading and formatting strings received
@@ -299,8 +277,7 @@ void uart_interrupt_init(
  * @param uart : pointer to the UART port 
  * @return uint8_t : read data register status 
  */
-uint8_t uart_data_ready(
-    USART_TypeDef *uart); 
+uint8_t uart_data_ready(USART_TypeDef *uart); 
 
 //=======================================================================================
 
@@ -395,6 +372,20 @@ void uart_send_spaces(
  * @param uart : pointer to the UART port 
  */
 void uart_send_new_line(USART_TypeDef *uart);
+
+
+/**
+ * @brief Send cursor up the specified number of lines 
+ * 
+ * @details Takes a number of lines and sends a string via UART that moves the cursor 
+ *          in a serial terminal up by that number of lines. 
+ * 
+ * @param uart : UART port to use 
+ * @param num_lines : number of lines to move the cursor up 
+ */
+void uart_send_cursor_up(
+    USART_TypeDef *uart, 
+    uint8_t num_lines); 
 
 //=======================================================================================
 
