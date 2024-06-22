@@ -182,6 +182,17 @@ typedef enum {
     UART_STR_TERM_CARRIAGE = 13    // '\r' == 13
 } uart_str_term_t;
 
+
+/**
+ * @brief Cursor move direction - from the VT100 escape codes 
+ */
+typedef enum {
+    UART_CURSOR_UP = 65,   // 65 == 'A' 
+    UART_CURSOR_DOWN,      // 66 == 'B' 
+    UART_CURSOR_RIGHT,     // 67 == 'C' 
+    UART_CURSOR_LEFT       // 68 == 'D' 
+} uart_cursor_move_t; 
+
 //=======================================================================================
 
 
@@ -381,10 +392,12 @@ void uart_send_new_line(USART_TypeDef *uart);
  *          in a serial terminal up by that number of lines. 
  * 
  * @param uart : UART port to use 
+ * @param direction : move direction (up, down, right, left) 
  * @param num_lines : number of lines to move the cursor up 
  */
-void uart_send_cursor_up(
+void uart_cursor_move(
     USART_TypeDef *uart, 
+    uart_cursor_move_t direction, 
     uint8_t num_lines); 
 
 //=======================================================================================

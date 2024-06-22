@@ -23,7 +23,7 @@
 //=======================================================================================
 // Macros 
 
-#define CURSOR_UP_BUFF_SIZE 10 
+#define CURSOR_MOVE_BUFF_SIZE 10 
 
 //=======================================================================================
 
@@ -284,12 +284,13 @@ void uart_send_new_line(USART_TypeDef *uart)
 
 
 // Send cursor up the specified number of lines 
-void uart_send_cursor_up(
+void uart_cursor_move(
     USART_TypeDef *uart, 
+    uart_cursor_move_t direction, 
     uint8_t num_lines)
 {
-    char cursor_up_str[CURSOR_UP_BUFF_SIZE]; 
-    snprintf(cursor_up_str, CURSOR_UP_BUFF_SIZE, "\033[%cA", (char)num_lines); 
+    char cursor_up_str[CURSOR_MOVE_BUFF_SIZE]; 
+    snprintf(cursor_up_str, CURSOR_MOVE_BUFF_SIZE, "\033[%c%c", (char)num_lines, (char)direction); 
     uart_sendstring(uart, cursor_up_str); 
 }
 
