@@ -290,7 +290,7 @@ void uart_cursor_move(
     uint8_t num_lines)
 {
     char cursor_up_str[CURSOR_MOVE_BUFF_SIZE]; 
-    snprintf(cursor_up_str, CURSOR_MOVE_BUFF_SIZE, "\033[%c%c", (char)num_lines, (char)direction); 
+    snprintf(cursor_up_str, CURSOR_MOVE_BUFF_SIZE, "\033[%u%c", num_lines, (char)direction); 
     uart_sendstring(uart, cursor_up_str); 
 }
 

@@ -298,7 +298,7 @@ typedef enum {
     SHIFT_28,
     SHIFT_29,
     SHIFT_30,
-    SHIFT_31,
+    SHIFT_31 
 } bit_shifter_t;
 
 
@@ -323,7 +323,7 @@ typedef enum {
     BYTE_14, 
     BYTE_15,
     BYTE_16, 
-    BYTE_17, 
+    BYTE_17 
 } byte_num_t;
 
 //=======================================================================================
