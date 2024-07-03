@@ -178,18 +178,14 @@ extern "C" {
 //=======================================================================================
 // Enums 
 
-/**
- * @brief True and False boolean 
- */
+// True and False boolean 
 typedef enum {
     FALSE,
     TRUE
 } boolean_t;
 
 
-/**
- * @brief General purpose pin selector 
- */
+// General purpose pin selector 
 typedef enum {
     PIN_0,
     PIN_1,
@@ -302,9 +298,7 @@ typedef enum {
 } bit_shifter_t;
 
 
-/**
- * @brief General purpose byte counter for specifying the byte within a data structure 
- */
+// General purpose byte counter for specifying the byte within a data structure 
 typedef enum {
     BYTE_0,
     BYTE_1,
