@@ -26,7 +26,6 @@
 // Device information 
 #define WS2812_BITS_PER_LED 24         // Data bits per LED - 1 byte per colour 
 #define WS2812_COLOUR_PER_LED 3        // Colours in each LED - Green, Red, Blue 
-#define WS2812_LED_NUM 8               // Max number of LEDs available 
 #define WS2812_MIN_SEND_DELAY 50       // Minimum delay between sends (microseconds) 
 
 // PWM data 
