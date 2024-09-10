@@ -637,9 +637,11 @@ void hw125_set_dir(const TCHAR *dir)
 FRESULT hw125_mkdir(const TCHAR *dir) 
 {
     // Check for NULL pointer 
-    if (dir == NULL) return FR_INVALID_OBJECT; 
+    if (dir == NULL) 
+    {
+        return FR_INVALID_OBJECT; 
+    }
     
-    // Local variables 
     TCHAR sub_dir[HW125_PATH_SIZE*2]; 
 
     // Record 'dir' for future use and establish 'path' as the base of the sub directory 
@@ -682,9 +684,11 @@ FRESULT hw125_open(
     uint8_t mode) 
 {
     // Check for NULL pointers and strings 
-    if (file_name == NULL || *file_name == NULL_CHAR) return FR_INVALID_OBJECT; 
+    if ((file_name == NULL) || (*file_name == NULL_CHAR)) 
+    {
+        return FR_INVALID_OBJECT; 
+    }
 
-    // Local variables 
     TCHAR file_dir[HW125_PATH_SIZE*3]; 
 
     // Attempt to open file if a file is not already open 
@@ -913,7 +917,10 @@ HW125_FILE_STATUS hw125_get_file_status(void)
 FRESULT hw125_get_exists(const TCHAR *str)
 {
     // Check for a valid file name 
-    if (str == NULL || *str == NULL_CHAR) return FR_INVALID_OBJECT; 
+    if ((str == NULL) || (*str == NULL_CHAR)) 
+    {
+        return FR_INVALID_OBJECT; 
+    }
 
     // Local variables 
     TCHAR directory[HW125_PATH_SIZE*3]; 
