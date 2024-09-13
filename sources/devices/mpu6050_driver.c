@@ -59,6 +59,7 @@ typedef struct mpu6050_driver_data_s
 {
     // Linked list tracking 
     struct mpu6050_driver_data_s *next_ptr; 
+    device_number_t device_num; 
 
     // Peripherals 
     I2C_TypeDef *i2c;                // I2C port connected to the device 
@@ -725,7 +726,10 @@ void mpu6050_int_pin_init(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    }
 
     // Update the data record 
     device_data_ptr->gpio = gpio; 
@@ -761,7 +765,6 @@ void mpu6050_write(
     byte_num_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value)
 {
-    // Local variables 
     I2C_STATUS i2c_status = I2C_OK; 
     
     // Create start condition to initiate master mode 
@@ -792,7 +795,6 @@ void mpu6050_read(
     byte_num_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value)
 {
-    // Local variables 
     I2C_STATUS i2c_status = I2C_OK; 
 
     // Create start condition to initiate master mode 
@@ -835,7 +837,10 @@ void mpu6050_calibrate(device_number_t device_num)
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    }
 
     // Read the current gyroscope data and save it as the offset/error 
     mpu6050_gyro_read(device_num); 
@@ -855,7 +860,10 @@ void mpu6050_low_pwr_config(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    }
 
     mpu6050_pwr_mgmt_1_write(
         device_data_ptr, 
@@ -904,7 +912,10 @@ void mpu6050_accel_read(device_number_t device_num)
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    } 
 
     // Temporary data storage 
     uint8_t data_reg[BYTE_8];
@@ -936,7 +947,10 @@ void mpu6050_gyro_read(device_number_t device_num)
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    } 
 
     // Temporary data storage 
     uint8_t data_reg[BYTE_8];
@@ -968,7 +982,10 @@ void mpu6050_temp_read(device_number_t device_num)
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    } 
 
     // Store the temperature data 
     uint8_t data_reg[BYTE_2]; 
@@ -993,7 +1010,10 @@ void mpu6050_read_all(device_number_t device_num)
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    } 
 
     // Temporary data storage 
     uint8_t data_reg[BYTE_14];
@@ -1235,7 +1255,10 @@ MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num)
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) 
+    {
+        return NULL_PTR_RETURN; 
+    }
 
     // Used to record the existing full scale range 
     uint8_t accel_fsr;
@@ -1512,7 +1535,10 @@ void mpu6050_clear_status(device_number_t device_num)
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    } 
 
     device_data_ptr->status = CLEAR; 
 }
@@ -1526,7 +1552,10 @@ uint8_t mpu6050_get_status(device_number_t device_num)
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) 
+    {
+        return NULL_PTR_RETURN; 
+    }
 
     return device_data_ptr->status; 
 }
@@ -1540,7 +1569,10 @@ MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num)
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) 
+    {
+        return NULL_PTR_RETURN; 
+    }
 
     return gpio_read(device_data_ptr->gpio, (SET_BIT << device_data_ptr->int_pin)); 
 }
@@ -1558,7 +1590,10 @@ void mpu6050_get_accel_raw(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    }
 
     *accel_x_raw = device_data_ptr->accel_data.accel_x; 
     *accel_y_raw = device_data_ptr->accel_data.accel_y; 
@@ -1578,7 +1613,10 @@ void mpu6050_get_accel(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    }
 
     *accel_x = device_data_ptr->accel_data.accel_x / device_data_ptr->accel_data_scalar; 
     *accel_y = device_data_ptr->accel_data.accel_y / device_data_ptr->accel_data_scalar; 
@@ -1598,7 +1636,10 @@ void mpu6050_get_gyro_raw(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    }
 
     *gyro_x_raw = device_data_ptr->gyro_data.gyro_x - device_data_ptr->gyro_data.gyro_x_offset; 
     *gyro_y_raw = device_data_ptr->gyro_data.gyro_y - device_data_ptr->gyro_data.gyro_y_offset; 
@@ -1618,7 +1659,10 @@ void mpu6050_get_gyro(
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return; 
+    if (device_data_ptr == NULL) 
+    {
+        return; 
+    }
 
     *gyro_x = (device_data_ptr->gyro_data.gyro_x - device_data_ptr->gyro_data.gyro_x_offset) / 
                device_data_ptr->gyro_data_scalar; 
@@ -1637,7 +1681,10 @@ int16_t mpu6050_get_temp_raw(device_number_t device_num)
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) 
+    {
+        return NULL_PTR_RETURN; 
+    }
 
     return device_data_ptr->other_data.temp; 
 }
@@ -1651,7 +1698,10 @@ float mpu6050_get_temp(device_number_t device_num)
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data_ptr); 
     
     // Check that the data record is valid 
-    if (device_data_ptr == NULL) return NULL_PTR_RETURN; 
+    if (device_data_ptr == NULL) 
+    {
+        return NULL_PTR_RETURN; 
+    }
 
     // Get the true temperature in degC
     return device_data_ptr->other_data.temp / ((float)(MPU6050_TEMP_SENSIT)) + 
