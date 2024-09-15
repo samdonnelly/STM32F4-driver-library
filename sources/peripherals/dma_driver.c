@@ -257,8 +257,7 @@ void dma_par(
  * 
  * @details Tells the stream the base address of memory area 0 from/to which the data will be 
  *          read/written. These bits can only be written when the stream is disabled. This is 
- *          the first of two memory addresses available. THe second address is only used for 
- *          double buffer mode which is not implemented in this driver. 
+ *          the first of two memory addresses available. 
  * 
  * @param dma_stream : pointer to DMA port stream being configured 
  * @param m0ar : memory 0 address 
@@ -266,6 +265,20 @@ void dma_par(
 void dma_m0ar(
     DMA_Stream_TypeDef *dma_stream, 
     uint32_t m0ar); 
+
+
+/**
+ * @brief Set memory 1 base address 
+ * 
+ * @details Tells the stream the base address of memory area 0 from/to which the data will be 
+ *          read/written. This is the second of two memory addresses available. 
+ * 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param m1ar : memory 1 address 
+ */
+void dma_m1ar(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t m1ar); 
 
 
 /**
@@ -336,6 +349,7 @@ void dma_stream_init(
     dma_direction_t dir, 
     dma_cm_t cm, 
     dma_priority_t priority, 
+    dma_dbm_t dbm, 
     dma_addr_inc_mode_t minc, 
     dma_addr_inc_mode_t pinc, 
     dma_data_size_t msize, 
@@ -368,6 +382,9 @@ void dma_stream_init(
     
     // Configure the stream priority 
     dma_priority(dma_stream, priority); 
+
+    // Configure double buffer mode 
+    dma_dbm(dma_stream, dbm); 
     
     // Configure increment/fixed memory mode 
     dma_minc(dma_stream, minc);     // Memory increment mode 
@@ -383,14 +400,20 @@ void dma_stream_init(
 void dma_stream_config(
     DMA_Stream_TypeDef *dma_stream, 
     uint32_t per_addr, 
-    uint32_t mem_addr, 
+    uint32_t mem0_addr, 
+    uint32_t mem1_addr, 
     uint16_t data_items)
 {
     // Set the peripheral port address 
     dma_par(dma_stream, per_addr); 
 
-    // Set the memory address and subsequently double buffer mode if needed 
-    dma_m0ar(dma_stream, mem_addr);
+    // Set the memory addresses. Memory address 1 is used for double buffer mode and will 
+    // only be set if a valid address is provided. 
+    dma_m0ar(dma_stream, mem0_addr); 
+    if (mem1_addr != NULL)
+    {
+        dma_m1ar(dma_stream, mem1_addr); 
+    }
     
     // Configure the total number of data items to be transferred 
     dma_ndt(dma_stream, data_items); 
@@ -545,6 +568,16 @@ void dma_msize(
 }
 
 
+// Double buffer mode 
+void dma_dbm(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_dbm_t dbm)
+{
+    dma_stream->CR &= ~(SET_BIT << SHIFT_18); 
+    dma_stream->CR |= (dbm << SHIFT_18); 
+}
+
+
 // Memory increment mode 
 void dma_minc(
     DMA_Stream_TypeDef *dma_stream, 
@@ -661,6 +694,15 @@ void dma_m0ar(
     uint32_t m0ar)
 {
     dma_stream->M0AR = m0ar; 
+}
+
+
+// Set memory 1 base address 
+void dma_m1ar(
+    DMA_Stream_TypeDef *dma_stream, 
+    uint32_t m1ar)
+{
+    dma_stream->M1AR = m1ar; 
 }
 
 //=======================================================================================

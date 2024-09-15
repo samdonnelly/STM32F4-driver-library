@@ -110,6 +110,13 @@ typedef enum {
 } dma_data_size_t; 
 
 
+// Double buffer mode configuration 
+typedef enum {
+    DMA_DBM_DISABLE,   // Disable - No buffer switching 
+    DMA_DBM_ENABLE     // Enable - memory target swicthed at end of DMA transfer 
+} dma_dbm_t; 
+
+
 /**
  * @brief Source and destination buffer address behavior 
  */
@@ -229,6 +236,7 @@ typedef dma_fifo_status_t FIFO_STATUS;
  * @param dir : data transfer direction 
  * @param cm : circular mode configuration 
  * @param priority : stream priority configuration 
+ * @param dbm : double buffer mode configuration 
  * @param minc : memory increment configuration 
  * @param pinc : peripheral increment configuration 
  * @param msize : memory data size 
@@ -241,6 +249,7 @@ void dma_stream_init(
     dma_direction_t dir, 
     dma_cm_t cm, 
     dma_priority_t priority, 
+    dma_dbm_t dbm, 
     dma_addr_inc_mode_t minc, 
     dma_addr_inc_mode_t pinc, 
     dma_data_size_t msize, 
@@ -260,13 +269,15 @@ void dma_stream_init(
  * 
  * @param dma_stream : pointer to DMA port stream to configure 
  * @param per_addr : peripheral address 
- * @param mem_addr : memory address 
+ * @param mem0_addr : memory 0 address 
+ * @param mem1_addr : memory 1 address (used in double buffer mode) 
  * @param data_items : number of items involved in the DMA transfer 
  */
 void dma_stream_config(
     DMA_Stream_TypeDef *dma_stream, 
     uint32_t per_addr, 
-    uint32_t mem_addr, 
+    uint32_t mem0_addr, 
+    uint32_t mem1_addr, 
     uint16_t data_items); 
 
 
