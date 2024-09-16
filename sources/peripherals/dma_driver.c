@@ -107,6 +107,17 @@ void dma_msize(
 
 
 /**
+ * @brief Double buffer mode 
+ * 
+ * @param dma_stream : pointer to DMA port stream being configured 
+ * @param dbm : double buffer mode configuration 
+ */
+void dma_dbm(
+    DMA_Stream_TypeDef *dma_stream, 
+    dma_dbm_t dbm); 
+
+
+/**
  * @brief Memory address increment 
  * 
  * @details Defines the behavior of the memory address after transfers. This can either be 
@@ -410,7 +421,7 @@ void dma_stream_config(
     // Set the memory addresses. Memory address 1 is used for double buffer mode and will 
     // only be set if a valid address is provided. 
     dma_m0ar(dma_stream, mem0_addr); 
-    if (mem1_addr != NULL)
+    if (mem1_addr != NULL_CHAR)
     {
         dma_m1ar(dma_stream, mem1_addr); 
     }
