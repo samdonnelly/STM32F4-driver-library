@@ -782,13 +782,13 @@ FRESULT hw125_f_write(
 
 
 // Write a string to the open file 
-int8_t hw125_puts(const TCHAR *str) 
+int16_t hw125_puts(const TCHAR *str) 
 {
     // Check for void pointer? 
     // Check for open file? 
 
     // Writes a string to the file 
-    int8_t puts_return = f_puts(str, &hw125_device_trackers.file); 
+    int16_t puts_return = f_puts(str, &hw125_device_trackers.file); 
 
     // Set fault code if there is a function error and a file is open 
     if ((puts_return < 0) && hw125_device_trackers.open_file) 

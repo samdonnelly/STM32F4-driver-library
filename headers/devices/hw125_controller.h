@@ -354,7 +354,7 @@ FRESULT hw125_f_write(
  * @param str : pointer to string to write 
  * @return int8_t : number of character encoding units written to the file 
  */
-int8_t hw125_puts(const TCHAR *str); 
+int16_t hw125_puts(const TCHAR *str); 
 
 
 /**
