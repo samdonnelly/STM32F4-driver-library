@@ -498,6 +498,62 @@ void dma_int_flags(
     dma_clear_int_flags(dma); 
 }
 
+
+// Get the transfer complete status 
+uint8_t dma_get_tc_status(
+    DMA_TypeDef *dma, 
+    DMA_Stream_TypeDef* dma_stream)
+{
+    // The least significant byte of the DMA stream address is what distinguishes 
+    // streams from one another and this byte is the same for a given stream number 
+    // regardless of the DMA port number. Knowing this, to identify the correct 
+    // stream we can cast the DMA stream address to a one byte integer then choose 
+    // the low or high interrupt register based in that number. We can also use the 
+    // number to know which bit to target. 
+
+    uint8_t status = CLEAR, address = (uint32_t)dma_stream; 
+
+    switch (address)
+    {
+        case (uint8_t)DMA1_Stream0_BASE: 
+            status = (dma->LISR >> SHIFT_5); 
+            break; 
+
+        case (uint8_t)DMA1_Stream1_BASE: 
+            status = (dma->LISR >> SHIFT_11); 
+            break; 
+
+        case (uint8_t)DMA1_Stream2_BASE: 
+            status = (dma->LISR >> SHIFT_21); 
+            break; 
+
+        case (uint8_t)DMA1_Stream3_BASE: 
+            status = (dma->LISR >> SHIFT_27); 
+            break; 
+
+        case (uint8_t)DMA1_Stream4_BASE: 
+            status = (dma->HISR >> SHIFT_5); 
+            break; 
+
+        case (uint8_t)DMA1_Stream5_BASE: 
+            status = (dma->HISR >> SHIFT_11); 
+            break; 
+
+        case (uint8_t)DMA1_Stream6_BASE: 
+            status = (dma->HISR >> SHIFT_21); 
+            break; 
+
+        case (uint8_t)DMA1_Stream7_BASE: 
+            status = (dma->HISR >> SHIFT_27); 
+            break; 
+        
+        default: 
+            break; 
+    }
+
+    return status && FILTER_1_LSB; 
+}
+
 //=======================================================================================
 
 

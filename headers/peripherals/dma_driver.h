@@ -371,6 +371,18 @@ void dma_int_flags(
     uint32_t *lo_streams, 
     uint32_t *hi_streams); 
 
+
+/**
+ * @brief Get the transfer complete status 
+ * 
+ * @param dma : DMA port to check 
+ * @param dma_stream : DMA stream to check 
+ * @return uint8_t : completion status 
+ */
+uint8_t dma_get_tc_status(
+    DMA_TypeDef *dma, 
+    DMA_Stream_TypeDef* dma_stream); 
+
 //=======================================================================================
 
 
