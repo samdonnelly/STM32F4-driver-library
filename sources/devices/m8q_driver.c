@@ -114,7 +114,7 @@ typedef struct m8q_nmea_pos_s
     uint8_t navStat [BYTE_2];     // Navigation status 
     uint8_t hAcc    [BYTE_5];     // Horizontal accuracy estimate 
     uint8_t vAcc    [BYTE_5];     // Vertical accuracy estimate 
-    uint8_t SOG     [BYTE_6];     // Speed over ground 
+    uint8_t SOG     [BYTE_9];     // Speed over ground 
     uint8_t COG     [BYTE_6];     // Course over ground 
     uint8_t vVel    [BYTE_6];     // Vertical velocity (+ downwards) 
     uint8_t diffAge [BYTE_1];     // Age of differential corrections 
@@ -1264,6 +1264,57 @@ uint8_t m8q_get_position_navstat_lock(void)
     }
 
     return TRUE; 
+}
+
+//=======================================================================================
+// 
+//=======================================================================================
+// Get speed over ground (SOG) value 
+uint32_t m8q_get_position_sog(void)
+{
+    uint32_t sog = CLEAR; 
+    uint8_t sog_index = CLEAR, sog_len = CLEAR; 
+
+    // Find the size of the SOG string 
+    while (m8q_driver_data.pos_data.SOG[sog_index] != NULL_CHAR)
+    {
+        if (m8q_driver_data.pos_data.SOG[sog_index++] != PERIOD_CHAR)
+        {
+            sog_len++; 
+        }
+    }
+
+    sog_index = CLEAR; 
+
+    // Convert the SOG string to a scaled integer 
+    while (sog_len)
+    {
+        if (m8q_driver_data.pos_data.SOG[sog_index] != PERIOD_CHAR)
+        {
+            sog += char_to_int(m8q_driver_data.pos_data.SOG[sog_index], --sog_len); 
+        }
+
+        sog_index++; 
+    }
+    
+    return sog; 
+}
+
+
+// Get speed over ground (SOG) string 
+M8Q_STATUS m8q_get_position_sog_str(
+    uint8_t *sog_str, 
+    uint8_t sog_str_len)
+{
+    uint8_t sog_size = (uint8_t)sizeof(m8q_driver_data.pos_data.SOG); 
+
+    if (sog_str_len < sog_size)
+    {
+        return M8Q_DATA_BUFF_OVERFLOW; 
+    }
+
+    memcpy((void *)sog_str, (void *)m8q_driver_data.pos_data.SOG, sog_size); 
+    return M8Q_OK; 
 }
 
 

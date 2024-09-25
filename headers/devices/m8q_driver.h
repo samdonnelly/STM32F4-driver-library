@@ -453,6 +453,42 @@ uint8_t m8q_get_position_navstat_lock(void);
 
 
 /**
+ * @brief Get speed over ground (SOG) value 
+ * 
+ * @details Get the converted and scaled value of speed over ground (SOG) read from the 
+ *          POSITION PUBX NMEA message. POSITION returns a numeric value of SOG and the 
+ *          converted value is scaled by 1000 to eliminate a decimal place. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @see m8q_read_data 
+ * 
+ * @return uint32_t : speed over ground * 1000 
+ */
+uint32_t m8q_get_position_sog(void); 
+
+
+/**
+ * @brief Get speed over ground (SOG) string 
+ * 
+ * @details Get the speed over ground (SOG) string read from the POSITION PUBX NMEA 
+ *          message. This string is exactly what is read from the device. See the device 
+ *          interface manual for formatting of data in the POSITION message. If the 
+ *          buffer used to store this string is too small then an overflow status will 
+ *          be returned. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @param sog_str : buffer to store the speed over ground string 
+ * @param sog_str_len : length of the sog_str buffer 
+ * @return M8Q_STATUS : status of the getter 
+ */
+M8Q_STATUS m8q_get_position_sog_str(
+    uint8_t *sog_str, 
+    uint8_t sog_str_len); 
+
+
+/**
  * @brief Get UTC time 
  * 
  * @details Get the UTC time string read from the TIME PUBX NMEA message. This string is 
