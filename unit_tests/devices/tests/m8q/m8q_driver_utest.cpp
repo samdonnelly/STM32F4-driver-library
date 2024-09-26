@@ -119,6 +119,21 @@ void m8q_test_config_compare(
     }
 }
 
+
+// Integer to bytes 
+void m8q_test_itob(
+    uint16_t integer, 
+    uint8_t *bytes)
+{
+    if (sizeof(bytes) < BYTE_2)
+    {
+        return; 
+    }
+
+    bytes[BYTE_0] = (integer >> SHIFT_8) & HIGH_8BIT; 
+    bytes[BYTE_1] = integer & HIGH_8BIT; 
+}
+
 //=======================================================================================
 
 
@@ -695,13 +710,10 @@ TEST(m8q_driver, m8q_read_unknown_multi_msg)
 {
     M8Q_STATUS read_status; 
 
-    uint8_t msg0_len = 67; 
-    uint8_t msg1_len = 28; 
-    uint8_t msg2_len = 28; 
-    uint8_t msg3_len = 71; 
-    uint8_t msg4_len = 29; 
-    uint8_t stream_len[] = { 0x00, 0xDF }; 
-    uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
+    uint8_t msg0_len = 67, msg1_len = 28, msg2_len = 28, msg3_len = 71, msg4_len = 29; 
+    uint16_t msg_len = msg0_len + msg1_len + msg2_len + msg3_len + msg4_len; 
+    uint8_t stream_len[BYTE_2]; 
+    m8q_test_itob(msg_len, stream_len); 
 
     uint8_t device_stream[msg_len]; 
 
@@ -740,13 +752,10 @@ TEST(m8q_driver, m8q_read_known_multi_msg)
 {
     M8Q_STATUS read_status; 
 
-    uint8_t msg0_len = 67; 
-    uint8_t msg1_len = 28; 
-    uint8_t msg2_len = 28; 
-    uint8_t msg3_len = 71; 
-    uint8_t msg4_len = 29; 
-    uint8_t stream_len[] = { 0x00, 0xDF }; 
-    uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
+    uint8_t msg0_len = 67, msg1_len = 28, msg2_len = 28, msg3_len = 71, msg4_len = 29; 
+    uint16_t msg_len = msg0_len + msg1_len + msg2_len + msg3_len + msg4_len; 
+    uint8_t stream_len[BYTE_2]; 
+    m8q_test_itob(msg_len, stream_len); 
 
     uint8_t device_stream[msg_len]; 
 
@@ -786,17 +795,20 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     M8Q_STATUS read_status; 
     uint8_t lat_str[BYTE_11]; 
     uint8_t lon_str[BYTE_12]; 
+    uint8_t sog_str[BYTE_9]; 
     uint8_t utc_time[BYTE_10]; 
     uint8_t utc_date[BYTE_7]; 
 
     memset((void *)lat_str, CLEAR, sizeof(lat_str)); 
     memset((void *)lon_str, CLEAR, sizeof(lon_str)); 
+    memset((void *)sog_str, CLEAR, sizeof(sog_str)); 
     memset((void *)utc_time, CLEAR, sizeof(utc_time)); 
     memset((void *)utc_date, CLEAR, sizeof(utc_date)); 
 
     uint8_t msg0_len = 111, msg1_len = 67, msg2_len = 28, msg3_len = 10, msg4_len = 71; 
-    uint8_t stream_len[] = { 0x01, 0x1F }; 
-    uint16_t msg_len = (stream_len[0] << SHIFT_8) | stream_len[1]; 
+    uint16_t msg_len = msg0_len + msg1_len + msg2_len + msg3_len + msg4_len; 
+    uint8_t stream_len[BYTE_2]; 
+    m8q_test_itob(msg_len, stream_len); 
     uint8_t device_stream[msg_len]; 
 
     // The stream contains multiple NMEA and UBX messages. Some messages are stored in the 
@@ -826,11 +838,13 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     i2c_mock_set_read_data((void *)device_stream, msg_len, I2C_MOCK_INDEX_1); 
 
     //==================================================
-    // Read data record - check for no data 
+    // Read data record - check that there is no data initially 
 
+    // Coordinate values 
     DOUBLES_EQUAL(CLEAR, m8q_get_position_lat(), 0.000001); 
     DOUBLES_EQUAL(CLEAR, m8q_get_position_lon(), 0.000001); 
 
+    // Coordinate strings 
     LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_position_lat_str(lat_str, BYTE_5)); 
     LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_position_lon_str(lon_str, BYTE_5)); 
     LONGS_EQUAL(M8Q_OK, m8q_get_position_lat_str(lat_str, BYTE_11)); 
@@ -838,12 +852,23 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     STRCMP_EQUAL("0000000000", (char *)lat_str); 
     STRCMP_EQUAL("00000000000", (char *)lon_str); 
 
+    // Coordinate directions 
     LONGS_EQUAL(CLEAR, m8q_get_position_NS()); 
     LONGS_EQUAL(CLEAR, m8q_get_position_EW()); 
     
+    // Position lock 
     LONGS_EQUAL(CLEAR, m8q_get_position_navstat()); 
     LONGS_EQUAL(FALSE, m8q_get_position_navstat_lock()); 
 
+    // Speed over ground (SOG) value 
+    LONGS_EQUAL(CLEAR, m8q_get_position_sog()); 
+
+    // Speed over ground (SOG) string 
+    LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_position_sog_str(sog_str, BYTE_5)); 
+    LONGS_EQUAL(M8Q_OK, m8q_get_position_sog_str(sog_str, BYTE_9)); 
+    STRCMP_EQUAL("", (char *)sog_str); 
+
+    // Time and date strings 
     LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_time_utc_time(utc_time, BYTE_5)); 
     LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_time_utc_date(utc_date, BYTE_5)); 
     LONGS_EQUAL(M8Q_OK, m8q_get_time_utc_time(utc_time, BYTE_10)); 
@@ -853,28 +878,39 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     
     //==================================================
 
-    // Read data from the device so the data record gets updated 
-    read_status = m8q_read_data(); 
-
     //==================================================
     // Read data record - check for populated data 
 
+    // Read data from the device so the data record gets updated 
+    read_status = m8q_read_data(); 
     LONGS_EQUAL(M8Q_OK, read_status); 
 
+    // Coordinate values 
     DOUBLES_EQUAL(47.285220, m8q_get_position_lat(), 0.000001); 
     DOUBLES_EQUAL(-114.565253, m8q_get_position_lon(), 0.000001); 
 
+    // Coordinate strings 
     m8q_get_position_lat_str(lat_str, BYTE_11); 
     m8q_get_position_lon_str(lon_str, BYTE_12); 
     STRCMP_EQUAL("4717.11321", (char *)lat_str); 
     STRCMP_EQUAL("11433.91518", (char *)lon_str); 
 
+    // Coordinate directions 
     LONGS_EQUAL(N_UP_CHAR, m8q_get_position_NS()); 
     LONGS_EQUAL(W_UP_CHAR, m8q_get_position_EW()); 
     
+    // Position lock 
     LONGS_EQUAL(M8Q_NAVSTAT_G3, m8q_get_position_navstat()); 
     LONGS_EQUAL(TRUE, m8q_get_position_navstat_lock()); 
 
+    // Speed over ground (SOG) value 
+    LONGS_EQUAL(7, m8q_get_position_sog()); 
+
+    // Speed over ground (SOG) string 
+    m8q_get_position_sog_str(sog_str, BYTE_9); 
+    STRCMP_EQUAL("0.007", (char *)sog_str); 
+
+    // Time and date strings 
     m8q_get_time_utc_time(utc_time, BYTE_10); 
     m8q_get_time_utc_date(utc_date, BYTE_7); 
     STRCMP_EQUAL("073731.00", (char *)utc_time); 
@@ -883,6 +919,104 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     //==================================================
 }
 
+
+// M8Q read - SOG (speed over ground) calculation check 
+TEST(m8q_driver, m8q_read_sog_calc_check)
+{
+    // Lengths of messages defined below 
+    uint8_t 
+    msg0_len = 111, 
+    msg1_len = 111, 
+    msg2_len = 111, 
+    msg3_len = 112, 
+    msg4_len = 113, 
+    msg5_len = 114; 
+    uint8_t stream_len[BYTE_2]; 
+
+    // The same NMEA message but with different SOG 
+    const char device_msg0[] = 
+        "$PUBX,00,081350.00,4717.113210,N,11433.915187,W,546.589,G3,2.1,2.0,0.007,77.52," 
+        "0.007,,0.92,1.19,0.77,9,0,0*41\r\n"; 
+    const char device_msg1[] = 
+        "$PUBX,00,081350.00,4717.113210,N,11433.915187,W,546.589,G3,2.1,2.0,0.947,77.52," 
+        "0.007,,0.92,1.19,0.77,9,0,0*4C\r\n"; 
+    const char device_msg2[] = 
+        "$PUBX,00,081350.00,4717.113210,N,11433.915187,W,546.589,G3,2.1,2.0,1.947,77.52," 
+        "0.007,,0.92,1.19,0.77,9,0,0*4D\r\n"; 
+    const char device_msg3[] = 
+        "$PUBX,00,081350.00,4717.113210,N,11433.915187,W,546.589,G3,2.1,2.0,21.007,77.52," 
+        "0.007,,0.92,1.19,0.77,9,0,0*72\r\n"; 
+    const char device_msg4[] = 
+        "$PUBX,00,081350.00,4717.113210,N,11433.915187,W,546.589,G3,2.1,2.0,821.007,77.52," 
+        "0.007,,0.92,1.19,0.77,9,0,0*4A\r\n"; 
+    const char device_msg5[] = 
+        "$PUBX,00,081350.00,4717.113210,N,11433.915187,W,546.589,G3,2.1,2.0,3501.070,77.52," 
+        "0.007,,0.92,1.19,0.77,9,0,0*76\r\n"; 
+
+    //==================================================
+    // Set up the I2C mock data for reading 
+
+    i2c_mock_init(I2C_MOCK_TIMEOUT_DISABLE, I2C_MOCK_INC_MODE_DISABLE, I2C_MOCK_INC_MODE_ENABLE); 
+
+    m8q_test_itob(msg0_len, stream_len); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_0); 
+    i2c_mock_set_read_data((void *)device_msg0, (uint16_t)msg0_len, I2C_MOCK_INDEX_1); 
+    
+    m8q_test_itob(msg1_len, stream_len); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_2); 
+    i2c_mock_set_read_data((void *)device_msg1, (uint16_t)msg1_len, I2C_MOCK_INDEX_3); 
+    
+    m8q_test_itob(msg2_len, stream_len); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_4); 
+    i2c_mock_set_read_data((void *)device_msg2, (uint16_t)msg2_len, I2C_MOCK_INDEX_5); 
+    
+    m8q_test_itob(msg3_len, stream_len); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_6); 
+    i2c_mock_set_read_data((void *)device_msg3, (uint16_t)msg3_len, I2C_MOCK_INDEX_7); 
+    
+    m8q_test_itob(msg4_len, stream_len); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_8); 
+    i2c_mock_set_read_data((void *)device_msg4, (uint16_t)msg4_len, I2C_MOCK_INDEX_9); 
+    
+    m8q_test_itob(msg5_len, stream_len); 
+    i2c_mock_set_read_data((void *)stream_len, BYTE_2, I2C_MOCK_INDEX_10); 
+    i2c_mock_set_read_data((void *)device_msg5, (uint16_t)msg5_len, I2C_MOCK_INDEX_11); 
+    
+    //==================================================
+
+    //==================================================
+    // Check the SOG conversion from each message 
+    // Values are written out in numeric form to match the message string defined above. 
+    
+    // Message 0 
+    m8q_read_data(); 
+    LONGS_EQUAL(7, m8q_get_position_sog()); 
+
+    // Message 1 
+    m8q_read_data(); 
+    LONGS_EQUAL(947, m8q_get_position_sog()); 
+
+    // Message 2 
+    m8q_read_data(); 
+    LONGS_EQUAL(1947, m8q_get_position_sog()); 
+
+    // Message 3 
+    m8q_read_data(); 
+    LONGS_EQUAL(21007, m8q_get_position_sog()); 
+
+    // Message 4 
+    m8q_read_data(); 
+    LONGS_EQUAL(821007, m8q_get_position_sog()); 
+
+    // Message 5 
+    m8q_read_data(); 
+    LONGS_EQUAL(3501070, m8q_get_position_sog()); 
+    
+    //==================================================
+}
+//=======================================================================================
+// 
+//=======================================================================================
 
 // M8Q read - Get whole data stream 
 TEST(m8q_driver, m8q_read_get_data_stream)

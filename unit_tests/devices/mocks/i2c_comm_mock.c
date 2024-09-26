@@ -23,7 +23,6 @@
 //=======================================================================================
 // Macros 
 
-#define MAX_DATA_OPS 12 
 #define MAX_DATA_SIZE 300 
 
 //=======================================================================================
@@ -39,11 +38,11 @@ typedef struct i2c_mock_driver_data_s
     uint8_t increment_mode_write; 
     uint8_t increment_mode_read; 
 
-    uint8_t write_data[MAX_DATA_OPS][MAX_DATA_SIZE]; 
-    uint8_t write_data_size[MAX_DATA_OPS]; 
+    uint8_t write_data[I2C_MOCK_MAX_INDEX][MAX_DATA_SIZE]; 
+    uint8_t write_data_size[I2C_MOCK_MAX_INDEX]; 
     uint8_t write_index; 
 
-    uint8_t read_data[MAX_DATA_OPS][MAX_DATA_SIZE]; 
+    uint8_t read_data[I2C_MOCK_MAX_INDEX][MAX_DATA_SIZE]; 
     uint8_t read_index; 
 }
 i2c_mock_driver_data_t; 
@@ -100,7 +99,7 @@ I2C_STATUS i2c_write(
     const uint8_t *data, 
     uint8_t data_size)
 {
-    if ((data == NULL) || (mock_driver_data.write_index >= MAX_DATA_OPS))
+    if ((data == NULL) || (mock_driver_data.write_index >= I2C_MOCK_MAX_INDEX))
     {
         return I2C_NULL_PTR; 
     }
@@ -124,7 +123,7 @@ I2C_STATUS i2c_read(
     uint8_t *data, 
     uint16_t data_size)
 {
-    if ((data == NULL) || (mock_driver_data.read_index >= MAX_DATA_OPS))
+    if ((data == NULL) || (mock_driver_data.read_index >= I2C_MOCK_MAX_INDEX))
     {
         return I2C_NULL_PTR; 
     }
@@ -147,7 +146,7 @@ I2C_STATUS i2c_clear(
     I2C_TypeDef *i2c, 
     uint16_t data_size)
 {
-    if (mock_driver_data.read_index >= MAX_DATA_OPS)
+    if (mock_driver_data.read_index >= I2C_MOCK_MAX_INDEX)
     {
         return I2C_NULL_PTR; 
     }
@@ -192,7 +191,7 @@ void i2c_mock_get_write_data(
     uint8_t *write_data_size, 
     uint8_t write_index)
 {
-    if ((write_buff == NULL) || (write_data_size == NULL) || (write_index >= MAX_DATA_OPS))
+    if ((write_buff == NULL) || (write_data_size == NULL) || (write_index >= I2C_MOCK_MAX_INDEX))
     {
         return; 
     }
@@ -209,7 +208,7 @@ void i2c_mock_set_read_data(
     uint16_t read_data_size, 
     uint8_t read_index)
 {
-    if ((read_data == NULL) || (read_index >= MAX_DATA_OPS))
+    if ((read_data == NULL) || (read_index >= I2C_MOCK_MAX_INDEX))
     {
         return; 
     }
