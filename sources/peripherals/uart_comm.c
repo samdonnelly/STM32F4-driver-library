@@ -314,7 +314,6 @@ UART_STATUS uart_getstr(
     uint8_t buff_len, 
     uart_str_term_t term_char)
 {
-    // Local variables 
     uint8_t input = CLEAR; 
     uint8_t char_count = CLEAR; 
     uint8_t max_char_read = buff_len - UART_BUFF_TERM_OFST; 

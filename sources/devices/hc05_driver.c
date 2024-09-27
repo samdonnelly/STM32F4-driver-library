@@ -150,11 +150,14 @@ void hc05_read(
     // Local variables 
     UART_STATUS uart_status = UART_OK; 
 
-    // Get the data 
-    uart_status |= uart_getstr(hc05_data_record.hc05_uart, 
-                               receive_data, 
-                               data_len, 
-                               UART_STR_TERM_CARRIAGE); 
+    // Get the data if it's available 
+    if (uart_data_ready(hc05_data_record.hc05_uart))
+    {
+        uart_status |= uart_getstr(hc05_data_record.hc05_uart, 
+                                   receive_data, 
+                                   data_len, 
+                                   UART_STR_TERM_CARRIAGE); 
+    }
 
     // Update the driver status 
     hc05_data_record.status |= (uint8_t)uart_status; 
