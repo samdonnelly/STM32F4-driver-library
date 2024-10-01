@@ -232,7 +232,7 @@ void uart_send_integer(
     int16_t integer)
 {
     // Store a digit to print 
-    uint8_t digit;
+    uint8_t digit = CLEAR;
 
     // Print the sign of the number 
     if (integer < 0)
@@ -335,8 +335,8 @@ UART_STATUS uart_getstr(
     } 
     while((input != term_char) && --timer && (char_count < max_char_read)); 
 
-    // Add a null character to the end of the string 
-    *str_buff = UART_STR_TERM_NULL; 
+    // Replace the termination character with a NULL character 
+    *--str_buff = UART_STR_TERM_NULL; 
 
     // Check for timeout 
     if (timer)
