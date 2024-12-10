@@ -74,54 +74,57 @@
 //=======================================================================================
 // AT/RT command definitions 
 
+// Enter AT/RT command mode 
+// ATO - exit AT command mode 
+
 const char 
 // Enter AT/RT command mode 
 sik_at_enter_cmd[] = "+++", 
-// - ATO - exit AT command mode 
-sik_atio_cmd[] = "ATO", 
-// Show radio version 
+// ATO - exit AT command mode 
+sik_ato_cmd[] = "ATO", 
+// ATI - Show radio version 
 sik_ati_cmd[] = "ATI", 
 sik_rti_cmd[] = "RTI", 
-// Show board type 
+// ATI2 - Show board type 
 sik_ati2_cmd[] = "ATI2", 
 sik_rti2_cmd[] = "RTI2", 
-// Show board frequency 
+// ATI3 - Show board frequency 
 sik_ati3_cmd[] = "ATI3", 
 sik_rti3_cmd[] = "RTI3", 
-// Show board version 
+// ATI4 - Show board version 
 sik_ati4_cmd[] = "ATI4", 
 sik_rti4_cmd[] = "RTI4", 
-// Show all user settable EEPROM parameters 
+// ATI5 - Show all user settable EEPROM parameters 
 sik_ati5_cmd[] = "ATI5", 
 sik_rti5_cmd[] = "RTI5", 
-// Display TDM timing report 
+// ATI6 - Display TDM timing report 
 sik_ati6_cmd[] = "ATI6", 
 sik_rti6_cmd[] = "RTI6", 
-// Display RSSI signal report 
+// ATI7 - Display RSSI signal report 
 sik_ati7_cmd[] = "ATI7", 
 sik_rti7_cmd[] = "RTI7", 
-// Display radio parameter number ‘n’ 
+// ATSn? - Display radio parameter number ‘n’ 
 sik_atsn_cmd[] = "ATSn?", 
 sik_rtsn_cmd[] = "RTSn?", 
-// Set radio parameter number ‘n’ to ‘X’ 
+// ATSn=X - Set radio parameter number ‘n’ to ‘X’ 
 sik_atsnx_cmd[] = "ATSn=X", 
 sik_rtsnx_cmd[] = "RTSn=X", 
-// Reboot the radio 
+// ATZ - Reboot the radio 
 sik_atz_cmd[] = "ATZ", 
 sik_rtz_cmd[] = "RTZ", 
-// Write current parameters to EEPROM 
+// AT&W - Write current parameters to EEPROM 
 sik_atw_cmd[] = "AT&W", 
 sik_rtw_cmd[] = "RT&W", 
-// Reset all parameters to factory default 
+// AT&F - Reset all parameters to factory default 
 sik_atf_cmd[] = "AT&F", 
 sik_rtf_cmd[] = "RT&F", 
-// Enable RSSI debug reporting 
+// AT&T=RSSI - Enable RSSI debug reporting 
 sik_attrssi_cmd[] = "AT&T=RSSI", 
 sik_rttrssi_cmd[] = "RT&T=RSSI", 
-// Enable TDM debug reporting 
+// AT&T=TDM - Enable TDM debug reporting 
 sik_atttdm_cmd[] = "AT&T=TDM", 
 sik_rtttdm_cmd[] = "RT&T=TDM", 
-// Disable debug reporting 
+// AT&T - Disable debug reporting 
 sik_att_cmd[] = "AT&T", 
 sik_rtt_cmd[] = "RT&T"; 
 
@@ -172,6 +175,13 @@ void sik_init(USART_TypeDef *uart)
 
 
 // Send data 
+void sik_send_data(const char *data)
+{
+    if (data != NULL)
+    {
+        uart_sendstring(sik_driver_data.uart, data); 
+    }
+}
 
 //=======================================================================================
 
@@ -179,46 +189,70 @@ void sik_init(USART_TypeDef *uart)
 //=======================================================================================
 // AT Command Functions 
 
-// Enter AT/RT command mode 
-void sik_at_mode(void)
+// AT command mode: send string 
+void sik_at_send(const char *cmd)
 {
-    // There should be some function to check for the "OK" from the radio when requesting 
-    // AT command mode which then sets this bit if it's seen. 
-    sik_driver_data.at_mode = SET_BIT; 
-}
-
-
-// Send command 
-void sik_at_send_cmd(const char *cmd)
-{
-    if (cmd == NULL)
+    if (cmd != NULL)
     {
-        return; 
+        uart_sendstring(sik_driver_data.uart, cmd); 
     }
-
-    uart_sendstring(sik_driver_data.uart, cmd); 
 }
 
 
-// 
-void sik_at_param_get(sik_at_param_number_t param)
+// AT command mode: enter or exit 
+void sik_at_mode(sik_at_mode_t mode)
+{
+    switch (mode)
+    {
+        case SIK_AT_ENTER: 
+            sik_at_send(sik_at_enter_cmd); 
+            sik_driver_data.at_mode = SET_BIT; 
+            break; 
+
+        case SIK_AT_EXIT: 
+            sik_at_send(sik_ato_cmd); 
+            sik_driver_data.at_mode = CLEAR_BIT; 
+        
+        default:
+            break;
+    }
+}
+
+
+// AT command mode: send command 
+void sik_at_send_cmd(
+    sik_at_rt_t device, 
+    char *cmd)
+{
+    // A pre-defined command that's constant will not be eligible to be passed here. 
+    
+    if (cmd != NULL)
+    {
+        cmd[BYTE_0] = (char)device; 
+        sik_at_send(cmd); 
+    }
+}
+
+
+// AT command mode: get parameter 
+void sik_at_get_param(sik_at_param_number_t param)
 {
     // Format the command 
     char format_cmd[50]; 
 
-    sik_at_send_cmd(format_cmd); 
+    sik_at_send(format_cmd); 
 }
 
 
-// 
-void sik_at_param_set(
+// AT command mode: set parameter 
+void sik_at_set_param(
     sik_at_param_number_t param, 
     uint32_t value)
 {
     // Format the command 
     char format_cmd[50]; 
 
-    sik_at_send_cmd(format_cmd); 
+    sik_at_send(format_cmd); 
 }
 
 //=======================================================================================
