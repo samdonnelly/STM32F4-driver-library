@@ -16,7 +16,6 @@
 // Includes 
 
 #include "pid_control.h" 
-#include "tools.h" 
 
 //=======================================================================================
 
@@ -98,23 +97,38 @@ int16_t pid_controller::pid_calc(int16_t error)
 // Setters 
 
 // Set proportional gain (KP) 
-void pid_controller::set_kp(int16_t kp) { KP = kp; }
+void pid_controller::set_kp(int16_t kp) 
+{
+    KP = kp; 
+}
 
 
 // Set integral gain (KI) 
-void pid_controller::set_ki(int16_t ki) { KI = ki; }
+void pid_controller::set_ki(int16_t ki) 
+{
+    KI = ki; 
+}
 
 
 // Set derivative gain (KD) 
-void pid_controller::set_kd(int16_t kd) { KD = kd; }
+void pid_controller::set_kd(int16_t kd) 
+{
+    KD = kd; 
+}
 
 
 // Cap the accumulated error to this upper bound 
-void pid_controller::set_max_error_sum(int16_t max_error) { error_max = max_error; }
+void pid_controller::set_max_error_sum(int16_t max_error) 
+{
+    error_max = max_error; 
+}
 
 
 // Cap the accumulated error to this lower bound 
-void pid_controller::set_min_error_sum(int16_t min_error) { error_min = min_error; }
+void pid_controller::set_min_error_sum(int16_t min_error) 
+{
+    error_min = min_error; 
+}
 
 
 // Reset the PID controller error history 

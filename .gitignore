@@ -5,6 +5,7 @@
 
 # build files 
 build
+*.code-workspace
 
 # Other files and folder 
 .DS_Store
@@ -13,7 +14,9 @@ unit_tests/devices/.DS_Store
 # File copies 
 .include_path/
 
+#==================================================
 # unit_tests folder 
+
 unit_tests/.DS_Store
 unit_tests/*.swp
 unit_tests/*.*~
@@ -62,7 +65,6 @@ unit_tests/test-lib
 unit_tests/test-obj
 unit_tests/sources
 
-
 unit_tests/device_controllers/test-lib
 unit_tests/device_controllers/test-obj
 unit_tests/device_controllers/sources
@@ -90,3 +92,5 @@ unit_tests/tools/sources
 unit_tests/tools/your_tests
 unit_tests/tools/*.exe
 unit_tests/tools/*.exe.stackdump
+
+#==================================================

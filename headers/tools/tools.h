@@ -12,8 +12,8 @@
  * 
  */
 
-#ifndef _TOOLS_H_
-#define _TOOLS_H_
+#ifndef _TOOLS_H_ 
+#define _TOOLS_H_ 
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,11 +22,12 @@ extern "C" {
 //=======================================================================================
 // Includes 
 
-#include "stm32f411xe.h"
+#include "stm32f4x.h" 
 
 // Standard libraries 
 #include <stdio.h> 
 #include <stdlib.h> 
+#include <stdint.h> 
 #include <string.h> 
 #include <math.h> 
 
@@ -35,9 +36,6 @@ extern "C" {
 
 //=======================================================================================
 // Macros 
-
-// Conditional compilation 
-#define DEV_CODE 0              // For new code in the library that is yet to be tested 
 
 // Data type 
 #define INT16_NUM_DIGITS 5
@@ -389,4 +387,4 @@ uint32_t char_to_int(
 }
 #endif
 
-#endif  // _TOOL_H_
+#endif  // _TOOLS_H_ 

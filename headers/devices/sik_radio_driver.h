@@ -25,7 +25,6 @@ extern "C" {
 //=======================================================================================
 // Includes 
 
-#include <stdint.h> 
 #include "tools.h" 
 #include "uart_comm.h" 
 

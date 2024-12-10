@@ -74,7 +74,7 @@
 //=======================================================================================
 // AT/RT command definitions 
 
-extern const char 
+const char 
 // Enter AT/RT command mode 
 sik_at_enter_cmd[] = "+++", 
 // - ATO - exit AT command mode 
