@@ -27,7 +27,7 @@ STM generated code: <a href="https://github.com/samdonnelly/STM32F4-driver-libra
 
 ### Dependencies 
 
-When working on this library (i.e. not using it within a project), it requires <a href="https://github.com/cpputest/cpputest">cpputest</a> to perform unit testing. If cloning this repository, be sure to also clone the unit test frameowrk and include it in your workspace and build files. 
+When working on this library (i.e. not using it within a project), it requires <a href="https://github.com/cpputest/cpputest">cpputest</a> to perform unit testing. If cloning this repository, be sure to also clone the unit test framework and include it in your workspace and build files. 
 
 ### System Configuration 
 

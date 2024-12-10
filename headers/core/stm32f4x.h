@@ -25,7 +25,14 @@ extern "C" {
 //=======================================================================================
 // Includes 
 
-// TODO 
+// The "system_config.h" file should be created by the project that's using this library 
+// so it can specify which device to use. However, for this library alone, a 
+// "system_config.h" mock file should be created in the ".include_path" folder to satisfy 
+// local requirements. The ".include_path" folder is located in the root and is not 
+// tracked as each users system configuration will be different. Within "system_config.h", 
+// define each of the below macros but with "ifndef" guards around each one so they will 
+// not conflict with a project macro definition, then set all macros to 0 except for the 
+// one specifying the device you're using. 
 #include "system_config.h" 
 
 //=======================================================================================
