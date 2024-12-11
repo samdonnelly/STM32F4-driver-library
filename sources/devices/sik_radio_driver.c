@@ -146,9 +146,11 @@ void sik_at_send_cmd(
 {
     if (cmd != NULL)
     {
-        char command[SIK_MAX_AT_CMD_SIZE]; 
-        snprintf(command, SIK_MAX_AT_CMD_SIZE, cmd, (char)device); 
-        sik_send_data(command); 
+        // snprintf was not used here because the compiler gave a warning that "cmd" 
+        // is not a string literal. 
+        memcpy((void *)sik_driver_data.at_cmd_buff, (const void *)cmd, sizeof(cmd)); 
+        sik_driver_data.at_cmd_buff[BYTE_0] = (char)device; 
+        sik_send_data(sik_driver_data.at_cmd_buff); 
     }
 }
 
@@ -161,15 +163,13 @@ void sik_at_get_param(
     // Copy the "xTSn?" command to the buffer but replace 'x' and 'n' with the device 
     // type and parameter number, respectfully. 
 
-    char command[SIK_MAX_AT_CMD_SIZE]; 
-
-    snprintf(command, 
+    snprintf(sik_driver_data.at_cmd_buff, 
              SIK_MAX_AT_CMD_SIZE, 
              sik_xtsn_cmd, 
              (char)device, 
              (uint8_t)param); 
 
-    sik_send_data(command); 
+    sik_send_data(sik_driver_data.at_cmd_buff); 
 }
 
 
@@ -182,16 +182,14 @@ void sik_at_set_param(
     // Copy the "xTSn=X" command to the buffer but replace 'x', 'n' and 'X' with the 
     // device type, parameter number and parameter value, respectfully. 
 
-    char command[SIK_MAX_AT_CMD_SIZE]; 
-
-    snprintf(command, 
+    snprintf(sik_driver_data.at_cmd_buff, 
              SIK_MAX_AT_CMD_SIZE, 
              sik_xtsnx_cmd, 
              (char)device, 
              (uint8_t)param, 
              value); 
     
-    sik_send_data(command); 
+    sik_send_data(sik_driver_data.at_cmd_buff); 
 }
 
 //=======================================================================================
