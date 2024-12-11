@@ -24,49 +24,9 @@
 
 
 //=======================================================================================
-// Notes 
+// Macros 
 
-// Available commands: 
-// - +++ - Enter AT/RT command mode 
-// - RT - Remote AT command 
-// - ATI - show radio version 
-// - ATI2 - show board type 
-// - ATI3 - show board frequency 
-// - ATI4 - show board version 
-// - ATI5 - show all user settable EEPROM parameters 
-// - ATI6 - display TDM timing report 
-// - ATI7 - display RSSI signal report 
-// - ATO - exit AT command mode 
-// - ATSn? - display radio parameter number ‘n’ 
-// - ATSn=X - set radio parameter number ‘n’ to ‘X’ 
-// - ATZ - reboot the radio 
-// - AT&W - write current parameters to EEPROM 
-// - AT&F - reset all parameters to factory default 
-// - AT&T=RSSI - enable RSSI debug reporting 
-// - AT&T=TDM - enable TDM debug reporting 
-// - AT&T - disable debug reporting 
-
-// In the above commands, "AT" can be replaced by "RT" for use on a connected remote 
-// radio with the exception of "ATO". 
-
-// Updating parameters process: 
-// - Change parameters with "ATSn=X" 
-// - Write parameter to EEPROM with "AT&W" 
-//   - Transmit power setting will take effect immediately without needing to write to 
-//     the EEPROMs, but you still need to write to the EEPROMs for the parameter to save 
-//     between reboots. 
-// - Reboot using "ATZ" so new parameters can take effect 
-
-// For two radios to communicate the following must be the same at both ends of the link:
-// - Radio firmware version
-// - AIR_SPEED 
-// - MIN_FREQ 
-// - MAX_FREQ 
-// - NUM_CHANNELS 
-// - NETID 
-// - ECC setting 
-// - LBT_RSSI setting 
-// - MAX_WINDOW setting 
+#define SIK_MAX_AT_CMD_SIZE 20 
 
 //=======================================================================================
 
@@ -74,59 +34,27 @@
 //=======================================================================================
 // AT/RT command definitions 
 
-// Enter AT/RT command mode 
-// ATO - exit AT command mode 
+// "AT" can be replaced by "RT" for use on a connected remote radio with the exception of 
+// "ATO". 
 
 const char 
-// Enter AT/RT command mode 
-sik_at_enter_cmd[] = "+++", 
-// ATO - exit AT command mode 
-sik_ato_cmd[] = "ATO", 
-// ATI - Show radio version 
-sik_ati_cmd[] = "ATI", 
-sik_rti_cmd[] = "RTI", 
-// ATI2 - Show board type 
-sik_ati2_cmd[] = "ATI2", 
-sik_rti2_cmd[] = "RTI2", 
-// ATI3 - Show board frequency 
-sik_ati3_cmd[] = "ATI3", 
-sik_rti3_cmd[] = "RTI3", 
-// ATI4 - Show board version 
-sik_ati4_cmd[] = "ATI4", 
-sik_rti4_cmd[] = "RTI4", 
-// ATI5 - Show all user settable EEPROM parameters 
-sik_ati5_cmd[] = "ATI5", 
-sik_rti5_cmd[] = "RTI5", 
-// ATI6 - Display TDM timing report 
-sik_ati6_cmd[] = "ATI6", 
-sik_rti6_cmd[] = "RTI6", 
-// ATI7 - Display RSSI signal report 
-sik_ati7_cmd[] = "ATI7", 
-sik_rti7_cmd[] = "RTI7", 
-// ATSn? - Display radio parameter number ‘n’ 
-sik_atsn_cmd[] = "ATSn?", 
-sik_rtsn_cmd[] = "RTSn?", 
-// ATSn=X - Set radio parameter number ‘n’ to ‘X’ 
-sik_atsnx_cmd[] = "ATSn=X", 
-sik_rtsnx_cmd[] = "RTSn=X", 
-// ATZ - Reboot the radio 
-sik_atz_cmd[] = "ATZ", 
-sik_rtz_cmd[] = "RTZ", 
-// AT&W - Write current parameters to EEPROM 
-sik_atw_cmd[] = "AT&W", 
-sik_rtw_cmd[] = "RT&W", 
-// AT&F - Reset all parameters to factory default 
-sik_atf_cmd[] = "AT&F", 
-sik_rtf_cmd[] = "RT&F", 
-// AT&T=RSSI - Enable RSSI debug reporting 
-sik_attrssi_cmd[] = "AT&T=RSSI", 
-sik_rttrssi_cmd[] = "RT&T=RSSI", 
-// AT&T=TDM - Enable TDM debug reporting 
-sik_atttdm_cmd[] = "AT&T=TDM", 
-sik_rtttdm_cmd[] = "RT&T=TDM", 
-// AT&T - Disable debug reporting 
-sik_att_cmd[] = "AT&T", 
-sik_rtt_cmd[] = "RT&T"; 
+sik_at_enter_cmd[] = "+++",         // Enter AT/RT command mode 
+sik_ato_cmd[] = "ATO",              // ATO - exit AT command mode 
+sik_xti_cmd[] = "%cTI",             // xTI - Show radio version 
+sik_xti2_cmd[] = "%cTI2",           // xTI2 - Show board type 
+sik_xti3_cmd[] = "%cTI3",           // xTI3 - Show board frequency 
+sik_xti4_cmd[] = "%cTI4",           // xTI4 - Show board version 
+sik_xti5_cmd[] = "%cTI5",           // xTI5 - Show all user settable EEPROM parameters 
+sik_xti6_cmd[] = "%cTI6",           // xTI6 - Display TDM timing report 
+sik_xti7_cmd[] = "%cTI7",           // xTI7 - Display RSSI signal report 
+sik_xtsn_cmd[] = "%cTS%u?",         // xTSn? - Display radio parameter number ‘n’ 
+sik_xtsnx_cmd[] = "%cTS%u=%lu",     // xTSn=X - Set radio parameter number ‘n’ to ‘X’ 
+sik_xtz_cmd[] = "%cTZ",             // xTZ - Reboot the radio 
+sik_xtw_cmd[] = "%cT&W",            // xT&W - Write current parameters to EEPROM 
+sik_xtf_cmd[] = "%cT&F",            // xT&F - Reset all parameters to factory default 
+sik_xttrssi_cmd[] = "%cT&T=RSSI",   // xT&T=RSSI - Enable RSSI debug reporting 
+sik_xtttdm_cmd[] = "%cT&T=TDM",     // xT&T=TDM - Enable TDM debug reporting 
+sik_xtt_cmd[] = "%cT&T";            // xT&T - Disable debug reporting 
 
 //=======================================================================================
 
@@ -138,6 +66,7 @@ sik_rtt_cmd[] = "RT&T";
 typedef struct sik_driver_data_s 
 {
     USART_TypeDef *uart; 
+    char at_cmd_buff[SIK_MAX_AT_CMD_SIZE]; 
     uint8_t at_mode : 1; 
 }
 sik_driver_data_t; 
@@ -160,6 +89,7 @@ void sik_init(USART_TypeDef *uart)
     }
     
     sik_driver_data.uart = uart; 
+    memset((void *)sik_driver_data.at_cmd_buff, CLEAR, SIK_MAX_AT_CMD_SIZE); 
     sik_driver_data.at_mode = CLEAR_BIT; 
 }
 
@@ -189,28 +119,18 @@ void sik_send_data(const char *data)
 //=======================================================================================
 // AT Command Functions 
 
-// AT command mode: send string 
-void sik_at_send(const char *cmd)
-{
-    if (cmd != NULL)
-    {
-        uart_sendstring(sik_driver_data.uart, cmd); 
-    }
-}
-
-
 // AT command mode: enter or exit 
 void sik_at_mode(sik_at_mode_t mode)
 {
     switch (mode)
     {
         case SIK_AT_ENTER: 
-            sik_at_send(sik_at_enter_cmd); 
+            sik_send_data(sik_at_enter_cmd); 
             sik_driver_data.at_mode = SET_BIT; 
             break; 
 
         case SIK_AT_EXIT: 
-            sik_at_send(sik_ato_cmd); 
+            sik_send_data(sik_ato_cmd); 
             sik_driver_data.at_mode = CLEAR_BIT; 
         
         default:
@@ -222,37 +142,56 @@ void sik_at_mode(sik_at_mode_t mode)
 // AT command mode: send command 
 void sik_at_send_cmd(
     sik_at_rt_t device, 
-    char *cmd)
+    const char *cmd)
 {
-    // A pre-defined command that's constant will not be eligible to be passed here. 
-    
     if (cmd != NULL)
     {
-        cmd[BYTE_0] = (char)device; 
-        sik_at_send(cmd); 
+        char command[SIK_MAX_AT_CMD_SIZE]; 
+        snprintf(command, SIK_MAX_AT_CMD_SIZE, cmd, (char)device); 
+        sik_send_data(command); 
     }
 }
 
 
 // AT command mode: get parameter 
-void sik_at_get_param(sik_at_param_number_t param)
+void sik_at_get_param(
+    sik_at_rt_t device, 
+    sik_at_param_number_t param)
 {
-    // Format the command 
-    char format_cmd[50]; 
+    // Copy the "xTSn?" command to the buffer but replace 'x' and 'n' with the device 
+    // type and parameter number, respectfully. 
 
-    sik_at_send(format_cmd); 
+    char command[SIK_MAX_AT_CMD_SIZE]; 
+
+    snprintf(command, 
+             SIK_MAX_AT_CMD_SIZE, 
+             sik_xtsn_cmd, 
+             (char)device, 
+             (uint8_t)param); 
+
+    sik_send_data(command); 
 }
 
 
 // AT command mode: set parameter 
 void sik_at_set_param(
+    sik_at_rt_t device, 
     sik_at_param_number_t param, 
     uint32_t value)
 {
-    // Format the command 
-    char format_cmd[50]; 
+    // Copy the "xTSn=X" command to the buffer but replace 'x', 'n' and 'X' with the 
+    // device type, parameter number and parameter value, respectfully. 
 
-    sik_at_send(format_cmd); 
+    char command[SIK_MAX_AT_CMD_SIZE]; 
+
+    snprintf(command, 
+             SIK_MAX_AT_CMD_SIZE, 
+             sik_xtsnx_cmd, 
+             (char)device, 
+             (uint8_t)param, 
+             value); 
+    
+    sik_send_data(command); 
 }
 
 //=======================================================================================

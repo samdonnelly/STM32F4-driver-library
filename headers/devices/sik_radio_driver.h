@@ -34,83 +34,41 @@ extern "C" {
 //=======================================================================================
 // AT/RT command declarations 
 
+/**
+ * @brief AT command mode: command list 
+ * 
+ * @details The listed commands are defined with format specifiers in place of 'x', 'n' 
+ *          and 'X' so they can easily be populated using tools like snprintf. 
+ *          - 'x' --> %c format, use sik_at_rt_t to select between 'A' and 'R' which is 
+ *                    used to specify the local or remote device, respectfully. 
+ *          - 'n' --> %u format, use sik_at_param_number_t to select the parameter index. 
+ *          - 'X' --> %lu format, this can be replaced with an unsigned 32-bit value. 
+ *          
+ *          NOTE: the exception to these format specifiers are the first two commands 
+ *                for entering and exiting AT command mode. These commands are always 
+ *                the same. 
+ * 
+ * @see sik_at_rt_t 
+ * @see sik_at_param_number_t 
+ */
 extern const char 
-// Enter AT/RT command mode 
-sik_at_enter_cmd[], 
-// ATO - exit AT command mode 
-sik_ato_cmd[], 
-// ATI - Show radio version 
-sik_ati_cmd[], 
-sik_rti_cmd[], 
-// ATI2 - Show board type 
-sik_ati2_cmd[], 
-sik_rti2_cmd[], 
-// ATI3 - Show board frequency 
-sik_ati3_cmd[], 
-sik_rti3_cmd[], 
-// ATI4 - Show board version 
-sik_ati4_cmd[], 
-sik_rti4_cmd[], 
-// ATI5 - Show all user settable EEPROM parameters 
-sik_ati5_cmd[], 
-sik_rti5_cmd[], 
-// ATI6 - Display TDM timing report 
-sik_ati6_cmd[], 
-sik_rti6_cmd[], 
-// ATI7 - Display RSSI signal report 
-sik_ati7_cmd[], 
-sik_rti7_cmd[], 
-// ATSn? - Display radio parameter number ‘n’ 
-sik_atsn_cmd[], 
-sik_rtsn_cmd[], 
-// ATSn=X - Set radio parameter number ‘n’ to ‘X’ 
-sik_atsnx_cmd[], 
-sik_rtsnx_cmd[], 
-// ATZ - Reboot the radio 
-sik_atz_cmd[], 
-sik_rtz_cmd[], 
-// AT&W - Write current parameters to EEPROM 
-sik_atw_cmd[], 
-sik_rtw_cmd[], 
-// AT&F - Reset all parameters to factory default 
-sik_atf_cmd[], 
-sik_rtf_cmd[], 
-// AT&T=RSSI - Enable RSSI debug reporting 
-sik_attrssi_cmd[], 
-sik_rttrssi_cmd[], 
-// AT&T=TDM - Enable TDM debug reporting 
-sik_atttdm_cmd[], 
-sik_rtttdm_cmd[], 
-// AT&T - Disable debug reporting 
-sik_att_cmd[], 
-sik_rtt_cmd[]; 
-
-// /**
-//  * @brief AT command mode command list 
-//  * 
-//  * @details 'x' is is to be replaced by 'A' or 'R' depending on if it's an AT or RT 
-//  *          command. sik_at_rt_t below can be used to specify the first character. 
-//  * 
-//  * @see sik_at_rt_t 
-//  */
-// extern const char 
-// sik_xt_enter_cmd[],   // Enter AT/RT command mode 
-// sik_xto_cmd[],        // ATO - exit AT command mode 
-// sik_xti_cmd[],        // ATI - Show radio version 
-// sik_xti2_cmd[],       // ATI2 - Show board type 
-// sik_xti3_cmd[],       // ATI3 - Show board frequency 
-// sik_xti4_cmd[],       // ATI4 - Show board version 
-// sik_xti5_cmd[],       // ATI5 - Show all user settable EEPROM parameters 
-// sik_xti6_cmd[],       // ATI6 - Display TDM timing report 
-// sik_xti7_cmd[],       // ATI7 - Display RSSI signal report 
-// sik_xtsn_cmd[],       // ATSn? - Display radio parameter number ‘n’ 
-// sik_xtsnx_cmd[],      // ATSn=X - Set radio parameter number ‘n’ to ‘X’ 
-// sik_xtz_cmd[],        // ATZ - Reboot the radio 
-// sik_xtw_cmd[],        // AT&W - Write current parameters to EEPROM 
-// sik_xtf_cmd[],        // AT&F - Reset all parameters to factory default 
-// sik_xttrssi_cmd[],    // AT&T=RSSI - Enable RSSI debug reporting 
-// sik_xtttdm_cmd[],     // AT&T=TDM - Enable TDM debug reporting 
-// sik_xtt_cmd[];        // AT&T - Disable debug reporting 
+sik_at_enter_cmd[],   // "+++" - Enter AT/RT command mode 
+sik_ato_cmd[],        // "ATO" - exit AT command mode 
+sik_xti_cmd[],        // "xTI" - Show radio version 
+sik_xti2_cmd[],       // "xTI2" - Show board type 
+sik_xti3_cmd[],       // "xTI3" - Show board frequency 
+sik_xti4_cmd[],       // "xTI4" - Show board version 
+sik_xti5_cmd[],       // "xTI5" - Show all user settable EEPROM parameters 
+sik_xti6_cmd[],       // "xTI6" - Display TDM timing report 
+sik_xti7_cmd[],       // "xTI7" - Display RSSI signal report 
+sik_xtsn_cmd[],       // "xTSn?" - Display radio parameter number ‘n’ 
+sik_xtsnx_cmd[],      // "xTSn=X" - Set radio parameter number ‘n’ to ‘X’ 
+sik_xtz_cmd[],        // "xTZ" - Reboot the radio 
+sik_xtw_cmd[],        // "xT&W" - Write current parameters to EEPROM 
+sik_xtf_cmd[],        // "xT&F" - Reset all parameters to factory default 
+sik_xttrssi_cmd[],    // "xT&T=RSSI" - Enable RSSI debug reporting 
+sik_xtttdm_cmd[],     // "xT&T=TDM" - Enable TDM debug reporting 
+sik_xtt_cmd[];        // "xT&T" - Disable debug reporting 
 
 //=======================================================================================
 
@@ -174,6 +132,14 @@ void sik_init(USART_TypeDef *uart);
 /**
  * @brief Send data 
  * 
+ * @details The provided data string will be sent to the device via UART. In normal 
+ *          operation (i.e. not in AT command mode), the device will try to relay the 
+ *          data to a remote module. Note that this does not check whether the module 
+ *          has an established connection or not. 
+ *          
+ *          If using this function to send AT commands, then the user must format the 
+ *          provided command strings (declared above) on their own. 
+ * 
  * @param data : data string to send 
  */
 void sik_send_data(const char *data); 
@@ -185,17 +151,18 @@ void sik_send_data(const char *data);
 // AT/RT command functions 
 
 /**
- * @brief AT command mode: send string 
- * 
- * @param cmd 
- */
-void sik_at_send(const char *cmd); 
-
-
-/**
  * @brief AT command mode: enter or exit 
  * 
- * @param mode 
+ * @details Will send the enter or exit commands for AT command mode depending on the 
+ *          provided mode. The device must enter AT command mode before it can process 
+ *          any AT/RT requests. According to the SiK documentation, there is a 1 second 
+ *          delay between sending the enter command ("+++") and getting the "OK" response 
+ *          which indicates that the device is now in AT command mode. 
+ *          
+ *          NOTE: This function does not wait to check for the "OK" response from the 
+ *                device if trying to enter AT command mode. 
+ * 
+ * @param mode : choice or whether to enter or exit AT command mode 
  */
 void sik_at_mode(sik_at_mode_t mode); 
 
@@ -203,33 +170,100 @@ void sik_at_mode(sik_at_mode_t mode);
 /**
  * @brief AT command mode: send command 
  * 
- * @param device 
- * @param cmd 
+ * @details Takes an AT command and formats it with the device type (i.e. 'A' or 'R') 
+ *          before sending it to the device. This function does not check the contents of 
+ *          the provided command so it's up to the user to provide the correct command 
+ *          string. It's recommended to use the pre-declared strings above. An 
+ *          incorrectly formatted string will have no affect. 
+ *          
+ *          If the user does not wish to use the pre-declared strings and this drivers 
+ *          formatting functions, they can format their own commands and send them via 
+ *          sik_send_data instead. 
+ *          
+ *          NOTE: This function is not meant for commands "+++", "ATO", "xTSn?", and 
+ *                "xTSn=X". The first two require no formatting and can be handled by 
+ *                sik_at_mode. The second two have additional formatting needed and are 
+ *                handled by sik_at_get_param and sik_at_set_param. 
+ * 
+ * @see sik_send_data 
+ * @see sik_at_mode 
+ * @see sik_at_get_param 
+ * @see sik_at_set_param 
+ * 
+ * @param device : device type 
+ * @param cmd : command - use one of the pre-decalred commands above 
  */
 void sik_at_send_cmd(
     sik_at_rt_t device, 
-    char *cmd); 
+    const char *cmd); 
 
 
 /**
  * @brief AT command mode: get parameter 
  * 
- * @details 
+ * @details This function if exclusively for command "xTSn?" (Display radio parameter 
+ *          number ‘n’). It takes the device type and parameter number then formats the 
+ *          command string before sending it to the device. This function does not check 
+ *          for a response to the parameter request, this must be done by the user. 
+ *          
+ *          If the user does not wish to use the pre-declared strings and this drivers 
+ *          formatting functions, they can format their own commands and send them via 
+ *          sik_send_data instead. 
  * 
+ * @see sik_send_data 
+ * 
+ * @param device : device type 
  * @param param : parameter number 
  */
-void sik_at_get_param(sik_at_param_number_t param); 
+void sik_at_get_param(
+    sik_at_rt_t device, 
+    sik_at_param_number_t param); 
 
 
 /**
  * @brief AT command mode: Set parameter 
  * 
- * @details 
+ * @details This function if exclusively for command "xTSn=X" (Set radio parameter number 
+ *          ‘n’ to ‘X’). It takes the device type, parameter number and desired parameter 
+ *          value then formats the command string before sending it to the device. 
+ *          Updating parameters in EEPROM is done with the following steps: 
+ *          
+ *          1. Change all needed parameters with "ATSn=X" (this function) 
+ *          2. Write parameter to EEPROM with "AT&W" (use sik_at_send_cmd) 
+ *             - Transmit power setting will take effect immediately without needing to 
+ *               write to the EEPROMs, but you still need to write to the EEPROMs for the 
+ *               parameter to save between reboots. 
+ *          3. Reboot using "ATZ" so new parameters can take effect (use sik_at_send_cmd) 
+ *          
+ *          Some parameters must be the same between local ('A') and remote ('R') devices 
+ *          for them to communicate. If one of these parameters must be updated then it's 
+ *          recommended to update the remote device first as changing the parameter will 
+ *          likely result in a loss of connection. For two radios to communicate, the 
+ *          following must be the same at both ends of the link: 
+ *          
+ *          - Radio firmware version
+ *          - AIR_SPEED 
+ *          - MIN_FREQ 
+ *          - MAX_FREQ 
+ *          - NUM_CHANNELS 
+ *          - NETID 
+ *          - ECC setting 
+ *          - LBT_RSSI setting 
+ *          - MAX_WINDOW setting 
+ *          
+ *          If the user does not wish to use the pre-declared strings and this drivers 
+ *          formatting functions, they can format their own commands and send them via 
+ *          sik_send_data instead. 
  * 
+ * @see sik_send_data 
+ * @see sik_at_send_cmd 
+ * 
+ * @param device : device type 
  * @param param : parameter number 
  * @param value : value to set parameter to 
  */
 void sik_at_set_param(
+    sik_at_rt_t device, 
     sik_at_param_number_t param, 
     uint32_t value); 
 

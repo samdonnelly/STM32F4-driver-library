@@ -103,6 +103,7 @@ extern "C" {
 #define MINUS_CHAR      45   // '-' 
 #define PERIOD_CHAR     46   // '.' 
 #define ZERO_CHAR       48   // '0' 
+#define ONE_CHAR        49   // '1' 
 #define NINE_CHAR       57   // '9' 
 #define A_UP_CHAR       65   // 'A' 
 #define E_UP_CHAR       69   // 'E' 
