@@ -99,17 +99,23 @@ void sik_init(USART_TypeDef *uart)
 //=======================================================================================
 // Read and write functions 
 
-// Receive data 
-// - Manual read? Only used if not using DMA? 
-// - Parse a data buffer? Can I send the data to the mavlink library for parsing? 
+// Read data 
+void sik_read_data(char *read_data)
+{
+    while ((read_data != NULL) && uart_data_ready(sik_driver_data.uart))
+    {
+        // Add a UART function for reading until no more data is seen (i.e. not uing a 
+        // terminating character). 
+    }
+}
 
 
 // Send data 
-void sik_send_data(const char *data)
+void sik_send_data(const char *send_data)
 {
-    if (data != NULL)
+    if (send_data != NULL)
     {
-        uart_sendstring(sik_driver_data.uart, data); 
+        uart_sendstring(sik_driver_data.uart, send_data); 
     }
 }
 

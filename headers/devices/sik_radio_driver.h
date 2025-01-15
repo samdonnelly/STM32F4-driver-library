@@ -6,7 +6,9 @@
  * @brief SiK telemetry radio firmware driver interface 
  * 
  * @details Works for the generic SiK telemetry radio as well as the RFD900 and its 
- *          variants. 
+ *          variants. These devices are designed (but not required) to work with the 
+ *          MAVLink protocol. This driver doesn't do any MAVLink message formatting so 
+ *          the application using this should also use the MAVLink library as needed. 
  * 
  * @version 0.1
  * @date 2024-12-06
@@ -130,6 +132,30 @@ void sik_init(USART_TypeDef *uart);
 // Read and write 
 
 /**
+ * @brief Read data 
+ * 
+ * @details Checks if there is UART data available in the RX buffer and proceeds to read 
+ *          the data and store it in the provided buffer. This function must be polled 
+ *          or called via an interrupt to catch the data when it arrives. It is the users 
+ *          responsibility to provide a buffer large enough to store the expected data. 
+ *          If the end of the buffer is reached before all data has been read then the 
+ *          remaining data will be lost. 
+ *          
+ *          Note that this function is not recommended. A more efficient and reliable 
+ *          method for getting the device data is to use DMA to transfer RX data to a 
+ *          buffer which can then be used at your conveinence. 
+ *          
+ *          SiK telemetry radios are designed (but not required) to work with the MAVLink 
+ *          protocol. This driver is intended to exchange date with the device only 
+ *          meaning no MAVLink formatting is handled here. Once MAVLink data is received, 
+ *          the application should use the MAVLink library to decode messages. 
+ * 
+ * @param read_data : buffer to store the incoming data 
+ */
+void sik_read_data(char *read_data); 
+
+
+/**
  * @brief Send data 
  * 
  * @details The provided data string will be sent to the device via UART. In normal 
@@ -138,11 +164,18 @@ void sik_init(USART_TypeDef *uart);
  *          has an established connection or not. 
  *          
  *          If using this function to send AT commands, then the user must format the 
- *          provided command strings (declared above) on their own. 
+ *          provided command strings (declared above) on their own. Otherwise, use the 
+ *          provided AT command functions below. 
+ *          
+ *          SiK telemetry radios are designed (but not required) to work with the MAVLink 
+ *          protocol. This driver is intended to exchange date with the device only 
+ *          meaning no MAVLink formatting is handled here. If using the MAVLink protocol, 
+ *          the application should encode the data using the MAVLink library before 
+ *          sending the message buffer here. 
  * 
- * @param data : data string to send 
+ * @param send_data : data string to send 
  */
-void sik_send_data(const char *data); 
+void sik_send_data(const char *send_data); 
 
 //=======================================================================================
 
