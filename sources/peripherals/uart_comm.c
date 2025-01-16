@@ -23,7 +23,32 @@
 //=======================================================================================
 // Macros 
 
+#define UART_GETSTR_TIMEOUT 30000     // uart_getstr timeout - must accommodate baud rate 
+#define UART_GET_TIMEOUT 1000         // Max number of times to get for received data 
+#define UART_BUFF_TERM_OFST 1         // Buffer termination offset - for NULL termination 
 #define CURSOR_MOVE_BUFF_SIZE 10 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Prototypes 
+
+/**
+ * @brief Check for an IDLE line 
+ * 
+ * @param uart : UART port to use 
+ * @return uint8_t : status of the idle line 
+ */
+uint8_t uart_idle_line_status(USART_TypeDef *uart); 
+
+
+/**
+ * @brief Clear the IDLE line detection bit 
+ * 
+ * @param uart : UART port to use 
+ */
+void uart_idle_line_clear(USART_TypeDef *uart); 
 
 //=======================================================================================
 
@@ -174,13 +199,39 @@ void uart_interrupt_init(
 // Check if data is available for reading 
 uint8_t uart_data_ready(USART_TypeDef *uart)
 {
-    // Check RXNE bit in the status register 
-    if (uart->SR & (SET_BIT << SHIFT_5)) 
+    if (uart == NULL)
     {
-        return TRUE; 
+        return FALSE; 
     }
-    
-    return FALSE; 
+
+    // Check RXNE bit in the status register 
+    return uart->SR & (SET_BIT << SHIFT_5); 
+}
+
+
+// UART clear data register 
+void uart_clear_dr(USART_TypeDef *uart)
+{
+    if (uart != NULL)
+    {
+        dummy_read(uart->DR); 
+    }
+}
+
+
+// Check for an IDLE line 
+uint8_t uart_idle_line_status(USART_TypeDef *uart)
+{
+    // Check IDLE bit in the status register 
+    return uart->SR & (SET_BIT << SHIFT_4); 
+}
+
+
+// Clear the IDLE line detection bit 
+void uart_idle_line_clear(USART_TypeDef *uart)
+{
+    dummy_read(uart->SR); 
+    dummy_read(uart->DR); 
 }
 
 //=======================================================================================
@@ -301,9 +352,9 @@ void uart_cursor_move(
 // Read Data 
 
 // UART get character 
-uint8_t uart_getchar(USART_TypeDef *uart)
+uint8_t uart_get_char(const USART_TypeDef *uart)
 {
-    return (uint8_t)(uart->DR);  // Read and return data from data register 
+    return (uint8_t)(uart->DR); 
 }
 
 
@@ -327,7 +378,7 @@ UART_STATUS uart_getstr(
         // Wait for data to be available then read and store it 
         if (uart_data_ready(uart))
         {
-            input = uart_getchar(uart);
+            input = uart_get_char(uart);
             *str_buff++ = input;
             timer = UART_GETSTR_TIMEOUT; 
             char_count++; 
@@ -348,10 +399,57 @@ UART_STATUS uart_getstr(
 }
 
 
-// UART clear data register 
-void uart_clear_dr(USART_TypeDef *uart)
+// UART get data 
+UART_STATUS uart_get_data(
+    const USART_TypeDef *uart, 
+    uint8_t *data_buff)
 {
-    dummy_read(uart->DR); 
+    uint16_t timer = UART_GET_TIMEOUT; 
+
+    if ((uart == NULL) || (data_buff == NULL))
+    {
+        return UART_INVALID_PTR; 
+    }
+    
+    // Read from the UART data register as long as there is data available and the 
+    // provided buffer is not full. If an idle line is detected then no more data is 
+    // coming so the loop is terminated. A timeout is included to make sure the loop 
+    // doesn't get stuck. 
+    while ((data_buff != NULL) && --timer)
+    {
+        if (uart_data_ready(uart))
+        {
+            *data_buff++ = uart_get_char(uart); 
+            timer = UART_GET_TIMEOUT; 
+        }
+        else if (uart_idle_line_status(uart))
+        {
+            uart_idle_line_clear(uart); 
+            break; 
+        }
+    }
+
+    // Make sure the data register is empty. If the loop above exits without having 
+    // read all the available data then we don't want old data to trigger a new read. 
+    while (uart_data_ready(uart))
+    {
+        uart_clear_dr(uart); 
+    }
+
+    // Terminate the data buffer to signify the end of the received data. The received 
+    // data may already be terminated but this is added just in case. 
+    if (data_buff != NULL)
+    {
+        *data_buff = NULL_CHAR; 
+    }
+
+    // Check for a timeout 
+    if (timer == ZERO)
+    {
+        return UART_TIMEOUT; 
+    }
+
+    return UART_OK; 
 }
 
 //=======================================================================================

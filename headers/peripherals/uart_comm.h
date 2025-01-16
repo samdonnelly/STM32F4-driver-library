@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Driver for UART communication 
+ * @brief UART driver interface 
  * 
  * @version 0.1
  * @date 2022-02-12
@@ -22,21 +22,9 @@ extern "C" {
 //=======================================================================================
 // Includes 
 
-// Tools 
-#include "stm32f411xe.h"
-#include "tools.h"
-
-// Drivers 
-#include "gpio_driver.h"
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Macros 
-
-#define UART_GETSTR_TIMEOUT 30000       // uart_getstr timeout - must accommodate baud rate 
-#define UART_BUFF_TERM_OFST 1           // Buffer termination offset - for NULL termination 
+#include "stm32f411xe.h" 
+#include "tools.h" 
+#include "gpio_driver.h" 
 
 //=======================================================================================
 
@@ -44,11 +32,10 @@ extern "C" {
 //=======================================================================================
 // Enums 
 
-/**
- * @brief UART operation status 
- */
+// UART operation status 
 typedef enum {
     UART_OK, 
+    UART_INVALID_PTR, 
     UART_TIMEOUT 
 } uart_status_t;
 
@@ -240,7 +227,7 @@ void uart_init(
  * @details Allows for changing the baud rate of the UART port. This is used by the init 
  *          function but can also be called independently if the rate needs to change. 
  * 
- * @param uart : pointer to the UART port 
+ * @param uart : UART port to use 
  * @param baud_frac : baud rate fractional part 
  * @param baud_mant : baud rate mantissa part 
  */
@@ -285,10 +272,21 @@ void uart_interrupt_init(
  *          If new data is available then the function will return true and it indicates 
  *          the data register can be read. 
  * 
- * @param uart : pointer to the UART port 
+ * @param uart : UART port to use 
  * @return uint8_t : read data register status 
  */
 uint8_t uart_data_ready(USART_TypeDef *uart); 
+
+
+/**
+ * @brief UART clear data register 
+ * 
+ * @details Clears the data register. This can be used to ensure a false read isn't 
+ *          triggered over old data. 
+ * 
+ * @param uart : UART port to use 
+ */
+void uart_clear_dr(USART_TypeDef *uart); 
 
 //=======================================================================================
 
@@ -303,7 +301,7 @@ uint8_t uart_data_ready(USART_TypeDef *uart);
  *          UART. Waits until the Transmission Complete (TC) bit (bit 6) in the status
  *          register (USART_SR) is set before exiting the function.
  * 
- * @param uart : pointer to the UART port 
+ * @param uart : UART port to use 
  * @param character : character written to data register 
  */
 void uart_sendchar(
@@ -319,7 +317,7 @@ void uart_sendchar(
  * 
  * @see uart_sendchar
  * 
- * @param uart : pointer to the UART port 
+ * @param uart : UART port to use 
  * @param string : pointer to buffer containing string to send 
  */
 void uart_sendstring(
@@ -335,7 +333,7 @@ void uart_sendstring(
  * 
  * @see uart_sendchar
  * 
- * @param uart : pointer to the UART port 
+ * @param uart : UART port to use 
  * @param digit : single numeric digit to send 
  */
 void uart_send_digit(
@@ -352,7 +350,7 @@ void uart_send_digit(
  * 
  * @see uart_send_digit
  * 
- * @param uart : pointer to the UART port 
+ * @param uart : UART port to use 
  * @param number : signed 16-bit integer to send 
  */
 void uart_send_integer(
@@ -366,7 +364,7 @@ void uart_send_integer(
  * @details Sends space characters a number of times defined by num_spaces. This is usedful 
  *          for formatting visual/user outputs. 
  * 
- * @param uart : pointer to the UART port 
+ * @param uart : UART port to use 
  * @param num_spaces : number of blank spaces that get sent to the 
  */
 void uart_send_spaces(
@@ -380,7 +378,7 @@ void uart_send_spaces(
  * @details Sends new line and carriage return characters. This is mainly usedful for when 
  *          the UART is configured for the serial terminal and you want to format the output. 
  * 
- * @param uart : pointer to the UART port 
+ * @param uart : UART port to use 
  */
 void uart_send_new_line(USART_TypeDef *uart);
 
@@ -415,17 +413,17 @@ void uart_cursor_move(
  * 
  * @see uart_data_ready
  * 
- * @param uart : pointer to the UART port 
+ * @param uart : UART port to use 
  * @return uint8_t : contents of the data register 
  */
-uint8_t uart_getchar(USART_TypeDef *uart);
+uint8_t uart_get_char(const USART_TypeDef *uart);
 
 
 /**
  * @brief UART get string 
  * 
  * @details Read a string of data until the specified termination character is seen. 
- *          uart_getchar is used to read individual characters of the string. Ensure the 
+ *          uart_get_char is used to read individual characters of the string. Ensure the 
  *          buffer used to store the string is large enough to accomodate the string. 
  *          
  *          If reading from PuTTy, PuTTy will add a carriage return character to the end 
@@ -433,9 +431,9 @@ uint8_t uart_getchar(USART_TypeDef *uart);
  *          isn't seen soon enough or the termination character isn't seen then the 
  *          function will time out and return. 
  * 
- * @see uart_getchar
+ * @see uart_get_char
  * 
- * @param uart : pointer to the UART port 
+ * @param uart : UART port to use 
  * @param str_buff : buffer used to store the string input 
  * @param buff_len : length of string storage buffer 
  * @param term_char : character, that once seen, will end the read sequence 
@@ -445,18 +443,33 @@ UART_STATUS uart_getstr(
     USART_TypeDef *uart, 
     char *str_buff, 
     uint8_t buff_len, 
-    uart_str_term_t term_char);
+    uart_str_term_t term_char); 
 
 
 /**
- * @brief UART clear data register 
+ * @brief UART get data 
  * 
- * @details Clears the data register. This can be used to ensure a false read isn't trigger 
- *          over old data. 
+ * @details Read data from the UART data register until no more data is incoming. This 
+ *          function can be polled or called via an interrupt (IDLE line interrupt) to 
+ *          catch the data when it arrives. It's the responsibility of the user to 
+ *          provide a data buffer that's large enough to store the incoming data. If the 
+ *          buffer is too small then the remaining data will be lost. You can check if 
+ *          data is ready before calling this function by checking the return of 
+ *          uart_data_ready. 
+ *          
+ *          Note that this function is not recommended. A more efficient and reliable 
+ *          method for getting UART data is to use DMA to transfer RX data to a buffer 
+ *          which can then be used at your conveinence. 
  * 
- * @param uart : pointer to the UART port 
+ * @see uart_data_ready 
+ * 
+ * @param uart : UART port to use 
+ * @param data_buff : buffer to store the received data 
+ * @return UART_STATUS : status of the read 
  */
-void uart_clear_dr(USART_TypeDef *uart); 
+UART_STATUS uart_get_data(
+    const USART_TypeDef *uart, 
+    uint8_t *data_buff); 
 
 //=======================================================================================
 

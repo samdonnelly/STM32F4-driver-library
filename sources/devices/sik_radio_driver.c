@@ -6,7 +6,9 @@
  * @brief SiK telemetry radio firmware driver 
  * 
  * @details Works for the generic SiK telemetry radio as well as the RFD900 and its 
- *          variants. 
+ *          variants. These devices are designed (but not required) to work with the 
+ *          MAVLink protocol. This driver doesn't do any MAVLink message formatting so 
+ *          the application using this should also use the MAVLink library as needed. 
  * 
  * @version 0.1
  * @date 2024-12-06
@@ -81,16 +83,18 @@ static sik_driver_data_t sik_driver_data;
 // Initialization 
 
 // Initialization 
-void sik_init(USART_TypeDef *uart)
+SIK_STATUS sik_init(USART_TypeDef *uart)
 {
     if (uart == NULL)
     {
-        return; 
+        return SIK_INVALID_PTR; 
     }
     
     sik_driver_data.uart = uart; 
     memset((void *)sik_driver_data.at_cmd_buff, CLEAR, SIK_MAX_AT_CMD_SIZE); 
     sik_driver_data.at_mode = CLEAR_BIT; 
+
+    return SIK_OK; 
 }
 
 //=======================================================================================
@@ -100,23 +104,41 @@ void sik_init(USART_TypeDef *uart)
 // Read and write functions 
 
 // Read data 
-void sik_read_data(char *read_data)
+SIK_STATUS sik_read_data(uint8_t *read_data)
 {
-    while ((read_data != NULL) && uart_data_ready(sik_driver_data.uart))
+    SIK_STATUS read_status = SIK_OK; 
+
+    if (read_data == NULL)
     {
-        // Add a UART function for reading until no more data is seen (i.e. not uing a 
-        // terminating character). 
+        return SIK_INVALID_PTR; 
     }
+
+    if (uart_data_ready(sik_driver_data.uart))
+    {
+        if (uart_get_data(sik_driver_data.uart, read_data) != UART_OK)
+        {
+            read_status = SIK_READ_FAULT; 
+        }
+    }
+    else 
+    {
+        read_status = SIK_NO_DATA; 
+    }
+
+    return read_status; 
 }
 
 
 // Send data 
-void sik_send_data(const char *send_data)
+SIK_STATUS sik_send_data(const char *send_data)
 {
-    if (send_data != NULL)
+    if (send_data == NULL)
     {
-        uart_sendstring(sik_driver_data.uart, send_data); 
+        return SIK_INVALID_PTR; 
     }
+
+    uart_sendstring(sik_driver_data.uart, send_data); 
+    return SIK_OK; 
 }
 
 //=======================================================================================

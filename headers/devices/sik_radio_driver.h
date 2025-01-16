@@ -78,6 +78,15 @@ sik_xtt_cmd[];        // "xT&T" - Disable debug reporting
 //=======================================================================================
 // Enums 
 
+// SiK driver statuses 
+typedef enum {
+    SIK_OK, 
+    SIK_INVALID_PTR, 
+    SIK_NO_DATA, 
+    SIK_READ_FAULT 
+} sik_status_t; 
+
+
 // AT command mode: enter or exit 
 typedef enum {
     SIK_AT_ENTER, 
@@ -116,14 +125,23 @@ typedef enum {
 
 
 //=======================================================================================
+// Data types 
+
+typedef sik_status_t SIK_STATUS; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 /**
  * @brief Sik radio driver initialization 
  * 
  * @param uart : UART port to communicate with 
+ * @return SIK_STATUS : driver status 
  */
-void sik_init(USART_TypeDef *uart); 
+SIK_STATUS sik_init(USART_TypeDef *uart); 
 
 //=======================================================================================
 
@@ -136,7 +154,7 @@ void sik_init(USART_TypeDef *uart);
  * 
  * @details Checks if there is UART data available in the RX buffer and proceeds to read 
  *          the data and store it in the provided buffer. This function must be polled 
- *          or called via an interrupt to catch the data when it arrives. It is the users 
+ *          or called via an interrupt to catch the data when it arrives. It's the users 
  *          responsibility to provide a buffer large enough to store the expected data. 
  *          If the end of the buffer is reached before all data has been read then the 
  *          remaining data will be lost. 
@@ -151,8 +169,9 @@ void sik_init(USART_TypeDef *uart);
  *          the application should use the MAVLink library to decode messages. 
  * 
  * @param read_data : buffer to store the incoming data 
+ * @return SIK_STATUS : driver status 
  */
-void sik_read_data(char *read_data); 
+SIK_STATUS sik_read_data(uint8_t *read_data); 
 
 
 /**
@@ -174,8 +193,9 @@ void sik_read_data(char *read_data);
  *          sending the message buffer here. 
  * 
  * @param send_data : data string to send 
+ * @return SIK_STATUS : driver status 
  */
-void sik_send_data(const char *send_data); 
+SIK_STATUS sik_send_data(const char *send_data); 
 
 //=======================================================================================
 
