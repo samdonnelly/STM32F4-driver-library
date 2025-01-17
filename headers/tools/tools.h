@@ -324,6 +324,21 @@ typedef enum {
 
 
 //=======================================================================================
+// Structures 
+
+// Circular buffer indexing 
+typedef struct cb_index_s
+{
+    uint8_t cb_size;   // Size of the circular buffer 
+    uint8_t head;      // Index to read up to in the circular buffer 
+    uint8_t tail;      // Index where the new data in the circular buffer begins 
+}
+cb_index_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // String functions 
 
 /**
@@ -367,6 +382,36 @@ void cb_parse(
     uint8_t *msg_buff, 
     uint8_t *buff_index,
     uint8_t max_buff_size); 
+
+
+/**
+ * @brief Circular buffer parse 
+ * 
+ * @details Copies the contents of the provided circular buffer from index "tail" to 
+ *          index "head" into the provided data buffer. The head and tail indexes must 
+ *          be within range of the circular buffer size or else no data will be copied. 
+ *          The tail index will be updated to match the head index once data is done 
+ *          being copied. It's the responsibility of the user to maintain the value of 
+ *          the tail index between function calls and to provide an accurate head index 
+ *          based on the data received in the circular buffer by the application. It's 
+ *          also the users responsibility to provide a data buffer that is large enough 
+ *          to handle whatever data the circular buffer contains (i.e the data buffer 
+ *          should be at least as large as the circular buffer size). If the data buffer 
+ *          is too small then the data buffer will be filled and the remaining data will 
+ *          be ignored and lost. If data received into the circular buffer is greater 
+ *          than the circular buffer size, data will be overwritten and this function 
+ *          can't work properly. 
+ * 
+ * @see cb_index_t 
+ * 
+ * @param circular_buff : circular buffer containing data to parse 
+ * @param cb_index : circular buffer indexing info - see cb_index_t 
+ * @param data_buff : buffer to store parsed circular buffer data bewteen tail and head 
+ */
+void cb_parse_v2(
+    const uint8_t *circular_buff, 
+    cb_index_t *cb_index, 
+    uint8_t *data_buff); 
 
 
 /**

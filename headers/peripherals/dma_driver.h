@@ -22,7 +22,6 @@ extern "C" {
 //=======================================================================================
 // Includes 
 
-// Toolkit 
 #include "stm32f411xe.h"
 #include "tools.h"
 
@@ -202,6 +201,28 @@ typedef enum {
     DMA_FTH_3QTR,       // 3/4 full FIFO 
     DMA_FTH_FULL        // Full FIFO 
 } dma_fifo_threshold_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Structures 
+
+/**
+ * @brief DMA transfer indexing 
+ * 
+ * @details This is a useful info to record if the data transfer size by DMA is of an 
+ *          unknown length. For example, if using a circular buffer to store UART data 
+ *          and the received data size is unknown, then this can help update the circular 
+ *          buffer index for parsing data. 
+ */
+typedef struct dma_index_s
+{
+    uint8_t data_size;   // Size of data transferred 
+    uint8_t ndt_old;     // Previous remaining data items to be transferred 
+    uint8_t ndt_new;     // Current remaining data items to be transferred 
+}
+dma_index_t; 
 
 //=======================================================================================
 
@@ -455,7 +476,7 @@ uint8_t dma_stream_status(DMA_Stream_TypeDef *dma_stream);
  * @param dma_stream : DMA port to read from 
  * @return uint16_t : NDT register contents 
  */
-uint16_t dma_ndt_read(DMA_Stream_TypeDef *dma_stream); 
+uint16_t dma_ndt_read(const DMA_Stream_TypeDef *dma_stream); 
 
 //=======================================================================================
 
@@ -475,6 +496,29 @@ uint16_t dma_ndt_read(DMA_Stream_TypeDef *dma_stream);
  * @return FIFO_STATUS : FIFO buffer level 
  */
 FIFO_STATUS dma_fs(DMA_Stream_TypeDef *dma_stream); 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data handling 
+
+/**
+ * @brief DMA circular buffer indexing 
+ * 
+ * @details Finds the number of data items transferred by DMA and updates a circular 
+ *          buffer head index. This is useful when a circular buffer is being populated 
+ *          by the DMA and the DMA data transfer size is unknown. If using this method 
+ *          then this should be called after each data transfer or else data may be lost. 
+ * 
+ * @param dma_stream : DMA port to use 
+ * @param dma_index : DMA buffer indexing info 
+ * @param cb_index : circular buffer indexing info 
+ */
+void dma_cb_index(
+    const DMA_Stream_TypeDef *dma_stream, 
+    dma_index_t *dma_index, 
+    cb_index_t *cb_index); 
 
 //=======================================================================================
 

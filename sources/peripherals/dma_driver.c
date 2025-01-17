@@ -730,7 +730,7 @@ void dma_ndt(
 
 
 // NDT register read 
-uint16_t dma_ndt_read(DMA_Stream_TypeDef *dma_stream)
+uint16_t dma_ndt_read(const DMA_Stream_TypeDef *dma_stream)
 {
     return dma_stream->NDTR; 
 }
@@ -812,6 +812,54 @@ void dma_fth(
 {
     dma_stream->FCR &= ~(SET_3 << SHIFT_0); 
     dma_stream->FCR |= (fth << SHIFT_0); 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data handling 
+
+// DMA circular buffer indexing 
+void dma_cb_index(
+    const DMA_Stream_TypeDef *dma_stream, 
+    dma_index_t *dma_index, 
+    cb_index_t *cb_index)
+{
+    // Find the number of data items left to be transferred before the NDTR register 
+    // reloads, then compare this to the previous number of remaining data items to 
+    // determine how to calculate the data transfer size. This accounts for when the 
+    // buffer being written to by the DMA is full and reloads causing the index to 
+    // start over. 
+
+    dma_index->ndt_new = dma_ndt_read(dma_stream); 
+
+    if (dma_index->ndt_new > dma_index->ndt_old)
+    {
+        // Buffer index has reloaded so the number of items before and after the reload 
+        // have to be accounted for. 
+        // Before reload: (buff size) - (tail index) 
+        // After reload: (buff size) - (new remaining data items index (NDT)) 
+        dma_index->data_size = 2*cb_index->cb_size - cb_index->tail - dma_index->ndt_new; 
+    }
+    else 
+    {
+        // Buffer index is within NDT register value range so the number of transferred 
+        // items is simply the difference between the current and previous NDT readings. 
+        dma_index->data_size = dma_index->ndt_old - dma_index->ndt_new; 
+    }
+
+    dma_index->ndt_old = dma_index->ndt_new; 
+
+    // The circular buffer head index is updated by adding the number of transferred 
+    // items to it. If it exceeds the circular buffer range then it's brought back 
+    // within range. 
+    cb_index->head += dma_index->data_size; 
+
+    if (cb_index->head >= cb_index->cb_size)
+    {
+        cb_index->head -= cb_index->cb_size; 
+    }
 }
 
 //=======================================================================================

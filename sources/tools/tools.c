@@ -84,6 +84,50 @@ void cb_parse(
 }
 
 
+// Circular buffer parse 
+void cb_parse_v2(
+    const uint8_t *circular_buff, 
+    cb_index_t *cb_index, 
+    uint8_t *data_buff)
+{
+    if ((circular_buff == NULL) || 
+        (cb_index == NULL) || 
+        (data_buff == NULL) || 
+        (cb_index->head > cb_index->cb_size) || 
+        (cb_index->tail > cb_index->cb_size))
+    {
+        return; 
+    }
+
+    // Copy the contents of the circular buffer from tail to head into the data buffer. 
+    // Once all data within range has been copied or the data buffer has filled up then 
+    // stop copying data. If all data gets copied then terminate the data buffer, 
+    // otherwise make sure tail matches head so old data is not copied next time. 
+
+    while ((cb_index->tail != cb_index->head) && (data_buff != NULL))
+    {
+        if (cb_index->tail >= cb_index->cb_size)
+        {
+            cb_index->tail = CLEAR; 
+        }
+
+        *data_buff++ = circular_buff[cb_index->tail++]; 
+    }
+
+    if (data_buff != NULL)
+    {
+        // Tail successfully reached head. 
+        *data_buff = NULL_CHAR; 
+    }
+    else 
+    {
+        // Data buffer filled up and the index needs to be manually adjusted. 
+        cb_index->tail = cb_index->head; 
+
+    }
+}
+
+
 // Character to scaled integer 
 uint32_t char_to_int(
     uint8_t num_char, 
