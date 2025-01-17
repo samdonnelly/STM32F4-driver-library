@@ -40,7 +40,7 @@
  * @param uart : UART port to use 
  * @return uint8_t : status of the idle line 
  */
-uint8_t uart_idle_line_status(USART_TypeDef *uart); 
+uint8_t uart_idle_line_status(const USART_TypeDef *uart); 
 
 
 /**
@@ -48,7 +48,7 @@ uint8_t uart_idle_line_status(USART_TypeDef *uart);
  * 
  * @param uart : UART port to use 
  */
-void uart_idle_line_clear(USART_TypeDef *uart); 
+void uart_idle_line_clear(const USART_TypeDef *uart); 
 
 //=======================================================================================
 
@@ -197,7 +197,7 @@ void uart_interrupt_init(
 // Register functions 
 
 // Check if data is available for reading 
-uint8_t uart_data_ready(USART_TypeDef *uart)
+uint8_t uart_data_ready(const USART_TypeDef *uart)
 {
     if (uart == NULL)
     {
@@ -210,7 +210,7 @@ uint8_t uart_data_ready(USART_TypeDef *uart)
 
 
 // UART clear data register 
-void uart_clear_dr(USART_TypeDef *uart)
+void uart_clear_dr(const USART_TypeDef *uart)
 {
     if (uart != NULL)
     {
@@ -220,7 +220,7 @@ void uart_clear_dr(USART_TypeDef *uart)
 
 
 // Check for an IDLE line 
-uint8_t uart_idle_line_status(USART_TypeDef *uart)
+uint8_t uart_idle_line_status(const USART_TypeDef *uart)
 {
     // Check IDLE bit in the status register 
     return uart->SR & (SET_BIT << SHIFT_4); 
@@ -228,7 +228,7 @@ uint8_t uart_idle_line_status(USART_TypeDef *uart)
 
 
 // Clear the IDLE line detection bit 
-void uart_idle_line_clear(USART_TypeDef *uart)
+void uart_idle_line_clear(const USART_TypeDef *uart)
 {
     dummy_read(uart->SR); 
     dummy_read(uart->DR); 

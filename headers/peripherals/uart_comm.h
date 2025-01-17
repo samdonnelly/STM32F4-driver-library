@@ -275,7 +275,7 @@ void uart_interrupt_init(
  * @param uart : UART port to use 
  * @return uint8_t : read data register status 
  */
-uint8_t uart_data_ready(USART_TypeDef *uart); 
+uint8_t uart_data_ready(const USART_TypeDef *uart); 
 
 
 /**
@@ -286,7 +286,7 @@ uint8_t uart_data_ready(USART_TypeDef *uart);
  * 
  * @param uart : UART port to use 
  */
-void uart_clear_dr(USART_TypeDef *uart); 
+void uart_clear_dr(const USART_TypeDef *uart); 
 
 //=======================================================================================
 

@@ -260,10 +260,21 @@ void dma_stream_init(
  * @brief Configure the DMA stream 
  * 
  * @details This functions configures the DMA data characteristics such as the number 
- *          of data items in a transfer and the source and destination addresses. At the end 
- *          of the function the stream is enabled. This function is separate from the stream 
- *          initialization function because these data characteristics need to be reconfigured 
- *          in the event of a transfer fault. 
+ *          of data items in a transfer and the source and destination addresses. At the 
+ *          end of the function the stream is enabled. This function is separate from the 
+ *          stream initialization function because these data characteristics need to be 
+ *          reconfigured in the event of a transfer fault. 
+ *          
+ *          'data_items' is the max number of transfers the DMA does. However, if using 
+ *          circular mode then this value automatically resets after the number is 
+ *          reached and continues going. This value should match the size of the buffer 
+ *          used to store the data transferred by the DMA. In circular mode this value 
+ *          still matters because it tells the DMA when to go to the start of the buffer 
+ *          again and therefore not exceed allocated memory. If using DMA for something 
+ *          such as UART RX, then the buffer (this value) should be large enough to 
+ *          accommodate the max data transfer size that will be seen, but a transfer 
+ *          smaller than this will stop the memory address increment and be the starting 
+ *          point for the next transfer. 
  * 
  * @see dma_stream_init
  * 
@@ -271,7 +282,7 @@ void dma_stream_init(
  * @param per_addr : peripheral address 
  * @param mem0_addr : memory 0 address 
  * @param mem1_addr : memory 1 address (used in double buffer mode) 
- * @param data_items : number of items involved in the DMA transfer 
+ * @param data_items : number of items involved in the DMA transfer - see notes above 
  */
 void dma_stream_config(
     DMA_Stream_TypeDef *dma_stream, 
@@ -439,7 +450,7 @@ uint8_t dma_stream_status(DMA_Stream_TypeDef *dma_stream);
 // DMA Stream x Number of Data Register 
 
 /**
- * @brief NDT register read 
+ * @brief NDT register read - remaining data items to be transmitted 
  * 
  * @param dma_stream : DMA port to read from 
  * @return uint16_t : NDT register contents 
