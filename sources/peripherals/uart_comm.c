@@ -23,7 +23,7 @@
 //=======================================================================================
 // Macros 
 
-#define UART_GETSTR_TIMEOUT 30000     // uart_getstr timeout - must accommodate baud rate 
+#define UART_GETSTR_TIMEOUT 30000     // uart_get_str timeout - must accommodate baud rate 
 #define UART_GET_TIMEOUT 1000         // Max number of times to get for received data 
 #define UART_BUFF_TERM_OFST 1         // Buffer termination offset - for NULL termination 
 #define CURSOR_MOVE_BUFF_SIZE 10 
@@ -241,7 +241,7 @@ void uart_idle_line_clear(const USART_TypeDef *uart)
 // Send Data 
 
 // UART send character  
-void uart_sendchar(
+void uart_send_char(
     USART_TypeDef *uart, 
     uint8_t character)
 {
@@ -255,14 +255,14 @@ void uart_sendchar(
 
 
 // UART send string 
-void uart_sendstring(
+void uart_send_str(
     USART_TypeDef *uart, 
     const char *string)
 {
     // Loop until null character of string is reached. 
     while (*string)
     {
-        uart_sendchar(uart, *string++);
+        uart_send_char(uart, *string++);
     }
 }
 
@@ -273,7 +273,7 @@ void uart_send_digit(
     uint8_t digit)
 {
     // Convert the digit into the ASCII character equivalent 
-    uart_sendchar(uart, digit + ZERO_CHAR); 
+    uart_send_char(uart, digit + ZERO_CHAR); 
 }
 
 
@@ -290,11 +290,11 @@ void uart_send_integer(
     {
         // 2's complememt the integer so the correct value is printed
         integer = -integer;
-        uart_sendchar(uart, MINUS_CHAR);
+        uart_send_char(uart, MINUS_CHAR);
     }
     else 
     {
-        uart_sendchar(uart, PLUS_CHAR);
+        uart_send_char(uart, PLUS_CHAR);
     }
 
     // Parse and print each digit
@@ -322,7 +322,7 @@ void uart_send_spaces(
 {
     for (uint8_t i = CLEAR; i < num_spaces; i++)
     {
-        uart_sendchar(uart, SPACE_CHAR);
+        uart_send_char(uart, SPACE_CHAR);
     }
 }
 
@@ -330,7 +330,7 @@ void uart_send_spaces(
 // Send a carriage return and a new line  
 void uart_send_new_line(USART_TypeDef *uart)
 {
-    uart_sendstring(uart, "\r\n");
+    uart_send_str(uart, "\r\n");
 }
 
 
@@ -342,7 +342,7 @@ void uart_cursor_move(
 {
     char cursor_up_str[CURSOR_MOVE_BUFF_SIZE]; 
     snprintf(cursor_up_str, CURSOR_MOVE_BUFF_SIZE, "\033[%u%c", num_lines, (char)direction); 
-    uart_sendstring(uart, cursor_up_str); 
+    uart_send_str(uart, cursor_up_str); 
 }
 
 //=======================================================================================
@@ -359,7 +359,7 @@ uint8_t uart_get_char(const USART_TypeDef *uart)
 
 
 // UART get string 
-UART_STATUS uart_getstr(
+UART_STATUS uart_get_str(
     USART_TypeDef *uart, 
     char *str_buff, 
     uint8_t buff_len, 

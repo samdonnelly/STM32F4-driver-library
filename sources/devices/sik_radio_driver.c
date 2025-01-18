@@ -137,7 +137,7 @@ SIK_STATUS sik_send_data(const char *send_data)
         return SIK_INVALID_PTR; 
     }
 
-    uart_sendstring(sik_driver_data.uart, send_data); 
+    uart_send_str(sik_driver_data.uart, send_data); 
     return SIK_OK; 
 }
 

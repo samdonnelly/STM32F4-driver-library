@@ -131,7 +131,7 @@ void hc05_off(void)
 // Send a string of data 
 void hc05_send(const char *send_data)
 {
-    uart_sendstring(hc05_data_record.hc05_uart, send_data); 
+    uart_send_str(hc05_data_record.hc05_uart, send_data); 
 }
 
 
@@ -153,7 +153,7 @@ void hc05_read(
     // Get the data if it's available 
     if (uart_data_ready(hc05_data_record.hc05_uart))
     {
-        uart_status |= uart_getstr(hc05_data_record.hc05_uart, 
+        uart_status |= uart_get_str(hc05_data_record.hc05_uart, 
                                    receive_data, 
                                    data_len, 
                                    UART_STR_TERM_CARRIAGE); 
@@ -526,7 +526,7 @@ void hc05_at_command(
         if (hc05_data_status()) 
         {
             // Read the module response 
-            uart_getstr(
+            uart_get_str(
                 hc05_data_record.hc05_uart, 
                 resp, 
                 resp_len, 
@@ -535,7 +535,7 @@ void hc05_at_command(
             // If a cmd response was received then clear the "OK\r\n" from the DR that follows 
             if (*resp == HC05_AT_RESP_STR) 
             {
-                uart_getstr(
+                uart_get_str(
                     hc05_data_record.hc05_uart, 
                     clear_dr, 
                     HC05_AT_DR_CLR_LEN, 

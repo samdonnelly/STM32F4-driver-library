@@ -832,6 +832,11 @@ void dma_cb_index(
     // buffer being written to by the DMA is full and reloads causing the index to 
     // start over. 
 
+    if ((dma_stream == NULL) || (dma_index == NULL) || (cb_index == NULL))
+    {
+        return; 
+    }
+
     dma_index->ndt_new = dma_ndt_read(dma_stream); 
 
     if (dma_index->ndt_new > dma_index->ndt_old)

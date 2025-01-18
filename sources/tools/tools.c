@@ -75,7 +75,11 @@ void cb_parse(
     {
         if (cb_index->tail >= cb_index->cb_size)
         {
+            // If the tail index is reset then the tail to head comparison must be 
+            // rechecked before copying more data. Otherwise there's a possibility 
+            // tail leapfrogs head. Remember to test your code kids. 
             cb_index->tail = CLEAR; 
+            continue; 
         }
 
         *data_buff++ = circular_buff[cb_index->tail++]; 

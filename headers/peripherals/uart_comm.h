@@ -156,12 +156,12 @@ typedef enum {
 /**
  * @brief String formatters for UART
  * 
- * @details These are used in uart_getstr for reading and formatting strings received
+ * @details These are used in uart_get_str for reading and formatting strings received
  *          from the serial terminal. Within this function the string has been fully 
  *          read once the code sees a carriage return. A null character is added to the 
  *          end to complete the read string. 
  * 
- * @see uart_getstr
+ * @see uart_get_str
  */
 typedef enum {
     UART_STR_TERM_NULL = 0,        // '\0' == 0
@@ -304,7 +304,7 @@ void uart_clear_dr(const USART_TypeDef *uart);
  * @param uart : UART port to use 
  * @param character : character written to data register 
  */
-void uart_sendchar(
+void uart_send_char(
     USART_TypeDef *uart, 
     uint8_t character);
 
@@ -313,14 +313,14 @@ void uart_sendchar(
  * @brief UART send string 
  * 
  * @details Sends the characters of a data buffer one at a time until a NUL character is 
- *          seen. Utilizes uart_sendchar to send each character. 
+ *          seen. Utilizes uart_send_char to send each character. 
  * 
- * @see uart_sendchar
+ * @see uart_send_char
  * 
  * @param uart : UART port to use 
  * @param string : pointer to buffer containing string to send 
  */
-void uart_sendstring(
+void uart_send_str(
     USART_TypeDef *uart, 
     const char *string);
 
@@ -329,9 +329,9 @@ void uart_sendstring(
  * @brief UART send digit 
  * 
  * @details Pass a number from 0-9 to send via UART. The function takes the digit, offsets 
- *          it to the corresponding character (ex. 9 -> '9') and sends it using uart_sendchar. 
+ *          it to the corresponding character (ex. 9 -> '9') and sends it using uart_send_char. 
  * 
- * @see uart_sendchar
+ * @see uart_send_char
  * 
  * @param uart : UART port to use 
  * @param digit : single numeric digit to send 
@@ -439,7 +439,7 @@ uint8_t uart_get_char(const USART_TypeDef *uart);
  * @param term_char : character, that once seen, will end the read sequence 
  * @return UART_STATUS : status of the read operation --> see uart_status_t 
  */
-UART_STATUS uart_getstr(
+UART_STATUS uart_get_str(
     USART_TypeDef *uart, 
     char *str_buff, 
     uint8_t buff_len, 
