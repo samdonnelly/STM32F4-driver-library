@@ -53,39 +53,6 @@ uint8_t str_compare(
 
 // Circular buffer parse 
 void cb_parse(
-    uint8_t *circ_buff, 
-    uint8_t *msg_buff, 
-    uint8_t *buff_index,
-    uint8_t max_buff_size)
-{
-    // Copy the new contents in the circular buffer to the user input buffer 
-    for (uint8_t i = CLEAR; i < max_buff_size; i++)
-    {
-        // Reset the circular buffer index if needed 
-        if (*buff_index >= max_buff_size)
-        {
-            *buff_index = CLEAR; 
-        }
-
-        // Populate the user input buffer - terminate the input at the end 
-        if (circ_buff[*buff_index] == CR_CHAR)
-        {
-            msg_buff[i] = NULL_CHAR; 
-            circ_buff[*buff_index] = NULL_CHAR; 
-            *buff_index += 1; 
-            break; 
-        }
-        else 
-        {
-            msg_buff[i] = circ_buff[*buff_index]; 
-            *buff_index += 1; 
-        }
-    }
-}
-
-
-// Circular buffer parse 
-void cb_parse_v2(
     const uint8_t *circular_buff, 
     cb_index_t *cb_index, 
     uint8_t *data_buff)

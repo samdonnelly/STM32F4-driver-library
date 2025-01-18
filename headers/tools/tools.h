@@ -326,7 +326,13 @@ typedef enum {
 //=======================================================================================
 // Structures 
 
-// Circular buffer indexing 
+/**
+ * @brief Circular buffer indexing 
+ * 
+ * @details Indexing info used to keep track of data added to a circular buffer. This 
+ *          does not provide a circular buffer or a parsed data buffer because their size 
+ *          is dependent on the application. The application must provide them as needed. 
+ */
 typedef struct cb_index_s
 {
     uint8_t cb_size;   // Size of the circular buffer 
@@ -368,25 +374,6 @@ uint8_t str_compare(
 /**
  * @brief Circular buffer parse 
  * 
- * @details Copies content from a circular buffer starting at a specified index into 
- *          another buffer starting an index 0 up until the end of the data segment in the 
- *          circular buffer. 
- * 
- * @param circ_buff : circular buffer that contains the most recent data 
- * @param msg_buff : buffer to store the parsed message into 
- * @param buff_index : index of circular buffer to start parsing from 
- * @param max_buff_size : buffer size 
- */
-void cb_parse(
-    uint8_t *circ_buff, 
-    uint8_t *msg_buff, 
-    uint8_t *buff_index,
-    uint8_t max_buff_size); 
-
-
-/**
- * @brief Circular buffer parse 
- * 
  * @details Copies the contents of the provided circular buffer from index "tail" to 
  *          index "head" into the provided data buffer. The head and tail indexes must 
  *          be within range of the circular buffer size or else no data will be copied. 
@@ -408,7 +395,7 @@ void cb_parse(
  * @param cb_index : circular buffer indexing info - see cb_index_t 
  * @param data_buff : buffer to store parsed circular buffer data bewteen tail and head 
  */
-void cb_parse_v2(
+void cb_parse(
     const uint8_t *circular_buff, 
     cb_index_t *cb_index, 
     uint8_t *data_buff); 
