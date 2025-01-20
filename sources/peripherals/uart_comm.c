@@ -23,9 +23,7 @@
 //=======================================================================================
 // Macros 
 
-#define UART_GETSTR_TIMEOUT 30000     // uart_get_str timeout - must accommodate baud rate 
 #define UART_GET_TIMEOUT 10000        // Max number of times to get for received data 
-#define UART_BUFF_TERM_OFST 1         // Buffer termination offset - for NULL termination 
 #define CURSOR_MOVE_BUFF_SIZE 10 
 
 //=======================================================================================
@@ -40,7 +38,7 @@
  * @param uart : UART port to use 
  * @return uint8_t : status of the idle line 
  */
-uint8_t uart_idle_line_status(const USART_TypeDef *uart); 
+uint8_t uart_idle_line_status(USART_TypeDef *uart); 
 
 
 /**
@@ -48,7 +46,7 @@ uint8_t uart_idle_line_status(const USART_TypeDef *uart);
  * 
  * @param uart : UART port to use 
  */
-void uart_idle_line_clear(const USART_TypeDef *uart); 
+void uart_idle_line_clear(USART_TypeDef *uart); 
 
 //=======================================================================================
 
@@ -57,7 +55,7 @@ void uart_idle_line_clear(const USART_TypeDef *uart);
 // Initialization 
 
 // UART initialization 
-void uart_init(
+UART_STATUS uart_init(
     USART_TypeDef *uart, 
     GPIO_TypeDef *gpio, 
     pin_selector_t rx_pin, 
@@ -67,9 +65,12 @@ void uart_init(
     uart_dma_config_t tx_dma, 
     uart_dma_config_t rx_dma)
 {
-    //==================================================
-    // Enable the UART clock 
+    if ((uart == NULL) || (gpio == NULL))
+    {
+        return UART_INVALID_PTR; 
+    }
 
+    // Enable the UART clock 
     if (uart == USART2)
     {
         // USART2 
@@ -80,33 +81,24 @@ void uart_init(
         // USART1 and USART6 
         RCC->APB2ENR |= (SET_BIT << (SHIFT_4 + (uint8_t)((uint32_t)(uart - USART1) >> SHIFT_10)));
     }
-    
-    //==================================================
 
-    //==================================================
     // Configure the UART pins for alternative functions 
-
-    // RX pin 
     gpio_pin_init(gpio, rx_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     gpio_afr(gpio, rx_pin, SET_7); 
-
-    // TX pin 
     gpio_pin_init(gpio, tx_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     gpio_afr(gpio, tx_pin, SET_7); 
     
-    //==================================================
-
-    //==================================================
-    // Configure the UART 
-
     // Set the baud rate of the UART 
     uart_set_baud_rate(uart, baud_frac, baud_mant); 
 
     // Configure TX and RX DMA in the USART_CR3 register 
     uart->CR3 |= (tx_dma << SHIFT_7);   // DMAT bit 
     uart->CR3 |= (rx_dma << SHIFT_6);   // DMAR bit 
-    
-    //==================================================
+
+    // Clear the idle line status before data is attempted to be read 
+    uart_idle_line_clear(uart); 
+
+    return UART_OK; 
 }
 
 
@@ -183,7 +175,7 @@ void uart_interrupt_init(
 // Register functions 
 
 // Check if data is available for reading 
-uint8_t uart_data_ready(const USART_TypeDef *uart)
+uint8_t uart_data_ready(USART_TypeDef *uart)
 {
     if (uart == NULL)
     {
@@ -196,17 +188,19 @@ uint8_t uart_data_ready(const USART_TypeDef *uart)
 
 
 // UART clear data register 
-void uart_clear_dr(const USART_TypeDef *uart)
+void uart_clear_dr(USART_TypeDef *uart)
 {
-    if (uart != NULL)
+    if (uart == NULL)
     {
-        dummy_read(uart->DR); 
+        return; 
     }
+
+    dummy_read(uart->DR); 
 }
 
 
 // Check for an IDLE line 
-uint8_t uart_idle_line_status(const USART_TypeDef *uart)
+uint8_t uart_idle_line_status(USART_TypeDef *uart)
 {
     // Check IDLE bit in the status register 
     return uart->SR & (SET_BIT << SHIFT_4); 
@@ -214,7 +208,7 @@ uint8_t uart_idle_line_status(const USART_TypeDef *uart)
 
 
 // Clear the IDLE line detection bit 
-void uart_idle_line_clear(const USART_TypeDef *uart)
+void uart_idle_line_clear(USART_TypeDef *uart)
 {
     dummy_read(uart->SR); 
     dummy_read(uart->DR); 
@@ -226,7 +220,7 @@ void uart_idle_line_clear(const USART_TypeDef *uart)
 //=======================================================================================
 // Send Data 
 
-// UART send character  
+// UART send character 
 void uart_send_char(
     USART_TypeDef *uart, 
     uint8_t character)
@@ -253,9 +247,9 @@ void uart_send_str(
         return; 
     }
 
-    while (*string != NULL)
+    while (*string != NULL_CHAR)
     {
-        uart_send_char(uart, *string++);
+        uart_send_char(uart, *string++); 
     }
 }
 
@@ -349,17 +343,17 @@ void uart_send_new_line(USART_TypeDef *uart)
 // Send cursor up the specified number of lines 
 void uart_cursor_move(
     USART_TypeDef *uart, 
-    uart_cursor_move_t direction, 
-    uint8_t num_lines)
+    uart_cursor_move_t dir, 
+    uint8_t num_units)
 {
     if (uart == NULL)
     {
         return; 
     }
 
-    char cursor_up_str[CURSOR_MOVE_BUFF_SIZE]; 
-    snprintf(cursor_up_str, CURSOR_MOVE_BUFF_SIZE, "\033[%u%c", num_lines, (char)direction); 
-    uart_send_str(uart, cursor_up_str); 
+    char cursor_move_str[CURSOR_MOVE_BUFF_SIZE]; 
+    snprintf(cursor_move_str, CURSOR_MOVE_BUFF_SIZE, "\033[%u%c", num_units, (char)dir); 
+    uart_send_str(uart, cursor_move_str); 
 }
 
 //=======================================================================================
@@ -369,7 +363,7 @@ void uart_cursor_move(
 // Read Data 
 
 // UART get character 
-uint8_t uart_get_char(const USART_TypeDef *uart)
+uint8_t uart_get_char(USART_TypeDef *uart)
 {
     if (uart == NULL)
     {
@@ -380,63 +374,17 @@ uint8_t uart_get_char(const USART_TypeDef *uart)
 }
 
 
-// UART get string 
-UART_STATUS uart_get_str(
-    USART_TypeDef *uart, 
-    char *str_buff, 
-    uint8_t buff_len, 
-    uart_str_term_t term_char)
-{
-    if ((uart == NULL) || (str_buff == NULL))
-    {
-        return UART_INVALID_PTR; 
-    }
-
-    uint8_t input = CLEAR; 
-    uint8_t char_count = CLEAR; 
-    uint8_t max_char_read = buff_len - UART_BUFF_TERM_OFST; 
-    uint16_t timer = UART_GETSTR_TIMEOUT; 
-
-    // Read UART data until string termination, timeout or max character read length 
-    // The max character read length is left as one less than the buffer length so 
-    // there is a spot for a NULL termination. 
-    do
-    {
-        // Wait for data to be available then read and store it 
-        if (uart_data_ready(uart))
-        {
-            input = uart_get_char(uart);
-            *str_buff++ = input;
-            timer = UART_GETSTR_TIMEOUT; 
-            char_count++; 
-        }
-    } 
-    while((input != term_char) && --timer && (char_count < max_char_read)); 
-
-    // Replace the termination character with a NULL character 
-    *--str_buff = UART_STR_TERM_NULL; 
-
-    // Check for timeout 
-    if (timer)
-    {
-        return UART_OK; 
-    }
-
-    return UART_TIMEOUT; 
-}
-
-
 // UART get data 
 UART_STATUS uart_get_data(
-    const USART_TypeDef *uart, 
+    USART_TypeDef *uart, 
     uint8_t *data_buff)
 {
-    uint16_t timer = UART_GET_TIMEOUT; 
-
     if ((uart == NULL) || (data_buff == NULL))
     {
         return UART_INVALID_PTR; 
     }
+
+    uint16_t timer = UART_GET_TIMEOUT; 
     
     // Read from the UART data register as long as there is data available and the 
     // provided buffer is not full. If an idle line is detected then no more data is 

@@ -153,10 +153,7 @@ void hc05_read(
     // Get the data if it's available 
     if (uart_data_ready(hc05_data_record.hc05_uart))
     {
-        uart_status |= uart_get_str(hc05_data_record.hc05_uart, 
-                                   receive_data, 
-                                   data_len, 
-                                   UART_STR_TERM_CARRIAGE); 
+        uart_status |= uart_get_data(hc05_data_record.hc05_uart, receive_data); 
     }
 
     // Update the driver status 
@@ -526,20 +523,12 @@ void hc05_at_command(
         if (hc05_data_status()) 
         {
             // Read the module response 
-            uart_get_str(
-                hc05_data_record.hc05_uart, 
-                resp, 
-                resp_len, 
-                UART_STR_TERM_NL); 
+            uart_get_data(hc05_data_record.hc05_uart, resp); 
 
             // If a cmd response was received then clear the "OK\r\n" from the DR that follows 
             if (*resp == HC05_AT_RESP_STR) 
             {
-                uart_get_str(
-                    hc05_data_record.hc05_uart, 
-                    clear_dr, 
-                    HC05_AT_DR_CLR_LEN, 
-                    UART_STR_TERM_NL);
+                uart_get_data(hc05_data_record.hc05_uart, clear_dr); 
             }
 
             break; 

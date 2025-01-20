@@ -118,61 +118,21 @@ typedef enum {
 } uart_mantissa_baud_t;
 
 
-/**
- * @brief UART TX/RX DMA configuration 
- */
-typedef enum 
-{
+// UART TX/RX DMA configuration 
+typedef enum {
     UART_DMA_DISABLE, 
     UART_DMA_ENABLE 
 } uart_dma_config_t; 
 
 
-/**
- * @brief UART interrupt configuration 
- */
-typedef enum 
-{
+// UART interrupt configuration 
+typedef enum {
     UART_INT_DISABLE, 
     UART_INT_ENABLE 
 } uart_int_config_t; 
 
 
-/**
- * @brief Number of spaces to send over UART 
- * 
- * @details This enum is used when calling uart_send_spaces to specify the number of 
- *          spaces to send. The purpose of this enum is purly for formatting outputs. 
- * 
- * @see uart_send_spaces
- */
-typedef enum {
-    UART_SPACE_1 = 1,
-    UART_SPACE_2,
-    UART_SPACE_3
-} uart_num_spaces_t;
-
-
-/**
- * @brief String formatters for UART
- * 
- * @details These are used in uart_get_str for reading and formatting strings received
- *          from the serial terminal. Within this function the string has been fully 
- *          read once the code sees a carriage return. A null character is added to the 
- *          end to complete the read string. 
- * 
- * @see uart_get_str
- */
-typedef enum {
-    UART_STR_TERM_NULL = 0,        // '\0' == 0
-    UART_STR_TERM_NL = 10,         // '\n' == 10
-    UART_STR_TERM_CARRIAGE = 13    // '\r' == 13
-} uart_str_term_t;
-
-
-/**
- * @brief Cursor move direction - from the VT100 escape codes 
- */
+// Cursor move direction - from the VT100 escape codes 
 typedef enum {
     UART_CURSOR_UP = 65,   // 65 == 'A' 
     UART_CURSOR_DOWN,      // 66 == 'B' 
@@ -209,8 +169,9 @@ typedef uart_status_t UART_STATUS;
  * @param baud_mant : baud rate mantissa part 
  * @param tx_dma : TX DMA enable 
  * @param rx_dma : RX DMA enable 
+ * @return : status of the initialization 
  */
-void uart_init(
+UART_STATUS uart_init(
     USART_TypeDef *uart, 
     GPIO_TypeDef *gpio, 
     pin_selector_t rx_pin, 
@@ -275,7 +236,7 @@ void uart_interrupt_init(
  * @param uart : UART port to use 
  * @return uint8_t : read data register status 
  */
-uint8_t uart_data_ready(const USART_TypeDef *uart); 
+uint8_t uart_data_ready(USART_TypeDef *uart); 
 
 
 /**
@@ -286,7 +247,7 @@ uint8_t uart_data_ready(const USART_TypeDef *uart);
  * 
  * @param uart : UART port to use 
  */
-void uart_clear_dr(const USART_TypeDef *uart); 
+void uart_clear_dr(USART_TypeDef *uart); 
 
 //=======================================================================================
 
@@ -390,13 +351,13 @@ void uart_send_new_line(USART_TypeDef *uart);
  *          in a serial terminal up by that number of lines. 
  * 
  * @param uart : UART port to use 
- * @param direction : move direction (up, down, right, left) 
- * @param num_lines : number of lines to move the cursor up 
+ * @param dir : move direction (up, down, right, left) 
+ * @param num_units : number of units to move the cursor 
  */
 void uart_cursor_move(
     USART_TypeDef *uart, 
-    uart_cursor_move_t direction, 
-    uint8_t num_lines); 
+    uart_cursor_move_t dir, 
+    uint8_t num_units); 
 
 //=======================================================================================
 
@@ -416,34 +377,7 @@ void uart_cursor_move(
  * @param uart : UART port to use 
  * @return uint8_t : contents of the data register 
  */
-uint8_t uart_get_char(const USART_TypeDef *uart);
-
-
-/**
- * @brief UART get string 
- * 
- * @details Read a string of data until the specified termination character is seen. 
- *          uart_get_char is used to read individual characters of the string. Ensure the 
- *          buffer used to store the string is large enough to accomodate the string. 
- *          
- *          If reading from PuTTy, PuTTy will add a carriage return character to the end 
- *          of the string so ensure to set the termination character to "\r". If new data 
- *          isn't seen soon enough or the termination character isn't seen then the 
- *          function will time out and return. 
- * 
- * @see uart_get_char
- * 
- * @param uart : UART port to use 
- * @param str_buff : buffer used to store the string input 
- * @param buff_len : length of string storage buffer 
- * @param term_char : character, that once seen, will end the read sequence 
- * @return UART_STATUS : status of the read operation --> see uart_status_t 
- */
-UART_STATUS uart_get_str(
-    USART_TypeDef *uart, 
-    char *str_buff, 
-    uint8_t buff_len, 
-    uart_str_term_t term_char); 
+uint8_t uart_get_char(USART_TypeDef *uart); 
 
 
 /**
@@ -468,7 +402,7 @@ UART_STATUS uart_get_str(
  * @return UART_STATUS : status of the read 
  */
 UART_STATUS uart_get_data(
-    const USART_TypeDef *uart, 
+    USART_TypeDef *uart, 
     uint8_t *data_buff); 
 
 //=======================================================================================
