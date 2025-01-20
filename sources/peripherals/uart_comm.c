@@ -24,7 +24,7 @@
 // Macros 
 
 #define UART_GETSTR_TIMEOUT 30000     // uart_get_str timeout - must accommodate baud rate 
-#define UART_GET_TIMEOUT 1000         // Max number of times to get for received data 
+#define UART_GET_TIMEOUT 10000        // Max number of times to get for received data 
 #define UART_BUFF_TERM_OFST 1         // Buffer termination offset - for NULL termination 
 #define CURSOR_MOVE_BUFF_SIZE 10 
 
@@ -55,20 +55,6 @@ void uart_idle_line_clear(const USART_TypeDef *uart);
 
 //=======================================================================================
 // Initialization 
-
-//===================================================
-// Pin information for UART1
-//  PA9:  TX
-//  PA10: RX
-// 
-// Pin information for UART2
-//  PA2: TX
-//  PA3: RX
-// 
-// Pin information for UART6 
-//  PC6 or PA11: TX 
-//  PC7 or PA12: RX 
-//===================================================
 
 // UART initialization 
 void uart_init(
@@ -245,12 +231,15 @@ void uart_send_char(
     USART_TypeDef *uart, 
     uint8_t character)
 {
-    // Write the data to the data register (USART_DR). 
-    uart->DR = character;
+    if (uart == NULL)
+    {
+        return; 
+    }
 
-    // Read the Transmission Complete (TC) bit (bit 6) in the status register 
-    // (USART_SR) continuously until it is set. 
-    while (!(uart->SR & (SET_BIT << SHIFT_6)));
+    // Write the data to the data register then read the Transmission Complete (TC) bit 
+    // in the status register continuously until it is set. 
+    uart->DR = character; 
+    while (!(uart->SR & (SET_BIT << SHIFT_6))); 
 }
 
 
@@ -259,8 +248,12 @@ void uart_send_str(
     USART_TypeDef *uart, 
     const char *string)
 {
-    // Loop until null character of string is reached. 
-    while (*string)
+    if (uart == NULL)
+    {
+        return; 
+    }
+
+    while (*string != NULL)
     {
         uart_send_char(uart, *string++);
     }
@@ -272,6 +265,11 @@ void uart_send_digit(
     USART_TypeDef *uart, 
     uint8_t digit)
 {
+    if (uart == NULL)
+    {
+        return; 
+    }
+
     // Convert the digit into the ASCII character equivalent 
     uart_send_char(uart, digit + ZERO_CHAR); 
 }
@@ -282,7 +280,11 @@ void uart_send_integer(
     USART_TypeDef *uart, 
     int16_t integer)
 {
-    // Store a digit to print 
+    if (uart == NULL)
+    {
+        return; 
+    }
+
     uint8_t digit = CLEAR;
 
     // Print the sign of the number 
@@ -320,6 +322,11 @@ void uart_send_spaces(
     USART_TypeDef *uart, 
     uint8_t num_spaces)
 {
+    if (uart == NULL)
+    {
+        return; 
+    }
+
     for (uint8_t i = CLEAR; i < num_spaces; i++)
     {
         uart_send_char(uart, SPACE_CHAR);
@@ -330,6 +337,11 @@ void uart_send_spaces(
 // Send a carriage return and a new line  
 void uart_send_new_line(USART_TypeDef *uart)
 {
+    if (uart == NULL)
+    {
+        return; 
+    }
+
     uart_send_str(uart, "\r\n");
 }
 
@@ -340,6 +352,11 @@ void uart_cursor_move(
     uart_cursor_move_t direction, 
     uint8_t num_lines)
 {
+    if (uart == NULL)
+    {
+        return; 
+    }
+
     char cursor_up_str[CURSOR_MOVE_BUFF_SIZE]; 
     snprintf(cursor_up_str, CURSOR_MOVE_BUFF_SIZE, "\033[%u%c", num_lines, (char)direction); 
     uart_send_str(uart, cursor_up_str); 
@@ -354,6 +371,11 @@ void uart_cursor_move(
 // UART get character 
 uint8_t uart_get_char(const USART_TypeDef *uart)
 {
+    if (uart == NULL)
+    {
+        return NULL_CHAR; 
+    }
+
     return (uint8_t)(uart->DR); 
 }
 
@@ -365,6 +387,11 @@ UART_STATUS uart_get_str(
     uint8_t buff_len, 
     uart_str_term_t term_char)
 {
+    if ((uart == NULL) || (str_buff == NULL))
+    {
+        return UART_INVALID_PTR; 
+    }
+
     uint8_t input = CLEAR; 
     uint8_t char_count = CLEAR; 
     uint8_t max_char_read = buff_len - UART_BUFF_TERM_OFST; 
