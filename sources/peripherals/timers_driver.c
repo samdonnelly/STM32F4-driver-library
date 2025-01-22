@@ -307,15 +307,18 @@ void tim_2_to_5_output_init(
     uint32_t index = ((uint32_t)timer - (uint32_t)TIM2_BASE) >> SHIFT_10; 
 
     // Return if the timer port is out of the acceptable range (TIM2-TIM5) 
-    if (index > SET_3) return; 
+    if (index > SET_3) 
+    {
+        return; 
+    }
 
     // Enable the timer clock 
     RCC->APB1ENR |= (SET_BIT << index);
 
     // Configure the output pin 
     gpio_pin_init(gpio, pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-    if (timer == TIM2) gpio_afr(gpio, pin, SET_BIT); 
-    else gpio_afr(gpio, pin, SET_2); 
+    bit_setter_t setpoint = (timer == TIM2) ? SET_BIT : SET_2; 
+    gpio_afr(gpio, pin, setpoint); 
 
     // Set the counter direction 
     tim_dir(timer, dir); 
