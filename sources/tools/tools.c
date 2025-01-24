@@ -29,12 +29,17 @@ uint8_t str_compare(
     const char *msg, 
     uint8_t msg_start)
 {
-    uint8_t str_len = strlen(ref_msg); 
-
-    if ((ref_msg == NULL) || (msg == NULL) || (str_len == NONE)) 
+    if ((ref_msg == NULL) || (msg == NULL)) 
     {
         return FALSE; 
     } 
+
+    uint8_t str_len = strlen(ref_msg); 
+
+    if (str_len == ZERO)
+    {
+        return FALSE; 
+    }
 
     // Move to the first comparison character 
     msg += msg_start; 

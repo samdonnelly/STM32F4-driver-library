@@ -133,9 +133,11 @@ void esc_readytosky_send(
         (esc_readytosky_driver_data_t *)get_linked_list_entry(device_num, esc_driver_data_ptr); 
 
     // Check for valid data 
-    if (driver_data_ptr == NULL) return; 
+    if (driver_data_ptr == NULL) 
+    {
+        return; 
+    }
 
-    // Local variables 
     uint32_t pwm_cmd = ESC_NEUTRAL_TIME; 
     uint16_t throttle = CLEAR; 
 

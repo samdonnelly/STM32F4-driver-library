@@ -240,24 +240,17 @@ ADC_STATUS adc1_clock_enable(RCC_TypeDef *rcc);
  * 
  * @see adc_prescalar_t
  * @see adc_res_t
- * @see adc_eoc_config_t
- * @see adc_scan_t
- * @see adc_cont_t
- * @see adc_dma_t
- * @see adc_dds_t
- * @see adc_eoc_int_t
- * @see adc_ovrie_t
  * 
  * @param adc : pointer to the ADC port to configure 
  * @param adc_common : pointer to the ADC ports common control register 
  * @param prescalar : prescalar to define the ADCCLK 
  * @param resolution : conversion resolution 
  * @param eoc : end of conversion behavior 
+ * @param eocie : end of conversion interrupt selection 
  * @param scan : scan mode selection 
  * @param cont : continuous mode selection 
  * @param dma : DMA mode selection 
  * @param dds : DMA disable behavior 
- * @param eocie : end of conversion interrupt selection 
  * @param ovrie : overrun behavior selection 
  * @return ADC_STATUS : port initialization status 
  */
