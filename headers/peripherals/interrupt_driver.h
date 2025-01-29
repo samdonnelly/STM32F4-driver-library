@@ -98,36 +98,28 @@ typedef enum {
 } exti_port_t; 
 
 
-/**
- * @brief External interrupt mask configuration 
- */
+// External interrupt mask configuration 
 typedef enum {
     EXTI_INT_MASKED,        // External interrupt masked - interrupt disabled 
     EXTI_INT_NOT_MASKED     // External interrupt not masked - interrupt enabled 
 } exti_int_mask_t; 
 
 
-/**
- * @brief External event mask configuration 
- */
+// External event mask configuration 
 typedef enum {
     EXTI_EVENT_MASKED,         // External event masked - interrupt disabled 
     EXTI_EVENT_NOT_MASKED      // External event not masked - interrupt enabled 
 } exti_event_mask_t; 
 
 
-/**
- * @brief Interrupt rising edge trigger configuration 
- */
+// Interrupt rising edge trigger configuration 
 typedef enum {
     EXTI_RISE_TRIG_DISABLE,     // Rising edge interrupt trigger disabled 
     EXTI_RISE_TRIG_ENABLE       // Rising edge interrupt trigger enabled 
 } exti_rise_trigger_t; 
 
 
-/**
- * @brief Interrupt falling edge trigger configuration 
- */
+// Interrupt falling edge trigger configuration 
 typedef enum {
     EXTI_FALL_TRIG_DISABLE,     // Falling edge interrupt trigger disabled 
     EXTI_FALL_TRIG_ENABLE       // Falling edge interrupt trigger enabled 

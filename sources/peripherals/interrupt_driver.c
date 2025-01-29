@@ -236,8 +236,7 @@ void exti_imr(
     exti_int_mask_t mask, 
     uint32_t im)
 {
-    if (mask) EXTI->IMR |= im; 
-    else EXTI->IMR &= ~im; 
+    mask ? (EXTI->IMR |= im) : (EXTI->IMR &= ~im); 
 }
 
 
@@ -246,8 +245,7 @@ void exti_emr(
     exti_event_mask_t mask, 
     uint32_t em)
 {
-    if (mask) EXTI->EMR |= em; 
-    else EXTI->EMR &= ~em; 
+    mask ? (EXTI->EMR |= em) : (EXTI->EMR &= ~em); 
 }
 
 
@@ -256,8 +254,7 @@ void exti_rtsr(
     exti_rise_trigger_t rtsr, 
     uint32_t rt)
 {
-    if (rtsr) EXTI->RTSR |= rt; 
-    else EXTI->RTSR &= ~rt; 
+    rtsr ? (EXTI->RTSR |= rt) : (EXTI->RTSR &= ~rt); 
 }
 
 
@@ -266,8 +263,7 @@ void exti_ftsr(
     exti_fall_trigger_t ftsr, 
     uint32_t ft)
 {
-    if (ftsr) EXTI->FTSR |= ft; 
-    else EXTI->FTSR &= ~ft; 
+    ftsr ? (EXTI->FTSR |= ft) : (EXTI->FTSR &= ~ft); 
 }
 
 

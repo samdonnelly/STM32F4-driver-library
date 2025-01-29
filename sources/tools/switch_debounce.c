@@ -59,16 +59,9 @@ static switch_debounce_t debouncer;
 // Switch debounce initialization 
 void debounce_init(uint8_t pull_mask)
 {
-    // Clear the buffer 
     memset((void *)debouncer.state, CLEAR, sizeof(debouncer.state)); 
-
-    // Set the index to zero 
     debouncer.index = CLEAR; 
-
-    // Record the pull mask 
     debouncer.pull_mask = pull_mask; 
-
-    // Clear the button statuses 
     debouncer.pressed = CLEAR; 
     debouncer.released = CLEAR; 
 }
@@ -82,7 +75,6 @@ void debounce_init(uint8_t pull_mask)
 // Switch debounce calculation 
 void debounce(uint8_t button_status)
 {
-    // Local variables 
     uint8_t press_pull_up = CLEAR; 
     uint8_t press_pull_down = CLEAR; 
     uint8_t release_pull_up = CLEAR; 

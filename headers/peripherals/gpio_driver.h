@@ -81,18 +81,14 @@ typedef enum {
 } gpio_pin_num_t;
 
 
-/**
- * @brief GPIO pin state
- */
+// GPIO pin state 
 typedef enum {
     GPIO_LOW,
     GPIO_HIGH
 } gpio_pin_state_t;
 
 
-/**
- * @brief GPIO mode register (MODER) settings 
- */
+// GPIO mode register (MODER) settings 
 typedef enum {
     MODER_INPUT,   // Input (reset state)
     MODER_GPO,     // General purpose output mode 
@@ -101,18 +97,14 @@ typedef enum {
 } gpio_moder_t;
 
 
-/**
- * @brief GPIO output type (OTYPER) register settings 
- */
+// GPIO output type (OTYPER) register settings 
 typedef enum {
     OTYPER_PP,  // Output push-pull (reset state) 
     OTYPER_OD   // Output open-drain 
 } gpio_otyper_t;
 
 
-/**
- * @brief GPIO output speed (OSPEEDR) register settings 
- */
+// GPIO output speed (OSPEEDR) register settings 
 typedef enum {
     OSPEEDR_LOW,   // Low speed 
     OSPEEDR_MED,   // Medium speed 
@@ -121,9 +113,7 @@ typedef enum {
 } gpio_ospeedr_t;
 
 
-/**
- * @brief GPIO pull-up/pull-down (PUPDR) register settings 
- */
+// GPIO pull-up/pull-down (PUPDR) register settings 
 typedef enum {
     PUPDR_NO,  // No pull-up, pull-down 
     PUPDR_PU,  // Pull-up 
