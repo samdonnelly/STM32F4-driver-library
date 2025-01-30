@@ -39,6 +39,7 @@
 // "AT" can be replaced by "RT" for use on a connected remote radio with the exception of 
 // "ATO". 
 
+// AT command mode: command list 
 const char 
 sik_at_enter_cmd[] = "+++",         // Enter AT/RT command mode 
 sik_ato_cmd[] = "ATO",              // ATO - exit AT command mode 
@@ -57,6 +58,10 @@ sik_xtf_cmd[] = "%cT&F",            // xT&F - Reset all parameters to factory de
 sik_xttrssi_cmd[] = "%cT&T=RSSI",   // xT&T=RSSI - Enable RSSI debug reporting 
 sik_xtttdm_cmd[] = "%cT&T=TDM",     // xT&T=TDM - Enable TDM debug reporting 
 sik_xtt_cmd[] = "%cT&T";            // xT&T - Disable debug reporting 
+
+// AT command mode: responses 
+const char 
+sik_at_enter_resp[] = "OK";         // "OK" - response when device enters AT command mode 
 
 //=======================================================================================
 

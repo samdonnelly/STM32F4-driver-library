@@ -54,23 +54,27 @@ extern "C" {
  * @see sik_at_param_number_t 
  */
 extern const char 
-sik_at_enter_cmd[],   // "+++" - Enter AT/RT command mode 
-sik_ato_cmd[],        // "ATO" - exit AT command mode 
-sik_xti_cmd[],        // "xTI" - Show radio version 
-sik_xti2_cmd[],       // "xTI2" - Show board type 
-sik_xti3_cmd[],       // "xTI3" - Show board frequency 
-sik_xti4_cmd[],       // "xTI4" - Show board version 
-sik_xti5_cmd[],       // "xTI5" - Show all user settable EEPROM parameters 
-sik_xti6_cmd[],       // "xTI6" - Display TDM timing report 
-sik_xti7_cmd[],       // "xTI7" - Display RSSI signal report 
-sik_xtsn_cmd[],       // "xTSn?" - Display radio parameter number ‘n’ 
-sik_xtsnx_cmd[],      // "xTSn=X" - Set radio parameter number ‘n’ to ‘X’ 
-sik_xtz_cmd[],        // "xTZ" - Reboot the radio 
-sik_xtw_cmd[],        // "xT&W" - Write current parameters to EEPROM 
-sik_xtf_cmd[],        // "xT&F" - Reset all parameters to factory default 
-sik_xttrssi_cmd[],    // "xT&T=RSSI" - Enable RSSI debug reporting 
-sik_xtttdm_cmd[],     // "xT&T=TDM" - Enable TDM debug reporting 
-sik_xtt_cmd[];        // "xT&T" - Disable debug reporting 
+sik_at_enter_cmd[],    // "+++" - Enter AT/RT command mode 
+sik_ato_cmd[],         // "ATO" - exit AT command mode 
+sik_xti_cmd[],         // "xTI" - Show radio version 
+sik_xti2_cmd[],        // "xTI2" - Show board type 
+sik_xti3_cmd[],        // "xTI3" - Show board frequency 
+sik_xti4_cmd[],        // "xTI4" - Show board version 
+sik_xti5_cmd[],        // "xTI5" - Show all user settable EEPROM parameters 
+sik_xti6_cmd[],        // "xTI6" - Display TDM timing report 
+sik_xti7_cmd[],        // "xTI7" - Display RSSI signal report 
+sik_xtsn_cmd[],        // "xTSn?" - Display radio parameter number ‘n’ 
+sik_xtsnx_cmd[],       // "xTSn=X" - Set radio parameter number ‘n’ to ‘X’ 
+sik_xtz_cmd[],         // "xTZ" - Reboot the radio 
+sik_xtw_cmd[],         // "xT&W" - Write current parameters to EEPROM 
+sik_xtf_cmd[],         // "xT&F" - Reset all parameters to factory default 
+sik_xttrssi_cmd[],     // "xT&T=RSSI" - Enable RSSI debug reporting 
+sik_xtttdm_cmd[],      // "xT&T=TDM" - Enable TDM debug reporting 
+sik_xtt_cmd[];         // "xT&T" - Disable debug reporting 
+
+// AT command mode: responses 
+extern const char 
+sik_at_enter_resp[];   // "OK" - response when device enters AT command mode 
 
 //=======================================================================================
 
