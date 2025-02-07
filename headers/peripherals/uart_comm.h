@@ -51,8 +51,8 @@ typedef enum {
  *          the decimal places. This enum defines the fraction portion for a given UART 
  *          clock speed and baud rate. Refer to the reference manual for more information.
  *          
- *          enum code: UART_FRAC_(X_1)_(X_2)
- *              X_1: PCLK1 frquency (MHz) 
+ *          enum code: UART_FRAC_(X_1)_(X_2) 
+ *              X_1: PCLK frquency (MHz) 
  *              X_2: baud rate (bps) 
  *          
  *          Baud rate description: 
@@ -71,11 +71,12 @@ typedef enum {
  * @see uart_mantissa_baud_t 
  */
 typedef enum {
-    UART_FRAC_42_1200 = 0x08, 
-    UART_FRAC_42_9600 = 0x07,
-    UART_FRAC_84_9600 = 0x0E,
-    UART_FRAC_84_38400 = 0x0B, 
-    UART_FRAC_84_115200 = 0x09
+    UART_FRAC_42_1200 = 0x8, 
+    UART_FRAC_42_9600 = 0x7,
+    UART_FRAC_84_9600 = 0xE,
+    UART_FRAC_84_38400 = 0xB, 
+    UART_FRAC_84_57600 = 0x2, 
+    UART_FRAC_84_115200 = 0x9
 } uart_fractional_baud_t;
 
 
@@ -111,10 +112,11 @@ typedef enum {
  */
 typedef enum {
     UART_MANT_42_1200 = 0x88B, 
-    UART_MANT_42_9600 = 0x111,
+    UART_MANT_42_9600 = 0x111, 
     UART_MANT_84_9600 = 0x222, 
-    UART_MANT_84_38400 = 0x88, 
-    UART_MANT_84_115200 = 0x2D
+    UART_MANT_84_38400 = 0x088, 
+    UART_MANT_84_57600 = 0x05B, 
+    UART_MANT_84_115200 = 0x02D 
 } uart_mantissa_baud_t;
 
 
