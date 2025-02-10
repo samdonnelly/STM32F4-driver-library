@@ -93,11 +93,12 @@ typedef enum {
 /**
  * @brief Timer prescalars 
  * 
- * @details These are predefined prescalers for the timer counters. The name of each prescaler
- *          defines the time taken for the timer counter to increment at a given clock frequency. 
- *          For example, the prescaler TIM_84MHZ_1US_PSC is what you'd use if your timer clock 
- *          is running at 84MHz and you wanted the timer counter to increment ever 1us. When 
- *          choosing a prescaler it's important to know which timers run on which clock: 
+ * @details These are predefined prescalers for the timer counters. The name of each 
+ *          prescaler defines the time taken for the timer counter to increment at a 
+ *          given clock frequency. For example, the prescaler TIM_84MHZ_1US_PSC is what 
+ *          you'd use if your timer clock is running at 84MHz and you wanted the timer 
+ *          counter to increment ever 1us. When choosing a prescaler it's important to 
+ *          know which timers run on which clock: 
  *          - Timers 1 and 9-11 run on APB2 clock frequency. 
  *          - Timers 2-5 run on APB1 clock frequency. 
  */

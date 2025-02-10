@@ -157,9 +157,10 @@ extern "C" {
 //==================================================
 
 //==================================================
-// Physics 
+// Units 
 
-#define KM_TO_M 1000    // kilometers to meters 
+#define KM_TO_M 1000    // Kilometers to meters 
+#define S_TO_MS 1000    // Seconds to milliseconds 
 #define MIN_TO_DEG 60   // Coordinate minutes to degrees conversion 
 
 //==================================================
