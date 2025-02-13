@@ -197,9 +197,12 @@ SIK_STATUS sik_read_data(uint8_t *read_data);
  *          sending the message buffer here. 
  * 
  * @param send_data : data string to send 
+ * @param send_data_len : length of data to send 
  * @return SIK_STATUS : driver status 
  */
-SIK_STATUS sik_send_data(const char *send_data); 
+SIK_STATUS sik_send_data(
+    const uint8_t *send_data, 
+    uint16_t send_data_len); 
 
 //=======================================================================================
 

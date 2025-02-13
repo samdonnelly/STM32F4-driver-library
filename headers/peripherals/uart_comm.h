@@ -275,17 +275,32 @@ void uart_send_char(
 /**
  * @brief UART send string 
  * 
- * @details Sends the characters of a data buffer one at a time until a NUL character is 
- *          seen. Utilizes uart_send_char to send each character. 
- * 
- * @see uart_send_char
+ * @details Sends the characters of a string until the strings NULL termination character 
+ *          is seen or the buffer is out of range, whichever comes first. 
  * 
  * @param uart : UART port to use 
- * @param string : pointer to buffer containing string to send 
+ * @param string : buffer containing string to send 
  */
 void uart_send_str(
     USART_TypeDef *uart, 
-    const char *string);
+    const char *string); 
+
+
+/**
+ * @brief UART send data 
+ * 
+ * @details Sends data from the supplied buffer until the data length is reached or the 
+ *          data buffer is out of range, whichever comes first. It's the users 
+ *          responsibility to make sure the data length is the correct size. 
+ * 
+ * @param uart : UART port to use 
+ * @param data : data buffer to send 
+ * @param data_len : length of data to send 
+ */
+void uart_send_data(
+    USART_TypeDef *uart, 
+    const uint8_t *data, 
+    uint16_t data_len); 
 
 
 /**

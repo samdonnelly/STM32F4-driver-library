@@ -242,14 +242,32 @@ void uart_send_str(
     USART_TypeDef *uart, 
     const char *string)
 {
-    if (uart == NULL)
+    if ((uart == NULL) || (string == NULL))
     {
         return; 
     }
 
-    while (*string != NULL_CHAR)
+    while ((*string != NULL_CHAR) && (string != NULL))
     {
         uart_send_char(uart, *string++); 
+    }
+}
+
+
+// UART send data 
+void uart_send_data(
+    USART_TypeDef *uart, 
+    const uint8_t *data, 
+    uint16_t data_len)
+{
+    if ((uart == NULL) || (data == NULL))
+    {
+        return; 
+    }
+
+    for (uint16_t i = CLEAR; (i < data_len) && (data != NULL); i++)
+    {
+        uart_send_char(uart, *data++); 
     }
 }
 

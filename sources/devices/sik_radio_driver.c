@@ -135,14 +135,16 @@ SIK_STATUS sik_read_data(uint8_t *read_data)
 
 
 // Send data 
-SIK_STATUS sik_send_data(const char *send_data)
+SIK_STATUS sik_send_data(
+    const uint8_t *send_data, 
+    uint16_t send_data_len)
 {
     if (send_data == NULL)
     {
         return SIK_INVALID_PTR; 
     }
 
-    uart_send_str(sik_driver_data.uart, send_data); 
+    uart_send_data(sik_driver_data.uart, send_data, send_data_len); 
     return SIK_OK; 
 }
 
@@ -158,12 +160,12 @@ void sik_at_mode(sik_at_mode_t mode)
     switch (mode)
     {
         case SIK_AT_ENTER: 
-            sik_send_data(sik_at_enter_cmd); 
+            sik_send_data((uint8_t *)sik_at_enter_cmd, strlen(sik_at_enter_cmd)); 
             sik_driver_data.at_mode = SET_BIT; 
             break; 
 
         case SIK_AT_EXIT: 
-            sik_send_data(sik_ato_cmd); 
+            sik_send_data((uint8_t *)sik_ato_cmd, strlen(sik_ato_cmd)); 
             sik_driver_data.at_mode = CLEAR_BIT; 
         
         default:
@@ -177,14 +179,16 @@ void sik_at_send_cmd(
     sik_at_rt_t device, 
     const char *cmd)
 {
-    if (cmd != NULL)
+    if (cmd == NULL)
     {
-        // snprintf was not used here because the compiler gave a warning that "cmd" 
-        // is not a string literal. 
-        memcpy((void *)sik_driver_data.at_cmd_buff, (const void *)cmd, sizeof(cmd)); 
-        sik_driver_data.at_cmd_buff[BYTE_0] = (char)device; 
-        sik_send_data(sik_driver_data.at_cmd_buff); 
+        return; 
     }
+
+    // snprintf was not used here because the compiler gave a warning that "cmd" 
+    // is not a string literal. 
+    memcpy((void *)sik_driver_data.at_cmd_buff, (const void *)cmd, sizeof(cmd)); 
+    sik_driver_data.at_cmd_buff[BYTE_0] = (char)device; 
+    sik_send_data((uint8_t *)sik_driver_data.at_cmd_buff, strlen(sik_driver_data.at_cmd_buff)); 
 }
 
 
@@ -202,7 +206,7 @@ void sik_at_get_param(
              (char)device, 
              (uint8_t)param); 
 
-    sik_send_data(sik_driver_data.at_cmd_buff); 
+    sik_send_data((uint8_t *)sik_driver_data.at_cmd_buff, strlen(sik_driver_data.at_cmd_buff)); 
 }
 
 
@@ -222,7 +226,7 @@ void sik_at_set_param(
              (uint8_t)param, 
              value); 
     
-    sik_send_data(sik_driver_data.at_cmd_buff); 
+    sik_send_data((uint8_t *)sik_driver_data.at_cmd_buff, strlen(sik_driver_data.at_cmd_buff)); 
 }
 
 //=======================================================================================
