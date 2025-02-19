@@ -337,8 +337,8 @@ typedef enum {
 typedef struct cb_index_s
 {
     uint16_t cb_size;   // Size of the circular buffer 
-    uint8_t head;       // Index to read up to in the circular buffer 
-    uint8_t tail;       // Index where the new data in the circular buffer begins 
+    uint16_t head;      // Index to read up to in the circular buffer 
+    uint16_t tail;      // Index where the new data in the circular buffer begins 
 }
 cb_index_t; 
 

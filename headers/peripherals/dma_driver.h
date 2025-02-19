@@ -218,9 +218,9 @@ typedef enum {
  */
 typedef struct dma_index_s
 {
-    uint8_t data_size;   // Size of data transferred 
-    uint8_t ndt_old;     // Previous remaining data items to be transferred 
-    uint8_t ndt_new;     // Current remaining data items to be transferred 
+    uint16_t data_size;   // Size of data transferred 
+    uint16_t ndt_old;     // Previous remaining data items to be transferred 
+    uint16_t ndt_new;     // Current remaining data items to be transferred 
 }
 dma_index_t; 
 
