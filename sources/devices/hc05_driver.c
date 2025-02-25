@@ -153,7 +153,7 @@ void hc05_read(
     // Get the data if it's available 
     if (uart_data_ready(hc05_data_record.hc05_uart))
     {
-        uart_status |= uart_get_data(hc05_data_record.hc05_uart, receive_data); 
+        uart_status |= uart_get_data(hc05_data_record.hc05_uart, (uint8_t *)receive_data); 
     }
 
     // Update the driver status 
