@@ -201,6 +201,21 @@ void uart_set_baud_rate(
 
 
 /**
+ * @brief Configure the UART data frame 
+ * 
+ * @param uart : UART port to use 
+ * @param word_length : data bits - 0: 8 bits, 1: 9 bits 
+ * @param parity : 0: even parity, 1: odd parity 
+ * @param stop_bits : number of stop bits - 0: 1 bit, 1: 0.5 bits, 2: 2 bits, 3: 1.5 bits 
+ */
+void uart_data_frame_config(
+    USART_TypeDef *uart, 
+    uint8_t word_length, 
+    uint8_t parity, 
+    uint8_t stop_bits); 
+
+
+/**
  * @brief UART interrupt initialization 
  * 
  * @param uart : USART port to configure 

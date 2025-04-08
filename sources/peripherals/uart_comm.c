@@ -102,6 +102,24 @@ UART_STATUS uart_init(
 }
 
 
+// Configure the UART data frame 
+void uart_data_frame_config(
+    USART_TypeDef *uart, 
+    uint8_t word_length, 
+    uint8_t parity, 
+    uint8_t stop_bits)
+{
+    // Word length 
+    uart->CR1 |= (word_length << SHIFT_12); 
+
+    // Parity selection 
+    uart->CR1 |= (parity << SHIFT_9); 
+
+    // Stop bits 
+    uart->CR2 |= (stop_bits << SHIFT_12); 
+}
+
+
 // Change the baud rate of the UART 
 void uart_set_baud_rate(
     USART_TypeDef *uart, 
