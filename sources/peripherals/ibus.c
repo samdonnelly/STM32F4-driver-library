@@ -8,7 +8,9 @@
  * @details IBUS is a specific type of serial protocol. This driver utilizes the UART 
  *          driver for communication. 
  *          
- *          Reference: https://thenerdyengineer.com/ibus-and-arduino/ 
+ *          References: 
+ *          - https://thenerdyengineer.com/ibus-and-arduino/ 
+ *          - https://forum.arduino.cc/t/ibus-protocol-decoded/1073658 
  * 
  * @version 0.1
  * @date 2025-04-08
@@ -26,33 +28,38 @@
 
 
 //=======================================================================================
+// Macros 
+
+#define IBUS_PACKET_HEADER 0x4020 
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Initialization 
 
 // IBUS driver init 
-void ibus_init(
+UART_STATUS ibus_init(
     USART_TypeDef *uart, 
     GPIO_TypeDef *gpio, 
     pin_selector_t rx_pin, 
     pin_selector_t tx_pin, 
-    uart_dma_config_t tx_dma, 
-    uart_dma_config_t rx_dma)
+    uart_param_config_t tx_dma, 
+    uart_param_config_t rx_dma)
 {
     UART_STATUS uart_status = uart_init(
         uart, 
         gpio, 
         rx_pin, 
         tx_pin, 
+        UART_PARAM_DISABLE, 
+        SET_2, 
         UART_FRAC_84_115200, 
         UART_MANT_84_115200, 
         tx_dma, 
         rx_dma); 
 
-    if (uart_status != UART_OK)
-    {
-        return; 
-    }
-
-    uart_data_frame_config(uart, BYTE_0, BYTE_0, BYTE_2); 
+    return uart_status; 
 }
 
 //=======================================================================================
@@ -60,4 +67,63 @@ void ibus_init(
 
 //=======================================================================================
 // Send data 
+
+// IBUS send data 
+void ibus_send_data(
+    USART_TypeDef *uart, 
+    ibus_packet_t *packet)
+{
+    if ((uart == NULL) || (packet == NULL))
+    {
+        return; 
+    }
+
+    uint16_t checksum = HIGH_16BIT - IBUS_PACKET_HEADER; 
+    packet->items[IBUS_HEADER] = IBUS_PACKET_HEADER; 
+
+    for (uint8_t i = IBUS_CH1; i <= IBUS_CH14; i++)
+    {
+        checksum -= packet->items[i]; 
+    }
+
+    packet->items[IBUS_CHECKSUM] = checksum; 
+
+    uart_send_data(uart, packet->data, IBUS_PACKET_BYTES); 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read data 
+
+// IBUS get data 
+UART_STATUS ibus_get_data(
+    USART_TypeDef *uart, 
+    ibus_packet_t *packet)
+{
+    if ((uart == NULL) || (packet == NULL))
+    {
+        return UART_INVALID_PTR; 
+    }
+
+    uint16_t checksum = HIGH_16BIT; 
+    UART_STATUS status = uart_get_data(uart, packet->data); 
+
+    if (status == UART_OK)
+    {
+        for (uint8_t i = IBUS_HEADER; i < IBUS_CHECKSUM; i++)
+        {
+            checksum -= packet->items[i]; 
+        }
+
+        if (checksum != packet->items[IBUS_CHECKSUM])
+        {
+            status = UART_BAD_DATA; 
+        }
+    }
+
+    return status; 
+}
+
 //=======================================================================================

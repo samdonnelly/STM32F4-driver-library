@@ -36,7 +36,8 @@ extern "C" {
 typedef enum {
     UART_OK, 
     UART_INVALID_PTR, 
-    UART_TIMEOUT 
+    UART_TIMEOUT, 
+    UART_BAD_DATA 
 } uart_status_t;
 
 
@@ -117,21 +118,60 @@ typedef enum {
     UART_MANT_84_38400 = 0x088, 
     UART_MANT_84_57600 = 0x05B, 
     UART_MANT_84_115200 = 0x02D 
-} uart_mantissa_baud_t;
+} uart_mantissa_baud_t; 
 
 
-// UART TX/RX DMA configuration 
+/**
+ * @brief UART register parameter configuration 
+ * 
+ * @details This is used for disabling or enabling features of the UART when setting it 
+ *          up. Some UART initialization functions take this as an argument for a number 
+ *          of features. These features include: 
+ *          
+ *          Parity error interrupt enable (PE) 
+ *          - 0 --> Interrupt is inhibited 
+ *          - 1 --> A USART interrupt is generated whenever PE=1 in the USART_SR register 
+ *          
+ *          Transmit data register interrupt enable (TXE) 
+ *          - 0 --> Interrupt is inhibited 
+ *          - 1 --> A USART interrupt is generated whenever TXE=1 in the USART_SR 
+ *                  register 
+ *          
+ *          Transmission complete interrupt enable (TCIE) 
+ *          - 0 --> Interrupt is inhibited 
+ *          - 1 --> A USART interrupt is generated whenever TC=1 in the USART_SR register 
+ *          
+ *          Read data register interrupt enable (RXNEIE) 
+ *          - 0 --> Interrupt is inhibited 
+ *          - 1 --> A USART interrupt is generated whenever ORE=1 or RXNE=1 in the 
+ *                  USART_SR register
+ *          
+ *          IDLE line detected interrupt enable (IDLEIE) 
+ *          - 0 --> Interrupt is inhibited 
+ *          - 1 --> An USART interrupt is generated whenever IDLE=1 in the USART_SR 
+ *                  register 
+ *          
+ *          CTS interrupt enable (CTSIE) 
+ *          - 0 --> Interrupt is inhibited 
+ *          - 1 --> An interrupt is generated whenever CTS=1 in the USART_SR register 
+ *          
+ *          Error interrupt enable (EIE) 
+ *          - 0 --> Interrupt is inhibited 
+ *          - 1 --> An interrupt is generated whenever DMAR=1 in the USART_CR3 register 
+ *                  and FE=1 or ORE=1 or NF=1 in the USART_SR register.
+ *          
+ *          TX and RX DMA enable (DMAT and DMAR) 
+ *          - 0 --> DMA mode is disabled for transmission/reception 
+ *          - 1 --> DMA mode is enabled for transmission/reception 
+ *          
+ *          Word length configure (M) 
+ *          - 0 --> 1 Start bit, 8 Data bits, n Stop bit 
+ *          - 1 --> 1 Start bit, 9 Data bits, n Stop bit 
+ */
 typedef enum {
-    UART_DMA_DISABLE, 
-    UART_DMA_ENABLE 
-} uart_dma_config_t; 
-
-
-// UART interrupt configuration 
-typedef enum {
-    UART_INT_DISABLE, 
-    UART_INT_ENABLE 
-} uart_int_config_t; 
+    UART_PARAM_DISABLE, 
+    UART_PARAM_ENABLE 
+} uart_param_config_t; 
 
 
 // Cursor move direction - from the VT100 escape codes 
@@ -167,6 +207,8 @@ typedef uart_status_t UART_STATUS;
  * @param gpio : GPIO port of UART pins 
  * @param rx_pin : RX pin 
  * @param tx_pin : TX pin 
+ * @param word_length : data bits 
+ * @param stop_bits : number of stop bits - 0: 1 bit, 1: 0.5 bits, 2: 2 bits, 3: 1.5 bits 
  * @param baud_frac : baud rate fractional part 
  * @param baud_mant : baud rate mantissa part 
  * @param tx_dma : TX DMA enable 
@@ -178,41 +220,32 @@ UART_STATUS uart_init(
     GPIO_TypeDef *gpio, 
     pin_selector_t rx_pin, 
     pin_selector_t tx_pin, 
+    uart_param_config_t word_length, 
+    uint8_t stop_bits, 
     uart_fractional_baud_t baud_frac, 
     uart_mantissa_baud_t baud_mant, 
-    uart_dma_config_t tx_dma, 
-    uart_dma_config_t rx_dma);
-
-
-/**
- * @brief Set the UART baud rate 
- * 
- * @details Allows for changing the baud rate of the UART port. This is used by the init 
- *          function but can also be called independently if the rate needs to change. 
- * 
- * @param uart : UART port to use 
- * @param baud_frac : baud rate fractional part 
- * @param baud_mant : baud rate mantissa part 
- */
-void uart_set_baud_rate(
-    USART_TypeDef *uart, 
-    uart_fractional_baud_t baud_frac, 
-    uart_mantissa_baud_t baud_mant); 
+    uart_param_config_t tx_dma, 
+    uart_param_config_t rx_dma);
 
 
 /**
  * @brief Configure the UART data frame 
  * 
+ * @details Allows for changing the baud rate of the UART port. This is used by the init 
+ *          function but can also be called independently if the rate needs to change. 
+ * 
  * @param uart : UART port to use 
- * @param word_length : data bits - 0: 8 bits, 1: 9 bits 
- * @param parity : 0: even parity, 1: odd parity 
+ * @param word_length : data bits 
  * @param stop_bits : number of stop bits - 0: 1 bit, 1: 0.5 bits, 2: 2 bits, 3: 1.5 bits 
+ * @param baud_frac : baud rate fractional part 
+ * @param baud_mant : baud rate mantissa part 
  */
 void uart_data_frame_config(
     USART_TypeDef *uart, 
-    uint8_t word_length, 
-    uint8_t parity, 
-    uint8_t stop_bits); 
+    uart_param_config_t word_length, 
+    uint8_t stop_bits, 
+    uart_fractional_baud_t baud_frac, 
+    uart_mantissa_baud_t baud_mant); 
 
 
 /**
@@ -229,13 +262,13 @@ void uart_data_frame_config(
  */
 void uart_interrupt_init(
     USART_TypeDef *uart, 
-    uart_int_config_t peie, 
-    uart_int_config_t txeie, 
-    uart_int_config_t tcie, 
-    uart_int_config_t rxneie, 
-    uart_int_config_t idleie, 
-    uart_int_config_t cts, 
-    uart_int_config_t eie); 
+    uart_param_config_t peie, 
+    uart_param_config_t txeie, 
+    uart_param_config_t tcie, 
+    uart_param_config_t rxneie, 
+    uart_param_config_t idleie, 
+    uart_param_config_t cts, 
+    uart_param_config_t eie); 
 
 //=======================================================================================
 

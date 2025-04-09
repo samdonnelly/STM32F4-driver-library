@@ -60,26 +60,47 @@ UART_STATUS uart_init(
     GPIO_TypeDef *gpio, 
     pin_selector_t rx_pin, 
     pin_selector_t tx_pin, 
+    uart_param_config_t word_length, 
+    uint8_t stop_bits, 
     uart_fractional_baud_t baud_frac, 
     uart_mantissa_baud_t baud_mant, 
-    uart_dma_config_t tx_dma, 
-    uart_dma_config_t rx_dma)
+    uart_param_config_t tx_dma, 
+    uart_param_config_t rx_dma)
 {
     if ((uart == NULL) || (gpio == NULL))
     {
         return UART_INVALID_PTR; 
     }
 
+    // // Enable the UART clock 
+    // if (uart == USART2)
+    // {
+    //     // USART2 
+    //     RCC->APB1ENR |= (SET_BIT << SHIFT_17); 
+    // }
+    // else 
+    // {
+    //     // USART1 and USART6 
+    //     RCC->APB2ENR |= (SET_BIT << (SHIFT_4 + (uint8_t)((uint32_t)(uart - USART1) >> SHIFT_10)));
+    // }
+
     // Enable the UART clock 
-    if (uart == USART2)
+    if (uart == USART1)
     {
-        // USART2 
+        RCC->APB2ENR |= (SET_BIT << SHIFT_4); 
+    }
+    else if (uart == USART2)
+    {
         RCC->APB1ENR |= (SET_BIT << SHIFT_17); 
+    }
+    else if (uart == USART6)
+    {
+        RCC->APB2ENR |= (SET_BIT << SHIFT_5); 
     }
     else 
     {
-        // USART1 and USART6 
-        RCC->APB2ENR |= (SET_BIT << (SHIFT_4 + (uint8_t)((uint32_t)(uart - USART1) >> SHIFT_10)));
+        // Not a valid pointer to a USART port 
+        return UART_INVALID_PTR; 
     }
 
     // Configure the UART pins for alternative functions 
@@ -88,8 +109,8 @@ UART_STATUS uart_init(
     gpio_pin_init(gpio, tx_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
     gpio_afr(gpio, tx_pin, SET_7); 
     
-    // Set the baud rate of the UART 
-    uart_set_baud_rate(uart, baud_frac, baud_mant); 
+    // Configure the data frame 
+    uart_data_frame_config(uart, word_length, stop_bits, baud_frac, baud_mant); 
 
     // Configure TX and RX DMA in the USART_CR3 register 
     uart->CR3 |= (tx_dma << SHIFT_7);   // DMAT bit 
@@ -105,24 +126,8 @@ UART_STATUS uart_init(
 // Configure the UART data frame 
 void uart_data_frame_config(
     USART_TypeDef *uart, 
-    uint8_t word_length, 
-    uint8_t parity, 
-    uint8_t stop_bits)
-{
-    // Word length 
-    uart->CR1 |= (word_length << SHIFT_12); 
-
-    // Parity selection 
-    uart->CR1 |= (parity << SHIFT_9); 
-
-    // Stop bits 
-    uart->CR2 |= (stop_bits << SHIFT_12); 
-}
-
-
-// Change the baud rate of the UART 
-void uart_set_baud_rate(
-    USART_TypeDef *uart, 
+    uart_param_config_t word_length, 
+    uint8_t stop_bits, 
     uart_fractional_baud_t baud_frac, 
     uart_mantissa_baud_t baud_mant)
 {
@@ -131,17 +136,21 @@ void uart_set_baud_rate(
     uart->BRR = CLEAR; 
 
     // Set the UE bit in the USART_CR1 register 
-    uart->CR1 |= (SET_BIT << SHIFT_13);
+    uart->CR1 |= (SET_BIT << SHIFT_13); 
 
-    // Clear the M bit in the USART_CR1 register for 8-bit data 
-    uart->CR1 &= ~(SET_BIT << SHIFT_12);
+    // Word length 
+    uart->CR1 |= (word_length << SHIFT_12); 
+
+    // Stop bits - truncate other bits 
+    stop_bits &= SET_3; 
+    uart->CR2 |= (stop_bits << SHIFT_12); 
 
     // Set the baud rate 
-    uart->BRR |= (baud_frac << SHIFT_0);  // Fractional 
-    uart->BRR |= (baud_mant << SHIFT_4);  // Mantissa 
+    uart->BRR |= (baud_frac << SHIFT_0);   // Fractional 
+    uart->BRR |= (baud_mant << SHIFT_4);   // Mantissa 
 
     // Enable the TX/RX by setting the RE and TE bits in USART_CR1 register 
-    uart->CR1 |= (SET_BIT << SHIFT_2);
+    uart->CR1 |= (SET_BIT << SHIFT_2); 
     uart->CR1 |= (SET_BIT << SHIFT_3); 
 
     // Clear the TC and RXNE status bits 
@@ -156,13 +165,13 @@ void uart_set_baud_rate(
 // UART interrupt initialization 
 void uart_interrupt_init(
     USART_TypeDef *uart, 
-    uart_int_config_t peie, 
-    uart_int_config_t txeie, 
-    uart_int_config_t tcie, 
-    uart_int_config_t rxneie, 
-    uart_int_config_t idleie, 
-    uart_int_config_t cts, 
-    uart_int_config_t eie)
+    uart_param_config_t peie, 
+    uart_param_config_t txeie, 
+    uart_param_config_t tcie, 
+    uart_param_config_t rxneie, 
+    uart_param_config_t idleie, 
+    uart_param_config_t cts, 
+    uart_param_config_t eie)
 {
     // Parity error (PE) interrupt enable 
     uart->CR1 |= (peie << SHIFT_8); 
