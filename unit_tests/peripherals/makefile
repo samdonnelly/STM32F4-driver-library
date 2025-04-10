@@ -32,6 +32,10 @@ endif
 SRC_FILES += ./../../sources/peripherals/analog_driver.c   # Production code 
 SRC_DIRS += tests/analog                                   # Test doubles and mocks 
 
+# Serial
+SRC_FILES += ./../../sources/peripherals/ibus.c            # Production code 
+SRC_DIRS += tests/serial                                   # Test doubles and mocks 
+
 # GPIO 
 SRC_FILES += ./../../sources/peripherals/gpio_driver.c     # Production code 
 
@@ -66,6 +70,10 @@ TEST_SRC_FILES +=
 TEST_SRC_DIRS += tests/analog                              # Unit tests 
 TEST_SRC_FILES += 
 
+# Serial
+TEST_SRC_DIRS += tests/serial                              # Unit tests 
+TEST_SRC_FILES += 
+
 # ----------------------------------
 
 # --------------------------------------------------------------------
@@ -95,6 +103,8 @@ INCLUDE_DIRS += $(CPPUTEST_HOME)/include
 INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Device/ST/STM32F4xx/Include
 INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Core/Include
 
+INCLUDE_DIRS += ./../../.include_path           # Production code 
+INCLUDE_DIRS += ./../../headers/core            # Production code 
 INCLUDE_DIRS += ./../../headers/peripherals     # Production code 
 INCLUDE_DIRS += ./../../headers/tools           # Production code 
 INCLUDE_DIRS += tests/analog                    # Test doubles 
