@@ -25,6 +25,7 @@ extern "C" {
 #include "stm32f411xe.h" 
 #include "tools.h" 
 #include "gpio_driver.h" 
+#include "dma_driver.h" 
 
 //=======================================================================================
 
@@ -189,6 +190,23 @@ typedef enum {
 // Datatypes 
 
 typedef uart_status_t UART_STATUS; 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Structures 
+
+// UART DMA input circular buffer indexing info 
+typedef struct uart_dma_input_cb_index_s 
+{
+    USART_TypeDef *uart;              // UART 
+    DMA_Stream_TypeDef *dma_stream;   // DMA 
+    cb_index_t cb_index;              // Circular buffer indexing info 
+    dma_index_t dma_index;            // DMA transfer indexing info 
+    uint16_t data_in_index;           // Data input buffer index 
+}
+uart_dma_input_cb_index_t;
 
 //=======================================================================================
 
