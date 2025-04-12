@@ -1,9 +1,9 @@
 /**
- * @file esc_readytosky_driver.h
+ * @file esc_driver.h
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief Readytosky bidirectional 40A 2-6S ESC driver interface 
+ * @brief ESC driver interface 
  * 
  * @version 0.1
  * @date 2023-09-05
@@ -12,8 +12,8 @@
  * 
  */
 
-#ifndef ESC_READYTOSKY_DRIVER_H_ 
-#define ESC_READYTOSKY_DRIVER_H_ 
+#ifndef ESC_DRIVER_H_ 
+#define ESC_DRIVER_H_ 
 
 #ifdef __cplusplus
 extern "C" {
@@ -86,7 +86,7 @@ extern "C" {
  * @param fwd_speed_lim : max PWM output (max forward speed) to cap the ESC at 
  * @param rev_speed_lim : min PWM output (max reverse speed) to cap the ESC at 
  */
-void esc_readytosky_init(
+void esc_init(
     device_number_t device_num, 
     TIM_TypeDef *timer, 
     tim_channel_t tim_channel, 
@@ -128,7 +128,7 @@ void esc_readytosky_init(
  * @param device_num : number used to fetch the device data record 
  * @param throttle_cmd : -100% to 100% throttle command 
  */
-void esc_readytosky_send(
+void esc_send(
     device_number_t device_num, 
     int16_t throttle_cmd); 
 
@@ -138,4 +138,4 @@ void esc_readytosky_send(
 }
 #endif
 
-#endif   // ESC_READYTOSKY_DRIVER_H_ 
+#endif   // ESC_DRIVER_H_ 
