@@ -72,30 +72,23 @@ UART_STATUS uart_init(
         return UART_INVALID_PTR; 
     }
 
-    // // Enable the UART clock 
-    // if (uart == USART2)
-    // {
-    //     // USART2 
-    //     RCC->APB1ENR |= (SET_BIT << SHIFT_17); 
-    // }
-    // else 
-    // {
-    //     // USART1 and USART6 
-    //     RCC->APB2ENR |= (SET_BIT << (SHIFT_4 + (uint8_t)((uint32_t)(uart - USART1) >> SHIFT_10)));
-    // }
+    bit_setter_t afr; 
 
-    // Enable the UART clock 
+    // Enable the UART clock and map the alternate function bits 
     if (uart == USART1)
     {
         RCC->APB2ENR |= (SET_BIT << SHIFT_4); 
+        afr = SET_7; 
     }
     else if (uart == USART2)
     {
         RCC->APB1ENR |= (SET_BIT << SHIFT_17); 
+        afr = SET_7; 
     }
     else if (uart == USART6)
     {
         RCC->APB2ENR |= (SET_BIT << SHIFT_5); 
+        afr = SET_8; 
     }
     else 
     {
@@ -105,9 +98,9 @@ UART_STATUS uart_init(
 
     // Configure the UART pins for alternative functions 
     gpio_pin_init(gpio, rx_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-    gpio_afr(gpio, rx_pin, SET_7); 
+    gpio_afr(gpio, rx_pin, afr); 
     gpio_pin_init(gpio, tx_pin, MODER_AF, OTYPER_PP, OSPEEDR_HIGH, PUPDR_NO); 
-    gpio_afr(gpio, tx_pin, SET_7); 
+    gpio_afr(gpio, tx_pin, afr); 
     
     // Configure the data frame 
     uart_data_frame_config(uart, word_length, stop_bits, baud_frac, baud_mant); 
