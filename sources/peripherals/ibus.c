@@ -31,6 +31,8 @@
 // Macros 
 
 #define IBUS_PACKET_HEADER 0x4020 
+#define IBUS_PACKET_HEADER_HI 0x40 
+#define IBUS_PACKET_HEADER_LO 0x20 
 
 //=======================================================================================
 
@@ -124,6 +126,33 @@ UART_STATUS ibus_get_data(
     }
 
     return status; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Data handling 
+
+// Align IBUS packets 
+ibus_packet_t* ibus_packet_align(
+    uint8_t *packets, 
+    uint16_t data_size)
+{
+    ibus_packet_t *packet_start = NULL; 
+
+    for (uint16_t i = CLEAR; i < (data_size - 1); i++)
+    {
+        // Search for the packet header 
+        if ((packets[i] == IBUS_PACKET_HEADER_LO) && 
+            (packets[i + 1] == IBUS_PACKET_HEADER_HI))
+        {
+            packet_start = (ibus_packet_t *)&packets[i]; 
+            break; 
+        }
+    }
+
+    return packet_start; 
 }
 
 //=======================================================================================

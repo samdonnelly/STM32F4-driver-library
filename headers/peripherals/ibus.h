@@ -156,6 +156,33 @@ UART_STATUS ibus_get_data(
 
 //=======================================================================================
 
+
+//=======================================================================================
+// Data handling 
+
+/**
+ * @brief Align IBUS packets 
+ * 
+ * @details There may be cases where each IBUS packet is not processed/checked right as 
+ *          it comes in, but instead packets are collected and checked at an interval 
+ *          unrelated to IBUS timing. For example, IBUS data gets sent every 7ms but the 
+ *          system may only check packets every 50ms. In this example, the rate at which 
+ *          data arrives and the rate at which it's checked are not synced/aligned with 
+ *          one another so the collected data may not start and end with complete 
+ *          packets. To allow this type of packet collection to occur, this function 
+ *          takes the packet data buffer and finds the first start to a packet, then 
+ *          returns the location of the packet start in the buffer. 
+ * 
+ * @param packets : buffer containing packets 
+ * @param data_size : size of data in buffer 
+ * @return ibus_packet_t : pointer to the start of a packet in the packets buffer 
+ */
+ibus_packet_t* ibus_packet_align(
+    uint8_t *packets, 
+    uint16_t data_size); 
+
+//=======================================================================================
+
 #ifdef __cplusplus
 }
 #endif
