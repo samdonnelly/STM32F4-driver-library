@@ -88,30 +88,29 @@ void esc_init(
     driver_data_ptr->timer = timer; 
     driver_data_ptr->tim_channel = tim_channel; 
 
-    // Make sure the speed limits are within the limitations of the device. 
-
-    if (fwd_speed_lim > ESC_FWD_MAX_TIME)
+    // Make sure the speed limits don't exceed PWM boundaries. 
+    if (fwd_speed_lim > ESC_MAX_PWM)
     {
-        driver_data_ptr->fwd_speed_lim = ESC_FWD_MAX_TIME; 
+        driver_data_ptr->fwd_speed_lim = ESC_MAX_PWM; 
     }
-    else if (fwd_speed_lim < ESC_FWD_START_TIME)
+    else if (fwd_speed_lim < ESC_NEUTRAL_PWM)
     {
-        driver_data_ptr->fwd_speed_lim = ESC_FWD_START_TIME; 
+        driver_data_ptr->fwd_speed_lim = ESC_NEUTRAL_PWM; 
     }
-    else 
+    else
     {
         driver_data_ptr->fwd_speed_lim = fwd_speed_lim; 
     }
 
-    if (rev_speed_lim < ESC_REV_MAX_TIME)
+    if (rev_speed_lim > ESC_NEUTRAL_PWM)
     {
-        driver_data_ptr->rev_speed_lim = ESC_REV_MAX_TIME; 
+        driver_data_ptr->rev_speed_lim = ESC_NEUTRAL_PWM; 
     }
-    else if (rev_speed_lim > ESC_REV_START_TIME)
+    else if (rev_speed_lim < ESC_MIN_PWM)
     {
-        driver_data_ptr->rev_speed_lim = ESC_REV_START_TIME; 
+        driver_data_ptr->rev_speed_lim = ESC_MIN_PWM; 
     }
-    else 
+    else
     {
         driver_data_ptr->rev_speed_lim = rev_speed_lim; 
     }
@@ -138,7 +137,8 @@ void esc_send(
         return; 
     }
 
-    uint32_t pwm_cmd = ESC_NEUTRAL_TIME; 
+    // uint32_t pwm_cmd = ESC_NEUTRAL_TIME; 
+    uint32_t pwm_cmd = ESC_NEUTRAL_PWM; 
     uint16_t throttle = CLEAR; 
 
     // Determine the PWM output 
@@ -154,8 +154,8 @@ void esc_send(
         throttle = (uint16_t)throttle_cmd; 
 
         // Calculate the forward throttle pwm command 
-        pwm_cmd = (uint32_t)(ESC_FWD_START_TIME + 
-            ((driver_data_ptr->fwd_speed_lim - ESC_FWD_START_TIME)*throttle) / ESC_MAX_THROTTLE); 
+        pwm_cmd = (uint32_t)(ESC_NEUTRAL_PWM + 
+            ((driver_data_ptr->fwd_speed_lim - ESC_NEUTRAL_PWM)*throttle) / ESC_MAX_THROTTLE); 
     }
     else if (throttle_cmd < 0)
     {
@@ -173,11 +173,41 @@ void esc_send(
 
         // Calculate the reverse throttle pwm command  
         pwm_cmd = (uint32_t)(driver_data_ptr->rev_speed_lim + 
-            ((ESC_REV_START_TIME - driver_data_ptr->rev_speed_lim)*throttle) / ESC_MAX_THROTTLE); 
+            ((ESC_NEUTRAL_PWM - driver_data_ptr->rev_speed_lim)*throttle) / ESC_MAX_THROTTLE); 
     }
 
     // Write the PWM command 
     tim_ccr(driver_data_ptr->timer, pwm_cmd, driver_data_ptr->tim_channel); 
+}
+
+
+// ESC PWM command set 
+void esc_pwm_set(
+    device_number_t device_num, 
+    uint16_t pwm_command)
+{
+    // Get the device data record 
+    esc_driver_data_t *esc_data = 
+        (esc_driver_data_t *)get_linked_list_entry(device_num, esc_driver_data_ptr); 
+
+    // Check for valid data 
+    if (esc_data == NULL) 
+    {
+        return; 
+    }
+
+    // Cap the command if it exceeds the set limits 
+    if (pwm_command > esc_data->fwd_speed_lim)
+    {
+        pwm_command = esc_data->fwd_speed_lim; 
+    }
+    else if (pwm_command < esc_data->rev_speed_lim)
+    {
+        pwm_command = esc_data->rev_speed_lim; 
+    }
+
+    // Set the PWM command 
+    tim_ccr(esc_data->timer, (uint32_t)pwm_command, esc_data->tim_channel); 
 }
 
 //=======================================================================================

@@ -37,14 +37,11 @@ extern "C" {
 // Macros 
 
 // Output 
-#define ESC_NEUTRAL_TIME 1520     // PWM pulse duration for "neutral" gear (us) 
-#define ESC_REV_START_TIME 1470   // PWM pulse duration for start of reverse thrust (us) 
-#define ESC_REV_MAX_TIME 1220     // PWM pulse duration for max reverse thrust (us) 
-#define ESC_FWD_START_TIME 1570   // PWM pulse duration for start of forward thrust (us) 
-#define ESC_FWD_MAX_TIME 1820     // PWM pulse duration for max forward thrust (us) 
+#define ESC_MIN_PWM 1000       // Min PWM pulse duration (us) 
+#define ESC_NEUTRAL_PWM 1500   // Neutral (zero motor output) PWM pulse duration (us) 
+#define ESC_MAX_PWM 2000       // Max PWM pulse duration (us) 
 
 // Calculation 
-// #define ESC_CMD_SCALAR 100        // PWM calculation scalar (0-100% throttle scalar) 
 #define ESC_MAX_THROTTLE 100      // Max throttle command 
 
 //=======================================================================================
@@ -131,6 +128,26 @@ void esc_init(
 void esc_send(
     device_number_t device_num, 
     int16_t throttle_cmd); 
+
+
+/**
+ * @brief ESC PWM command set 
+ * 
+ * @details Update the PWM command provided to the ESC. PWM commands follow standard 
+ *          ESC PWM values of: 
+ *          - 1000 --> Full speed one direction 
+ *          - 1500 --> neutral/off 
+ *          - 2000 --> Full speed the other direction 
+ *          
+ *          The provided PWM command will be capped if it exceeds the limits set in the 
+ *          init function. 
+ * 
+ * @param device_num : number used to fetch the device data record 
+ * @param pwm_command : PWM command to supply to the ESC 
+ */
+void esc_pwm_set(
+    device_number_t device_num, 
+    uint16_t pwm_command); 
 
 //=======================================================================================
 
