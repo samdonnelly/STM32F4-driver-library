@@ -843,6 +843,8 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     // Coordinate values 
     DOUBLES_EQUAL(CLEAR, m8q_get_position_lat(), 0.000001); 
     DOUBLES_EQUAL(CLEAR, m8q_get_position_lon(), 0.000001); 
+    LONGS_EQUAL(CLEAR, m8q_get_position_latI()); 
+    LONGS_EQUAL(CLEAR, m8q_get_position_lonI()); 
 
     // Coordinate strings 
     LONGS_EQUAL(M8Q_DATA_BUFF_OVERFLOW, m8q_get_position_lat_str(lat_str, BYTE_5)); 
@@ -855,6 +857,10 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     // Coordinate directions 
     LONGS_EQUAL(CLEAR, m8q_get_position_NS()); 
     LONGS_EQUAL(CLEAR, m8q_get_position_EW()); 
+
+    // Altitude value 
+    DOUBLES_EQUAL(CLEAR, m8q_get_position_altref(), 0.001); 
+    LONGS_EQUAL(CLEAR, m8q_get_position_altrefI()); 
     
     // Position lock 
     LONGS_EQUAL(CLEAR, m8q_get_position_navstat()); 
@@ -888,6 +894,8 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     // Coordinate values 
     DOUBLES_EQUAL(47.285220, m8q_get_position_lat(), 0.000001); 
     DOUBLES_EQUAL(-114.565253, m8q_get_position_lon(), 0.000001); 
+    LONGS_EQUAL(472852201, m8q_get_position_latI()); 
+    LONGS_EQUAL(-1145652530, m8q_get_position_lonI()); 
 
     // Coordinate strings 
     m8q_get_position_lat_str(lat_str, BYTE_11); 
@@ -898,6 +906,10 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     // Coordinate directions 
     LONGS_EQUAL(N_UP_CHAR, m8q_get_position_NS()); 
     LONGS_EQUAL(W_UP_CHAR, m8q_get_position_EW()); 
+
+    // Altitude value 
+    DOUBLES_EQUAL(546.589, m8q_get_position_altref(), 0.001); 
+    LONGS_EQUAL(546589, m8q_get_position_altrefI()); 
     
     // Position lock 
     LONGS_EQUAL(M8Q_NAVSTAT_G3, m8q_get_position_navstat()); 

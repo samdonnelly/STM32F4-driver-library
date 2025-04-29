@@ -357,6 +357,50 @@ typedef uint8_t M8Q_MSG_TYPE;
 // Prototypes 
 
 /**
+ * @brief Convert the latitude string to a number 
+ * 
+ * @details Takes the latitude string formatted as "DDMM.MMMMM" and converts it into two 
+ *          numbers: 
+ *          1. deg_integer --> integer portion of degrees ("DD" --> DD*10^scale) 
+ *          2. min_scaled --> minutes as a scaled integer ("MM.MMMMM" --> MMMMMMM)
+ *          
+ *          This is used to return both scaled integer and floating point degree values 
+ *          for latitude. The 'scale' parameter indicates how to scale the degree integer 
+ *          portion. 
+ * 
+ * @param deg_integer : integer portion of degrees 
+ * @param min_scaled : scaled integer value of minutes 
+ * @param scale : magnitude to scale deg_integer 
+ */
+void m8q_lat_str_convert(
+    int32_t *deg_integer, 
+    int32_t *min_scaled, 
+    uint8_t scale); 
+
+
+/**
+ * @brief Convert the longitude string to a number 
+ * 
+ * @details Takes the longitude string formatted as "DDDMM.MMMMM" and converts it into 
+ *          two numbers: 
+ *          1. deg_integer --> integer portion of degrees ("DDD" --> DDD*10^scale) 
+ *          2. min_scaled --> minutes as a scaled integer ("MM.MMMMM" --> MMMMMMM)
+ *          
+ *          This is used to return both scaled integer and floating point degree values 
+ *          for longitude. The 'scale' parameter indicates how to scale the degree 
+ *          integer portion. 
+ * 
+ * @param deg_integer : integer portion of degrees 
+ * @param min_scaled : scaled integer value of minutes 
+ * @param scale : magnitude to scale deg_integer 
+ */
+void m8q_lon_str_convert(
+    int32_t *deg_integer, 
+    int32_t *min_scaled, 
+    uint8_t scale); 
+
+
+/**
  * @brief Flush/clear the M8Q data stream 
  * 
  * @details Reads all the data in the device stream but doesn't store any of it. This 
@@ -933,7 +977,7 @@ M8Q_STATUS m8q_read_data(void)
     // then clear the stream data and return a buffer overflow status. 
     read_status = m8q_read_ds_size(&stream_len); 
 
-    if (!read_status)
+    if (read_status == M8Q_OK)
     {
         read_status = (stream_len > m8q_driver_data.data_buff_limit) ? 
                       m8q_flush_ds(stream_len) : m8q_read_sort_ds(stream_len); 
@@ -1080,8 +1124,35 @@ void m8q_clear_low_pwr(void)
 }
 
 
-// Get latitude coordinate 
+// Get the floating point latitude coordinate (degrees) 
 double m8q_get_position_lat(void)
+{
+    int32_t deg_int = CLEAR, min_scaled = CLEAR; 
+    m8q_lat_str_convert(&deg_int, &min_scaled, BYTE_0); 
+
+    // Calculate and return the final degree value. This requires changing the scaled 
+    // minutes value into a fractional/decimal degrees value. 
+    return ((double)deg_int) + (((double)min_scaled) / (pow(SCALE_10, BYTE_5)*MIN_TO_DEG)); 
+}
+
+
+// Get the scaled integer latitude coordinate (degrees*10^7) 
+int32_t m8q_get_position_latI(void)
+{
+    int32_t deg_int = CLEAR, min_scaled = CLEAR; 
+    m8q_lat_str_convert(&deg_int, &min_scaled, BYTE_7); 
+
+    // Calculate and return the scaled integer degree value. The minutes get converted to
+    // the fractional part of degrees and scaled so all decimal places are accounted for.  
+    return deg_int + (min_scaled * SCALE_100 / MIN_TO_DEG); 
+}
+
+
+// Convert the latitude string to a number 
+void m8q_lat_str_convert(
+    int32_t *deg_integer, 
+    int32_t *min_scaled, 
+    uint8_t scale)
 {
     // Latitude is formatted as a string with the following characters: DDMM.MMMMM - where 
     // 'D' is a degrees digit and 'M' is a minutes digit. This function converts the string 
@@ -1089,23 +1160,22 @@ double m8q_get_position_lat(void)
     // for each part of the coordinate. Based on the format above, there are two digits each 
     // for the integer portion of degrees and minutes, a decimal point, and five digits for 
     // the fractional part of the minutes. Since the final product is a double expressed 
-    // in degrees, 'deg_int' holds the conversion of the first two digits and 'deg_frac' 
+    // in degrees, 'deg_integer' holds the conversion of the first two digits and 'min_scaled' 
     // holds the conversion of the minutes which makes up the fractional/decimal part of 
     // the degrees. 
 
-    int32_t deg_int = CLEAR; 
-    int32_t deg_frac = CLEAR; 
     uint8_t lat_index = CLEAR; 
+    scale += BYTE_1; 
 
     // Convert the integer portion of the degrees and minutes, both of which are two 
     // digit/characters in length. The minutes get converted to a scaled value to 
     // prepare for adding the fractional/decimal part of the minute. 
     do
     {
-        deg_int += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index], 
-                                        BYTE_1 - lat_index); 
-        deg_frac += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index + BYTE_2], 
-                                         BYTE_6 - lat_index); 
+        *deg_integer += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index], 
+                                             scale - lat_index); 
+        *min_scaled +=  (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index + BYTE_2], 
+                                             BYTE_6 - lat_index); 
     }
     while (++lat_index < BYTE_2); 
 
@@ -1117,8 +1187,8 @@ double m8q_get_position_lat(void)
     // fractional part of the minute is 5 characters in length. 
     do
     {
-        deg_frac += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index], 
-                                         BYTE_9 - lat_index); 
+        *min_scaled += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index], 
+                                            BYTE_9 - lat_index); 
     }
     while (++lat_index < BYTE_10); 
 
@@ -1127,13 +1197,9 @@ double m8q_get_position_lat(void)
     // indicator. 
     if (m8q_get_position_NS() == S_UP_CHAR) 
     {
-        deg_int = ~deg_int + 1; 
-        deg_frac = ~deg_frac + 1; 
+        *deg_integer = -(*deg_integer); 
+        *min_scaled = -(*min_scaled); 
     }
-
-    // Calculate and return the final degree value. This requires changing the scaled 
-    // minutes value into a fractional/decimal degrees value. 
-    return ((double)deg_int) + (((double)deg_frac) / (pow(SCALE_10, BYTE_5)*MIN_TO_DEG)); 
 }
 
 
@@ -1159,8 +1225,35 @@ uint8_t m8q_get_position_NS(void)
 }
 
 
-// Get longitude coordinate 
+// Get the floating point longitude coordinate (degrees) 
 double m8q_get_position_lon(void)
+{
+    int32_t deg_int = CLEAR, min_scaled = CLEAR; 
+    m8q_lon_str_convert(&deg_int, &min_scaled, BYTE_0); 
+
+    // Calculate and return the final degree value. This requires changing the scaled 
+    // minutes value into a fractional/decimal degrees value. 
+    return ((double)deg_int) + (((double)min_scaled) / (pow(SCALE_10, BYTE_5)*MIN_TO_DEG)); 
+}
+
+
+// Get the scaled integer longitude coordinate (degrees*10^7) 
+int32_t m8q_get_position_lonI(void)
+{
+    int32_t deg_int = CLEAR, min_scaled = CLEAR; 
+    m8q_lon_str_convert(&deg_int, &min_scaled, BYTE_7); 
+
+    // Calculate and return the scaled integer degree value. The minutes get converted to
+    // the fractional part of degrees and scaled so all decimal places are accounted for.  
+    return deg_int + (min_scaled * SCALE_100 / MIN_TO_DEG); 
+}
+
+
+// Convert the longitude string to a number 
+void m8q_lon_str_convert(
+    int32_t *deg_integer, 
+    int32_t *min_scaled, 
+    uint8_t scale)
 {
     // Longitude is formatted as a string with the following characters: DDDMM.MMMMM - where 
     // 'D' is a degrees digit and 'M' is a minutes digit. This function converts the string 
@@ -1172,22 +1265,22 @@ double m8q_get_position_lon(void)
     // and 'deg_frac' holds the conversion of the minutes which makes up the 
     // fractional/decimal part of the degrees. 
     
-    int32_t deg_int = CLEAR; 
-    int32_t deg_frac = CLEAR; 
     uint8_t lon_index = CLEAR; 
+    scale += BYTE_2; 
 
-    // Convert the integer portion of the degrees and minutes, both of which are two 
-    // digit/characters in length. The minutes get converted to a scaled value to 
-    // prepare for adding the fractional/decimal part of the minute. 
-    deg_int += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
-                                    BYTE_2 - lon_index); 
+    // Convert the integer portion of the degrees (3 digits) and minutes (2 digits). The 
+    // minutes get converted to a scaled value to prepare for adding the fractional part 
+    // of the minute. Since the degree integer portion is one digit larger, and extra 
+    // conversion is added. 
+    *deg_integer += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
+                                         scale - lon_index); 
     
     while (++lon_index < BYTE_3)
     {
-        deg_int += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
-                                        BYTE_2 - lon_index); 
-        deg_frac += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index + BYTE_2], 
-                                         BYTE_7 - lon_index); 
+        *deg_integer += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
+                                             scale - lon_index); 
+        *min_scaled +=  (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index + BYTE_2], 
+                                             BYTE_7 - lon_index); 
     }
 
     // Bypass the decimal point character 
@@ -1198,8 +1291,8 @@ double m8q_get_position_lon(void)
     // fractional part of the minute is 5 characters in length. 
     do
     {
-        deg_frac += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
-                                         BYTE_10 - lon_index); 
+        *min_scaled += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
+                                            BYTE_10 - lon_index); 
     }
     while (++lon_index < BYTE_11); 
 
@@ -1208,13 +1301,9 @@ double m8q_get_position_lon(void)
     // indicator. 
     if (m8q_get_position_EW() == W_UP_CHAR) 
     {
-        deg_int = ~deg_int + 1; 
-        deg_frac = ~deg_frac + 1; 
+        *deg_integer = -(*deg_integer); 
+        *min_scaled = -(*min_scaled); 
     }
-
-    // Calculate and return the final degree value. This requires changing the scaled 
-    // minutes value into a fractional/decimal degrees value. 
-    return ((double)deg_int) + (((double)deg_frac) / (pow(SCALE_10, BYTE_5)*MIN_TO_DEG)); 
 }
 
 
@@ -1237,6 +1326,38 @@ M8Q_STATUS m8q_get_position_lon_str(
 uint8_t m8q_get_position_EW(void)
 {
     return m8q_driver_data.pos_data.EW[BYTE_0]; 
+}
+
+
+// Get the floating point WGS84 altitude (m) 
+float m8q_get_position_altref(void)
+{
+    // altRef always has 3 decimal places. 
+    return (float)m8q_get_position_altrefI() / powf(SCALE_10, BYTE_3); 
+}
+
+
+// Get the integer WGS84 altitude (mm) 
+int32_t m8q_get_position_altrefI(void)
+{
+    uint8_t altref[BYTE_9]; 
+    uint8_t altref_len = CLEAR; 
+    int32_t altitude = CLEAR; 
+
+    for (uint8_t i = CLEAR; (i < BYTE_9) && (m8q_driver_data.pos_data.altRef[i] != NULL_CHAR); i++)
+    {
+        if (m8q_driver_data.pos_data.altRef[i] != PERIOD_CHAR)
+        {
+            altref[altref_len++] = m8q_driver_data.pos_data.altRef[i]; 
+        }
+    }
+
+    for (uint8_t i = CLEAR; i < altref_len; i++)
+    {
+        altitude += (int32_t)char_to_int(altref[i], altref_len - i - 1); 
+    }
+
+    return altitude; 
 }
 
 

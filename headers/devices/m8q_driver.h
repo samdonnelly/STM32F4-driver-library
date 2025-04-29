@@ -316,7 +316,7 @@ void m8q_clear_low_pwr(void);
 
 
 /**
- * @brief Get latitude coordinate 
+ * @brief Get the floating point latitude coordinate (degrees) 
  * 
  * @details Get the converted value of latitude read from the POSITION PUBX NMEA message. 
  *          POSITION returns an absolute value of latitude and the NS byte is used to 
@@ -327,9 +327,26 @@ void m8q_clear_low_pwr(void);
  * 
  * @see m8q_read_data 
  * 
- * @return double : latitude 
+ * @return double : floating point latitude coordinate (degrees) 
  */
 double m8q_get_position_lat(void); 
+
+
+/**
+ * @brief Get the scaled integer latitude coordinate (degrees*10^7) 
+ * 
+ * @details Get the latitude represented as a scaled integer using the data from the 
+ *          POSITION PUBX NMEA message (absolute value of latitude and N/S indicator). 
+ *          Latitude ranges from +/-90 deg so the returned value is within 
+ *          +/-900000000 degrees*10^7. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @see m8q_read_data 
+ * 
+ * @return int32_t : scaled integer latitude coordinates (degrees*10^7) 
+ */
+int32_t m8q_get_position_latI(void); 
 
 
 /**
@@ -367,7 +384,7 @@ uint8_t m8q_get_position_NS(void);
 
 
 /**
- * @brief Get longitude coordinate 
+ * @brief Get the floating point longitude coordinate (degrees) 
  * 
  * @details Get the converted value of longitude read from the POSITION PUBX NMEA message. 
  *          POSITION returns an absolute value of longitude and the EW byte is used to 
@@ -381,6 +398,23 @@ uint8_t m8q_get_position_NS(void);
  * @return double : longitude 
  */
 double m8q_get_position_lon(void); 
+
+
+/**
+ * @brief Get the scaled integer longitude coordinate (degrees*10^7) 
+ * 
+ * @details Get the longitude represented as a scaled integer using the data from the 
+ *          POSITION PUBX NMEA message (absolute value of longitude and E/W indicator). 
+ *          Longitude ranges from +/-180 deg so the returned value is within 
+ *          +/-1800000000 degrees*10^7. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @see m8q_read_data 
+ * 
+ * @return int32_t : scaled integer longitude coordinates (degrees*10^7) 
+ */
+int32_t m8q_get_position_lonI(void); 
 
 
 /**
@@ -415,6 +449,36 @@ M8Q_STATUS m8q_get_position_lon_str(
  * @return uint8_t : EW byte 
  */
 uint8_t m8q_get_position_EW(void); 
+
+
+/**
+ * @brief Get the floating point WGS84 altitude (m) 
+ * 
+ * @details Get the altitude above the user datum ellipsoid represented as a floating 
+ *          point value using the data from the POSITION PUBX NMEA message. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @see m8q_read_data 
+ * 
+ * @return float : WGS84 altitude (m) 
+ */
+float m8q_get_position_altref(void); 
+
+
+/**
+ * @brief Get the integer WGS84 altitude (mm) 
+ * 
+ * @details Get the altitude above the user datum ellipsoid represented as an integer 
+ *          value using the data from the POSITION PUBX NMEA message. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @see m8q_read_data 
+ * 
+ * @return int32_t : WGS84 altitude (mm) 
+ */
+int32_t m8q_get_position_altrefI(void); 
 
 
 /**
