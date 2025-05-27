@@ -271,7 +271,7 @@ void lsm303agr_m_get_field(int32_t *m_field_data);
  * @see lsm303agr_m_update 
  * @see lsm303agr_m_heading_calibration 
  * 
- * @return int16_t : magnetometer heading 
+ * @return int16_t : magnetometer heading (degrees*10) 
  */
 int16_t lsm303agr_m_get_heading(void); 
 
