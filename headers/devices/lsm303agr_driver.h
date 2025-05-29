@@ -118,7 +118,7 @@ typedef uint8_t LSM303AGR_STATUS;
  * @see lsm303agr_m_heading_calibration 
  * 
  * @param i2c : I2C port to use for communicating with the device 
- * @param offsets : errors between actual and calculated headings 
+//  * @param offsets : errors between actual and calculated headings 
  * @param heading_lpf_gain : low pass filter gain for calculating the heading 
  * @param m_odr : output data rate 
  * @param m_mode : system mode 
@@ -130,7 +130,7 @@ typedef uint8_t LSM303AGR_STATUS;
  */
 LSM303AGR_STATUS lsm303agr_m_init(
     I2C_TypeDef *i2c, 
-    const int16_t *offsets, 
+    // const int16_t *offsets, 
     double heading_lpf_gain, 
     lsm303agr_m_odr_cfg_t m_odr, 
     lsm303agr_m_sys_mode_t m_mode, 
@@ -141,63 +141,89 @@ LSM303AGR_STATUS lsm303agr_m_init(
 
 
 /**
- * @brief Calibrate the magnetometer heading 
+ * @brief Set the hard-iron offset registers 
  * 
- * @details Generate equations that help correct errors in the calculated heading. The 
- *          magnetometer is prone to errors and interference which can inaccurately 
- *          represent the direction the device is pointing. To correct this, the 
- *          difference between the actual and calculated heading is used to adjust the 
- *          calculated heading to a value that's more accurate. The errors seen by the 
- *          device is application and device dependent which is why calibration is 
- *          needed. 
- *          
- *          These generated equations get using in lsm303agr_m_get_heading where the 
- *          heading is updated. This function can be called independently to update the 
- *          offsets but it also gets called during lsm303agr_m_init. 
- *          
- *          The "offsets" argument stores the errors needed to generate the equations. 
- *          "offsets" is a buffer with LSM303AGR_M_NUM_DIR elements that represent the 
- *          following directions: 0 (360), 45, 90, 135, 180, 225, 270, and 315 degrees. 
- *          These directions/headings are relative to magnetic north (0/360 degrees) 
- *          and increase in the clockwise direction. The X-axis of the device is 
- *          considered the forward direction or the direction the magnetometer is 
- *          pointing. To find the values to use in "offsets", the following procedure 
- *          can be used: 
- *          
- *          1. Generate a sample program that reads magnetometer data, calculates the 
- *             heading and outputs the value of the heading somewhere to be seen in real 
- *             time. Initialize the magnetometer with 0's for all the offsets. 
- *          
- *          2. Position the magnetometer so its forward direction is aligned with the 
- *             forward direction of your system. Note that device errors are system 
- *             dependent so make sure this calibration is being done using your system 
- *             setup. Place an external compass on/in your system, align the compass 
- *             needle with the forward direction of your system (parallel to the 
- *             magnetometer), and make sure the compass reading is visible. Note that 
- *             depending on the compass used, the compass can cause interference with 
- *             the magnetometer (ex. if you're using your phone as a compass) so it's 
- *             best to make sure the compass isn't placed too close. 
- *          
- *          3. Run the program and use the compass to align the forward direction of the 
- *             system with each of the following directions one at a time: 0, 45, 90, 
- *             135, 180, 225, 270, 315 degrees. Note that the calculated heading and 
- *             the errors stored in "offsets" are of units degrees*10. At each direction 
- *             make sure the magnetometer reading is stable, then calculate the offset 
- *             for a given direction by subtrating the magnetometer heading from the 
- *             compass heading (ex. 45 degrees --> offsets[1] = 450 - heading degrees*10). 
- *             The index of "offsets" corresponds to the direction index*45 (ex. 
- *             offsets[0] --> 0 degrees, offsets[7] --> 315 degrees, etc.). 
- *           
- *          4. Once all the offsets have been recored, pass "offsets" with the updated 
- *             values either to this function or lsm303agr_m_init to and start using 
- *             the magnetometer as a compass by calling lsm303agr_m_get_heading. 
+ * @details 
  * 
- * @see lsm303agr_m_init 
- * @see lsm303agr_m_get_heading 
- * 
- * @param offsets : error between magnetometer heading and true heading in each direction 
+ * @param offset_reg : hard-iron offsets to update the registers with 
+ * @return LSM303AGR_STATUS : status of the register write 
  */
-void lsm303agr_m_heading_calibration(const int16_t *offsets); 
+LSM303AGR_STATUS lsm303agr_m_offset_reg_set(const int16_t *offset_reg); 
+
+
+/**
+ * @brief Set the hard and soft-iron calibration values 
+ * 
+ * @details 
+ * 
+ * @param hi_offsets : hard-iron offsets to set 
+ * @param sid_values : soft-iron diagonal values to set 
+ * @param sio_values : soft-iron off-diagonal values to set 
+ */
+void lsm303agr_m_calibration_set(
+    const int16_t *hi_offsets, 
+    const int16_t *sid_values, 
+    const int16_t *sio_values); 
+
+
+// /**
+//  * @brief Calibrate the magnetometer heading 
+//  * 
+//  * @details Generate equations that help correct errors in the calculated heading. The 
+//  *          magnetometer is prone to errors and interference which can inaccurately 
+//  *          represent the direction the device is pointing. To correct this, the 
+//  *          difference between the actual and calculated heading is used to adjust the 
+//  *          calculated heading to a value that's more accurate. The errors seen by the 
+//  *          device is application and device dependent which is why calibration is 
+//  *          needed. 
+//  *          
+//  *          These generated equations get using in lsm303agr_m_get_heading where the 
+//  *          heading is updated. This function can be called independently to update the 
+//  *          offsets but it also gets called during lsm303agr_m_init. 
+//  *          
+//  *          The "offsets" argument stores the errors needed to generate the equations. 
+//  *          "offsets" is a buffer with LSM303AGR_M_NUM_DIR elements that represent the 
+//  *          following directions: 0 (360), 45, 90, 135, 180, 225, 270, and 315 degrees. 
+//  *          These directions/headings are relative to magnetic north (0/360 degrees) 
+//  *          and increase in the clockwise direction. The X-axis of the device is 
+//  *          considered the forward direction or the direction the magnetometer is 
+//  *          pointing. To find the values to use in "offsets", the following procedure 
+//  *          can be used: 
+//  *          
+//  *          1. Generate a sample program that reads magnetometer data, calculates the 
+//  *             heading and outputs the value of the heading somewhere to be seen in real 
+//  *             time. Initialize the magnetometer with 0's for all the offsets. 
+//  *          
+//  *          2. Position the magnetometer so its forward direction is aligned with the 
+//  *             forward direction of your system. Note that device errors are system 
+//  *             dependent so make sure this calibration is being done using your system 
+//  *             setup. Place an external compass on/in your system, align the compass 
+//  *             needle with the forward direction of your system (parallel to the 
+//  *             magnetometer), and make sure the compass reading is visible. Note that 
+//  *             depending on the compass used, the compass can cause interference with 
+//  *             the magnetometer (ex. if you're using your phone as a compass) so it's 
+//  *             best to make sure the compass isn't placed too close. 
+//  *          
+//  *          3. Run the program and use the compass to align the forward direction of the 
+//  *             system with each of the following directions one at a time: 0, 45, 90, 
+//  *             135, 180, 225, 270, 315 degrees. Note that the calculated heading and 
+//  *             the errors stored in "offsets" are of units degrees*10. At each direction 
+//  *             make sure the magnetometer reading is stable, then calculate the offset 
+//  *             for a given direction by subtrating the magnetometer heading from the 
+//  *             compass heading (ex. 45 degrees --> offsets[1] = 450 - heading degrees*10). 
+//  *             The index of "offsets" corresponds to the direction index*45 (ex. 
+//  *             offsets[0] --> 0 degrees, offsets[7] --> 315 degrees, etc.). 
+//  *           
+//  *          4. Once all the offsets have been recored, pass "offsets" with the updated 
+//  *             values either to this function or lsm303agr_m_init to and start using 
+//  *             the magnetometer as a compass by calling lsm303agr_m_get_heading. 
+//  * 
+//  * @see lsm303agr_m_init 
+//  * @see lsm303agr_m_get_heading 
+//  * 
+//  * @param offsets : error between magnetometer heading and true heading in each direction 
+//  */
+// void lsm303agr_m_heading_calibration(const int16_t *offsets); 
 
 //=======================================================================================
 
@@ -219,34 +245,48 @@ LSM303AGR_STATUS lsm303agr_m_update(void);
 /**
  * @brief Get magnetometer axis data 
  * 
- * @details Saves the last read magnetometer axis data to the buffer. lsm303agr_m_update 
- *          must be called before this function to read the most recent magnetometer 
- *          data or else the data retrieved by this function will not change. Note that 
- *          the buffer must be large enough to store data for each axis. 
+ * @details Copies the last read magnetometer axis data to the provided buffer. If the 
+ *          hard-iron offset registers have been set then those will automatically be 
+ *          applied to the axis data by the device. If not, then the raw axis data will 
+ *          be copied. 
+ *          
+ *          Note that it's the users responsibility to provide a buffer large enough to 
+ *          store the axis data (3 axes x 2 bytes per axis == buffer of size 3 (6 total 
+ *          bytes). Also lsm303agr_m_update must be called in order to read/update 
+ *          magnetometer data, this function only retrieves the already read data. 
  * 
+ * @see lsm303agr_m_offset_reg_set 
  * @see lsm303agr_m_update 
  * 
- * @param m_axis_data : buffer to store the magnetometer axis data 
+ * @param m_axis_buff : buffer to store the magnetometer axis data 
  */
-void lsm303agr_m_get_axis_data(int16_t *m_axis_data); 
+void lsm303agr_m_get_axis(int16_t *m_axis_buff); 
 
 
 /**
- * @brief Get magnetometer applied magnetic field reading for each axis 
+ * @brief Get calibrated magnetometer axis data 
  * 
- * @details Calculates the applied magnetic field (mgauss) for each axis using the 
- *          last read magnetometer data and saves the result in the buffer. This is 
- *          calculated by scaling the device digital output by the magnetometer 
- *          sensitivity (see the datasheet for further details). lsm303agr_m_update 
- *          must be called before this function to read the most recent magnetometer 
- *          data or else the data retrieved by this function will not change. Note that 
- *          the buffer must be large enough to store data for each axis. 
+ * @details Takes the last read magnetometer axis data, applies the hard and soft-iron 
+ *          calibration values set by the user and copies the result to the provided 
+ *          buffer. This process does not account for the hard-iron offsets that can be 
+ *          set in the device registers which, when set, get automatically applied to 
+ *          the axis data read from the device. It's advised to do only one of the 
+ *          following: 
+ *           - Manually set these calibration values, don't set the hard-iron offset
+ *             registers and use this function OR 
+ *           - Set the hard-iron offset registers and avoid using this function. 
+ *          
+ *          Note that it's the users responsibility to provide a buffer large enough to 
+ *          store the axis data (3 axes x 2 bytes per axis == buffer of size 3 (6 total 
+ *          bytes). Also lsm303agr_m_update must be called in order to read/update 
+ *          magnetometer data, this function only retrieves the already read data. 
  * 
+ * @see lsm303agr_m_calibration_set 
  * @see lsm303agr_m_update 
  * 
- * @param m_field_data : buffer to store the applied magnetic field data 
+ * @param m_axis_buff : buffer to store the calibrated magnetometer axis data 
  */
-void lsm303agr_m_get_field(int32_t *m_field_data); 
+void lsm303agr_m_get_calibrated_axis(int16_t *m_axis_buff); 
 
 
 /**

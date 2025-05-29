@@ -202,7 +202,7 @@ TEST(lsm303agr_driver_test, lsm303agr_m_data_update_axis_read)
 
     // Update and read the data 
     lsm303agr_m_update(); 
-    lsm303agr_m_get_axis_data(axis_data); 
+    lsm303agr_m_get_axis(axis_data); 
 
     LONGS_EQUAL(axis_checks[X_AXIS], axis_data[X_AXIS]); 
     LONGS_EQUAL(axis_checks[Y_AXIS], axis_data[Y_AXIS]); 

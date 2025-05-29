@@ -384,7 +384,11 @@ I2C_STATUS i2c_write_addr(
     I2C_TypeDef *i2c, 
     uint8_t i2c_address)
 {
-    // Local variables 
+    if (i2c == NULL)
+    {
+        return I2C_NULL_PTR; 
+    }
+    
     I2C_STATUS i2c_status = I2C_OK; 
 
     i2c->DR = i2c_address;                // Send slave address 
@@ -400,10 +404,14 @@ I2C_STATUS i2c_write(
     const uint8_t *data, 
     uint8_t data_size)
 {
-    // Local variables 
+    if ((i2c == NULL) || (data == NULL))
+    {
+        return I2C_NULL_PTR; 
+    }
+
     I2C_STATUS i2c_status = I2C_OK; 
 
-    for (uint8_t i = 0; i < data_size; i++)
+    for (uint8_t i = CLEAR; (i < data_size), (data != NULL); i++)
     {
         i2c_status |= i2c_txe_wait(i2c);    // Wait for TxE bit to set 
         i2c->DR = *data++;                  // Send data 
