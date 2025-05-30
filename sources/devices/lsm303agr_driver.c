@@ -297,7 +297,6 @@ LSM303AGR_STATUS lsm303agr_m_reg_write(
 // Magnetometer initialization 
 LSM303AGR_STATUS lsm303agr_m_init(
     I2C_TypeDef *i2c, 
-    // const int16_t *offsets, 
     double heading_lpf_gain, 
     lsm303agr_m_odr_cfg_t m_odr, 
     lsm303agr_m_sys_mode_t m_mode, 
@@ -306,7 +305,6 @@ LSM303AGR_STATUS lsm303agr_m_init(
     lsm303agr_cfg_t m_int_mag_pin, 
     lsm303agr_cfg_t m_int_mag)
 {
-    // if ((i2c == NULL) || (offsets == NULL))
     if (i2c == NULL)
     {
         return LSM303AGR_INVALID_PTR; 
@@ -331,9 +329,6 @@ LSM303AGR_STATUS lsm303agr_m_init(
     lsm303agr_data.m_cfgc.cfgc_reg = CLEAR; 
     lsm303agr_data.m_cfgc.int_mag = m_int_mag; 
     lsm303agr_data.m_cfgc.int_mag_pin = m_int_mag_pin; 
-
-    // // Generate heading offset equations 
-    // lsm303agr_m_heading_calibration(offsets); 
     
     // Identify the device 
     init_status |= lsm303agr_m_reg_read(LSM303AGR_M_WHO_AM_I, &whoami_status, BYTE_1); 
@@ -357,10 +352,14 @@ LSM303AGR_STATUS lsm303agr_m_offset_reg_set(const int16_t *offset_reg)
 {
     if (offset_reg == NULL)
     {
-        return; 
+        return LSM303AGR_INVALID_PTR; 
     }
 
-    return lsm303agr_m_reg_write(LSM303AGR_M_OFFSET_X_L | LSM303AGR_ADDR_INC, offset_reg, BYTE_6); 
+    lsm303agr_m_data_t *hi_offsets_reg = (lsm303agr_m_data_t *)offset_reg; 
+
+    return lsm303agr_m_reg_write(LSM303AGR_M_OFFSET_X_L | LSM303AGR_ADDR_INC, 
+                                 hi_offsets_reg->m_axis_bytes, 
+                                 BYTE_6); 
 }
 
 
@@ -370,12 +369,12 @@ void lsm303agr_m_calibration_set(
     const int16_t *sid_values, 
     const int16_t *sio_values)
 {
-    for (uint8_t i = X_AXIS; (i < NUM_AXES), (hi_offsets != NULL); i++)
+    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (hi_offsets != NULL); i++)
     {
         lsm303agr_data.hi_offsets[i] = hi_offsets[i]; 
     }
 
-    for (uint8_t i = X_AXIS; (i < NUM_AXES), (sid_values != NULL), (sio_values != NULL); i++)
+    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (sid_values != NULL) && (sio_values != NULL); i++)
     {
         lsm303agr_data.sid_values[i] = sid_values[i]; 
         lsm303agr_data.sio_values[i] = sio_values[i]; 
@@ -437,7 +436,7 @@ LSM303AGR_STATUS lsm303agr_m_update(void)
 // Get magnetometer axis data 
 void lsm303agr_m_get_axis(int16_t *m_axis_buff)
 {
-    for (uint8_t i = X_AXIS; (i < NUM_AXES), (m_axis_buff != NULL); i++)
+    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_axis_buff != NULL); i++)
     {
         m_axis_buff[i] = lsm303agr_data.m_data[i].m_axis; 
     }
@@ -471,7 +470,7 @@ void lsm303agr_m_get_calibrated_axis(int16_t *m_cal_axis_buff)
                       (lsm303agr_data.sio_values[Z_AXIS]*mag_off[Y_AXIS]) + 
                       (lsm303agr_data.sid_values[Z_AXIS]*mag_off[Z_AXIS]); 
 
-    for (uint8_t i = X_AXIS; (i < NUM_AXES), (m_cal_axis_buff != NULL); i++)
+    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_cal_axis_buff != NULL); i++)
     {
         m_cal_axis_buff[i] = mag_cal[i]; 
     }

@@ -115,10 +115,7 @@ typedef uint8_t LSM303AGR_STATUS;
  *          the heading will not update when lsm303agr_m_get_heading is called. Gains 
  *          greater than 1 will cause the calculated heading value to oscillate. 
  * 
- * @see lsm303agr_m_heading_calibration 
- * 
  * @param i2c : I2C port to use for communicating with the device 
-//  * @param offsets : errors between actual and calculated headings 
  * @param heading_lpf_gain : low pass filter gain for calculating the heading 
  * @param m_odr : output data rate 
  * @param m_mode : system mode 
@@ -130,7 +127,6 @@ typedef uint8_t LSM303AGR_STATUS;
  */
 LSM303AGR_STATUS lsm303agr_m_init(
     I2C_TypeDef *i2c, 
-    // const int16_t *offsets, 
     double heading_lpf_gain, 
     lsm303agr_m_odr_cfg_t m_odr, 
     lsm303agr_m_sys_mode_t m_mode, 
