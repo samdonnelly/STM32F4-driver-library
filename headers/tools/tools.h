@@ -150,9 +150,9 @@ extern "C" {
 //==================================================
 // Math 
 
-#define PI 3.141592                    // PI 
-#define RAD_TO_DEG 180.0 / PI          // Radians to degrees conversion 
-#define DEG_TO_RAD PI / 180.0          // Degrees to radians conversion 
+#define PI 3.1415927f                   // PI 
+#define RAD_TO_DEG 180.0f / PI          // Radians to degrees conversion 
+#define DEG_TO_RAD PI / 180.0f          // Degrees to radians conversion 
 
 //==================================================
 

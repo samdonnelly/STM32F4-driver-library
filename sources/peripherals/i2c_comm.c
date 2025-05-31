@@ -411,7 +411,7 @@ I2C_STATUS i2c_write(
 
     I2C_STATUS i2c_status = I2C_OK; 
 
-    for (uint8_t i = CLEAR; (i < data_size), (data != NULL); i++)
+    for (uint8_t i = CLEAR; (i < data_size) && (data != NULL); i++)
     {
         i2c_status |= i2c_txe_wait(i2c);    // Wait for TxE bit to set 
         i2c->DR = *data++;                  // Send data 

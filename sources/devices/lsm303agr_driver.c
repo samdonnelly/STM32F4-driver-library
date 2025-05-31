@@ -40,19 +40,18 @@
 #define LSM303AGR_ADDR_INC 0x80       // Register address increment mask for r/w 
 
 // Magnetometer register addresses 
-#define LSM303AGR_M_OFFSET_X_L 0x45   // X-axis hard-iron offset low byte 
-#define LSM303AGR_M_WHO_AM_I 0x4F     // WHO AM I 
-#define LSM303AGR_M_CFG_A 0x60        // Configuration register A 
-#define LSM303AGR_M_CFG_B 0x61        // Configuration register B 
-#define LSM303AGR_M_CFG_C 0x62        // Configuration register C 
-#define LSM303AGR_M_STATUS 0x67       // Status register 
-#define LSM303AGR_M_OUT_X_L 0x68      // X-axis data output low byte 
+#define LSM303AGR_M_OFFSET_X_L 0x45      // X-axis hard-iron offset low byte 
+#define LSM303AGR_M_WHO_AM_I 0x4F        // WHO AM I 
+#define LSM303AGR_M_CFG_A 0x60           // Configuration register A 
+#define LSM303AGR_M_CFG_B 0x61           // Configuration register B 
+#define LSM303AGR_M_CFG_C 0x62           // Configuration register C 
+#define LSM303AGR_M_STATUS 0x67          // Status register 
+#define LSM303AGR_M_OUT_X_L 0x68         // X-axis data output low byte 
 
 // Magnetometer data 
-#define LSM303AGR_M_ID 0x40           // Value returned from the WHO_AM_I register 
-#define LSM303AGR_M_HEAD_MAX 3600     // Max heading value - scaled (360deg * 10)
-#define LSM303AGR_M_HEAD_DIFF 1800    // Heading different threshold for filtering 
-#define LSM303AGR_M_DIR_OFFSET 450    // 45 degrees*10 - heading sections (ex. N-->NE) 
+#define LSM303AGR_M_ID 0x40              // Value returned from the WHO_AM_I register 
+#define LSM303AGR_M_HEADING_NORTH 0      // Heading reading when facing North (0 deg*10) 
+#define LSM303AGR_M_HEADING_RANGE 3600   // Full heading range (360 deg*10) 
 
 //=======================================================================================
 
@@ -159,15 +158,6 @@ lsm303agr_m_status_t;
 //=======================================================================================
 // Data record 
 
-// Magnetometer heading correction equation components 
-typedef struct lsm303agr_m_heading_offset_s
-{
-    double slope;            // Slope of linear offset equation 
-    double intercept;        // Intercept of linear offset equation 
-}
-lsm303agr_m_heading_offset_t; 
-
-
 // Driver data record 
 typedef struct lsm303agr_driver_data_s 
 {
@@ -181,20 +171,16 @@ typedef struct lsm303agr_driver_data_s
     uint8_t m_addr; 
     
     // Magnetometer register data 
-    lsm303agr_m_data_t m_data[NUM_AXES]; 
-    lsm303agr_m_cfga_t m_cfga; 
-    lsm303agr_m_cfgb_t m_cfgb; 
-    lsm303agr_m_cfgc_t m_cfgc; 
-    lsm303agr_m_status_t m_status; 
+    lsm303agr_m_data_t m_data[NUM_AXES];   // Axis data registers 
+    lsm303agr_m_cfga_t m_cfga;             // Configuration register A 
+    lsm303agr_m_cfgb_t m_cfgb;             // Configuration register B 
+    lsm303agr_m_cfgc_t m_cfgc;             // Configuration register C 
+    lsm303agr_m_status_t m_status;         // Status register 
     
     // Magnetometer calculation info 
-    lsm303agr_m_heading_offset_t heading_offset_eqns[LSM303AGR_M_NUM_DIR]; 
-    double heading_gain; 
-    int16_t heading_offsets[LSM303AGR_M_NUM_DIR]; 
-    int16_t hi_offsets[NUM_AXES];   // Hard-iron offsets 
-    int16_t sid_values[NUM_AXES];   // Soft-iron diagonal values 
-    int16_t sio_values[NUM_AXES];   // Soft-iron off-diagonal values 
-    int16_t mag_cal[NUM_AXES]; 
+    float hi_offsets[NUM_AXES];            // Hard-iron offsets 
+    float sid_values[NUM_AXES];            // Soft-iron diagonal values 
+    float sio_values[NUM_AXES];            // Soft-iron off-diagonal values 
     
     //==================================================
 }
@@ -209,6 +195,14 @@ static lsm303agr_driver_data_t lsm303agr_data;
 
 //=======================================================================================
 // Prototypes 
+
+/**
+ * @brief Apply calibrated correction values to axis data 
+ * 
+ * @param mag_cal : buffer to store the calibrated axis data 
+ */
+void lsm303agr_m_correct_axes(float *mag_cal); 
+
 
 /**
  * @brief Read from device register(s) 
@@ -297,7 +291,6 @@ LSM303AGR_STATUS lsm303agr_m_reg_write(
 // Magnetometer initialization 
 LSM303AGR_STATUS lsm303agr_m_init(
     I2C_TypeDef *i2c, 
-    double heading_lpf_gain, 
     lsm303agr_m_odr_cfg_t m_odr, 
     lsm303agr_m_sys_mode_t m_mode, 
     lsm303agr_cfg_t m_off_canc, 
@@ -312,23 +305,32 @@ LSM303AGR_STATUS lsm303agr_m_init(
 
     LSM303AGR_STATUS init_status = LSM303AGR_OK; 
     uint8_t whoami_status = CLEAR; 
-
-    // Initialize driver data 
+    
+    //==================================================
+    // Initialize data 
+    
     lsm303agr_data.i2c = i2c; 
     lsm303agr_data.m_addr = LSM303AGR_M_ADDR; 
-    lsm303agr_data.heading_gain = heading_lpf_gain; 
-    // Configuration register A 
+    
     lsm303agr_data.m_cfga.cfga_reg = CLEAR; 
     lsm303agr_data.m_cfga.md = m_mode; 
     lsm303agr_data.m_cfga.odr = m_odr; 
-    // Configuration register B 
+    
     lsm303agr_data.m_cfgb.cfgb_reg = CLEAR; 
     lsm303agr_data.m_cfgb.lpf = m_lpf; 
     lsm303agr_data.m_cfgb.off_canc = m_off_canc; 
-    // Configuration register C 
+    
     lsm303agr_data.m_cfgc.cfgc_reg = CLEAR; 
     lsm303agr_data.m_cfgc.int_mag = m_int_mag; 
     lsm303agr_data.m_cfgc.int_mag_pin = m_int_mag_pin; 
+    
+    memset((void *)lsm303agr_data.hi_offsets, CLEAR, sizeof(lsm303agr_data.hi_offsets)); 
+    lsm303agr_data.sid_values[X_AXIS] = 1.0f; 
+    lsm303agr_data.sid_values[Y_AXIS] = 1.0f; 
+    lsm303agr_data.sid_values[Z_AXIS] = 1.0f; 
+    memset((void *)lsm303agr_data.sio_values, CLEAR, sizeof(lsm303agr_data.sio_values)); 
+
+    //==================================================
     
     // Identify the device 
     init_status |= lsm303agr_m_reg_read(LSM303AGR_M_WHO_AM_I, &whoami_status, BYTE_1); 
@@ -365,9 +367,9 @@ LSM303AGR_STATUS lsm303agr_m_offset_reg_set(const int16_t *offset_reg)
 
 // Set the hard and soft-iron calibration values 
 void lsm303agr_m_calibration_set(
-    const int16_t *hi_offsets, 
-    const int16_t *sid_values, 
-    const int16_t *sio_values)
+    const float *hi_offsets, 
+    const float *sid_values, 
+    const float *sio_values)
 {
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (hi_offsets != NULL); i++)
     {
@@ -380,41 +382,6 @@ void lsm303agr_m_calibration_set(
         lsm303agr_data.sio_values[i] = sio_values[i]; 
     }
 }
-
-
-// // Calibrate the magnetometer heading - generate heading offset equations 
-// void lsm303agr_m_heading_calibration(const int16_t *offsets)
-// {
-//     if (offsets == NULL)
-//     {
-//         return; 
-//     }
-
-//     lsm303agr_m_heading_offset_t *offset_eqn = lsm303agr_data.heading_offset_eqns; 
-//     double delta1, delta2, heading = CLEAR; 
-//     const double dir_spacing = LSM303AGR_M_DIR_OFFSET; 
-//     uint8_t last = LSM303AGR_M_NUM_DIR - 1; 
-
-//     // Calculate the slope and intercept of the linear equation used to adjust calculated 
-//     // magnetometer headings between two directions. 
-//     for (uint8_t i = CLEAR; i < last; i++)
-//     {
-//         delta1 = offsets[i]; 
-//         delta2 = offsets[i + 1]; 
-        
-//         offset_eqn[i].slope = dir_spacing / (dir_spacing + delta1 - delta2); 
-//         offset_eqn[i].intercept = heading - offset_eqn[i].slope*(heading - delta1); 
-
-//         heading += dir_spacing; 
-//         lsm303agr_data.heading_offsets[i] = delta1; 
-//     }
-
-//     // The heading loops back to 0/360 degrees so the final offset direction is also the 
-//     // first (index 0). 
-//     offset_eqn[last].slope = dir_spacing / (dir_spacing + delta2 - offsets[BYTE_0]); 
-//     offset_eqn[last].intercept = heading - offset_eqn[last].slope*(heading - delta2); 
-//     lsm303agr_data.heading_offsets[last] = delta2; 
-// }
 
 //=======================================================================================
 
@@ -446,16 +413,55 @@ void lsm303agr_m_get_axis(int16_t *m_axis_buff)
 // Get calibrated magnetometer axis data 
 void lsm303agr_m_get_calibrated_axis(int16_t *m_cal_axis_buff)
 {
+    float mag_cal[NUM_AXES]; 
+
+    lsm303agr_m_correct_axes(mag_cal); 
+
+    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_cal_axis_buff != NULL); i++)
+    {
+        m_cal_axis_buff[i] = (int16_t)mag_cal[i]; 
+    }
+}
+
+
+// Get magnetometer (compass) heading 
+int16_t lsm303agr_m_get_heading(void)
+{
+    float mag_cal[NUM_AXES]; 
+    int16_t heading = CLEAR; 
+
+    lsm303agr_m_correct_axes(mag_cal); 
+
+    // Find the magnetic heading based on the magnetometer X and Y axis data. atan2f 
+    // looks at the value and sign of X and Y to determine the correct output so axis 
+    // values don't have to be checked for potential errors (ex. divide by zero). 
+    heading = (int16_t)(atan2f(-mag_cal[Y_AXIS], mag_cal[X_AXIS])*RAD_TO_DEG*SCALE_10); 
+
+    // Adjust the heading range. The magnetic heading is calculated within the range 
+    // -180 to 180 degrees, however the returned heading needs to be in the range 0 to 
+    // 360 degrees (or 0-3600 deg*10). 
+    if (heading < LSM303AGR_M_HEADING_NORTH)
+    {
+        heading += LSM303AGR_M_HEADING_RANGE; 
+    }
+
+    return heading; 
+}
+
+
+// Apply calibrated correction values to axis data 
+void lsm303agr_m_correct_axes(float *mag_cal)
+{
     // Correct the magnetometer axis readings with calibration values. First the hard-
     // iron offsets are subtracted from the axis reading that come from the magnetometer, 
     // then soft-iron scale values are applied using a matrix multiplication. 
 
-    int16_t mag_off[NUM_AXES], mag_cal[NUM_AXES]; 
+    float mag_off[NUM_AXES]; 
 
     // Hard-iron offsets 
-    mag_off[X_AXIS] = lsm303agr_data.m_data[X_AXIS].m_axis - lsm303agr_data.hi_offsets[X_AXIS]; 
-    mag_off[Y_AXIS] = lsm303agr_data.m_data[Y_AXIS].m_axis - lsm303agr_data.hi_offsets[Y_AXIS]; 
-    mag_off[Z_AXIS] = lsm303agr_data.m_data[Z_AXIS].m_axis - lsm303agr_data.hi_offsets[Z_AXIS]; 
+    mag_off[X_AXIS] = (float)lsm303agr_data.m_data[X_AXIS].m_axis - lsm303agr_data.hi_offsets[X_AXIS]; 
+    mag_off[Y_AXIS] = (float)lsm303agr_data.m_data[Y_AXIS].m_axis - lsm303agr_data.hi_offsets[Y_AXIS]; 
+    mag_off[Z_AXIS] = (float)lsm303agr_data.m_data[Z_AXIS].m_axis - lsm303agr_data.hi_offsets[Z_AXIS]; 
 
     // Soft-iron offsets 
     mag_cal[X_AXIS] = (lsm303agr_data.sid_values[X_AXIS]*mag_off[X_AXIS]) + 
@@ -469,116 +475,6 @@ void lsm303agr_m_get_calibrated_axis(int16_t *m_cal_axis_buff)
     mag_cal[Z_AXIS] = (lsm303agr_data.sio_values[Y_AXIS]*mag_off[X_AXIS]) + 
                       (lsm303agr_data.sio_values[Z_AXIS]*mag_off[Y_AXIS]) + 
                       (lsm303agr_data.sid_values[Z_AXIS]*mag_off[Z_AXIS]); 
-
-    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_cal_axis_buff != NULL); i++)
-    {
-        m_cal_axis_buff[i] = mag_cal[i]; 
-    }
-}
-
-
-// Get magnetometer (compass) heading 
-int16_t lsm303agr_m_get_heading(void)
-{
-    static int16_t heading_stored = CLEAR; 
-    int16_t heading, heading_check = CLEAR, heading_diff; 
-    double atan2_calc, slope = CLEAR, intercept = CLEAR; 
-    uint8_t last_offset_index = LSM303AGR_M_NUM_DIR - 1, offset_index = last_offset_index; 
-
-    // If the x-axis is zero then it's adjusted by 0.1 degrees to prevent a divide by zero 
-    // error and the heading calculation is done anyway. This adjustment is considered 
-    // negligible and this way the filtered heading is still updated. 
-    if (!lsm303agr_data.m_data[X_AXIS].m_axis)
-    {
-        lsm303agr_data.m_data[X_AXIS].m_axis++; 
-    }
-
-    // Using the Y and X axis data read from the magnetometer, the heading relative to 
-    // magnetic north is calculated. For this to work properly, the X-axis must be 
-    // oriented in the forward direction and the Z-axis must be vertical. The heading is 
-    // calculated using atan2 which is the inverse tangent that accounts for the sign of 
-    // Y and X. The returned angle is a double in the range +/-pi but 0-359.9 degrees is 
-    // required so it gets converted to degrees, scaled by 10 to maintain one decimal 
-    // place of accuracy and shifted to be a positive value if less than zero. The 
-    // returned angle is also positive in the counter clockwise direction, however the 
-    // opposite is needed so the sign is inverted. 
-    atan2_calc = atan2((double)lsm303agr_data.m_data[Y_AXIS].m_axis, 
-                       (double)lsm303agr_data.m_data[X_AXIS].m_axis); 
-    heading = -(int16_t)(atan2_calc * RAD_TO_DEG * SCALE_10); 
-
-    if (heading < 0)
-    {
-        heading += LSM303AGR_M_HEAD_MAX; 
-    }
-
-    // To account for errors in the data read from the device, an offset is added to the 
-    // calculated heading based on the direction the device is pointing (see the 
-    // lsm303agr_m_heading_calibration function). The correction is a linear interpolation 
-    // between each (45*i - offset[i]) degree heading interval. To find the right 
-    // equation, the calculated heading is checked against each interval. Once the 
-    // interval where the heading resides is found then the index of that interval is 
-    // used to apply the needed offset equation that adjusts the heading. Since the 
-    // heading goes from 359.9 degrees back to 0, it's possible the final equation 
-    // interval crosses this boundary, and therefore it needs it's own check before 
-    // checking the other equations. 
-    if (heading < (heading_check - lsm303agr_data.heading_offsets[0]))
-    {
-        heading += LSM303AGR_M_HEAD_MAX; 
-    }
-    else if (heading < (LSM303AGR_M_HEAD_MAX - LSM303AGR_M_DIR_OFFSET - 
-                        lsm303agr_data.heading_offsets[last_offset_index]))
-    {
-        offset_index--; 
-
-        for (uint8_t i = 1; i < last_offset_index; i++)
-        {
-            heading_check += LSM303AGR_M_DIR_OFFSET; 
-
-            if (heading < (heading_check - lsm303agr_data.heading_offsets[i]))
-            {
-                offset_index = i - 1; 
-                break; 
-            }
-        }
-    }
-
-    slope = lsm303agr_data.heading_offset_eqns[offset_index].slope; 
-    intercept = lsm303agr_data.heading_offset_eqns[offset_index].intercept; 
-    heading = (int16_t)(slope*(double)heading + intercept); 
-
-    // The calculated heading is put through a low pass filter because the data read 
-    // from the device has lots of noise (the gain of the filter can be set during init). 
-    // The heading data is circular meaning it increments from 359.9 to 0 degrees after 
-    // one full rotation. This jump in data will make the filter think there was a sudden 
-    // change in direction which is not true so this must be addressed before filtering 
-    // the heading. To correct for this, the difference between the new and previously 
-    // calculated headings is checked. If the magnitude exceeds +/-180 degrees then 
-    // -/+360 degrees is added to find the true heading change. After the heading is 
-    // filtered/updated, if it falls outside of the acceptable range then it's moved 
-    // back within range (while still maintaining the same heading). 
-    heading_diff = heading - heading_stored; 
-
-    if (heading_diff > LSM303AGR_M_HEAD_DIFF)
-    {
-        heading_diff -= LSM303AGR_M_HEAD_MAX; 
-    }
-    else if (heading_diff < -LSM303AGR_M_HEAD_DIFF)
-    {
-        heading_diff += LSM303AGR_M_HEAD_MAX; 
-    }
-
-    heading_stored += (int16_t)((double)heading_diff*lsm303agr_data.heading_gain); 
-
-    if (heading_stored >= LSM303AGR_M_HEAD_MAX)
-    {
-        heading_stored -= LSM303AGR_M_HEAD_MAX; 
-    }
-    else if (heading_stored < 0)
-    {
-        heading_stored += LSM303AGR_M_HEAD_MAX; 
-    }
-
-    return heading_stored; 
 }
 
 //=======================================================================================
