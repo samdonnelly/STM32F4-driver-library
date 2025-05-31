@@ -92,20 +92,8 @@ typedef uint8_t LSM303AGR_STATUS;
  * 
  * @details Configures the magnetometer portion of the driver and device. This function 
  *          must be called before interfacing with the magnetometer. See the datasheet 
- *          for further details on device settings. 
- *          
- *          Errors between the actual and calculated headings can be specified using the 
- *          "offsets" argument. This function calls lsm303agr_m_heading_calibration using 
- *          these offsets. These offsets are used to generate equations that adjust the 
- *          heading to be more accurate. See the calibration function for further details 
- *          on how this works. If no correction is desired then set all offsets to zero. 
- *          
- *          The gain for the low pass filter (LPF) used to calculate the updated heading 
- *          can be set. The range of the gain is: 0 < gain <= 1.0. A gain of 1 will 
- *          negate any LPF affect. Smaller gains will filter more noise but will 
- *          increasingly lag behind the true signal. If the LPF gain is set to 0 then 
- *          the heading will not update when lsm303agr_m_get_heading is called. Gains 
- *          greater than 1 will cause the calculated heading value to oscillate. 
+ *          for further details on device settings. The return status of the function 
+ *          can be used to see if reading and writing to the device was successful. 
  * 
  * @param i2c : I2C port to use for communicating with the device 
  * @param m_odr : output data rate 
@@ -137,11 +125,18 @@ LSM303AGR_STATUS lsm303agr_m_init(
  *          what the other does. If this correction method is not desired, then this 
  *          function can simply not be called when setting up the device. 
  *          
+ *          One method to obtain these hard-iron offsets is through the MotionCal 
+ *          software. The process is described in further detail in the calibration 
+ *          setter function description but the offsets obtained can simply be rounded 
+ *          then cast from floats to integers. These offsets are integers because the 
+ *          registers that will hold them are in int16_t format. 
+ *          
  *          Note that it's the users responsibility to provide a valid buffer of offsets 
  *          to be written. A buffer that is NULL or too small will not update all the 
  *          axis offsets. 
  * 
  * @see lsm303agr_m_get_axis 
+ * @see lsm303agr_m_calibration_set 
  * 
  * @param offset_reg : hard-iron offsets to update the registers with 
  * @return LSM303AGR_STATUS : status of the register write 
@@ -162,20 +157,32 @@ LSM303AGR_STATUS lsm303agr_m_offset_reg_set(const int16_t *offset_reg);
  *          or the soft-iron correction values and not the other. 
  *          
  *          The provided correction values are made up of hard-iron (hi) offsets and 
- *          values that make up a soft-iron (si) correction matrix. The soft-iron matrix 
- *          is made up of diagonal (sid) values and off-diagonal (sio) values. The 
- *          calibration math is as follows: 
+ *          soft-iron values that make up a soft-iron (si) correction matrix. The soft-
+ *          iron matrix is made up of diagonal (sid) values and off-diagonal (sio) 
+ *          values. The calibration math is as follows: 
  *          
  *          [ sid.x  sio.x  sio.y ]   | (x-axis_data) - hi.x | 
  *          [ sio.x  sid.y  sio.z ] * | (y-axis_data) - hi.y | 
  *          [ sio.y  sio.z  sid.z ]   | (z-axis_data) - hi.z | 
  *          
  *          A common way to obtain these calibration values is through the MotionCal 
- *          software. Note that soft-iron diagonal correction values cannot be zero or 
- *          else axis data will always come out as zero. 
+ *          software. There are videos online showing how to use it but some key details 
+ *          not mentioned are: 
+ *          - MotionCal uses a 115200 baudrate to read serial data. 
+ *          - MotionCal looks for magnetometer axis data as an integer with units of 
+ *            microteslas*10 (uT*10) which is the same as milligauss (mG) which happens 
+ *            to be the units this device outputs axis data in. This means no output 
+ *            data modification is needed. 
+ *          - Hard-iron offsets and soft-iron scalars are determined and displayed as 
+ *            floats in MotionCal despite the provided data being integers. The hard-
+ *            iron float values have the units of microteslas (uT) so to make them 
+ *            compatible with this devices data output, they must be multiplied by 10 
+ *            once the process is done which gives them units of milligauss (mG). 
  *          
- *          Note that it's the users responsibility to provide valid buffers for these 
- *          values. Buffers that are NULL or too small will not update all the values. 
+ *          Note that soft-iron diagonal correction values cannot be zero or else axis 
+ *          data will always come out as zero. Also note that it's the users 
+ *          responsibility to provide valid buffers for these values. Buffers that are 
+ *          NULL or too small will not update all the values. 
  * 
  * @see lsm303agr_m_get_calibrated_axis 
  * 
@@ -255,10 +262,10 @@ void lsm303agr_m_get_calibrated_axis(int16_t *m_axis_buff);
 /**
  * @brief Get magnetometer (compass) heading 
  * 
- * @details Uses the last read magnetometer data to calculate the heading of the device 
- *          (i.e. the direction the device is pointing). lsm303agr_m_update must be 
- *          called before this function to read the most recent magnetometer data or else 
- *          the heading will not change. 
+ * @details Uses the last read magnetometer data to calculate the magnetic heading of the 
+ *          device (i.e. the direction the device is pointing relative to the Earth's 
+ *          magnetic North pole). lsm303agr_m_update must be called before this function 
+ *          to read the most recent magnetometer data or else the heading will not change. 
  *          
  *          The heading calculation works under the assumption that the device has its XY 
  *          plane parallel to the ground (X and Y markings are on the device). The 
@@ -268,11 +275,10 @@ void lsm303agr_m_get_calibrated_axis(int16_t *m_axis_buff);
  *          The returned heading is in the range 0-359.9 degrees but the returned value 
  *          has units of degrees*10 (i.e. 0-3599 range). Heading is relative to magnetic 
  *          north (0/360 degrees) and heading value increases in the clockwise direction. 
- *          Part of the calculation involves correcting for errors in device data which 
- *          comes from the equations generated in lsm303agr_m_heading_calibration. 
  * 
  * @see lsm303agr_m_update 
  * @see lsm303agr_m_heading_calibration 
+ * @see lsm303agr_m_offset_reg_set 
  * 
  * @return int16_t : magnetometer heading (degrees*10) 
  */

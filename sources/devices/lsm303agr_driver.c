@@ -21,15 +21,6 @@
 
 
 //=======================================================================================
-// Notes: 
-// - Procedures start on page 38 of the datasheet. 
-// - The magnetometer works best with its XY plane parallel to the ground. The magnetometer 
-//   features of this driver work under the assumption that the device is oriented this 
-//   way with the x-axis pointing forward. There are X and Y marking on the device. 
-//=======================================================================================
-
-
-//=======================================================================================
 // Macros 
 
 // I2C addresses (datasheet page 39) 
@@ -434,7 +425,9 @@ int16_t lsm303agr_m_get_heading(void)
 
     // Find the magnetic heading based on the magnetometer X and Y axis data. atan2f 
     // looks at the value and sign of X and Y to determine the correct output so axis 
-    // values don't have to be checked for potential errors (ex. divide by zero). 
+    // values don't have to be checked for potential errors (ex. divide by zero). The 
+    // y-axis data has it's sign inverted so heading increases from 0 in the clockwise 
+    // direction (increased in the counter-clockwise direction otherwise). 
     heading = (int16_t)(atan2f(-mag_cal[Y_AXIS], mag_cal[X_AXIS])*RAD_TO_DEG*SCALE_10); 
 
     // Adjust the heading range. The magnetic heading is calculated within the range 
