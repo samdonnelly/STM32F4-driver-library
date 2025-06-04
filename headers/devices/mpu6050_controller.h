@@ -33,7 +33,7 @@ extern "C" {
 
 // Control information 
 #define MPU6050_NUM_STATES 7             // Number of controller states 
-#define MPU6050_NUM_READS 4              // Number of driver read functions 
+#define MPU6050_NUM_READS 1              // Number of driver read functions 
 #define MPU6050_ST_DELAY 10              // Post self-test delay (ms) 
 
 // Data 
@@ -75,9 +75,6 @@ typedef enum {
  * @details determines which data/sensors to read during the run state 
  */
 typedef enum {
-    MPU6050_READ_A,       // Read accelerometer data 
-    MPU6050_READ_G,       // Read gyroscope data 
-    MPU6050_READ_T,       // Read temperature data 
     MPU6050_READ_ALL      // Read all data 
 } mpu6050_sample_type_t; 
 

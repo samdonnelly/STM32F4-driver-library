@@ -22,23 +22,15 @@ extern "C" {
 //=======================================================================================
 // Includes 
 
-#include "stm32f411xe.h"
-#include "i2c_comm.h"
+#include "stm32f411xe.h" 
+#include "tools.h" 
+#include "i2c_comm.h" 
 
 //=======================================================================================
 
 
 //=======================================================================================
 // Enums 
-
-// Device axis index 
-typedef enum {
-    X_AXIS, 
-    Y_AXIS, 
-    Z_AXIS, 
-    NUM_AXES 
-} lsm303agr_axis_t; 
-
 
 // LSM303AGR driver status 
 typedef enum {

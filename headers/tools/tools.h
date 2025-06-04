@@ -321,6 +321,15 @@ typedef enum {
     BYTE_17 
 } byte_num_t;
 
+
+// Vector axes index 
+typedef enum {
+    X_AXIS, 
+    Y_AXIS, 
+    Z_AXIS, 
+    NUM_AXES 
+} vector_axis_t; 
+
 //=======================================================================================
 
 

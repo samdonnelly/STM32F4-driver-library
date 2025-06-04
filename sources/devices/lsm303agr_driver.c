@@ -54,6 +54,7 @@
 typedef union lsm303agr_m_data_s 
 {
     // Axis data is a 16-bit value but broken down into low and high byte registers. 
+    // STM32 stores bytes in memory in little endian format. 
     uint8_t m_axis_bytes[BYTE_2]; 
     int16_t m_axis; 
 }

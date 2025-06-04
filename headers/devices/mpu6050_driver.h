@@ -39,61 +39,14 @@ extern "C" {
 
 // Device info 
 #define MPU6050_7BIT_ADDR 0x68           // 7-bit default address (excluding r/w bit) 
-#define MPU6050_FT_MAX_ERROR 14          // Max % change from factory trim acceptable
-#define MPU6050_NUM_AXIS 3               // Number of acclerometer axes 
+#define MPU6050_FT_MAX_ERROR 14          // Max % change from factory trim acceptable 
 
 // Register control 
 #define MPU6050_STBY_STATUS_MASK 0x3F    // Pwr mgmt 2 standby status mask 
 #define MPU6050_FSR_MASK 0x18            // Mask for reading gyro and accel full scale range 
 #define MPU6050_EXT_SYNC_DISABLE 0       // Disables the FSYNC feature 
 
-// Registers 
-#define MPU6050_SELF_TEST    0x0D        // Register 13  - Self-test 
-#define MPU6050_SMPRT_DIV    0x19        // Register 25  - Sample Rate Divider 
-#define MPU6050_CONFIG       0x1A        // Register 26  - Configuration 
-#define MPU6050_GYRO_CONFIG  0x1B        // Register 27  - Gyroscope configuration 
-#define MPU6050_ACCEL_CONFIG 0x1C        // Register 28  - Accelerometer configuration 
-#define MPU6050_INT_CONFIG   0x37        // Register 55  - Interrupt configuration 
-#define MPU6050_INT_ENABLE   0x38        // Register 56  - Interrupt enable 
-#define MPU6050_ACCEL_XOUT_H 0x3B        // Register 59  - Accelerometer x-axis high byte 
-#define MPU6050_TEMP_OUT_H   0x41        // Register 65  - Temperature high byte 
-#define MPU6050_GYRO_XOUT_H  0x43        // Register 67  - Gyroscope x-axis high byte 
-#define MPU6050_PWR_MGMT_1   0x6B        // Register 107 - Power management 1 
-#define MPU6050_PWR_MGMT_2   0x6C        // Register 108 - Power management 2 
-#define MPU6050_WHO_AM_I     0x75        // Register 117 - Who Am I 
-
-// Temperature sensor 
-#define MPU6050_TEMP_SCALAR 100          // User defined temp scalar to eliminate decimals 
-#define MPU6050_TEMP_SENSIT 340          // Sensitivity (LSB/degC) - MPU6050 defined scalar
-#define MPU6050_TEMP_OFFSET 3653         // Temperature offset scaled by MPU6050_TEMP_SCALAR
-
-// Accelerometer 
-#define MPU6050_AFS_SEL_MAX 16384        // Max accelerometer calculation scalar 
-#define MPU6050_ACCEL_ST_FT_C1 142       // Accelerometer factory trim calc constant 1 
-#define MPU6050_ACCEL_ST_FT_C2 6056      // Accelerometer factory trim calc constant 2 
-#define MPU6050_ACCEL_ST_FT_C4 13452     // Accelerometer factory trim calc constant 3 
-#define MPU6050_ACCEL_ST_FT_C3 45752     // Accelerometer factory trim calc constant 4 
-
-// Gyroscope 
-#define MPU6050_FS_SEL_MAX 1310          // Max gyroscopic calculation scalar 
-#define MPU6050_FS_CORRECTION 0x02       // Gyroscope calculation correction mask 
-#define MPU6050_GYRO_SCALAR 10           // Unscales scaled mpu6050_gyro_scalars_t values 
-#define MPU6050_GYRO_ST_FT_C1 1001       // Gyroscope factory trim calc constant 1 
-#define MPU6050_GYRO_ST_FT_C3 15056      // Gyroscope factory trim calc constant 2 
-#define MPU6050_GYRO_ST_FT_C2 19244      // Gyroscope factory trim calc constant 3 
-#define MPU6050_GYRO_ST_FT_C4 31125      // Gyroscope factory trim calc constant 4 
-
-// Self-Test 
-#define MPU6050_ST_MASK_ZA_TEST_LO 0x03  // Mask to parse self-test y-axis accelerometer data 
-#define MPU6050_ST_MASK_YA_TEST_LO 0x0C  // Mask to parse self-test z-axis accelerometer data 
-#define MPU6050_ST_MASK_X_TEST     0x1F  // Mask to parse self-test gyroscope data 
-#define MPU6050_ST_MASK_XA_TEST_LO 0x30  // Mask to parse self-test x-axis accelerometer data 
-#define MPU6050_ST_MASK_A_TEST_HI  0xE0  // Mask to parse self-test x, y and z axis accel data 
-#define MPU6050_STR_SHIFT_ACCEL    0x01  // Bit shift for accel self-test results 
-#define MPU6050_STR_SHIFT_GYRO     0x08  // Bit shift for gyro self-test results 
-
 //=======================================================================================
-
 
 
 //=======================================================================================
@@ -460,11 +413,6 @@ void mpu6050_int_pin_init(
     GPIO_TypeDef *gpio, 
     pin_selector_t pin); 
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Configuration functions 
 
 /**
  * @brief MPU6050 calibration 
@@ -500,143 +448,128 @@ void mpu6050_low_pwr_config(
 
 
 //=======================================================================================
-// Register Function
+// Read and get data 
 
 /**
- * @brief MPU6050 Accelerometer Measurements (ACCEL_OUT) registers read
- * 
- * @details Register number: 59-64 
- *          Register size: 6 bytes 
- *          
- *          Register data: 
- *          - ACCEL_XOUT: x-axis acceleration - 16-bit signed value (reg 59-60) 
- *          - ACCEL_YOUT: y-axis acceleration - 16-bit signed value (reg 61-62) 
- *          - ACCEL_ZOUT: z-axis acceleration - 16-bit signed value (reg 63-64) 
- *          
- *          These registers store the most recent (unformatted) accelerometer measurements. 
- *          These values are written to the registers at the Sample Rate but are updated 
- *          within the device at a frequency of 1 kHz. This function must be called to 
- *          so the new data gets updated to the device data record. After updating the 
- *          data, the raw or formatted values can be read from the getters. 
- *          
- *          When the serial interface (i2c interface) is active, the values in the 
- *          registers are held constant so that you can read all values (burst read)
- *          at one instance in time. When the serial interface is idle then these 
- *          registers will go back to being written to at the Sample Rate. 
- * 
- * @param device_num : data record address of device 
- */
-void mpu6050_accel_read(device_number_t device_num);
-
-
-/**
- * @brief MPU6050 Gyroscope Measurements (GYRO_OUT) registers read
- * 
- * @details Register number: 67-72 
- *          Register size: 6 bytes 
- *          
- *          Register data: 
- *          - GYRO_XOUT: x-axis angular velocity - 16-bit signed value (reg 67-68) 
- *          - GYRO_YOUT: y-axis angular velocity - 16-bit signed value (reg 69-70) 
- *          - GYRO_ZOUT: z-axis angular velocity - 16-bit signed value (reg 71-72) 
- *          
- *          These registers store the most recent (unformatted) gyroscope measurements. 
- *          These values are written to the registers at the Sample Rate. This function 
- *          must be called to so the new data gets updated to the device data record. 
- *          After updating the data, the raw or formatted values can be read from the 
- *          getters. 
- *          
- *          When the serial interface (i2c interface) is active, the values in the 
- *          registers are held constant so that you can read all values (burst read)
- *          at one instance in time. When the serial interface is idle then these 
- *          registers will go back to being written to at the Sample Rate. 
- * 
- * @param device_num : data record address of device 
- */
-void mpu6050_gyro_read(device_number_t device_num);
-
-
-/**
- * @brief MPU6050 Temperature Measurements (TEMP_OUT) registers read
- * 
- * @details Register number: 65-66 
- *          Register size: 2 bytes 
- *          
- *          Register data: 
- *          - TEMP_OUT: device temperature - 16-bit signed value 
- *          
- *          These registers store the most recent (unformatted) temperature sensor 
- *          measurements. This value is written to the registers at the Sample Rate. 
- *          This function must be called to so the new data gets updated to the device 
- *          data record. After updating the data, the raw or formatted values can be read 
- *          from the getters. 
- *          
- *          When the serial interface (i2c interface) is active, the values in the 
- *          registers are held constant so that you can read all values (burst read)
- *          at one instance in time. When the serial interface is idle then these 
- *          registers will go back to being written to at the Sample Rate. 
- * 
- * @param device_num : data record address of device 
- */
-void mpu6050_temp_read(device_number_t device_num); 
-
-
-/**
- * @brief MPU6050 read all 
+ * @brief Read the most recent IMU data 
  * 
  * @details Performs the same data record update as the accelerometer, gyroscope and temp 
  *          sensor read functions combined in a burst read. This allows for keeping 
  *          hold of the I2C bus and ensures all the data read is from the same instance in time. 
  *          This is useful for when all the data needs to be read. 
  * 
- * @see mpu6050_accel_read
- * @see mpu6050_gyro_read
- * @see mpu6050_temp_read
- * 
  * @param device_num : data record address of device 
  */
-void mpu6050_read_all(device_number_t device_num); 
+void mpu6050_update(device_number_t device_num); 
 
-//=======================================================================================
-
-
-//=======================================================================================
-// Self-test functions 
 
 /**
- * @brief MPU6050 self-test
+ * @brief Get accelerometer axis data 
  * 
- * @details This functions runs a self-test on the device to see it has drifted from the 
- *          factory calibration. When self-test is activated, the on-board electronics
- *          will actuate the appropriate sensor and produce a change in the sensor
- *          output. The self-test response is defined as:  
- *          
- *          Self-test response = (sensor output with self-test enabled) - 
- *                               (sensor output with self-test disabled)  
- *          
- *          To pass the self-test the sensor must be within 14% of it's factory 
- *          calibration. If a self-test is failed then the sensor readings cannot be 
- *          considered accurate. The function will return a byte that indicates the self-
- *          test results of each accelerometer and gyroscope axis where a 0 is a pass and 
- *          a 1 is a fail. The return value breakdown is as follows: 
- *          
- *          - Bit 5: gyroscope z-axis 
- *          - Bit 4: gyroscope y-axis 
- *          - Bit 3: gyroscope x-axis 
- *          - Bit 2: accelerometer z-axis 
- *          - Bit 1: accelerometer y-axis 
- *          - Bit 0: accelerometer x-axis 
+ * @details Stores the most recently read unformatted acceleration values in the buffers 
+ *          passed as arguments. Note that the data is updated using one of the read 
+ *          functions, this function only returns the read value. 
  * 
- * @param device_num : data record address of device 
- * @return MPU6050_ST_RESULT : self-test results 
+ * @see mpu6050_update 
+ * 
+ * @param device_num : number of device data record to access 
+ * @param accel_axis : buffer to store the accelerometer axis data (raw) 
  */
-MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num);
+void mpu6050_get_accel_axis(
+    device_number_t device_num, 
+    int16_t *accel_axis); 
+
+
+/**
+ * @brief Get accelerometer axis g's 
+ * 
+ * @details Formats and stores the most recently read acceleration values in the buffers 
+ *          passed as arguments. Note that the data is updated using one of the read 
+ *          functions, this function only returns the read value. 
+ * 
+ * @see mpu6050_update 
+ * 
+ * @param device_num : number of device data record to access 
+ * @param accel_axis_gs : buffer to store the accelerometer axis data (g's) 
+ */
+void mpu6050_get_accel_axis_gs(
+    device_number_t device_num, 
+    float *accel_axis_gs); 
+
+
+/**
+ * @brief Get the gyroscope axis data 
+ * 
+ * @details Stores the most recently read unformatted angular velocity values in the 
+ *          buffers passed as arguments. Note that the data is updated using one of the 
+ *          read functions, this function only returns the read value. 
+ * 
+ * @see mpu6050_update 
+ * 
+ * @param device_num : number of device data record to access 
+ * @param gyro_axis : buffer to store the gyroscope axis data (raw) 
+ */
+void mpu6050_get_gyro_axis(
+    device_number_t device_num, 
+    int16_t *gyro_axis); 
+
+
+/**
+ * @brief Get gyroscope axis angular velocity 
+ * 
+ * @details Formats and stores the most recently read angular velocity values in the 
+ *          buffers passed as arguments. Note that the data is updated using one of the 
+ *          read functions, this function only returns the read value. 
+ * 
+ * @see mpu6050_update 
+ * 
+ * @param device_num : number of device data record to access 
+ * @param gyro_axis_rate : buffer to store the angular velocity (rad/s) 
+ */
+void mpu6050_get_gyro_axis_rate(
+    device_number_t device_num, 
+    float *gyro_axis_rate); 
+
+
+/**
+ * @brief MPU6050 temperature sensor raw value 
+ * 
+ * @details Returns the unformatted temperature sensor data. Note that the data is 
+ *          updated using one of the read functions, this function only returns the read 
+ *          value. 
+ * 
+ * @see mpu6050_update 
+ * 
+ * @param device_num : number of device data record to access 
+ * @return int16_t : unformatted temperature reading 
+ */
+int16_t mpu6050_get_temp_raw(device_number_t device_num); 
+
+
+/**
+ * @brief MPU6050 temperature sensor calculation
+ * 
+ * @details Calculates and returns the true temperature reading in degC using the raw 
+ *          temperature sensor data. This value is calculated using the following equation 
+ *          from the register map documentation: 
+ *          
+ *          Temperature (degC) = (16-bit register value) / 340 + 36.53 
+ *          
+ *          Note that the data is updated using one of the read functions, this function 
+ *          only returns the read value. 
+ * 
+ * @see mpu6050_update 
+ * 
+ * @param device_num : number of device data record to access 
+ * @return float : true temperature value (degC) 
+ */
+float mpu6050_get_temp(device_number_t device_num);
 
 //=======================================================================================
 
 
 //=======================================================================================
-// Setters and getters 
+// Status 
 
 /**
  * @brief MPU6050 clear device driver fault flag 
@@ -676,130 +609,40 @@ uint8_t mpu6050_get_status(device_number_t device_num);
  */
 MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num); 
 
+//=======================================================================================
+
+
+//=======================================================================================
+// Self-test functions 
 
 /**
- * @brief Get raw acceleration values 
+ * @brief MPU6050 self-test
  * 
- * @details Stores the most recently read unformatted acceleration values in the buffers 
- *          passed as arguments. Note that the data is updated using one of the read 
- *          functions, this function only returns the read value. 
- * 
- * @see mpu6050_accel_read 
- * @see mpu6050_read_all 
- * 
- * @param device_num : number of device data record to access 
- * @param accel_x : buffer to store the unformatted x-axis acceleration 
- * @param accel_y : buffer to store the unformatted y-axis acceleration 
- * @param accel_z : buffer to store the unformatted z-axis acceleration 
- */
-void mpu6050_get_accel_raw(
-    device_number_t device_num, 
-    int16_t *accel_x, 
-    int16_t *accel_y, 
-    int16_t *accel_z); 
-
-
-/**
- * @brief Get formatted acceleration 
- * 
- * @details Formats and stores the most recently read acceleration values in the buffers 
- *          passed as arguments. Note that the data is updated using one of the read 
- *          functions, this function only returns the read value. 
- * 
- * @see mpu6050_accel_read 
- * @see mpu6050_read_all 
- * 
- * @param device_num : number of device data record to access 
- * @param accel_x : buffer to store the formatted x-axis acceleration 
- * @param accel_y : buffer to store the formatted y-axis acceleration 
- * @param accel_z : buffer to store the formatted z-axis acceleration 
- */
-void mpu6050_get_accel(
-    device_number_t device_num, 
-    float *accel_x, 
-    float *accel_y, 
-    float *accel_z); 
-
-
-/**
- * @brief Get raw angular velocity values 
- * 
- * @details Stores the most recently read unformatted angular velocity values in the 
- *          buffers passed as arguments. Note that the data is updated using one of the 
- *          read functions, this function only returns the read value. 
- * 
- * @see mpu6050_gyro_read 
- * @see mpu6050_read_all 
- * 
- * @param device_num : number of device data record to access 
- * @param gyro_x_raw : buffer to store the unformatted x-axis angular velocity 
- * @param gyro_y_raw : buffer to store the unformatted x-axis angular velocity 
- * @param gyro_z_raw : buffer to store the unformatted x-axis angular velocity 
- */
-void mpu6050_get_gyro_raw(
-    device_number_t device_num, 
-    int16_t *gyro_x_raw, 
-    int16_t *gyro_y_raw, 
-    int16_t *gyro_z_raw); 
-
-
-/**
- * @brief Get formatted angular velocity 
- * 
- * @details Formats and stores the most recently read angular velocity values in the 
- *          buffers passed as arguments. Note that the data is updated using one of the 
- *          read functions, this function only returns the read value. 
- * 
- * @see mpu6050_gyro_read 
- * @see mpu6050_read_all 
- * 
- * @param device_num : number of device data record to access 
- * @param gyro_x : buffer to store the formatted x-axis angular velocity 
- * @param gyro_y : buffer to store the formatted y-axis angular velocity 
- * @param gyro_z : buffer to store the formatted z-axis angular velocity 
- */
-void mpu6050_get_gyro(
-    device_number_t device_num, 
-    float *gyro_x, 
-    float *gyro_y, 
-    float *gyro_z); 
-
-
-/**
- * @brief MPU6050 temperature sensor raw value 
- * 
- * @details Returns the unformatted temperature sensor data. Note that the data is 
- *          updated using one of the read functions, this function only returns the read 
- *          value. 
- * 
- * @see mpu6050_temp_read 
- * @see mpu6050_read_all 
- * 
- * @param device_num : number of device data record to access 
- * @return int16_t : unformatted temperature reading 
- */
-int16_t mpu6050_get_temp_raw(device_number_t device_num); 
-
-
-/**
- * @brief MPU6050 temperature sensor calculation
- * 
- * @details Calculates and returns the true temperature reading in degC using the raw 
- *          temperature sensor data. This value is calculated using the following equation 
- *          from the register map documentation: 
+ * @details This functions runs a self-test on the device to see it has drifted from the 
+ *          factory calibration. When self-test is activated, the on-board electronics
+ *          will actuate the appropriate sensor and produce a change in the sensor
+ *          output. The self-test response is defined as:  
  *          
- *          Temperature (degC) = (16-bit register value) / 340 + 36.53 
+ *          Self-test response = (sensor output with self-test enabled) - 
+ *                               (sensor output with self-test disabled)  
  *          
- *          Note that the data is updated using one of the read functions, this function 
- *          only returns the read value. 
+ *          To pass the self-test the sensor must be within 14% of it's factory 
+ *          calibration. If a self-test is failed then the sensor readings cannot be 
+ *          considered accurate. The function will return a byte that indicates the self-
+ *          test results of each accelerometer and gyroscope axis where a 0 is a pass and 
+ *          a 1 is a fail. The return value breakdown is as follows: 
+ *          
+ *          - Bit 5: gyroscope z-axis 
+ *          - Bit 4: gyroscope y-axis 
+ *          - Bit 3: gyroscope x-axis 
+ *          - Bit 2: accelerometer z-axis 
+ *          - Bit 1: accelerometer y-axis 
+ *          - Bit 0: accelerometer x-axis 
  * 
- * @see mpu6050_temp_read 
- * @see mpu6050_read_all 
- * 
- * @param device_num : number of device data record to access 
- * @return float : true temperature value (degC) 
+ * @param device_num : data record address of device 
+ * @return MPU6050_ST_RESULT : self-test results 
  */
-float mpu6050_get_temp(device_number_t device_num);
+MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num);
 
 //=======================================================================================
 

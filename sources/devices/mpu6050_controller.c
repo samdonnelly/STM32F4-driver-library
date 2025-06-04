@@ -143,10 +143,7 @@ static mpu6050_state_functions_t state_table[MPU6050_NUM_STATES] =
 // Function pointers to read functions 
 static mpu6050_read_functions_t read_table[MPU6050_NUM_READS] = 
 {
-    &mpu6050_accel_read, 
-    &mpu6050_gyro_read, 
-    &mpu6050_temp_read, 
-    &mpu6050_read_all 
+    &mpu6050_update 
 }; 
 
 //=======================================================================================
