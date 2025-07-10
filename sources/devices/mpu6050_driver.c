@@ -32,8 +32,6 @@
 #define MPU6050_INT_CONFIG   0x37        // Register 55  - Interrupt configuration 
 #define MPU6050_INT_ENABLE   0x38        // Register 56  - Interrupt enable 
 #define MPU6050_ACCEL_XOUT_H 0x3B        // Register 59  - Accelerometer x-axis high byte 
-#define MPU6050_TEMP_OUT_H   0x41        // Register 65  - Temperature high byte 
-#define MPU6050_GYRO_XOUT_H  0x43        // Register 67  - Gyroscope x-axis high byte 
 #define MPU6050_PWR_MGMT_1   0x6B        // Register 107 - Power management 1 
 #define MPU6050_PWR_MGMT_2   0x6C        // Register 108 - Power management 2 
 #define MPU6050_WHO_AM_I     0x75        // Register 117 - Who Am I 
@@ -44,19 +42,19 @@
 
 // Accelerometer 
 #define MPU6050_AFS_SEL_MAX 16384        // Max accelerometer calculation scalar 
-#define MPU6050_ACCEL_ST_FT_C1 142       // Accelerometer factory trim calc constant 1 
-#define MPU6050_ACCEL_ST_FT_C2 6056      // Accelerometer factory trim calc constant 2 
-#define MPU6050_ACCEL_ST_FT_C4 13452     // Accelerometer factory trim calc constant 3 
-#define MPU6050_ACCEL_ST_FT_C3 45752     // Accelerometer factory trim calc constant 4 
+#define MPU6050_ACCEL_ST_FT_C1 0.0142f   // Accelerometer factory trim calc constant 1 
+#define MPU6050_ACCEL_ST_FT_C2 0.6056f   // Accelerometer factory trim calc constant 2 
+#define MPU6050_ACCEL_ST_FT_C3 45.752f   // Accelerometer factory trim calc constant 3 
+#define MPU6050_ACCEL_ST_FT_C4 1345.2f   // Accelerometer factory trim calc constant 4 
 
 // Gyroscope 
 #define MPU6050_FS_SEL_MAX 1310          // Max gyroscopic calculation scalar 
 #define MPU6050_FS_CORRECTION 0x02       // Gyroscope calculation correction mask 
 #define MPU6050_GYRO_SCALAR 10           // Unscales scaled mpu6050_gyro_scalars_t values 
-#define MPU6050_GYRO_ST_FT_C1 1001       // Gyroscope factory trim calc constant 1 
-#define MPU6050_GYRO_ST_FT_C3 15056      // Gyroscope factory trim calc constant 2 
-#define MPU6050_GYRO_ST_FT_C2 19244      // Gyroscope factory trim calc constant 3 
-#define MPU6050_GYRO_ST_FT_C4 31125      // Gyroscope factory trim calc constant 4 
+#define MPU6050_GYRO_ST_FT_C1 0.1001f    // Gyroscope factory trim calc constant 1 
+#define MPU6050_GYRO_ST_FT_C2 1.9244f    // Gyroscope factory trim calc constant 3 
+#define MPU6050_GYRO_ST_FT_C3 150.56f    // Gyroscope factory trim calc constant 3 
+#define MPU6050_GYRO_ST_FT_C4 3112.5f    // Gyroscope factory trim calc constant 4 
 
 // Self-Test 
 #define MPU6050_ST_MASK_ZA_TEST_LO 0x03  // Mask to parse self-test y-axis accelerometer data 
@@ -73,7 +71,7 @@
 //=======================================================================================
 // Messages 
 
-// MPU6050 data record structure 
+// MPU-6050 data record structure 
 typedef struct mpu6050_driver_data_s 
 {
     // Linked list tracking 
@@ -512,13 +510,11 @@ void mpu6050_self_test_read(
  * @param self_test_response : pointer that stores the sef-test response calculation
  * @param no_self_test : pointer to raw senor output (without self-test enabled)
  * @param self_test : pointer to raw self-test sensor output 
- * @param num_axes : number of accelerometer or gyroscope axis to calculate
  */
 void mpu6050_str_calc(
     int16_t *self_test_response,
     int16_t *no_self_test,
-    int16_t *self_test,
-    uint8_t num_axes);
+    int16_t *self_test);
 
 
 /**
@@ -649,7 +645,7 @@ float mpu6050_gyro_scalar(mpu6050_driver_data_t *device_ptr);
 //=======================================================================================
 // Initialization 
 
-// MPU6050 Initialization 
+// MPU-6050 Initialization 
 void mpu6050_init(
     device_number_t device_num, 
     I2C_TypeDef *i2c, 
@@ -687,7 +683,7 @@ void mpu6050_init(
         return; 
     }
 
-    // Choose which sensors to use and frquency of CYCLE mode
+    // Choose which sensors to use and frequency of CYCLE mode
     mpu6050_pwr_mgmt_2_write(device_data, MPU6050_LP_WAKE_CTRL_0, standby_status);
 
     // Wake the sensor up through the power management 1 register 
@@ -717,17 +713,15 @@ void mpu6050_init(
 }
 
 
-// MPU6050 INT pin initialization 
+// MPU-6050 INT pin initialization 
 void mpu6050_int_pin_init(
     device_number_t device_num, 
     GPIO_TypeDef *gpio, 
     pin_selector_t pin)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return; 
@@ -750,14 +744,12 @@ void mpu6050_int_pin_init(
 }
 
 
-// MPU6050 reference point set 
+// MPU-6050 reference point set 
 void mpu6050_calibrate(device_number_t device_num)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return; 
@@ -771,16 +763,14 @@ void mpu6050_calibrate(device_number_t device_num)
 }
 
 
-// MPU6050 low power mode config 
+// MPU-6050 low power mode config 
 void mpu6050_low_pwr_config(
     device_number_t device_num, 
     mpu6050_sleep_mode_t sleep)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return; 
@@ -796,7 +786,7 @@ void mpu6050_low_pwr_config(
 }
 
 
-// MPU6050 accelerometer scalar
+// MPU-6050 accelerometer scalar
 float mpu6050_accel_scalar(mpu6050_driver_data_t *device_ptr)
 {
     // Get AFS_SEL 
@@ -807,7 +797,7 @@ float mpu6050_accel_scalar(mpu6050_driver_data_t *device_ptr)
 }
 
 
-// MPU6050 gyroscope scalar 
+// MPU-6050 gyroscope scalar 
 float mpu6050_gyro_scalar(mpu6050_driver_data_t *device_ptr)
 {
     // Get FS_SEL 
@@ -828,34 +818,29 @@ float mpu6050_gyro_scalar(mpu6050_driver_data_t *device_ptr)
 // Read the most recent IMU data 
 void mpu6050_update(device_number_t device_num)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return; 
     } 
 
-    // Temporary data storage 
-    uint8_t data_reg[BYTE_14];
-
-    // Read and format the IMU data 
+    uint8_t data_reg[BYTE_14]; 
     mpu6050_read(device_data, MPU6050_ACCEL_XOUT_H, BYTE_14, data_reg); 
 
-    // Acceleration 
-    device_data->accel[X_AXIS] = (int16_t)((data_reg[0] << SHIFT_8) | (data_reg[1]));
-    device_data->accel[Y_AXIS] = (int16_t)((data_reg[2] << SHIFT_8) | (data_reg[3]));
-    device_data->accel[Z_AXIS] = (int16_t)((data_reg[4] << SHIFT_8) | (data_reg[5]));
+    // Accelerometer 
+    device_data->accel[X_AXIS] = ((int16_t)data_reg[0] << SHIFT_8) | (int16_t)data_reg[1];
+    device_data->accel[Y_AXIS] = ((int16_t)data_reg[2] << SHIFT_8) | (int16_t)data_reg[3];
+    device_data->accel[Z_AXIS] = ((int16_t)data_reg[4] << SHIFT_8) | (int16_t)data_reg[5];
 
     // Temperature 
-    device_data->temp = (int16_t)((data_reg[6] << SHIFT_8) | (data_reg[7])); 
+    device_data->temp = ((int16_t)data_reg[6] << SHIFT_8) | (int16_t)data_reg[7]; 
 
     // Gyroscope 
-    device_data->gyro[X_AXIS] = (int16_t)((data_reg[8]  << SHIFT_8) | (data_reg[9]));
-    device_data->gyro[Y_AXIS] = (int16_t)((data_reg[10] << SHIFT_8) | (data_reg[11]));
-    device_data->gyro[Z_AXIS] = (int16_t)((data_reg[12] << SHIFT_8) | (data_reg[13]));
+    device_data->gyro[X_AXIS] = ((int16_t)data_reg[8]  << SHIFT_8) | (int16_t)data_reg[9];
+    device_data->gyro[Y_AXIS] = ((int16_t)data_reg[10] << SHIFT_8) | (int16_t)data_reg[11];
+    device_data->gyro[Z_AXIS] = ((int16_t)data_reg[12] << SHIFT_8) | (int16_t)data_reg[13];
 }
 
 
@@ -864,11 +849,9 @@ void mpu6050_get_accel_axis(
     device_number_t device_num, 
     int16_t *accel_axis)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return; 
@@ -876,7 +859,7 @@ void mpu6050_get_accel_axis(
 
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (accel_axis != NULL); i++)
     {
-        accel_axis[i] = device_data->accel[i]; 
+        *accel_axis++ = device_data->accel[i]; 
     }
 }
 
@@ -886,11 +869,9 @@ void mpu6050_get_accel_axis_gs(
     device_number_t device_num, 
     float *accel_axis_gs)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return; 
@@ -898,7 +879,7 @@ void mpu6050_get_accel_axis_gs(
 
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (accel_axis_gs != NULL); i++)
     {
-        accel_axis_gs[i] = (float)device_data->accel[i] / device_data->accel_data_scalar; 
+        *accel_axis_gs++ = (float)device_data->accel[i] / device_data->accel_data_scalar; 
     }
 }
 
@@ -908,11 +889,9 @@ void mpu6050_get_gyro_axis(
     device_number_t device_num, 
     int16_t *gyro_axis)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return; 
@@ -920,7 +899,7 @@ void mpu6050_get_gyro_axis(
 
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (gyro_axis != NULL); i++)
     {
-        gyro_axis[i] = device_data->gyro[i] - device_data->gyro_offsets[i]; 
+        *gyro_axis++ = device_data->gyro[i] - device_data->gyro_offsets[i]; 
     }
 }
 
@@ -930,11 +909,9 @@ void mpu6050_get_gyro_axis_rate(
     device_number_t device_num, 
     float *gyro_axis_rate)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return; 
@@ -942,8 +919,8 @@ void mpu6050_get_gyro_axis_rate(
 
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (gyro_axis_rate != NULL); i++)
     {
-        gyro_axis_rate[i] = (float)(device_data->gyro[i] - device_data->gyro_offsets[i]) / 
-                             device_data->gyro_data_scalar; 
+        *gyro_axis_rate++ = (float)(device_data->gyro[i] - device_data->gyro_offsets[i]) / 
+                                device_data->gyro_data_scalar; 
     }
 }
 
@@ -951,11 +928,9 @@ void mpu6050_get_gyro_axis_rate(
 // Temperature sensor raw value 
 int16_t mpu6050_get_temp_raw(device_number_t device_num)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return NULL_PTR_RETURN; 
@@ -968,11 +943,9 @@ int16_t mpu6050_get_temp_raw(device_number_t device_num)
 // Temperature sensor calculation 
 float mpu6050_get_temp(device_number_t device_num)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return NULL_PTR_RETURN; 
@@ -991,11 +964,9 @@ float mpu6050_get_temp(device_number_t device_num)
 // Clear status flag 
 void mpu6050_clear_status(device_number_t device_num)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return; 
@@ -1008,11 +979,9 @@ void mpu6050_clear_status(device_number_t device_num)
 // Get status flag 
 uint8_t mpu6050_get_status(device_number_t device_num)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return NULL_PTR_RETURN; 
@@ -1025,11 +994,9 @@ uint8_t mpu6050_get_status(device_number_t device_num)
 // INT pin status 
 MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return NULL_PTR_RETURN; 
@@ -1044,7 +1011,7 @@ MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num)
 //=======================================================================================
 // Read and Write Functions 
 
-// MPU6050 write to register 
+// MPU-6050 write to register 
 void mpu6050_write(
     mpu6050_driver_data_t *device_ptr, 
     MPU6050_REG_ADDR mpu6050_register,
@@ -1074,7 +1041,7 @@ void mpu6050_write(
 }
 
 
-// MPU6050 read from register 
+// MPU-6050 read from register 
 void mpu6050_read(
     mpu6050_driver_data_t *device_ptr, 
     MPU6050_REG_ADDR mpu6050_register, 
@@ -1115,81 +1082,62 @@ void mpu6050_read(
 //=======================================================================================
 // Register functions 
 
-// MPU6050 Sample Rate Divider register write 
+// MPU-6050 Sample Rate Divider register write 
 void mpu6050_smprt_div_write(
     mpu6050_driver_data_t *device_ptr, 
     MPU6050_SMPLRT_DIV smprt_div)
 {
-    // Write to the Sample Rate Divider register
     mpu6050_write(device_ptr, MPU6050_SMPRT_DIV, BYTE_1, &smprt_div);
 }
 
 
-// MPU6050 Configuration register write
+// MPU-6050 Configuration register write
 void mpu6050_config_write(
     mpu6050_driver_data_t *device_ptr, 
     uint8_t ext_sync_set,
     mpu6050_dlpf_cfg_t dlpf_cfg)
 {
-    // Configure the data 
     uint8_t mpu6050_config = (ext_sync_set << SHIFT_3) | (dlpf_cfg << SHIFT_0);
-
-    // Write to the Configuration register 
     mpu6050_write(device_ptr, MPU6050_CONFIG, BYTE_1, &mpu6050_config);
 }
 
 
-// MPU6050 Gyroscope Configuration register write
+// MPU-6050 Gyroscope Configuration register write
 void mpu6050_gyro_config_write(
     mpu6050_driver_data_t *device_ptr, 
     mpu6050_gyro_self_test_set_t gyro_self_test,
     mpu6050_fs_sel_set_t fs_sel)
 {
-    // Configure the data 
     uint8_t mpu6050_gyro_config = (gyro_self_test << SHIFT_5) | (fs_sel << SHIFT_3);
-
-    // Write to the Gyroscope Configuration register 
     mpu6050_write(device_ptr, MPU6050_GYRO_CONFIG, BYTE_1, &mpu6050_gyro_config);
 }
 
 
-// MPU6050 Gyroscope Configuration register read
+// MPU-6050 Gyroscope Configuration register read
 uint8_t mpu6050_gyro_config_read(mpu6050_driver_data_t *device_ptr)
 {
     uint8_t mpu6050_gyro_config;
-
-    // Read the value of GYRO_CONFIG register 
     mpu6050_read(device_ptr, MPU6050_GYRO_CONFIG, BYTE_1, &mpu6050_gyro_config);
-
-    // Return the value of GYRO_CONFIG 
     return mpu6050_gyro_config;
 }
 
 
-// MPU6050 Accelerometer Configuration register write
+// MPU-6050 Accelerometer Configuration register write
 void mpu6050_accel_config_write(
     mpu6050_driver_data_t *device_ptr, 
     mpu6050_accel_self_test_set_t accel_self_test,
     mpu6050_afs_sel_set_t afs_sel)
 {
-    // Configure the data 
     uint8_t mpu6050_accel_config = (accel_self_test << SHIFT_5) | (afs_sel << SHIFT_3);
-
-    // Write to the Accelerometer Configuration register 
     mpu6050_write(device_ptr, MPU6050_ACCEL_CONFIG, BYTE_1, &mpu6050_accel_config);
 }
 
 
-// MPU6050 Accelerometer Configuration register read 
+// MPU-6050 Accelerometer Configuration register read 
 uint8_t mpu6050_accel_config_read(mpu6050_driver_data_t *device_ptr)
 {
-    // Place to store the value of ACCEL_CONFIG
     uint8_t mpu6050_accel_config;
-
-    // Read the value of ACCEL_CONFIG register 
     mpu6050_read(device_ptr, MPU6050_ACCEL_CONFIG, BYTE_1, &mpu6050_accel_config);
-
-    // Return the value of ACCEL_CONFIG 
     return mpu6050_accel_config;
 }
 
@@ -1200,10 +1148,7 @@ void mpu6050_int_pin_config_write(
     mpu6050_int_latch_t latch_int_en, 
     mpu6050_int_clear_t int_rd_clear)
 {
-    // Configure the data
     uint8_t mpu6050_int_config = (latch_int_en << SHIFT_5) | (int_rd_clear << SHIFT_4); 
-    
-    // Write to the INT pin configuration register (register 55) 
     mpu6050_write(device_ptr, MPU6050_INT_CONFIG, BYTE_1, &mpu6050_int_config);
 }
 
@@ -1213,15 +1158,12 @@ void mpu6050_int_enable_write(
     mpu6050_driver_data_t *device_ptr, 
     mpu6050_int_data_rdy_t data_rdy_en)
 {
-    // Configure the data
     uint8_t mpu6050_int_enable = (data_rdy_en << SHIFT_0); 
-    
-    // Write to the Interrupt Enable register (register 56) 
     mpu6050_write(device_ptr, MPU6050_INT_ENABLE, BYTE_1, &mpu6050_int_enable);
 }
 
 
-// MPU6050 Power Manangement 1 register write
+// MPU-6050 Power Manangement 1 register write
 void mpu6050_pwr_mgmt_1_write(
     mpu6050_driver_data_t *device_ptr, 
     mpu6050_device_reset_t device_reset,
@@ -1230,41 +1172,34 @@ void mpu6050_pwr_mgmt_1_write(
     mpu6050_temp_sensor_t temp_dis,
     mpu6050_clksel_t clksel)
 {
-    // Configure the data
     uint8_t mpu6050_pwr_mgmt_1 = (device_reset << SHIFT_7) |
                                  (sleep        << SHIFT_6) |
                                  (cycle        << SHIFT_5) |
                                  (temp_dis     << SHIFT_3) |
                                  (clksel       << SHIFT_0);
     
-    // Write to the Power Management 1 register 
     mpu6050_write(device_ptr, MPU6050_PWR_MGMT_1, BYTE_1, &mpu6050_pwr_mgmt_1);
 }
 
 
-// MPU6050 Power Manangement 2 register write
+// MPU-6050 Power Manangement 2 register write
 void mpu6050_pwr_mgmt_2_write(
     mpu6050_driver_data_t *device_ptr, 
     mpu6050_lp_wake_ctrl_t lp_wake_ctrl,
     uint8_t standby_status)
 {
-    // Configure the data 
     uint8_t mpu6050_pwr_mgmt_2 = (lp_wake_ctrl << SHIFT_6) | 
                                  (standby_status & MPU6050_STBY_STATUS_MASK); 
     
-    // Write to the Power Management 2 register 
     mpu6050_write(device_ptr, MPU6050_PWR_MGMT_2, BYTE_1, &mpu6050_pwr_mgmt_2);
 }
 
 
-// MPU6050 Who Am I register read
+// MPU-6050 Who Am I register read
 uint8_t mpu6050_who_am_i_read(mpu6050_driver_data_t *device_ptr)
 {
     uint8_t mpu6050_who_am_i;
-
-    // Read the value of WHO_AM_I register 
     mpu6050_read(device_ptr, MPU6050_WHO_AM_I, BYTE_1, &mpu6050_who_am_i);
-
     return mpu6050_who_am_i;
 }
 
@@ -1274,14 +1209,12 @@ uint8_t mpu6050_who_am_i_read(mpu6050_driver_data_t *device_ptr)
 //=======================================================================================
 // Self-test 
 
-// MPU6050 self-test
+// MPU-6050 self-test
 MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num)
 {
-    // Get the device data record 
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    // Check that the data record is valid 
     if (device_data == NULL) 
     {
         return NULL_PTR_RETURN; 
@@ -1312,7 +1245,7 @@ MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num)
     float gyro_ft[NUM_AXES];
 
     // Status of the self-test 
-    uint8_t self_test_result = 0; 
+    uint8_t self_test_result = CLEAR; 
 
     // Record the full scale range set in the init function 
     accel_fsr = ((mpu6050_accel_config_read(device_data) & MPU6050_FSR_MASK) >> SHIFT_3);
@@ -1370,13 +1303,11 @@ MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num)
     mpu6050_str_calc(
         accel_str,
         accel_no_st,
-        accel_st,
-        NUM_AXES);
+        accel_st);
     mpu6050_str_calc(
         gyro_str,
         gyro_no_st,
-        gyro_st,
-        NUM_AXES);
+        gyro_st);
     
     // Calculate the change from factory trim and check against the acceptable range 
     mpu6050_self_test_result(
@@ -1407,21 +1338,14 @@ MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num)
 }
 
 
-// MPU6050 self-test read 
+// MPU-6050 self-test read 
 void mpu6050_self_test_read(
     mpu6050_driver_data_t *device_ptr, 
     uint8_t *accel_st_data,
     uint8_t *gyro_st_data)
 {
-    // Store unformatted data 
     uint8_t st_data[BYTE_4];
-
-    // Read the value of SELF_TEST registers 
-    mpu6050_read(
-        device_ptr, 
-        MPU6050_SELF_TEST, 
-        BYTE_4,
-        st_data);
+    mpu6050_read(device_ptr, MPU6050_SELF_TEST, BYTE_4, st_data); 
     
     // Parse the acceleration data in X, Y and Z respectively 
     *accel_st_data++ = ((st_data[BYTE_0] & MPU6050_ST_MASK_A_TEST_HI)  >> SHIFT_3) |
@@ -1434,65 +1358,46 @@ void mpu6050_self_test_read(
                      ((st_data[BYTE_3] & MPU6050_ST_MASK_ZA_TEST_LO) >> SHIFT_0);
 
     // Parse the gyro data in X, Y and Z respectively 
-    *gyro_st_data++ = st_data[BYTE_0] & MPU6050_ST_MASK_X_TEST;
-    
-    *gyro_st_data++ = st_data[BYTE_1] & MPU6050_ST_MASK_X_TEST;
-    
-    *gyro_st_data = st_data[BYTE_2] & MPU6050_ST_MASK_X_TEST;
+    for (uint8_t i = X_AXIS; i < NUM_AXES; i++)
+    {
+        *gyro_st_data++ = st_data[i] & MPU6050_ST_MASK_X_TEST; 
+    }
 }
 
 
-// MPU6050 accelerometer factory trim 
+// MPU-6050 accelerometer factory trim 
 void mpu6050_accel_ft(
     uint8_t *a_test, 
     float *accel_ft)
 {
-    // Constants 
-    float c1 = MPU6050_ACCEL_ST_FT_C1 / ((float)(DIVIDE_10000));
-    float c2 = MPU6050_ACCEL_ST_FT_C2 / ((float)(DIVIDE_10000));
-    float c3 = MPU6050_ACCEL_ST_FT_C3 / ((float)(DIVIDE_1000));
-    float c4 = MPU6050_ACCEL_ST_FT_C4 / ((float)(DIVIDE_10));
+    float c1 = MPU6050_ACCEL_ST_FT_C1; 
+    float c2 = MPU6050_ACCEL_ST_FT_C2; 
+    float c3 = MPU6050_ACCEL_ST_FT_C3; 
+    float c4 = MPU6050_ACCEL_ST_FT_C4; 
 
     // Determine the factory trim 
-    for (uint8_t i = 0; i < NUM_AXES; i++)
+    for (uint8_t i = X_AXIS; i < NUM_AXES; i++)
     {
-        if (*a_test == 0)
-        {
-            *accel_ft = 0;
-        }
-        else
-        {
-            *accel_ft = (*a_test)*((*a_test)*(c1*(*a_test) + c2) + c3) + c4;
-        }
-
-        accel_ft++;
+        *accel_ft++ = (*a_test == 0) ? 0 : (*a_test)*((*a_test)*(c1*(*a_test) + c2) + c3) + c4; 
         a_test++;
     }
 }
 
 
-// MPU6050 gyroscope factory trim 
+// MPU-6050 gyroscope factory trim 
 void mpu6050_gyro_ft(
     uint8_t *g_test, 
     float *gyro_ft)
 {
-    // Constants 
-    float c1 = MPU6050_GYRO_ST_FT_C1 / ((float)(DIVIDE_10000));
-    float c2 = MPU6050_GYRO_ST_FT_C2 / ((float)(DIVIDE_10000));
-    float c3 = MPU6050_GYRO_ST_FT_C3 / ((float)(DIVIDE_100));
-    float c4 = MPU6050_GYRO_ST_FT_C4 / ((float)(DIVIDE_10));
+    float c1 = MPU6050_GYRO_ST_FT_C1; 
+    float c2 = MPU6050_GYRO_ST_FT_C2; 
+    float c3 = MPU6050_GYRO_ST_FT_C3; 
+    float c4 = MPU6050_GYRO_ST_FT_C4; 
 
     // Determine the factory trim 
-    for (uint8_t i = 0; i < NUM_AXES; i++)
+    for (uint8_t i = X_AXIS; i < NUM_AXES; i++)
     {
-        if (*g_test == 0)
-        {
-            *gyro_ft = 0;
-        }
-        else 
-        {
-            *gyro_ft = (*g_test)*((*g_test)*(c1*(*g_test) + c2) + c3) + c4;
-        }
+        *gyro_ft = (*g_test == 0) ? 0 : (*g_test)*((*g_test)*(c1*(*g_test) + c2) + c3) + c4; 
 
         if (i == 1)
         {
@@ -1505,32 +1410,30 @@ void mpu6050_gyro_ft(
 }
 
 
-// MPU6050 self-test response calculation
+// MPU-6050 self-test response calculation
 void mpu6050_str_calc(
     int16_t *self_test_response,
     int16_t *no_self_test,
-    int16_t *self_test,
-    uint8_t num_axes)
+    int16_t *self_test)
 {
-    for (uint8_t i = 0; i < num_axes; i++)
+    for (uint8_t i = X_AXIS; i < NUM_AXES; i++)
     {
         *self_test_response++ = *self_test++ - *no_self_test++;
     }
 }
 
 
-// MPU6050 self-test result calculation 
+// MPU-6050 self-test result calculation 
 void mpu6050_self_test_result(
     int16_t *self_test_results,
     float *factory_trim,
     uint8_t *results, 
     uint8_t shift)
 {
-    // Place to store the % change 
     float ft_change;
 
     // Determine the result of the self-test 
-    for (uint8_t i = 0; i < NUM_AXES; i++)
+    for (uint8_t i = X_AXIS; i < NUM_AXES; i++)
     {
         // Check % change from factory trim 
         ft_change = ((float)(*self_test_results) - *factory_trim) / *factory_trim;
