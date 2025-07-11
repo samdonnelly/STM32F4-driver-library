@@ -52,6 +52,16 @@ extern "C" {
 //=======================================================================================
 // Enums 
 
+// MPU-6050 driver status 
+typedef enum {
+    MPU6050_OK,            // No problem with the MPU-6050 driver 
+    MPU6050_INVALID_PTR,   // Invalid pointer provided to the driver 
+    MPU6050_WHOAMI,        // WHO AM I register doesn't match 
+    MPU6050_WRITE_FAULT,   // A problem occurred while writing via I2C 
+    MPU6050_READ_FAULT,    // A problem occurred while reading via I2C 
+    MPU6050_ST_FAULT       // A problem occured during self test 
+} mpu6050_status_t; 
+
 /**
  * @brief MPU6050 Addresses 
  * 
@@ -357,9 +367,9 @@ typedef enum {
 //=======================================================================================
 // Data types 
 
+typedef uint8_t MPU6050_STATUS; 
 typedef uint8_t MPU6050_REG_ADDR;        // Register address 
 typedef uint8_t MPU6050_INT_STATUS;      // INT pin status 
-typedef uint8_t MPU6050_INIT_STATUS;     // Initialization status 
 typedef uint8_t MPU6050_SMPLRT_DIV;      // Sample Rate Divider 
 typedef uint8_t MPU6050_ST_RESULT;       // Self-Test Result 
 
@@ -384,8 +394,9 @@ typedef uint8_t MPU6050_ST_RESULT;       // Self-Test Result
  * @param smplrt_div : sample rate divider 
  * @param afs_sel : full scale range of accelerometer 
  * @param fs_sel : full scale range of gyroscope 
+ * @return MPU6050_STATUS : initialization status 
  */
-void mpu6050_init(
+MPU6050_STATUS mpu6050_init(
     device_number_t device_num, 
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t mpu6050_address,
@@ -448,7 +459,7 @@ void mpu6050_low_pwr_config(
 
 
 //=======================================================================================
-// Read and get data 
+// Update and get data 
 
 /**
  * @brief Read the most recent IMU data 
@@ -570,28 +581,6 @@ float mpu6050_get_temp(device_number_t device_num);
 
 //=======================================================================================
 // Status 
-
-/**
- * @brief MPU6050 clear device driver fault flag 
- * 
- * @param device_num : data record address of device 
- */
-void mpu6050_clear_status(device_number_t device_num); 
-
-
-/**
- * @brief MPU6050 get device driver fault code 
- * 
- * @details Status info / fault code: 
- *            --> bit 0: i2c status (see i2c_status_t) 
- *            --> bit 1: init status (WHO_AM_I) 
- *            --> bits 2-7: self test results 
- * 
- * @param device_num : data record address of device 
- * @return uint8_t : driver status code for a given device number 
- */
-uint8_t mpu6050_get_status(device_number_t device_num); 
-
 
 /**
  * @brief MPU6050 INT pin status 

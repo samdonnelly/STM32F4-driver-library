@@ -50,7 +50,7 @@
 // Gyroscope 
 #define MPU6050_FS_SEL_MAX 1310          // Max gyroscopic calculation scalar 
 #define MPU6050_FS_CORRECTION 0x02       // Gyroscope calculation correction mask 
-#define MPU6050_GYRO_SCALAR 10           // Unscales scaled mpu6050_gyro_scalars_t values 
+#define MPU6050_GYRO_SCALAR 10.0f        // Unscales scaled mpu6050_gyro_scalars_t values 
 #define MPU6050_GYRO_ST_FT_C1 0.1001f    // Gyroscope factory trim calc constant 1 
 #define MPU6050_GYRO_ST_FT_C2 1.9244f    // Gyroscope factory trim calc constant 3 
 #define MPU6050_GYRO_ST_FT_C3 150.56f    // Gyroscope factory trim calc constant 3 
@@ -93,12 +93,6 @@ typedef struct mpu6050_driver_data_s
     int16_t gyro[NUM_AXES];            // Gyroscope data 
     int16_t gyro_offsets[NUM_AXES];    // Gyroscope offsets 
     int16_t temp;                      // Temperature 
-
-    // Status info 
-    // 'status' --> bit 0: i2c status (see i2c_status_t) 
-    //          --> bit 1: init status (WHO_AM_I) 
-    //          --> bits 2-7: self test results 
-    uint8_t status; 
 }
 mpu6050_driver_data_t; 
 
@@ -113,27 +107,6 @@ static mpu6050_driver_data_t *mpu6050_driver_data = NULL;
 // Function Prototypes 
 
 /**
- * @brief MPU6050 write to register 
- * 
- * @details Writes data to the device over the I2C bus. This function is used by the 
- *          register functions. The register address specifies where to begin writing in 
- *          the devices memory and the register size argument specifies the number of 
- *          bytes in memory to write. Bytes in registers are written successively. The 
- *          register addresses are defined in the header file. 
- * 
- * @param device_ptr : pointer to device data record 
- * @param mpu6050_register : register address within the device 
- * @param mpu6050_reg_size : register size (bytes) 
- * @param mpu6050_reg_value : pointer to data to write to the register 
- */
-void mpu6050_write(
-    mpu6050_driver_data_t *device_ptr, 
-    MPU6050_REG_ADDR mpu6050_register,
-    byte_num_t mpu6050_reg_size,
-    uint8_t *mpu6050_reg_value);
-
-
-/**
  * @brief MPU6050 read from register 
  * 
  * @details Reads data to the device over the I2C bus. This function is used by the 
@@ -146,10 +119,33 @@ void mpu6050_write(
  * @param mpu6050_register : register address within the device 
  * @param mpu6050_reg_size : register size (bytes) 
  * @param mpu6050_reg_value : pointer to buffer to store data 
+ * @return MPU6050_STATUS : status of the read operation 
  */
-void mpu6050_read(
+MPU6050_STATUS mpu6050_read(
     mpu6050_driver_data_t *device_ptr, 
     MPU6050_REG_ADDR mpu6050_register, 
+    byte_num_t mpu6050_reg_size,
+    uint8_t *mpu6050_reg_value);
+
+
+/**
+ * @brief MPU6050 write to register 
+ * 
+ * @details Writes data to the device over the I2C bus. This function is used by the 
+ *          register functions. The register address specifies where to begin writing in 
+ *          the devices memory and the register size argument specifies the number of 
+ *          bytes in memory to write. Bytes in registers are written successively. The 
+ *          register addresses are defined in the header file. 
+ * 
+ * @param device_ptr : pointer to device data record 
+ * @param mpu6050_register : register address within the device 
+ * @param mpu6050_reg_size : register size (bytes) 
+ * @param mpu6050_reg_value : pointer to data to write to the register 
+ * @return MPU6050_STATUS : status of the write operation 
+ */
+MPU6050_STATUS mpu6050_write(
+    mpu6050_driver_data_t *device_ptr, 
+    MPU6050_REG_ADDR mpu6050_register,
     byte_num_t mpu6050_reg_size,
     uint8_t *mpu6050_reg_value);
 
@@ -646,7 +642,7 @@ float mpu6050_gyro_scalar(mpu6050_driver_data_t *device_ptr);
 // Initialization 
 
 // MPU-6050 Initialization 
-void mpu6050_init(
+MPU6050_STATUS mpu6050_init(
     device_number_t device_num, 
     I2C_TypeDef *i2c, 
     mpu6050_i2c_addr_t mpu6050_addr,
@@ -662,13 +658,12 @@ void mpu6050_init(
                                                           (void *)&mpu6050_driver_data, 
                                                           sizeof(mpu6050_driver_data_t)); 
 
-    if (device_data == NULL)
+    if ((device_data == NULL) || (i2c == NULL))
     {
-        return; 
+        return MPU6050_INVALID_PTR; 
     }
 
     // Initialize data record 
-    device_data->status = CLEAR; 
     device_data->i2c = i2c; 
     device_data->addr = mpu6050_addr; 
     memset((void *)device_data->accel, CLEAR, sizeof(device_data->accel)); 
@@ -679,8 +674,7 @@ void mpu6050_init(
     // Read the WHO_AM_I register to establish that there is communication 
     if (mpu6050_who_am_i_read(device_data) != MPU6050_7BIT_ADDR)
     {
-        device_data->status |= (SET_BIT << SHIFT_1); 
-        return; 
+        return MPU6050_WHOAMI; 
     }
 
     // Choose which sensors to use and frequency of CYCLE mode
@@ -710,6 +704,8 @@ void mpu6050_init(
     // Store the raw data scalars for calculating the actual value 
     device_data->accel_data_scalar = mpu6050_accel_scalar(device_data); 
     device_data->gyro_data_scalar = mpu6050_gyro_scalar(device_data); 
+
+    return MPU6050_OK; 
 }
 
 
@@ -806,14 +802,14 @@ float mpu6050_gyro_scalar(mpu6050_driver_data_t *device_ptr)
     
     // Calculate the gyroscope calculation scalar 
     return ((MPU6050_FS_SEL_MAX >> fs_sel) + ((fs_sel & MPU6050_FS_CORRECTION) >> SHIFT_1)) / 
-            (float)(MPU6050_GYRO_SCALAR); 
+            MPU6050_GYRO_SCALAR; 
 }
 
 //=======================================================================================
 
 
 //=======================================================================================
-// Read and get data 
+// Update and get data 
 
 // Read the most recent IMU data 
 void mpu6050_update(device_number_t device_num)
@@ -961,36 +957,6 @@ float mpu6050_get_temp(device_number_t device_num)
 //=======================================================================================
 // Status 
 
-// Clear status flag 
-void mpu6050_clear_status(device_number_t device_num)
-{
-    mpu6050_driver_data_t *device_data = 
-        (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
-    
-    if (device_data == NULL) 
-    {
-        return; 
-    } 
-
-    device_data->status = CLEAR; 
-}
-
-
-// Get status flag 
-uint8_t mpu6050_get_status(device_number_t device_num)
-{
-    mpu6050_driver_data_t *device_data = 
-        (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
-    
-    if (device_data == NULL) 
-    {
-        return NULL_PTR_RETURN; 
-    }
-
-    return device_data->status; 
-}
-
-
 // INT pin status 
 MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num)
 {
@@ -1003,77 +969,6 @@ MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num)
     }
 
     return gpio_read(device_data->gpio, (SET_BIT << device_data->int_pin)); 
-}
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Read and Write Functions 
-
-// MPU-6050 write to register 
-void mpu6050_write(
-    mpu6050_driver_data_t *device_ptr, 
-    MPU6050_REG_ADDR mpu6050_register,
-    byte_num_t mpu6050_reg_size,
-    uint8_t *mpu6050_reg_value)
-{
-    I2C_STATUS i2c_status = I2C_OK; 
-    
-    // Create start condition to initiate master mode 
-    i2c_status |= i2c_start(device_ptr->i2c); 
-
-    // Send the MPU6050 address with a write offset
-    i2c_status |= i2c_write_addr(device_ptr->i2c, device_ptr->addr + MPU6050_W_OFFSET);
-    i2c_clear_addr(device_ptr->i2c);
-
-    // Send the register address that is going to be written to 
-    i2c_status |= i2c_write(device_ptr->i2c, &mpu6050_register, BYTE_1);
-
-    // Write the data to the MPU6050 
-    i2c_status |= i2c_write(device_ptr->i2c, mpu6050_reg_value, mpu6050_reg_size);
-
-    // Create a stop condition
-    i2c_stop(device_ptr->i2c); 
-
-    // Update the driver status 
-    device_ptr->status |= (uint8_t)i2c_status; 
-}
-
-
-// MPU-6050 read from register 
-void mpu6050_read(
-    mpu6050_driver_data_t *device_ptr, 
-    MPU6050_REG_ADDR mpu6050_register, 
-    byte_num_t mpu6050_reg_size,
-    uint8_t *mpu6050_reg_value)
-{
-    I2C_STATUS i2c_status = I2C_OK; 
-
-    // Create start condition to initiate master mode 
-    i2c_status |= i2c_start(device_ptr->i2c); 
-
-    // Send the MPU6050 address with a write offset 
-    i2c_status |= i2c_write_addr(device_ptr->i2c, device_ptr->addr + MPU6050_W_OFFSET);
-    i2c_clear_addr(device_ptr->i2c);
-
-    // Send the register address that is going to be read 
-    i2c_status |= i2c_write(device_ptr->i2c, &mpu6050_register, BYTE_1);
-
-    // Create another start signal 
-    i2c_status |= i2c_start(device_ptr->i2c); 
-
-    // Send the MPU6050 address with a read offset 
-    i2c_status |= i2c_write_addr(device_ptr->i2c, device_ptr->addr + MPU6050_R_OFFSET);
-
-    // Read the data sent by the MPU6050 
-    i2c_status |= i2c_read(device_ptr->i2c, mpu6050_reg_value, mpu6050_reg_size);
-
-    // Create a stop condition
-    i2c_stop(device_ptr->i2c); 
-
-    // Update the driver status 
-    device_ptr->status |= (uint8_t)i2c_status; 
 }
 
 //=======================================================================================
@@ -1330,9 +1225,6 @@ MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num)
         device_data, 
         MPU6050_GYRO_ST_DISABLE,
         gyro_fsr);
-
-    // Update the fault flags 
-    device_data->status |= (self_test_result << SHIFT_2); 
     
     return self_test_result;
 }
@@ -1447,6 +1339,72 @@ void mpu6050_self_test_result(
         self_test_results++;
         factory_trim++;
     }
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and write 
+
+// MPU-6050 read from register 
+MPU6050_STATUS mpu6050_read(
+    mpu6050_driver_data_t *device_ptr, 
+    MPU6050_REG_ADDR mpu6050_register, 
+    byte_num_t mpu6050_reg_size,
+    uint8_t *mpu6050_reg_value)
+{
+    I2C_STATUS i2c_status = I2C_OK; 
+
+    // Generate a start condition, send the MPU6050 address with a write offset, then send 
+    // the register address that is going to be read. 
+    i2c_status |= i2c_start(device_ptr->i2c); 
+    i2c_status |= i2c_write_addr(device_ptr->i2c, device_ptr->addr + MPU6050_W_OFFSET);
+    i2c_clear_addr(device_ptr->i2c);
+    i2c_status |= i2c_write(device_ptr->i2c, &mpu6050_register, BYTE_1);
+
+    // Generate another start condition, send the MPU6050 address with a read offset and 
+    // read the data sent by the MPU-6050 before stopping the transaction. 
+    i2c_status |= i2c_start(device_ptr->i2c); 
+    i2c_status |= i2c_write_addr(device_ptr->i2c, device_ptr->addr + MPU6050_R_OFFSET);
+    i2c_status |= i2c_read(device_ptr->i2c, mpu6050_reg_value, mpu6050_reg_size);
+    i2c_stop(device_ptr->i2c); 
+
+    if (i2c_status)
+    {
+        return MPU6050_READ_FAULT; 
+    }
+
+    return MPU6050_OK; 
+}
+
+
+// MPU-6050 write to register 
+MPU6050_STATUS mpu6050_write(
+    mpu6050_driver_data_t *device_ptr, 
+    MPU6050_REG_ADDR mpu6050_register,
+    byte_num_t mpu6050_reg_size,
+    uint8_t *mpu6050_reg_value)
+{
+    I2C_STATUS i2c_status = I2C_OK; 
+    
+    // Generate a start condition, send the MPU-6050 address with a write offset, then 
+    // send the register address that is going to be written to. 
+    i2c_status |= i2c_start(device_ptr->i2c); 
+    i2c_status |= i2c_write_addr(device_ptr->i2c, device_ptr->addr + MPU6050_W_OFFSET);
+    i2c_clear_addr(device_ptr->i2c);
+    i2c_status |= i2c_write(device_ptr->i2c, &mpu6050_register, BYTE_1);
+
+    // Write the data to the MPU-6050 then stop the transaction 
+    i2c_status |= i2c_write(device_ptr->i2c, mpu6050_reg_value, mpu6050_reg_size);
+    i2c_stop(device_ptr->i2c); 
+
+    if (i2c_status)
+    {
+        return MPU6050_WRITE_FAULT; 
+    }
+
+    return MPU6050_OK; 
 }
 
 //=======================================================================================

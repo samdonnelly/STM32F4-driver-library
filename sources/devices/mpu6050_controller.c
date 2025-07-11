@@ -206,9 +206,6 @@ void mpu6050_controller(device_number_t device_num)
     // Record the controller state 
     MPU6050_STATE next_state = cntrl_data_ptr->state; 
 
-    // Check the driver status 
-    cntrl_data_ptr->fault_code |= (uint16_t)mpu6050_get_status(device_num); 
-
     //===================================================
     // State machine 
 
@@ -440,7 +437,6 @@ void mpu6050_reset_state(mpu6050_cntrl_data_t *mpu6050_device)
 {
     // Reset the fault code in both the controller and driver 
     mpu6050_device->fault_code = CLEAR; 
-    mpu6050_clear_status(mpu6050_device->device_num); 
 
     // Reset the low power flag and make sure to exit sleep mode 
     mpu6050_device->low_power = MPU6050_SLEEP_MODE_DISABLE; 

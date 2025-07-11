@@ -379,7 +379,7 @@ void lsm303agr_m_calibration_set(
 
 
 //=======================================================================================
-// User functions 
+// Update and get data 
 
 // Read the most recent magnetometer data 
 LSM303AGR_STATUS lsm303agr_m_update(void)
@@ -475,6 +475,45 @@ void lsm303agr_m_correct_axes(float *mag_cal)
 
 
 //=======================================================================================
+// Register functions 
+
+// Magnetometer register read 
+LSM303AGR_STATUS lsm303agr_m_reg_read(
+    uint8_t reg_addr, 
+    uint8_t *reg_buff, 
+    uint8_t data_size)
+{
+    I2C_STATUS i2c_status = lsm303agr_read(lsm303agr_data.m_addr, reg_addr, reg_buff, data_size); 
+
+    if (i2c_status)
+    {
+        return LSM303AGR_READ_FAULT; 
+    }
+
+    return LSM303AGR_OK; 
+}
+
+
+// Magnetometer register write 
+LSM303AGR_STATUS lsm303agr_m_reg_write(
+    uint8_t reg_addr, 
+    uint8_t *reg_data, 
+    uint8_t data_size)
+{
+    I2C_STATUS i2c_status = lsm303agr_write(lsm303agr_data.m_addr, reg_addr, reg_data, data_size); 
+
+    if (i2c_status)
+    {
+        return LSM303AGR_WRITE_FAULT; 
+    }
+
+    return LSM303AGR_OK; 
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Read and write 
 
 // Read from register 
@@ -525,45 +564,6 @@ I2C_STATUS lsm303agr_write(
     i2c_stop(lsm303agr_data.i2c); 
 
     return i2c_status; 
-}
-
-//=======================================================================================
-
-
-//=======================================================================================
-// Register functions 
-
-// Magnetometer register read 
-LSM303AGR_STATUS lsm303agr_m_reg_read(
-    uint8_t reg_addr, 
-    uint8_t *reg_buff, 
-    uint8_t data_size)
-{
-    I2C_STATUS i2c_status = lsm303agr_read(lsm303agr_data.m_addr, reg_addr, reg_buff, data_size); 
-
-    if (i2c_status)
-    {
-        return LSM303AGR_READ_FAULT; 
-    }
-
-    return LSM303AGR_OK; 
-}
-
-
-// Magnetometer register write 
-LSM303AGR_STATUS lsm303agr_m_reg_write(
-    uint8_t reg_addr, 
-    uint8_t *reg_data, 
-    uint8_t data_size)
-{
-    I2C_STATUS i2c_status = lsm303agr_write(lsm303agr_data.m_addr, reg_addr, reg_data, data_size); 
-
-    if (i2c_status)
-    {
-        return LSM303AGR_WRITE_FAULT; 
-    }
-
-    return LSM303AGR_OK; 
 }
 
 //=======================================================================================
