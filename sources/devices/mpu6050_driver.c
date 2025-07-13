@@ -812,14 +812,14 @@ float mpu6050_gyro_scalar(mpu6050_driver_data_t *device_ptr)
 // Update and get data 
 
 // Read the most recent IMU data 
-void mpu6050_update(device_number_t device_num)
+MPU6050_STATUS mpu6050_update(device_number_t device_num)
 {
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
     if (device_data == NULL) 
     {
-        return; 
+        return MPU6050_INVALID_PTR; 
     } 
 
     uint8_t data_reg[BYTE_14]; 
@@ -837,6 +837,8 @@ void mpu6050_update(device_number_t device_num)
     device_data->gyro[X_AXIS] = ((int16_t)data_reg[8]  << SHIFT_8) | (int16_t)data_reg[9];
     device_data->gyro[Y_AXIS] = ((int16_t)data_reg[10] << SHIFT_8) | (int16_t)data_reg[11];
     device_data->gyro[Z_AXIS] = ((int16_t)data_reg[12] << SHIFT_8) | (int16_t)data_reg[13];
+
+    return MPU6050_OK; 
 }
 
 

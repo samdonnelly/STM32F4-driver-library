@@ -470,8 +470,9 @@ void mpu6050_low_pwr_config(
  *          This is useful for when all the data needs to be read. 
  * 
  * @param device_num : data record address of device 
+ * @return MPU6050_STATUS : status of the update 
  */
-void mpu6050_update(device_number_t device_num); 
+MPU6050_STATUS mpu6050_update(device_number_t device_num); 
 
 
 /**
