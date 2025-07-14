@@ -630,9 +630,12 @@ MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num);
  *          - Bit 0: accelerometer x-axis 
  * 
  * @param device_num : data record address of device 
- * @return MPU6050_ST_RESULT : self-test results 
+ * @param st_result : result of the self test 
+ * @return MPU6050_STATUS : self-test results 
  */
-MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num);
+MPU6050_ST_RESULT mpu6050_self_test(
+    device_number_t device_num, 
+    uint8_t *st_result);
 
 //=======================================================================================
 

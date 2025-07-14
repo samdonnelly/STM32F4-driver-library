@@ -1107,14 +1107,16 @@ uint8_t mpu6050_who_am_i_read(mpu6050_driver_data_t *device_ptr)
 // Self-test 
 
 // MPU-6050 self-test
-MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num)
+MPU6050_STATUS mpu6050_self_test(
+    device_number_t device_num, 
+    uint8_t *st_result)
 {
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
-    if (device_data == NULL) 
+    if ((device_data == NULL) || (st_result == NULL)) 
     {
-        return NULL_PTR_RETURN; 
+        return MPU6050_INVALID_PTR; 
     }
 
     // Used to record the existing full scale range 
@@ -1138,11 +1140,8 @@ MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num)
     uint8_t gyro_test[NUM_AXES];
 
     // Factory trim calculation 
-    float accel_ft[NUM_AXES];
-    float gyro_ft[NUM_AXES];
-
-    // Status of the self-test 
-    uint8_t self_test_result = CLEAR; 
+    float accel_ft[NUM_AXES]; 
+    float gyro_ft[NUM_AXES]; 
 
     // Record the full scale range set in the init function 
     accel_fsr = ((mpu6050_accel_config_read(device_data) & MPU6050_FSR_MASK) >> SHIFT_3);
@@ -1210,12 +1209,12 @@ MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num)
     mpu6050_self_test_result(
         accel_str,
         accel_ft,
-        &self_test_result, 
+        st_result, 
         MPU6050_STR_SHIFT_ACCEL); 
     mpu6050_self_test_result(
         gyro_str,
         gyro_ft,
-        &self_test_result, 
+        st_result, 
         MPU6050_STR_SHIFT_GYRO); 
     
     // Disable self-test and set the full scale ranges back to their original values 
@@ -1228,7 +1227,7 @@ MPU6050_ST_RESULT mpu6050_self_test(device_number_t device_num)
         MPU6050_GYRO_ST_DISABLE,
         gyro_fsr);
     
-    return self_test_result;
+    return MPU6050_OK;
 }
 
 
