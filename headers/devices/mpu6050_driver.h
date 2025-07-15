@@ -62,6 +62,7 @@ typedef enum {
     MPU6050_ST_FAULT       // A problem occured during self test 
 } mpu6050_status_t; 
 
+
 /**
  * @brief MPU6050 Addresses 
  * 
@@ -371,7 +372,6 @@ typedef uint8_t MPU6050_STATUS;
 typedef uint8_t MPU6050_REG_ADDR;        // Register address 
 typedef uint8_t MPU6050_INT_STATUS;      // INT pin status 
 typedef uint8_t MPU6050_SMPLRT_DIV;      // Sample Rate Divider 
-typedef uint8_t MPU6050_ST_RESULT;       // Self-Test Result 
 
 //=======================================================================================
 
@@ -633,7 +633,7 @@ MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num);
  * @param st_result : result of the self test 
  * @return MPU6050_STATUS : self-test results 
  */
-MPU6050_ST_RESULT mpu6050_self_test(
+MPU6050_STATUS mpu6050_self_test(
     device_number_t device_num, 
     uint8_t *st_result);
 

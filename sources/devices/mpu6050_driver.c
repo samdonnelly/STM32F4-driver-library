@@ -1226,6 +1226,11 @@ MPU6050_STATUS mpu6050_self_test(
         device_data, 
         MPU6050_GYRO_ST_DISABLE,
         gyro_fsr);
+
+    if (*st_result)
+    {
+        return MPU6050_ST_FAULT; 
+    }
     
     return MPU6050_OK;
 }
