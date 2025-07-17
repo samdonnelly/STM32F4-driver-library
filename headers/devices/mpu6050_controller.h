@@ -145,7 +145,7 @@ typedef void (*mpu6050_state_functions_t)(mpu6050_cntrl_data_t *mpu6050_device);
  * 
  * @param device_num : device number - used for retrieving the correct data record 
  */
-typedef void (*mpu6050_read_functions_t)(device_number_t device_num); 
+typedef MPU6050_STATUS (*mpu6050_read_functions_t)(device_number_t device_num); 
 
 //=======================================================================================
 

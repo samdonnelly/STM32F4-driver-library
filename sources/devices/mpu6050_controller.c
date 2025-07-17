@@ -365,7 +365,8 @@ void mpu6050_init_state(mpu6050_cntrl_data_t *mpu6050_device)
     mpu6050_device->reset = CLEAR_BIT; 
 
     // Run self-test 
-    mpu6050_self_test(mpu6050_device->device_num);
+    uint8_t st_result = CLEAR; 
+    mpu6050_self_test(mpu6050_device->device_num, &st_result);
 
     // Provide time for device data to update so self-test data is not used for calibration 
     tim_delay_ms(mpu6050_device->timer, MPU6050_ST_DELAY); 
@@ -575,7 +576,10 @@ MPU6050_STATE mpu6050_get_state(device_number_t device_num)
         (mpu6050_cntrl_data_t *)get_linked_list_entry(device_num, mpu6050_cntrl_data_ptr); 
     
     // Check that the data record is valid 
-    if (cntrl_data_ptr == NULL) return MPU6050_FAULT_STATE; 
+    if (cntrl_data_ptr == NULL) 
+    {
+        return MPU6050_FAULT_STATE; 
+    }
 
     return cntrl_data_ptr->state; 
 }
@@ -589,7 +593,10 @@ MPU6050_FAULT_CODE mpu6050_get_fault_code(device_number_t device_num)
         (mpu6050_cntrl_data_t *)get_linked_list_entry(device_num, mpu6050_cntrl_data_ptr); 
     
     // Check that the data record is valid 
-    if (cntrl_data_ptr == NULL) return NULL_PTR_RETURN; 
+    if (cntrl_data_ptr == NULL) 
+    {
+        return 0; 
+    }
 
     return cntrl_data_ptr->fault_code; 
 }

@@ -370,7 +370,6 @@ typedef enum {
 
 typedef uint8_t MPU6050_STATUS; 
 typedef uint8_t MPU6050_REG_ADDR;        // Register address 
-typedef uint8_t MPU6050_INT_STATUS;      // INT pin status 
 typedef uint8_t MPU6050_SMPLRT_DIV;      // Sample Rate Divider 
 
 //=======================================================================================
@@ -595,9 +594,9 @@ float mpu6050_get_temp(device_number_t device_num);
  * @see mpu6050_int_pin_init
  * 
  * @param device_num : data record address of device 
- * @return MPU6050_INT_STATUS : INT pin status 
+ * @return uint8_t : INT pin status 
  */
-MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num); 
+uint8_t mpu6050_int_status(device_number_t device_num); 
 
 //=======================================================================================
 

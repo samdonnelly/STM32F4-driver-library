@@ -196,7 +196,6 @@ GPIO_STATE gpio_read(
     GPIO_TypeDef *gpio, 
     gpio_pin_num_t pin_num)
 {
-    // Read the GPIO pin 
     if ((gpio->IDR) & pin_num) 
     {
         return GPIO_HIGH; 

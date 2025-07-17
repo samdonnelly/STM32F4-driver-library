@@ -931,7 +931,7 @@ int16_t mpu6050_get_temp_raw(device_number_t device_num)
     
     if (device_data == NULL) 
     {
-        return NULL_PTR_RETURN; 
+        return 0; 
     }
 
     return device_data->temp; 
@@ -946,7 +946,7 @@ float mpu6050_get_temp(device_number_t device_num)
     
     if (device_data == NULL) 
     {
-        return NULL_PTR_RETURN; 
+        return 0; 
     }
 
     // Get the true temperature in degC 
@@ -960,14 +960,14 @@ float mpu6050_get_temp(device_number_t device_num)
 // Status 
 
 // INT pin status 
-MPU6050_INT_STATUS mpu6050_int_status(device_number_t device_num)
+uint8_t mpu6050_int_status(device_number_t device_num)
 {
     mpu6050_driver_data_t *device_data = 
         (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
     
     if (device_data == NULL) 
     {
-        return NULL_PTR_RETURN; 
+        return GPIO_LOW; 
     }
 
     return gpio_read(device_data->gpio, (SET_BIT << device_data->int_pin)); 
