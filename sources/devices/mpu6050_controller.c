@@ -370,9 +370,6 @@ void mpu6050_init_state(mpu6050_cntrl_data_t *mpu6050_device)
 
     // Provide time for device data to update so self-test data is not used for calibration 
     tim_delay_ms(mpu6050_device->timer, MPU6050_ST_DELAY); 
-    
-    // Run calibration to zero the gyroscope values 
-    mpu6050_calibrate(mpu6050_device->device_num); 
 }
 
 

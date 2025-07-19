@@ -37,10 +37,6 @@ extern "C" {
 //=======================================================================================
 // Macros 
 
-// Device info 
-#define MPU6050_7BIT_ADDR 0x68           // 7-bit default address (excluding r/w bit) 
-#define MPU6050_FT_MAX_ERROR 14          // Max % change from factory trim acceptable 
-
 // Register control 
 #define MPU6050_STBY_STATUS_MASK 0x3F    // Pwr mgmt 2 standby status mask 
 #define MPU6050_FSR_MASK 0x18            // Mask for reading gyro and accel full scale range 
