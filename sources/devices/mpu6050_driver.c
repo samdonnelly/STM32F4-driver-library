@@ -37,8 +37,8 @@
 #define MPU6050_WHO_AM_I     0x75        // Register 117 - Who Am I 
 
 // Temperature sensor 
-#define MPU6050_TEMP_SENSIT 340.0f       // Sensitivity (LSB/degC) - MPU6050 defined scalar
-#define MPU6050_TEMP_OFFSET 36.53f       // Temperature offset scaled by MPU6050_TEMP_SCALAR
+#define MPU6050_TEMP_SENSIT 340.0f       // Sensitivity (LSB/degC) - MPU-6050 defined scalar
+#define MPU6050_TEMP_OFFSET 36.53f       // Temperature offset 
 
 // Accelerometer 
 #define MPU6050_AFS_SEL_MAX 16384        // Max accelerometer calculation scalar 
@@ -89,10 +89,9 @@ typedef struct mpu6050_driver_data_s
     float gyro_data_scalar;          // Scales gyroscope raw data into readable values 
 
     // Data 
-    int16_t accel[NUM_AXES];           // Accelerometer data 
-    int16_t gyro[NUM_AXES];            // Gyroscope data 
-    int16_t gyro_offsets[NUM_AXES];    // Gyroscope offsets 
-    int16_t temp;                      // Temperature 
+    int16_t accel[NUM_AXES];         // Accelerometer data 
+    int16_t gyro[NUM_AXES];          // Gyroscope data 
+    int16_t temp;                    // Temperature 
 }
 mpu6050_driver_data_t; 
 
@@ -107,7 +106,7 @@ static mpu6050_driver_data_t *mpu6050_driver_data = NULL;
 // Function Prototypes 
 
 /**
- * @brief MPU6050 read from register 
+ * @brief MPU-6050 read from register 
  * 
  * @details Reads data to the device over the I2C bus. This function is used by the 
  *          register functions. The register address specifies where to begin reading in 
@@ -129,7 +128,7 @@ MPU6050_STATUS mpu6050_read(
 
 
 /**
- * @brief MPU6050 write to register 
+ * @brief MPU-6050 write to register 
  * 
  * @details Writes data to the device over the I2C bus. This function is used by the 
  *          register functions. The register address specifies where to begin writing in 
@@ -151,7 +150,7 @@ MPU6050_STATUS mpu6050_write(
 
 
 /**
- * @brief MPU6050 Sample Rate Divider (SMPRT_DIV) register write 
+ * @brief MPU-6050 Sample Rate Divider (SMPRT_DIV) register write 
  * 
  * @details Register number: 25 
  *          Register size: 1 byte 
@@ -182,7 +181,7 @@ void mpu6050_smprt_div_write(
 
 
 /**
- * @brief MPU6050 Configuration (CONFIG) register write
+ * @brief MPU-6050 Configuration (CONFIG) register write
  * 
  * @details Register number: 26 
  *          Register size: 1 byte 
@@ -208,7 +207,7 @@ void mpu6050_config_write(
 
 
 /**
- * @brief MPU6050 Gyroscope Configuration (GYRO_CONFIG) register write
+ * @brief MPU-6050 Gyroscope Configuration (GYRO_CONFIG) register write
  * 
  * @details Register number: 27 
  *          Register size: 1 byte 
@@ -241,7 +240,7 @@ void mpu6050_gyro_config_write(
 
 
 /**
- * @brief MPU6050 Gyroscope Configuration (GYRO_CONFIG) register read
+ * @brief MPU-6050 Gyroscope Configuration (GYRO_CONFIG) register read
  * 
  * @details Register number: 27 
  *          Register size: 1 byte 
@@ -266,7 +265,7 @@ uint8_t mpu6050_gyro_config_read(mpu6050_driver_data_t *device_ptr);
 
 
 /**
- * @brief MPU6050 Accelerometer Configuration (ACCEL_CONFIG) register write
+ * @brief MPU-6050 Accelerometer Configuration (ACCEL_CONFIG) register write
  * 
  * @details Register number: 28 
  *          Register size: 1 byte 
@@ -299,7 +298,7 @@ void mpu6050_accel_config_write(
 
 
 /**
- * @brief MPU6050 Accelerometer Configuration (ACCEL_CONFIG) register read 
+ * @brief MPU-6050 Accelerometer Configuration (ACCEL_CONFIG) register read 
  * 
  * @details Register number: 28 
  *          Register size: 1 byte 
@@ -374,7 +373,7 @@ void mpu6050_int_enable_write(
 
 
 /**
- * @brief MPU6050 Power Manangement 1 (PWR_MGMT_1) register write
+ * @brief MPU-6050 Power Manangement 1 (PWR_MGMT_1) register write
  * 
  * @details Register number: 107 
  *          Register size: 1 byte 
@@ -421,7 +420,7 @@ void mpu6050_pwr_mgmt_1_write(
 
 
 /**
- * @brief MPU6050 Power Management 2 (PWR_MGMT_2) register write
+ * @brief MPU-6050 Power Management 2 (PWR_MGMT_2) register write
  * 
  * @details Register number: 108 
  *          Register size: 1 byte 
@@ -455,7 +454,7 @@ void mpu6050_pwr_mgmt_2_write(
 
 
 /**
- * @brief MPU6050 Who Am I (WHO_AM_I) register read 
+ * @brief MPU-6050 Who Am I (WHO_AM_I) register read 
  * 
  * @details Register number: 117 
  *          Register size: 1 byte 
@@ -476,7 +475,7 @@ uint8_t mpu6050_who_am_i_read(mpu6050_driver_data_t *device_ptr);
 
 
 /**
- * @brief MPU6050 self-test read 
+ * @brief MPU-6050 self-test read 
  * 
  * @details Called by mpu6050_self_test to read the self-test register values. After 
  *          reading the registers the accelerometer and gyroscope data is parsed to make 
@@ -496,7 +495,7 @@ void mpu6050_self_test_read(
 
 
 /**
- * @brief MPU6050 self-test response calculation
+ * @brief MPU-6050 self-test response calculation
  * 
  * @details This function calculates the self-test response of each sensor axis. 
  *          
@@ -514,7 +513,7 @@ void mpu6050_str_calc(
 
 
 /**
- * @brief MPU6050 self-test result calculation 
+ * @brief MPU-6050 self-test result calculation 
  * 
  * @details Determines the results (pass/fail) of the device self-test and stores the 
  *          result in "results". This function is called for both the accelerometer and 
@@ -544,7 +543,7 @@ void mpu6050_self_test_result(
 
 
 /**
- * @brief MPU6050 accelerometer factory trim 
+ * @brief MPU-6050 accelerometer factory trim 
  * 
  * @details The factory trim is used to determine how much the accelerometer sensors
  *          have drifted from their factory configuration as seen in the 
@@ -569,7 +568,7 @@ void mpu6050_accel_ft(
 
 
 /**
- * @brief MPU6050 gyroscope factory trim 
+ * @brief MPU-6050 gyroscope factory trim 
  * 
  * @details The factory trim is used to determine how much the gyroscope sensors
  *          have drifted from their factory configuration as seen in the 
@@ -594,7 +593,7 @@ void mpu6050_gyro_ft(
 
 
 /**
- * @brief MPU6050 accelerometer scalar 
+ * @brief MPU-6050 accelerometer scalar 
  * 
  * @details This function reads the ACCEL_CONFIG register to check the chosen full scale
  *          range of the accelerometer. This is used to determine the scalar that  
@@ -610,7 +609,7 @@ float mpu6050_accel_scalar(mpu6050_driver_data_t *device_ptr);
 
 
 /**
- * @brief MPU6050 gyroscope scalar
+ * @brief MPU-6050 gyroscope scalar
  * 
  * @details This function reads the GYRO_CONFIG register to check the chosen full scale
  *          range of the gyroscope. This is used to determine the scalar that  
@@ -668,7 +667,6 @@ MPU6050_STATUS mpu6050_init(
     device_data->addr = mpu6050_addr; 
     memset((void *)device_data->accel, CLEAR, sizeof(device_data->accel)); 
     memset((void *)device_data->gyro, CLEAR, sizeof(device_data->gyro)); 
-    memset((void *)device_data->gyro_offsets, CLEAR, sizeof(device_data->gyro_offsets)); 
     device_data->temp = CLEAR; 
 
     // Read the WHO_AM_I register to establish that there is communication 
@@ -737,25 +735,6 @@ void mpu6050_int_pin_init(
 
     // Interrupt enable register 
     mpu6050_int_enable_write(device_data, MPU6050_INT_DATA_RDY_ENABLE); 
-}
-
-
-// MPU-6050 reference point set 
-void mpu6050_calibrate(device_number_t device_num)
-{
-    mpu6050_driver_data_t *device_data = 
-        (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
-    
-    if (device_data == NULL) 
-    {
-        return; 
-    }
-
-    // Read the current gyroscope data and save it as the offset/error 
-    mpu6050_update(device_num); 
-    device_data->gyro_offsets[X_AXIS] = device_data->gyro[X_AXIS]; 
-    device_data->gyro_offsets[Y_AXIS] = device_data->gyro[Y_AXIS]; 
-    device_data->gyro_offsets[Z_AXIS] = device_data->gyro[Z_AXIS]; 
 }
 
 
@@ -897,7 +876,7 @@ void mpu6050_get_gyro_axis(
 
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (gyro_axis != NULL); i++)
     {
-        *gyro_axis++ = device_data->gyro[i] - device_data->gyro_offsets[i]; 
+        *gyro_axis++ = device_data->gyro[i]; 
     }
 }
 
@@ -917,8 +896,7 @@ void mpu6050_get_gyro_axis_rate(
 
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (gyro_axis_rate != NULL); i++)
     {
-        *gyro_axis_rate++ = (float)(device_data->gyro[i] - device_data->gyro_offsets[i]) / 
-                                device_data->gyro_data_scalar; 
+        *gyro_axis_rate++ = (float)device_data->gyro[i] / device_data->gyro_data_scalar; 
     }
 }
 
@@ -1362,14 +1340,14 @@ MPU6050_STATUS mpu6050_read(
 {
     I2C_STATUS i2c_status = I2C_OK; 
 
-    // Generate a start condition, send the MPU6050 address with a write offset, then send 
+    // Generate a start condition, send the MPU-6050 address with a write offset, then send 
     // the register address that is going to be read. 
     i2c_status |= i2c_start(device_ptr->i2c); 
     i2c_status |= i2c_write_addr(device_ptr->i2c, device_ptr->addr + MPU6050_W_OFFSET);
     i2c_clear_addr(device_ptr->i2c);
     i2c_status |= i2c_write(device_ptr->i2c, &mpu6050_register, BYTE_1);
 
-    // Generate another start condition, send the MPU6050 address with a read offset and 
+    // Generate another start condition, send the MPU-6050 address with a read offset and 
     // read the data sent by the MPU-6050 before stopping the transaction. 
     i2c_status |= i2c_start(device_ptr->i2c); 
     i2c_status |= i2c_write_addr(device_ptr->i2c, device_ptr->addr + MPU6050_R_OFFSET);

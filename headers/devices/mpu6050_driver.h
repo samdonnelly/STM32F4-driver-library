@@ -425,20 +425,6 @@ void mpu6050_int_pin_init(
 
 
 /**
- * @brief MPU6050 calibration 
- * 
- * @details The readings from the device have errors from the true values even if self-test 
- *          is passed. This function takes a single reading of gyroscope values and stores 
- *          the results in the device data record which is used to correct for the error 
- *          in the gyroscope readings. In order for this method to work correctly, the 
- *          device must be kept still, otherwise the error is not correctly measured. 
- * 
- * @param device_num : data record address of device 
- */
-void mpu6050_calibrate(device_number_t device_num); 
-
-
-/**
  * @brief MPU6050 low power mode config 
  * 
  * @details Write the value of "sleep" to the power management 1 register to either set 
