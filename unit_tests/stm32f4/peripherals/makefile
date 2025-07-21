@@ -6,7 +6,7 @@ COMPONENT_NAME = your
 
 #--- Inputs ----#
 PROJECT_HOME_DIR = .
-CPPUTEST_HOME = ./../../../cpputest
+CPPUTEST_HOME = ./../../../../cpputest
 ifeq "$(CPPUTEST_HOME)" ""
 $(error The environment variable CPPUTEST_HOME is not set. \
 Set it to where cpputest is installed)
@@ -26,26 +26,25 @@ endif
 # production code C and CPP files.
 #
 
-# ------------ DEVICES -------------
+# ---------- PERIPHERALS -----------
 
-# LSM303AGR 
-SRC_FILES += ./../../sources/devices/lsm303agr_driver.c       # Production code 
-SRC_DIRS += tests/lsm303agr                                   # Test doubles 
+# Analog 
+SRC_FILES += ./../../../stm32f4/sources/peripherals/analog_driver.c   # Production code 
+SRC_DIRS += tests/analog                                              # Test doubles and mocks 
 
-# M8Q 
-SRC_FILES += ./../../sources/devices/m8q_driver.c             # Production code 
-SRC_FILES += ./../../sources/devices/m8q_controller.c         # Production code 
-SRC_DIRS += tests/m8q                                         # Test doubles 
+# Serial
+SRC_FILES += ./../../../stm32f4/sources/peripherals/ibus.c            # Production code 
+SRC_DIRS += tests/serial                                              # Test doubles and mocks 
 
-# nRF24L01 
-SRC_FILES += ./../../sources/devices/nrf24l01_driver.c        # Production code 
-SRC_DIRS += tests/nRF24L01                                    # Test doubles 
+# GPIO 
+SRC_FILES += ./../../../stm32f4/sources/peripherals/gpio_driver.c     # Production code 
 
 # ----------------------------------
 
 # ------------- TOOLS --------------
 
-SRC_FILES += ./../../sources/tools/tools.c                    # Production code 
+# Tools 
+SRC_FILES += ./../../../stm32f4/sources/tools/tools.c                 # Production code 
 
 # ----------------------------------
 
@@ -65,18 +64,14 @@ SRC_FILES += ./../../sources/tools/tools.c                    # Production code
 TEST_SRC_DIRS += tests
 TEST_SRC_FILES += 
 
-# ------------ DEVICES -------------
+# ---------- PERIPHERALS -----------
 
-# LSM303AGR 
-TEST_SRC_DIRS += tests/lsm303agr                         # Unit tests 
+# Analog 
+TEST_SRC_DIRS += tests/analog                              # Unit tests 
 TEST_SRC_FILES += 
 
-# M8Q 
-TEST_SRC_DIRS += tests/m8q                               # Unit tests 
-TEST_SRC_FILES += 
-
-# nRF24L01 
-TEST_SRC_DIRS += tests/nrf24l01                          # Unit tests 
+# Serial
+TEST_SRC_DIRS += tests/serial                              # Unit tests 
 TEST_SRC_FILES += 
 
 # ----------------------------------
@@ -88,12 +83,7 @@ TEST_SRC_FILES +=
 # MOCKS_SRC_DIRS specifies a directories where you can put your
 # mocks, stubs and fakes.  You can also just put them
 # in TEST_SRC_DIRS
-
-# ------------ DEVICES -------------
-
-MOCKS_SRC_DIRS += mocks
-
-# ----------------------------------
+MOCKS_SRC_DIRS +=
 
 # Turn on CppUMock
 CPPUTEST_USE_EXTENSIONS = Y
@@ -110,18 +100,14 @@ CPPUTEST_USE_EXTENSIONS = Y
 INCLUDE_DIRS += $(CPPUTEST_HOME)/include
 
 # stmcode headers needed to get the tests to build 
-INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Device/ST/STM32F4xx/Include
-INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Core/Include
+INCLUDE_DIRS += ./../../../stm32f4/stmcode/Drivers/CMSIS/Device/ST/STM32F4xx/Include
+INCLUDE_DIRS += ./../../../stm32f4/stmcode/Drivers/CMSIS/Core/Include
 
-INCLUDE_DIRS += ./../../.include_path              # Mock code 
-INCLUDE_DIRS += ./../../headers/core               # Production code 
-INCLUDE_DIRS += ./../../headers/devices            # Production code 
-INCLUDE_DIRS += ./../../headers/peripherals        # Production code 
-INCLUDE_DIRS += ./../../headers/tools              # Production code 
-INCLUDE_DIRS += mocks                              # Mocks 
-INCLUDE_DIRS += tests/lsm303agr                    # Test doubles 
-INCLUDE_DIRS += tests/m8q                          # Test doubles 
-INCLUDE_DIRS += tests/nrf24l01                     # Test doubles 
+INCLUDE_DIRS += ./../../../stm32f4/.include_path           # Production code 
+INCLUDE_DIRS += ./../../../stm32f4/headers/core            # Production code 
+INCLUDE_DIRS += ./../../../stm32f4/headers/peripherals     # Production code 
+INCLUDE_DIRS += ./../../../stm32f4/headers/tools           # Production code 
+INCLUDE_DIRS += tests/analog                               # Test doubles 
 
 # --------------------------------------------------------------------
 
@@ -142,7 +128,7 @@ INCLUDE_DIRS += tests/nrf24l01                     # Test doubles
 # This is kind of a kludge, but it causes the
 # .o and .d files to be put under objs.
 CPPUTEST_OBJS_DIR = test-obj
-CPPUTEST_OBJS_DIR = test-obj/1/2
+CPPUTEST_OBJS_DIR = test-obj/1/2/3
 
 CPPUTEST_LIB_DIR = test-lib
 

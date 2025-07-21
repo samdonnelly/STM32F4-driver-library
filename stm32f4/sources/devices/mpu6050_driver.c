@@ -3,7 +3,7 @@
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief IMU driver 
+ * @brief MPU-6050 IMU driver 
  * 
  * @version 0.1
  * @date 2022-02-11
@@ -78,7 +78,184 @@
 
 
 //=======================================================================================
-// Messages 
+// Enums 
+
+/**
+ * @brief Read and write offset 
+ * 
+ * @details These provide the necessary offset to the devices I2C address to either read 
+ *          or write to from it. Simply add this value to the end of the address when 
+ *          reading or writing.  
+ * 
+ * @see mpu6050_i2c_addr_t
+ */
+typedef enum {
+    MPU6050_W_OFFSET,
+    MPU6050_R_OFFSET
+} mpu6050_rw_offset_t;
+
+
+/**
+ * @brief PWR_MGMT_1 : CLKSEL
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. Allows for the
+ *          selection of the devices clock source. The clock source is selected as 
+ *          follows:  
+ *              - CLKSEL = 0 : Internal 8MHz oscillator                                
+ *              - CLKSEL = 1 : PPL with X-axis gyro reference                          
+ *              - CLKSEL = 2 : PPL with Y-axis gyro reference                          
+ *              - CLKSEL = 3 : PPL with Z-axis gyro reference                          
+ *              - CLKSEL = 4 : PPL with external 32.768kHz reference                   
+ *              - CLKSEL = 5 : PPL with external 19.2MHz reference                     
+ *              - CLKSEL = 6 : Reserved                                                
+ *              - CLKSEL = 7 : Stops the clock and keeps the timing generator on reset 
+ *            
+ *           It is recommended the internal oscillator is not used as the other options 
+ *           are much more stable.  
+ */
+typedef enum {
+    MPU6050_CLKSEL_0,  // Internal 8MHz oscillator
+    MPU6050_CLKSEL_1,  // PPL with X-axis gyro reference 
+    MPU6050_CLKSEL_2,  // PPL with Y-axis gyro reference 
+    MPU6050_CLKSEL_3,  // PPL with Z-axis gyro reference 
+    MPU6050_CLKSEL_4,  // PPL with external 32.768kHz reference
+    MPU6050_CLKSEL_5,  // PPL with external 19.2MHz reference
+    MPU6050_CLKSEL_6,  // Reserved 
+    MPU6050_CLKSEL_7   // Stops the clock and keeps the timing generator on reset
+} mpu6050_clksel_t;
+
+
+/**
+ * @brief PWR_MGMT_2 : LP_WAKE_CTRL
+ * 
+ * @details Used to configure power management register 2 in mpu6050_init. This allows 
+ *          for configuring of the frequency of wake-ups in low power mode. In this mode 
+ *          the device will power off all functions except for the primary i2c interface
+ *          waking up only the accelerometer at fixed intervals to take a single 
+ *          measurements. Values of LP_WAKE_CTRL correspond to the following wake-up
+ *          frequencies: 
+ *              - LP_WAKE_CTRL = 0 : 1.25 Hz  
+ *              - LP_WAKE_CTRL = 1 : 5  Hz    
+ *              - LP_WAKE_CTRL = 2 : 20 Hz    
+ *              - LP_WAKE_CTRL = 3 : 40 Hz    
+ *          
+ *          Low power mode can be configured using the following steps carried out in 
+ *          power management register 1:             
+ *              - Set CYCLE to 1                     
+ *              - Set SLEEP to 0                     
+ *              - Set TEMP_DIS to 1                  
+ *              - Set STBY_XG, STBY_YG, STBY_ZG to 1 
+ */
+typedef enum {
+    MPU6050_LP_WAKE_CTRL_0,    // 1.25 Hz wakeup frequency
+    MPU6050_LP_WAKE_CTRL_1,    // 5 Hz wakeup frequency
+    MPU6050_LP_WAKE_CTRL_2,    // 20 Hz wakeup frequency
+    MPU6050_LP_WAKE_CTRL_3     // 40 Hz wakeup frequency
+} mpu6050_lp_wake_ctrl_t;
+
+
+/**
+ * @brief GYRO_CONFIG : XG_ST, YG_ST and ZG_ST setpoint 
+ * 
+ * @details This is used to enable and disable self-test on the gyroscope. During 
+ *          initialization self-test is disabled, but when mpu6050_self_test is called 
+ *          self-test is temporarily enabled. 
+ * 
+ * @see mpu6050_self_test
+ */
+typedef enum {
+    MPU6050_GYRO_ST_DISABLE,
+    MPU6050_GYRO_ST_ENABLE
+} mpu6050_gyro_self_test_set_t;
+
+
+/**
+ * @brief ACCEL_CONFIG : XA_ST, YA_SET and ZA_ST setpoint
+ * 
+ * @details This is used to enable and disable self-test on the accelerometer. During 
+ *          initialization self-test is disabled, but when mpu6050_self_test is called 
+ *          self-test is temporarily enabled. 
+ * 
+ * @see mpu6050_self_test 
+ */
+typedef enum {
+    MPU6050_ACCEL_ST_DISABLE,
+    MPU6050_ACCEL_ST_ENABLE
+} mpu6050_accel_self_test_set_t;
+
+
+/**
+ * @brief PWR_MGMT_1 : DEVICE_RESET
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. Allows for 
+ *          a reset to the devices default settings. 
+ */
+typedef enum {
+    MPU6050_RESET_DISABLE,
+    MPU6050_RESET_ENABLE
+} mpu6050_device_reset_t; 
+
+
+/**
+ * @brief PWR_MGMT_1 : CYCLE 
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. If cycle is 
+ *          enabled and sleep mode is disabled, the device will wake up from sleep mode 
+ *          periodically to take a single sample of data at a frquency dictated by 
+ *          LP_WAKE_CTRL. 
+ * 
+ * @see mpu6050_sleep_mode_t
+ * @see mpu6050_lp_wake_ctrl_t
+ */
+typedef enum {
+    MPU6050_CYCLE_SLEEP_DISABLED,
+    MPU6050_CYCLE_SLEEP_ENABLED
+} mpu6050_cycle_t;
+
+
+/**
+ * @brief PWR_MGMT_1 : TEMP_DIS
+ * 
+ * @details Used to configure power management register 1 in mpu6050_init. Allows for 
+ *          enabling or disabling of the temperature sensor. 
+ */
+typedef enum {
+    MPU6050_TEMP_SENSOR_ENABLE,
+    MPU6050_TEMP_SENSOR_DISABLE
+} mpu6050_temp_sensor_t;
+
+
+/**
+ * @brief INT_PIN_CFG (register 55): LATCH_INT_EN 
+ */
+typedef enum {
+    MPU6050_INT_LATCH_PULSE,   // INT pin emits 50us long pulses 
+    MPU6050_INT_LATCH_HIGH     // INT pin held high until interrupt is cleared 
+} mpu6050_int_latch_t; 
+
+
+/**
+ * @brief INT_PIN_CFG (register 55): INT_RD_CLEAR 
+ */
+typedef enum {
+    MPU6050_INT_CLEAR_RD_STAT,   // INT status is only cleared by reading INT_STATUS 
+    MPU6050_INT_CLEAR_RD_ANY     // INT status is cleared by any read 
+} mpu6050_int_clear_t; 
+
+
+/**
+ * @brief INT_ENABLE (register 56): DATA_RDY_EN  
+ */
+typedef enum {
+    MPU6050_INT_DATA_RDY_DISABLE,   // Disable the data ready interrupt 
+    MPU6050_INT_DATA_RDY_ENABLE     // Enable the data ready interrupt 
+} mpu6050_int_data_rdy_t; 
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Driver data 
 
 // MPU-6050 data record structure 
 typedef struct mpu6050_driver_data_s 
@@ -336,7 +513,7 @@ MPU6050_STATUS mpu6050_accel_config_write(
  * @param accel_config : buffer to store the ACCEL_CONFIG register data 
  * @return uint8_t : status of the read operation 
  */
-uint8_t mpu6050_accel_config_read(
+MPU6050_STATUS mpu6050_accel_config_read(
     mpu6050_driver_data_t *device_ptr, 
     uint8_t *accel_config);
 

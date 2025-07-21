@@ -6,7 +6,7 @@ COMPONENT_NAME = your
 
 #--- Inputs ----#
 PROJECT_HOME_DIR = .
-CPPUTEST_HOME = ./../../../cpputest
+CPPUTEST_HOME = ./../../../../cpputest
 ifeq "$(CPPUTEST_HOME)" ""
 $(error The environment variable CPPUTEST_HOME is not set. \
 Set it to where cpputest is installed)
@@ -29,14 +29,14 @@ endif
 # ---------- CONTROLLERS -----------
 
 # WS2812 
-SRC_FILES += ./../../sources/devices/ws2812_controller.cpp 
+SRC_FILES += ./../../../stm32f4/sources/devices/ws2812_controller.cpp 
 SRC_DIRS += tests/ws2812 
 
 # ----------------------------------
 
 # ------------- TOOLS --------------
 
-SRC_FILES += ./../../sources/tools/tools.c 
+SRC_FILES += ./../../../stm32f4/sources/tools/tools.c 
 
 # ----------------------------------
 
@@ -93,12 +93,12 @@ CPPUTEST_USE_EXTENSIONS = Y
 INCLUDE_DIRS += $(CPPUTEST_HOME)/include
 
 # stmcode headers needed to get the tests to build 
-INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Device/ST/STM32F4xx/Include
-INCLUDE_DIRS += ./../../stmcode/Drivers/CMSIS/Core/Include
+INCLUDE_DIRS += ./../../../stm32f4/stmcode/Drivers/CMSIS/Device/ST/STM32F4xx/Include
+INCLUDE_DIRS += ./../../../stm32f4/stmcode/Drivers/CMSIS/Core/Include
 
-INCLUDE_DIRS += ./../../headers/devices            # Production code 
-INCLUDE_DIRS += ./../../headers/peripherals        # Production code 
-INCLUDE_DIRS += ./../../headers/tools              # Production code 
+INCLUDE_DIRS += ./../../../stm32f4/headers/devices            # Production code 
+INCLUDE_DIRS += ./../../../stm32f4/headers/peripherals        # Production code 
+INCLUDE_DIRS += ./../../../stm32f4/headers/tools              # Production code 
 INCLUDE_DIRS += mocks 
 INCLUDE_DIRS += tests/ws2812 
 
@@ -121,7 +121,7 @@ INCLUDE_DIRS += tests/ws2812
 # This is kind of a kludge, but it causes the
 # .o and .d files to be put under objs.
 CPPUTEST_OBJS_DIR = test-obj
-CPPUTEST_OBJS_DIR = test-obj/1/2
+CPPUTEST_OBJS_DIR = test-obj/1/2/3
 
 CPPUTEST_LIB_DIR = test-lib
 
