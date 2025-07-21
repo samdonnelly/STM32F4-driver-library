@@ -35,17 +35,6 @@ extern "C" {
 
 
 //=======================================================================================
-// Macros 
-
-// Register control 
-#define MPU6050_STBY_STATUS_MASK 0x3F    // Pwr mgmt 2 standby status mask 
-#define MPU6050_FSR_MASK 0x18            // Mask for reading gyro and accel full scale range 
-#define MPU6050_EXT_SYNC_DISABLE 0       // Disables the FSYNC feature 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Enums 
 
 // MPU-6050 driver status 
@@ -60,7 +49,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 Addresses 
+ * @brief MPU-6050 Addresses 
  * 
  * @details The AD0 pin on the accelerometer can be set externally as either 0 or 1 to 
  *          allow for two different MPU's to be on the same I2C bus. The default address
@@ -85,7 +74,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 read and write offset 
+ * @brief Read and write offset 
  * 
  * @details These provide the necessary offset to the devices I2C address to either read 
  *          or write to from it. Simply add this value to the end of the address when 
@@ -100,7 +89,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 DLPF_CFG setpoint
+ * @brief DLPF_CFG setpoint
  * 
  * @details A digital low pass filter (DLPF) can be specified in the CONFIG register 
  *          which is used to filter accelerometer and gyroscope data. The value of the 
@@ -135,7 +124,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - GYRO_CONFIG : FS_SEL setpoint 
+ * @brief GYRO_CONFIG : FS_SEL setpoint 
  * 
  * @details Selects the full scale range used by the gyroscope. This is passed as an 
  *          argument to mpu6050_init to configure the device. Higher ranges cover 
@@ -161,7 +150,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - ACCEL_CONFIG : AFS_SEL setpoint
+ * @brief ACCEL_CONFIG : AFS_SEL setpoint
  * 
  * @details Selects the full scale range used by the acclerometer. This is passed as an 
  *          argument to mpu6050_init to configure the device. Higher ranges cover 
@@ -185,7 +174,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - PWR_MGMT_1 : CLKSEL
+ * @brief PWR_MGMT_1 : CLKSEL
  * 
  * @details Used to configure power management register 1 in mpu6050_init. Allows for the
  *          selection of the devices clock source. The clock source is selected as 
@@ -215,7 +204,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - PWR_MGMT_2 : LP_WAKE_CTRL
+ * @brief PWR_MGMT_2 : LP_WAKE_CTRL
  * 
  * @details Used to configure power management register 2 in mpu6050_init. This allows 
  *          for configuring of the frequency of wake-ups in low power mode. In this mode 
@@ -244,7 +233,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - GYRO_CONFIG : XG_ST, YG_ST and ZG_ST setpoint 
+ * @brief GYRO_CONFIG : XG_ST, YG_ST and ZG_ST setpoint 
  * 
  * @details This is used to enable and disable self-test on the gyroscope. During 
  *          initialization self-test is disabled, but when mpu6050_self_test is called 
@@ -259,7 +248,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - ACCEL_CONFIG : XA_ST, YA_SET and ZA_ST setpoint
+ * @brief ACCEL_CONFIG : XA_ST, YA_SET and ZA_ST setpoint
  * 
  * @details This is used to enable and disable self-test on the accelerometer. During 
  *          initialization self-test is disabled, but when mpu6050_self_test is called 
@@ -274,7 +263,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - PWR_MGMT_1 : DEVICE_RESET
+ * @brief PWR_MGMT_1 : DEVICE_RESET
  * 
  * @details Used to configure power management register 1 in mpu6050_init. Allows for 
  *          a reset to the devices default settings. 
@@ -286,7 +275,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - PWR_MGMT_1 : SLEEP
+ * @brief PWR_MGMT_1 : SLEEP
  * 
  * @details Used to configure power management register 1 in mpu6050_init. Allows for 
  *          sleep mode to be enabled or disabled. Sleep mode is a low power mode where 
@@ -304,7 +293,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - PWR_MGMT_1 : CYCLE 
+ * @brief PWR_MGMT_1 : CYCLE 
  * 
  * @details Used to configure power management register 1 in mpu6050_init. If cycle is 
  *          enabled and sleep mode is disabled, the device will wake up from sleep mode 
@@ -321,7 +310,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - PWR_MGMT_1 : TEMP_DIS
+ * @brief PWR_MGMT_1 : TEMP_DIS
  * 
  * @details Used to configure power management register 1 in mpu6050_init. Allows for 
  *          enabling or disabling of the temperature sensor. 
@@ -333,7 +322,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - INT_PIN_CFG (register 55): LATCH_INT_EN 
+ * @brief INT_PIN_CFG (register 55): LATCH_INT_EN 
  */
 typedef enum {
     MPU6050_INT_LATCH_PULSE,   // INT pin emits 50us long pulses 
@@ -342,7 +331,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - INT_PIN_CFG (register 55): INT_RD_CLEAR 
+ * @brief INT_PIN_CFG (register 55): INT_RD_CLEAR 
  */
 typedef enum {
     MPU6050_INT_CLEAR_RD_STAT,   // INT status is only cleared by reading INT_STATUS 
@@ -351,7 +340,7 @@ typedef enum {
 
 
 /**
- * @brief MPU6050 - INT_ENABLE (register 56): DATA_RDY_EN  
+ * @brief INT_ENABLE (register 56): DATA_RDY_EN  
  */
 typedef enum {
     MPU6050_INT_DATA_RDY_DISABLE,   // Disable the data ready interrupt 
@@ -365,8 +354,6 @@ typedef enum {
 // Data types 
 
 typedef uint8_t MPU6050_STATUS; 
-typedef uint8_t MPU6050_REG_ADDR;        // Register address 
-typedef uint8_t MPU6050_SMPLRT_DIV;      // Sample Rate Divider 
 
 //=======================================================================================
 
@@ -375,7 +362,7 @@ typedef uint8_t MPU6050_SMPLRT_DIV;      // Sample Rate Divider
 // Initialization 
 
 /**
- * @brief MPU5060 initialization 
+ * @brief MPU-5060 initialization 
  * 
  * @details Configures device registers and creates a new data record for the device. The 
  *          initialization status is returned. If the init status is not zero then a fault 
@@ -397,13 +384,13 @@ MPU6050_STATUS mpu6050_init(
     mpu6050_i2c_addr_t mpu6050_address,
     uint8_t standby_status, 
     mpu6050_dlpf_cfg_t dlpf_cfg,
-    MPU6050_SMPLRT_DIV smplrt_div,
+    uint8_t smplrt_div,
     mpu6050_afs_sel_set_t afs_sel,
     mpu6050_fs_sel_set_t fs_sel);
 
 
 /**
- * @brief MPU6050 INT pin initialization 
+ * @brief INT pin initialization 
  * 
  * @details Configures an input pin to read the status of the INT pin on the device and 
  *          configures the device to set the INT pin high when data is ready to be read. 
@@ -413,15 +400,16 @@ MPU6050_STATUS mpu6050_init(
  * @param device_num : data record address of device 
  * @param gpio : GPIO port to use for INT pin 
  * @param pin : pin number to use for INT pin 
+ * @return MPU6050_STATUS : status of the initialization 
  */
-void mpu6050_int_pin_init(
+MPU6050_STATUS mpu6050_int_pin_init(
     device_number_t device_num, 
     GPIO_TypeDef *gpio, 
     pin_selector_t pin); 
 
 
 /**
- * @brief MPU6050 low power mode config 
+ * @brief Low power mode config 
  * 
  * @details Write the value of "sleep" to the power management 1 register to either set 
  *          or disable sleep (low power) mode. When set to low power mode the device will 
@@ -431,8 +419,9 @@ void mpu6050_int_pin_init(
  * 
  * @param device_num : data record address of device 
  * @param sleep : low power mode configuration 
+ * @return MPU6050_STATUS : status of the write operation 
  */
-void mpu6050_low_pwr_config(
+MPU6050_STATUS mpu6050_low_pwr_config(
     device_number_t device_num, 
     mpu6050_sleep_mode_t sleep); 
 
@@ -525,7 +514,7 @@ void mpu6050_get_gyro_axis_rate(
 
 
 /**
- * @brief MPU6050 temperature sensor raw value 
+ * @brief Get temperature sensor raw value 
  * 
  * @details Returns the unformatted temperature sensor data. Note that the data is 
  *          updated using one of the read functions, this function only returns the read 
@@ -540,7 +529,7 @@ int16_t mpu6050_get_temp_raw(device_number_t device_num);
 
 
 /**
- * @brief MPU6050 temperature sensor calculation
+ * @brief Get temperature sensor calculation
  * 
  * @details Calculates and returns the true temperature reading in degC using the raw 
  *          temperature sensor data. This value is calculated using the following equation 
@@ -565,7 +554,7 @@ float mpu6050_get_temp(device_number_t device_num);
 // Status 
 
 /**
- * @brief MPU6050 INT pin status 
+ * @brief INT pin status 
  * 
  * @details Returns the INT pin status of the device. This is done by reading the GPIO 
  *          input pin configured during INT pin initialization. If the pin is high then 
@@ -587,7 +576,7 @@ uint8_t mpu6050_int_status(device_number_t device_num);
 // Self-test functions 
 
 /**
- * @brief MPU6050 self-test
+ * @brief Self-test
  * 
  * @details This functions runs a self-test on the device to see it has drifted from the 
  *          factory calibration. When self-test is activated, the on-board electronics
