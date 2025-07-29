@@ -196,7 +196,7 @@ typedef uint32_t MPU6050_STATUS;
  *          initialization status is returned. If the init status is not zero then a fault 
  *          occured. The init status follows the first 8-bits of the driver fault code. 
  * 
- * @param device_num : data record address of device 
+ * @param device_num : ID used to get device info 
  * @param i2c : I2C port used by device 
  * @param mpu6050_address : I2C address of device 
  * @param standby_status : 1 byte bitmap specifying the data to put into standby mode 
@@ -225,7 +225,7 @@ MPU6050_STATUS mpu6050_init(
  *          This is separate from the init function because this feature is not always 
  *          needed. The main init function should be called before this function. 
  * 
- * @param device_num : data record address of device 
+ * @param device_num : ID used to get device info 
  * @param gpio : GPIO port to use for INT pin 
  * @param pin : pin number to use for INT pin 
  * @return MPU6050_STATUS : status of the initialization 
@@ -245,13 +245,27 @@ MPU6050_STATUS mpu6050_int_pin_init(
  * 
  * @see mpu6050_sleep_mode_t
  * 
- * @param device_num : data record address of device 
+ * @param device_num : ID used to get device info 
  * @param sleep : low power mode configuration 
  * @return MPU6050_STATUS : status of the write operation 
  */
 MPU6050_STATUS mpu6050_low_pwr_config(
     device_number_t device_num, 
-    mpu6050_sleep_mode_t sleep); 
+    mpu6050_sleep_mode_t sleep);
+
+
+/**
+ * @brief Correct offsets in the accelerometer and gyroscope readings 
+ * 
+ * @param device_num : ID used to get device info 
+ * @param accel_offset : buffer of offsets used to zero each accelerometer axis 
+ * @param gyro_offset : buffer of offsets used to zero each gyroscope axis 
+ * @return MPU6050_STATUS : status of the setting operation 
+ */
+MPU6050_STATUS mpu6050_set_offsets(
+    device_number_t device_num, 
+    const int16_t *accel_offset, 
+    const int16_t *gyro_offset); 
 
 //=======================================================================================
 
@@ -267,7 +281,7 @@ MPU6050_STATUS mpu6050_low_pwr_config(
  *          hold of the I2C bus and ensures all the data read is from the same instance in time. 
  *          This is useful for when all the data needs to be read. 
  * 
- * @param device_num : data record address of device 
+ * @param device_num : ID used to get device info 
  * @return MPU6050_STATUS : status of the update 
  */
 MPU6050_STATUS mpu6050_update(device_number_t device_num); 
@@ -282,7 +296,7 @@ MPU6050_STATUS mpu6050_update(device_number_t device_num);
  * 
  * @see mpu6050_update 
  * 
- * @param device_num : number of device data record to access 
+ * @param device_num : ID used to get device info 
  * @param accel_axis : buffer to store the accelerometer axis data (raw) 
  */
 void mpu6050_get_accel_axis(
@@ -299,7 +313,7 @@ void mpu6050_get_accel_axis(
  * 
  * @see mpu6050_update 
  * 
- * @param device_num : number of device data record to access 
+ * @param device_num : ID used to get device info 
  * @param accel_axis_gs : buffer to store the accelerometer axis data (g's) 
  */
 void mpu6050_get_accel_axis_gs(
@@ -316,7 +330,7 @@ void mpu6050_get_accel_axis_gs(
  * 
  * @see mpu6050_update 
  * 
- * @param device_num : number of device data record to access 
+ * @param device_num : ID used to get device info 
  * @param gyro_axis : buffer to store the gyroscope axis data (raw) 
  */
 void mpu6050_get_gyro_axis(
@@ -333,7 +347,7 @@ void mpu6050_get_gyro_axis(
  * 
  * @see mpu6050_update 
  * 
- * @param device_num : number of device data record to access 
+ * @param device_num : ID used to get device info 
  * @param gyro_axis_rate : buffer to store the angular velocity (rad/s) 
  */
 void mpu6050_get_gyro_axis_rate(
@@ -350,7 +364,7 @@ void mpu6050_get_gyro_axis_rate(
  * 
  * @see mpu6050_update 
  * 
- * @param device_num : number of device data record to access 
+ * @param device_num : ID used to get device info 
  * @return int16_t : unformatted temperature reading 
  */
 int16_t mpu6050_get_temp_raw(device_number_t device_num); 
@@ -370,7 +384,7 @@ int16_t mpu6050_get_temp_raw(device_number_t device_num);
  * 
  * @see mpu6050_update 
  * 
- * @param device_num : number of device data record to access 
+ * @param device_num : ID used to get device info 
  * @return float : true temperature value (degC) 
  */
 float mpu6050_get_temp(device_number_t device_num);
@@ -392,7 +406,7 @@ float mpu6050_get_temp(device_number_t device_num);
  * 
  * @see mpu6050_int_pin_init
  * 
- * @param device_num : data record address of device 
+ * @param device_num : ID used to get device info 
  * @return uint8_t : INT pin status 
  */
 uint8_t mpu6050_int_status(device_number_t device_num); 
@@ -427,7 +441,7 @@ uint8_t mpu6050_int_status(device_number_t device_num);
  *          - Bit 1: accelerometer y-axis 
  *          - Bit 0: accelerometer x-axis 
  * 
- * @param device_num : data record address of device 
+ * @param device_num : ID used to get device info 
  * @param st_result : result of the self test 
  * @return MPU6050_STATUS : self-test results 
  */

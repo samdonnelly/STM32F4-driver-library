@@ -265,19 +265,21 @@ typedef struct mpu6050_driver_data_s
     device_number_t device_num; 
 
     // Peripherals 
-    I2C_TypeDef *i2c;                // I2C port connected to the device 
-    GPIO_TypeDef *gpio;              // GPIO port for the INT pin 
+    I2C_TypeDef *i2c;                  // I2C port connected to the device 
+    GPIO_TypeDef *gpio;                // GPIO port for the INT pin 
 
     // Device information 
-    mpu6050_i2c_addr_t addr;         // Device I2C address 
-    pin_selector_t int_pin;          // INT pin number 
-    float accel_data_scalar;         // Scales accelerometer raw data into readable values 
-    float gyro_data_scalar;          // Scales gyroscope raw data into readable values 
+    mpu6050_i2c_addr_t addr;           // Device I2C address 
+    pin_selector_t int_pin;            // INT pin number 
+    float accel_data_scalar;           // Scales accelerometer raw data into readable values 
+    float gyro_data_scalar;            // Scales gyroscope raw data into readable values 
+    int16_t accel_offsets[NUM_AXES];   // Accelerometer axis offsets 
+    int16_t gyro_offsets[NUM_AXES];    // Gyroscope axis offsets 
 
     // Data 
-    int16_t accel[NUM_AXES];         // Accelerometer data 
-    int16_t gyro[NUM_AXES];          // Gyroscope data 
-    int16_t temp;                    // Temperature 
+    int16_t accel[NUM_AXES];           // Accelerometer data 
+    int16_t gyro[NUM_AXES];            // Gyroscope data 
+    int16_t temp;                      // Temperature 
 }
 mpu6050_driver_data_t; 
 
@@ -975,6 +977,32 @@ MPU6050_STATUS mpu6050_low_pwr_config(
         MPU6050_CLKSEL_5);
 
     return status; 
+}
+
+
+// Correct offsets in the accelerometer and gyroscope readings 
+MPU6050_STATUS mpu6050_set_offsets(
+    device_number_t device_num, 
+    const int16_t *accel_offset, 
+    const int16_t *gyro_offset)
+{
+    mpu6050_driver_data_t *device_data = 
+        (mpu6050_driver_data_t *)get_linked_list_entry(device_num, mpu6050_driver_data); 
+    
+    if ((device_data == NULL) || (accel_offset == NULL) || (gyro_offset == NULL)) 
+    {
+        return MPU6050_INVALID_PTR; 
+    }
+
+    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (accel_offset != NULL); i++)
+    {
+        device_data->accel_offsets[i] = *accel_offset++; 
+    }
+
+    for (uint8_t j = X_AXIS; (j < NUM_AXES) && (gyro_offset != NULL); j++)
+    {
+        device_data->accel_offsets[j] = *gyro_offset++; 
+    }
 }
 
 
