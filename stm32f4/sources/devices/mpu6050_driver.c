@@ -1001,7 +1001,7 @@ MPU6050_STATUS mpu6050_set_offsets(
 
     for (uint8_t j = X_AXIS; (j < NUM_AXES) && (gyro_offset != NULL); j++)
     {
-        device_data->accel_offsets[j] = *gyro_offset++; 
+        device_data->gyro_offsets[j] = *gyro_offset++; 
     }
 }
 
@@ -1054,17 +1054,17 @@ MPU6050_STATUS mpu6050_update(device_number_t device_num)
     if (status == MPU6050_OK)
     {
         // Accelerometer 
-        device_data->accel[X_AXIS] = ((int16_t)data_reg[0] << SHIFT_8) | (int16_t)data_reg[1];
-        device_data->accel[Y_AXIS] = ((int16_t)data_reg[2] << SHIFT_8) | (int16_t)data_reg[3];
-        device_data->accel[Z_AXIS] = ((int16_t)data_reg[4] << SHIFT_8) | (int16_t)data_reg[5];
+        device_data->accel[X_AXIS] = (((int16_t)data_reg[0] << SHIFT_8) | (int16_t)data_reg[1]) - device_data->accel_offsets[X_AXIS];
+        device_data->accel[Y_AXIS] = (((int16_t)data_reg[2] << SHIFT_8) | (int16_t)data_reg[3]) - device_data->accel_offsets[Y_AXIS];
+        device_data->accel[Z_AXIS] = (((int16_t)data_reg[4] << SHIFT_8) | (int16_t)data_reg[5]) - device_data->accel_offsets[Z_AXIS];
     
         // Temperature 
         device_data->temp = ((int16_t)data_reg[6] << SHIFT_8) | (int16_t)data_reg[7]; 
     
         // Gyroscope 
-        device_data->gyro[X_AXIS] = ((int16_t)data_reg[8]  << SHIFT_8) | (int16_t)data_reg[9];
-        device_data->gyro[Y_AXIS] = ((int16_t)data_reg[10] << SHIFT_8) | (int16_t)data_reg[11];
-        device_data->gyro[Z_AXIS] = ((int16_t)data_reg[12] << SHIFT_8) | (int16_t)data_reg[13];
+        device_data->gyro[X_AXIS] = (((int16_t)data_reg[8]  << SHIFT_8) | (int16_t)data_reg[9]) - device_data->gyro_offsets[X_AXIS];
+        device_data->gyro[Y_AXIS] = (((int16_t)data_reg[10] << SHIFT_8) | (int16_t)data_reg[11]) - device_data->gyro_offsets[Y_AXIS];
+        device_data->gyro[Z_AXIS] = (((int16_t)data_reg[12] << SHIFT_8) | (int16_t)data_reg[13]) - device_data->gyro_offsets[Z_AXIS];
     }
 
     return status; 
