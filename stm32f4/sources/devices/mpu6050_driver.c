@@ -878,6 +878,9 @@ MPU6050_STATUS mpu6050_init(
     device_data->addr = mpu6050_addr; 
     memset((void *)device_data->accel, CLEAR, sizeof(device_data->accel)); 
     memset((void *)device_data->gyro, CLEAR, sizeof(device_data->gyro)); 
+    memset((void *)device_data->accel_offsets, CLEAR, sizeof(device_data->accel_offsets)); 
+    memset((void *)device_data->gyro_offsets, CLEAR, sizeof(device_data->gyro_offsets)); 
+
     device_data->temp = CLEAR; 
 
     MPU6050_STATUS status = MPU6050_OK; 
