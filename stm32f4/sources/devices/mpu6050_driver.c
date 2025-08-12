@@ -1006,6 +1006,8 @@ MPU6050_STATUS mpu6050_set_offsets(
     {
         device_data->gyro_offsets[j] = *gyro_offset++; 
     }
+
+    return MPU6050_OK; 
 }
 
 
