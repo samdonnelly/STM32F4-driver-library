@@ -34,6 +34,7 @@
 // Data 
 
 // static constexpr float inv_sample_freq = 1.0f / 510.0f; 
+static constexpr float deg_to_rad = 0.0174533;   // Degrees to radians 
 
 //=======================================================================================
 
@@ -85,9 +86,9 @@ void MadgwickFilter::Madgwick(
 	}
 
 	// Convert gyroscope degrees/sec to radians/sec
-	gx *= 0.0174533f;
-	gy *= 0.0174533f;
-	gz *= 0.0174533f;
+	gx *= deg_to_rad;
+	gy *= deg_to_rad;
+	gz *= deg_to_rad;
 
 	// Rate of change of quaternion from gyroscope
 	qDot1 = 0.5f * (-q1 * gx - q2 * gy - q3 * gz);
@@ -200,21 +201,21 @@ void MadgwickFilter::Madgwick(
 // Get Roll to NED frame 
 float MadgwickFilter::GetRoll(void)
 {
-    return 0.0f; 
+    return roll; 
 }
 
 
 // Get Pitch to NED frame 
 float MadgwickFilter::GetPitch(void)
 {
-    return 0.0f; 
+    return pitch; 
 }
 
 
 // Get Yaw to NED frame 
 float MadgwickFilter::GetYaw(void)
 {
-    return 0.0f; 
+    return yaw; 
 }
 
 //=======================================================================================

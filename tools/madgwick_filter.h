@@ -30,8 +30,8 @@ public:
     /**
      * @brief Constructor 
      * 
-     * @param beta_setpoint 
-     * @param sample_period 
+     * @param beta_setpoint : Madgwick filter weighted adjustment 
+     * @param sample_period : time between calculations 
      */
     MadgwickFilter(float beta_setpoint, float sample_period);
 
@@ -51,17 +51,17 @@ public:
     /**
      * @brief Madgwick filter implementation 
      * 
-     * @param w_x 
-     * @param w_y 
-     * @param w_z 
-     * @param a_x 
-     * @param a_y 
-     * @param a_z 
-     * @param m_x 
-     * @param m_y 
-     * @param m_z 
+     * @param wx 
+     * @param wy 
+     * @param wz 
+     * @param ax 
+     * @param ay 
+     * @param az 
+     * @param mx 
+     * @param my 
+     * @param mz 
      */
-    void Madgwick(float w_x, float w_y, float w_z, float a_x, float a_y, float a_z, float m_x, float m_y, float m_z);
+    void Madgwick(float wx, float wy, float wz, float ax, float ay, float az, float mx, float my, float mz);
 
     /**
      * @brief Get Roll to NED frame 
