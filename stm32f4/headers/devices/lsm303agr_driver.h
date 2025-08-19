@@ -34,11 +34,11 @@ extern "C" {
 
 // LSM303AGR driver status 
 typedef enum {
-    LSM303AGR_OK,            // No problem with the LSM303AGR device 
-    LSM303AGR_INVALID_PTR,   // Invalid pointer provided to function 
-    LSM303AGR_WHOAMI,        // WHO AM I register doesn't match 
-    LSM303AGR_WRITE_FAULT,   // A problem occurred while writing via I2C 
-    LSM303AGR_READ_FAULT     // A problem occurred while reading via I2C 
+    LSM303AGR_OK          = 0x00000000,   // No problem with the LSM303AGR device 
+    LSM303AGR_INVALID_PTR = 0x00000001,   // Invalid pointer provided to function 
+    LSM303AGR_WHOAMI      = 0x00000002,   // WHO AM I register doesn't match 
+    LSM303AGR_WRITE_FAULT = 0x00000004,   // A problem occurred while writing to the device 
+    LSM303AGR_READ_FAULT  = 0x00000008    // A problem occurred while reading from the device 
 } lsm303agr_status_t; 
 
 
@@ -71,7 +71,7 @@ typedef enum {
 //=======================================================================================
 // Datatypes 
 
-typedef uint8_t LSM303AGR_STATUS; 
+typedef uint32_t LSM303AGR_STATUS; 
 
 //=======================================================================================
 
@@ -176,7 +176,7 @@ LSM303AGR_STATUS lsm303agr_m_offset_reg_set(const int16_t *offset_reg);
  *          responsibility to provide valid buffers for these values. Buffers that are 
  *          NULL or too small will not update all the values. 
  * 
- * @see lsm303agr_m_get_calibrated_axis 
+ * @see lsm303agr_m_get_axis_cal_int 
  * 
  * @param hi_offsets : hard-iron offsets to set (milligauss) 
  * @param sid_values : soft-iron diagonal values to set (milligauss) 
@@ -226,7 +226,7 @@ void lsm303agr_m_get_axis(int16_t *m_axis_buff);
 
 
 /**
- * @brief Get calibrated magnetometer axis data 
+ * @brief Get calibrated magnetometer axis data as integers 
  * 
  * @details Takes the last read magnetometer axis data, applies the hard and soft-iron 
  *          calibration values set by the user and copies the result to the provided 
@@ -239,16 +239,30 @@ void lsm303agr_m_get_axis(int16_t *m_axis_buff);
  *           - Set the hard-iron offset registers and avoid using this function. 
  *          
  *          Note that it's the users responsibility to provide a buffer large enough to 
- *          store the axis data (3 axes x 2 bytes per axis == buffer of size 3 (6 total 
- *          bytes). Also lsm303agr_m_update must be called in order to read/update 
- *          magnetometer data, this function only retrieves the already read data. 
+ *          store the axis data (3 axes --> buffer of size 3). If the buffer is not 
+ *          large enough then data will simple not be copied to the buffer. Also 
+ *          lsm303agr_m_update must be called in order to read/update magnetometer data 
+ *          as this function only retrieves the already read data. 
  * 
  * @see lsm303agr_m_calibration_set 
  * @see lsm303agr_m_update 
  * 
  * @param m_axis_buff : buffer to store the calibrated magnetometer axis data 
  */
-void lsm303agr_m_get_calibrated_axis(int16_t *m_axis_buff); 
+void lsm303agr_m_get_axis_cal_int(int16_t *m_axis_buff);
+
+
+/**
+ * @brief Get calibrated magnetometer axis data as floating point numbers 
+ * 
+ * @details See the description for lsm303agr_m_get_axis_cal_int. The only difference 
+ *          here is the calibrated data is stored in floating point numbers. 
+ * 
+ * @see lsm303agr_m_get_axis_cal_int
+ * 
+ * @param m_cal_axis_buff : buffer to store the calibrated magnetometer axis data 
+ */
+void lsm303agr_m_get_axis_cal_float(float *m_cal_axis_buff);
 
 
 /**

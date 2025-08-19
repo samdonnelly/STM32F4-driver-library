@@ -39,12 +39,12 @@ extern "C" {
 
 // MPU-6050 driver status 
 typedef enum {
-    MPU6050_OK          = 0x0000,   // No problem with the MPU-6050 driver 
-    MPU6050_INVALID_PTR = 0x0001,   // Invalid pointer provided to the driver 
-    MPU6050_WHOAMI      = 0x0002,   // WHO AM I register doesn't match 
-    MPU6050_WRITE_FAULT = 0x0004,   // A problem occurred while writing via I2C 
-    MPU6050_READ_FAULT  = 0x0008,   // A problem occurred while reading via I2C 
-    MPU6050_ST_FAULT    = 0x0010    // A problem occured during self test 
+    MPU6050_OK          = 0x00000000,   // No problem with the MPU-6050 driver 
+    MPU6050_INVALID_PTR = 0x00000001,   // Invalid pointer provided to the driver 
+    MPU6050_WHOAMI      = 0x00000002,   // WHO AM I register doesn't match 
+    MPU6050_WRITE_FAULT = 0x00000004,   // A problem occurred while writing via I2C 
+    MPU6050_READ_FAULT  = 0x00000008,   // A problem occurred while reading via I2C 
+    MPU6050_ST_FAULT    = 0x00000010    // A problem occured during self test 
 } mpu6050_status_t; 
 
 

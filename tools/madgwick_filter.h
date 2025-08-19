@@ -35,7 +35,7 @@ public:
      * @brief Constructor 
      * 
      * @param beta_setpoint : Madgwick filter weighted adjustment 
-     * @param sample_period : time between calculations 
+     * @param sample_period : time between calculations (seconds) 
      */
     MadgwickFilter(float beta_setpoint, float sample_period);
 
@@ -52,19 +52,25 @@ public:
     MadgwickFilter(MadgwickFilter &&) = delete;
     MadgwickFilter &operator=(MadgwickFilter &&) = delete;
 
+    // Driver status 
     enum MadgwickStatus : uint8_t 
     {
-        MADGWICK_OK, 
-        MADGWICK_NO_ACCEL, 
-        MADGWICK_INCOMPLETE
+        MADGWICK_OK,          // Calculation performed normally 
+        MADGWICK_NO_ACCEL,    // No acceleration present ([0,0,0]) so no correction applied 
+        MADGWICK_INCOMPLETE   // Calculation not performed - missing data 
     };
 
     /**
      * @brief Madgwick filter implementation 
      * 
+     * @note The gyroscope data units matter and must be in deg/s. The accelerometer and 
+     *       magnetometer units do not matter as these vectors get normalized (i.e. only 
+     *       direction matters). Typical units for the accelerometer is g's and for the 
+     *       magnetometer is uT or mG. 
+     * 
      * @param gyro : latest 3-axis gyroscope data (deg/s) 
-     * @param accel : latest 3-axis accelerometer data (g's) 
-     * @param mag : latest 3-axis magnetometer data () 
+     * @param accel : latest 3-axis accelerometer data 
+     * @param mag : latest 3-axis magnetometer data 
      * @return MadgwickStatus : status of the calculation 
      */
     MadgwickStatus Madgwick(

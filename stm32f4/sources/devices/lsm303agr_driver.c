@@ -402,16 +402,28 @@ void lsm303agr_m_get_axis(int16_t *m_axis_buff)
 }
 
 
-// Get calibrated magnetometer axis data 
-void lsm303agr_m_get_calibrated_axis(int16_t *m_cal_axis_buff)
+// Get calibrated magnetometer axis data as integers 
+void lsm303agr_m_get_axis_cal_int(int16_t *m_cal_axis_buff)
 {
     float mag_cal[NUM_AXES]; 
-
     lsm303agr_m_correct_axes(mag_cal); 
 
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_cal_axis_buff != NULL); i++)
     {
         m_cal_axis_buff[i] = (int16_t)mag_cal[i]; 
+    }
+}
+
+
+// Get calibrated magnetometer axis data as floating point numbers 
+void lsm303agr_m_get_axis_cal_float(float *m_cal_axis_buff)
+{
+    float mag_cal[NUM_AXES];
+    lsm303agr_m_correct_axes(mag_cal);
+
+    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_cal_axis_buff != NULL); i++)
+    {
+        m_cal_axis_buff[i] = mag_cal[i]; 
     }
 }
 
