@@ -17,6 +17,10 @@
 
 //=======================================================================================
 // Includes 
+
+#include "tools.h"
+#include <array>
+
 //=======================================================================================
 
 
@@ -48,20 +52,25 @@ public:
     MadgwickFilter(MadgwickFilter &&) = delete;
     MadgwickFilter &operator=(MadgwickFilter &&) = delete;
 
+    enum MadgwickStatus : uint8_t 
+    {
+        MADGWICK_OK, 
+        MADGWICK_NO_ACCEL, 
+        MADGWICK_INCOMPLETE
+    };
+
     /**
      * @brief Madgwick filter implementation 
      * 
-     * @param wx 
-     * @param wy 
-     * @param wz 
-     * @param ax 
-     * @param ay 
-     * @param az 
-     * @param mx 
-     * @param my 
-     * @param mz 
+     * @param gyro : latest 3-axis gyroscope data (deg/s) 
+     * @param accel : latest 3-axis accelerometer data (g's) 
+     * @param mag : latest 3-axis magnetometer data () 
+     * @return MadgwickStatus : status of the calculation 
      */
-    void Madgwick(float wx, float wy, float wz, float ax, float ay, float az, float mx, float my, float mz);
+    MadgwickStatus Madgwick(
+        std::array<float, NUM_AXES> &gyro,
+        std::array<float, NUM_AXES> &accel,
+        std::array<float, NUM_AXES> &mag);
 
     /**
      * @brief Get Roll to NED frame 
@@ -94,10 +103,10 @@ private:
      */
     float invSqrt(float x);
 
-    // Data 
-    float beta;				  // Algorithm gain 
+    // Madgwick filter data 
+    float beta;				  // Algorithm gain (correction weight) 
     float inv_sample_freq;    // Inverse sample frequency (1 / sample_frequency (Hz) == dt) 
-    float q0, q1, q2, q3;	  // quaternion of sensor frame relative to auxiliary frame 
+    float q0, q1, q2, q3;	  // Quaternion of sensor frame relative to auxiliary frame 
     float roll, pitch, yaw;   // Orientation 
 };
 
