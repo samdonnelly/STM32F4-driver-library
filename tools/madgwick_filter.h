@@ -79,46 +79,40 @@ public:
         std::array<float, NUM_AXES> &mag);
 
     /**
-     * @brief Get Roll in radians to NED frame 
+     * @brief Get the Roll, Pitch or Yaw in radians to the NWU frame 
      * 
-     * @return float : roll (radians) 
+     * @return float : Roll, Pitch or Yaw (radians) 
      */
-    float GetRollRad(void); 
+    float GetRollRadNWU(void);
+    float GetPitchRadNWU(void);
+    float GetYawRadNWU(void);
 
     /**
-     * @brief Get Pitch in radians to NED frame 
+     * @brief Get the Roll, Pitch or Yaw in degrees to the NWU frame 
      * 
-     * @return float : pitch (radians) 
+     * @return float : Roll, Pitch or Yaw (degrees) 
      */
-    float GetPitchRad(void); 
+    float GetRollDegNWU(void);
+    float GetPitchDegNWU(void);
+    float GetYawDegNWU(void);
 
     /**
-     * @brief Get Yaw in radians to NED frame 
+     * @brief Get the Roll, Pitch or Yaw in radians to the NED frame 
      * 
-     * @return float : yaw (radians) 
+     * @return float : Roll, Pitch or Yaw (radians) 
      */
-    float GetYawRad(void); 
+    float GetRollRadNED(void);
+    float GetPitchRadNED(void);
+    float GetYawRadNED(void);
 
     /**
-     * @brief Get Roll in degrees to NED frame 
+     * @brief Get the Roll, Pitch or Yaw in degrees to the NED frame 
      * 
-     * @return float : roll (degrees) 
+     * @return float : Roll, Pitch or Yaw (degrees) 
      */
-    float GetRollDeg(void); 
-
-    /**
-     * @brief Get Pitch in degrees to NED frame 
-     * 
-     * @return float : pitch (degrees) 
-     */
-    float GetPitchDeg(void); 
-
-    /**
-     * @brief Get Yaw in degrees to NED frame 
-     * 
-     * @return float : yaw (degrees) 
-     */
-    float GetYawDeg(void); 
+    float GetRollDegNED(void);
+    float GetPitchDegNED(void);
+    float GetYawDegNED(void);
 
 private: 
 

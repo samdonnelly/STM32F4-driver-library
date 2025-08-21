@@ -29,8 +29,8 @@
 // Stores the latitude and longitude of a GPS coordinate 
 typedef struct gps_waypoints_t 
 {
-    double lat; 
-    double lon; 
+    float lat; 
+    float lon; 
 }
 gps_waypoints_t; 
 
@@ -41,31 +41,30 @@ gps_waypoints_t;
 // Classes 
 
 // Navigation calculations 
-class nav_calculations 
+class NavCalcs 
 {
-private:   // Private members 
+public: 
 
-    double coordinate_lpf_gain;  // Low pass filter gain for GPS coordinates 
-    int16_t true_north_offset;   // True north offset from magnetic north 
+    /**
+     * @brief Constructor 
+     * 
+     * @param coordinate_gain : low pass filter gain for GPS coordinates 
+     * @param tn_offset : magnetic declination (degrees) 
+     */
+    NavCalcs(float coordinate_gain, float tn_offset); 
 
-public:   // Public member functions 
+    /**
+     * @brief Destructor 
+     */
+    ~NavCalcs() = default; 
 
-    // Constructor - Default 
-    nav_calculations(); 
+    // Delete copy constructor and assignment operator
+    NavCalcs(const NavCalcs &) = delete;
+    NavCalcs &operator=(const NavCalcs &) = delete;
 
-    // Constructor - Specify coordinate filter gain 
-    nav_calculations(double coordinate_gain); 
-
-    // Constructor - Specify true north correction offset 
-    nav_calculations(int16_t tn_offset); 
-
-    // Constructor - Specify coordinate filter gain and true north correction offset 
-    nav_calculations(
-        double coordinate_gain, 
-        int16_t tn_offset); 
-
-    // Destructor 
-    ~nav_calculations(); 
+    // Delete move constructor and assignment operator
+    NavCalcs(NavCalcs &&) = delete;
+    NavCalcs &operator=(NavCalcs &&) = delete;
 
     /**
      * @brief Coordinate filter 
@@ -87,50 +86,23 @@ public:   // Public member functions
      *                            -90deg <= latitude  <= +90deg 
      *                           -180deg <  longitude <= +180deg 
      * 
-     * @see set_coordinate_lpf_gain 
+     * @see SetCoordinateLPFGain 
      * 
      * @param new_data : new location data - most recent coordinates read from GPS 
      * @param filtered_data : filtered coordinates - managed by the application 
      */
-    void coordinate_filter(
+    void CoordinateFilter(
         gps_waypoints_t new_data, 
-        gps_waypoints_t& filtered_data) const; 
-
-
-    /**
-     * @brief GPS coordinate radius calculation 
-     * 
-     * @details Calculates the surface distance (or radius because it's direction 
-     *          independent) between two coordinates. This distance can also be described 
-     *          as the length of the arc along the great circle that connects these two 
-     *          points. The two coordinates are the current and target locations and the 
-     *          returned distance is expressed in meters*10 to provide one decimal place 
-     *          of accuracy while still being an integer. 
-     *          
-     *          Coordinates passed to this function must be expressed entirely in degrees 
-     *          (i.e. no minutes or seconds representation). They must also be within the 
-     *          following range: 
-     *                            -90deg <= latitude  <= +90deg 
-     *                           -180deg <  longitude <= +180deg 
-     * 
-     * @param current : current location (read from a GPS device) 
-     * @param target : target location 
-     * @return int32_t : GPS radius (meters*10) 
-     */
-    int32_t gps_radius(
-        gps_waypoints_t current, 
-        gps_waypoints_t target); 
-
+        gps_waypoints_t& filtered_data) const;
 
     /**
-     * @brief GPS heading calculation 
+     * @brief Find the distance and heading to the target location 
      * 
      * @details Calculates the initial heading between two GPS coordinates relative to 
-     *          true north. The heading is an angle from 0 to 359.9 degrees rotating 
-     *          clockwise starting from the true north direction. The two coordinates 
-     *          are the current and target locations and the returned heading is 
-     *          expressed in degrees*10 to provide one decimal place of accuracy while 
-     *          still being an integer. 
+     *          true North and the surface distance between them. The target heading 
+     *          increases from 0 clockwise relative to true North. The distance has 
+     *          no direction, it's just the shortest distance between the current and 
+     *          target locations. 
      *          
      *          As you move along the great circle path between two coordinates (i.e. 
      *          the most direct path), your heading relative to true north changes 
@@ -143,78 +115,107 @@ public:   // Public member functions
      *                            -90deg <= latitude  <= +90deg 
      *                           -180deg <  longitude <= +180deg 
      * 
-     * @param current : current location (read from a GPS device) 
-     * @param target : target/desired location 
-     * @return int16_t : GPS heading (degrees*10) 
+     * @param current : current location 
+     * @param target : target location 
+     * @param target_heading : buffer to store the target heading (degrees) 
+     * @param target_distance : buffer to store the target distance (meters) 
      */
-    int16_t gps_heading(
-        gps_waypoints_t current, 
-        gps_waypoints_t target); 
-
+    void WaypointError(
+        const gps_waypoints_t &current,
+        const gps_waypoints_t &target,
+        float &target_heading,
+        float &target_distance) const;
 
     /**
-     * @brief True north heading 
+     * @brief Magnetic heading 
      * 
-     * @details Takes a heading relative to magnetic north and determines the heading 
-     *          relative to true north. The returned heading is an angle from 0 to 359.9 
-     *          degrees rotating clockwise starting from the true north direction, and 
-     *          it's expressed in degrees*10 to provide a decimal place of accuracy. A 
-     *          heading relative to magnetic north typically comes from a digital compass. 
-     *          
-     *          This function uses 'true_north_offset' to get the true north heading. 
-     *          It can be either positive or negative and its value is how many degrees 
-     *          you must rotate from true north to get to magnetic north where clockwise 
-     *          rotation is positive. The offset between magnetic and true north changes 
-     *          depending on your location on Earth which means this value must be updated 
-     *          accordingly. 
+     * @details Finds the magnetic heading from magnetometer axis components. The 
+     *          returned heading increases from 0 clockwise relative to magnetic North. 
+     *          Note that the provided axis data should be calibrated before hand to get 
+     *          a more accurate result. Also note that axis units don't matter. Only the 
+     *          magnitude relative to each other matters. 
      * 
-     * @see set_tn_offset 
-     * 
-     * @param heading : current compass heading relative to magnetic north (degrees*10) 
-     * @return int16_t : true north heading (degrees*10) 
+     * @param mx : magnetometer x-axis data 
+     * @param my : magnetometer y-axis data 
+     * @return float : magnetic heading (0.0-359.9 degrees) 
      */
-    int16_t true_north_heading(int16_t heading) const; 
+    float MagneticHeading(
+        const float &mx, 
+        const float &my) const;
 
+    /**
+     * @brief True North heading 
+     * 
+     * @details Finds the true North heading using the magnetic heading and the true 
+     *          North offset (magnetic declination). The returned heading increases from 
+     *          0 clockwise relative to true North. Note that the provided magnetic 
+     *          heading should be in the range 0.0-359.9 degrees. 
+     *          
+     *          This functions uses the true_north_offset that can be set by the user. 
+     *          This variable should be set to the magnetic declination of your location 
+     *          which can easily be found online. 
+     * 
+     * @see SetTnOffset 
+     * 
+     * @param mag_heading : current compass heading relative to magnetic north (0.0-359.9 degrees) 
+     * @return float : true north heading (0.0-359.9 degrees) 
+     */
+    float TrueNorthHeading(const float &mag_heading) const;
 
     /**
      * @brief Heading error 
      * 
      * @details Determines the error between the current and desired headings. The 
      *          returned error is an angle from -179.9 to +180 degrees relative to the 
-     *          current heading and expressed in degrees*10 to provide one decimal 
-     *          place of accuracy. 
+     *          current heading.  
      *          
      *          The error will always be the shortest angle between the two headings. 
      *          A positive error indicates a clockwise rotation to get from the current 
      *          to the desired heading. A negative error is a counter clockwise rotation. 
      * 
-     * @param current_heading : current heading (degrees*10) 
-     * @param target_heading : target/desired heading (degrees*10) 
-     * @return int16_t : signed error between headings (degrees*10) 
+     * @param current_heading : current heading (0.0-359.9 degrees) 
+     * @param target_heading : target/desired heading (0.0-359.9 degrees) 
+     * @return float : error between headings (-179.9-180.0 degrees) 
      */
-    int16_t heading_error(
-        int16_t current_heading, 
-        int16_t target_heading); 
-    
+    float HeadingError(
+        const float &current_heading, 
+        const float &target_heading) const; 
 
     /**
      * @brief Set the GPS coordinate low pass filter gain 
      * 
-     * @see coordinate_filter 
+     * @see CoordinateFilter 
      * 
      * @param coordinate_gain : coordinate low pass filter gain 
      */
-    void set_coordinate_lpf_gain(double coordinate_gain); 
-
+    void SetCoordinateLPFGain(float coordinate_gain); 
 
     /**
-     * @brief Set the true north correction offset 
+     * @brief Set the true North correction offset 
      * 
-     * @see true_north_heading 
+     * @see TrueNorthHeading 
      * 
      * @param tn_offset : offset between magnetic and true north (degrees*10) 
      */
-    void set_tn_offset(int16_t tn_offset); 
+    void SetTnOffset(int16_t tn_offset); 
+
+private: 
+
+    /**
+     * @brief Correct the heading if it exceeds acceptable bounds 
+     * 
+     * @details Makes sure the provided heading angle is within 0.0-359.9 degrees. This 
+     *          is for headings that may have exceeded the upper or lower bounds of the 
+     *          desired heading range. Note that only up to 360 degrees of heading 
+     *          correction can be applied. 
+     * 
+     * @param heading : potentially out of bounds heading (degrees) 
+     * @return float : heading within bounds (0.0-359.9 degrees) 
+     */
+    void HeadingBoundChecks(float &heading) const;
+
+    float coordinate_lpf_gain;   // Low pass filter gain for GPS coordinates 
+    float true_north_offset;     // True north offset from magnetic north 
 }; 
 
 //=======================================================================================
