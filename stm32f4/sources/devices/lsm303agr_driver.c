@@ -439,9 +439,11 @@ int16_t lsm303agr_m_get_heading(void)
     // Find the magnetic heading based on the magnetometer X and Y axis data. atan2f 
     // looks at the value and sign of X and Y to determine the correct output so axis 
     // values don't have to be checked for potential errors (ex. divide by zero). The 
-    // y-axis data has it's sign inverted so heading increases from 0 in the clockwise 
-    // direction (increased in the counter-clockwise direction otherwise). 
-    heading = (int16_t)(atan2f(-mag_cal[Y_AXIS], mag_cal[X_AXIS])*RAD_TO_DEG*SCALE_10); 
+    // sign on the calculated angle is inverted so that heading increases from 0 in the 
+    // clockwise direction which aligns with the NED frame orientation. Following the 
+    // NED orientation, X is assumed to be positive forward and Y positive right (check 
+    // physical board orientation). 
+    heading = (int16_t)(-atan2f(mag_cal[Y_AXIS], mag_cal[X_AXIS])*RAD_TO_DEG*SCALE_10);
 
     // Adjust the heading range. The magnetic heading is calculated within the range 
     // -180 to 180 degrees, however the returned heading needs to be in the range 0 to 

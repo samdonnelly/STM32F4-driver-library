@@ -197,24 +197,45 @@ MadgwickFilter::MadgwickStatus MadgwickFilter::Madgwick(
 }
 
 
-// Get Roll to NED frame 
-float MadgwickFilter::GetRoll(void)
+// Get Roll in radians to NED frame 
+float MadgwickFilter::GetRollRad(void)
 {
     return roll; 
 }
 
 
-// Get Pitch to NED frame 
-float MadgwickFilter::GetPitch(void)
+// Get Pitch in radians to NED frame 
+float MadgwickFilter::GetPitchRad(void)
 {
     return pitch; 
 }
 
 
-// Get Yaw to NED frame 
-float MadgwickFilter::GetYaw(void)
+// Get Yaw in radians to NED frame 
+float MadgwickFilter::GetYawRad(void)
 {
     return yaw; 
+}
+
+
+// Get Roll in degrees to NED frame 
+float MadgwickFilter::GetRollDeg(void)
+{
+    return roll * RAD_TO_DEG; 
+}
+
+
+// Get Pitch in degrees to NED frame 
+float MadgwickFilter::GetPitchDeg(void)
+{
+    return pitch * RAD_TO_DEG; 
+}
+
+
+// Get Yaw in degrees to NED frame 
+float MadgwickFilter::GetYawDeg(void)
+{
+    return yaw * RAD_TO_DEG; 
 }
 
 //=======================================================================================

@@ -79,25 +79,46 @@ public:
         std::array<float, NUM_AXES> &mag);
 
     /**
-     * @brief Get Roll to NED frame 
+     * @brief Get Roll in radians to NED frame 
+     * 
+     * @return float : roll (radians) 
+     */
+    float GetRollRad(void); 
+
+    /**
+     * @brief Get Pitch in radians to NED frame 
+     * 
+     * @return float : pitch (radians) 
+     */
+    float GetPitchRad(void); 
+
+    /**
+     * @brief Get Yaw in radians to NED frame 
+     * 
+     * @return float : yaw (radians) 
+     */
+    float GetYawRad(void); 
+
+    /**
+     * @brief Get Roll in degrees to NED frame 
      * 
      * @return float : roll (degrees) 
      */
-    float GetRoll(void); 
+    float GetRollDeg(void); 
 
     /**
-     * @brief Get Pitch to NED frame 
+     * @brief Get Pitch in degrees to NED frame 
      * 
      * @return float : pitch (degrees) 
      */
-    float GetPitch(void); 
+    float GetPitchDeg(void); 
 
     /**
-     * @brief Get Yaw to NED frame 
+     * @brief Get Yaw in degrees to NED frame 
      * 
      * @return float : yaw (degrees) 
      */
-    float GetYaw(void); 
+    float GetYawDeg(void); 
 
 private: 
 
