@@ -198,84 +198,84 @@ MadgwickFilter::MadgwickStatus MadgwickFilter::Madgwick(
 
 
 // Get Roll in radians to NWU frame 
-float MadgwickFilter::GetRollRadNWU(void)
+float MadgwickFilter::GetRollRadNWU(void) const
 {
     return roll; 
 }
 
 
 // Get Pitch in radians to NWU frame 
-float MadgwickFilter::GetPitchRadNWU(void)
+float MadgwickFilter::GetPitchRadNWU(void) const
 {
     return pitch; 
 }
 
 
 // Get Yaw in radians to NWU frame 
-float MadgwickFilter::GetYawRadNWU(void)
+float MadgwickFilter::GetYawRadNWU(void) const
 {
     return yaw; 
 }
 
 
 // Get Roll in degrees to NWU frame 
-float MadgwickFilter::GetRollDegNWU(void)
+float MadgwickFilter::GetRollDegNWU(void) const
 {
     return roll * RAD_TO_DEG; 
 }
 
 
 // Get Pitch in degrees to NWU frame 
-float MadgwickFilter::GetPitchDegNWU(void)
+float MadgwickFilter::GetPitchDegNWU(void) const
 {
     return pitch * RAD_TO_DEG; 
 }
 
 
 // Get Yaw in degrees to NWU frame 
-float MadgwickFilter::GetYawDegNWU(void)
+float MadgwickFilter::GetYawDegNWU(void) const
 {
     return yaw * RAD_TO_DEG; 
 }
 
 
 // Get Roll in radians to NED frame 
-float MadgwickFilter::GetRollRadNED(void)
+float MadgwickFilter::GetRollRadNED(void) const
 {
     return roll; 
 }
 
 
 // Get Pitch in radians to NED frame 
-float MadgwickFilter::GetPitchRadNED(void)
+float MadgwickFilter::GetPitchRadNED(void) const
 {
     return -pitch; 
 }
 
 
 // Get Yaw in radians to NED frame 
-float MadgwickFilter::GetYawRadNED(void)
+float MadgwickFilter::GetYawRadNED(void) const
 {
     return -yaw; 
 }
 
 
 // Get Roll in degrees to NED frame 
-float MadgwickFilter::GetRollDegNED(void)
+float MadgwickFilter::GetRollDegNED(void) const
 {
     return roll * RAD_TO_DEG; 
 }
 
 
 // Get Pitch in degrees to NED frame 
-float MadgwickFilter::GetPitchDegNED(void)
+float MadgwickFilter::GetPitchDegNED(void) const
 {
     return -pitch * RAD_TO_DEG; 
 }
 
 
 // Get Yaw in degrees to NED frame 
-float MadgwickFilter::GetYawDegNED(void)
+float MadgwickFilter::GetYawDegNED(void) const
 {
     return -yaw * RAD_TO_DEG; 
 }
@@ -286,7 +286,7 @@ float MadgwickFilter::GetYawDegNED(void)
 //=======================================================================================
 // Helper functions 
 
-float MadgwickFilter::invSqrt(float x)
+float MadgwickFilter::invSqrt(const float &x) const
 {
 	float halfx = 0.5f * x;
 	float y = x;

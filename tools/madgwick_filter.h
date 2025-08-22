@@ -83,36 +83,36 @@ public:
      * 
      * @return float : Roll, Pitch or Yaw (radians) 
      */
-    float GetRollRadNWU(void);
-    float GetPitchRadNWU(void);
-    float GetYawRadNWU(void);
+    float GetRollRadNWU(void) const;
+    float GetPitchRadNWU(void) const;
+    float GetYawRadNWU(void) const;
 
     /**
      * @brief Get the Roll, Pitch or Yaw in degrees to the NWU frame 
      * 
      * @return float : Roll, Pitch or Yaw (degrees) 
      */
-    float GetRollDegNWU(void);
-    float GetPitchDegNWU(void);
-    float GetYawDegNWU(void);
+    float GetRollDegNWU(void) const;
+    float GetPitchDegNWU(void) const;
+    float GetYawDegNWU(void) const;
 
     /**
      * @brief Get the Roll, Pitch or Yaw in radians to the NED frame 
      * 
      * @return float : Roll, Pitch or Yaw (radians) 
      */
-    float GetRollRadNED(void);
-    float GetPitchRadNED(void);
-    float GetYawRadNED(void);
+    float GetRollRadNED(void) const;
+    float GetPitchRadNED(void) const;
+    float GetYawRadNED(void) const;
 
     /**
      * @brief Get the Roll, Pitch or Yaw in degrees to the NED frame 
      * 
      * @return float : Roll, Pitch or Yaw (degrees) 
      */
-    float GetRollDegNED(void);
-    float GetPitchDegNED(void);
-    float GetYawDegNED(void);
+    float GetRollDegNED(void) const;
+    float GetPitchDegNED(void) const;
+    float GetYawDegNED(void) const;
 
 private: 
 
@@ -122,7 +122,7 @@ private:
      * @param x : value to inverse square root 
      * @return float : result of calculation 
      */
-    float invSqrt(float x);
+    float invSqrt(const float &x) const;
 
     // Madgwick filter data 
     float beta;				  // Algorithm gain (correction weight) 
