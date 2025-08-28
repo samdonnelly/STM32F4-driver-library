@@ -65,8 +65,10 @@ MadgwickFilter::MadgwickStatus MadgwickFilter::Madgwick(
           _2bx, _2bz, _4bx, _4bz, 
           _2q0, _2q1, _2q2, _2q3, 
           _2q0q2, _2q2q3, q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
+	float r11, r12, r13, r21, r22, r23, r31, r32, r33;
 
     constexpr float _0_0f = 0.0f, _1_0f = 1.0f, _0_5f = 0.5f, _2_0f = 2.0f, _4_0f = 4.0f; 
+	constexpr float gravity = 1.0f;
 
 	// Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
 	if ((mag[X_AXIS] == _0_0f) && (mag[Y_AXIS] == _0_0f) && (mag[Z_AXIS] == _0_0f))
@@ -189,9 +191,30 @@ MadgwickFilter::MadgwickStatus MadgwickFilter::Madgwick(
 	q3 *= recipNorm;
 
     // Calculate Roll, Pitch and Yaw - NWU 
-    roll = atan2f(q0*q1 + q2*q3, _0_5f - q1*q1 - q2*q2);
-	pitch = asinf(-_2_0f * (q1*q3 - q0*q2));
-	yaw = atan2f(q1*q2 + q0*q3, _0_5f - q2*q2 - q3*q3);
+    // roll = atan2f(q0*q1 + q2*q3, _0_5f - q1*q1 - q2*q2);
+	// pitch = asinf(-_2_0f * (q1*q3 - q0*q2));
+	// yaw = atan2f(q1*q2 + q0*q3, _0_5f - q2*q2 - q3*q3);
+
+	// Find the elements of the rotation matrix from body to NWU frame 
+	r11 = _0_5f - q2*q2 - q3*q3;
+	r12 = q1*q2 - q0*q3;
+	r13 = q1*q3 + q0*q2;
+	r21 = q1*q2 + q0*q3;
+	r22 = _0_5f - q1*q1 - q3*q3;
+	r23 = q2*q3 - q0*q1;
+	r31 = q1*q3 - q0*q2;
+	r32 = q0*q1 + q2*q3;
+	r33 = _0_5f - q1*q1 - q2*q2;
+
+	// Find acceleration in the NWU frame by rotating the body frame acceleration 
+	aN = r11*accel[X_AXIS] * r12*accel[Y_AXIS] + r13*accel[Z_AXIS];
+	aW = r21*accel[X_AXIS] * r22*accel[Y_AXIS] + r23*accel[Z_AXIS];
+	aU = r31*accel[X_AXIS] * r32*accel[Y_AXIS] + r33*accel[Z_AXIS] - gravity;
+
+	// Calculate Roll, Pitch and Yaw - NWU 
+	roll = atan2f(r32, r33);
+	pitch = asinf(-_2_0f * r31);
+	yaw = atan2f(r21, r11);
 
     return status;
 }
@@ -278,6 +301,24 @@ float MadgwickFilter::GetPitchDegNED(void) const
 float MadgwickFilter::GetYawDegNED(void) const
 {
     return -yaw * RAD_TO_DEG; 
+}
+
+
+// Get acceleration in the NWU frame 
+void MadgwickFilter::GetAccelNWU(std::array<float, NUM_AXES> &accel_nwu)
+{
+	accel_nwu[X_AXIS] = aN;
+	accel_nwu[Y_AXIS] = aW;
+	accel_nwu[Z_AXIS] = aU;
+}
+
+
+// Get acceleration in the NED frame 
+void MadgwickFilter::GetAccelNED(std::array<float, NUM_AXES> &accel_ned)
+{
+	accel_ned[X_AXIS] = aN;
+	accel_ned[Y_AXIS] = -aW;
+	accel_ned[Z_AXIS] = -aU;
 }
 
 //=======================================================================================

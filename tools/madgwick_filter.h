@@ -114,6 +114,20 @@ public:
     float GetPitchDegNED(void) const;
     float GetYawDegNED(void) const;
 
+    /**
+     * @brief Get acceleration in the NWU frame 
+     * 
+     * @param accel_nwu : buffer to store NWU acceleration values 
+     */
+    void GetAccelNWU(std::array<float, NUM_AXES> &accel_nwu);
+
+    /**
+     * @brief Get acceleration in the NED frame 
+     * 
+     * @param accel_ned : buffer to store NED acceleration values 
+     */
+    void GetAccelNED(std::array<float, NUM_AXES> &accel_ned);
+
 private: 
 
     /**
@@ -128,6 +142,7 @@ private:
     float beta;				  // Algorithm gain (correction weight) 
     float inv_sample_freq;    // Inverse sample frequency (1 / sample_frequency (Hz) == dt) 
     float q0, q1, q2, q3;	  // Quaternion of sensor frame relative to auxiliary frame 
+    float aN, aW, aU;         // Acceleration in the NWU frame 
     float roll, pitch, yaw;   // Orientation 
 };
 
