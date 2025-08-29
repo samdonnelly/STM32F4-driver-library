@@ -33,14 +33,14 @@ extern "C" {
 
 // M8Q driver status 
 typedef enum {
-    M8Q_OK,                   // No problems with the M8Q operation 
-    M8Q_INVALID_PTR,          // Invalid pointer provided to function 
-    M8Q_INVALID_CONFIG,       // Invalid configuration message 
-    M8Q_WRITE_FAULT,          // A problem occurred while writing via I2C 
-    M8Q_READ_FAULT,           // A problem occurred while reading via I2C 
-    M8Q_NO_DATA_AVAILABLE,    // The data stream is empty or does not have the needed info 
-    M8Q_DATA_BUFF_OVERFLOW,   // Device data buffer (stream size) exceeds driver threshold 
-    M8Q_UNKNOWN_DATA          // Unknown message stream data 
+    M8Q_OK                 = 0x00000000,   // No problems with the M8Q operation 
+    M8Q_INVALID_PTR        = 0x00000001,   // Invalid pointer provided to function 
+    M8Q_INVALID_CONFIG     = 0x00000002,   // Invalid configuration message 
+    M8Q_WRITE_FAULT        = 0x00000004,   // A problem occurred while writing via I2C 
+    M8Q_READ_FAULT         = 0x00000008,   // A problem occurred while reading via I2C 
+    M8Q_NO_DATA_AVAILABLE  = 0x00000010,   // The data stream is empty or does not have the needed info 
+    M8Q_DATA_BUFF_OVERFLOW = 0x00000020,   // Device data buffer (stream size) exceeds driver threshold 
+    M8Q_UNKNOWN_DATA       = 0x00000040    // Unknown message stream data 
 } m8q_status_t; 
 
 
@@ -62,7 +62,7 @@ typedef enum {
 //=======================================================================================
 // Data types 
 
-typedef uint8_t M8Q_STATUS; 
+typedef uint32_t M8Q_STATUS; 
 
 //=======================================================================================
 
