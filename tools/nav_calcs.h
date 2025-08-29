@@ -179,7 +179,32 @@ public:
      */
     float HeadingError(
         const float &current_heading, 
-        const float &target_heading) const; 
+        const float &target_heading) const;
+
+    /**
+     * @brief True North acceleration 
+     * 
+     * @details Takes the Earth frame acceleration relative to magnetic North and rotates 
+     *          it to point towards true North using the true North offset (magnetic 
+     *          declination). The result can be used to estimate global position which 
+     *          can be fused with GPS position for more accurate results. 
+     *          
+     *          This rotation calculation supports both NED and NWU frame orientations 
+     *          but the order in which directions are provided matters. For NED frames, 
+     *          the North axis should be x and the East axis should be y. For NWU frames, 
+     *          the West axis should be x and the North axis should be y. If this is not 
+     *          followed then the rotation will likely come out incorrect. 
+     *          
+     *          This functions uses the true_north_offset that can be set by the user. 
+     *          This variable should be set to the magnetic declination of your location 
+     *          which can easily be found online. 
+     * 
+     * @param x : x element of Earth frame acceleration to be rotated - see description 
+     * @param y : y element of Earth frame acceleration to be rotated - see description 
+     */
+    void TrueNorthAccel(
+        float &x,
+        float &y) const;
 
     /**
      * @brief Set the GPS coordinate low pass filter gain 

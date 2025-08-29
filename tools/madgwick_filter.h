@@ -115,14 +115,14 @@ public:
     float GetYawDegNED(void) const;
 
     /**
-     * @brief Get acceleration in the NWU frame 
+     * @brief Get absolute acceleration (no gravity) in the NWU frame 
      * 
      * @param accel_nwu : buffer to store NWU acceleration values 
      */
     void GetAccelNWU(std::array<float, NUM_AXES> &accel_nwu);
 
     /**
-     * @brief Get acceleration in the NED frame 
+     * @brief Get absolute acceleration (no gravity) in the NED frame 
      * 
      * @param accel_ned : buffer to store NED acceleration values 
      */

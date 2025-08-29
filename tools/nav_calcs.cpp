@@ -182,6 +182,25 @@ float NavCalcs::HeadingError(
 }
 
 
+// True North acceleration 
+void NavCalcs::TrueNorthAccel(
+    float &x,
+    float &y) const
+{
+    // Use a 2D rotation matrix to rotate the North and East/West axes about the 
+    // down/up axis. 
+    float
+    eq1 = cosf(true_north_offset),
+    eq2 = sinf(true_north_offset),
+    eq3 = x*eq1,
+    eq4 = y*eq2,
+    eq5 = x*eq2,
+    eq6 = y*eq1;
+    x = eq3 - eq4;
+    y = eq5 + eq6;
+}
+
+
 // Set the coordinate low pass filter gain 
 void NavCalcs::SetCoordinateLPFGain(float coordinate_gain) 
 {
