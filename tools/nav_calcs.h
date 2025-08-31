@@ -18,7 +18,8 @@
 //=======================================================================================
 // Includes 
 
-#include "tools.h" 
+#include "tools.h"
+#include <array>
 
 //=======================================================================================
 
@@ -205,6 +206,19 @@ public:
     void TrueNorthAccel(
         float &x,
         float &y) const;
+
+    // Kalman filter position prediction 
+    void KalmanPosePredict(void);
+
+    /**
+     * @brief Kalman filter position update 
+     * 
+     * @param gps_pose 
+     * @param gps_vel 
+     */
+    void KalmanPoseUpdate(
+        std::array<float, NUM_AXES> gps_pose,
+        std::array<float, NUM_AXES> gps_vel);
 
     /**
      * @brief Set the GPS coordinate low pass filter gain 
