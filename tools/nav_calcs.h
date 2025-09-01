@@ -207,8 +207,12 @@ public:
         float &x,
         float &y) const;
 
-    // Kalman filter position prediction 
-    void KalmanPosePredict(void);
+    /**
+     * @brief Kalman filter position prediction 
+     * 
+     * @param accel_ned 
+     */
+    void KalmanPosePredict(std::array<float, NUM_AXES> accel_ned);
 
     /**
      * @brief Kalman filter position update 
