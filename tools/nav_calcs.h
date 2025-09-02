@@ -210,19 +210,53 @@ public:
     /**
      * @brief Kalman filter position prediction 
      * 
-     * @param accel_ned 
+     * @details Kalman filter prediction step for determining the global position of a 
+     *          system. This function: 
+     *          - Takes in the systems acceleration in the NED frame and uses that to 
+     *            predict the new position based on the last measured GPS location. 
+     *          - Should be called each time accelration in the NED frame is updated and 
+     *            the time between acceleration updates is set either in the constructor 
+     *            or using the setter function. 
+     *          - Is linked to the Kalman filter update function which will update the 
+     *            reference position when it's called. 
+     *          
+     *          After this function is called, the estimated position and velocity can 
+     *          be retrieved from the getter. 
+     * 
+     * @see KalmanPoseUpdate
+     * @see GetKalmanPose
+     * 
+     * @param accel_ned : acceleration of the system in the NED frame (g's) 
      */
-    void KalmanPosePredict(std::array<float, NUM_AXES> accel_ned);
+    void KalmanPosePredict(std::array<float, NUM_AXES> &accel_ned);
 
     /**
      * @brief Kalman filter position update 
      * 
-     * @param gps_pose 
-     * @param gps_vel 
+     * @details Kalman filter update/correction step for determining the global position 
+     *          of a system. This function: 
+     *          - Takes the systems measured position (lititude, longitude, altitude) and 
+     *            velocity (in North, East and Down) from a GPS device and uses that along 
+     *            with the predicted position and velocity to find the best estimate of the 
+     *            systems true position and velocity. 
+     *          - Should be called each time new GPS data is received. 
+     *          - Is linked to the Kalman filter prediction function which will provide 
+     *            the predicited position and velocity which is fused with the measured 
+     *            data. This function will update the last known position and reset the 
+     *            predicition as needed. 
+     *          
+     *          After this function is called, the determined position and velocity can 
+     *          be retrieved from the getter. 
+     * 
+     * @see KalmanPosePredict
+     * @see GetKalmanPose
+     * 
+     * @param gps_pose : GPS measured position: lat (deg), lon (deg) and altitude (m) 
+     * @param gps_vel : GPS measured velocity: North, East and Down (m/s) 
      */
     void KalmanPoseUpdate(
-        std::array<float, NUM_AXES> gps_pose,
-        std::array<float, NUM_AXES> gps_vel);
+        std::array<float, NUM_AXES> &gps_pose,
+        std::array<float, NUM_AXES> &gps_vel);
 
     /**
      * @brief Set the GPS coordinate low pass filter gain 
@@ -240,7 +274,24 @@ public:
      * 
      * @param tn_offset : offset between magnetic and true north (degrees*10) 
      */
-    void SetTnOffset(int16_t tn_offset); 
+    void SetTnOffset(int16_t tn_offset);
+
+    /**
+     * @brief Get the Kalman filter position and velocity 
+     * 
+     * @details Returns the determined position and velocity from the Kalman filter 
+     *          in the provided buffers. These values will be updated every time the 
+     *          prediction or update step is called for the pose Kalman filter. 
+     * 
+     * @see KalmanPosePredict
+     * @see KalmanPoseUpdate
+     * 
+     * @param pose : Global position: lat (deg), lon (deg), atitude(m) 
+     * @param vel : NED velocity: North, East, down (m/s) 
+     */
+    void GetKalmanPose(
+        std::array<float, NUM_AXES> &pose,
+        std::array<float, NUM_AXES> &vel);
 
 private: 
 
