@@ -1389,7 +1389,39 @@ uint8_t m8q_get_position_navstat_lock(void)
 
 
 // Get speed over ground (SOG) value 
-uint32_t m8q_get_position_sog(void)
+float m8q_get_position_sog(void)
+{
+    uint32_t sog = CLEAR; 
+    uint8_t sog_index = CLEAR, sog_len = CLEAR; 
+
+    // Find the size of the SOG string 
+    while (m8q_driver_data.pos_data.SOG[sog_index] != NULL_CHAR)
+    {
+        if (m8q_driver_data.pos_data.SOG[sog_index++] != PERIOD_CHAR)
+        {
+            sog_len++; 
+        }
+    }
+
+    sog_index = CLEAR; 
+
+    // Convert the SOG string to a scaled integer 
+    while (sog_len)
+    {
+        if (m8q_driver_data.pos_data.SOG[sog_index] != PERIOD_CHAR)
+        {
+            sog += char_to_int(m8q_driver_data.pos_data.SOG[sog_index], --sog_len); 
+        }
+
+        sog_index++; 
+    }
+    
+    return sog; 
+}
+
+
+// Get speed over ground (SOG) as a scaled integer 
+uint32_t m8q_get_position_sogI(void)
 {
     uint32_t sog = CLEAR; 
     uint8_t sog_index = CLEAR, sog_len = CLEAR; 

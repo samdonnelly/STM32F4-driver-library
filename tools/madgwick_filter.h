@@ -63,14 +63,20 @@ public:
     /**
      * @brief Madgwick filter implementation 
      * 
+     * @details Performs the Madgwick filter calculations and determines the roll, pitch 
+     *          yaw and acceleration in the NWU Earth frame. The gyroscope, accelerometer 
+     *          and magnetomter data provided must be measured in the systems body frame 
+     *          with forward as positive x, left as positive y and up as positive z. The 
+     *          orientation can be retreived in either the NWU or NED frame. 
+     * 
      * @note The gyroscope data units matter and must be in deg/s. The accelerometer and 
      *       magnetometer units do not matter as these vectors get normalized (i.e. only 
      *       direction matters). Typical units for the accelerometer is g's and for the 
      *       magnetometer is uT or mG. 
      * 
-     * @param gyro : latest 3-axis gyroscope data (deg/s) 
-     * @param accel : latest 3-axis accelerometer data 
-     * @param mag : latest 3-axis magnetometer data 
+     * @param gyro : latest 3-axis gyroscope body frame data (deg/s) 
+     * @param accel : latest 3-axis accelerometer body frame data 
+     * @param mag : latest 3-axis magnetometer body frame data 
      * @return MadgwickStatus : status of the calculation 
      */
     MadgwickStatus Madgwick(
@@ -119,14 +125,14 @@ public:
      * 
      * @param accel_nwu : buffer to store NWU acceleration values 
      */
-    void GetAccelNWU(std::array<float, NUM_AXES> &accel_nwu);
+    void GetAccelNWU(std::array<float, NUM_AXES> &accel_nwu) const;
 
     /**
      * @brief Get absolute acceleration (no gravity) in the NED frame 
      * 
      * @param accel_ned : buffer to store NED acceleration values 
      */
-    void GetAccelNED(std::array<float, NUM_AXES> &accel_ned);
+    void GetAccelNED(std::array<float, NUM_AXES> &accel_ned) const;
 
 private: 
 

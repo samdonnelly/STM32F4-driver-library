@@ -301,7 +301,7 @@ float MadgwickFilter::GetYawDegNED(void) const
 
 
 // Get absolute acceleration in the NWU frame 
-void MadgwickFilter::GetAccelNWU(std::array<float, NUM_AXES> &accel_nwu)
+void MadgwickFilter::GetAccelNWU(std::array<float, NUM_AXES> &accel_nwu) const
 {
 	accel_nwu[X_AXIS] = aN;
 	accel_nwu[Y_AXIS] = aW;
@@ -310,7 +310,7 @@ void MadgwickFilter::GetAccelNWU(std::array<float, NUM_AXES> &accel_nwu)
 
 
 // Get absolute acceleration in the NED frame 
-void MadgwickFilter::GetAccelNED(std::array<float, NUM_AXES> &accel_ned)
+void MadgwickFilter::GetAccelNED(std::array<float, NUM_AXES> &accel_ned) const
 {
 	accel_ned[X_AXIS] = aN;
 	accel_ned[Y_AXIS] = -aW;

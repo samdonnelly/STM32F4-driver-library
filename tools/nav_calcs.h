@@ -67,6 +67,18 @@ public:
     NavCalcs(NavCalcs &&) = delete;
     NavCalcs &operator=(NavCalcs &&) = delete;
 
+    // Position 
+    struct Position
+    {
+        float lat, lon, alt;   // Latitude, longitude, altitude 
+    };
+
+    // Velocity 
+    struct Velocity
+    {
+        float sog, cog, vvel;   // Speed over ground, course over ground, vertical velocity 
+    };
+
     /**
      * @brief Coordinate filter 
      * 
@@ -168,7 +180,8 @@ public:
      * 
      * @details Determines the error between the current and desired headings. The 
      *          returned error is an angle from -179.9 to +180 degrees relative to the 
-     *          current heading.  
+     *          current heading. Make sure both of the provided headings are relative to 
+     *          either magnetic North or true North, not a combination of the two. 
      *          
      *          The error will always be the shortest angle between the two headings. 
      *          A positive error indicates a clockwise rotation to get from the current 
@@ -183,7 +196,7 @@ public:
         const float &target_heading) const;
 
     /**
-     * @brief True North acceleration 
+     * @brief True North Earth frame acceleration 
      * 
      * @details Takes the Earth frame acceleration relative to magnetic North and rotates 
      *          it to point towards true North using the true North offset (magnetic 
@@ -203,7 +216,7 @@ public:
      * @param x : x element of Earth frame acceleration to be rotated - see description 
      * @param y : y element of Earth frame acceleration to be rotated - see description 
      */
-    void TrueNorthAccel(
+    void TrueNorthEarthAccel(
         float &x,
         float &y) const;
 
@@ -214,7 +227,7 @@ public:
      *          system. This function: 
      *          - Takes in the systems acceleration in the NED frame and uses that to 
      *            predict the new position based on the last measured GPS location. 
-     *          - Should be called each time accelration in the NED frame is updated and 
+     *          - Should be called each time acceleration in the NED frame is updated and 
      *            the time between acceleration updates is set either in the constructor 
      *            or using the setter function. 
      *          - Is linked to the Kalman filter update function which will update the 
@@ -223,12 +236,17 @@ public:
      *          After this function is called, the estimated position and velocity can 
      *          be retrieved from the getter. 
      * 
+     * @note The provided 3-axis NED acceleration is defined as follows: 
+     *       - North: index 0 / X-axis 
+     *       - East:  index 1 / Y-axis 
+     *       - Down:  index 2 / Z-axis 
+     * 
      * @see KalmanPoseUpdate
      * @see GetKalmanPose
      * 
-     * @param accel_ned : acceleration of the system in the NED frame (g's) 
+     * @param accel_ned : 3-axis acceleration of the system in the NED frame (g's) 
      */
-    void KalmanPosePredict(std::array<float, NUM_AXES> &accel_ned);
+    void KalmanPosePredict(const std::array<float, NUM_AXES> &accel_ned);
 
     /**
      * @brief Kalman filter position update 
@@ -251,12 +269,12 @@ public:
      * @see KalmanPosePredict
      * @see GetKalmanPose
      * 
-     * @param gps_pose : GPS measured position: lat (deg), lon (deg) and altitude (m) 
-     * @param gps_vel : GPS measured velocity: North, East and Down (m/s) 
+     * @param gps_position : GPS measured position: lat (deg), lon (deg) and altitude (m) 
+     * @param gps_velocity : GPS measured velocity: SOG (m/s), COG (deg), vvel (m/s) 
      */
     void KalmanPoseUpdate(
-        std::array<float, NUM_AXES> &gps_pose,
-        std::array<float, NUM_AXES> &gps_vel);
+        const Position &gps_position,
+        const Velocity &gps_velocity);
 
     /**
      * @brief Set the GPS coordinate low pass filter gain 
@@ -286,12 +304,12 @@ public:
      * @see KalmanPosePredict
      * @see KalmanPoseUpdate
      * 
-     * @param pose : Global position: lat (deg), lon (deg), atitude(m) 
-     * @param vel : NED velocity: North, East, down (m/s) 
+     * @param kalman_position : Global position: lat (deg), lon (deg), atitude(m) 
+     * @param kalman_velocity : NED velocity: North, East, down (m/s) 
      */
     void GetKalmanPose(
-        std::array<float, NUM_AXES> &pose,
-        std::array<float, NUM_AXES> &vel);
+        Position &kalman_position,
+        Velocity &kalman_velocity);
 
 private: 
 
@@ -308,8 +326,11 @@ private:
      */
     void HeadingBoundChecks(float &heading) const;
 
+    // Internal data 
     float coordinate_lpf_gain;   // Low pass filter gain for GPS coordinates 
     float true_north_offset;     // True north offset from magnetic north 
+    Position kalman_pos;         // Position determined by the Kalman filter 
+    Velocity kalman_vel;         // Velocity determined by the Kalman filter 
 }; 
 
 //=======================================================================================

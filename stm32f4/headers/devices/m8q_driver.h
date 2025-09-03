@@ -384,12 +384,11 @@ uint8_t m8q_get_position_NS(void);
 
 
 /**
- * @brief Get the floating point longitude coordinate (degrees) 
+ * @brief Get the floating point longitude coordinate 
  * 
- * @details Get the converted value of longitude read from the POSITION PUBX NMEA message. 
- *          POSITION returns an absolute value of longitude and the EW byte is used to 
- *          determine the hemisphere. This function uses these two values to calculate 
- *          longitude in the range of +/- 180deg. 
+ * @details Get the longitude read from the POSITION PUBX NMEA message. POSITION returns 
+ *          an absolute value of longitude so the EW byte is used to put the returned 
+ *          value in the range of +/-180deg. 
  *          
  *          This value is only updated if new POSITION messages are read. 
  * 
@@ -401,7 +400,7 @@ double m8q_get_position_lon(void);
 
 
 /**
- * @brief Get the scaled integer longitude coordinate (degrees*10^7) 
+ * @brief Get the scaled integer longitude coordinate 
  * 
  * @details Get the longitude represented as a scaled integer using the data from the 
  *          POSITION PUBX NMEA message (absolute value of longitude and E/W indicator). 
@@ -519,17 +518,32 @@ uint8_t m8q_get_position_navstat_lock(void);
 /**
  * @brief Get speed over ground (SOG) value 
  * 
- * @details Get the converted and scaled value of speed over ground (SOG) read from the 
- *          POSITION PUBX NMEA message. POSITION returns a numeric value of SOG and the 
- *          converted value is scaled by 1000 to eliminate a decimal place. 
+ * @details Get speed over ground (SOG) read from the POSITION PUBX NMEA message. POSITION 
+ *          returns a numeric value of SOG in km/h but the returned value is in m/s. 
  *          
  *          This value is only updated if new POSITION messages are read. 
  * 
  * @see m8q_read_data 
  * 
- * @return uint32_t : speed over ground * 1000 
+ * @return float : speed over ground (m/s) 
  */
-uint32_t m8q_get_position_sog(void); 
+float m8q_get_position_sog(void);
+
+
+/**
+ * @brief Get speed over ground (SOG) as a scaled integer 
+ * 
+ * @details Get the scaled value of speed over ground (SOG) read from the POSITION PUBX 
+ *          NMEA message. POSITION returns a numeric value of SOG in km/h but the returned 
+ *          value is converted to m/s and scaled by 1000 to eliminate a decimal place. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @see m8q_read_data 
+ * 
+ * @return uint32_t : speed over ground (m/s * 1000) 
+ */
+uint32_t m8q_get_position_sogI(void);
 
 
 /**

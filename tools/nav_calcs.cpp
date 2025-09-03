@@ -182,8 +182,8 @@ float NavCalcs::HeadingError(
 }
 
 
-// True North acceleration 
-void NavCalcs::TrueNorthAccel(
+// True North Earth frame acceleration 
+void NavCalcs::TrueNorthEarthAccel(
     float &x,
     float &y) const
 {
@@ -201,6 +201,22 @@ void NavCalcs::TrueNorthAccel(
 }
 
 
+// Kalman filter position prediction 
+void NavCalcs::KalmanPosePredict(const std::array<float, NUM_AXES> &accel_ned)
+{
+    // 
+}
+
+
+// Kalman filter position update 
+void NavCalcs::KalmanPoseUpdate(
+    const Position &gps_position,
+    const Velocity &gps_velocity)
+{
+    // 
+}
+
+
 // Set the coordinate low pass filter gain 
 void NavCalcs::SetCoordinateLPFGain(float coordinate_gain) 
 {
@@ -212,6 +228,15 @@ void NavCalcs::SetCoordinateLPFGain(float coordinate_gain)
 void NavCalcs::SetTnOffset(int16_t tn_offset) 
 {
     true_north_offset = tn_offset; 
+}
+
+
+// Get the Kalman filter position and velocity 
+void NavCalcs::GetKalmanPose(
+    Position &kalman_position,
+    Velocity &kalman_velocity)
+{
+    // 
 }
 
 //=======================================================================================
