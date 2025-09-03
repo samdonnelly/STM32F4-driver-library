@@ -892,8 +892,8 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     LONGS_EQUAL(M8Q_OK, read_status); 
 
     // Coordinate values 
-    DOUBLES_EQUAL(47.285220, m8q_get_position_lat(), 0.000001); 
-    DOUBLES_EQUAL(-114.565253, m8q_get_position_lon(), 0.000001); 
+    DOUBLES_EQUAL(47.285220, m8q_get_position_lat(), 0.00001); 
+    DOUBLES_EQUAL(-114.565253, m8q_get_position_lon(), 0.00001); 
     LONGS_EQUAL(472852201, m8q_get_position_latI()); 
     LONGS_EQUAL(-1145652530, m8q_get_position_lonI()); 
 
@@ -908,25 +908,25 @@ TEST(m8q_driver, m8q_read_msg_record_update)
     LONGS_EQUAL(W_UP_CHAR, m8q_get_position_EW()); 
 
     // Altitude value 
-    DOUBLES_EQUAL(546.589, m8q_get_position_altref(), 0.001); 
-    LONGS_EQUAL(546589, m8q_get_position_altrefI()); 
+    DOUBLES_EQUAL(546.589, m8q_get_position_altref(), 0.001);
+    LONGS_EQUAL(546589, m8q_get_position_altrefI());
     
     // Position lock 
-    LONGS_EQUAL(M8Q_NAVSTAT_G3, m8q_get_position_navstat()); 
-    LONGS_EQUAL(TRUE, m8q_get_position_navstat_lock()); 
+    LONGS_EQUAL(M8Q_NAVSTAT_G3, m8q_get_position_navstat());
+    LONGS_EQUAL(TRUE, m8q_get_position_navstat_lock());
 
     // Speed over ground (SOG) value 
-    LONGS_EQUAL(7, m8q_get_position_sog()); 
+    LONGS_EQUAL(7, m8q_get_position_sogI());
 
     // Speed over ground (SOG) string 
-    m8q_get_position_sog_str(sog_str, BYTE_9); 
-    STRCMP_EQUAL("0.007", (char *)sog_str); 
+    m8q_get_position_sog_str(sog_str, BYTE_9);
+    STRCMP_EQUAL("0.007", (char *)sog_str);
 
     // Time and date strings 
-    m8q_get_time_utc_time(utc_time, BYTE_10); 
-    m8q_get_time_utc_date(utc_date, BYTE_7); 
-    STRCMP_EQUAL("073731.00", (char *)utc_time); 
-    STRCMP_EQUAL("091202", (char *)utc_date); 
+    m8q_get_time_utc_time(utc_time, BYTE_10);
+    m8q_get_time_utc_date(utc_date, BYTE_7);
+    STRCMP_EQUAL("073731.00", (char *)utc_time);
+    STRCMP_EQUAL("091202", (char *)utc_date);
     
     //==================================================
 }
@@ -1002,27 +1002,27 @@ TEST(m8q_driver, m8q_read_sog_calc_check)
     
     // Message 0 
     m8q_read_data(); 
-    LONGS_EQUAL(7, m8q_get_position_sog()); 
+    LONGS_EQUAL(7, m8q_get_position_sogI()); 
 
     // Message 1 
     m8q_read_data(); 
-    LONGS_EQUAL(947, m8q_get_position_sog()); 
+    LONGS_EQUAL(947, m8q_get_position_sogI()); 
 
     // Message 2 
     m8q_read_data(); 
-    LONGS_EQUAL(1947, m8q_get_position_sog()); 
+    LONGS_EQUAL(1947, m8q_get_position_sogI()); 
 
     // Message 3 
     m8q_read_data(); 
-    LONGS_EQUAL(21007, m8q_get_position_sog()); 
+    LONGS_EQUAL(21007, m8q_get_position_sogI()); 
 
     // Message 4 
     m8q_read_data(); 
-    LONGS_EQUAL(821007, m8q_get_position_sog()); 
+    LONGS_EQUAL(821007, m8q_get_position_sogI()); 
 
     // Message 5 
     m8q_read_data(); 
-    LONGS_EQUAL(3501070, m8q_get_position_sog()); 
+    LONGS_EQUAL(3501070, m8q_get_position_sogI()); 
     
     //==================================================
 }

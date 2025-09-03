@@ -24,13 +24,13 @@
 // Config messages 
 
 // Zero offsets used for calibrating the device 
-const int16_t lsm303agr_calibrate_offsets_test[LSM303AGR_M_NUM_DIR] = 
+const int16_t lsm303agr_calibrate_offsets_test[8] = 
 {
     0, 0, 0, 0, 0, 0, 0, 0
 }; 
 
 // Directional offsets to correct for heading errors (units: degrees*10) 
-const int16_t lsm303agr_config_dir_offsets_test[LSM303AGR_M_NUM_DIR] = 
+const int16_t lsm303agr_config_dir_offsets_test[8] = 
 {
     -160,     // N  (0/360deg) 
     32,       // NE (45deg) 

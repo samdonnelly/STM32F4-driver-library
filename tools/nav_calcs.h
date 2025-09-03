@@ -25,20 +25,6 @@
 
 
 //=======================================================================================
-// Structs 
-
-// Stores the latitude and longitude of a GPS coordinate 
-typedef struct gps_waypoints_t 
-{
-    float lat; 
-    float lon; 
-}
-gps_waypoints_t; 
-
-//=======================================================================================
-
-
-//=======================================================================================
 // Classes 
 
 // Navigation calculations 
@@ -105,8 +91,8 @@ public:
      * @param filtered_data : filtered coordinates - managed by the application 
      */
     void CoordinateFilter(
-        gps_waypoints_t new_data, 
-        gps_waypoints_t& filtered_data) const;
+        Position new_data, 
+        Position& filtered_data) const;
 
     /**
      * @brief Find the distance and heading to the target location 
@@ -134,8 +120,8 @@ public:
      * @param target_distance : buffer to store the target distance (meters) 
      */
     void WaypointError(
-        const gps_waypoints_t &current,
-        const gps_waypoints_t &target,
+        const Position &current,
+        const Position &target,
         float &target_heading,
         float &target_distance) const;
 

@@ -43,9 +43,15 @@ SRC_DIRS += tests/nRF24L01                                               # Test 
 
 # ----------------------------------
 
+# ------------- OTHER --------------
+
+SRC_FILES += ./../../../stm32f4/sources/other/stm32f411xe_custom.c
+
+# ----------------------------------
+
 # ------------- TOOLS --------------
 
-SRC_FILES += ./../../../stm32f4/sources/tools/tools.c                    # Production code 
+SRC_FILES += ./../../../tools/tools.c                    # Production code 
 
 # ----------------------------------
 
@@ -113,11 +119,12 @@ INCLUDE_DIRS += $(CPPUTEST_HOME)/include
 INCLUDE_DIRS += ./../../../stm32f4/stmcode/Drivers/CMSIS/Device/ST/STM32F4xx/Include
 INCLUDE_DIRS += ./../../../stm32f4/stmcode/Drivers/CMSIS/Core/Include
 
-INCLUDE_DIRS += ./../../../stm32f4/.include_path              # Mock code 
+INCLUDE_DIRS += ./../../../.include_path                      # Mock code 
 INCLUDE_DIRS += ./../../../stm32f4/headers/core               # Production code 
 INCLUDE_DIRS += ./../../../stm32f4/headers/devices            # Production code 
 INCLUDE_DIRS += ./../../../stm32f4/headers/peripherals        # Production code 
-INCLUDE_DIRS += ./../../../stm32f4/headers/tools              # Production code 
+INCLUDE_DIRS += ./../../../stm32f4/headers/other              # Production code 
+INCLUDE_DIRS += ./../../../tools                              # Production code 
 INCLUDE_DIRS += mocks                              # Mocks 
 INCLUDE_DIRS += tests/lsm303agr                    # Test doubles 
 INCLUDE_DIRS += tests/m8q                          # Test doubles 

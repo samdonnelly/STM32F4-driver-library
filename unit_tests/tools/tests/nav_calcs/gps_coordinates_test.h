@@ -62,7 +62,7 @@ inter_coordinate_info_t;
 // Data 
 
 // Coordinates 
-extern const gps_waypoints_t waypoints_test[NUM_TEST_WAYPOINTS]; 
+extern const NavCalcs::Position waypoints_test[NUM_TEST_WAYPOINTS]; 
 
 // Coordinate info 
 extern const inter_coordinate_info_t waypoint_info_test[NUM_TEST_INFO]; 

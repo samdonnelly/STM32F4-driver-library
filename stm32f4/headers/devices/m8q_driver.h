@@ -41,10 +41,10 @@ typedef enum {
     M8Q_NO_DATA_AVAILABLE  = 0x00000010,   // The data stream is empty or does not have the needed info 
     M8Q_DATA_BUFF_OVERFLOW = 0x00000020,   // Device data buffer (stream size) exceeds driver threshold 
     M8Q_UNKNOWN_DATA       = 0x00000040    // Unknown message stream data 
-} m8q_status_t; 
+} m8q_status_t;
 
 
-// M8Q navigation statuses 
+// M8Q navigation status 
 typedef enum {
     M8Q_NAVSTAT_NF = 0x4E46,   // No Fix 
     M8Q_NAVSTAT_DR = 0x4452,   // Dead reckoning only solution 
@@ -54,7 +54,7 @@ typedef enum {
     M8Q_NAVSTAT_D3 = 0x4433,   // Differential 3D solution 
     M8Q_NAVSTAT_RK = 0x524B,   // Combined GPS and DR solution 
     M8Q_NAVSTAT_TT = 0x5454    // Time only solution 
-} m8q_navstats_t; 
+} m8q_navstats_t;
 
 //=======================================================================================
 
@@ -160,7 +160,7 @@ M8Q_STATUS m8q_txr_pin_init(
 
 
 //=======================================================================================
-// User functions 
+// Device interface 
 
 /**
  * @brief Read and store relevant message data 
@@ -314,6 +314,11 @@ void m8q_set_low_pwr(void);
  */
 void m8q_clear_low_pwr(void); 
 
+//=======================================================================================
+
+
+//=======================================================================================
+// POSITION (PUBX,00) message
 
 /**
  * @brief Get the floating point latitude coordinate (degrees) 
@@ -327,9 +332,9 @@ void m8q_clear_low_pwr(void);
  * 
  * @see m8q_read_data 
  * 
- * @return double : floating point latitude coordinate (degrees) 
+ * @return float : latitude (degrees) 
  */
-double m8q_get_position_lat(void); 
+float m8q_get_position_lat(void); 
 
 
 /**
@@ -394,9 +399,9 @@ uint8_t m8q_get_position_NS(void);
  * 
  * @see m8q_read_data 
  * 
- * @return double : longitude 
+ * @return float : longitude (degrees) 
  */
-double m8q_get_position_lon(void); 
+float m8q_get_position_lon(void); 
 
 
 /**
@@ -516,16 +521,16 @@ uint8_t m8q_get_position_navstat_lock(void);
 
 
 /**
- * @brief Get speed over ground (SOG) value 
+ * @brief Get speed over ground (SOG) 
  * 
  * @details Get speed over ground (SOG) read from the POSITION PUBX NMEA message. POSITION 
- *          returns a numeric value of SOG in km/h but the returned value is in m/s. 
+ *          returns a numeric value of SOG in km/h. 
  *          
  *          This value is only updated if new POSITION messages are read. 
  * 
  * @see m8q_read_data 
  * 
- * @return float : speed over ground (m/s) 
+ * @return float : speed over ground (km/h) 
  */
 float m8q_get_position_sog(void);
 
@@ -535,13 +540,13 @@ float m8q_get_position_sog(void);
  * 
  * @details Get the scaled value of speed over ground (SOG) read from the POSITION PUBX 
  *          NMEA message. POSITION returns a numeric value of SOG in km/h but the returned 
- *          value is converted to m/s and scaled by 1000 to eliminate a decimal place. 
+ *          value is scaled by 1000 to eliminate decimal places. 
  *          
  *          This value is only updated if new POSITION messages are read. 
  * 
  * @see m8q_read_data 
  * 
- * @return uint32_t : speed over ground (m/s * 1000) 
+ * @return uint32_t : speed over ground (km/h * 1000) 
  */
 uint32_t m8q_get_position_sogI(void);
 
@@ -563,8 +568,80 @@ uint32_t m8q_get_position_sogI(void);
  */
 M8Q_STATUS m8q_get_position_sog_str(
     uint8_t *sog_str, 
-    uint8_t sog_str_len); 
+    uint8_t sog_str_len);
 
+
+/**
+ * @brief Get course over ground (COG) 
+ * 
+ * @details Get course over ground (COG) read from the POSITION PUBX NMEA message. POSITION 
+ *          returns a numeric value of COG in degrees. COG is the direction of the SOG 
+ *          relative to true North. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @see m8q_read_data 
+ * 
+ * @return float : course over ground (deg) 
+ */
+float m8q_get_position_cog(void);
+
+
+/**
+ * @brief Get course over ground (COG) as a scaled integer 
+ * 
+ * @details Get the scaled value of course over ground (COG) read from the POSITION PUBX 
+ *          NMEA message. POSITION returns a numeric value of COG in degrees but the 
+ *          returned value is scaled by 100 to eliminate decimal places. COG is the 
+ *          direction of the SOG relative to true North. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @see m8q_read_data 
+ * 
+ * @return uint32_t : course over ground (deg*1000) 
+ */
+uint32_t m8q_get_position_cogI(void);
+
+
+/**
+ * @brief Get vertical velocity 
+ * 
+ * @details Get vertical velocity (vVel) read from the POSITION PUBX NMEA message. POSITION 
+ *          returns a numeric value of vVel in m/s. This velocity is positive downward 
+ *          which follows NED frame convention. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @see m8q_read_data 
+ * 
+ * @return float : vertical velocity (m/s) 
+ */
+float m8q_get_position_vvel(void);
+
+
+/**
+ * @brief Get vertical velocity (vVel) as a scaled integer 
+ * 
+ * @details Get the scaled value of vertical velocity (vVel) read from the POSITION PUBX 
+ *          NMEA message. POSITION returns a numeric value of vVel in m/s but the returned 
+ *          value is scaled by 1000 to eliminate decimal places which therefore returns 
+ *          thr velocity in mm/s. This velocity is positive downward which follows NED 
+ *          frame convention. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @see m8q_read_data 
+ * 
+ * @return int32_t : vertical velocity (mm/s) 
+ */
+int32_t m8q_get_position_vvelI(void);
+
+//=======================================================================================
+
+
+//=======================================================================================
+// TIME (PUBX,04) message 
 
 /**
  * @brief Get UTC time 

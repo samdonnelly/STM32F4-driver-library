@@ -130,8 +130,8 @@ TEST(nav_calcs_test, nav_calcs_coordinate_filter_works)
 
     double coordinate_filter_gain = LPF_GAIN_0; 
     nav_calculations nav_local(coordinate_filter_gain); 
-    gps_waypoints_t gps_current = { waypoints_test[8].lat, waypoints_test[8].lon }; 
-    gps_waypoints_t gps_filtered = { waypoints_test[7].lat, waypoints_test[7].lon }; 
+    NavCalcs::Position gps_current = { waypoints_test[8].lat, waypoints_test[8].lon }; 
+    NavCalcs::Position gps_filtered = { waypoints_test[7].lat, waypoints_test[7].lon }; 
 
     // Call the coordinate filter function until the filtered coordinate is within 
     // an acceptable error of the current location. 

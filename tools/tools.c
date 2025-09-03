@@ -99,7 +99,6 @@ void cb_parse(
     {
         // Data buffer filled up and the index needs to be manually adjusted. 
         cb_index->tail = cb_index->head; 
-
     }
 }
 
@@ -109,7 +108,7 @@ uint32_t char_to_int(
     uint8_t num_char, 
     uint8_t place)
 {
-    return ((uint32_t)(num_char - NUM_TO_CHAR_OFFSET))*((uint32_t)pow(SCALE_10, (double)place)); 
+    return ((uint32_t)(num_char - NUM_TO_CHAR_OFFSET))*((uint32_t)powf(SCALE_10F, (float)place)); 
 }
 
 //=======================================================================================

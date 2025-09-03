@@ -397,7 +397,24 @@ void m8q_lat_str_convert(
 void m8q_lon_str_convert(
     int32_t *deg_integer, 
     int32_t *min_scaled, 
-    uint8_t scale); 
+    uint8_t scale);
+
+
+/**
+ * @brief Parse a numeric value from NMEA messages 
+ * 
+ * @details Takes an NMEA message string containing a numeric value and converts it to a 
+ *          scaled integer. Integer getters can return this value and float getters can 
+ *          convert the number to a floating point value before returning it using the 
+ *          buffer indicating the number of decimal places the value contains. 
+ * 
+ * @param data_buff : NMEA message string containing the numeric value 
+ * @param data_buff_size : size of the NMEA message string buffer 
+ * @return int32_t : value as the scaled integer 
+ */
+int32_t m8q_nmea_num_parse(
+    uint8_t *data_buff,
+    uint8_t data_buff_size);
 
 
 /**
@@ -959,7 +976,7 @@ M8Q_STATUS m8q_txr_pin_init(
 
 
 //=======================================================================================
-// User functions 
+// Device interface 
 
 // Read and store relevant message data 
 M8Q_STATUS m8q_read_data(void)
@@ -1123,16 +1140,21 @@ void m8q_clear_low_pwr(void)
     gpio_write(m8q_driver_data.pwr_save_gpio, (SET_BIT << m8q_driver_data.pwr_save), GPIO_HIGH); 
 }
 
+//=======================================================================================
+
+
+//=======================================================================================
+// POSITION (PUBX,00) message
 
 // Get the floating point latitude coordinate (degrees) 
-double m8q_get_position_lat(void)
+float m8q_get_position_lat(void)
 {
     int32_t deg_int = CLEAR, min_scaled = CLEAR; 
-    m8q_lat_str_convert(&deg_int, &min_scaled, BYTE_0); 
+    m8q_lat_str_convert(&deg_int, &min_scaled, CLEAR); 
 
     // Calculate and return the final degree value. This requires changing the scaled 
     // minutes value into a fractional/decimal degrees value. 
-    return ((double)deg_int) + (((double)min_scaled) / (pow(SCALE_10, BYTE_5)*MIN_TO_DEG)); 
+    return ((float)deg_int) + (((float)min_scaled) / (SCALE_1E5F*MIN_TO_DEG)); 
 }
 
 
@@ -1140,7 +1162,7 @@ double m8q_get_position_lat(void)
 int32_t m8q_get_position_latI(void)
 {
     int32_t deg_int = CLEAR, min_scaled = CLEAR; 
-    m8q_lat_str_convert(&deg_int, &min_scaled, BYTE_7); 
+    m8q_lat_str_convert(&deg_int, &min_scaled, SET_7); 
 
     // Calculate and return the scaled integer degree value. The minutes get converted to
     // the fractional part of degrees and scaled so all decimal places are accounted for.  
@@ -1226,14 +1248,14 @@ uint8_t m8q_get_position_NS(void)
 
 
 // Get the floating point longitude coordinate (degrees) 
-double m8q_get_position_lon(void)
+float m8q_get_position_lon(void)
 {
     int32_t deg_int = CLEAR, min_scaled = CLEAR; 
-    m8q_lon_str_convert(&deg_int, &min_scaled, BYTE_0); 
+    m8q_lon_str_convert(&deg_int, &min_scaled, CLEAR); 
 
     // Calculate and return the final degree value. This requires changing the scaled 
     // minutes value into a fractional/decimal degrees value. 
-    return ((double)deg_int) + (((double)min_scaled) / (pow(SCALE_10, BYTE_5)*MIN_TO_DEG)); 
+    return ((float)deg_int) + (((float)min_scaled) / (SCALE_1E5F*MIN_TO_DEG)); 
 }
 
 
@@ -1241,7 +1263,7 @@ double m8q_get_position_lon(void)
 int32_t m8q_get_position_lonI(void)
 {
     int32_t deg_int = CLEAR, min_scaled = CLEAR; 
-    m8q_lon_str_convert(&deg_int, &min_scaled, BYTE_7); 
+    m8q_lon_str_convert(&deg_int, &min_scaled, SET_7); 
 
     // Calculate and return the scaled integer degree value. The minutes get converted to
     // the fractional part of degrees and scaled so all decimal places are accounted for.  
@@ -1332,32 +1354,14 @@ uint8_t m8q_get_position_EW(void)
 // Get the floating point WGS84 altitude (m) 
 float m8q_get_position_altref(void)
 {
-    // altRef always has 3 decimal places. 
-    return (float)m8q_get_position_altrefI() / powf(SCALE_10, BYTE_3); 
+    return (float)m8q_get_position_altrefI() / SCALE_1000F; 
 }
 
 
 // Get the integer WGS84 altitude (mm) 
 int32_t m8q_get_position_altrefI(void)
 {
-    uint8_t altref[BYTE_9]; 
-    uint8_t altref_len = CLEAR; 
-    int32_t altitude = CLEAR; 
-
-    for (uint8_t i = CLEAR; (i < BYTE_9) && (m8q_driver_data.pos_data.altRef[i] != NULL_CHAR); i++)
-    {
-        if (m8q_driver_data.pos_data.altRef[i] != PERIOD_CHAR)
-        {
-            altref[altref_len++] = m8q_driver_data.pos_data.altRef[i]; 
-        }
-    }
-
-    for (uint8_t i = CLEAR; i < altref_len; i++)
-    {
-        altitude += (int32_t)char_to_int(altref[i], altref_len - i - 1); 
-    }
-
-    return altitude; 
+    return m8q_nmea_num_parse(m8q_driver_data.pos_data.altRef, sizeof(m8q_driver_data.pos_data.altRef));
 }
 
 
@@ -1388,67 +1392,17 @@ uint8_t m8q_get_position_navstat_lock(void)
 }
 
 
-// Get speed over ground (SOG) value 
+// Get speed over ground (SOG) 
 float m8q_get_position_sog(void)
 {
-    uint32_t sog = CLEAR; 
-    uint8_t sog_index = CLEAR, sog_len = CLEAR; 
-
-    // Find the size of the SOG string 
-    while (m8q_driver_data.pos_data.SOG[sog_index] != NULL_CHAR)
-    {
-        if (m8q_driver_data.pos_data.SOG[sog_index++] != PERIOD_CHAR)
-        {
-            sog_len++; 
-        }
-    }
-
-    sog_index = CLEAR; 
-
-    // Convert the SOG string to a scaled integer 
-    while (sog_len)
-    {
-        if (m8q_driver_data.pos_data.SOG[sog_index] != PERIOD_CHAR)
-        {
-            sog += char_to_int(m8q_driver_data.pos_data.SOG[sog_index], --sog_len); 
-        }
-
-        sog_index++; 
-    }
-    
-    return sog; 
+    return (float)m8q_get_position_sogI() / SCALE_1000F;
 }
 
 
 // Get speed over ground (SOG) as a scaled integer 
 uint32_t m8q_get_position_sogI(void)
 {
-    uint32_t sog = CLEAR; 
-    uint8_t sog_index = CLEAR, sog_len = CLEAR; 
-
-    // Find the size of the SOG string 
-    while (m8q_driver_data.pos_data.SOG[sog_index] != NULL_CHAR)
-    {
-        if (m8q_driver_data.pos_data.SOG[sog_index++] != PERIOD_CHAR)
-        {
-            sog_len++; 
-        }
-    }
-
-    sog_index = CLEAR; 
-
-    // Convert the SOG string to a scaled integer 
-    while (sog_len)
-    {
-        if (m8q_driver_data.pos_data.SOG[sog_index] != PERIOD_CHAR)
-        {
-            sog += char_to_int(m8q_driver_data.pos_data.SOG[sog_index], --sog_len); 
-        }
-
-        sog_index++; 
-    }
-    
-    return sog; 
+    return m8q_nmea_num_parse(m8q_driver_data.pos_data.SOG, sizeof(m8q_driver_data.pos_data.SOG));
 }
 
 
@@ -1468,6 +1422,39 @@ M8Q_STATUS m8q_get_position_sog_str(
     return M8Q_OK; 
 }
 
+
+// Get course over ground (COG) 
+float m8q_get_position_cog(void)
+{
+    return (float)m8q_get_position_cogI() / SCALE_100F;
+}
+
+
+// Get course over ground (COG) as a scaled integer 
+uint32_t m8q_get_position_cogI(void)
+{
+    return m8q_nmea_num_parse(m8q_driver_data.pos_data.COG,sizeof(m8q_driver_data.pos_data.COG));
+}
+
+
+// Get vertical velocity 
+float m8q_get_position_vvel(void)
+{
+    return m8q_get_position_vvelI() / SCALE_1000F;
+}
+
+
+// Get vertical velocity (vVel) as a scaled integer 
+int32_t m8q_get_position_vvelI(void)
+{
+    return m8q_nmea_num_parse(m8q_driver_data.pos_data.vVel, sizeof(m8q_driver_data.pos_data.vVel));
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// TIME (PUBX,04) message 
 
 // Get UTC time 
 M8Q_STATUS m8q_get_time_utc_time(
@@ -1502,7 +1489,58 @@ M8Q_STATUS m8q_get_time_utc_date(
 
 
 //=======================================================================================
-// Read and write functions 
+// NMEA message helper functions 
+
+// Parse a numeric value from NMEA messages 
+int32_t m8q_nmea_num_parse(
+    uint8_t *data_buff,
+    uint8_t data_buff_size)
+{
+    uint8_t index = CLEAR, data_size = CLEAR, digit_index = CLEAR, sign = CLEAR_BIT;
+    int32_t integer = CLEAR;
+
+    // Determine the format of the provided data 
+    while ((index < data_buff_size) && (data_buff != NULL) && (data_buff[index] != NULL_CHAR))
+    {
+        switch (data_buff[index++])
+        {
+            case MINUS_CHAR:
+                sign = SET_BIT;
+                break;
+
+            case PERIOD_CHAR:
+                break;
+
+            default:
+                data_size++;
+                break;
+        }
+    }
+
+    index = CLEAR;
+
+    while (digit_index < data_size)
+    {
+        if ((data_buff[index] != MINUS_CHAR) && (data_buff[index] != PERIOD_CHAR))
+        {
+            integer += (int32_t)char_to_int(data_buff[index], data_size - ++digit_index);
+        }
+        index++;
+    }
+
+    if (sign == SET_BIT)
+    {
+        integer = -integer;
+    }
+
+    return integer;
+}
+
+//=======================================================================================
+
+
+//=======================================================================================
+// Read and write 
 
 // Flush/clear the M8Q data stream 
 M8Q_STATUS m8q_flush_ds(uint16_t stream_len)

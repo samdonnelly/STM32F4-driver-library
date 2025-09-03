@@ -48,8 +48,8 @@ NavCalcs::NavCalcs(float coordinate_gain, float tn_offset)
 
 // Coordinate filter 
 void NavCalcs::CoordinateFilter(
-    gps_waypoints_t new_data, 
-    gps_waypoints_t& filtered_data) const
+    Position new_data, 
+    Position& filtered_data) const
 {
     filtered_data.lat += (new_data.lat - filtered_data.lat)*coordinate_lpf_gain; 
     filtered_data.lon += (new_data.lon - filtered_data.lon)*coordinate_lpf_gain; 
@@ -58,8 +58,8 @@ void NavCalcs::CoordinateFilter(
 
 // Find the distance and heading to the target location 
 void NavCalcs::WaypointError(
-    const gps_waypoints_t &current,
-    const gps_waypoints_t &target,
+    const Position &current,
+    const Position &target,
     float &target_heading,
     float &target_distance) const
 {

@@ -24,7 +24,7 @@
 // Data 
 
 // Coordinates 
-const gps_waypoints_t waypoints_test[NUM_TEST_WAYPOINTS] = 
+const NavCalcs::Position waypoints_test[NUM_TEST_WAYPOINTS] = 
 {
     // Global waypoints 
     {  41.724841,  -49.946026 },   // 0 

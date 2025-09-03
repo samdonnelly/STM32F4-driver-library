@@ -127,12 +127,21 @@ extern "C" {
 //==================================================
 // Scaling 
 
+// Scalar integers 
 #define SCALE_10 10 
 #define SCALE_100 100 
 #define SCALE_1000 1000 
 #define SCALE_10000 10000 
 #define SCALE_1E5 100000 
 #define SCALE_1E6 1000000 
+
+// Scalar floats 
+#define SCALE_10F 10.0f
+#define SCALE_100F 100.0f
+#define SCALE_1000F 1000.0f
+#define SCALE_1E4F 10000.0f
+#define SCALE_1E5F 100000.0f
+#define SCALE_1E6F 1000000.0f
 
 // Modulo operator divisors
 #define REMAINDER_10   10
@@ -159,9 +168,10 @@ extern "C" {
 //==================================================
 // Units 
 
-#define KM_TO_M 1000    // Kilometers to meters 
-#define S_TO_MS 1000    // Seconds to milliseconds 
-#define MIN_TO_DEG 60   // Coordinate minutes to degrees conversion 
+#define KM_TO_M 1000      // Kilometers to meters 
+#define S_TO_MS 1000      // Seconds to milliseconds 
+#define MIN_TO_DEG 60     // Coordinate minutes to degrees conversion 
+#define KPH_TO_MPS 3.6f   // Kilometers/hour to meters/second 
 
 //==================================================
 
