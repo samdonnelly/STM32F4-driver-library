@@ -38,8 +38,9 @@ NavCalcs::NavCalcs()
     : coordinate_lpf_gain(1.0), 
       true_north_offset(CLEAR),
       k_dt(CLEAR),
-      k_pos_cur(), k_pos_prv(),
-      k_vel_cur(), k_vel_prv()
+      kg_pos_cur(), kg_pos_prv(),
+      kg_vel(),
+      kl_pos(), kl_vel()
 {
 }
 
@@ -120,25 +121,25 @@ void NavCalcs::WaypointError(
 
 
 // Magnetic heading 
-float NavCalcs::MagneticHeading(
-    const float &mx, 
-    const float &my) const
+float NavCalcs::Heading(
+    const float &x, 
+    const float &y) const
 {
-    // Find the magnetic heading based on the magnetometer X and Y axis data. atan2f 
-    // looks at the value and sign of X and Y to determine the correct output so axis 
-    // values don't have to be checked for potential errors (ex. divide by zero). The 
-    // provided magnetometer axis data is assumed to be in the NWU frame (i.e. X is 
-    // positive forward and Y is positive left following right hand rule) which, if 
-    // correct, will result in the calculated heading increasing from 0 clockwise with 
-    // reference to magnetic North. 
-    float mag_heading = atan2f(my, mx)*RAD_TO_DEG;
+    // Find the heading based on the X and Y axis data. atan2f looks at the value and 
+    // sign of X and Y to determine the correct output so axis values don't have to be 
+    // checked for potential errors (ex. divide by zero). The provided axis data is 
+    // assumed to be in the NWU frame (i.e. X is positive forward and Y is positive left 
+    // following right hand rule) which, if correct, will result in the calculated 
+    // heading increasing from 0 clockwise relative to North after the result of atan2f 
+    // has been shifted into the correct bounds. 
+    float heading = atan2f(y, x)*RAD_TO_DEG;
 
-    // The magnetic heading is calculated within the range -179.9 to 180.0 degrees, 
-    // however the returned heading needs to be in the range 0.0 to 359.9 degrees 
-    // for navigation purposes. 
-    HeadingBoundChecks(mag_heading);
+    // atan2f produces a heading in the range -179.9 to 180.0 degrees, however the 
+    // returned heading needs to be in the range 0.0 to 359.9 degrees for navigation 
+    // purposes. 
+    HeadingBoundChecks(heading);
 
-    return mag_heading;
+    return heading;
 }
 
 
@@ -193,8 +194,8 @@ void NavCalcs::TrueNorthEarthAccel(
     // Use a 2D rotation matrix to rotate the North and East/West axes about the 
     // down/up axis. 
     float
-    eq1 = cosf(true_north_offset),
-    eq2 = sinf(true_north_offset),
+    eq1 = cosf(true_north_offset*DEG_TO_RAD),
+    eq2 = sinf(true_north_offset*DEG_TO_RAD),
     eq3 = x*eq1,
     eq4 = y*eq2,
     eq5 = x*eq2,
@@ -207,17 +208,44 @@ void NavCalcs::TrueNorthEarthAccel(
 // Kalman filter position prediction 
 void NavCalcs::KalmanPosePredict(const std::array<float, NUM_AXES> &accel_ned)
 {
-    // State 
-    k_pos_cur.N = k_pos_prv.N + k_vel_prv.N*k_dt + 0.5*k_dt*k_dt*accel_ned[X_AXIS];
-    k_vel_cur.N = k_vel_prv.N + k_dt*accel_ned[X_AXIS];
-    k_pos_cur.E = k_pos_prv.E + k_vel_prv.E*k_dt + 0.5*k_dt*k_dt*accel_ned[Y_AXIS];
-    k_vel_cur.E = k_vel_prv.E + k_dt*accel_ned[Y_AXIS];
-    k_pos_cur.D = k_pos_prv.D + k_vel_prv.D*k_dt + 0.5*k_dt*k_dt*accel_ned[Z_AXIS];
-    k_vel_cur.D = k_vel_prv.D + k_dt*accel_ned[Z_AXIS];
+    //==================================================
+    // Predict the new state 
 
-    kalman_pos.lat;
-    kalman_pos.lon;
-    kalman_pos.alt;
+    // Find the local change in position and velocity (no global reference) using the new 
+    // NED frame acceleration data. 
+    kl_pos.N = kl_pos.N + kl_vel.N*k_dt + 0.5*k_dt*k_dt*accel_ned[X_AXIS];
+    kl_vel.N = kl_vel.N + k_dt*accel_ned[X_AXIS];
+    kl_pos.E = kl_pos.E + kl_vel.E*k_dt + 0.5*k_dt*k_dt*accel_ned[Y_AXIS];
+    kl_vel.E = kl_vel.E + k_dt*accel_ned[Y_AXIS];
+    kl_pos.D = kl_pos.D + kl_vel.D*k_dt + 0.5*k_dt*k_dt*accel_ned[Z_AXIS];
+    kl_vel.D = kl_vel.D + k_dt*accel_ned[Z_AXIS];
+    
+    // Use the local change in position to predict the new global position using the last 
+    // known global position as reference. 
+    kg_pos_cur.lat = kg_pos_prv.lat + kl_pos.N / (earth_radius*DEG_TO_RAD);
+    kg_pos_cur.lon = kg_pos_prv.lon + kl_pos.E / (earth_radius*DEG_TO_RAD*cosf(kg_pos_cur.lat*DEG_TO_RAD));
+    kg_pos_cur.alt = kg_pos_prv.alt + kl_pos.D;
+
+    // Use the local change in velocity to predict the new global velocity. 
+    kg_vel.sog = sqrtf(kl_vel.N*kl_vel.N + kl_vel.E*kl_vel.E);
+    kg_vel.cog = Heading(kl_vel.N, -kl_vel.E);
+    kg_vel.vvel = kl_vel.D;
+    
+    //==================================================
+
+    //==================================================
+    // Predict the new uncertainty 
+
+    // This must be done each prediction step to account for error accumulation. 
+
+    s2_p.N = s2_p.N + s2_v.N*k_dt*k_dt + s2_ap;
+    s2_v.N = s2_v.N + s2_av;
+    s2_p.E = s2_p.E + s2_v.E*k_dt*k_dt + s2_ap;
+    s2_v.E = s2_v.E + s2_av;
+    s2_p.D = s2_p.D + s2_v.D*k_dt*k_dt + s2_ap;
+    s2_v.D = s2_v.D + s2_av;
+
+    //==================================================
 }
 
 
@@ -226,11 +254,45 @@ void NavCalcs::KalmanPoseUpdate(
     const Position &gps_position,
     const Velocity &gps_velocity)
 {
-    float K_N11, K_N22, K_E11, K_E22, K_D11, K_D22;
+    constexpr float _1_0f = 1.0f;
 
-    // Kalman gain 
+    // Find the Kalman gains 
+    float
+    K_N11 = s2_p.N / (s2_p.N + s2_gp),
+    K_N22 = s2_v.N / (s2_v.N + s2_gv),
+    K_E11 = s2_p.E / (s2_p.E + s2_gp),
+    K_E22 = s2_v.E / (s2_v.E + s2_gv),
+    K_D11 = s2_p.D / (s2_p.D + s2_gp),
+    K_D22 = s2_v.D / (s2_v.D + s2_gv);
 
-    // Update prediciton data 
+    // Update the uncertainty of the estimation 
+    s2_p.N = (_1_0f - K_N11)*s2_p.N;
+    s2_v.N = (_1_0f - K_N22)*s2_v.N;
+    s2_p.E = (_1_0f - K_E11)*s2_p.E;
+    s2_v.E = (_1_0f - K_E22)*s2_v.E;
+    s2_p.D = (_1_0f - K_D11)*s2_p.D;
+    s2_v.D = (_1_0f - K_D22)*s2_v.D;
+
+    // Update the state estimation 
+    // Latitude / North 
+    kg_pos_cur.lat = kg_pos_cur.lat + (gps_position.lat - kg_pos_cur.lat)*K_N11;
+    kl_vel.N = kl_vel.N + (gps_velocity.sog*cosf(gps_velocity.cog*DEG_TO_RAD) - kl_vel.N)*K_N22;
+    // Longitude / East 
+    kg_pos_cur.lon = kg_pos_cur.lon + (gps_position.lon - kg_pos_cur.lon)*K_E11;
+    kl_vel.E = kl_vel.E + (gps_velocity.sog*sinf(gps_velocity.cog*DEG_TO_RAD) - kl_vel.E)*K_E22;
+    // Altitude / Down 
+    kg_pos_cur.alt = kg_pos_cur.alt + (gps_position.alt - kg_pos_cur.alt)*K_D11;
+    kl_vel.D = kl_vel.D + (gps_velocity.vvel - kl_vel.D)*K_D22;
+
+    kg_vel.sog = sqrtf(kl_vel.N*kl_vel.N + kl_vel.E*kl_vel.E);
+    kg_vel.cog = Heading(kl_vel.N, -kl_vel.E);
+    kg_vel.vvel = kl_vel.D;
+
+    // Update "previous" data 
+    kg_pos_prv = kg_pos_cur;
+    kl_pos.N = CLEAR;
+    kl_pos.E = CLEAR;
+    kl_pos.D = CLEAR;
 }
 
 
@@ -260,7 +322,8 @@ void NavCalcs::GetKalmanPose(
     Position &kalman_position,
     Velocity &kalman_velocity)
 {
-    // 
+    kalman_position = kg_pos_cur;
+    kalman_velocity = kg_vel;
 }
 
 //=======================================================================================

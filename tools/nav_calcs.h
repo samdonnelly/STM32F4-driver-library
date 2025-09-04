@@ -123,21 +123,25 @@ public:
         float &target_distance) const;
 
     /**
-     * @brief Magnetic heading 
+     * @brief Heading 
      * 
-     * @details Finds the magnetic heading from magnetometer axis components. The 
-     *          returned heading increases from 0 clockwise relative to magnetic North. 
-     *          Note that the provided axis data should be calibrated before hand to get 
-     *          a more accurate result. Also note that axis units don't matter. Only the 
-     *          magnitude relative to each other matters. 
+     * @details Finds the heading or course within a 2D plane. The returned heading is in 
+     *          the range 0.0-359.9 degrees clockwise relative to North. Applications of 
+     *          this function include finding magnetic heading (relative to magnetic 
+     *          North) from magnetometer axis data or determining the course of an object 
+     *          using velocity along axes. This function assumes that X is positive 
+     *          forward and Y is positive left (following right hand rule for NWU frame). 
+     *          If this convention is not followed then results may come out incorrect. 
+     *          Note that axis units don't matter, only the magnitude relative to each 
+     *          other matters. 
      * 
-     * @param mx : magnetometer x-axis data 
-     * @param my : magnetometer y-axis data 
-     * @return float : magnetic heading (0.0-359.9 degrees) 
+     * @param x : x-axis data 
+     * @param y : y-axis data 
+     * @return float : heading (0.0-359.9 degrees) 
      */
-    float MagneticHeading(
-        const float &mx, 
-        const float &my) const;
+    float Heading(
+        const float &x, 
+        const float &y) const;
 
     /**
      * @brief True North heading 
@@ -327,13 +331,13 @@ private:
     float true_north_offset;     // True north offset from magnetic north 
 
     // Kalman filter pose data 
-    float k_dt;                       // Predicition step calculation interval (s) 
-    Position kalman_pos;              // 
-    Velocity kalman_vel;              // 
-    VectorNED k_pos_cur, k_pos_prv;   // Position determined by the Kalman filter 
-    VectorNED k_vel_cur, k_vel_prv;   // Velocity determined by the Kalman filter 
-    float s_ap, s_av;                 // Process (accelerometer) variance for position and velocity 
-    float s_gp, s_gv;                 // Measurement (GPS) variance for position and velocity 
+    float k_dt;                         // Predicition step calculation interval (s) 
+    Position kg_pos_cur, kg_pos_prv;    // Kalman filter global position - current and previous 
+    Velocity kg_vel;                    // Kalman filter global velocity 
+    VectorNED kl_pos, kl_vel;           // Kalman filter local position and velocity 
+    VectorNED s2_p, s2_v;               // Variance in Kalman filter position and velocity 
+    float s2_ap, s2_av;                 // Process (accelerometer) variance for position and velocity 
+    float s2_gp, s2_gv;                 // Measurement (GPS) variance for position and velocity 
 }; 
 
 //=======================================================================================
