@@ -12,8 +12,8 @@
  * 
  */
 
-#ifndef _NAV_CALCs_H_ 
-#define _NAV_CALCs_H_ 
+#ifndef _NAV_CALCS_H_ 
+#define _NAV_CALCS_H_ 
 
 //=======================================================================================
 // Includes 
@@ -34,11 +34,8 @@ public:
 
     /**
      * @brief Constructor 
-     * 
-     * @param coordinate_gain : low pass filter gain for GPS coordinates 
-     * @param tn_offset : magnetic declination (degrees) 
      */
-    NavCalcs(float coordinate_gain, float tn_offset); 
+    NavCalcs(); 
 
     /**
      * @brief Destructor 
@@ -281,6 +278,13 @@ public:
     void SetTnOffset(int16_t tn_offset);
 
     /**
+     * @brief Set the time between Kalman pose prediction calculations 
+     * 
+     * @param dt : time between calls to the Kalman prediction step (s) 
+     */
+    void SetKalmanDT(float dt);
+
+    /**
      * @brief Get the Kalman filter position and velocity 
      * 
      * @details Returns the determined position and velocity from the Kalman filter 
@@ -299,6 +303,12 @@ public:
 
 private: 
 
+    // 3-axis vector in the NED frame 
+    struct VectorNED
+    {
+        float N, E, D;
+    };
+
     /**
      * @brief Correct the heading if it exceeds acceptable bounds 
      * 
@@ -312,13 +322,20 @@ private:
      */
     void HeadingBoundChecks(float &heading) const;
 
-    // Internal data 
+    // General class data 
     float coordinate_lpf_gain;   // Low pass filter gain for GPS coordinates 
     float true_north_offset;     // True north offset from magnetic north 
-    Position kalman_pos;         // Position determined by the Kalman filter 
-    Velocity kalman_vel;         // Velocity determined by the Kalman filter 
+
+    // Kalman filter pose data 
+    float k_dt;                       // Predicition step calculation interval (s) 
+    Position kalman_pos;              // 
+    Velocity kalman_vel;              // 
+    VectorNED k_pos_cur, k_pos_prv;   // Position determined by the Kalman filter 
+    VectorNED k_vel_cur, k_vel_prv;   // Velocity determined by the Kalman filter 
+    float s_ap, s_av;                 // Process (accelerometer) variance for position and velocity 
+    float s_gp, s_gv;                 // Measurement (GPS) variance for position and velocity 
 }; 
 
 //=======================================================================================
 
-#endif   // _NAV_CALCs_H_ 
+#endif   // _NAV_CALCS_H_ 

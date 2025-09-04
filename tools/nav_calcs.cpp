@@ -34,9 +34,12 @@ static constexpr float heading_full_range = 360.0;   // Full heading range (360 
 //=======================================================================================
 // Initialization 
 
-NavCalcs::NavCalcs(float coordinate_gain, float tn_offset)
-    : coordinate_lpf_gain(coordinate_gain), 
-      true_north_offset(tn_offset)
+NavCalcs::NavCalcs()
+    : coordinate_lpf_gain(1.0), 
+      true_north_offset(CLEAR),
+      k_dt(CLEAR),
+      k_pos_cur(), k_pos_prv(),
+      k_vel_cur(), k_vel_prv()
 {
 }
 
@@ -204,7 +207,17 @@ void NavCalcs::TrueNorthEarthAccel(
 // Kalman filter position prediction 
 void NavCalcs::KalmanPosePredict(const std::array<float, NUM_AXES> &accel_ned)
 {
-    // 
+    // State 
+    k_pos_cur.N = k_pos_prv.N + k_vel_prv.N*k_dt + 0.5*k_dt*k_dt*accel_ned[X_AXIS];
+    k_vel_cur.N = k_vel_prv.N + k_dt*accel_ned[X_AXIS];
+    k_pos_cur.E = k_pos_prv.E + k_vel_prv.E*k_dt + 0.5*k_dt*k_dt*accel_ned[Y_AXIS];
+    k_vel_cur.E = k_vel_prv.E + k_dt*accel_ned[Y_AXIS];
+    k_pos_cur.D = k_pos_prv.D + k_vel_prv.D*k_dt + 0.5*k_dt*k_dt*accel_ned[Z_AXIS];
+    k_vel_cur.D = k_vel_prv.D + k_dt*accel_ned[Z_AXIS];
+
+    kalman_pos.lat;
+    kalman_pos.lon;
+    kalman_pos.alt;
 }
 
 
@@ -213,21 +226,32 @@ void NavCalcs::KalmanPoseUpdate(
     const Position &gps_position,
     const Velocity &gps_velocity)
 {
-    // 
+    float K_N11, K_N22, K_E11, K_E22, K_D11, K_D22;
+
+    // Kalman gain 
+
+    // Update prediciton data 
 }
 
 
 // Set the coordinate low pass filter gain 
-void NavCalcs::SetCoordinateLPFGain(float coordinate_gain) 
+void NavCalcs::SetCoordinateLPFGain(float coordinate_gain)
 {
     coordinate_lpf_gain = coordinate_gain; 
 }
 
 
 // Set the true north offset 
-void NavCalcs::SetTnOffset(int16_t tn_offset) 
+void NavCalcs::SetTnOffset(int16_t tn_offset)
 {
     true_north_offset = tn_offset; 
+}
+
+
+// Set the time between Kalman pose prediction calculations 
+void NavCalcs::SetKalmanDT(float dt)
+{
+    k_dt = dt;
 }
 
 
