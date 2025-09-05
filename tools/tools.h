@@ -82,6 +82,7 @@ extern "C" {
 #define RESET_ZERO 0
 #define NONE 0 
 #define ZERO 0 
+#define CLEARF 0.0f
 
 // Logic high 
 #define HIGH_8BIT 0xFF 

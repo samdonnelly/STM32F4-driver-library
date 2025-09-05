@@ -36,11 +36,14 @@ static constexpr float heading_full_range = 360.0;   // Full heading range (360 
 
 NavCalcs::NavCalcs()
     : coordinate_lpf_gain(1.0), 
-      true_north_offset(CLEAR),
-      k_dt(CLEAR),
+      true_north_offset(CLEARF),
+      k_dt(CLEARF),
       kg_pos_cur(), kg_pos_prv(),
       kg_vel(),
-      kl_pos(), kl_vel()
+      kl_pos(), kl_vel(),
+      s2_p(), s2_v(),
+      s2_ap(CLEARF), s2_av(CLEARF),
+      s2_gp(CLEARF), s2_gv(CLEARF)
 {
 }
 
@@ -213,11 +216,12 @@ void NavCalcs::KalmanPosePredict(const std::array<float, NUM_AXES> &accel_ned)
 
     // Find the local change in position and velocity (no global reference) using the new 
     // NED frame acceleration data. 
-    kl_pos.N = kl_pos.N + kl_vel.N*k_dt + 0.5*k_dt*k_dt*accel_ned[X_AXIS];
+    const float accel_const = 0.5f*k_dt*k_dt;
+    kl_pos.N = kl_pos.N + kl_vel.N*k_dt + accel_const*accel_ned[X_AXIS];
     kl_vel.N = kl_vel.N + k_dt*accel_ned[X_AXIS];
-    kl_pos.E = kl_pos.E + kl_vel.E*k_dt + 0.5*k_dt*k_dt*accel_ned[Y_AXIS];
+    kl_pos.E = kl_pos.E + kl_vel.E*k_dt + accel_const*accel_ned[Y_AXIS];
     kl_vel.E = kl_vel.E + k_dt*accel_ned[Y_AXIS];
-    kl_pos.D = kl_pos.D + kl_vel.D*k_dt + 0.5*k_dt*k_dt*accel_ned[Z_AXIS];
+    kl_pos.D = kl_pos.D + kl_vel.D*k_dt + accel_const*accel_ned[Z_AXIS];
     kl_vel.D = kl_vel.D + k_dt*accel_ned[Z_AXIS];
     
     // Use the local change in position to predict the new global position using the last 
@@ -254,9 +258,9 @@ void NavCalcs::KalmanPoseUpdate(
     const Position &gps_position,
     const Velocity &gps_velocity)
 {
-    constexpr float _1_0f = 1.0f;
+    constexpr float _0_0f = 0.0f, _1_0f = 1.0f;
 
-    // Find the Kalman gains 
+    // Find the Kalman gains for position and velocity in each NED axis. 
     float
     K_N11 = s2_p.N / (s2_p.N + s2_gp),
     K_N22 = s2_v.N / (s2_v.N + s2_gv),
@@ -265,7 +269,7 @@ void NavCalcs::KalmanPoseUpdate(
     K_D11 = s2_p.D / (s2_p.D + s2_gp),
     K_D22 = s2_v.D / (s2_v.D + s2_gv);
 
-    // Update the uncertainty of the estimation 
+    // Update the uncertainty of the estimation. 
     s2_p.N = (_1_0f - K_N11)*s2_p.N;
     s2_v.N = (_1_0f - K_N22)*s2_v.N;
     s2_p.E = (_1_0f - K_E11)*s2_p.E;
@@ -273,26 +277,27 @@ void NavCalcs::KalmanPoseUpdate(
     s2_p.D = (_1_0f - K_D11)*s2_p.D;
     s2_v.D = (_1_0f - K_D22)*s2_v.D;
 
-    // Update the state estimation 
-    // Latitude / North 
+    // Update the state position 
     kg_pos_cur.lat = kg_pos_cur.lat + (gps_position.lat - kg_pos_cur.lat)*K_N11;
-    kl_vel.N = kl_vel.N + (gps_velocity.sog*cosf(gps_velocity.cog*DEG_TO_RAD) - kl_vel.N)*K_N22;
-    // Longitude / East 
     kg_pos_cur.lon = kg_pos_cur.lon + (gps_position.lon - kg_pos_cur.lon)*K_E11;
-    kl_vel.E = kl_vel.E + (gps_velocity.sog*sinf(gps_velocity.cog*DEG_TO_RAD) - kl_vel.E)*K_E22;
-    // Altitude / Down 
     kg_pos_cur.alt = kg_pos_cur.alt + (gps_position.alt - kg_pos_cur.alt)*K_D11;
+    
+    // Update the state velocity. The local velocity for each axis is updated so velocity 
+    // can continue to be estimated during the prediction step. The determined velocity 
+    // is then converted to its global format for the user to fetch. 
+    float cog = gps_velocity.cog*DEG_TO_RAD;
+    kl_vel.N = kl_vel.N + (gps_velocity.sog*cosf(cog) - kl_vel.N)*K_N22;
+    kl_vel.E = kl_vel.E + (gps_velocity.sog*sinf(cog) - kl_vel.E)*K_E22;
     kl_vel.D = kl_vel.D + (gps_velocity.vvel - kl_vel.D)*K_D22;
-
     kg_vel.sog = sqrtf(kl_vel.N*kl_vel.N + kl_vel.E*kl_vel.E);
     kg_vel.cog = Heading(kl_vel.N, -kl_vel.E);
     kg_vel.vvel = kl_vel.D;
 
-    // Update "previous" data 
+    // Save the global position so the prediction step can add local position estimates 
+    // to it to estimate global position. Reset the local position estimates as the 
+    // distance from last known position is now zero. 
     kg_pos_prv = kg_pos_cur;
-    kl_pos.N = CLEAR;
-    kl_pos.E = CLEAR;
-    kl_pos.D = CLEAR;
+    kl_pos = { _0_0f, _0_0f, _0_0f };
 }
 
 
@@ -310,10 +315,21 @@ void NavCalcs::SetTnOffset(int16_t tn_offset)
 }
 
 
-// Set the time between Kalman pose prediction calculations 
-void NavCalcs::SetKalmanDT(float dt)
+// Set the Kalman Pose Data objectSet Kalman filter data 
+void NavCalcs::SetKalmanPoseData(
+    float predict_delta,
+    Position initial_position,
+    float accel_pos_variance,
+    float accel_vel_variance,
+    float gps_pos_variance,
+    float gps_vel_variance)
 {
-    k_dt = dt;
+    k_dt = predict_delta;
+    kg_pos_prv = initial_position;
+    s2_ap = accel_pos_variance;
+    s2_av = accel_vel_variance;
+    s2_gp = gps_pos_variance;
+    s2_gv = gps_vel_variance;
 }
 
 

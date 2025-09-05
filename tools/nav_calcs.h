@@ -282,11 +282,26 @@ public:
     void SetTnOffset(int16_t tn_offset);
 
     /**
-     * @brief Set the time between Kalman pose prediction calculations 
+     * @brief Set the Kalman Pose Data objectSet Kalman filter data 
      * 
-     * @param dt : time between calls to the Kalman prediction step (s) 
+     * @details This setter must be called before the Kalman filter for pose can be used. 
+     *          Not doing so will likely produce incorrect results. Other Kalman filter 
+     *          data not specified here is initialized to zero. 
+     * 
+     * @param predict_delta : time between calls to the prediction step function (s) 
+     * @param initial_position : initial coordinates and altitude of the system 
+     * @param accel_pos_variance : accelerometer position data variance 
+     * @param accel_vel_variance : accelerometer velocity data variance 
+     * @param gps_pos_variance : GPS position data variance 
+     * @param gps_vel_variance : GPS velocity data variance 
      */
-    void SetKalmanDT(float dt);
+    void SetKalmanPoseData(
+        float predict_delta,
+        Position initial_position,
+        float accel_pos_variance,
+        float accel_vel_variance,
+        float gps_pos_variance,
+        float gps_vel_variance);
 
     /**
      * @brief Get the Kalman filter position and velocity 
