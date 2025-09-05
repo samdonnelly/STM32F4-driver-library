@@ -27,6 +27,7 @@ static constexpr float earth_radius = 6371.0;        // Average radius of the Ea
 static constexpr float heading_north = 0.0;          // Heading when point North (0 degrees) 
 static constexpr float max_heading_diff = 180.0;     // Maximum heading difference (+/- 180 degrees * 10) 
 static constexpr float heading_full_range = 360.0;   // Full heading range (360 degrees * 10) 
+static constexpr float gravity = 9.81;               // Gravity (m/s^2) 
 
 //=======================================================================================
 
@@ -35,7 +36,7 @@ static constexpr float heading_full_range = 360.0;   // Full heading range (360 
 // Initialization 
 
 NavCalcs::NavCalcs()
-    : coordinate_lpf_gain(1.0), 
+    : coordinate_lpf_gain(1.0f), 
       true_north_offset(CLEARF),
       k_dt(CLEARF),
       kg_pos_cur(), kg_pos_prv(),
@@ -196,13 +197,15 @@ void NavCalcs::TrueNorthEarthAccel(
 {
     // Use a 2D rotation matrix to rotate the North and East/West axes about the 
     // down/up axis. 
-    float
-    eq1 = cosf(true_north_offset*DEG_TO_RAD),
-    eq2 = sinf(true_north_offset*DEG_TO_RAD),
+    const float
+    eqo = true_north_offset*DEG_TO_RAD,
+    eq1 = cosf(eqo),
+    eq2 = sinf(eqo),
     eq3 = x*eq1,
     eq4 = y*eq2,
     eq5 = x*eq2,
     eq6 = y*eq1;
+
     x = eq3 - eq4;
     y = eq5 + eq6;
 }
@@ -211,45 +214,43 @@ void NavCalcs::TrueNorthEarthAccel(
 // Kalman filter position prediction 
 void NavCalcs::KalmanPosePredict(const std::array<float, NUM_AXES> &accel_ned)
 {
-    //==================================================
-    // Predict the new state 
-
-    // Find the local change in position and velocity (no global reference) using the new 
-    // NED frame acceleration data. 
+    // Predict the new state by finding the local change in position and velocity (no 
+    // global reference) using the new NED frame acceleration data. 
+    const VectorNED accel = 
+    {
+        .N = accel_ned[X_AXIS]*gravity,
+        .E = accel_ned[Y_AXIS]*gravity,
+        .D = accel_ned[Z_AXIS]*gravity
+    };
     const float accel_const = 0.5f*k_dt*k_dt;
-    kl_pos.N = kl_pos.N + kl_vel.N*k_dt + accel_const*accel_ned[X_AXIS];
-    kl_vel.N = kl_vel.N + k_dt*accel_ned[X_AXIS];
-    kl_pos.E = kl_pos.E + kl_vel.E*k_dt + accel_const*accel_ned[Y_AXIS];
-    kl_vel.E = kl_vel.E + k_dt*accel_ned[Y_AXIS];
-    kl_pos.D = kl_pos.D + kl_vel.D*k_dt + accel_const*accel_ned[Z_AXIS];
-    kl_vel.D = kl_vel.D + k_dt*accel_ned[Z_AXIS];
+    kl_pos.N = kl_pos.N + kl_vel.N*k_dt + accel_const*accel.N;
+    kl_vel.N = kl_vel.N + k_dt*accel.N;
+    kl_pos.E = kl_pos.E + kl_vel.E*k_dt + accel_const*accel.E;
+    kl_vel.E = kl_vel.E + k_dt*accel.E;
+    kl_pos.D = kl_pos.D + kl_vel.D*k_dt + accel_const*accel.D;
+    kl_vel.D = kl_vel.D + k_dt*accel.D;
     
-    // Use the local change in position to predict the new global position using the last 
-    // known global position as reference. 
-    kg_pos_cur.lat = kg_pos_prv.lat + kl_pos.N / (earth_radius*DEG_TO_RAD);
-    kg_pos_cur.lon = kg_pos_prv.lon + kl_pos.E / (earth_radius*DEG_TO_RAD*cosf(kg_pos_cur.lat*DEG_TO_RAD));
+    // Convert the local changes to a new global position using the last known position 
+    // as reference. 
+    constexpr float coordinate_const = earth_radius*KM_TO_M*DEG_TO_RAD;
+    kg_pos_cur.lat = kg_pos_prv.lat + kl_pos.N / coordinate_const;
+    kg_pos_cur.lon = kg_pos_prv.lon + kl_pos.E / (coordinate_const*cosf(kg_pos_cur.lat*DEG_TO_RAD));
     kg_pos_cur.alt = kg_pos_prv.alt + kl_pos.D;
 
-    // Use the local change in velocity to predict the new global velocity. 
+    // Convert the local changes in velocity to a more usable form. 
     kg_vel.sog = sqrtf(kl_vel.N*kl_vel.N + kl_vel.E*kl_vel.E);
     kg_vel.cog = Heading(kl_vel.N, -kl_vel.E);
     kg_vel.vvel = kl_vel.D;
-    
-    //==================================================
 
-    //==================================================
-    // Predict the new uncertainty 
-
-    // This must be done each prediction step to account for error accumulation. 
-
-    s2_p.N = s2_p.N + s2_v.N*k_dt*k_dt + s2_ap;
+    // Predict the new uncertainty. This must be done each prediction step to account for 
+    // error accumulation. 
+    const float dt_2 = k_dt*k_dt;
+    s2_p.N = s2_p.N + s2_v.N*dt_2 + s2_ap;
     s2_v.N = s2_v.N + s2_av;
-    s2_p.E = s2_p.E + s2_v.E*k_dt*k_dt + s2_ap;
+    s2_p.E = s2_p.E + s2_v.E*dt_2 + s2_ap;
     s2_v.E = s2_v.E + s2_av;
-    s2_p.D = s2_p.D + s2_v.D*k_dt*k_dt + s2_ap;
+    s2_p.D = s2_p.D + s2_v.D*dt_2 + s2_ap;
     s2_v.D = s2_v.D + s2_av;
-
-    //==================================================
 }
 
 
@@ -261,7 +262,7 @@ void NavCalcs::KalmanPoseUpdate(
     constexpr float _0_0f = 0.0f, _1_0f = 1.0f;
 
     // Find the Kalman gains for position and velocity in each NED axis. 
-    float
+    const float
     K_N11 = s2_p.N / (s2_p.N + s2_gp),
     K_N22 = s2_v.N / (s2_v.N + s2_gv),
     K_E11 = s2_p.E / (s2_p.E + s2_gp),
@@ -285,7 +286,7 @@ void NavCalcs::KalmanPoseUpdate(
     // Update the state velocity. The local velocity for each axis is updated so velocity 
     // can continue to be estimated during the prediction step. The determined velocity 
     // is then converted to its global format for the user to fetch. 
-    float cog = gps_velocity.cog*DEG_TO_RAD;
+    const float cog = gps_velocity.cog*DEG_TO_RAD;
     kl_vel.N = kl_vel.N + (gps_velocity.sog*cosf(cog) - kl_vel.N)*K_N22;
     kl_vel.E = kl_vel.E + (gps_velocity.sog*sinf(cog) - kl_vel.E)*K_E22;
     kl_vel.D = kl_vel.D + (gps_velocity.vvel - kl_vel.D)*K_D22;
