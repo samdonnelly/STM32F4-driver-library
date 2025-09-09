@@ -42,9 +42,7 @@ NavCalcs::NavCalcs()
       kg_pos_cur(), kg_pos_prv(),
       kg_vel(),
       kl_pos(), kl_vel(),
-      s2_p(), s2_v(),
-      s2_ap(CLEARF), s2_av(CLEARF),
-      s2_gp(CLEARF), s2_gv(CLEARF)
+      s2_p(), s2_v()
 {
 }
 
@@ -212,8 +210,15 @@ void NavCalcs::TrueNorthEarthAccel(
 
 
 // Kalman filter position prediction 
-void NavCalcs::KalmanPosePredict(const std::array<float, NUM_AXES> &accel_ned)
+void NavCalcs::KalmanPosePredict(
+    const std::array<float, NUM_AXES> &accel_ned,
+    const std::array<float, NUM_AXES> &accel_ned_accuracy)
 {
+    const float dt_2 = k_dt*k_dt;
+    const float accel_const = 0.5f*dt_2;
+    const float s2_ap_const = 2.25f*dt_2;
+    constexpr float coordinate_const = earth_radius*KM_TO_M*DEG_TO_RAD;
+
     // Predict the new state by finding the local change in position and velocity (no 
     // global reference) using the new NED frame acceleration data. 
     const VectorNED accel = 
@@ -222,17 +227,15 @@ void NavCalcs::KalmanPosePredict(const std::array<float, NUM_AXES> &accel_ned)
         .E = accel_ned[Y_AXIS]*gravity,
         .D = accel_ned[Z_AXIS]*gravity
     };
-    const float accel_const = 0.5f*k_dt*k_dt;
-    kl_pos.N = kl_pos.N + kl_vel.N*k_dt + accel_const*accel.N;
     kl_vel.N = kl_vel.N + k_dt*accel.N;
-    kl_pos.E = kl_pos.E + kl_vel.E*k_dt + accel_const*accel.E;
+    kl_pos.N = kl_pos.N + kl_vel.N*k_dt + accel_const*accel.N;
     kl_vel.E = kl_vel.E + k_dt*accel.E;
-    kl_pos.D = kl_pos.D + kl_vel.D*k_dt + accel_const*accel.D;
+    kl_pos.E = kl_pos.E + kl_vel.E*k_dt + accel_const*accel.E;
     kl_vel.D = kl_vel.D + k_dt*accel.D;
+    kl_pos.D = kl_pos.D + kl_vel.D*k_dt + accel_const*accel.D;
     
     // Convert the local changes to a new global position using the last known position 
     // as reference. 
-    constexpr float coordinate_const = earth_radius*KM_TO_M*DEG_TO_RAD;
     kg_pos_cur.lat = kg_pos_prv.lat + kl_pos.N / coordinate_const;
     kg_pos_cur.lon = kg_pos_prv.lon + kl_pos.E / (coordinate_const*cosf(kg_pos_cur.lat*DEG_TO_RAD));
     kg_pos_cur.alt = kg_pos_prv.alt + kl_pos.D;
@@ -244,31 +247,42 @@ void NavCalcs::KalmanPosePredict(const std::array<float, NUM_AXES> &accel_ned)
 
     // Predict the new uncertainty. This must be done each prediction step to account for 
     // error accumulation. 
-    const float dt_2 = k_dt*k_dt;
-    s2_p.N = s2_p.N + s2_v.N*dt_2 + s2_ap;
-    s2_v.N = s2_v.N + s2_av;
-    s2_p.E = s2_p.E + s2_v.E*dt_2 + s2_ap;
-    s2_v.E = s2_v.E + s2_av;
-    s2_p.D = s2_p.D + s2_v.D*dt_2 + s2_ap;
-    s2_v.D = s2_v.D + s2_av;
+    float 
+    s2_av_N = accel_ned_accuracy[X_AXIS]*gravity*dt_2,
+    s2_ap_N = s2_av_N*s2_ap_const,
+    s2_av_E = accel_ned_accuracy[Y_AXIS]*gravity*dt_2,
+    s2_ap_E = s2_av_E*s2_ap_const,
+    s2_av_D = accel_ned_accuracy[Z_AXIS]*gravity*dt_2,
+    s2_ap_D = s2_av_D*s2_ap_const;
+
+    s2_v.N = s2_v.N + s2_av_N;
+    s2_p.N = s2_p.N + s2_v.N*dt_2 + s2_ap_N;
+    s2_v.E = s2_v.E + s2_av_E;
+    s2_p.E = s2_p.E + s2_v.E*dt_2 + s2_ap_E;
+    s2_v.D = s2_v.D + s2_av_D;
+    s2_p.D = s2_p.D + s2_v.D*dt_2 + s2_ap_D;
 }
 
 
 // Kalman filter position update 
 void NavCalcs::KalmanPoseUpdate(
     const Position &gps_position,
-    const Velocity &gps_velocity)
+    const Position &gps_position_accuracy,
+    const Velocity &gps_velocity,
+    const Velocity &gps_velocity_accuracy)
 {
     constexpr float _0_0f = 0.0f, _1_0f = 1.0f;
+    const float cog = gps_velocity.cog*DEG_TO_RAD;
+    const float cosf_cog = cosf(cog), sinf_cog = sinf(cog);
 
     // Find the Kalman gains for position and velocity in each NED axis. 
     const float
-    K_N11 = s2_p.N / (s2_p.N + s2_gp),
-    K_N22 = s2_v.N / (s2_v.N + s2_gv),
-    K_E11 = s2_p.E / (s2_p.E + s2_gp),
-    K_E22 = s2_v.E / (s2_v.E + s2_gv),
-    K_D11 = s2_p.D / (s2_p.D + s2_gp),
-    K_D22 = s2_v.D / (s2_v.D + s2_gv);
+    K_N11 = s2_p.N / (s2_p.N + gps_position_accuracy.lat),
+    K_N22 = s2_v.N / (s2_v.N + gps_velocity_accuracy.sog*cosf_cog),
+    K_E11 = s2_p.E / (s2_p.E + gps_position_accuracy.lon),
+    K_E22 = s2_v.E / (s2_v.E + gps_velocity_accuracy.sog*sinf_cog),
+    K_D11 = s2_p.D / (s2_p.D + gps_position_accuracy.alt),
+    K_D22 = s2_v.D / (s2_v.D + gps_velocity_accuracy.vvel);
 
     // Update the uncertainty of the estimation. 
     s2_p.N = (_1_0f - K_N11)*s2_p.N;
@@ -286,9 +300,8 @@ void NavCalcs::KalmanPoseUpdate(
     // Update the state velocity. The local velocity for each axis is updated so velocity 
     // can continue to be estimated during the prediction step. The determined velocity 
     // is then converted to its global format for the user to fetch. 
-    const float cog = gps_velocity.cog*DEG_TO_RAD;
-    kl_vel.N = kl_vel.N + (gps_velocity.sog*cosf(cog) - kl_vel.N)*K_N22;
-    kl_vel.E = kl_vel.E + (gps_velocity.sog*sinf(cog) - kl_vel.E)*K_E22;
+    kl_vel.N = kl_vel.N + (gps_velocity.sog*cosf_cog - kl_vel.N)*K_N22;
+    kl_vel.E = kl_vel.E + (gps_velocity.sog*sinf_cog - kl_vel.E)*K_E22;
     kl_vel.D = kl_vel.D + (gps_velocity.vvel - kl_vel.D)*K_D22;
     kg_vel.sog = sqrtf(kl_vel.N*kl_vel.N + kl_vel.E*kl_vel.E);
     kg_vel.cog = Heading(kl_vel.N, -kl_vel.E);
@@ -319,18 +332,10 @@ void NavCalcs::SetTnOffset(int16_t tn_offset)
 // Set the Kalman Pose Data objectSet Kalman filter data 
 void NavCalcs::SetKalmanPoseData(
     float predict_delta,
-    Position initial_position,
-    float accel_pos_variance,
-    float accel_vel_variance,
-    float gps_pos_variance,
-    float gps_vel_variance)
+    Position initial_position)
 {
     k_dt = predict_delta;
     kg_pos_prv = initial_position;
-    s2_ap = accel_pos_variance;
-    s2_av = accel_vel_variance;
-    s2_gp = gps_pos_variance;
-    s2_gv = gps_vel_variance;
 }
 
 

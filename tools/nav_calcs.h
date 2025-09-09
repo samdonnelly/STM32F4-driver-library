@@ -232,8 +232,11 @@ public:
      * @see GetKalmanPose
      * 
      * @param accel_ned : 3-axis acceleration of the system in the NED frame (g's) 
+     * @param accel_ned_accuracy : uncertainty of acceleration in each NED axis (variance - (g's)^2) 
      */
-    void KalmanPosePredict(const std::array<float, NUM_AXES> &accel_ned);
+    void KalmanPosePredict(
+        const std::array<float, NUM_AXES> &accel_ned,
+        const std::array<float, NUM_AXES> &accel_ned_accuracy);
 
     /**
      * @brief Kalman filter position update 
@@ -257,11 +260,15 @@ public:
      * @see GetKalmanPose
      * 
      * @param gps_position : GPS measured position: lat (deg), lon (deg) and altitude (m) 
+     * @param gps_position_accuracy : uncertainty in GPS position measurement (variance - m^2) 
      * @param gps_velocity : GPS measured velocity: SOG (m/s), COG (deg), vvel (m/s) 
+     * @param gps_velocity_accuracy : uncertainty in GPS velocity measurement (variance - (m/s)^2)
      */
     void KalmanPoseUpdate(
         const Position &gps_position,
-        const Velocity &gps_velocity);
+        const Position &gps_position_accuracy,
+        const Velocity &gps_velocity,
+        const Velocity &gps_velocity_accuracy);
 
     /**
      * @brief Set the GPS coordinate low pass filter gain 
@@ -287,30 +294,13 @@ public:
      * @details This setter must be called before the Kalman filter for pose can be used. 
      *          Not doing so will likely produce incorrect results. Other Kalman filter 
      *          data not specified here is initialized to zero. 
-     *          
-     *          The process (accelerometer) variance is assumed to be same for all axes 
-     *          (hence only one variance for position and velocity) but in reality each 
-     *          axis of the accelerometer will have its own uncertainty. In order to 
-     *          factor in each body/sensor frame axis uncertaintly you'd have to 
-     *          transform the uncertaintly in the body/sensor frame into the NED frame. 
-     *          This additional computation may create a more accurate result but it's 
-     *          not considered necessary here. The average axis uncertaintly can be 
-     *          passed as an argument instead. 
      * 
      * @param predict_delta : time between calls to the prediction step function (s) 
      * @param initial_position : initial coordinates and altitude of the system 
-     * @param accel_pos_variance : accelerometer position data variance 
-     * @param accel_vel_variance : accelerometer velocity data variance 
-     * @param gps_pos_variance : GPS position data variance 
-     * @param gps_vel_variance : GPS velocity data variance 
      */
     void SetKalmanPoseData(
         float predict_delta,
-        Position initial_position,
-        float accel_pos_variance,
-        float accel_vel_variance,
-        float gps_pos_variance,
-        float gps_vel_variance);
+        Position initial_position);
 
     /**
      * @brief Get the Kalman filter position and velocity 
@@ -360,8 +350,6 @@ private:
     Velocity kg_vel;                    // Kalman filter global velocity 
     VectorNED kl_pos, kl_vel;           // Kalman filter local position and velocity 
     VectorNED s2_p, s2_v;               // Variance in Kalman filter position and velocity 
-    float s2_ap, s2_av;                 // Process (accelerometer) variance for position and velocity 
-    float s2_gp, s2_gv;                 // Measurement (GPS) variance for position and velocity 
 }; 
 
 //=======================================================================================

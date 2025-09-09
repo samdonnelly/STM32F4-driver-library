@@ -123,16 +123,62 @@ public:
     /**
      * @brief Get absolute acceleration (no gravity) in the NWU frame 
      * 
+     * @details Rotates body frame acceration into NWU Earth frame acceleration using the 
+     *          Madgwick quaternion determined during the Madgwick filter calculations. 
+     *          This function subtracts gravity in the Up direction. 
+     * 
+     * @param accel_body : body frame accelerometer data (g's) 
      * @param accel_nwu : buffer to store NWU acceleration values 
      */
-    void GetAccelNWU(std::array<float, NUM_AXES> &accel_nwu) const;
+    void GetAccelNWU(
+        const std::array<float, NUM_AXES> &accel_body,
+        std::array<float, NUM_AXES> &accel_nwu) const;
 
     /**
      * @brief Get absolute acceleration (no gravity) in the NED frame 
      * 
+     * @details Rotates body frame acceration into NED Earth frame acceleration using the 
+     *          Madgwick quaternion determined during the Madgwick filter calculations. 
+     *          This function subtracts gravity in the Down direction. 
+     * 
+     * @param accel_body : body frame accelerometer data (g's) 
      * @param accel_ned : buffer to store NED acceleration values 
      */
-    void GetAccelNED(std::array<float, NUM_AXES> &accel_ned) const;
+    void GetAccelNED(
+        const std::array<float, NUM_AXES> &accel_body,
+        std::array<float, NUM_AXES> &accel_ned) const;
+
+    /**
+     * @brief Get data in the NWU frame 
+     * 
+     * @details Rotates body frame data into NWU Earth frame data using the Madgwick 
+     *          quaternion determined during the Madgwick filter calculations. The data 
+     *          can be any 3-axis body frame data such as gyroscope data or accelerometer 
+     *          variance. Note that this function does not account for gravity if passing 
+     *          accelerometer values. 
+     * 
+     * @param data_body : body frame data 
+     * @param data_nwu : buffer to store NWU values 
+     */
+    void GetDataNWU(
+        const std::array<float, NUM_AXES> &data_body,
+        std::array<float, NUM_AXES> &data_nwu) const;
+
+    /**
+     * @brief Get data in the NED frame 
+     * 
+     * @details Rotates body frame data into NED Earth frame data using the Madgwick 
+     *          quaternion determined during the Madgwick filter calculations. The data 
+     *          can be any 3-axis body frame data such as gyroscope data or accelerometer 
+     *          variance. Note that this function does not account for gravity if passing 
+     *          accelerometer values. 
+     * 
+     * @param data_body : body frame data 
+     * @param data_ned : buffer to store NED values 
+     */
+    void GetDataNED(
+        const std::array<float, NUM_AXES> &data_body,
+        std::array<float, NUM_AXES> &data_ned) const;
 
 private: 
 
@@ -144,12 +190,22 @@ private:
      */
     float invSqrt(const float &x) const;
 
+    /**
+     * @brief Body frame to Earth frame rotation using Madgwick quaternion 
+     * 
+     * @param body : body frame data 
+     * @param earth : Earth frame data 
+     */
+    void BodyToEarth(
+        const std::array<float, NUM_AXES> &body,
+        std::array<float, NUM_AXES> &earth) const;
+
     // Madgwick filter data 
-    float beta;				  // Algorithm gain (correction weight) 
-    float inv_sample_freq;    // Inverse sample frequency (1 / sample_frequency (Hz) == dt) 
-    float q0, q1, q2, q3;	  // Quaternion of sensor frame relative to auxiliary frame 
-    float aN, aW, aU;         // Acceleration in the NWU frame 
-    float roll, pitch, yaw;   // Orientation 
+    float beta;				                             // Algorithm gain (correction weight) 
+    float inv_sample_freq;                               // Inverse sample frequency (1 / sample_frequency (Hz) == dt) 
+    float q0, q1, q2, q3;	                             // Quaternion of sensor frame relative to auxiliary frame 
+    float r11, r12, r13, r21, r22, r23, r31, r32, r33;   // Quaternion rotation matrix elements 
+    float roll, pitch, yaw;                              // Orientation 
 };
 
 //=======================================================================================

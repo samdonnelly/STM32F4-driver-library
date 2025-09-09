@@ -65,10 +65,9 @@ MadgwickFilter::MadgwickStatus MadgwickFilter::Madgwick(
           _2bx, _2bz, _4bx, _4bz, 
           _2q0, _2q1, _2q2, _2q3, 
           _2q0q2, _2q2q3, q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
-	float r11, r12, r13, r21, r22, r23, r31, r32, r33;
+	// float r11, r12, r13, r21, r22, r23, r31, r32, r33;
 
     constexpr float _0_0f = 0.0f, _0_5f = 0.5f, _1_0f = 1.0f, _2_0f = 2.0f, _4_0f = 4.0f; 
-	constexpr float gravity = 1.0f;
 
 	// Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
 	if ((mag[X_AXIS] == _0_0f) && (mag[Y_AXIS] == _0_0f) && (mag[Z_AXIS] == _0_0f))
@@ -206,12 +205,6 @@ MadgwickFilter::MadgwickStatus MadgwickFilter::Madgwick(
 	pitch = asinf(-_2_0f*r31);
 	yaw = atan2f(r21, r11);
 
-	// Find the absolute acceleration (no gravity) in the NWU frame by rotating the body 
-	// frame acceleration. 
-	aN = _2_0f*(r11*accel[X_AXIS] + r12*accel[Y_AXIS] + r13*accel[Z_AXIS]);
-	aW = _2_0f*(r21*accel[X_AXIS] + r22*accel[Y_AXIS] + r23*accel[Z_AXIS]);
-	aU = _2_0f*(r31*accel[X_AXIS] + r32*accel[Y_AXIS] + r33*accel[Z_AXIS]) - gravity;
-
     return status;
 }
 
@@ -301,20 +294,44 @@ float MadgwickFilter::GetYawDegNED(void) const
 
 
 // Get absolute acceleration in the NWU frame 
-void MadgwickFilter::GetAccelNWU(std::array<float, NUM_AXES> &accel_nwu) const
+void MadgwickFilter::GetAccelNWU(
+	const std::array<float, NUM_AXES> &accel_body,
+	std::array<float, NUM_AXES> &accel_nwu) const
 {
-	accel_nwu[X_AXIS] = aN;
-	accel_nwu[Y_AXIS] = aW;
-	accel_nwu[Z_AXIS] = aU;
+	constexpr float gravity = 1.0f;
+	BodyToEarth(accel_body, accel_nwu);
+	accel_nwu[Z_AXIS] -= gravity;
 }
 
 
 // Get absolute acceleration in the NED frame 
-void MadgwickFilter::GetAccelNED(std::array<float, NUM_AXES> &accel_ned) const
+void MadgwickFilter::GetAccelNED(
+	const std::array<float, NUM_AXES> &accel_body,
+	std::array<float, NUM_AXES> &accel_ned) const
 {
-	accel_ned[X_AXIS] = aN;
-	accel_ned[Y_AXIS] = -aW;
-	accel_ned[Z_AXIS] = -aU;
+	GetAccelNWU(accel_body, accel_ned);
+	accel_ned[Y_AXIS] = -accel_ned[Y_AXIS];
+	accel_ned[Z_AXIS] = -accel_ned[Z_AXIS];
+}
+
+
+// Get data in the NWU frame 
+void MadgwickFilter::GetDataNWU(
+	const std::array<float, NUM_AXES> &data_body,
+	std::array<float, NUM_AXES> &data_nwu) const
+{
+	BodyToEarth(data_body, data_nwu);
+}
+
+
+// Get data in the NED frame 
+void MadgwickFilter::GetDataNED(
+	const std::array<float, NUM_AXES> &data_body,
+	std::array<float, NUM_AXES> &data_ned) const
+{
+	GetDataNWU(data_body, data_ned);
+	data_ned[Y_AXIS] = -data_ned[Y_AXIS];
+	data_ned[Z_AXIS] = -data_ned[Z_AXIS];
 }
 
 //=======================================================================================
@@ -335,6 +352,18 @@ float MadgwickFilter::invSqrt(const float &x) const
 	y *= (1.5f - (halfx * y * y));
 
 	return y;
+}
+
+
+// Body frame to Earth frame rotation using Madgwick quaternion 
+void MadgwickFilter::BodyToEarth(
+	const std::array<float, NUM_AXES> &body,
+	std::array<float, NUM_AXES> &earth) const
+{
+	constexpr float _2_0f = 2.0f;
+	earth[X_AXIS] = _2_0f*(r11*body[X_AXIS] + r12*body[Y_AXIS] + r13*body[Z_AXIS]);
+	earth[Y_AXIS] = _2_0f*(r21*body[X_AXIS] + r22*body[Y_AXIS] + r23*body[Z_AXIS]);
+	earth[Z_AXIS] = _2_0f*(r31*body[X_AXIS] + r32*body[Y_AXIS] + r33*body[Z_AXIS]);
 }
 
 //=======================================================================================
