@@ -175,6 +175,7 @@ extern "C" {
 #define S_TO_MS 1000      // Seconds to milliseconds 
 #define MIN_TO_DEG 60     // Coordinate minutes to degrees conversion 
 #define KPH_TO_MPS 3.6f   // Kilometers/hour to meters/second 
+#define GRAVITY 9.81f     // Gravity (m/s^2) 
 
 //==================================================
 

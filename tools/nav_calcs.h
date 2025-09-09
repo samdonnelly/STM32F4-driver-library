@@ -287,6 +287,15 @@ public:
      * @details This setter must be called before the Kalman filter for pose can be used. 
      *          Not doing so will likely produce incorrect results. Other Kalman filter 
      *          data not specified here is initialized to zero. 
+     *          
+     *          The process (accelerometer) variance is assumed to be same for all axes 
+     *          (hence only one variance for position and velocity) but in reality each 
+     *          axis of the accelerometer will have its own uncertainty. In order to 
+     *          factor in each body/sensor frame axis uncertaintly you'd have to 
+     *          transform the uncertaintly in the body/sensor frame into the NED frame. 
+     *          This additional computation may create a more accurate result but it's 
+     *          not considered necessary here. The average axis uncertaintly can be 
+     *          passed as an argument instead. 
      * 
      * @param predict_delta : time between calls to the prediction step function (s) 
      * @param initial_position : initial coordinates and altitude of the system 
