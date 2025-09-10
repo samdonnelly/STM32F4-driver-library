@@ -153,7 +153,6 @@ float NavCalcs::TrueNorthHeading(const float &mag_heading) const
     // offset didn't put the heading value outside its acceptable range. 
     float tn_heading = mag_heading + true_north_offset;
     HeadingBoundChecks(tn_heading);
-
     return tn_heading; 
 }
 
@@ -216,6 +215,7 @@ void NavCalcs::KalmanPosePredict(
 {
     const float dt_2 = k_dt*k_dt;
     const float accel_const = 0.5f*dt_2;
+    const float s2_av_const = gravity*gravity*dt_2;
     const float s2_ap_const = 2.25f*dt_2;
     constexpr float coordinate_const = earth_radius*KM_TO_M*DEG_TO_RAD;
 
@@ -248,11 +248,11 @@ void NavCalcs::KalmanPosePredict(
     // Predict the new uncertainty. This must be done each prediction step to account for 
     // error accumulation. 
     float 
-    s2_av_N = accel_ned_accuracy[X_AXIS]*gravity*dt_2,
+    s2_av_N = accel_ned_accuracy[X_AXIS]*s2_av_const,
     s2_ap_N = s2_av_N*s2_ap_const,
-    s2_av_E = accel_ned_accuracy[Y_AXIS]*gravity*dt_2,
+    s2_av_E = accel_ned_accuracy[Y_AXIS]*s2_av_const,
     s2_ap_E = s2_av_E*s2_ap_const,
-    s2_av_D = accel_ned_accuracy[Z_AXIS]*gravity*dt_2,
+    s2_av_D = accel_ned_accuracy[Z_AXIS]*s2_av_const,
     s2_ap_D = s2_av_D*s2_ap_const;
 
     s2_v.N = s2_v.N + s2_av_N;
@@ -273,14 +273,13 @@ void NavCalcs::KalmanPoseUpdate(
 {
     constexpr float _0_0f = 0.0f, _1_0f = 1.0f;
     const float cog = gps_velocity.cog*DEG_TO_RAD;
-    const float cosf_cog = cosf(cog), sinf_cog = sinf(cog);
 
     // Find the Kalman gains for position and velocity in each NED axis. 
     const float
     K_N11 = s2_p.N / (s2_p.N + gps_position_accuracy.lat),
-    K_N22 = s2_v.N / (s2_v.N + gps_velocity_accuracy.sog*cosf_cog),
+    K_N22 = s2_v.N / (s2_v.N + gps_velocity_accuracy.sog),
     K_E11 = s2_p.E / (s2_p.E + gps_position_accuracy.lon),
-    K_E22 = s2_v.E / (s2_v.E + gps_velocity_accuracy.sog*sinf_cog),
+    K_E22 = s2_v.E / (s2_v.E + gps_velocity_accuracy.sog),
     K_D11 = s2_p.D / (s2_p.D + gps_position_accuracy.alt),
     K_D22 = s2_v.D / (s2_v.D + gps_velocity_accuracy.vvel);
 
@@ -300,8 +299,8 @@ void NavCalcs::KalmanPoseUpdate(
     // Update the state velocity. The local velocity for each axis is updated so velocity 
     // can continue to be estimated during the prediction step. The determined velocity 
     // is then converted to its global format for the user to fetch. 
-    kl_vel.N = kl_vel.N + (gps_velocity.sog*cosf_cog - kl_vel.N)*K_N22;
-    kl_vel.E = kl_vel.E + (gps_velocity.sog*sinf_cog - kl_vel.E)*K_E22;
+    kl_vel.N = kl_vel.N + (gps_velocity.sog*cosf(cog) - kl_vel.N)*K_N22;
+    kl_vel.E = kl_vel.E + (gps_velocity.sog*sinf(cog) - kl_vel.E)*K_E22;
     kl_vel.D = kl_vel.D + (gps_velocity.vvel - kl_vel.D)*K_D22;
     kg_vel.sog = sqrtf(kl_vel.N*kl_vel.N + kl_vel.E*kl_vel.E);
     kg_vel.cog = Heading(kl_vel.N, -kl_vel.E);
@@ -323,7 +322,7 @@ void NavCalcs::SetCoordinateLPFGain(float coordinate_gain)
 
 
 // Set the true north offset 
-void NavCalcs::SetTnOffset(int16_t tn_offset)
+void NavCalcs::SetTnOffset(float tn_offset)
 {
     true_north_offset = tn_offset; 
 }

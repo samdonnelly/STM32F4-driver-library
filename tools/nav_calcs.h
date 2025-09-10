@@ -284,9 +284,9 @@ public:
      * 
      * @see TrueNorthHeading 
      * 
-     * @param tn_offset : offset between magnetic and true north (degrees*10) 
+     * @param tn_offset : offset between magnetic and true north (degrees) 
      */
-    void SetTnOffset(int16_t tn_offset);
+    void SetTnOffset(float tn_offset);
 
     /**
      * @brief Set the Kalman Pose Data objectSet Kalman filter data 

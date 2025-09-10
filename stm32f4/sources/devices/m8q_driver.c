@@ -1392,6 +1392,34 @@ uint8_t m8q_get_position_navstat_lock(void)
 }
 
 
+// Get horizontal accuracy estimate (hAcc) 
+float m8q_get_position_hacc(void)
+{
+    return (float)m8q_get_position_haccI() / SCALE_10F;
+}
+
+
+// Get horizontal accuracy estimate (hAcc) as a scaled integer 
+uint32_t m8q_get_position_haccI(void)
+{
+    return m8q_nmea_num_parse(m8q_driver_data.pos_data.SOG, sizeof(m8q_driver_data.pos_data.SOG));
+}
+
+
+// Get vertical accuracy estimate (vAcc) 
+float m8q_get_position_vacc(void)
+{
+    return (float)m8q_get_position_vaccI() / SCALE_10F;
+}
+
+
+// Get vertical accuracy estimate (vAcc) as a scaled integer 
+uint32_t m8q_get_position_vaccI(void)
+{
+    return m8q_nmea_num_parse(m8q_driver_data.pos_data.SOG, sizeof(m8q_driver_data.pos_data.SOG));
+}
+
+
 // Get speed over ground (SOG) 
 float m8q_get_position_sog(void)
 {
@@ -1440,7 +1468,7 @@ uint32_t m8q_get_position_cogI(void)
 // Get vertical velocity 
 float m8q_get_position_vvel(void)
 {
-    return m8q_get_position_vvelI() / SCALE_1000F;
+    return (float)m8q_get_position_vvelI() / SCALE_1000F;
 }
 
 

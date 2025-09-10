@@ -315,23 +315,15 @@ void MadgwickFilter::GetAccelNED(
 }
 
 
-// Get data in the NWU frame 
-void MadgwickFilter::GetDataNWU(
-	const std::array<float, NUM_AXES> &data_body,
-	std::array<float, NUM_AXES> &data_nwu) const
+// Body frame to Earth frame rotation using Madgwick quaternion 
+void MadgwickFilter::BodyToEarth(
+	const std::array<float, NUM_AXES> &body,
+	std::array<float, NUM_AXES> &earth) const
 {
-	BodyToEarth(data_body, data_nwu);
-}
-
-
-// Get data in the NED frame 
-void MadgwickFilter::GetDataNED(
-	const std::array<float, NUM_AXES> &data_body,
-	std::array<float, NUM_AXES> &data_ned) const
-{
-	GetDataNWU(data_body, data_ned);
-	data_ned[Y_AXIS] = -data_ned[Y_AXIS];
-	data_ned[Z_AXIS] = -data_ned[Z_AXIS];
+	constexpr float _2_0f = 2.0f;
+	earth[X_AXIS] = _2_0f*(r11*body[X_AXIS] + r12*body[Y_AXIS] + r13*body[Z_AXIS]);
+	earth[Y_AXIS] = _2_0f*(r21*body[X_AXIS] + r22*body[Y_AXIS] + r23*body[Z_AXIS]);
+	earth[Z_AXIS] = _2_0f*(r31*body[X_AXIS] + r32*body[Y_AXIS] + r33*body[Z_AXIS]);
 }
 
 //=======================================================================================
@@ -352,18 +344,6 @@ float MadgwickFilter::invSqrt(const float &x) const
 	y *= (1.5f - (halfx * y * y));
 
 	return y;
-}
-
-
-// Body frame to Earth frame rotation using Madgwick quaternion 
-void MadgwickFilter::BodyToEarth(
-	const std::array<float, NUM_AXES> &body,
-	std::array<float, NUM_AXES> &earth) const
-{
-	constexpr float _2_0f = 2.0f;
-	earth[X_AXIS] = _2_0f*(r11*body[X_AXIS] + r12*body[Y_AXIS] + r13*body[Z_AXIS]);
-	earth[Y_AXIS] = _2_0f*(r21*body[X_AXIS] + r22*body[Y_AXIS] + r23*body[Z_AXIS]);
-	earth[Z_AXIS] = _2_0f*(r31*body[X_AXIS] + r32*body[Y_AXIS] + r33*body[Z_AXIS]);
 }
 
 //=======================================================================================

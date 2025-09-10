@@ -517,7 +517,61 @@ uint16_t m8q_get_position_navstat(void);
  * 
  * @return uint8_t : valid position lock status 
  */
-uint8_t m8q_get_position_navstat_lock(void); 
+uint8_t m8q_get_position_navstat_lock(void);
+
+
+/**
+ * @brief Get horizontal accuracy estimate (hAcc) 
+ * 
+ * @details Get horizontal accuracy estimate (hAcc) read from the POSITION PUBX NMEA 
+ *          message. POSITION returns a numeric value of hAcc in m. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @return float : horizontal accuracy estimate (m) 
+ */
+float m8q_get_position_hacc(void);
+
+
+/**
+ * @brief Get horizontal accuracy estimate (hAcc) as a scaled integer 
+ * 
+ * @details Get the scaled value of horizontal accuracy estimate (hAcc) read from the 
+ *          POSITION PUBX NMEA message. POSITION returns a numeric value of hAcc in m but 
+ *          the returned value is scaled by 10 to eliminate the decimal place. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @return uint32_t : horizontal accuracy estimate (m*10) 
+ */
+uint32_t m8q_get_position_haccI(void);
+
+
+/**
+ * @brief Get vertical accuracy estimate (vAcc) 
+ * 
+ * @details Get vertical accuracy estimate (vAcc) read from the POSITION PUBX NMEA 
+ *          message. POSITION returns a numeric value of vAcc in m. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @return float : vertical accuracy estimate (m) 
+ */
+float m8q_get_position_vacc(void);
+
+
+/**
+ * @brief Get vertical accuracy estimate (vAcc) as a scaled integer 
+ * 
+ * @details Get the scaled value of vertical accuracy estimate (vAcc) read from the 
+ *          POSITION PUBX NMEA message. POSITION returns a numeric value of vAcc in m but 
+ *          the returned value is scaled by 10 to eliminate the decimal place. 
+ *          
+ *          This value is only updated if new POSITION messages are read. 
+ * 
+ * @return uint32_t : vertical accuracy estimate (m*10) 
+ */
+uint32_t m8q_get_position_vaccI(void);
 
 
 /**

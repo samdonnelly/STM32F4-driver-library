@@ -149,36 +149,17 @@ public:
         std::array<float, NUM_AXES> &accel_ned) const;
 
     /**
-     * @brief Get data in the NWU frame 
+     * @brief Body frame to Earth frame rotation using Madgwick quaternion 
      * 
-     * @details Rotates body frame data into NWU Earth frame data using the Madgwick 
-     *          quaternion determined during the Madgwick filter calculations. The data 
-     *          can be any 3-axis body frame data such as gyroscope data or accelerometer 
-     *          variance. Note that this function does not account for gravity if passing 
-     *          accelerometer values. 
+     * @note This functions does not do any corrections to the data such as changing sign 
+     *       or accounting for gravity. 
      * 
-     * @param data_body : body frame data 
-     * @param data_nwu : buffer to store NWU values 
+     * @param body : body frame data 
+     * @param earth : buffer to store Earth frame data 
      */
-    void GetDataNWU(
-        const std::array<float, NUM_AXES> &data_body,
-        std::array<float, NUM_AXES> &data_nwu) const;
-
-    /**
-     * @brief Get data in the NED frame 
-     * 
-     * @details Rotates body frame data into NED Earth frame data using the Madgwick 
-     *          quaternion determined during the Madgwick filter calculations. The data 
-     *          can be any 3-axis body frame data such as gyroscope data or accelerometer 
-     *          variance. Note that this function does not account for gravity if passing 
-     *          accelerometer values. 
-     * 
-     * @param data_body : body frame data 
-     * @param data_ned : buffer to store NED values 
-     */
-    void GetDataNED(
-        const std::array<float, NUM_AXES> &data_body,
-        std::array<float, NUM_AXES> &data_ned) const;
+    void BodyToEarth(
+        const std::array<float, NUM_AXES> &body,
+        std::array<float, NUM_AXES> &earth) const;
 
 private: 
 
@@ -189,16 +170,6 @@ private:
      * @return float : result of calculation 
      */
     float invSqrt(const float &x) const;
-
-    /**
-     * @brief Body frame to Earth frame rotation using Madgwick quaternion 
-     * 
-     * @param body : body frame data 
-     * @param earth : Earth frame data 
-     */
-    void BodyToEarth(
-        const std::array<float, NUM_AXES> &body,
-        std::array<float, NUM_AXES> &earth) const;
 
     // Madgwick filter data 
     float beta;				                             // Algorithm gain (correction weight) 
