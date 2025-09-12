@@ -115,12 +115,11 @@ typedef enum {
  *          argument to mpu6050_init to configure the device. Higher ranges cover 
  *          a wider range of angular velocity but have less precision. 
  *          
- *          Each of the gyroscope ranges has a scalar used to convert it's raw 
- *          value into a human readable form. These scalars are listed below and are used 
- *          to divide the raw 16-bit value read from the gyroscope measurement register 
- *          to get the angular acceleration in deg/s. These values are scaled by a factor 
- *          of 10 to eliminate the decimal place. When calculating the actual value the 
- *          values are unscaled. 
+ *          Each of the gyroscope ranges has a scalar used to convert it's raw value into 
+ *          a human readable form. These scalars are listed below and are used to divide 
+ *          the raw 16-bit value read from the gyroscope measurement register to get the 
+ *          angular rate in deg/s. These values are scaled by a factor of 10 to eliminate 
+ *          the decimal place. When calculating the actual value the values are unscaled. 
  *          - GYRO_SCALE_FS_SEL_2000 = 164, ---> 16.4 * 10 
  *          - GYRO_SCALE_FS_SEL_1000 = 328, ---> 32.8 * 10 
  *          - GYRO_SCALE_FS_SEL_500  = 655, ---> 65.5 * 10 

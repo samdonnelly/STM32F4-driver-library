@@ -116,9 +116,8 @@ LSM303AGR_STATUS lsm303agr_m_init(
  *          calibration value setter as these two functions do not account for what the 
  *          other does. 
  *          
- *          Note that these offsets must match the "units" of the digital output data 
- *          which is the applied magnetic field in millgauss (mG) divided by the magnetic 
- *          sensitivity of the device (see datasheet). 
+ *          Note that these offsets should have units of milligauss (mG). This function 
+ *          will convert it to the scale needed to work with the digital output values. 
  *          
  *          Note that it's the users responsibility to provide a valid buffer of offsets 
  *          to be written. A buffer that is NULL or too small will not update all the 
@@ -127,7 +126,7 @@ LSM303AGR_STATUS lsm303agr_m_init(
  * @see lsm303agr_m_get_axis 
  * @see lsm303agr_m_calibration_set 
  * 
- * @param offset_reg : hard-iron offsets to update the registers with 
+ * @param offset_reg : hard-iron offsets to update the registers with (mG) 
  * @return LSM303AGR_STATUS : status of the register write 
  */
 LSM303AGR_STATUS lsm303agr_m_offset_reg_set(const int16_t *offset_reg); 
@@ -171,11 +170,12 @@ LSM303AGR_STATUS lsm303agr_m_offset_reg_set(const int16_t *offset_reg);
  *          responsibility to provide valid buffers for these values. Buffers that are 
  *          NULL or too small will not update all the values. 
  * 
- * @see lsm303agr_m_get_axis_cal_int 
+ * @see lsm303agr_m_get_axis_cal
+ * @see lsm303agr_m_get_axis_cal_f
  * 
- * @param hi_offsets : hard-iron offsets to set (milligauss) 
- * @param sid_values : soft-iron diagonal values to set (milligauss) 
- * @param sio_values : soft-iron off-diagonal values to set (milligauss) 
+ * @param hi_offsets : hard-iron offsets to set (mG) 
+ * @param sid_values : soft-iron diagonal values to set (mG) 
+ * @param sio_values : soft-iron off-diagonal values to set (mG) 
  */
 void lsm303agr_m_calibration_set(
     const float *hi_offsets, 
@@ -200,13 +200,14 @@ LSM303AGR_STATUS lsm303agr_m_update(void);
 
 
 /**
- * @brief Get raw magnetometer axis data 
+ * @brief Get digital output magnetometer axis data 
  * 
  * @details Copies the last read magnetometer digital output data of each axis to the 
  *          provided buffer. If the hard-iron offset registers have been set then those 
  *          values will automatically be applied to the digital output values. If not, 
- *          then only the raw axis data will be copied. The digital output values are 
- *          the actual magnetic field strength in milligauss (mG) divided by the 
+ *          then only the raw axis data will be copied. The driver calibration values 
+ *          are NOT applied to the digital output values here. The digital output values 
+ *          are the actual magnetic field strength in milligauss (mG) divided by the 
  *          magnetic sensitivity. 
  *          
  *          Note that it's the users responsibility to provide a buffer large enough to 
@@ -214,8 +215,9 @@ LSM303AGR_STATUS lsm303agr_m_update(void);
  *          bytes). Also lsm303agr_m_update must be called in order to read/update 
  *          magnetometer data, this function only retrieves the already read data. 
  * 
- * @see lsm303agr_m_offset_reg_set 
- * @see lsm303agr_m_update 
+ * @see lsm303agr_m_offset_reg_set
+ * @see lsm303agr_m_calibration_set
+ * @see lsm303agr_m_update
  * 
  * @param m_axis_buff : buffer to store the magnetometer axis data 
  */
@@ -232,7 +234,20 @@ void lsm303agr_m_get_axis_raw(int16_t *m_axis_buff);
  * 
  * @param m_axis_buff : buffer to store the magnetometer axis data (mG) 
  */
-void lsm303agr_m_get_axis_mg(int16_t *m_axis_buff);
+void lsm303agr_m_get_axis(int16_t *m_axis_buff);
+
+
+/**
+ * @brief Get magnetometer axis data as floats in milligauss (mG) 
+ * 
+ * @details This provides the same data as lsm303agr_m_get_axis except as floats instead 
+ *          of integers. 
+ * 
+ * @see lsm303agr_m_get_axis
+ * 
+ * @param m_axis_buff : buffer to store the magnetometer axis data (mG) 
+ */
+void lsm303agr_m_get_axis_f(float *m_axis_buff);
 
 
 /**
@@ -259,20 +274,20 @@ void lsm303agr_m_get_axis_mg(int16_t *m_axis_buff);
  * 
  * @param m_axis_buff : buffer to store the calibrated magnetometer axis data 
  */
-void lsm303agr_m_get_axis_cal_int(int16_t *m_axis_buff);
+void lsm303agr_m_get_axis_cal(int16_t *m_axis_buff);
 
 
 /**
  * @brief Get calibrated magnetometer axis data as floating point numbers 
  * 
- * @details See the description for lsm303agr_m_get_axis_cal_int. The only difference 
+ * @details See the description for lsm303agr_m_get_axis_cal. The only difference 
  *          here is the calibrated data is stored in floating point numbers. 
  * 
- * @see lsm303agr_m_get_axis_cal_int
+ * @see lsm303agr_m_get_axis_cal
  * 
  * @param m_cal_axis_buff : buffer to store the calibrated magnetometer axis data 
  */
-void lsm303agr_m_get_axis_cal_float(float *m_cal_axis_buff);
+void lsm303agr_m_get_axis_cal_f(float *m_cal_axis_buff);
 
 
 /**

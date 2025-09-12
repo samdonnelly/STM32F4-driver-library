@@ -42,8 +42,8 @@
 // Magnetometer data 
 #define LSM303AGR_M_ID 0x40              // Value returned from the WHO_AM_I register 
 // Ratio of magnetic field (mG) to digital output data 
-#define LSM303AGR_M_SENS_I_NUM 3         // Integer - numerator 
-#define LSM303AGR_M_SENS_I_DEN 2         // Integer - denomenator  
+#define LSM303AGR_M_SENS_I1 3            // Integer - numerator 
+#define LSM303AGR_M_SENS_I2 2            // Integer - denomenator  
 #define LSM303AGR_M_SENS_F 1.5f          // Float 
 // Heading 
 #define LSM303AGR_M_HEADING_NORTH 0      // Heading reading when facing North (0 deg*10) 
@@ -194,11 +194,11 @@ static lsm303agr_driver_data_t lsm303agr_data;
 // Prototypes 
 
 /**
- * @brief Apply calibrated correction values to axis data 
+ * @brief Apply calibrated correction values to magnetometer axis data 
  * 
- * @param mag_cal : buffer to store the calibrated axis data 
+ * @param m_axis_data : buffer that contains axis data to be corrected 
  */
-void lsm303agr_m_correct_axes(float *mag_cal); 
+void lsm303agr_m_correct_axes(float *m_axis_data); 
 
 
 /**
@@ -349,12 +349,12 @@ LSM303AGR_STATUS lsm303agr_m_init(
 // Set the hard-iron offset registers 
 LSM303AGR_STATUS lsm303agr_m_offset_reg_set(const int16_t *offset_reg)
 {
-    if (offset_reg == NULL)
-    {
-        return LSM303AGR_INVALID_PTR; 
-    }
+    lsm303agr_m_data_t hi_offsets_reg[NUM_AXES];
 
-    lsm303agr_m_data_t *hi_offsets_reg = (lsm303agr_m_data_t *)offset_reg; 
+    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (offset_reg != NULL); i++)
+    {
+        hi_offsets_reg[i].m_axis = (offset_reg[i] * LSM303AGR_M_SENS_I2) / LSM303AGR_M_SENS_I1;
+    }
 
     return lsm303agr_m_reg_write(LSM303AGR_M_OFFSET_X_L | LSM303AGR_ADDR_INC, 
                                  hi_offsets_reg->m_axis_bytes, 
@@ -393,52 +393,62 @@ LSM303AGR_STATUS lsm303agr_m_update(void)
     // is used to increment to the next register address after each byte read. 
     return lsm303agr_m_reg_read(LSM303AGR_M_OUT_X_L | LSM303AGR_ADDR_INC, 
                                 lsm303agr_data.m_data[X_AXIS].m_axis_bytes, 
-                                BYTE_6); 
+                                BYTE_6);
 }
 
 
-// Get raw magnetometer axis data 
+// Get digital output magnetometer axis data 
 void lsm303agr_m_get_axis_raw(int16_t *m_axis_buff)
 {
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_axis_buff != NULL); i++)
     {
-        m_axis_buff[i] = lsm303agr_data.m_data[i].m_axis; 
+        *m_axis_buff++ = lsm303agr_data.m_data[i].m_axis;
     }
 }
 
 
 // Get magnetometer axis data as integers in milligauss (mG) 
-void lsm303agr_m_get_axis_mg(int16_t *m_axis_buff)
+void lsm303agr_m_get_axis(int16_t *m_axis_buff)
 {
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_axis_buff != NULL); i++)
     {
-        m_axis_buff[i] = (lsm303agr_data.m_data[i].m_axis * LSM303AGR_M_SENS_I_NUM) / LSM303AGR_M_SENS_I_DEN;
+        *m_axis_buff++ = (lsm303agr_data.m_data[i].m_axis * LSM303AGR_M_SENS_I1) / LSM303AGR_M_SENS_I2;
     }
 }
 
 
-// Get calibrated magnetometer axis data as integers 
-void lsm303agr_m_get_axis_cal_int(int16_t *m_cal_axis_buff)
+// Get magnetometer axis data as floats in milligauss (mG) 
+void lsm303agr_m_get_axis_f(float *m_axis_buff)
 {
-    float mag_cal[NUM_AXES]; 
-    lsm303agr_m_correct_axes(mag_cal); 
-
-    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_cal_axis_buff != NULL); i++)
+    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_axis_buff != NULL); i++)
     {
-        m_cal_axis_buff[i] = (int16_t)mag_cal[i]; 
+        *m_axis_buff++ = (float)lsm303agr_data.m_data[i].m_axis * LSM303AGR_M_SENS_F;
     }
 }
 
 
-// Get calibrated magnetometer axis data as floating point numbers 
-void lsm303agr_m_get_axis_cal_float(float *m_cal_axis_buff)
+// Get calibrated magnetometer axis data as integers in milligauss (mG) 
+void lsm303agr_m_get_axis_cal(int16_t *m_cal_axis_buff)
 {
     float mag_cal[NUM_AXES];
     lsm303agr_m_correct_axes(mag_cal);
 
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_cal_axis_buff != NULL); i++)
     {
-        m_cal_axis_buff[i] = mag_cal[i]; 
+        *m_cal_axis_buff++ = (int16_t)mag_cal[i];
+    }
+}
+
+
+// Get calibrated magnetometer axis data as floats in milligauss (mG) 
+void lsm303agr_m_get_axis_cal_f(float *m_cal_axis_buff)
+{
+    float mag_cal[NUM_AXES];
+    lsm303agr_m_correct_axes(mag_cal);
+
+    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_cal_axis_buff != NULL); i++)
+    {
+        *m_cal_axis_buff++ = mag_cal[i];
     }
 }
 
@@ -449,7 +459,7 @@ int16_t lsm303agr_m_get_heading(void)
     float mag_cal[NUM_AXES]; 
     int16_t heading = CLEAR; 
 
-    lsm303agr_m_correct_axes(mag_cal); 
+    lsm303agr_m_correct_axes(mag_cal);
 
     // Find the magnetic heading based on the magnetometer X and Y axis data. atan2f 
     // looks at the value and sign of X and Y to determine the correct output so axis 
@@ -465,7 +475,7 @@ int16_t lsm303agr_m_get_heading(void)
     // 360 degrees (or 0-3600 deg*10). 
     if (heading < LSM303AGR_M_HEADING_NORTH)
     {
-        heading += LSM303AGR_M_HEADING_RANGE; 
+        heading += LSM303AGR_M_HEADING_RANGE;
     }
 
     return heading; 
@@ -473,31 +483,34 @@ int16_t lsm303agr_m_get_heading(void)
 
 
 // Apply calibrated correction values to axis data 
-void lsm303agr_m_correct_axes(float *mag_cal)
+void lsm303agr_m_correct_axes(float *m_axis_data)
 {
     // Correct the magnetometer axis readings with calibration values. First the hard-
     // iron offsets are subtracted from the axis reading that come from the magnetometer, 
     // then soft-iron scale values are applied using a matrix multiplication. 
 
-    float mag_off[NUM_AXES]; 
+    lsm303agr_m_get_axis_f(m_axis_data);
 
     // Hard-iron offsets 
-    mag_off[X_AXIS] = (float)lsm303agr_data.m_data[X_AXIS].m_axis - lsm303agr_data.hi_offsets[X_AXIS]; 
-    mag_off[Y_AXIS] = (float)lsm303agr_data.m_data[Y_AXIS].m_axis - lsm303agr_data.hi_offsets[Y_AXIS]; 
-    mag_off[Z_AXIS] = (float)lsm303agr_data.m_data[Z_AXIS].m_axis - lsm303agr_data.hi_offsets[Z_AXIS]; 
+    float mag_off[NUM_AXES] = 
+    {
+        m_axis_data[X_AXIS] - lsm303agr_data.hi_offsets[X_AXIS],
+        m_axis_data[Y_AXIS] - lsm303agr_data.hi_offsets[Y_AXIS],
+        m_axis_data[Z_AXIS] - lsm303agr_data.hi_offsets[Z_AXIS]
+    };
 
     // Soft-iron offsets 
-    mag_cal[X_AXIS] = (lsm303agr_data.sid_values[X_AXIS]*mag_off[X_AXIS]) + 
-                      (lsm303agr_data.sio_values[X_AXIS]*mag_off[Y_AXIS]) + 
-                      (lsm303agr_data.sio_values[Y_AXIS]*mag_off[Z_AXIS]); 
+    m_axis_data[X_AXIS] = (lsm303agr_data.sid_values[X_AXIS]*mag_off[X_AXIS]) + 
+                          (lsm303agr_data.sio_values[X_AXIS]*mag_off[Y_AXIS]) + 
+                          (lsm303agr_data.sio_values[Y_AXIS]*mag_off[Z_AXIS]);
     
-    mag_cal[Y_AXIS] = (lsm303agr_data.sio_values[X_AXIS]*mag_off[X_AXIS]) + 
-                      (lsm303agr_data.sid_values[Y_AXIS]*mag_off[Y_AXIS]) + 
-                      (lsm303agr_data.sio_values[Z_AXIS]*mag_off[Z_AXIS]); 
+    m_axis_data[Y_AXIS] = (lsm303agr_data.sio_values[X_AXIS]*mag_off[X_AXIS]) + 
+                          (lsm303agr_data.sid_values[Y_AXIS]*mag_off[Y_AXIS]) + 
+                          (lsm303agr_data.sio_values[Z_AXIS]*mag_off[Z_AXIS]);
     
-    mag_cal[Z_AXIS] = (lsm303agr_data.sio_values[Y_AXIS]*mag_off[X_AXIS]) + 
-                      (lsm303agr_data.sio_values[Z_AXIS]*mag_off[Y_AXIS]) + 
-                      (lsm303agr_data.sid_values[Z_AXIS]*mag_off[Z_AXIS]); 
+    m_axis_data[Z_AXIS] = (lsm303agr_data.sio_values[Y_AXIS]*mag_off[X_AXIS]) + 
+                          (lsm303agr_data.sio_values[Z_AXIS]*mag_off[Y_AXIS]) + 
+                          (lsm303agr_data.sid_values[Z_AXIS]*mag_off[Z_AXIS]);
 }
 
 //=======================================================================================
