@@ -109,19 +109,16 @@ LSM303AGR_STATUS lsm303agr_m_init(
 /**
  * @brief Set the hard-iron offset registers 
  * 
- * @details Writes the provided hard-iron offsers to the device. If successfully written, 
- *          these offsets will automatically be applied to the device axis readings and 
- *          will be reflected when getting the axis readings from the driver. If using 
- *          this method for correcting the axis data, then it's recommended to not use 
- *          the calibration value setter below as these two functions do not account for 
- *          what the other does. If this correction method is not desired, then this 
- *          function can simply not be called when setting up the device. 
+ * @details Writes the provided hard-iron offsets for each axis to the device. These 
+ *          offsets will automatically be applied to the digital output and therefore 
+ *          reflected in magnetometer data retreived from the driver. If using this 
+ *          method for correcting the axis data, then it's recommended to not use the 
+ *          calibration value setter as these two functions do not account for what the 
+ *          other does. 
  *          
- *          One method to obtain these hard-iron offsets is through the MotionCal 
- *          software. The process is described in further detail in the calibration 
- *          setter function description but the offsets obtained can simply be rounded 
- *          then cast from floats to integers. These offsets are integers because the 
- *          registers that will hold them are in int16_t format. 
+ *          Note that these offsets must match the "units" of the digital output data 
+ *          which is the applied magnetic field in millgauss (mG) divided by the magnetic 
+ *          sensitivity of the device (see datasheet). 
  *          
  *          Note that it's the users responsibility to provide a valid buffer of offsets 
  *          to be written. A buffer that is NULL or too small will not update all the 
@@ -142,29 +139,27 @@ LSM303AGR_STATUS lsm303agr_m_offset_reg_set(const int16_t *offset_reg);
  * @details Set the provided hard-iron offsets and soft-iron correction values within the 
  *          driver. These values will be used to correct the axis data when getting the 
  *          calibrated axis values. If using this method for correcting the axis data, 
- *          it's recommended to not use the hard-iron offset register setter above as 
- *          these two functions do not account for what the other does. If this 
- *          correction method is not desired, then this function can simply not be called 
- *          when setting up the device. It is possible to set only the hard-iron offsets 
- *          or the soft-iron correction values and not the other. 
+ *          it's recommended to not use the hard-iron offset register setter as thse two 
+ *          functions do not account for what the other does. It is possible to set only 
+ *          the hard-iron offsets or the soft-iron correction values and not the other. 
+ *          
+ *          Note that these offsets must be in units of milligauss (mG). 
  *          
  *          The provided correction values are made up of hard-iron (hi) offsets and 
- *          soft-iron values that make up a soft-iron (si) correction matrix. The soft-
+ *          soft-iron (si) values that make up a soft-iron correction matrix. The soft-
  *          iron matrix is made up of diagonal (sid) values and off-diagonal (sio) 
  *          values. The calibration math is as follows: 
  *          
- *          [ sid.x  sio.x  sio.y ]   | (x-axis_data) - hi.x | 
- *          [ sio.x  sid.y  sio.z ] * | (y-axis_data) - hi.y | 
- *          [ sio.y  sio.z  sid.z ]   | (z-axis_data) - hi.z | 
+ *          | mag_cal.x |   | sid.x   sio.x   sio.y |   | (x-axis_data) - hi.x | 
+ *          | mag_cal.y | = | sio.x   sid.y   sio.z | * | (y-axis_data) - hi.y | 
+ *          | mag_cal.z |   | sio.y   sio.z   sid.z |   | (z-axis_data) - hi.z | 
  *          
  *          A common way to obtain these calibration values is through the MotionCal 
  *          software. There are videos online showing how to use it but some key details 
  *          not mentioned are: 
  *          - MotionCal uses a 115200 baudrate to read serial data. 
  *          - MotionCal looks for magnetometer axis data as an integer with units of 
- *            microteslas*10 (uT*10) which is the same as milligauss (mG) which happens 
- *            to be the units this device outputs axis data in. This means no output 
- *            data modification is needed. 
+ *            microteslas*10 (uT*10) which is the same as milligauss (mG). 
  *          - Hard-iron offsets and soft-iron scalars are determined and displayed as 
  *            floats in MotionCal despite the provided data being integers. The hard-
  *            iron float values have the units of microteslas (uT) so to make them 
@@ -205,12 +200,14 @@ LSM303AGR_STATUS lsm303agr_m_update(void);
 
 
 /**
- * @brief Get magnetometer axis data 
+ * @brief Get raw magnetometer axis data 
  * 
- * @details Copies the last read magnetometer axis data to the provided buffer. If the 
- *          hard-iron offset registers have been set then those will automatically be 
- *          applied to the axis data by the device. If not, then the raw axis data will 
- *          be copied. 
+ * @details Copies the last read magnetometer digital output data of each axis to the 
+ *          provided buffer. If the hard-iron offset registers have been set then those 
+ *          values will automatically be applied to the digital output values. If not, 
+ *          then only the raw axis data will be copied. The digital output values are 
+ *          the actual magnetic field strength in milligauss (mG) divided by the 
+ *          magnetic sensitivity. 
  *          
  *          Note that it's the users responsibility to provide a buffer large enough to 
  *          store the axis data (3 axes x 2 bytes per axis == buffer of size 3 (6 total 
@@ -222,7 +219,20 @@ LSM303AGR_STATUS lsm303agr_m_update(void);
  * 
  * @param m_axis_buff : buffer to store the magnetometer axis data 
  */
-void lsm303agr_m_get_axis(int16_t *m_axis_buff); 
+void lsm303agr_m_get_axis_raw(int16_t *m_axis_buff);
+
+
+/**
+ * @brief Get magnetometer axis data as integers in milligauss (mG) 
+ * 
+ * @details This provides the same data as lsm303agr_m_get_axis_raw except scaled by the 
+ *          magnetic sensitivity to make the data have units of milligauss (mG). 
+ * 
+ * @see lsm303agr_m_get_axis_raw
+ * 
+ * @param m_axis_buff : buffer to store the magnetometer axis data (mG) 
+ */
+void lsm303agr_m_get_axis_mg(int16_t *m_axis_buff);
 
 
 /**

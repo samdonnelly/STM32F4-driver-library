@@ -41,6 +41,11 @@
 
 // Magnetometer data 
 #define LSM303AGR_M_ID 0x40              // Value returned from the WHO_AM_I register 
+// Ratio of magnetic field (mG) to digital output data 
+#define LSM303AGR_M_SENS_I_NUM 3         // Integer - numerator 
+#define LSM303AGR_M_SENS_I_DEN 2         // Integer - denomenator  
+#define LSM303AGR_M_SENS_F 1.5f          // Float 
+// Heading 
 #define LSM303AGR_M_HEADING_NORTH 0      // Heading reading when facing North (0 deg*10) 
 #define LSM303AGR_M_HEADING_RANGE 3600   // Full heading range (360 deg*10) 
 
@@ -392,12 +397,22 @@ LSM303AGR_STATUS lsm303agr_m_update(void)
 }
 
 
-// Get magnetometer axis data 
-void lsm303agr_m_get_axis(int16_t *m_axis_buff)
+// Get raw magnetometer axis data 
+void lsm303agr_m_get_axis_raw(int16_t *m_axis_buff)
 {
     for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_axis_buff != NULL); i++)
     {
         m_axis_buff[i] = lsm303agr_data.m_data[i].m_axis; 
+    }
+}
+
+
+// Get magnetometer axis data as integers in milligauss (mG) 
+void lsm303agr_m_get_axis_mg(int16_t *m_axis_buff)
+{
+    for (uint8_t i = X_AXIS; (i < NUM_AXES) && (m_axis_buff != NULL); i++)
+    {
+        m_axis_buff[i] = (lsm303agr_data.m_data[i].m_axis * LSM303AGR_M_SENS_I_NUM) / LSM303AGR_M_SENS_I_DEN;
     }
 }
 
