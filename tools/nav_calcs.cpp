@@ -215,8 +215,8 @@ void NavCalcs::KalmanPosePredict(
 {
     const float dt_2 = k_dt*k_dt;
     const float accel_const = 0.5f*dt_2;
-    const float s2_av_const = gravity*gravity*dt_2;
-    const float s2_ap_const = 2.25f*dt_2;
+    // const float s2_av_const = gravity*gravity*dt_2;
+    // const float s2_ap_const = 2.25f*dt_2;
     constexpr float coordinate_const = earth_radius*KM_TO_M*DEG_TO_RAD;
 
     // Predict the new state by finding the local change in position and velocity (no 
@@ -247,20 +247,33 @@ void NavCalcs::KalmanPosePredict(
 
     // Predict the new uncertainty. This must be done each prediction step to account for 
     // error accumulation. 
-    float 
-    s2_av_N = accel_ned_accuracy[X_AXIS]*s2_av_const,
-    s2_ap_N = s2_av_N*s2_ap_const,
-    s2_av_E = accel_ned_accuracy[Y_AXIS]*s2_av_const,
-    s2_ap_E = s2_av_E*s2_ap_const,
-    s2_av_D = accel_ned_accuracy[Z_AXIS]*s2_av_const,
-    s2_ap_D = s2_av_D*s2_ap_const;
+    const VectorNED accel_uncertainty = 
+    {
+        .N = accel_ned_accuracy[X_AXIS]*gravity,
+        .E = accel_ned_accuracy[Y_AXIS]*gravity,
+        .D = accel_ned_accuracy[Z_AXIS]*gravity
+    };
+    s2_v.N = s2_v.N + k_dt*accel_uncertainty.N;
+    s2_p.N = s2_p.N + s2_v.N*k_dt + accel_const*accel_uncertainty.N;
+    s2_v.E = s2_v.E + k_dt*accel_uncertainty.E;
+    s2_p.E = s2_p.E + s2_v.E*k_dt + accel_const*accel_uncertainty.E;
+    s2_v.D = s2_v.D + k_dt*accel_uncertainty.D;
+    s2_p.D = s2_p.D + s2_v.D*k_dt + accel_const*accel_uncertainty.D;
 
-    s2_v.N = s2_v.N + s2_av_N;
-    s2_p.N = s2_p.N + s2_v.N*dt_2 + s2_ap_N;
-    s2_v.E = s2_v.E + s2_av_E;
-    s2_p.E = s2_p.E + s2_v.E*dt_2 + s2_ap_E;
-    s2_v.D = s2_v.D + s2_av_D;
-    s2_p.D = s2_p.D + s2_v.D*dt_2 + s2_ap_D;
+    // float 
+    // s2_av_N = accel_ned_accuracy[X_AXIS]*s2_av_const,
+    // s2_ap_N = s2_av_N*s2_ap_const,
+    // s2_av_E = accel_ned_accuracy[Y_AXIS]*s2_av_const,
+    // s2_ap_E = s2_av_E*s2_ap_const,
+    // s2_av_D = accel_ned_accuracy[Z_AXIS]*s2_av_const,
+    // s2_ap_D = s2_av_D*s2_ap_const;
+
+    // s2_v.N = s2_v.N + s2_av_N;
+    // s2_p.N = s2_p.N + s2_v.N*dt_2 + s2_ap_N;
+    // s2_v.E = s2_v.E + s2_av_E;
+    // s2_p.E = s2_p.E + s2_v.E*dt_2 + s2_ap_E;
+    // s2_v.D = s2_v.D + s2_av_D;
+    // s2_p.D = s2_p.D + s2_v.D*dt_2 + s2_ap_D;
 }
 
 

@@ -145,6 +145,7 @@ extern "C" {
 #define SCALE_1E4F 10000.0f
 #define SCALE_1E5F 100000.0f
 #define SCALE_1E6F 1000000.0f
+#define SCALE_1E7F 10000000.0f
 
 // Modulo operator divisors
 #define REMAINDER_10   10
@@ -173,7 +174,6 @@ extern "C" {
 
 #define KM_TO_M 1000      // Kilometers to meters 
 #define S_TO_MS 1000      // Seconds to milliseconds 
-#define MIN_TO_DEG 60     // Coordinate minutes to degrees conversion 
 #define KPH_TO_MPS 3.6f   // Kilometers/hour to meters/second 
 #define GRAVITY 9.81f     // Gravity (m/s^2) 
 

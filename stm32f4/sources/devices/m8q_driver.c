@@ -52,6 +52,7 @@
 
 // Other 
 #define EOM_BYTE 1                // End of memory byte - helps find size of message fields 
+#define MIN_TO_DEG 60.0f          // Coordinate minutes to degrees conversion 
 
 //=======================================================================================
 
@@ -1194,10 +1195,8 @@ void m8q_lat_str_convert(
     // prepare for adding the fractional/decimal part of the minute. 
     do
     {
-        *deg_integer += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index], 
-                                             scale - lat_index); 
-        *min_scaled +=  (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index + BYTE_2], 
-                                             BYTE_6 - lat_index); 
+        *deg_integer += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index], scale - lat_index); 
+        *min_scaled +=  (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index + BYTE_2], BYTE_6 - lat_index); 
     }
     while (++lat_index < BYTE_2); 
 
@@ -1209,8 +1208,7 @@ void m8q_lat_str_convert(
     // fractional part of the minute is 5 characters in length. 
     do
     {
-        *min_scaled += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index], 
-                                            BYTE_9 - lat_index); 
+        *min_scaled += (int32_t)char_to_int(m8q_driver_data.pos_data.lat[lat_index], BYTE_9 - lat_index); 
     }
     while (++lat_index < BYTE_10); 
 
@@ -1292,17 +1290,14 @@ void m8q_lon_str_convert(
 
     // Convert the integer portion of the degrees (3 digits) and minutes (2 digits). The 
     // minutes get converted to a scaled value to prepare for adding the fractional part 
-    // of the minute. Since the degree integer portion is one digit larger, and extra 
+    // of the minute. Since the degree integer portion is one digit larger, an extra 
     // conversion is added. 
-    *deg_integer += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
-                                         scale - lon_index); 
+    *deg_integer += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], scale - lon_index); 
     
     while (++lon_index < BYTE_3)
     {
-        *deg_integer += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
-                                             scale - lon_index); 
-        *min_scaled +=  (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index + BYTE_2], 
-                                             BYTE_7 - lon_index); 
+        *deg_integer += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], scale - lon_index); 
+        *min_scaled +=  (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index + BYTE_2], BYTE_7 - lon_index); 
     }
 
     // Bypass the decimal point character 
@@ -1313,8 +1308,7 @@ void m8q_lon_str_convert(
     // fractional part of the minute is 5 characters in length. 
     do
     {
-        *min_scaled += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], 
-                                            BYTE_10 - lon_index); 
+        *min_scaled += (int32_t)char_to_int(m8q_driver_data.pos_data.lon[lon_index], BYTE_10 - lon_index); 
     }
     while (++lon_index < BYTE_11); 
 
