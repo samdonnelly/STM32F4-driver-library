@@ -215,8 +215,6 @@ void NavCalcs::KalmanPosePredict(
 {
     const float dt_2 = k_dt*k_dt;
     const float accel_const = 0.5f*dt_2;
-    // const float s2_av_const = gravity*gravity*dt_2;
-    // const float s2_ap_const = 2.25f*dt_2;
     constexpr float coordinate_const = earth_radius*KM_TO_M*DEG_TO_RAD;
 
     // Predict the new state by finding the local change in position and velocity (no 
@@ -246,7 +244,14 @@ void NavCalcs::KalmanPosePredict(
     kg_vel.vvel = kl_vel.D;
 
     // Predict the new uncertainty. This must be done each prediction step to account for 
-    // error accumulation. 
+    // error accumulation. In the Kalman filter equations, the uncertainty is calculated 
+    // using the variance in the sensor measurements which is the square of the standard 
+    // deviation. These calculations use uncertainty in the same format/units as the 
+    // acceleration (i.e. not squared) and velocity and position uncertainty are 
+    // calculated the same way as the predicted velocity and position are from above. 
+    // This is done to simplify the calculation, and it still produces good results 
+    // because accelerometer uncertainty is hard to determine so empirical tuning is 
+    // often required anyway. The GPS uncertainty measurement is in the same units. 
     const VectorNED accel_uncertainty = 
     {
         .N = accel_ned_accuracy[X_AXIS]*gravity,
@@ -259,21 +264,6 @@ void NavCalcs::KalmanPosePredict(
     s2_p.E = s2_p.E + s2_v.E*k_dt + accel_const*accel_uncertainty.E;
     s2_v.D = s2_v.D + k_dt*accel_uncertainty.D;
     s2_p.D = s2_p.D + s2_v.D*k_dt + accel_const*accel_uncertainty.D;
-
-    // float 
-    // s2_av_N = accel_ned_accuracy[X_AXIS]*s2_av_const,
-    // s2_ap_N = s2_av_N*s2_ap_const,
-    // s2_av_E = accel_ned_accuracy[Y_AXIS]*s2_av_const,
-    // s2_ap_E = s2_av_E*s2_ap_const,
-    // s2_av_D = accel_ned_accuracy[Z_AXIS]*s2_av_const,
-    // s2_ap_D = s2_av_D*s2_ap_const;
-
-    // s2_v.N = s2_v.N + s2_av_N;
-    // s2_p.N = s2_p.N + s2_v.N*dt_2 + s2_ap_N;
-    // s2_v.E = s2_v.E + s2_av_E;
-    // s2_p.E = s2_p.E + s2_v.E*dt_2 + s2_ap_E;
-    // s2_v.D = s2_v.D + s2_av_D;
-    // s2_p.D = s2_p.D + s2_v.D*dt_2 + s2_ap_D;
 }
 
 
@@ -287,7 +277,12 @@ void NavCalcs::KalmanPoseUpdate(
     constexpr float _0_0f = 0.0f, _1_0f = 1.0f;
     const float cog = gps_velocity.cog*DEG_TO_RAD;
 
-    // Find the Kalman gains for position and velocity in each NED axis. 
+    // Find the Kalman gains for position and velocity in each NED axis. Note that the 
+    // GPS uncertainties are in the same units as those derived from the accelerometer 
+    // uncertainies. The Kalman filter equations call for the variance to be used for 
+    // uncertainty calculation (standard deviation squared), but that isn't used here 
+    // since the same result can be achieved with standard SI units. In addition, GPS 
+    // devices also often provide a dynamic accuracy estimate in the same units. 
     const float
     K_N11 = s2_p.N / (s2_p.N + gps_position_accuracy.lat),
     K_N22 = s2_v.N / (s2_v.N + gps_velocity_accuracy.sog),

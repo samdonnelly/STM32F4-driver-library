@@ -65,7 +65,6 @@ MadgwickFilter::MadgwickStatus MadgwickFilter::Madgwick(
           _2bx, _2bz, _4bx, _4bz, 
           _2q0, _2q1, _2q2, _2q3, 
           _2q0q2, _2q2q3, q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
-	// float r11, r12, r13, r21, r22, r23, r31, r32, r33;
 
     constexpr float _0_0f = 0.0f, _0_5f = 0.5f, _1_0f = 1.0f, _2_0f = 2.0f, _4_0f = 4.0f; 
 

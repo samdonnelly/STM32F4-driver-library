@@ -214,6 +214,9 @@ public:
      *          system. This function: 
      *          - Takes in the systems acceleration in the NED frame and uses that to 
      *            predict the new position based on the last measured GPS location. 
+     *          - Takes the acceleration uncertainty which is used to determine how much 
+     *            confidence to place in the acceleration measurement. This will likely 
+     *            need to be tuned by the user to get the best position estimate. 
      *          - Should be called each time acceleration in the NED frame is updated and 
      *            the time between acceleration updates is set either in the constructor 
      *            or using the setter function. 
@@ -232,7 +235,7 @@ public:
      * @see GetKalmanPose
      * 
      * @param accel_ned : 3-axis acceleration of the system in the NED frame (g's) 
-     * @param accel_ned_accuracy : uncertainty of acceleration in each NED axis (variance - (g's)^2) 
+     * @param accel_ned_accuracy : uncertainty of acceleration in each NED axis (g's) 
      */
     void KalmanPosePredict(
         const std::array<float, NUM_AXES> &accel_ned,
@@ -244,9 +247,12 @@ public:
      * @details Kalman filter update/correction step for determining the global position 
      *          of a system. This function: 
      *          - Takes the systems measured position (lititude, longitude, altitude) and 
-     *            velocity (in North, East and Down) from a GPS device and uses that along 
+     *            velocity (in SOG, COG and vVel) from a GPS device and uses that along 
      *            with the predicted position and velocity to find the best estimate of the 
      *            systems true position and velocity. 
+     *          - Takes the position and velocity uncertainty from the GPS and uses that 
+     *            with the acceleration uncertainty from the prediction step to determine 
+     *            how much to trust the GPS vs accelerometer. 
      *          - Should be called each time new GPS data is received. 
      *          - Is linked to the Kalman filter prediction function which will provide 
      *            the predicited position and velocity which is fused with the measured 
@@ -260,9 +266,9 @@ public:
      * @see GetKalmanPose
      * 
      * @param gps_position : GPS measured position: lat (deg), lon (deg) and altitude (m) 
-     * @param gps_position_accuracy : uncertainty in GPS position measurement (variance - m^2) 
+     * @param gps_position_accuracy : uncertainty in GPS position measurement (m) 
      * @param gps_velocity : GPS measured velocity: SOG (m/s), COG (deg), vvel (m/s) 
-     * @param gps_velocity_accuracy : uncertainty in GPS velocity measurement (variance - (m/s)^2)
+     * @param gps_velocity_accuracy : uncertainty in GPS velocity measurement (m/s)
      */
     void KalmanPoseUpdate(
         const Position &gps_position,
