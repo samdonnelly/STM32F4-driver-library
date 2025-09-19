@@ -440,7 +440,7 @@ void hw125_not_ready_state(hw125_trackers_t *hw125_device)
     // Check if the volume is present 
     if (hw125_get_existance() == HW125_RES_OK) 
     {
-        // If exists then clear the not ready flag 
+        // Present - clear the not ready flag so we can try remounting 
         hw125_device->not_ready = CLEAR_BIT; 
     }
 }

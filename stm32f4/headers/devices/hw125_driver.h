@@ -454,8 +454,8 @@ DISK_RESULT hw125_get_existance(void);
  * @return DISK_RESULT : result of the read operation 
  */
 DISK_RESULT hw125_read(
-    uint8_t  pdrv, 
-    uint8_t  *buff,
+    uint8_t pdrv, 
+    uint8_t *buff,
     uint32_t sector,
     uint16_t count);
 
@@ -479,10 +479,10 @@ DISK_RESULT hw125_read(
  * @return DISK_RESULT : result of the write operation 
  */
 DISK_RESULT hw125_write(
-    uint8_t       pdrv, 
+    uint8_t pdrv, 
     const uint8_t *buff,
-    uint32_t      sector,
-    uint16_t      count);
+    uint32_t sector,
+    uint16_t count);
 
 //=======================================================================================
 
@@ -513,7 +513,7 @@ DISK_RESULT hw125_write(
 DISK_RESULT hw125_ioctl(
     uint8_t pdrv, 
     uint8_t cmd, 
-    void    *buff);
+    void *buff);
 
 //=======================================================================================
 

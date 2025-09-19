@@ -337,7 +337,10 @@ DISK_STATUS hw125_init(uint8_t pdrv)
     uint8_t v_range[HW125_TRAILING_BYTES];
 
     // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
-    if (pdrv) return HW125_STATUS_NOINIT; 
+    if (pdrv)
+    {
+        return HW125_STATUS_NOINIT; 
+    }
 
     //===================================================
     // Power ON or card insertion and software reset 
@@ -374,8 +377,7 @@ DISK_STATUS hw125_init(uint8_t pdrv)
             spi_write_read(sd_card.spi, HW125_DATA_HIGH, v_range, HW125_TRAILING_BYTES);
 
             // Check lower 12-bits of R7 response (big endian format) 
-            if ((uint16_t)((v_range[BYTE_2] << SHIFT_8) | (v_range[BYTE_3])) 
-                == HW125_SDCV2_CHECK)
+            if ((uint16_t)((v_range[BYTE_2] << SHIFT_8) | (v_range[BYTE_3])) == HW125_SDCV2_CHECK)
             {
                 // 0x1AA matched (SDCV2+) - Send ACMD41 with the HCS bit set in the arg 
                 init_timer_status = hw125_initiate_init(HW125_CMD41, HW125_ARG_HCS, &do_resp);
@@ -559,7 +561,10 @@ DISK_RESULT hw125_power_on(uint16_t hw125_slave_pin)
     spi_slave_deselect(sd_card.gpio, hw125_slave_pin); 
     
     // Response timeout 
-    if (!num_read) return HW125_RES_ERROR; 
+    if (!num_read)
+    {
+        return HW125_RES_ERROR; 
+    }
 
     //===================================================
 
@@ -582,11 +587,10 @@ void hw125_power_off(void)
 
 // HW125 initiate initialization sequence
 uint8_t hw125_initiate_init(
-    uint8_t  cmd,
+    uint8_t cmd,
     uint32_t arg,
     uint8_t *resp)
  {
-    // Local variables 
     uint16_t init_timer = HW125_INIT_TIMER;
 
     // Send CMD1 or ACMD41 (depending on the card type) to initiate initialization 
@@ -608,7 +612,10 @@ uint8_t hw125_initiate_init(
     while ((*resp == HW125_IDLE_STATE) && --init_timer); 
 
     // Initialization can begin 
-    if (init_timer) return TRUE; 
+    if (init_timer)
+    {
+        return TRUE; 
+    }
     
     // Timeout 
     return FALSE; 
@@ -623,11 +630,14 @@ uint8_t hw125_initiate_init(
 // HW125 disk status 
 DISK_STATUS hw125_status(uint8_t pdrv)
 {
-   // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
-   if (pdrv) return HW125_STATUS_NOINIT; 
-   
-   // Return the existing disk status 
-   return sd_card.disk_status;
+    // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
+    if (pdrv)
+    {
+        return HW125_STATUS_NOINIT; 
+    }
+
+    // Return the existing disk status 
+    return sd_card.disk_status;
 }
 
 
@@ -644,7 +654,10 @@ DISK_RESULT hw125_ready_rec(void)
     }
     while (resp != HW125_DATA_HIGH && --timer); 
 
-    if (timer) return HW125_RES_OK; 
+    if (timer)
+    {
+        return HW125_RES_OK; 
+    }
 
     return HW125_RES_ERROR; 
 }
@@ -664,21 +677,13 @@ CARD_TYPE hw125_get_card_type(void)
 }
 
 
-// Get card presence status 
+// Check if the card is present 
 DISK_RESULT hw125_get_existance(void)
 {
-    DISK_RESULT exist; 
-
-    // Select the slave device 
     spi_slave_select(sd_card.gpio, sd_card.ss_pin);
-
-    // Wait until the card is no longer busy before sending a CMD 
-    exist = hw125_ready_rec();
-
-    // Deselect the slave device 
+    DISK_RESULT exist = hw125_ready_rec();
     spi_slave_deselect(sd_card.gpio, sd_card.ss_pin);
-
-    return exist; 
+    return exist;
 }
 
 //=======================================================================================
@@ -692,12 +697,11 @@ DISK_RESULT hw125_get_existance(void)
 
 // HW125 send command messages and return response values - add a status return for timeouts 
 void hw125_send_cmd(
-    uint8_t  cmd,
+    uint8_t cmd,
     uint32_t arg,
-    uint8_t  crc,
+    uint8_t crc,
     uint8_t *resp)
 {
-    // Local variables 
     uint8_t cmd_frame[BYTE_6];
     uint8_t num_read = HW125_R1_RESP_COUNT;
 
@@ -705,7 +709,7 @@ void hw125_send_cmd(
     hw125_ready_rec();
 
     // Generate a command frame 
-    for (uint8_t i = 0; i < BYTE_6; i++)
+    for (uint8_t i = CLEAR; i < BYTE_6; i++)
     {
         switch (i)
         {
@@ -725,7 +729,10 @@ void hw125_send_cmd(
     spi_write(sd_card.spi, cmd_frame, BYTE_6);
 
     // Skip the stuff byte sent following CMD12 (stop transmission) 
-    if (cmd == HW125_CMD12) spi_write_read(sd_card.spi, HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
+    if (cmd == HW125_CMD12)
+    {
+        spi_write_read(sd_card.spi, HW125_DATA_HIGH, resp, HW125_SINGLE_BYTE);
+    }
 
     // Read R1 response until it is valid or until it times out 
     do 
@@ -743,26 +750,37 @@ void hw125_send_cmd(
 
 // HW125 read 
 DISK_RESULT hw125_read(
-    uint8_t  pdrv, 
-    uint8_t  *buff,
+    uint8_t pdrv, 
+    uint8_t *buff,
     uint32_t sector,
     uint16_t count)
 {
     DISK_RESULT read_resp;
     uint8_t do_resp = 255;
 
-    // Check that the drive number is zero 
-    if (pdrv) return HW125_RES_PARERR;
-    
-    // Check that the count is valid 
-    if (count == NONE) return HW125_RES_PARERR;
+    if (buff == NULL)
+    {
+        HW125_RES_ERROR;
+    }
+
+    // Check that the drive number is zero and that the count is valid 
+    if (pdrv || (count == NONE))
+    {
+        return HW125_RES_PARERR;
+    }
 
     // Check the init status 
-    if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
+    if (sd_card.disk_status == HW125_STATUS_NOINIT)
+    {
+        return HW125_RES_NOTRDY;
+    }
 
     // Convert the sector number to byte address if it's not SDC V2 (byte address)
     // Is this needed for all SDC V2 cards or just block address ones? 
-    if (sd_card.card_type & HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
+    if (sd_card.card_type & HW125_CT_SDC2_BYTE)
+    {
+        sector *= HW125_SEC_SIZE;
+    }
 
     // Select the slave device 
     spi_slave_select(sd_card.gpio, sd_card.ss_pin);
@@ -833,7 +851,6 @@ DISK_RESULT hw125_read_data_packet(
     uint8_t *buff,
     uint32_t sector_size)
 {
-    // Local variables 
     DISK_RESULT read_resp;
     uint8_t do_resp = 200; 
     uint16_t num_read = HW125_DT_RESP_COUNT; 
@@ -876,29 +893,43 @@ DISK_RESULT hw125_read_data_packet(
 
 // HW125 write 
 DISK_RESULT hw125_write(
-    uint8_t       pdrv, 
+    uint8_t pdrv, 
     const uint8_t *buff,
-    uint32_t      sector,
-    uint16_t      count)
+    uint32_t sector,
+    uint16_t count)
 {
     DISK_RESULT write_resp; 
     uint8_t do_resp; 
-    uint8_t stop_trans = HW125_DT_ONE; 
+    uint8_t stop_trans = HW125_DT_ONE;
 
-    // Check that the drive number is zero 
-    if (pdrv) return HW125_RES_PARERR;
+    if (buff == NULL)
+    {
+        return HW125_RES_ERROR;
+    }
 
-    // Check that the count is valid 
-    if (count == NONE) return HW125_RES_PARERR;
+    // Check that the drive number is zero and that the count is valid 
+    if (pdrv || (count == NONE))
+    {
+        return HW125_RES_PARERR;
+    }
 
     // Check the init status 
-    if (sd_card.disk_status == HW125_STATUS_NOINIT) return HW125_RES_NOTRDY;
+    if (sd_card.disk_status == HW125_STATUS_NOINIT)
+    {
+        return HW125_RES_NOTRDY;
+    }
 
     // Check write protection 
-    if (sd_card.disk_status == HW125_STATUS_PROTECT) return HW125_RES_WRPRT; 
+    if (sd_card.disk_status == HW125_STATUS_PROTECT)
+    {
+        return HW125_RES_WRPRT;
+    }
 
     // Convert the sector number to byte address if it's not SDC V2 (byte address) 
-    if (sd_card.card_type != HW125_CT_SDC2_BYTE) sector *= HW125_SEC_SIZE;
+    if (sd_card.card_type != HW125_CT_SDC2_BYTE)
+    {
+        sector *= HW125_SEC_SIZE;
+    }
 
     // Select the slave device 
     spi_slave_select(sd_card.gpio, sd_card.ss_pin);
@@ -978,7 +1009,6 @@ DISK_RESULT hw125_write_data_packet(
     uint32_t sector_size,
     uint8_t data_token)
 {
-    // Local variables 
     DISK_RESULT write_resp;
     uint8_t do_resp; 
     uint8_t crc = HW125_CRC_CMDX; 
@@ -1027,15 +1057,19 @@ DISK_RESULT hw125_ioctl(
     uint8_t cmd, 
     void    *buff)
 {
-    // Local variables 
     DISK_RESULT result; 
 
     // Check that the drive number is zero 
-    if (pdrv) return HW125_RES_PARERR;
+    if (pdrv)
+    {
+        return HW125_RES_PARERR;
+    }
 
     // Check the init status 
-    if ((sd_card.disk_status == HW125_STATUS_NOINIT) && (cmd != HW125_CTRL_POWER)) 
+    if ((sd_card.disk_status == HW125_STATUS_NOINIT) && (cmd != HW125_CTRL_POWER))
+    {
         return HW125_RES_NOTRDY;
+    }
 
     // Select the slave card 
     spi_slave_select(sd_card.gpio, sd_card.ss_pin); 
@@ -1154,10 +1188,8 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
             {
                 case HW125_CSD_V1:  // CSD Version == 1.0 --> MMC or SDC V1 
                     // Filter the register data 
-                    n =   ((uint32_t)csd[BYTE_5]  & FILTER_4_LSB) + 
-                        ((((uint32_t)csd[BYTE_10] & FILTER_1_MSB) >> SHIFT_7) + 
-                         (((uint32_t)csd[BYTE_9]  & FILTER_2_LSB) << SHIFT_1)) + 
-                        HW125_MULT_OFFSET;
+                    n = ((uint32_t)csd[BYTE_5] & FILTER_4_LSB) + ((((uint32_t)csd[BYTE_10] & FILTER_1_MSB) >> SHIFT_7) + 
+                        (((uint32_t)csd[BYTE_9] & FILTER_2_LSB) << SHIFT_1)) + HW125_MULT_OFFSET;
 
                     c_size = ((uint32_t)(csd[BYTE_8] & FILTER_2_MSB) >> SHIFT_6) +
                              ((uint32_t) csd[BYTE_7] << SHIFT_2) + 
@@ -1172,10 +1204,8 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
                 
                 case HW125_CSD_V2:  // CSD Version == 2.0 --> SDC V2 
                     // Filter the register data 
-                    c_size =  (uint32_t) csd[BYTE_9] + 
-                            ((uint32_t) csd[BYTE_8] << SHIFT_8) + 
-                            ((uint32_t)(csd[BYTE_7] & FILTER_6_LSB) << SHIFT_16) + 
-                            HW125_LBA_OFFSET; 
+                    c_size = (uint32_t)csd[BYTE_9] + ((uint32_t)csd[BYTE_8] << SHIFT_8) + 
+                            ((uint32_t)(csd[BYTE_7] & FILTER_6_LSB) << SHIFT_16) + HW125_LBA_OFFSET; 
 
                     // Format the sector count 
                     *(uint32_t *) buff = c_size << HW125_MAGIC_SHIFT_V2;
@@ -1206,21 +1236,15 @@ DISK_RESULT hw125_ioctl_get_sector_count(void *buff)
 // HW125 IO Control - Get Sector Size 
 DISK_RESULT hw125_ioctl_get_sector_size(void *buff)
 {
-    // Local variables 
-    uint8_t result; 
-
     // Assign pre-defined sector size 
-    *(uint16_t *)buff = (uint16_t)HW125_SEC_SIZE; 
-    result = HW125_RES_OK; 
-
-    return result; 
+    *(uint16_t *)buff = (uint16_t)HW125_SEC_SIZE;
+    return HW125_RES_OK;
 }
 
 
 // HW125 IO Control - Control Power 
 DISK_RESULT hw125_ioctl_ctrl_pwr(void *buff)
 {
-    // Local variables 
     DISK_RESULT result; 
     uint8_t *param = buff; 
     
