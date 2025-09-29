@@ -1,9 +1,9 @@
 /**
- * @file hw125_controller.c
+ * @file fatfs_controller.c
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HW125 controller 
+ * @brief FATFS controller 
  * 
  * @version 0.1
  * @date 2023-01-12
@@ -15,7 +15,7 @@
 //=======================================================================================
 // Includes 
 
-#include "hw125_controller.h"
+#include "fatfs_controller.h"
 
 //=======================================================================================
 
@@ -24,23 +24,23 @@
 // Function prototypes 
 
 /**
- * @brief HW125 initialization state 
+ * @brief FATFS initialization state 
  * 
  * @details Attempts to mount the volume. If successful, the project directory saved in 
- *          hw125_trackers_t will be made if it does not already exist and the state 
+ *          fatfs_trackers_t will be made if it does not already exist and the state 
  *          machine will move to the "access" state. If unsuccessful, the "not ready" state
  *          will be entered. The init state is called on startup and controller reset as 
  *          well as from the "not ready" state once a device is seen. If there is a fault 
  *          during one of the volume read operations, excluding the mounting procedure, 
  *          then the fault flag will be set and the "fault" state will be entered. 
  * 
- * @param hw125_device : device tracker that defines control characteristics 
+ * @param fatfs_device : device tracker that defines control characteristics 
  */
-void hw125_init_state(hw125_trackers_t *hw125_device); 
+void fatfs_init_state(fatfs_trackers_t *fatfs_device); 
 
 
 /**
- * @brief HW125 not ready state 
+ * @brief FATFS not ready state 
  * 
  * @details Continuously checks for the presence of the volume to see if it shows up. This 
  *          state indicates that the volume is not seen by the system (not ready flag set) 
@@ -58,21 +58,21 @@ void hw125_init_state(hw125_trackers_t *hw125_device);
  *          so these reads/writes won't work or the eject flag is set which will unmount 
  *          the device and therefore make the reads/writes not possible. 
  * 
- * @param hw125_device : device tracker that defines control characteristics 
+ * @param fatfs_device : device tracker that defines control characteristics 
  */
-void hw125_not_ready_state(hw125_trackers_t *hw125_device); 
+void fatfs_not_ready_state(fatfs_trackers_t *fatfs_device); 
 
 
 /**
- * @brief HW125 access state 
+ * @brief FATFS access state 
  * 
- * @param hw125_device : data record 
+ * @param fatfs_device : data record 
  */
-void hw125_access_state(hw125_trackers_t *hw125_device); 
+void fatfs_access_state(fatfs_trackers_t *fatfs_device); 
 
 
 /**
- * @brief HW125 access check state 
+ * @brief FATFS access check state 
  * 
  * @details Continuously checks for the presence of the volume to see if it goes missing. If 
  *          it is missing the not ready flag will be set. This state indicates that the volume 
@@ -81,61 +81,61 @@ void hw125_access_state(hw125_trackers_t *hw125_device);
  *          successful. It is left when the fault or reset flags are set, or if either of the 
  *          not ready or eject flags are set. 
  * 
- * @param hw125_device : device tracker that defines control characteristics 
+ * @param fatfs_device : device tracker that defines control characteristics 
  */
-void hw125_access_check_state(hw125_trackers_t *hw125_device); 
+void fatfs_access_check_state(fatfs_trackers_t *fatfs_device); 
 
 
 /**
- * @brief HW125 eject state 
+ * @brief FATFS eject state 
  * 
  * @details If there is an open file this state closes it then unmounts the volume. This state 
  *          is triggered by the eject flag being set which is set by the application through 
- *          the hw125_set_eject_flag setter. This can be used to safely remove the disk while 
+ *          the fatfs_set_eject_flag setter. This can be used to safely remove the disk while 
  *          the system is still powered on. After this state is run it immediately goes to 
  *          the "not ready" state. The eject flag is cleared through the application code using 
- *          the hw125_clear_eject_flag setter. 
+ *          the fatfs_clear_eject_flag setter. 
  * 
- * @see hw125_set_eject_flag 
- * @see hw125_clear_eject_flag 
+ * @see fatfs_set_eject_flag 
+ * @see fatfs_clear_eject_flag 
  * 
- * @param hw125_device : device tracker that defines control characteristics 
+ * @param fatfs_device : device tracker that defines control characteristics 
  */
-void hw125_eject_state(hw125_trackers_t *hw125_device); 
+void fatfs_eject_state(fatfs_trackers_t *fatfs_device); 
 
 
 /**
- * @brief HW125 fault state 
+ * @brief FATFS fault state 
  * 
  * @details Currently this state does nothing until the reset flag is set. This state can be 
  *          entered from the "init" or "access" states after the fault flag has been set. The 
  *          fault flag can be set in the getter/setter functions when a FATFS file operation 
  *          is performed if one of these operations is not successful. To leave this state, the 
- *          reset flag has to be set using the hw125_set_reset_flag setter at which point the 
+ *          reset flag has to be set using the fatfs_set_reset_flag setter at which point the 
  *          "reset" state will be entered. 
  * 
- * @see hw125_set_reset_flag 
+ * @see fatfs_set_reset_flag 
  * 
- * @param hw125_device : device tracker that defines control characteristics 
+ * @param fatfs_device : device tracker that defines control characteristics 
  */
-void hw125_fault_state(hw125_trackers_t *hw125_device); 
+void fatfs_fault_state(fatfs_trackers_t *fatfs_device); 
 
 
 /**
- * @brief HW125 reset state 
+ * @brief FATFS reset state 
  * 
  * @details Closes any open file, resets the projects subdirectory, unmounts the volumes and 
  *          resets controller trackers as needed. This state is triggered by setting the reset 
- *          flag using hw125_set_reset_flag and can be entered from the "not ready", "access" or 
+ *          flag using fatfs_set_reset_flag and can be entered from the "not ready", "access" or 
  *          "fault" states. This state is called typically when there is an issue in the system 
  *          and it needs to re-initialize itself. After this state is run it will go directly to 
  *          the "init" state and the reset flag will be automatically cleared. 
  * 
- * @see hw125_set_reset_flag 
+ * @see fatfs_set_reset_flag 
  * 
- * @param hw125_device : device tracker that defines control characteristics 
+ * @param fatfs_device : device tracker that defines control characteristics 
  */
-void hw125_reset_state(hw125_trackers_t *hw125_device); 
+void fatfs_reset_state(fatfs_trackers_t *fatfs_device); 
 
 
 /**
@@ -147,7 +147,7 @@ void hw125_reset_state(hw125_trackers_t *hw125_device);
  * 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_mount(hw125_trackers_t *hw125_device); 
+FRESULT fatfs_mount(fatfs_trackers_t *fatfs_device); 
 
 
 /**
@@ -166,7 +166,7 @@ FRESULT hw125_mount(hw125_trackers_t *hw125_device);
  * 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_unmount(hw125_trackers_t *hw125_device); 
+FRESULT fatfs_unmount(fatfs_trackers_t *fatfs_device); 
 
 
 /**
@@ -177,10 +177,10 @@ FRESULT hw125_unmount(hw125_trackers_t *hw125_device);
  *          successful and will update the fault code in the process if something goes wrong 
  *          while reading the label. 
  * 
- * @param hw125_device : data record 
+ * @param fatfs_device : data record 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_getlabel(hw125_trackers_t *hw125_device); 
+FRESULT fatfs_getlabel(fatfs_trackers_t *fatfs_device); 
 
 
 /**
@@ -193,7 +193,7 @@ FRESULT hw125_getlabel(hw125_trackers_t *hw125_device);
  * 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_getfree(hw125_trackers_t *hw125_device); 
+FRESULT fatfs_getfree(fatfs_trackers_t *fatfs_device); 
 
 //=======================================================================================
 
@@ -205,18 +205,18 @@ FRESULT hw125_getfree(hw125_trackers_t *hw125_device);
 extern Disk_drvTypeDef disk; 
 
 // Device tracker record instance 
-static hw125_trackers_t hw125_device_trackers; 
+static fatfs_trackers_t fatfs_device_trackers; 
 
 // Function pointers to controller states 
-static hw125_state_functions_t state_table[HW125_NUM_STATES] = 
+static fatfs_state_functions_t state_table[FATFS_NUM_STATES] = 
 {
-    &hw125_init_state, 
-    &hw125_not_ready_state, 
-    &hw125_access_state, 
-    &hw125_access_check_state, 
-    &hw125_eject_state, 
-    &hw125_fault_state, 
-    &hw125_reset_state 
+    &fatfs_init_state, 
+    &fatfs_not_ready_state, 
+    &fatfs_access_state, 
+    &fatfs_access_check_state, 
+    &fatfs_eject_state, 
+    &fatfs_fault_state, 
+    &fatfs_reset_state 
 }; 
 
 //=======================================================================================
@@ -225,178 +225,178 @@ static hw125_state_functions_t state_table[HW125_NUM_STATES] =
 //=======================================================================================
 // Control functions 
 
-// HW125 controller initialization 
-void hw125_controller_init(const char *path)
+// FATFS controller initialization 
+void fatfs_controller_init(const char *path)
 {
     // Check that the path length is not too long 
 
     // Controller information 
-    hw125_device_trackers.state = HW125_INIT_STATE; 
-    hw125_device_trackers.fault_code = CLEAR; 
-    hw125_device_trackers.fault_mode = CLEAR; 
+    fatfs_device_trackers.state = FATFS_INIT_STATE; 
+    fatfs_device_trackers.fault_code = CLEAR; 
+    fatfs_device_trackers.fault_mode = CLEAR; 
 
     // File system information 
-    memset((void *)hw125_device_trackers.path, CLEAR, HW125_PATH_SIZE); 
-    strcpy(hw125_device_trackers.path, path); 
-    memset((void *)hw125_device_trackers.dir, CLEAR, HW125_PATH_SIZE); 
+    memset((void *)fatfs_device_trackers.path, CLEAR, FATFS_PATH_SIZE); 
+    strcpy(fatfs_device_trackers.path, path); 
+    memset((void *)fatfs_device_trackers.dir, CLEAR, FATFS_PATH_SIZE); 
     
     // State trackers 
-    hw125_device_trackers.mount = CLEAR_BIT; 
-    hw125_device_trackers.not_ready = CLEAR_BIT; 
-    hw125_device_trackers.check = CLEAR_BIT; 
-    hw125_device_trackers.eject = CLEAR_BIT; 
-    hw125_device_trackers.open_file = CLEAR_BIT; 
-    hw125_device_trackers.startup = SET_BIT; 
+    fatfs_device_trackers.mount = CLEAR_BIT; 
+    fatfs_device_trackers.not_ready = CLEAR_BIT; 
+    fatfs_device_trackers.check = CLEAR_BIT; 
+    fatfs_device_trackers.eject = CLEAR_BIT; 
+    fatfs_device_trackers.open_file = CLEAR_BIT; 
+    fatfs_device_trackers.startup = SET_BIT; 
 }
 
 
-// HW125 controller 
-void hw125_controller(void)
+// FATFS controller 
+void fatfs_controller(void)
 {
-    hw125_states_t next_state = hw125_device_trackers.state; 
+    fatfs_states_t next_state = fatfs_device_trackers.state; 
 
     //==================================================
     // State machine 
 
     switch (next_state)
     {
-        case HW125_INIT_STATE: 
+        case FATFS_INIT_STATE: 
             // Make sure the init state runs at least once 
-            if (!hw125_device_trackers.startup)
+            if (!fatfs_device_trackers.startup)
             {
                 // Fault during drive access 
-                if (hw125_device_trackers.fault_code) 
+                if (fatfs_device_trackers.fault_code) 
                 {
-                    next_state = HW125_FAULT_STATE; 
+                    next_state = FATFS_FAULT_STATE; 
                 }
 
                 // Device successfully mounted and access check requested 
-                else if (hw125_device_trackers.mount && hw125_device_trackers.check) 
+                else if (fatfs_device_trackers.mount && fatfs_device_trackers.check) 
                 {
-                    next_state = HW125_ACCESS_CHECK_STATE; 
+                    next_state = FATFS_ACCESS_CHECK_STATE; 
                 }
 
                 // Device successfully mounted 
-                else if (hw125_device_trackers.mount) 
+                else if (fatfs_device_trackers.mount) 
                 {
-                    next_state = HW125_ACCESS_STATE; 
+                    next_state = FATFS_ACCESS_STATE; 
                 }
 
                 // Default to the not ready state if not mounted 
                 else 
                 {
-                    next_state = HW125_NOT_READY_STATE; 
+                    next_state = FATFS_NOT_READY_STATE; 
                 }
             }
 
             break; 
 
-        case HW125_NOT_READY_STATE: 
+        case FATFS_NOT_READY_STATE: 
             // Reset flag set 
-            if (hw125_device_trackers.reset) 
+            if (fatfs_device_trackers.reset) 
             {
-                next_state = HW125_RESET_STATE; 
+                next_state = FATFS_RESET_STATE; 
             }
 
             // Drive accessible and application code clears eject flag 
-            else if (!hw125_device_trackers.not_ready && !hw125_device_trackers.eject) 
+            else if (!fatfs_device_trackers.not_ready && !fatfs_device_trackers.eject) 
             {
-                next_state = HW125_INIT_STATE; 
+                next_state = FATFS_INIT_STATE; 
             }
 
             break; 
 
-        case HW125_ACCESS_STATE: 
+        case FATFS_ACCESS_STATE: 
             // File access fault 
-            if (hw125_device_trackers.fault_code) 
+            if (fatfs_device_trackers.fault_code) 
             {
-                next_state = HW125_FAULT_STATE; 
+                next_state = FATFS_FAULT_STATE; 
             }
 
             // Reset flag set 
-            else if (hw125_device_trackers.reset) 
+            else if (fatfs_device_trackers.reset) 
             {
-                next_state = HW125_RESET_STATE; 
+                next_state = FATFS_RESET_STATE; 
             }
 
             // Eject flag set 
-            else if (hw125_device_trackers.eject)
+            else if (fatfs_device_trackers.eject)
             {
-                next_state = HW125_EJECT_STATE; 
+                next_state = FATFS_EJECT_STATE; 
             }
 
             // Check flag set 
-            else if (hw125_device_trackers.check)
+            else if (fatfs_device_trackers.check)
             {
-                next_state = HW125_ACCESS_CHECK_STATE; 
+                next_state = FATFS_ACCESS_CHECK_STATE; 
             }
 
             break; 
 
-        case HW125_ACCESS_CHECK_STATE: 
+        case FATFS_ACCESS_CHECK_STATE: 
             // File access fault 
-            if (hw125_device_trackers.fault_code) 
+            if (fatfs_device_trackers.fault_code) 
             {
-                next_state = HW125_FAULT_STATE; 
+                next_state = FATFS_FAULT_STATE; 
             }
 
             // Reset flag set 
-            else if (hw125_device_trackers.reset) 
+            else if (fatfs_device_trackers.reset) 
             {
-                next_state = HW125_RESET_STATE; 
+                next_state = FATFS_RESET_STATE; 
             }
 
             // Volume not seen or eject flag set 
-            else if (hw125_device_trackers.not_ready || hw125_device_trackers.eject)
+            else if (fatfs_device_trackers.not_ready || fatfs_device_trackers.eject)
             {
-                next_state = HW125_EJECT_STATE; 
+                next_state = FATFS_EJECT_STATE; 
             }
 
             // Check flag cleared 
-            else if (!hw125_device_trackers.check)
+            else if (!fatfs_device_trackers.check)
             {
-                next_state = HW125_ACCESS_STATE; 
+                next_state = FATFS_ACCESS_STATE; 
             }
 
             break; 
 
-        case HW125_EJECT_STATE: 
+        case FATFS_EJECT_STATE: 
             // Default to the not ready state if the eject flag has been set 
-            next_state = HW125_NOT_READY_STATE; 
+            next_state = FATFS_NOT_READY_STATE; 
             break; 
 
-        case HW125_FAULT_STATE: 
+        case FATFS_FAULT_STATE: 
             // Wait for reset flag to set 
-            if (hw125_device_trackers.reset) 
+            if (fatfs_device_trackers.reset) 
             {
-                next_state = HW125_RESET_STATE; 
+                next_state = FATFS_RESET_STATE; 
             }
 
             // Eject flag set 
-            if (hw125_device_trackers.eject) 
+            if (fatfs_device_trackers.eject) 
             {
-                next_state = HW125_EJECT_STATE; 
+                next_state = FATFS_EJECT_STATE; 
             }
 
             break; 
 
-        case HW125_RESET_STATE: 
-            next_state = HW125_INIT_STATE; 
+        case FATFS_RESET_STATE: 
+            next_state = FATFS_INIT_STATE; 
             break; 
 
         default: 
             // Default back to the init state 
-            next_state = HW125_INIT_STATE; 
+            next_state = FATFS_INIT_STATE; 
             break; 
     }
 
     //==================================================
 
     // Go to state function 
-    (state_table[next_state])(&hw125_device_trackers); 
+    (state_table[next_state])(&fatfs_device_trackers); 
 
     // Update the state 
-    hw125_device_trackers.state = next_state; 
+    fatfs_device_trackers.state = next_state; 
 }
 
 //=======================================================================================
@@ -405,101 +405,101 @@ void hw125_controller(void)
 //=======================================================================================
 // State functions 
 
-// HW125 initialization state 
-void hw125_init_state(hw125_trackers_t *hw125_device) 
+// FATFS initialization state 
+void fatfs_init_state(fatfs_trackers_t *fatfs_device) 
 {
     // Clear startup flag 
-    hw125_device->startup = CLEAR_BIT; 
+    fatfs_device->startup = CLEAR_BIT; 
 
     // Clear reset flag 
-    hw125_device->reset = CLEAR_BIT; 
+    fatfs_device->reset = CLEAR_BIT; 
 
     // Attempt to mount the volume 
-    if (hw125_mount(hw125_device) == FR_OK) 
+    if (fatfs_mount(fatfs_device) == FR_OK) 
     {
         // Mounting successful 
         // Read the volume, serial number, free space and make the directory specified by 
         // "path" if it does not exist 
-        hw125_getlabel(hw125_device); 
-        hw125_getfree(hw125_device); 
-        hw125_mkdir(""); 
+        fatfs_getlabel(fatfs_device); 
+        fatfs_getfree(fatfs_device); 
+        fatfs_mkdir(""); 
     }
     else 
     {
         // Mounting unsuccessful 
         // Go to the not ready state and unmount the volume 
-        hw125_device->not_ready = SET_BIT; 
-        hw125_unmount(hw125_device); 
+        fatfs_device->not_ready = SET_BIT; 
+        fatfs_unmount(fatfs_device); 
     }
 }
 
 
-// HW125 not ready state 
-void hw125_not_ready_state(hw125_trackers_t *hw125_device)
+// FATFS not ready state 
+void fatfs_not_ready_state(fatfs_trackers_t *fatfs_device)
 {
     // Check if the volume is present 
-    if (hw125_get_existance() == HW125_RES_OK) 
+    if (fatfs_get_existance() == FATFS_RES_OK) 
     {
         // Present - clear the not ready flag so we can try remounting 
-        hw125_device->not_ready = CLEAR_BIT; 
+        fatfs_device->not_ready = CLEAR_BIT; 
     }
 }
 
 
-// HW125 access state 
-void hw125_access_state(hw125_trackers_t *hw125_device)
+// FATFS access state 
+void fatfs_access_state(fatfs_trackers_t *fatfs_device)
 {
     // Do nothing while the volume is accessed 
 }
 
 
-// HW125 access file state 
-void hw125_access_check_state(hw125_trackers_t *hw125_device) 
+// FATFS access file state 
+void fatfs_access_check_state(fatfs_trackers_t *fatfs_device) 
 {
     // Check for the presence of the volume 
-    if (hw125_ready_rec()) 
+    if (fatfs_ready_rec()) 
     {
         // If not seen then set the not_ready flag 
-        hw125_device->not_ready = SET_BIT; 
+        fatfs_device->not_ready = SET_BIT; 
     }
 }
 
 
-// HW125 eject state 
-void hw125_eject_state(hw125_trackers_t *hw125_device)
+// FATFS eject state 
+void fatfs_eject_state(fatfs_trackers_t *fatfs_device)
 {
     // Attempt to close the open file 
-    hw125_close(); 
+    fatfs_close(); 
 
     // Unmount the volume 
-    hw125_unmount(hw125_device); 
+    fatfs_unmount(fatfs_device); 
 }
 
 
-// HW125 fault state 
-void hw125_fault_state(hw125_trackers_t *hw125_device) 
+// FATFS fault state 
+void fatfs_fault_state(fatfs_trackers_t *fatfs_device) 
 {
     // Idle until the reset flag is set 
 }
 
 
-// HW125 reset state 
-void hw125_reset_state(hw125_trackers_t *hw125_device) 
+// FATFS reset state 
+void fatfs_reset_state(fatfs_trackers_t *fatfs_device) 
 {
     // Attempt to close a file 
-    hw125_close(); 
+    fatfs_close(); 
 
     // Reset sub directory 
-    memset((void *)hw125_device_trackers.dir, CLEAR, HW125_PATH_SIZE); 
+    memset((void *)fatfs_device_trackers.dir, CLEAR, FATFS_PATH_SIZE); 
 
     // Unmount the volume 
-    hw125_unmount(hw125_device); 
+    fatfs_unmount(fatfs_device); 
 
     // Clear device trackers 
-    hw125_device->fault_code = CLEAR; 
-    hw125_device->fault_mode = CLEAR; 
-    hw125_device->not_ready = CLEAR_BIT; 
-    hw125_device->eject = CLEAR_BIT; 
+    fatfs_device->fault_code = CLEAR; 
+    fatfs_device->fault_mode = CLEAR; 
+    fatfs_device->not_ready = CLEAR_BIT; 
+    fatfs_device->eject = CLEAR_BIT; 
 }
 
 //=======================================================================================
@@ -509,78 +509,78 @@ void hw125_reset_state(hw125_trackers_t *hw125_device)
 // Controller volume access functions 
 
 // Mount the volume 
-FRESULT hw125_mount(hw125_trackers_t *hw125_device) 
+FRESULT fatfs_mount(fatfs_trackers_t *fatfs_device) 
 {
-    hw125_device->fresult = f_mount(&hw125_device->file_sys, "", HW125_MOUNT_NOW); 
+    fatfs_device->fresult = f_mount(&fatfs_device->file_sys, "", FATFS_MOUNT_NOW); 
 
-    if (hw125_device->fresult == FR_OK) 
+    if (fatfs_device->fresult == FR_OK) 
     {
-        hw125_device->mount = SET_BIT; 
+        fatfs_device->mount = SET_BIT; 
     }
 
-    return hw125_device_trackers.fresult; 
+    return fatfs_device_trackers.fresult; 
 }
 
 
 // Unmount the volume 
-FRESULT hw125_unmount(hw125_trackers_t *hw125_device) 
+FRESULT fatfs_unmount(fatfs_trackers_t *fatfs_device) 
 {
     // Unmount, clear the init status so it can be re-mounted, and clear the mount bit 
     f_unmount(""); 
-    disk.is_initialized[HW125_VOL_NUM_0] = CLEAR;  // Logical drive number 0 - default number 
-    hw125_device->mount = CLEAR_BIT; 
+    disk.is_initialized[FATFS_VOL_NUM_0] = CLEAR;  // Logical drive number 0 - default number 
+    fatfs_device->mount = CLEAR_BIT; 
 
     return FR_OK; 
 }
 
 
 // Get the volume label 
-FRESULT hw125_getlabel(hw125_trackers_t *hw125_device) 
+FRESULT fatfs_getlabel(fatfs_trackers_t *fatfs_device) 
 {
-    hw125_device->fresult = f_getlabel("", hw125_device->vol_label, &hw125_device->serial_num); 
+    fatfs_device->fresult = f_getlabel("", fatfs_device->vol_label, &fatfs_device->serial_num); 
 
-    if (hw125_device->fresult) 
+    if (fatfs_device->fresult) 
     {
-        hw125_device->fault_mode |= (SET_BIT << hw125_device->fresult); 
-        hw125_device->fault_code |= (SET_BIT << HW125_FAULT_COMMS); 
+        fatfs_device->fault_mode |= (SET_BIT << fatfs_device->fresult); 
+        fatfs_device->fault_code |= (SET_BIT << FATFS_FAULT_COMMS); 
     }
 
-    return hw125_device->fresult; 
+    return fatfs_device->fresult; 
 }
 
 
 // Get free space 
-FRESULT hw125_getfree(hw125_trackers_t *hw125_device) 
+FRESULT fatfs_getfree(fatfs_trackers_t *fatfs_device) 
 {
-    hw125_device->fresult = f_getfree("", &hw125_device->fre_clust, &hw125_device->pfs); 
+    fatfs_device->fresult = f_getfree("", &fatfs_device->fre_clust, &fatfs_device->pfs); 
 
-    if (hw125_device->fresult == FR_OK) 
+    if (fatfs_device->fresult == FR_OK) 
     {
         // Calculate the total space 
         // (n_fatent - 2) * csize / 2
-        hw125_device->total = (uint32_t)(((hw125_device->pfs->n_fatent - 2) * 
-                                           hw125_device->pfs->csize) >> SHIFT_1);
+        fatfs_device->total = (uint32_t)(((fatfs_device->pfs->n_fatent - 2) * 
+                                           fatfs_device->pfs->csize) >> SHIFT_1);
         
         // Calculate the free space 
         // fre_clust * csize / 2 
-        hw125_device->free_space = (uint32_t)((hw125_device->fre_clust * 
-                                               hw125_device->pfs->csize) >> SHIFT_1); 
+        fatfs_device->free_space = (uint32_t)((fatfs_device->fre_clust * 
+                                               fatfs_device->pfs->csize) >> SHIFT_1); 
 
         // Check if there is sufficient disk space 
-        if (hw125_device->free_space < HW125_FREE_THRESH) 
+        if (fatfs_device->free_space < FATFS_FREE_THRESH) 
         {
-            hw125_device->fault_mode |= (SET_BIT << FR_DENIED); 
-            hw125_device->fault_code |= (SET_BIT << HW125_FAULT_FREE); 
+            fatfs_device->fault_mode |= (SET_BIT << FR_DENIED); 
+            fatfs_device->fault_code |= (SET_BIT << FATFS_FAULT_FREE); 
         }
 
     }
     else   // Communication fault 
     {
-        hw125_device->fault_mode |= (SET_BIT << hw125_device->fresult); 
-        hw125_device->fault_code |= (SET_BIT << HW125_FAULT_COMMS); 
+        fatfs_device->fault_mode |= (SET_BIT << fatfs_device->fresult); 
+        fatfs_device->fault_code |= (SET_BIT << FATFS_FAULT_COMMS); 
     }
 
-    return hw125_device->fresult; 
+    return fatfs_device->fresult; 
 }
 
 //=======================================================================================
@@ -590,51 +590,51 @@ FRESULT hw125_getfree(hw125_trackers_t *hw125_device)
 // Setters 
 
 // Set the check flag 
-void hw125_set_check_flag(void)
+void fatfs_set_check_flag(void)
 {
-    hw125_device_trackers.check = SET_BIT; 
+    fatfs_device_trackers.check = SET_BIT; 
 }
 
 
 // Clear the check flag 
-void hw125_clear_check_flag(void)
+void fatfs_clear_check_flag(void)
 {
-    hw125_device_trackers.check = CLEAR_BIT; 
+    fatfs_device_trackers.check = CLEAR_BIT; 
 }
 
 
 // Set the eject flag 
-void hw125_set_eject_flag(void) 
+void fatfs_set_eject_flag(void) 
 {
-    hw125_device_trackers.eject = SET_BIT; 
+    fatfs_device_trackers.eject = SET_BIT; 
 }
 
 
 // Clear the eject flag 
-void hw125_clear_eject_flag(void) 
+void fatfs_clear_eject_flag(void) 
 {
-    hw125_device_trackers.eject = CLEAR_BIT; 
+    fatfs_device_trackers.eject = CLEAR_BIT; 
 }
 
 
 // Set reset flag 
-void hw125_set_reset_flag(void) 
+void fatfs_set_reset_flag(void) 
 {
-    hw125_device_trackers.reset = SET_BIT; 
+    fatfs_device_trackers.reset = SET_BIT; 
 }
 
 
 // Set directory 
-void hw125_set_dir(const TCHAR *dir)
+void fatfs_set_dir(const TCHAR *dir)
 {
     // Reset the saved directory and set the new directory 
-    memset((void *)hw125_device_trackers.dir, CLEAR, HW125_PATH_SIZE); 
-    strcpy(hw125_device_trackers.dir, dir); 
+    memset((void *)fatfs_device_trackers.dir, CLEAR, FATFS_PATH_SIZE); 
+    strcpy(fatfs_device_trackers.dir, dir); 
 }
 
 
 // Make a new directory in the project directory 
-FRESULT hw125_mkdir(const TCHAR *dir) 
+FRESULT fatfs_mkdir(const TCHAR *dir) 
 {
     // Check for NULL pointer 
     if (dir == NULL) 
@@ -642,44 +642,44 @@ FRESULT hw125_mkdir(const TCHAR *dir)
         return FR_INVALID_OBJECT; 
     }
     
-    TCHAR sub_dir[HW125_PATH_SIZE*2]; 
+    TCHAR sub_dir[FATFS_PATH_SIZE*2]; 
 
     // Record 'dir' for future use and establish 'path' as the base of the sub directory 
-    hw125_set_dir(dir); 
-    strcpy(sub_dir, hw125_device_trackers.path); 
+    fatfs_set_dir(dir); 
+    strcpy(sub_dir, fatfs_device_trackers.path); 
 
     // If 'dir' is not a null character then prepare the sub-directory to be concatenated. 
     // 'dir' will be a null character when it's empty such as in the "init" state. 
-    if (*hw125_device_trackers.dir != NULL_CHAR)
+    if (*fatfs_device_trackers.dir != NULL_CHAR)
     {
         strcat(sub_dir, "/"); 
     }
 
     // Concatenate 'dir' to complete the sub directory string 
-    strcat(sub_dir, hw125_device_trackers.dir); 
+    strcat(sub_dir, fatfs_device_trackers.dir); 
 
     // Check for the existance of the directory 
-    hw125_device_trackers.fresult = f_stat(sub_dir, (FILINFO *)NULL); 
+    fatfs_device_trackers.fresult = f_stat(sub_dir, (FILINFO *)NULL); 
 
     // Only proceed to make the directory if it does not exist 
-    if (hw125_device_trackers.fresult)
+    if (fatfs_device_trackers.fresult)
     {
-        hw125_device_trackers.fresult = f_mkdir(sub_dir); 
+        fatfs_device_trackers.fresult = f_mkdir(sub_dir); 
 
         // Set fault code if there is an access error 
-        if (hw125_device_trackers.fresult) 
+        if (fatfs_device_trackers.fresult) 
         {
-            hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-            hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_DIR); 
+            fatfs_device_trackers.fault_mode |= (SET_BIT << fatfs_device_trackers.fresult); 
+            fatfs_device_trackers.fault_code |= (SET_BIT << FATFS_FAULT_DIR); 
         }
     }
 
-    return hw125_device_trackers.fresult; 
+    return fatfs_device_trackers.fresult; 
 }
 
 
 // Open file 
-FRESULT hw125_open(
+FRESULT fatfs_open(
     const TCHAR *file_name, 
     uint8_t mode) 
 {
@@ -689,39 +689,39 @@ FRESULT hw125_open(
         return FR_INVALID_OBJECT; 
     }
 
-    TCHAR file_dir[HW125_PATH_SIZE*3]; 
+    TCHAR file_dir[FATFS_PATH_SIZE*3]; 
 
     // Attempt to open file if a file is not already open 
-    if (!hw125_device_trackers.open_file) 
+    if (!fatfs_device_trackers.open_file) 
     {
         // Establish 'path' as the root of the file directory 
-        strcpy(file_dir, hw125_device_trackers.path); 
+        strcpy(file_dir, fatfs_device_trackers.path); 
 
         // If 'dir' is not a null character then concatenate it to the file directory 
-        if (*hw125_device_trackers.dir != NULL_CHAR)
+        if (*fatfs_device_trackers.dir != NULL_CHAR)
         {
             strcat(file_dir, "/"); 
-            strcat(file_dir, hw125_device_trackers.dir); 
+            strcat(file_dir, fatfs_device_trackers.dir); 
         }
 
         strcat(file_dir, "/"); 
         strcat(file_dir, file_name); 
         
-        hw125_device_trackers.fresult = f_open(&hw125_device_trackers.file, 
+        fatfs_device_trackers.fresult = f_open(&fatfs_device_trackers.file, 
                                                file_dir, 
                                                mode); 
 
-        if (hw125_device_trackers.fresult == FR_OK) 
+        if (fatfs_device_trackers.fresult == FR_OK) 
         {
-            hw125_device_trackers.open_file = SET_BIT; 
+            fatfs_device_trackers.open_file = SET_BIT; 
         }
         else   // Open fault - record the fault types 
         {
-            hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-            hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_OPEN); 
+            fatfs_device_trackers.fault_mode |= (SET_BIT << fatfs_device_trackers.fresult); 
+            fatfs_device_trackers.fault_code |= (SET_BIT << FATFS_FAULT_OPEN); 
         }
 
-        return hw125_device_trackers.fresult; 
+        return fatfs_device_trackers.fresult; 
     }
 
     return FR_TOO_MANY_OPEN_FILES; 
@@ -729,27 +729,27 @@ FRESULT hw125_open(
 
 
 // Close the open file 
-FRESULT hw125_close(void) 
+FRESULT fatfs_close(void) 
 {
     // Attempt to close a file if it's open 
-    if (hw125_device_trackers.open_file) 
+    if (fatfs_device_trackers.open_file) 
     {
-        hw125_device_trackers.fresult = f_close(&hw125_device_trackers.file); 
+        fatfs_device_trackers.fresult = f_close(&fatfs_device_trackers.file); 
 
-        if (hw125_device_trackers.fresult) 
+        if (fatfs_device_trackers.fresult) 
         {
             // Close file fault 
-            hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-            hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_CLOSE); 
+            fatfs_device_trackers.fault_mode |= (SET_BIT << fatfs_device_trackers.fresult); 
+            fatfs_device_trackers.fault_code |= (SET_BIT << FATFS_FAULT_CLOSE); 
         }
 
         // Clear the open file flag regardless of the fault code 
-        hw125_device_trackers.open_file = CLEAR_BIT; 
+        fatfs_device_trackers.open_file = CLEAR_BIT; 
 
         // Update the free space 
-        hw125_getfree(&hw125_device_trackers); 
+        fatfs_getfree(&fatfs_device_trackers); 
 
-        return hw125_device_trackers.fresult; 
+        return fatfs_device_trackers.fresult; 
     }
 
     return FR_OK; 
@@ -757,7 +757,7 @@ FRESULT hw125_close(void)
 
 
 // Write to the open file 
-FRESULT hw125_f_write(
+FRESULT fatfs_f_write(
     const void *buff, 
     UINT btw) 
 {
@@ -765,36 +765,36 @@ FRESULT hw125_f_write(
     // Check for open file? 
 
     // Write to the file 
-    hw125_device_trackers.fresult = f_write(&hw125_device_trackers.file, 
+    fatfs_device_trackers.fresult = f_write(&fatfs_device_trackers.file, 
                                             buff, 
                                             btw, 
-                                            &hw125_device_trackers.bw); 
+                                            &fatfs_device_trackers.bw); 
 
     // Set fault code if there is an access error and a file is open 
-    if (hw125_device_trackers.fresult && hw125_device_trackers.open_file) 
+    if (fatfs_device_trackers.fresult && fatfs_device_trackers.open_file) 
     {
-        hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-        hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_WRITE); 
+        fatfs_device_trackers.fault_mode |= (SET_BIT << fatfs_device_trackers.fresult); 
+        fatfs_device_trackers.fault_code |= (SET_BIT << FATFS_FAULT_WRITE); 
     }
 
-    return hw125_device_trackers.fresult; 
+    return fatfs_device_trackers.fresult; 
 }
 
 
 // Write a string to the open file 
-int16_t hw125_puts(const TCHAR *str) 
+int16_t fatfs_puts(const TCHAR *str) 
 {
     // Check for void pointer? 
     // Check for open file? 
 
     // Writes a string to the file 
-    int16_t puts_return = f_puts(str, &hw125_device_trackers.file); 
+    int16_t puts_return = f_puts(str, &fatfs_device_trackers.file); 
 
     // Set fault code if there is a function error and a file is open 
-    if ((puts_return < 0) && hw125_device_trackers.open_file) 
+    if ((puts_return < 0) && fatfs_device_trackers.open_file) 
     {
-        hw125_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
-        hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_WRITE); 
+        fatfs_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
+        fatfs_device_trackers.fault_code |= (SET_BIT << FATFS_FAULT_WRITE); 
     }
 
     return puts_return; 
@@ -802,7 +802,7 @@ int16_t hw125_puts(const TCHAR *str)
 
 
 // Write a formatted string to the open file 
-int8_t hw125_printf(
+int8_t fatfs_printf(
     const TCHAR *fmt_str, 
     uint16_t fmt_value) 
 {
@@ -810,15 +810,15 @@ int8_t hw125_printf(
     // Check for open file? 
 
     // Writes a formatted string to the file 
-    int8_t printf_return = f_printf(&hw125_device_trackers.file, 
+    int8_t printf_return = f_printf(&fatfs_device_trackers.file, 
                                     fmt_str, 
                                     fmt_value); 
 
     // Set fault code if there is a function error and a file is open 
-    if ((printf_return < 0) && hw125_device_trackers.open_file) 
+    if ((printf_return < 0) && fatfs_device_trackers.open_file) 
     {
-        hw125_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
-        hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_WRITE); 
+        fatfs_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
+        fatfs_device_trackers.fault_code |= (SET_BIT << FATFS_FAULT_WRITE); 
     }
 
     return printf_return; 
@@ -826,24 +826,24 @@ int8_t hw125_printf(
 
 
 // Navigate within the open file 
-FRESULT hw125_lseek(FSIZE_t offset) 
+FRESULT fatfs_lseek(FSIZE_t offset) 
 {
     // Move to the specified position in the file 
-    hw125_device_trackers.fresult = f_lseek(&hw125_device_trackers.file, offset); 
+    fatfs_device_trackers.fresult = f_lseek(&fatfs_device_trackers.file, offset); 
 
     // Set fault code if there is an access error and a file is open 
-    if (hw125_device_trackers.fresult && hw125_device_trackers.open_file) 
+    if (fatfs_device_trackers.fresult && fatfs_device_trackers.open_file) 
     {
-        hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-        hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_SEEK); 
+        fatfs_device_trackers.fault_mode |= (SET_BIT << fatfs_device_trackers.fresult); 
+        fatfs_device_trackers.fault_code |= (SET_BIT << FATFS_FAULT_SEEK); 
     }
 
-    return hw125_device_trackers.fresult; 
+    return fatfs_device_trackers.fresult; 
 }
 
 
 // Delete a file 
-FRESULT hw125_unlink(const TCHAR* filename)
+FRESULT fatfs_unlink(const TCHAR* filename)
 {
     // Check that path validity 
     if (filename == NULL) 
@@ -851,32 +851,32 @@ FRESULT hw125_unlink(const TCHAR* filename)
         return FR_INVALID_OBJECT; 
     }
 
-    TCHAR file_dir[HW125_PATH_SIZE*3]; 
+    TCHAR file_dir[FATFS_PATH_SIZE*3]; 
 
     // Establish 'path' as the root of the file directory 
-    strcpy(file_dir, hw125_device_trackers.path); 
+    strcpy(file_dir, fatfs_device_trackers.path); 
 
     // If 'dir' is not a null character then concatenate it to the file directory 
-    if (*hw125_device_trackers.dir != NULL_CHAR)
+    if (*fatfs_device_trackers.dir != NULL_CHAR)
     {
         strcat(file_dir, "/"); 
-        strcat(file_dir, hw125_device_trackers.dir); 
+        strcat(file_dir, fatfs_device_trackers.dir); 
     }
 
     strcat(file_dir, "/"); 
     strcat(file_dir, filename); 
 
     // Attempt to delete the specified file 
-    hw125_device_trackers.fresult = f_unlink(file_dir); 
+    fatfs_device_trackers.fresult = f_unlink(file_dir); 
 
     // Set the fault code if the file failed to be deleted 
-    if (hw125_device_trackers.fresult)
+    if (fatfs_device_trackers.fresult)
     {
-        hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-        hw125_device_trackers.fault_code |= (SET_BIT << HW125_FAULT_DIR); 
+        fatfs_device_trackers.fault_mode |= (SET_BIT << fatfs_device_trackers.fresult); 
+        fatfs_device_trackers.fault_code |= (SET_BIT << FATFS_FAULT_DIR); 
     }
 
-    return hw125_device_trackers.fresult; 
+    return fatfs_device_trackers.fresult; 
 }
 
 //=======================================================================================
@@ -886,35 +886,35 @@ FRESULT hw125_unlink(const TCHAR* filename)
 // Getters 
 
 // Get state 
-HW125_STATE hw125_get_state(void) 
+FATFS_STATE fatfs_get_state(void) 
 {
-    return hw125_device_trackers.state; 
+    return fatfs_device_trackers.state; 
 }
 
 
 // Get fault code 
-HW125_FAULT_CODE hw125_get_fault_code(void) 
+FATFS_FAULT_CODE fatfs_get_fault_code(void) 
 {
-    return hw125_device_trackers.fault_code; 
+    return fatfs_device_trackers.fault_code; 
 }
 
 
 // Get fault mode 
-HW125_FAULT_MODE hw125_get_fault_mode(void)
+FATFS_FAULT_MODE fatfs_get_fault_mode(void)
 {
-    return hw125_device_trackers.fault_mode; 
+    return fatfs_device_trackers.fault_mode; 
 }
 
 
 // Get open file flag 
-HW125_FILE_STATUS hw125_get_file_status(void)
+FATFS_FILE_STATUS fatfs_get_file_status(void)
 {
-    return hw125_device_trackers.open_file; 
+    return fatfs_device_trackers.open_file; 
 }
 
 
 // Check for the existance of a file or directory 
-FRESULT hw125_get_exists(const TCHAR *str)
+FRESULT fatfs_get_exists(const TCHAR *str)
 {
     // Check for a valid file name 
     if ((str == NULL) || (*str == NULL_CHAR)) 
@@ -923,16 +923,16 @@ FRESULT hw125_get_exists(const TCHAR *str)
     }
 
     // Local variables 
-    TCHAR directory[HW125_PATH_SIZE*3]; 
+    TCHAR directory[FATFS_PATH_SIZE*3]; 
 
     // Establish 'path' as the root of the file directory 
-    strcpy(directory, hw125_device_trackers.path); 
+    strcpy(directory, fatfs_device_trackers.path); 
 
     // If 'dir' is not a null character then concatenate it to the file directory 
-    if (*hw125_device_trackers.dir != NULL_CHAR)
+    if (*fatfs_device_trackers.dir != NULL_CHAR)
     {
         strcat(directory, "/"); 
-        strcat(directory, hw125_device_trackers.dir); 
+        strcat(directory, fatfs_device_trackers.dir); 
     }
 
     strcat(directory, "/"); 
@@ -944,40 +944,40 @@ FRESULT hw125_get_exists(const TCHAR *str)
 
 
 // Read data from open file 
-FRESULT hw125_f_read(
+FRESULT fatfs_f_read(
     void *buff, 
     UINT btr) 
 {
     // Read from the file 
-    hw125_device_trackers.fresult = f_read(&hw125_device_trackers.file, 
+    fatfs_device_trackers.fresult = f_read(&fatfs_device_trackers.file, 
                                            buff, 
                                            btr, 
-                                           &hw125_device_trackers.br); 
+                                           &fatfs_device_trackers.br); 
     
     // Set fault code if there is an access error and a file is open 
-    if (hw125_device_trackers.fresult && hw125_device_trackers.open_file) 
+    if (fatfs_device_trackers.fresult && fatfs_device_trackers.open_file) 
     {
-        hw125_device_trackers.fault_mode |= (SET_BIT << hw125_device_trackers.fresult); 
-        hw125_device_trackers.fault_code |= HW125_FAULT_READ; 
+        fatfs_device_trackers.fault_mode |= (SET_BIT << fatfs_device_trackers.fresult); 
+        fatfs_device_trackers.fault_code |= FATFS_FAULT_READ; 
     }
 
-    return hw125_device_trackers.fresult; 
+    return fatfs_device_trackers.fresult; 
 }
 
 
 // Reads a string from open file 
-TCHAR* hw125_gets(
+TCHAR* fatfs_gets(
     TCHAR *buff, 
     uint16_t len)
 {
     // Read a string from the file 
-    TCHAR *gets_return = f_gets(buff, len, &hw125_device_trackers.file); 
+    TCHAR *gets_return = f_gets(buff, len, &fatfs_device_trackers.file); 
 
     // Set fault code if there was a read operation error and a file is open 
-    if ((gets_return == NULL) && (!hw125_eof()) && hw125_device_trackers.open_file) 
+    if ((gets_return == NULL) && (!fatfs_eof()) && fatfs_device_trackers.open_file) 
     {
-        hw125_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
-        hw125_device_trackers.fault_code |= HW125_FAULT_READ; 
+        fatfs_device_trackers.fault_mode |= (SET_BIT << FR_DISK_ERR); 
+        fatfs_device_trackers.fault_code |= FATFS_FAULT_READ; 
     }
 
     return gets_return; 
@@ -985,9 +985,9 @@ TCHAR* hw125_gets(
 
 
 // Test for end of file on open file 
-HW125_EOF hw125_eof(void) 
+FATFS_EOF fatfs_eof(void) 
 {
-    return (HW125_EOF)f_eof(&hw125_device_trackers.file); 
+    return (FATFS_EOF)f_eof(&fatfs_device_trackers.file); 
 }
 
 //=======================================================================================

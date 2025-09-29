@@ -36,7 +36,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "ff_gen_drv.h"
-#include "hw125_driver.h" 
+#include "fatfs_driver.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -83,7 +83,7 @@ DSTATUS USER_initialize (
 )
 {
   /* USER CODE BEGIN INIT */
-    return hw125_init(pdrv); 
+    return fatfs_init(pdrv); 
   /* USER CODE END INIT */
 }
 
@@ -97,7 +97,7 @@ DSTATUS USER_status (
 )
 {
   /* USER CODE BEGIN STATUS */
-    return hw125_status(pdrv); 
+    return fatfs_status(pdrv); 
   /* USER CODE END STATUS */
 }
 
@@ -117,7 +117,7 @@ DRESULT USER_read (
 )
 {
   /* USER CODE BEGIN READ */
-    return (DRESULT)hw125_read(pdrv, buff, sector, count); 
+    return (DRESULT)fatfs_read(pdrv, buff, sector, count); 
   /* USER CODE END READ */
 }
 
@@ -139,7 +139,7 @@ DRESULT USER_write (
 {
   /* USER CODE BEGIN WRITE */
   /* USER CODE HERE */
-    return (DRESULT)hw125_write(pdrv, buff, sector, count); 
+    return (DRESULT)fatfs_write(pdrv, buff, sector, count); 
   /* USER CODE END WRITE */
 }
 #endif /* _USE_WRITE == 1 */
@@ -159,7 +159,7 @@ DRESULT USER_ioctl (
 )
 {
   /* USER CODE BEGIN IOCTL */
-    return (DRESULT)hw125_ioctl(pdrv, cmd, buff); 
+    return (DRESULT)fatfs_ioctl(pdrv, cmd, buff); 
   /* USER CODE END IOCTL */
 }
 #endif /* _USE_IOCTL == 1 */

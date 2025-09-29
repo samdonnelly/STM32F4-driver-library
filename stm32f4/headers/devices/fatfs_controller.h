@@ -1,9 +1,9 @@
 /**
- * @file hw125_controller.h
+ * @file fatfs_controller.h
  * 
  * @author Sam Donnelly (samueldonnelly11@gmail.com)
  * 
- * @brief HW125 controller interface 
+ * @brief FATFS controller interface 
  * 
  * @version 0.1
  * @date 2023-01-12
@@ -12,8 +12,8 @@
  * 
  */
 
-#ifndef _HW125_CONTROLLER_H_ 
-#define _HW125_CONTROLLER_H_ 
+#ifndef _FATFS_CONTROLLER_H_ 
+#define _FATFS_CONTROLLER_H_ 
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,7 +23,7 @@ extern "C" {
 // Includes 
 
 // Drivers 
-#include "hw125_driver.h" 
+#include "fatfs_driver.h" 
 
 // STM drivers 
 #include "fatfs.h"
@@ -35,17 +35,17 @@ extern "C" {
 // Macros 
 
 // State machine 
-#define HW125_NUM_STATES 7             // Number of possible states for the controller 
+#define FATFS_NUM_STATES 7             // Number of possible states for the controller 
 
 // Controller tracker 
-#define HW125_PATH_SIZE 50             // Volume path max length 
-#define HW125_INFO_SIZE 30             // Device info buffer size 
-#define HW125_FREE_THRESH 0x0000C350   // Free space threshold before disk full fault (KB) 
+#define FATFS_PATH_SIZE 50             // Volume path max length 
+#define FATFS_INFO_SIZE 30             // Device info buffer size 
+#define FATFS_FREE_THRESH 0x0000C350   // Free space threshold before disk full fault (KB) 
 
 // Volume numbers 
-#define HW125_VOL_NUM_0 0              // Logical drive number 0 (default number) 
-#define HW125_VOL_NUM_1 1              // Logical drive number 1 
-#define HW125_VOL_NUM_2 2              // Logical drive number 2 
+#define FATFS_VOL_NUM_0 0              // Logical drive number 0 (default number) 
+#define FATFS_VOL_NUM_1 1              // Logical drive number 1 
+#define FATFS_VOL_NUM_2 2              // Logical drive number 2 
 
 //=======================================================================================
 
@@ -54,32 +54,32 @@ extern "C" {
 // Enums 
 
 /**
- * @brief HW125 controller states 
+ * @brief FATFS controller states 
  */
 typedef enum {
-    HW125_INIT_STATE, 
-    HW125_NOT_READY_STATE, 
-    HW125_ACCESS_STATE, 
-    HW125_ACCESS_CHECK_STATE, 
-    HW125_EJECT_STATE, 
-    HW125_FAULT_STATE, 
-    HW125_RESET_STATE 
-} hw125_states_t; 
+    FATFS_INIT_STATE, 
+    FATFS_NOT_READY_STATE, 
+    FATFS_ACCESS_STATE, 
+    FATFS_ACCESS_CHECK_STATE, 
+    FATFS_EJECT_STATE, 
+    FATFS_FAULT_STATE, 
+    FATFS_RESET_STATE 
+} fatfs_states_t; 
 
 
 /**
- * @brief HW125 fault code bit indexes 
+ * @brief FATFS fault code bit indexes 
  */
 typedef enum {
-    HW125_FAULT_DIR,          // Directory access - make or delete (unlink) 
-    HW125_FAULT_OPEN,         // Open 
-    HW125_FAULT_CLOSE,        // Close 
-    HW125_FAULT_WRITE,        // Write 
-    HW125_FAULT_READ,         // Read 
-    HW125_FAULT_SEEK,         // Seek 
-    HW125_FAULT_FREE,         // Free space 
-    HW125_FAULT_COMMS         // Comms 
-} hw125_fault_codes_t; 
+    FATFS_FAULT_DIR,          // Directory access - make or delete (unlink) 
+    FATFS_FAULT_OPEN,         // Open 
+    FATFS_FAULT_CLOSE,        // Close 
+    FATFS_FAULT_WRITE,        // Write 
+    FATFS_FAULT_READ,         // Read 
+    FATFS_FAULT_SEEK,         // Seek 
+    FATFS_FAULT_FREE,         // Free space 
+    FATFS_FAULT_COMMS         // Comms 
+} fatfs_fault_codes_t; 
 
 //=======================================================================================
 
@@ -87,11 +87,11 @@ typedef enum {
 //=======================================================================================
 // Structures 
 
-// HW125 controller trackers 
-typedef struct hw125_trackers_s 
+// FATFS controller trackers 
+typedef struct fatfs_trackers_s 
 {
     // Controller information 
-    hw125_states_t state;                        // State of the controller 
+    fatfs_states_t state;                        // State of the controller 
     uint16_t fault_code;                         // Fault code 
     DWORD fault_mode;                            // Fault mode - based on FRESULT 
 
@@ -100,8 +100,8 @@ typedef struct hw125_trackers_s
     FIL file;                                    // File object 
     FRESULT fresult;                             // Store result of FatFs operation 
     UINT br, bw;                                 // Read and write counters 
-    TCHAR path[HW125_PATH_SIZE];                 // Path to project directory 
-    TCHAR dir[HW125_PATH_SIZE];                  // Sub-directory in project directory 
+    TCHAR path[FATFS_PATH_SIZE];                 // Path to project directory 
+    TCHAR dir[FATFS_PATH_SIZE];                  // Sub-directory in project directory 
 
     // Card capacity 
     FATFS *pfs;                                  // Pointer to file system object 
@@ -109,7 +109,7 @@ typedef struct hw125_trackers_s
     DWORD total, free_space;                     // Volume total and free space 
     
     // Volume tracking 
-    TCHAR vol_label[HW125_INFO_SIZE];            // Volume label 
+    TCHAR vol_label[FATFS_INFO_SIZE];            // Volume label 
     DWORD serial_num;                            // Volume serial number 
 
     // State trackers 
@@ -121,7 +121,7 @@ typedef struct hw125_trackers_s
     uint8_t reset      : 1;                      // Reset state trigger 
     uint8_t startup    : 1;                      // Ensures the init state is run 
 }
-hw125_trackers_t; 
+fatfs_trackers_t; 
 
 //=======================================================================================
 
@@ -129,11 +129,11 @@ hw125_trackers_t;
 //=======================================================================================
 // Datatypes 
 
-typedef hw125_states_t HW125_STATE; 
-typedef uint16_t HW125_FAULT_CODE; 
-typedef DWORD HW125_FAULT_MODE; 
-typedef uint8_t HW125_FILE_STATUS; 
-typedef int8_t HW125_EOF; 
+typedef fatfs_states_t FATFS_STATE; 
+typedef uint16_t FATFS_FAULT_CODE; 
+typedef DWORD FATFS_FAULT_MODE; 
+typedef uint8_t FATFS_FILE_STATUS; 
+typedef int8_t FATFS_EOF; 
 
 //=======================================================================================
 
@@ -142,11 +142,11 @@ typedef int8_t HW125_EOF;
 // Function pointers 
 
 /**
- * @brief HW125 state machine function pointer 
+ * @brief FATFS state machine function pointer 
  * 
- * @param hw125_device : device tracker that defines control characteristics 
+ * @param fatfs_device : device tracker that defines control characteristics 
  */
-typedef void (*hw125_state_functions_t)(hw125_trackers_t *hw125_device); 
+typedef void (*fatfs_state_functions_t)(fatfs_trackers_t *fatfs_device); 
 
 //=======================================================================================
 
@@ -155,28 +155,28 @@ typedef void (*hw125_state_functions_t)(hw125_trackers_t *hw125_device);
 // Control functions 
 
 /**
- * @brief HW125 controller initialization 
+ * @brief FATFS controller initialization 
  * 
  * @details Initializes the controller tracker information. The 'path' argument specifies 
  *          the directory where files will be saved on the volume. This directory is the 
  *          applications root directory and all subsequent folders and files will be saved 
  *          here. This allows for files from different applications to be easily separated. 
- *          Note that the path length must be less than HW125_PATH_SIZE to prevent overrun. 
+ *          Note that the path length must be less than FATFS_PATH_SIZE to prevent overrun. 
  *          If the path length is too long then the project/applications directory will not 
  *          be set. 
  * 
  * @param path : path to directory to use on the volume 
  */
-void hw125_controller_init(const char *path); 
+void fatfs_controller_init(const char *path); 
 
 
 /**
- * @brief HW125 controller 
+ * @brief FATFS controller 
  * 
  * @details Contains the state machine to control the flow of the controller. Should be 
  *          called continuously by the application while the device is in use. 
  */
-void hw125_controller(void); 
+void fatfs_controller(void); 
 
 //=======================================================================================
 
@@ -194,7 +194,7 @@ void hw125_controller(void);
  *          performed in this state, however there will be the added overhead of checking 
  *          for the volume presence on each pass. 
  */
-void hw125_set_check_flag(void); 
+void fatfs_set_check_flag(void); 
 
 
 /**
@@ -205,7 +205,7 @@ void hw125_set_check_flag(void);
  *          is best when the volume is being accessed consistently so a check is not needed 
  *          and when you don't want to waste cycle on a ping of the volume. 
  */
-void hw125_clear_check_flag(void); 
+void fatfs_clear_check_flag(void); 
 
 
 /**
@@ -215,16 +215,16 @@ void hw125_clear_check_flag(void);
  *          preps the volume for removal. This flag is set by the application if the user 
  *          wants to remove the volume while the system still has power. 
  */
-void hw125_set_eject_flag(void); 
+void fatfs_set_eject_flag(void); 
 
 
 /**
  * @brief Clear the eject flag 
  * 
  * @details The eject flag must be cleared in order for the volume to be properly mounted 
- *          and used. This setter is only needed after hw125_set_eject_flag has been called. 
+ *          and used. This setter is only needed after fatfs_set_eject_flag has been called. 
  */
-void hw125_clear_eject_flag(void); 
+void fatfs_clear_eject_flag(void); 
 
 
 /**
@@ -233,7 +233,7 @@ void hw125_clear_eject_flag(void);
  * @details The reset flag triggers a controller reset. This flag will be cleared 
  *          automatically after being set. 
  */
-void hw125_set_reset_flag(void); 
+void fatfs_set_reset_flag(void); 
 
 
 /**
@@ -243,7 +243,7 @@ void hw125_set_reset_flag(void);
  * 
  * @param dir : project directory to access 
  */
-void hw125_set_dir(const TCHAR *dir); 
+void fatfs_set_dir(const TCHAR *dir); 
 
 
 /**
@@ -262,7 +262,7 @@ void hw125_set_dir(const TCHAR *dir);
  *          with the sub-directory added to the end and separated by a "/". 
  *          
  *          The length of 'dir' and 'path' together should be less than twice the length of 
- *          HW125_PATH_SIZE. 
+ *          FATFS_PATH_SIZE. 
  *          
  *          If 'dir' is an invalid pointer then the function will return before attempting to 
  *          create a directory. 
@@ -270,7 +270,7 @@ void hw125_set_dir(const TCHAR *dir);
  * @param dir : sub directory to creae within the project directory 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_mkdir(const TCHAR *dir); 
+FRESULT fatfs_mkdir(const TCHAR *dir); 
 
 
 /**
@@ -281,15 +281,15 @@ FRESULT hw125_mkdir(const TCHAR *dir);
  *          Concatenates the file name ('file_name') onto the project directory and attempts to 
  *          open the specified file. If there is an error opening the file then the fault code 
  *          will be updated accordingly. Note that if a subdirectory for the project has been 
- *          created using hw125_mkdir then the file will be made in that directory. If you 
- *          want the file in a different directory then use hw125_mkdir to update the 
- *          subdirectory accordingly (can specify 'dir' as "" in hw125_mkdir to go to the 
+ *          created using fatfs_mkdir then the file will be made in that directory. If you 
+ *          want the file in a different directory then use fatfs_mkdir to update the 
+ *          subdirectory accordingly (can specify 'dir' as "" in fatfs_mkdir to go to the 
  *          project root directory). 
  *          
  *          When the function attempts to open the specified file it will use the method 
- *          specified by 'mode' to do so. For example, if you specify HW125_MODE_W as the mode 
+ *          specified by 'mode' to do so. For example, if you specify FATFS_MODE_W as the mode 
  *          then the function will create a file if it does not already exist and open it in 
- *          write mode. See the HW125 driver header for possible modes. 
+ *          write mode. See the FATFS driver header for possible modes. 
  *           
  *          If a file is already open then there will be no attempt to open another. The result 
  *          can be observed in the return value. 
@@ -298,7 +298,7 @@ FRESULT hw125_mkdir(const TCHAR *dir);
  * @param mode : mode to open the file in (read, write, etc.) 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_open(
+FRESULT fatfs_open(
     const TCHAR *file_name, 
     uint8_t mode); 
 
@@ -315,7 +315,7 @@ FRESULT hw125_open(
  * 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_close(void); 
+FRESULT fatfs_close(void); 
 
 
 /**
@@ -331,7 +331,7 @@ FRESULT hw125_close(void);
  * @param btw : number of bytes to write 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_f_write(
+FRESULT fatfs_f_write(
     const void *buff, 
     UINT btw); 
 
@@ -354,7 +354,7 @@ FRESULT hw125_f_write(
  * @param str : pointer to string to write 
  * @return int8_t : number of character encoding units written to the file 
  */
-int16_t hw125_puts(const TCHAR *str); 
+int16_t fatfs_puts(const TCHAR *str); 
 
 
 /**
@@ -385,7 +385,7 @@ int16_t hw125_puts(const TCHAR *str);
  * @param fmt_value : unsigned integer to write with the formatted string 
  * @return int8_t : number of character encoding units written to the file 
  */
-int8_t hw125_printf(
+int8_t fatfs_printf(
     const TCHAR *fmt_str, 
     uint16_t fmt_value); 
 
@@ -413,7 +413,7 @@ int8_t hw125_printf(
  * @param offset : byte position in the file to point to 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_lseek(FSIZE_t offset); 
+FRESULT fatfs_lseek(FSIZE_t offset); 
 
 
 /**
@@ -425,7 +425,7 @@ FRESULT hw125_lseek(FSIZE_t offset);
  * @param filename : name of file 
  * @return FRESULT : status of the delete operation 
  */
-FRESULT hw125_unlink(const TCHAR* filename); 
+FRESULT fatfs_unlink(const TCHAR* filename); 
 
 //=======================================================================================
 
@@ -438,9 +438,9 @@ FRESULT hw125_unlink(const TCHAR* filename);
  * 
  * @details Returns the current state of the controllers state machine. 
  * 
- * @return HW125_STATE : state machine state 
+ * @return FATFS_STATE : state machine state 
  */
-HW125_STATE hw125_get_state(void); 
+FATFS_STATE fatfs_get_state(void); 
 
 
 /**
@@ -448,16 +448,16 @@ HW125_STATE hw125_get_state(void);
  * 
  * @details Returns the controllers fault code. The fault code indicates the FATFS file 
  *          system function that caused a fault. Each bit of the code corresponds to a file 
- *          operation which is defined by hw125_fault_codes_t. When one of these operations 
+ *          operation which is defined by fatfs_fault_codes_t. When one of these operations 
  *          is unsuccessful on a valid file then the fault code will be set. The fault code 
  *          is used by the state machine to determine whether to enter the fault state. 
  *          The fault code is cleared on a controller reset. 
  * 
- * @see hw125_fault_codes_t 
+ * @see fatfs_fault_codes_t 
  * 
- * @return HW125_FAULT_CODE : controller fault code 
+ * @return FATFS_FAULT_CODE : controller fault code 
  */
-HW125_FAULT_CODE hw125_get_fault_code(void); 
+FATFS_FAULT_CODE fatfs_get_fault_code(void); 
 
 
 /**
@@ -470,9 +470,9 @@ HW125_FAULT_CODE hw125_get_fault_code(void);
  *          controller, this flag will be set and can be used to identify the cause of 
  *          the problem along with the fault code. 
  * 
- * @return HW125_FAULT_MODE : controller fault mode 
+ * @return FATFS_FAULT_MODE : controller fault mode 
  */
-HW125_FAULT_MODE hw125_get_fault_mode(void); 
+FATFS_FAULT_MODE fatfs_get_fault_mode(void); 
 
 
 /**
@@ -480,23 +480,23 @@ HW125_FAULT_MODE hw125_get_fault_mode(void);
  * 
  * @details Returns the open file flag state. 
  * 
- * @return HW125_FILE_STATUS : open file flag state 
+ * @return FATFS_FILE_STATUS : open file flag state 
  */
-HW125_FILE_STATUS hw125_get_file_status(void); 
+FATFS_FILE_STATUS fatfs_get_file_status(void); 
 
 
 /**
  * @brief Check for the existance of a file or directory 
  *       
  * NOTE: The root directory is set during the controller init and the sub-directory 
- *       is set by the hw125_set_dir function. 'str', passed as an argument to this 
+ *       is set by the fatfs_set_dir function. 'str', passed as an argument to this 
  *       function, is concatenated onto the root + sub-directory that is already 
  *       defined so do not include those in 'str'. 
  * 
  * @param str : string to file or directory to check for 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_get_exists(const TCHAR *str); 
+FRESULT fatfs_get_exists(const TCHAR *str); 
 
 
 /**
@@ -507,16 +507,16 @@ FRESULT hw125_get_exists(const TCHAR *str);
  *          Attempts to read data from an open file and updates the fault code if there 
  *          is an error during the read process. If there is no file open then nothing 
  *          will happen. Note that the read will start at the read/write pointer which 
- *          can be changed using hw125_lseek. There is no data type during the read 
+ *          can be changed using fatfs_lseek. There is no data type during the read 
  *          process so a void pointer type buffer is used. 
  * 
- * @see hw125_lseek 
+ * @see fatfs_lseek 
  * 
  * @param buff : void pointer to buffer to store read data 
  * @param btr : number of bytes to read 
  * @return FRESULT : FATFS file function return code 
  */
-FRESULT hw125_f_read(
+FRESULT fatfs_f_read(
     void *buff, 
     UINT btr); 
 
@@ -537,7 +537,7 @@ FRESULT hw125_f_read(
  * @param len : lengh of string to read (bytes) 
  * @return TCHAR : pointer to buff (if read successful) 
  */
-TCHAR* hw125_gets(
+TCHAR* fatfs_gets(
     TCHAR *buff, 
     uint16_t len); 
 
@@ -552,9 +552,9 @@ TCHAR* hw125_gets(
  *          open file. If at the end of the file then this function will return a non-zero 
  *          value and zero otherwise. 
  * 
- * @return HW125_EOF : end of file status 
+ * @return FATFS_EOF : end of file status 
  */
-HW125_EOF hw125_eof(void); 
+FATFS_EOF fatfs_eof(void); 
 
 //=======================================================================================
 
@@ -562,4 +562,4 @@ HW125_EOF hw125_eof(void);
 }
 #endif
 
-#endif   // _HW125_CONTROLLER_H_
+#endif   // _FATFS_CONTROLLER_H_
