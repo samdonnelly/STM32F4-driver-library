@@ -1829,7 +1829,6 @@ void m8q_nmea_msg_parse(
     uint8_t arg_num, 
     uint8_t **data)
 {
-    // Local variables 
     uint8_t param_index = CLEAR; 
     uint8_t param_len = CLEAR; 
     uint8_t data_index = CLEAR; 
@@ -2052,7 +2051,6 @@ M8Q_STATUS m8q_nmea_config(
 // NMEA message checksum calculation 
 uint16_t m8q_nmea_checksum(const char *msg)
 {
-    // Local variables 
     uint16_t xor_result = CLEAR; 
     uint16_t cs_hi_byte = CLEAR; 
     uint16_t cs_lo_byte = CLEAR; 
@@ -2086,7 +2084,6 @@ M8Q_STATUS m8q_ubx_config(
     const char *config_msg, 
     uint8_t max_msg_len)
 {
-    // Local variables 
     const char *msg_ptr = config_msg + BYTE_7; 
     uint16_t pl_len = CLEAR; 
     uint8_t msg_data[max_msg_len]; 
@@ -2251,7 +2248,6 @@ void ubx_config_msg_convert(
     uint8_t *msg_data, 
     uint8_t *msg_len)
 {
-    // Local variables 
     uint8_t *msg_data_copy = msg_data; 
     uint8_t checksum_len = CLEAR; 
     uint8_t checksum_A = CLEAR; 

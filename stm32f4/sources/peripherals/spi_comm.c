@@ -173,7 +173,6 @@ void spi_ss_init(
     GPIO_TypeDef *gpio, 
     pin_selector_t ss_pin)
 {
-    // Local variables 
     gpio_pin_num_t pin_num = (SET_BIT << ss_pin); 
     
     // Configure the slave select pin and GPIO then deselect the slave device 
@@ -250,7 +249,6 @@ SPI_STATUS spi_write(
     const uint8_t *write_data, 
     uint32_t data_len)
 {
-    // Local variables 
     SPI_STATUS spi_status = SPI_OK; 
 
     // Argument check - NULL pointers and zero length 
@@ -287,7 +285,6 @@ SPI_STATUS spi_write_read(
     uint8_t *read_data, 
     uint32_t data_len)
 {
-    // Local variables 
     SPI_STATUS spi_status = SPI_OK; 
 
     // Argument check - NULL pointers and zero length 

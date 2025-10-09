@@ -120,7 +120,6 @@ void ws2812_send(
         return; 
     } 
 
-    // Local variables 
     uint8_t led_index; 
     uint8_t colour_index; 
     uint8_t pwm_duty[WS2812_LED_NUM * WS2812_BITS_PER_LED]; 

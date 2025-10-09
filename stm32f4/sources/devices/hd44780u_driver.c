@@ -240,7 +240,6 @@ void hd44780u_re_init(void)
 // Send a byte of instruction information 
 void hd44780u_send_instruc(uint8_t hd44780u_cmd)
 {
-    // Local variables 
     uint8_t lcd_instruction[HD44780U_MSG_PER_CMD]; 
     uint8_t mask = hd44780u_data_record.backlight; 
 
@@ -258,7 +257,6 @@ void hd44780u_send_instruc(uint8_t hd44780u_cmd)
 // Send a byte of printable data 
 void hd44780u_send_data(uint8_t hd44780u_data)
 {
-    // Local variables 
     uint8_t lcd_display_data[HD44780U_MSG_PER_CMD]; 
     uint8_t mask = hd44780u_data_record.backlight | HD44780U_RS; 
 
@@ -278,7 +276,6 @@ void hd44780u_send(
     I2C_TypeDef *i2c, 
     uint8_t *data)
 {
-    // Local variables 
     I2C_STATUS i2c_status = I2C_OK; 
 
     // Create start condition to initiate master mode 

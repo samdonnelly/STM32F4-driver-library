@@ -147,7 +147,6 @@ void hc05_read(
     char *receive_data, 
     uint8_t data_len)
 {
-    // Local variables 
     UART_STATUS uart_status = UART_OK; 
 
     // Get the data if it's available 

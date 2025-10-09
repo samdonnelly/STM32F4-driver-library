@@ -460,9 +460,6 @@ TEST(m8q_driver, m8q_init_ubx_config_invalid_msg_check)
 // M8Q device initialization - valid UBX config message check 
 TEST(m8q_driver, m8q_init_ubx_config_valid_msg_check)
 {
-    //==================================================
-    // Local variables 
-
     M8Q_STATUS init_check; 
 
     // Variables to store the drivers formatted config message 
@@ -473,9 +470,7 @@ TEST(m8q_driver, m8q_init_ubx_config_valid_msg_check)
     // Variables to configure the ACK message sent by the device 
     uint8_t msg_len = 10; 
     uint8_t stream_len[] = { 0x00, 0x0A }; 
-    uint8_t device_stream[msg_len]; 
-    
-    //==================================================
+    uint8_t device_stream[msg_len];
 
     //==================================================
     // Messages 

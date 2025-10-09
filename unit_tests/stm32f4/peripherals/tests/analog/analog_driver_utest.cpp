@@ -194,7 +194,6 @@ TEST(analog_driver, adc1_clock_init_ok)
 // ADC port init - call the init function with an invalid pointer 
 TEST(analog_driver, adc_port_null_ptr)
 {
-    // Local variables 
     ADC_TypeDef *ADC_LOCAL_FAKE = NULL; 
     ADC_Common_TypeDef *ADC_COMMON_LOCAL_FAKE = NULL; 
 
@@ -214,7 +213,6 @@ TEST(analog_driver, adc_port_null_ptr)
 // ADC port init - call the init function with a valid pointer 
 TEST(analog_driver, adc_port_valid_ptr)
 {
-    // Local variables 
     ADC_TypeDef ADC_LOCAL_FAKE; 
     ADC_Common_TypeDef ADC_COMMON_LOCAL_FAKE; 
 
@@ -234,7 +232,6 @@ TEST(analog_driver, adc_port_valid_ptr)
 // ADC port init - init ok, register bits successfully cleared 
 TEST(analog_driver, adc_port_init_ok_bits_cleared)
 {
-    // Local variables 
     ADC_Common_TypeDef ADC_COMMON_LOCAL_FAKE; 
     uint32_t ccr_check = CCR_PRE_HIGH_BIT | CCR_PRE_LOW_BIT; 
     uint32_t cr1_check = CR1_RES_HIGH_BIT | CR1_RES_LOW_BIT | CR1_SCAN_BIT | 
@@ -266,7 +263,6 @@ TEST(analog_driver, adc_port_init_ok_bits_cleared)
 // ADC port init - init ok, register bits successfully set 
 TEST(analog_driver, adc_port_init_ok_bits_set)
 {
-    // Local variables 
     ADC_Common_TypeDef ADC_COMMON_LOCAL_FAKE; 
     uint32_t ccr_check = CCR_PRE_LOW_BIT; 
     uint32_t cr1_check = CR1_RES_HIGH_BIT | CR1_SCAN_BIT | CR1_EOC_INT_BIT | CR1_OVERRUN_BIT; 

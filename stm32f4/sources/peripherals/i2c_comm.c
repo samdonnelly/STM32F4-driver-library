@@ -255,7 +255,6 @@ void i2c_init(
 // I2C generate start condition 
 I2C_STATUS i2c_start(I2C_TypeDef *i2c)
 {
-    // Local variables 
     uint16_t timeout = I2C_TIMEOUT_COUNT; 
 
     // Enable the acknowledgement bit and set the start generation bit 
@@ -291,7 +290,6 @@ void i2c_clear_addr(I2C_TypeDef *i2c)
 // I2C wait for ADDR bit to set
 I2C_STATUS i2c_addr_wait(I2C_TypeDef *i2c)
 {
-    // Local variables 
     uint16_t timeout = I2C_TIMEOUT_COUNT; 
 
     // Wait for the ADDR bit to set - abort if operation times out 
@@ -323,7 +321,6 @@ void i2c_set_ack(I2C_TypeDef *i2c)
 // I2C wait for RxNE bit to set indicating data is ready 
 I2C_STATUS i2c_rxne_wait(I2C_TypeDef *i2c)
 {
-    // Local variables 
     uint16_t timeout = I2C_TIMEOUT_COUNT; 
 
     // Wait for the RXNE bit to set - abort if operation times out 
@@ -341,7 +338,6 @@ I2C_STATUS i2c_rxne_wait(I2C_TypeDef *i2c)
 // I2C wait for TxE bit to set 
 I2C_STATUS i2c_txe_wait(I2C_TypeDef *i2c)
 {
-    // Local variables 
     uint16_t timeout = I2C_TIMEOUT_COUNT; 
 
     // Wait for the TXE bit to set - abort if operation times out 
@@ -359,7 +355,6 @@ I2C_STATUS i2c_txe_wait(I2C_TypeDef *i2c)
 // I2C wait for BTF to set
 I2C_STATUS i2c_btf_wait(I2C_TypeDef *i2c)
 {
-    // Local variables 
     uint16_t timeout = I2C_TIMEOUT_COUNT; 
 
     // Wait for the BTF bit to set - abort if operation times out 
@@ -456,7 +451,6 @@ I2C_STATUS i2c_get(
     uint16_t data_size, 
     uint8_t increment)
 {
-    // Local variables 
     I2C_STATUS i2c_status = I2C_OK; 
 
     // Check the amount of data to be received 
@@ -525,7 +519,6 @@ I2C_STATUS i2c_read_to_term(
     uint8_t term_char, 
     uint16_t bytes_remain)
 {
-    // Local variables 
     I2C_STATUS i2c_status = I2C_OK; 
 
     // Read the data until the termination character is seen 
@@ -555,7 +548,6 @@ I2C_STATUS i2c_read_to_len(
     uint8_t len_bytes, 
     uint8_t add_bytes)
 {
-    // Local variables 
     I2C_STATUS i2c_status = I2C_OK; 
     uint16_t msg_length = 0; 
 

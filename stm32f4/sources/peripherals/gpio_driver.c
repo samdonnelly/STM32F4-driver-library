@@ -144,7 +144,6 @@ void gpio_afr(
     pin_selector_t pin, 
     bit_setter_t setpoint)
 {
-    // Local variables 
     uint8_t afr_index = 0; 
 
     // Adjust the AFR index and pin offset if needed 

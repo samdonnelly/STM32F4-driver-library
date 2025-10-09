@@ -463,7 +463,6 @@ uint8_t tim_compare(
     uint32_t *count_compare, 
     uint8_t  *count_start)
 {
-    // Local variables 
     uint32_t time_elapsed; 
     uint32_t count_tracker; 
 
