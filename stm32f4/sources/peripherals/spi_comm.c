@@ -105,10 +105,14 @@ void spi_init(
         // SPI1 
         RCC->APB2ENR |= (SET_BIT << SHIFT_12); 
     }
-    else 
+    else if ((spi == SPI2) || (spi == SPI3))
     {
         // SPI2 and SPI3 
         RCC->APB1ENR |= (SET_BIT << (SHIFT_14 + (uint8_t)((uint32_t)(spi - SPI2) >> SHIFT_10))); 
+    }
+    else
+    {
+        return;
     }
     
     //==================================================
