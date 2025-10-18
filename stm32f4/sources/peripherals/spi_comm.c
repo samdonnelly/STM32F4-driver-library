@@ -21,6 +21,14 @@
 
 
 //=======================================================================================
+// Macros 
+
+#define SPI_TIMEOUT_COUNT 10000
+
+//=======================================================================================
+
+
+//=======================================================================================
 // Function prototypes 
 
 /**
@@ -207,13 +215,15 @@ void spi_disable(SPI_TypeDef *spi)
 // Wait for TXE bit to set 
 void spi_txe_wait(SPI_TypeDef *spi)
 {
-    while(!(spi->SR & (SET_BIT << SHIFT_1))); 
+    uint16_t timeout = SPI_TIMEOUT_COUNT;
+    while(!(spi->SR & (SET_BIT << SHIFT_1)) && --timeout); 
 }
 
 // Wait for RXNE bit to set 
 void spi_rxne_wait(SPI_TypeDef *spi)
 {
-    while(!(spi->SR & (SET_BIT << SHIFT_0)));
+    uint16_t timeout = SPI_TIMEOUT_COUNT;
+    while(!(spi->SR & (SET_BIT << SHIFT_0)) && --timeout);
 }
 
 
