@@ -16,6 +16,7 @@
 // Includes 
 
 #include "fatfs_driver.h"
+#include "diskio.h"
 
 // Drivers 
 #include "timers_driver.h"
@@ -251,6 +252,119 @@ typedef enum {
 
 //=======================================================================================
 // Function Prototypes 
+
+/**
+ * @brief FATFS initialization 
+ * 
+ * @details Puts the SD card into the ready state so it can start to accept generic read and 
+ *          write commands. The type of card is also determined which is used throughout the 
+ *          driver to know how to handle data. If all initialization operations are 
+ *          successful then the function will clear the FATFS_STATUS_NOINIT flag and 
+ *          return that as the status. If unsuccessful then FATFS_STATUS_NOINIT will be 
+ *          returned and the no further calls can be made to the card. 
+ *          
+ *          This function is called by the FATFS module layer and should not be called 
+ *          manually in the application layer. 
+ * 
+ * @see fatfs_disk_status_t
+ * 
+ * @param pdrv : physical drive number to distinguish between target devices (starts at 0) 
+ * @return DISK_STATUS : status of the disk drive 
+ */
+DISK_STATUS fatfs_init(uint8_t pdrv);
+
+
+/**
+ * @brief FATFS disk status 
+ * 
+ * @details Returns the current status of the card. 
+ *          
+ *          This function is called by the FATFS module layer and should not be called 
+ *          manually in the application layer. 
+ * 
+ * @see fatfs_disk_status_t
+ * 
+ * @param pdrv : physical drive number to distinguish between target devices (starts at 0)
+ * @return DISK_STATUS : status of the disk drive 
+ */
+DISK_STATUS fatfs_status(uint8_t pdrv);
+
+
+/**
+ * @brief FATFS read 
+ * 
+ * @details Reads single or multiple data packets from the SD card. The address to start 
+ *          reading from is specified as an argument and the data read gets stored into 
+ *          a pointer to a buffer. The function returns the result of the operation. 
+ *          
+ *          This function is called by the FATFS module layer and should not be called 
+ *          manually in the application layer. 
+ * 
+ * @see fatfs_disk_results_t
+ * 
+ * @param pdrv : physical drive number to distinguish between target devices (starts at 0) 
+ * @param buff : pointer to the read data buffer that stores the information read 
+ * @param sector : start sector number - address to begin reading from 
+ * @param count : number of sectors to read 
+ * @return DISK_RESULT : result of the read operation 
+ */
+DISK_RESULT fatfs_read(
+    uint8_t pdrv, 
+    uint8_t *buff,
+    uint32_t sector,
+    uint16_t count);
+
+
+/**
+ * @brief FATFS write 
+ * 
+ * @details Writes single or multiple data packets to the SD card. The address to start 
+ *          writing to and a pointer to a buffer that stores the data to be written are passed 
+ *          as arguments. The function returns the result of the operation. 
+ *          
+ *          This function is called by the FATFS module layer and should not be called 
+ *          manually in the application layer. 
+ * 
+ * @see fatfs_disk_results_t
+ * 
+ * @param pdrv : physical drive number to distinguish between target devices (starts at 0) 
+ * @param buff : pointer to the data to be written 
+ * @param sector : sector number (address) that specifies where to begin writing data 
+ * @param count : number of sectors to write (determines single or multiple data packet write) 
+ * @return DISK_RESULT : result of the write operation 
+ */
+DISK_RESULT fatfs_write(
+    uint8_t pdrv, 
+    const uint8_t *buff,
+    uint32_t sector,
+    uint16_t count);
+
+
+/**
+ * @brief FATFS IO control 
+ * 
+ * @details This function is called to control device specific features and misc functions 
+ *          other than generic read and write. Which function to call is specified by the 
+ *          cmd argument. The buff argument is a generic void pointer that can be used for 
+ *          any of the functions specified by cmd. Each function can cast the pointer to the 
+ *          needed data type. buff can also serves as further specification of the operation to 
+ *          perform within each sub function. 
+ *          
+ *          This function is called by the FATFS module layer and should not be called 
+ *          manually in the application layer. 
+ * 
+ * @see fatfs_disk_results_t
+ * 
+ * @param pdrv : physical drive number to distinguish between target devices (starts at 0) 
+ * @param cmd : control command code - specifies sub operation to execute 
+ * @param buff : parameter and data buffer - supports the sub operation specified by cmd 
+ * @return DISK_RESULT : result of the IO control operation 
+ */
+DISK_RESULT fatfs_ioctl(
+    uint8_t pdrv, 
+    uint8_t cmd, 
+    void *buff);
+
 
 /**
  * @brief FATFS power on sequence
@@ -513,6 +627,17 @@ void fatfs_user_init(
 
     // Pins 
     sd_card.ss_pin = fatfs_slave_pin;
+
+    // Link the hardware functions to the diskio layer 
+    const diskio_dispatch_t dispatch_functions = 
+    {
+        .disk_initialize = &fatfs_init,
+        .disk_status = &fatfs_status,
+        .disk_read = &fatfs_read,
+        .disk_write = &fatfs_write,
+        .disk_ioctl = &fatfs_ioctl
+    };
+    disk_link(&dispatch_functions);
 }
 
 

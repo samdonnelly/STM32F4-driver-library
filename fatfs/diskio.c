@@ -66,7 +66,7 @@ static diskio_data_t diskio_data =
  * @param dispatch_functions : pointers to functions to call in each diskio function 
  * @return DSTATUS : status of the linkage 
  */
-DSTATUS disk_link(diskio_dispatch_t *dispatch_functions)
+DSTATUS disk_link(const diskio_dispatch_t *dispatch_functions)
 {
 	DSTATUS status = (DSTATUS)STA_NOINIT;
 

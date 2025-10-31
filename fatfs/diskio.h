@@ -60,7 +60,7 @@ diskio_dispatch_t;
 // Prototypes 
 
 // Initialization 
-DSTATUS disk_link(diskio_dispatch_t *dispatch_functions);
+DSTATUS disk_link(const diskio_dispatch_t *dispatch_functions);
 
 // Disk control functions 
 DSTATUS disk_initialize(BYTE pdrv);
