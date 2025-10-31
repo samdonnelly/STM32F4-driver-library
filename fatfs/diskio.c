@@ -5,7 +5,12 @@
  * 
  * @brief Low level disk I/O module SKELETON for FatFs - (C)ChaN, 2025 
  * 
- * @details If a working storage control module is available, it should be 
+ * @details The below code is taken from the CHAN distribution of FatFs. The code has 
+ *          been modified to adjust formatting and make the interface more univeral for 
+ *          different applications. The diskio code will be manually updated to keep up 
+ *          to date with the latest FatFs code. 
+ *          
+ *          If a working storage control module is available, it should be 
  *          attached to the FatFs via a glue function rather than modifying it. 
  *          This is an example of glue functions to attach various exsisting 
  *          storage control modules to the FatFs module with a defined API. 
@@ -21,6 +26,7 @@
 // Includes 
 
 #include "diskio.h"
+#include <stddef.h>
 
 //=======================================================================================
 
@@ -62,6 +68,17 @@ static diskio_data_t diskio_data =
 
 /**
  * @brief Link the hardware layer to the FatFs layer 
+ * 
+ * @details This functions links the FatFs layer with the needed hardware layer. This 
+ *          function must be called during setup so that when the diskio functions are 
+ *          called by FatFs, they are able to dispatch to the code that can carry out 
+ *          FatFs operations with the connected hardware. If this is not successfully 
+ *          called then no operations will be carried out. 
+ *          
+ *          A pointer to the dispatch functions is passed as an argument. The I/O layer 
+ *          that communicates with hardware should pass pointers to the init, status, 
+ *          read, write and ioctl functions so that they can be deployed when the diskio 
+ *          functions are called. 
  * 
  * @param dispatch_functions : pointers to functions to call in each diskio function 
  * @return DSTATUS : status of the linkage 

@@ -5,6 +5,11 @@
  * 
  * @brief Low level disk interface modlue include file - (C)ChaN, 2025 
  * 
+ * @details The below code is taken from the CHAN distribution of FatFs. The code has 
+ *          been modified to adjust formatting and make the interface more univeral for 
+ *          different applications. The diskio code will be manually updated to keep up 
+ *          to date with the latest FatFs code. 
+ * 
  * @version 0.1
  * @date 2025-10-28
  * 
