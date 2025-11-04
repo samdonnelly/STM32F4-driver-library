@@ -65,12 +65,12 @@ unit_tests/test-lib
 unit_tests/test-obj
 unit_tests/sources
 
-unit_tests/stm32f4/device_controllers/test-lib
-unit_tests/stm32f4/device_controllers/test-obj
-unit_tests/stm32f4/device_controllers/sources
-unit_tests/stm32f4/device_controllers/your_tests
-unit_tests/stm32f4/device_controllers/*.exe
-unit_tests/stm32f4/device_controllers/*.exe.stackdump
+unit_tests/fatfs/test-lib
+unit_tests/fatfs/test-obj
+unit_tests/fatfs/sources
+unit_tests/fatfs/your_tests
+unit_tests/fatfs/*.exe
+unit_tests/fatfs/*.exe.stackdump
 
 unit_tests/stm32f4/devices/test-lib
 unit_tests/stm32f4/devices/test-obj

@@ -197,7 +197,7 @@ DRESULT disk_ioctl(
 	BYTE cmd,
 	void *buff)
 {
-	return ((diskio_data.link_status == DFLAG_SET) && (pdrv < FF_VOLUMES)) ? 
+	return ((diskio_data.link_status == DFLAG_SET) && (pdrv < FF_VOLUMES) && (buff != NULL)) ? 
 			diskio_data.dispatch.disk_ioctl(pdrv, cmd, buff) : 
 			RES_PARERR;
 }
