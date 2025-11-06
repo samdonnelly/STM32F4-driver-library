@@ -17,6 +17,7 @@
 
 #include "ff.h"
 #include <stdlib.h>
+#include <stdbool.h>
 #include "cmsis_os2.h"
 
 //=======================================================================================
@@ -25,7 +26,8 @@
 //=======================================================================================
 // Global data 
 
-static osMutexId_t Mutex[FF_VOLUMES + 1];	// Table of mutex ID 
+static const uint8_t max_mutex = FF_VOLUMES + 1;   // Max number of mutexes 
+static osMutexId_t Mutex[max_mutex];               // Table of mutex IDs 
 
 //=======================================================================================
 
@@ -52,7 +54,7 @@ void* ff_memalloc(UINT msize)
  * 
  * @param mblock : pointer to the memory block to free (no effect if null) 
  */
-void ff_memfree (void *mblock)
+void ff_memfree(void *mblock)
 {
 	free(mblock);
 }
@@ -74,14 +76,17 @@ void ff_memfree (void *mblock)
  *          semaphore for the volume. When a 0 is returned, the f_mount function fails 
  *          with FR_INT_ERR.
  * 
- * @param vol : Mutex ID: Volume mutex (0 to FF_VOLUMES - 1) or system mutex (FF_VOLUMES) 
- * @return int : 1:Function succeeded or 0:Could not create the mutex 
+ * @param vol : Mutex ID - Volume mutex (0 to FF_VOLUMES - 1) or system mutex (FF_VOLUMES) 
+ * @return int : 1: Function succeeded, 0: Could not create the mutex 
  */
 int ff_mutex_create(int vol)
 {
-	osMutexDef(cmsis_os_mutex);
+	if (vol >= max_mutex)
+	{
+		return (int)false;
+	}
 
-	Mutex[vol] = osMutexNew(osMutex(cmsis_os_mutex));
+	Mutex[vol] = osMutexNew(NULL);
 	return (int)(Mutex[vol] != NULL);
 }
 
@@ -92,11 +97,14 @@ int ff_mutex_create(int vol)
  * @details This function is called in f_mount function to delete a mutex or
  *          semaphore of the volume created with ff_mutex_create function.
  * 
- * @param vol : Mutex ID: Volume mutex (0 to FF_VOLUMES - 1) or system mutex (FF_VOLUMES) 
+ * @param vol : Mutex ID - Volume mutex (0 to FF_VOLUMES - 1) or system mutex (FF_VOLUMES) 
  */
 void ff_mutex_delete(int vol)
 {
-	osMutexDelete(Mutex[vol]);
+	if (vol < max_mutex)
+	{
+		osMutexDelete(Mutex[vol]);
+	}
 }
 
 
@@ -106,11 +114,16 @@ void ff_mutex_delete(int vol)
  * @details This function is called on enter file functions to lock the volume.
  *          When a 0 is returned, the file function fails with FR_TIMEOUT.
  * 
- * @param vol : Mutex ID: Volume mutex (0 to FF_VOLUMES - 1) or system mutex (FF_VOLUMES) 
- * @return int : 1:Succeeded or 0:Timeout 
+ * @param vol : Mutex ID - Volume mutex (0 to FF_VOLUMES - 1) or system mutex (FF_VOLUMES) 
+ * @return int : 1: Succeeded, 0: Timeout 
  */
 int ff_mutex_take(int vol)
 {
+	if (vol >= max_mutex)
+	{
+		return (int)false;
+	}
+
 	return (int)(osMutexAcquire(Mutex[vol], FF_FS_TIMEOUT) == osOK);
 }
 
@@ -120,11 +133,14 @@ int ff_mutex_take(int vol)
  * 
  * @details This function is called on leave file functions to unlock the volume. 
  * 
- * @param vol : Mutex ID: Volume mutex (0 to FF_VOLUMES - 1) or system mutex (FF_VOLUMES) 
+ * @param vol : Mutex ID - Volume mutex (0 to FF_VOLUMES - 1) or system mutex (FF_VOLUMES) 
  */
 void ff_mutex_give(int vol)
 {
-	osMutexRelease(Mutex[vol]);
+	if (vol < max_mutex)
+	{
+		osMutexRelease(Mutex[vol]);
+	}
 }
 
 #endif	// FF_FS_REENTRANT 
