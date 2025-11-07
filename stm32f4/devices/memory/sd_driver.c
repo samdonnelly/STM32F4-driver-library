@@ -653,8 +653,7 @@ DSTATUS sd_init(BYTE pdrv)
     uint8_t ocr[SD_TRAILING_BYTES];
     uint8_t v_range[SD_TRAILING_BYTES];
 
-    // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
-    if (pdrv)
+    if (pdrv >= FF_VOLUMES)
     {
         return SD_STATUS_NOINIT; 
     }
@@ -815,8 +814,7 @@ DSTATUS sd_init(BYTE pdrv)
 // SD card disk status 
 DSTATUS sd_status(BYTE pdrv)
 {
-    // pdrv is 0 for single drive systems. The code doesn't support more than one drive. 
-    if (pdrv)
+    if (pdrv >= FF_VOLUMES)
     {
         return SD_STATUS_NOINIT; 
     }
@@ -841,8 +839,8 @@ DRESULT sd_read(
         return RES_ERROR;
     }
 
-    // Check that the drive number is zero and that the count is valid 
-    if (pdrv || (count == NONE))
+    // Check that the drive number and count are both valid 
+    if ((pdrv >= FF_VOLUMES) || (count == NONE))
     {
         return RES_PARERR;
     }
@@ -940,8 +938,8 @@ DRESULT sd_write(
         return RES_ERROR;
     }
 
-    // Check that the drive number is zero and that the count is valid 
-    if (pdrv || (count == NONE))
+    // Check that the drive number and count are both valid 
+    if ((pdrv >= FF_VOLUMES) || (count == NONE))
     {
         return RES_PARERR;
     }
@@ -1044,8 +1042,8 @@ DRESULT sd_ioctl(
 {
     DRESULT result; 
 
-    // Check that the drive number is zero 
-    if (pdrv)
+    // Check that the drive number is valid 
+    if (pdrv >= FF_VOLUMES)
     {
         return RES_PARERR;
     }
