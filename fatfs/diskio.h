@@ -64,10 +64,10 @@ diskio_dispatch_t;
 //=======================================================================================
 // Prototypes 
 
-// Initialization 
+// Initialization - called by application during setup 
 DSTATUS disk_link(const diskio_dispatch_t *dispatch_functions);
 
-// Disk control functions 
+// Disk control functions - called by FatFs layer, should not be called by application 
 DSTATUS disk_initialize(BYTE pdrv);
 DSTATUS disk_status(BYTE pdrv);
 DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count);

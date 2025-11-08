@@ -193,7 +193,6 @@ TEST(diskio_test, diskio_dispatch)
     // dispatch because it was already dispatched in the previous check and therefore 
     // initialization cannot happen again. 
     dispatch_status = 0;
-    pdrv = 0;
     DiskDispatch(pdrv, read_buff, write_buff, (void *)ioctl_buff);
     UNSIGNED_LONGS_EQUAL(0x1E, dispatch_status);
 }
