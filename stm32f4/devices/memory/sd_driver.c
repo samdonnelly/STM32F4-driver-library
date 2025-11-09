@@ -137,7 +137,7 @@ typedef enum {
     SD_STATUS_NOINIT  = 0x01,  // Device has not been initialized and not ready to work 
     SD_STATUS_NODISK  = 0x02,  // No medium in the drive 
     SD_STATUS_PROTECT = 0x04   // Medium is write protected 
-} sd_disk_status_t; 
+} sd_disk_status_t;
 
 
 /**
@@ -347,7 +347,7 @@ DRESULT sd_ioctl(
  * @param sd_slave_pin : SS pin that the SD card is connected to 
  * @return DRESULT : result of the power on operation 
  */
-DRESULT sd_power_on(uint16_t sd_slave_pin); 
+DRESULT sd_power_on(uint16_t sd_slave_pin);
 
 
 /**
@@ -583,7 +583,7 @@ void sd_user_init(
     // Tracking information 
     sd_card.disk_status = SD_STATUS_NOINIT;
     sd_card.card_type = SD_CT_UNKNOWN;
-    sd_card.pwr_flag = SD_PWR_OFF; 
+    sd_card.pwr_flag = SD_PWR_OFF;
 
     // Pins 
     sd_card.ss_pin = sd_slave_pin;
@@ -604,29 +604,24 @@ void sd_user_init(
 // Get the card type 
 CARD_TYPE sd_get_card_type(void)
 {
-    return sd_card.card_type; 
+    return sd_card.card_type;
 }
 
 
 // SD card ready to receive commands 
 DISK_STATUS sd_ready_rec(void)
 {
-    uint8_t resp; 
-    uint16_t timer = SD_PWR_ON_RES_CNT; 
+    uint8_t resp;
+    uint16_t timer = SD_PWR_ON_RES_CNT;
 
     // Read DO/MISO continuously until it is ready to receive commands 
     do 
     {
-        spi_write_read(sd_card.spi, SD_DATA_HIGH, &resp, BYTE_1); 
+        spi_write_read(sd_card.spi, SD_DATA_HIGH, &resp, BYTE_1);
     }
     while ((resp != SD_DATA_HIGH) && --timer);
 
-    if (timer)
-    {
-        return (DISK_STATUS)TRUE;
-    }
-
-    return (DISK_STATUS)FALSE;
+    return (DISK_STATUS)(timer != 0);
 }
 
 
@@ -648,14 +643,14 @@ DISK_STATUS sd_get_existance(void)
 // SD card initialization 
 DSTATUS sd_init(BYTE pdrv)
 {
-    uint8_t do_resp; 
+    uint8_t do_resp;
     uint8_t init_timer_status;
     uint8_t ocr[SD_TRAILING_BYTES];
     uint8_t v_range[SD_TRAILING_BYTES];
 
     if (pdrv >= FF_VOLUMES)
     {
-        return SD_STATUS_NOINIT; 
+        return SD_STATUS_NOINIT;
     }
 
     //===================================================
@@ -663,9 +658,9 @@ DSTATUS sd_init(BYTE pdrv)
 
     if (sd_power_on(sd_card.ss_pin)) 
     {
-        sd_card.card_type = SD_CT_UNKNOWN; 
-        sd_card.disk_status = SD_STATUS_NOINIT; 
-        return sd_card.disk_status; 
+        sd_card.card_type = SD_CT_UNKNOWN;
+        sd_card.disk_status = SD_STATUS_NOINIT;
+        return sd_card.disk_status;
     }
 
     //===================================================
@@ -790,13 +785,13 @@ DSTATUS sd_init(BYTE pdrv)
     spi_slave_deselect(sd_card.gpio, sd_card.ss_pin);
     
     // Perform a write_read after deselecting the slave --> Why? 
-    spi_write_read(sd_card.spi, SD_DATA_HIGH, &do_resp, SD_SINGLE_BYTE); 
+    spi_write_read(sd_card.spi, SD_DATA_HIGH, &do_resp, SD_SINGLE_BYTE);
 
     // Status check 
     if (sd_card.card_type == SD_CT_UNKNOWN)
     {
         // Power off the card 
-        sd_power_off(); 
+        sd_power_off();
 
         // Set no init flag 
         sd_card.disk_status = SD_STATUS_NOINIT;
@@ -804,7 +799,7 @@ DSTATUS sd_init(BYTE pdrv)
     else
     {
         // Clear no init flag 
-        sd_card.disk_status = (SD_STATUS_NOINIT & SD_INIT_SUCCESS); 
+        sd_card.disk_status = (SD_STATUS_NOINIT & SD_INIT_SUCCESS);
     }
 
     return sd_card.disk_status;
@@ -816,7 +811,7 @@ DSTATUS sd_status(BYTE pdrv)
 {
     if (pdrv >= FF_VOLUMES)
     {
-        return SD_STATUS_NOINIT; 
+        return SD_STATUS_NOINIT;
     }
 
     return sd_card.disk_status;
@@ -885,7 +880,7 @@ DRESULT sd_read(
             do 
             {
                 read_resp = sd_read_data_packet(buff, SD_SEC_SIZE);
-                buff += SD_SEC_SIZE; 
+                buff += SD_SEC_SIZE;
             }
             while (--count && (read_resp != RES_ERROR));
 
@@ -904,7 +899,7 @@ DRESULT sd_read(
     spi_slave_deselect(sd_card.gpio, sd_card.ss_pin);
 
     // Dummy read 
-    spi_write_read(sd_card.spi, SD_DATA_HIGH, &do_resp, SD_SINGLE_BYTE); 
+    spi_write_read(sd_card.spi, SD_DATA_HIGH, &do_resp, SD_SINGLE_BYTE);
 
     return read_resp;
 }
@@ -917,8 +912,8 @@ DRESULT sd_write(
     DWORD sector,
     UINT count)
 {
-    DRESULT write_resp; 
-    uint8_t do_resp; 
+    DRESULT write_resp;
+    uint8_t do_resp;
     uint8_t stop_trans = SD_DT_ONE;
 
     if (buff == NULL)
@@ -994,9 +989,9 @@ DRESULT sd_write(
             do 
             {
                 write_resp = sd_write_data_packet(buff, SD_SEC_SIZE, SD_DT_ZERO);
-                buff += SD_SEC_SIZE; 
+                buff += SD_SEC_SIZE;
             }
-            while (--count && (write_resp != RES_ERROR)); 
+            while (--count && (write_resp != RES_ERROR));
 
             // Wait on busy flag to clear 
             sd_ready_rec();
@@ -1015,9 +1010,9 @@ DRESULT sd_write(
     sd_ready_rec();
 
     // Deselect the slave device
-    spi_slave_deselect(sd_card.gpio, sd_card.ss_pin); 
+    spi_slave_deselect(sd_card.gpio, sd_card.ss_pin);
 
-    return write_resp; 
+    return write_resp;
 }
 
 
@@ -1027,7 +1022,7 @@ DRESULT sd_ioctl(
     BYTE cmd, 
     void *buff)
 {
-    DRESULT result; 
+    DRESULT result;
 
     // Check that the drive number and buffer are valid 
     if ((pdrv >= FF_VOLUMES) || (buff == NULL))
@@ -1042,89 +1037,89 @@ DRESULT sd_ioctl(
     }
 
     // Select the slave card 
-    spi_slave_select(sd_card.gpio, sd_card.ss_pin); 
+    spi_slave_select(sd_card.gpio, sd_card.ss_pin);
 
     // Choose the misc function 
     switch(cmd)
     {
         case CTRL_SYNC:  // Ensure write operation in disk_write is complete. 
-            sd_ready_rec(); 
-            result = RES_OK; 
-            break; 
+            sd_ready_rec();
+            result = RES_OK;
+            break;
         
         case GET_SECTOR_COUNT:  // Get the size of the disk 
-            result = sd_ioctl_get_sector_count(buff); 
-            break; 
+            result = sd_ioctl_get_sector_count(buff);
+            break;
         
         case GET_SECTOR_SIZE:  // Get the sector size 
-            result = sd_ioctl_get_sector_size(buff); 
-            break; 
+            result = sd_ioctl_get_sector_size(buff);
+            break;
         
         case GET_BLOCK_SIZE:  // Currently unsupported 
-            result = RES_PARERR; 
-            break; 
+            result = RES_PARERR;
+            break;
         
         case CTRL_TRIM:  // Not needed 
-            result = RES_PARERR; 
-            break; 
+            result = RES_PARERR;
+            break;
         
         case CTRL_POWER:  // Get/set the power status 
-            result = sd_ioctl_ctrl_pwr(buff); 
-            break; 
+            result = sd_ioctl_ctrl_pwr(buff);
+            break;
         
         case CTRL_LOCK:  // Currently unsupported 
-            result = RES_PARERR; 
-            break; 
+            result = RES_PARERR;
+            break;
         
         case CTRL_EJECT:  // Currently unsupported 
-            result = RES_PARERR; 
-            break; 
+            result = RES_PARERR;
+            break;
         
         case CTRL_FORMAT:  // Currently unsupported 
-            result = RES_PARERR; 
-            break; 
+            result = RES_PARERR;
+            break;
         
         case MMC_GET_TYPE:  // Currently unsupported 
-            result = RES_PARERR; 
-            break; 
+            result = RES_PARERR;
+            break;
         
         case MMC_GET_CSD:  // Read and the CSD register 
-            result = sd_ioctl_get_csd(buff); 
-            break; 
+            result = sd_ioctl_get_csd(buff);
+            break;
         
         case MMC_GET_CID:  // Read the CID register 
-            result = sd_ioctl_get_cid(buff); 
-            break; 
+            result = sd_ioctl_get_cid(buff);
+            break;
         
         case MMC_GET_OCR:  // Read tje OCR register 
-            result = sd_ioctl_get_ocr(buff); 
-            break; 
+            result = sd_ioctl_get_ocr(buff);
+            break;
         
         case MMC_GET_SDSTAT:  // Currently unsupported 
-            result = RES_PARERR; 
-            break; 
+            result = RES_PARERR;
+            break;
         
         case ATA_GET_REV:  // Currently unsupported 
-            result = RES_PARERR; 
-            break; 
+            result = RES_PARERR;
+            break;
         
         case ATA_GET_MODEL:  // Currently unsupported 
-            result = RES_PARERR; 
-            break; 
+            result = RES_PARERR;
+            break;
         
         case ATA_GET_SN:  // Currently unsupported 
-            result = RES_PARERR; 
-            break; 
+            result = RES_PARERR;
+            break;
         
         default:  // Unknown 
-            result = RES_PARERR; 
+            result = RES_PARERR;
             break;
     }
 
     // Deselect the slave card 
-    spi_slave_deselect(sd_card.gpio, sd_card.ss_pin); 
+    spi_slave_deselect(sd_card.gpio, sd_card.ss_pin);
 
-    return result; 
+    return result;
 }
 
 
@@ -1137,10 +1132,10 @@ DRESULT sd_ioctl(
 // SD card power on sequence and software reset 
 DRESULT sd_power_on(uint16_t sd_slave_pin)
 {
-    uint8_t di_cmd; 
-    uint8_t do_resp; 
+    uint8_t di_cmd;
+    uint8_t do_resp;
     uint8_t cmd_frame[BYTE_6];
-    uint16_t num_read = SD_PWR_ON_RES_CNT; 
+    uint16_t num_read = SD_PWR_ON_RES_CNT;
 
     //===================================================
     // Power ON or card insertion 
@@ -1152,10 +1147,10 @@ DRESULT sd_power_on(uint16_t sd_slave_pin)
     spi_slave_deselect(sd_card.gpio, sd_slave_pin);
 
     // Set the DI/MOSI command high (0xFF) 
-    di_cmd = SD_DATA_HIGH; 
+    di_cmd = SD_DATA_HIGH;
 
     // Send DI/MOSI high 10x to wait for more than 74 clock pulses 
-    for (uint8_t i = 0; i < SD_PWR_ON_COUNTER; i++) 
+    for (uint8_t i = CLEAR; i < SD_PWR_ON_COUNTER; i++) 
     {
         spi_write(sd_card.spi, &di_cmd, BYTE_1);
     }
@@ -1166,10 +1161,10 @@ DRESULT sd_power_on(uint16_t sd_slave_pin)
     // Software reset 
 
     // Slave select 
-    spi_slave_select(sd_card.gpio, sd_slave_pin); 
+    spi_slave_select(sd_card.gpio, sd_slave_pin);
 
     // Generate a command frame 
-    for (uint8_t i = 0; i < BYTE_6; i++)
+    for (uint8_t i = CLEAR; i < BYTE_6; i++)
     {
         switch (i)
         {
@@ -1186,22 +1181,22 @@ DRESULT sd_power_on(uint16_t sd_slave_pin)
     }
 
     // Transmit command 
-    spi_write(sd_card.spi, cmd_frame, BYTE_6); 
+    spi_write(sd_card.spi, cmd_frame, BYTE_6);
 
     // Read R1 response until it is valid or until it times out 
-    do 
+    do
     {
-        spi_write_read(sd_card.spi, SD_DATA_HIGH, &do_resp, SD_SINGLE_BYTE); 
+        spi_write_read(sd_card.spi, SD_DATA_HIGH, &do_resp, SD_SINGLE_BYTE);
     }
-    while ((do_resp != SD_IDLE_STATE) && --num_read); 
+    while ((do_resp != SD_IDLE_STATE) && --num_read);
 
     // Slave deselect 
-    spi_slave_deselect(sd_card.gpio, sd_slave_pin); 
+    spi_slave_deselect(sd_card.gpio, sd_slave_pin);
     
     // Response timeout 
     if (!num_read)
     {
-        return RES_ERROR; 
+        return RES_ERROR;
     }
 
     //===================================================
@@ -1210,16 +1205,16 @@ DRESULT sd_power_on(uint16_t sd_slave_pin)
     spi_write(sd_card.spi, &di_cmd, BYTE_1);
 
     // Set the Power Flag status to on 
-    sd_card.pwr_flag = SD_PWR_ON; 
+    sd_card.pwr_flag = SD_PWR_ON;
 
-    return RES_OK; 
+    return RES_OK;
 }
 
 
 // Set the Power Flag status to off 
 void sd_power_off(void)
 {
-    sd_card.pwr_flag = SD_PWR_OFF; 
+    sd_card.pwr_flag = SD_PWR_OFF;
 }
 
 
@@ -1247,16 +1242,11 @@ uint8_t sd_initiate_init(
         // Delay 1ms --> SD_INIT_DELAY * SD_INIT_TIMER = 1000ms (recommended delay) 
         tim_delay_ms(sd_card.timer, SD_INIT_DELAY);
     }
-    while ((*resp == SD_IDLE_STATE) && --init_timer); 
+    while ((*resp == SD_IDLE_STATE) && --init_timer);
 
     // Remaining counts on the timer means the operation did not time out so we can 
     // proceed with initialization. 
-    if (init_timer)
-    {
-        return TRUE; 
-    }
-    
-    return FALSE; 
+    return (uint8_t)(init_timer != 0);
 }
 
 
@@ -1314,15 +1304,15 @@ DRESULT sd_read_data_packet(
     uint32_t sector_size)
 {
     DRESULT read_resp = RES_ERROR;
-    uint8_t do_resp = 200; 
-    uint16_t num_read = SD_DT_RESP_COUNT; 
+    uint8_t do_resp = 200;
+    uint16_t num_read = SD_DT_RESP_COUNT;
 
     // Read the data token 
     do 
     {
-        spi_write_read(sd_card.spi, SD_DATA_HIGH, &do_resp, SD_SINGLE_BYTE); 
+        spi_write_read(sd_card.spi, SD_DATA_HIGH, &do_resp, SD_SINGLE_BYTE);
     }
-    while ((do_resp != SD_DT_TWO) && --num_read); 
+    while ((do_resp != SD_DT_TWO) && --num_read);
 
     // Check the R1 response 
     if (do_resp == SD_DT_TWO)
@@ -1338,7 +1328,6 @@ DRESULT sd_read_data_packet(
         read_resp = RES_OK;
     }
 
-    // Return the status of the data packet response 
     return read_resp;
 }
 
@@ -1350,8 +1339,8 @@ DRESULT sd_write_data_packet(
     uint8_t data_token)
 {
     DRESULT write_resp = RES_ERROR;
-    uint8_t do_resp; 
-    uint8_t crc = SD_CRC_CMDX; 
+    uint8_t do_resp;
+    uint8_t crc = SD_CRC_CMDX;
 
     // Wait until the card is no longer busy before sending a CMD 
     sd_ready_rec();
@@ -1360,7 +1349,7 @@ DRESULT sd_write_data_packet(
     spi_write(sd_card.spi, &data_token, SD_SINGLE_BYTE);
 
     // Send data block 
-    spi_write(sd_card.spi, buff, sector_size); 
+    spi_write(sd_card.spi, buff, sector_size);
 
     // Send CRC 
     spi_write(sd_card.spi, &crc, SD_SINGLE_BYTE);
@@ -1377,8 +1366,7 @@ DRESULT sd_write_data_packet(
         write_resp = RES_OK;
     }
 
-    // Return the response 
-    return write_resp; 
+    return write_resp;
 }
 
 
@@ -1386,11 +1374,11 @@ DRESULT sd_write_data_packet(
 DRESULT sd_ioctl_get_sector_count(void *buff)
 {
     // Sector count variables 
-    DRESULT result = RES_ERROR; 
-    uint8_t do_resp; 
-    uint8_t csd[SD_CSD_REG_LEN]; 
-    uint8_t csd_struc; 
-    uint8_t n; 
+    DRESULT result = RES_ERROR;
+    uint8_t do_resp;
+    uint8_t csd[SD_CSD_REG_LEN];
+    uint8_t csd_struc;
+    uint8_t n;
     uint32_t c_size;
     uint32_t *sector_count = (uint32_t *)buff;
 
@@ -1402,12 +1390,12 @@ DRESULT sd_ioctl_get_sector_count(void *buff)
     {
         // Successfull CMD9 
         // Read the CSD register data 
-        result = sd_read_data_packet(csd, SD_CSD_REG_LEN); 
+        result = sd_read_data_packet(csd, SD_CSD_REG_LEN);
 
         if (result == RES_OK)
         {
             // No issues reading the data packet - Get the version number 
-            csd_struc = (csd[BYTE_0] >> SHIFT_6) & SD_CSD_FILTER; 
+            csd_struc = (csd[BYTE_0] >> SHIFT_6) & SD_CSD_FILTER;
 
             // Check the version number to know which bits to read 
             switch (csd_struc) 
@@ -1423,24 +1411,24 @@ DRESULT sd_ioctl_get_sector_count(void *buff)
                              SD_LBA_OFFSET;
                     
                     // Format the sector count 
-                    *sector_count = c_size << (n - SD_MAGIC_SHIFT_V1); 
+                    *sector_count = c_size << (n - SD_MAGIC_SHIFT_V1);
 
-                    result = RES_OK; 
+                    result = RES_OK;
                     break;
                 
                 case SD_CSD_V2:  // CSD Version == 2.0 --> SDC V2 
                     // Filter the register data 
                     c_size = (uint32_t)csd[BYTE_9] + ((uint32_t)csd[BYTE_8] << SHIFT_8) + 
-                            ((uint32_t)(csd[BYTE_7] & FILTER_6_LSB) << SHIFT_16) + SD_LBA_OFFSET; 
+                            ((uint32_t)(csd[BYTE_7] & FILTER_6_LSB) << SHIFT_16) + SD_LBA_OFFSET;
 
                     // Format the sector count 
                     *sector_count = c_size << SD_MAGIC_SHIFT_V2;
                     
-                    result = RES_OK; 
+                    result = RES_OK;
                     break;
                 
                 case SD_CSD_V3:  // CSD Version == 3.0 --> Currently unsupported 
-                    result = RES_PARERR; 
+                    result = RES_PARERR;
                     break;
                 
                 default:  // Unknown 
@@ -1450,7 +1438,7 @@ DRESULT sd_ioctl_get_sector_count(void *buff)
         }
     }
 
-    return result; 
+    return result;
 }
 
 
@@ -1466,84 +1454,84 @@ DRESULT sd_ioctl_get_sector_size(void *buff)
 // SD card IO Control - Control Power 
 DRESULT sd_ioctl_ctrl_pwr(void *buff)
 {
-    DRESULT result; 
-    uint8_t *param = (uint8_t *)buff; 
+    DRESULT result;
+    uint8_t *param = (uint8_t *)buff;
     
     // Choose the power operation 
     switch (*param) 
     {
         case SD_PWR_OFF:  // Turn the Power Flag off 
-            sd_power_off(); 
-            result = RES_OK; 
+            sd_power_off();
+            result = RES_OK;
             break;
         
         case SD_PWR_ON:  // Turn the Power Flag on 
             sd_power_on(sd_card.ss_pin);
-            result = RES_OK; 
+            result = RES_OK;
             break;
         
         case SD_PWR_CHECK:  // Check the status of the Power Flag 
             *(param++) = (uint8_t)sd_card.pwr_flag;
-            result = RES_OK; 
+            result = RES_OK;
             break;
         
         default:  // Invalid request 
-            result = RES_PARERR; 
-            break; 
+            result = RES_PARERR;
+            break;
     }
 
-    return result; 
+    return result;
 }
 
 
 // SD card IO Control - Get CSD Register 
 DRESULT sd_ioctl_get_csd(void *buff)
 {
-    DRESULT result = RES_ERROR; 
-    uint8_t do_resp; 
-    uint8_t *csd = (uint8_t *)buff; 
+    DRESULT result = RES_ERROR;
+    uint8_t do_resp;
+    uint8_t *csd = (uint8_t *)buff;
 
     // Send CMD9 to read the CSD register 
-    sd_send_cmd(SD_CMD9, SD_ARG_NONE, SD_CRC_CMDX, &do_resp); 
+    sd_send_cmd(SD_CMD9, SD_ARG_NONE, SD_CRC_CMDX, &do_resp);
 
     // Check the R1 response 
     if (do_resp == SD_READY_STATE)
     {
         // Successful CMD9 - proceed to read the CSD register 
-        result = sd_read_data_packet(csd, SD_CSD_REG_LEN); 
+        result = sd_read_data_packet(csd, SD_CSD_REG_LEN);
     }
 
-    return result; 
+    return result;
 }
 
 
 // SD card IO Control - Get CID Register 
 DRESULT sd_ioctl_get_cid(void *buff)
 {
-    DRESULT result = RES_ERROR; 
-    uint8_t do_resp; 
-    uint8_t *cid = (uint8_t *)buff; 
+    DRESULT result = RES_ERROR;
+    uint8_t do_resp;
+    uint8_t *cid = (uint8_t *)buff;
 
     // Send CMD10 to read the CID register 
-    sd_send_cmd(SD_CMD10, SD_ARG_NONE, SD_CRC_CMDX, &do_resp); 
+    sd_send_cmd(SD_CMD10, SD_ARG_NONE, SD_CRC_CMDX, &do_resp);
 
     // Check the R1 response 
     if (do_resp == SD_READY_STATE)
     {
         // Successful CMD10 - proceed to read the CID register 
-        result = sd_read_data_packet(cid, SD_CID_REG_LEN); 
+        result = sd_read_data_packet(cid, SD_CID_REG_LEN);
     }
 
-    return result; 
+    return result;
 }
 
 
 // SD card IO Control - Get OCR Register 
 DRESULT sd_ioctl_get_ocr(void *buff)
 {
-    DRESULT result = RES_ERROR; 
-    uint8_t do_resp; 
-    uint8_t *ocr = (uint8_t *)buff; 
+    DRESULT result = RES_ERROR;
+    uint8_t do_resp;
+    uint8_t *ocr = (uint8_t *)buff;
 
     // Send CMD58 with no arg to check the OCR (trailing 32-bits)
     sd_send_cmd(SD_CMD58, SD_ARG_NONE, SD_CRC_CMDX, &do_resp);
@@ -1552,10 +1540,10 @@ DRESULT sd_ioctl_get_ocr(void *buff)
     {
         // Successful CMD58 - proceed to read the OCR register 
         spi_write_read(sd_card.spi, SD_DATA_HIGH, ocr, SD_TRAILING_BYTES);
-        result = RES_OK; 
+        result = RES_OK;
     }
 
-    return result; 
+    return result;
 }
 
 //=======================================================================================
