@@ -26,8 +26,12 @@
 //=======================================================================================
 // Global data 
 
+#if FF_FS_REENTRANT
+
 static const uint8_t max_mutex = FF_VOLUMES + 1;   // Max number of mutexes 
 static osMutexId_t Mutex[max_mutex];               // Table of mutex IDs 
+
+#endif   // FF_FS_REENTRANT 
 
 //=======================================================================================
 
